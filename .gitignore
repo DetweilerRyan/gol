@@ -11,6 +11,9 @@ node_modules
 dist
 dist-ssr
 coverage
+reports
+.stryker-tmp
+stryker.log
 *.local
 
 # Editor directories and files
