@@ -2,7 +2,10 @@ import { describeFeature, loadFeature } from '@amiceli/vitest-cucumber'
 import { expect } from 'vitest'
 import { cellKey, createEmptyLiveCells, getNextGeneration, isCellAlive, toggleCell, type LiveCells } from '../src/gameOfLife'
 
-const feature = await loadFeature('./cell-life-and-death.feature')
+// ACCEPTANCE_MUTATION_FEATURE_FILE lets the acceptance-mutation runner point
+// this suite at a mutated copy of the feature file (see
+// scripts/acceptance-mutation/) without ever touching the real one.
+const feature = await loadFeature(process.env.ACCEPTANCE_MUTATION_FEATURE_FILE ?? './cell-life-and-death.feature')
 
 const NEIGHBOR_OFFSETS: ReadonlyArray<readonly [number, number]> = [
   [-1, -1], [-1, 0], [-1, 1],
@@ -59,7 +62,12 @@ describeFeature(feature, ({ Scenario, ScenarioOutline }) => {
       cells = getNextGeneration(cells)
     })
     Then('the cell should end up <next state>', () => {
-      expect(isCellAlive(cells, 0, 0)).toBe(variables['next state'] === 'alive')
+      // Compare the observed outcome to the expected string directly (rather
+      // than reducing "expected" to a boolean via `=== 'alive'`) so a
+      // mutated <next state> value is always detected, not just mutations
+      // that happen to land on the string "alive".
+      const actual = isCellAlive(cells, 0, 0) ? 'alive' : 'dead'
+      expect(actual).toBe(variables['next state'])
     })
   })
 

@@ -2,7 +2,10 @@ import { describeFeature, loadFeature } from '@amiceli/vitest-cucumber'
 import { expect } from 'vitest'
 import { centeredCamera, DEFAULT_CELL_SIZE, panCamera, worldToScreen, zoomCameraAtPoint, type Camera } from '../src/viewport'
 
-const feature = await loadFeature('./camera-pan-and-zoom.feature')
+// ACCEPTANCE_MUTATION_FEATURE_FILE lets the acceptance-mutation runner point
+// this suite at a mutated copy of the feature file (see
+// scripts/acceptance-mutation/) without ever touching the real one.
+const feature = await loadFeature(process.env.ACCEPTANCE_MUTATION_FEATURE_FILE ?? './camera-pan-and-zoom.feature')
 
 describeFeature(feature, ({ Scenario, ScenarioOutline }) => {
   Scenario('Panning moves the viewport without changing the zoom level', ({ Given, When, Then, And }) => {

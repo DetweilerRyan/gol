@@ -2,7 +2,10 @@ import { describeFeature, loadFeature } from '@amiceli/vitest-cucumber'
 import { expect } from 'vitest'
 import { cellKey, createEmptyLiveCells, getNextGeneration, isCellAlive, toggleCell, type LiveCells } from '../src/gameOfLife'
 
-const feature = await loadFeature('./infinite-grid.feature')
+// ACCEPTANCE_MUTATION_FEATURE_FILE lets the acceptance-mutation runner point
+// this suite at a mutated copy of the feature file (see
+// scripts/acceptance-mutation/) without ever touching the real one.
+const feature = await loadFeature(process.env.ACCEPTANCE_MUTATION_FEATURE_FILE ?? './infinite-grid.feature')
 
 function makeLiveCells(coords: readonly (readonly [number, number])[]): LiveCells {
   return new Set(coords.map(([x, y]) => cellKey(x, y)))
