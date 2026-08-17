@@ -2,8 +2,10 @@ import { describe, expect, it } from 'vitest'
 import {
   centeredCamera,
   clampCellSize,
+  computeMajorGridlines,
   computeVisibleRange,
   DEFAULT_CELL_SIZE,
+  isMajorGridline,
   MAX_CELL_SIZE,
   MIN_CELL_SIZE,
   panCamera,
@@ -11,6 +13,7 @@ import {
   worldToScreen,
   zoomCameraAtPoint,
   type Camera,
+  type VisibleRange,
 } from './viewport'
 
 const camera: Camera = { offsetX: 0, offsetY: 0, cellSize: DEFAULT_CELL_SIZE }
@@ -141,5 +144,57 @@ describe('centeredCamera', () => {
       offsetX: -800 / 2 / DEFAULT_CELL_SIZE,
       offsetY: -600 / 2 / DEFAULT_CELL_SIZE,
     })
+  })
+})
+
+describe('isMajorGridline', () => {
+  it('is true for zero and positive multiples of 10', () => {
+    expect(isMajorGridline(0)).toBe(true)
+    expect(isMajorGridline(10)).toBe(true)
+    expect(isMajorGridline(100)).toBe(true)
+  })
+
+  it('is true for negative multiples of 10', () => {
+    expect(isMajorGridline(-10)).toBe(true)
+    expect(isMajorGridline(-100)).toBe(true)
+  })
+
+  it('is false for non-multiples of 10', () => {
+    expect(isMajorGridline(5)).toBe(false)
+    expect(isMajorGridline(11)).toBe(false)
+    expect(isMajorGridline(-3)).toBe(false)
+  })
+})
+
+describe('computeMajorGridlines', () => {
+  it('returns every multiple of 10 within an arbitrary range', () => {
+    const range: VisibleRange = { minX: -23, maxX: 17, minY: -5, maxY: 26 }
+    expect(computeMajorGridlines(range)).toEqual({
+      x: [-20, -10, 0, 10],
+      y: [0, 10, 20],
+    })
+  })
+
+  it('returns an empty array when the range spans no multiple of 10', () => {
+    const range: VisibleRange = { minX: 1, maxX: 9, minY: 1, maxY: 9 }
+    expect(computeMajorGridlines(range)).toEqual({ x: [], y: [] })
+  })
+
+  it('includes both bounds when they are themselves exact multiples of 10', () => {
+    const range: VisibleRange = { minX: -10, maxX: 10, minY: -10, maxY: 10 }
+    expect(computeMajorGridlines(range)).toEqual({
+      x: [-10, 0, 10],
+      y: [-10, 0, 10],
+    })
+  })
+
+  it('finds the gridline at exactly 0 for the default camera\'s visible range, not -0', () => {
+    // computeVisibleRange's own test above produces exactly this range for the
+    // default camera. Math.ceil(-2 / 10) is -0, not 0 -- toEqual distinguishes
+    // them (Object.is semantics), so this specifically guards that regression.
+    const range: VisibleRange = { minX: -2, maxX: 12, minY: -2, maxY: 7 }
+    const gridlines = computeMajorGridlines(range)
+    expect(gridlines).toEqual({ x: [0, 10], y: [0] })
+    expect(Object.is(gridlines.x[0], -0)).toBe(false)
   })
 })

@@ -25,6 +25,7 @@ const TARGETS = [
   { feature: 'cell-life-and-death.feature', steps: 'cell-life-and-death.steps.test.ts' },
   { feature: 'infinite-grid.feature', steps: 'infinite-grid.steps.test.ts' },
   { feature: 'camera-pan-and-zoom.feature', steps: 'camera-pan-and-zoom.steps.test.ts' },
+  { feature: 'grid-reference-lines.feature', steps: 'grid-reference-lines.steps.test.ts' },
 ]
 
 function runScenarioSuite(stepsFile, featureFilePath) {

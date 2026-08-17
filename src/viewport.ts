@@ -72,3 +72,32 @@ export function centeredCamera(viewportWidthPx: number, viewportHeightPx: number
     offsetY: -viewportHeightPx / 2 / DEFAULT_CELL_SIZE,
   }
 }
+
+export const MAJOR_GRIDLINE_INTERVAL = 10
+
+export function isMajorGridline(coordinate: number): boolean {
+  return coordinate % MAJOR_GRIDLINE_INTERVAL === 0
+}
+
+export interface MajorGridlines {
+  x: number[]
+  y: number[]
+}
+
+function gridlinesInRange(min: number, max: number): number[] {
+  // `Math.ceil` of a small negative fraction (e.g. -2 / 10) yields -0, not 0.
+  // `|| 0` normalizes that back to a plain 0 without affecting any other value.
+  const start = Math.ceil(min / MAJOR_GRIDLINE_INTERVAL) * MAJOR_GRIDLINE_INTERVAL || 0
+  const lines: number[] = []
+  for (let line = start; line <= max; line += MAJOR_GRIDLINE_INTERVAL) {
+    lines.push(line)
+  }
+  return lines
+}
+
+export function computeMajorGridlines(range: VisibleRange): MajorGridlines {
+  return {
+    x: gridlinesInRange(range.minX, range.maxX),
+    y: gridlinesInRange(range.minY, range.maxY),
+  }
+}

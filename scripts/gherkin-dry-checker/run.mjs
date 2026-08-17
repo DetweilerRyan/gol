@@ -17,7 +17,7 @@ const SCRIPT_DIR = path.dirname(fileURLToPath(import.meta.url))
 const FEATURES_DIR = path.resolve(SCRIPT_DIR, '../../features')
 const REPORT_PATH = path.resolve(SCRIPT_DIR, '../../reports/gherkin-dry/report.json')
 
-const FEATURE_FILES = ['cell-life-and-death.feature', 'infinite-grid.feature', 'camera-pan-and-zoom.feature']
+const FEATURE_FILES = ['cell-life-and-death.feature', 'infinite-grid.feature', 'camera-pan-and-zoom.feature', 'grid-reference-lines.feature']
 
 function loadAllSteps() {
   const steps = []

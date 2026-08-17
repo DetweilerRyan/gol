@@ -1,11 +1,35 @@
 import { useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react'
 import { cellKey, isCellAlive, type LiveCells } from '../gameOfLife'
 import { useCamera } from '../hooks/useCamera'
-import { computeVisibleRange, screenToWorld, worldToScreen } from '../viewport'
+import { computeMajorGridlines, computeVisibleRange, isMajorGridline, screenToWorld, worldToScreen, type Camera } from '../viewport'
 
 interface GridProps {
   liveCells: LiveCells
   onToggleCell: (x: number, y: number) => void
+}
+
+interface RulerLabelProps {
+  axis: 'x' | 'y'
+  coordinate: number
+  camera: Camera
+}
+
+// pointer-events-none keeps these from interfering with cell clicks/dragging
+// underneath. axis picks which worldToScreen component positions the label
+// and which edge it's pinned to -- otherwise the x and y rulers are identical.
+function RulerLabel({ axis, coordinate, camera }: RulerLabelProps) {
+  const screen = axis === 'x' ? worldToScreen(camera, coordinate, 0) : worldToScreen(camera, 0, coordinate)
+  const edgeClass = axis === 'x' ? 'top-0.5' : 'left-0.5'
+  const transform = axis === 'x' ? `translateX(${screen.x + 2}px)` : `translateY(${screen.y + 2}px)`
+
+  return (
+    <span
+      className={`absolute ${edgeClass} rounded bg-gray-50/80 px-0.5 text-[10px] leading-none text-gray-500 pointer-events-none`}
+      style={{ transform }}
+    >
+      {coordinate}
+    </span>
+  )
 }
 
 const DRAG_THRESHOLD_PX = 4
@@ -76,6 +100,8 @@ export default function Grid({ liveCells, onToggleCell }: GridProps) {
     }
     return result
   }, [visibleRange])
+
+  const majorGridlines = useMemo(() => computeMajorGridlines(visibleRange), [visibleRange])
 
   function handlePointerDown(e: React.PointerEvent) {
     e.currentTarget.setPointerCapture(e.pointerId)
@@ -161,10 +187,19 @@ export default function Grid({ liveCells, onToggleCell }: GridProps) {
             }}
             className={`absolute top-0 left-0 border border-gray-200 transition-colors ${
               isAlive ? 'bg-gray-900 hover:bg-gray-700' : 'bg-white hover:bg-gray-100'
-            }`}
+            } ${isMajorGridline(x) ? 'border-l-2 border-l-gray-400' : ''} ${isMajorGridline(y) ? 'border-t-2 border-t-gray-400' : ''}`}
           />
         )
       })}
+
+      {/* Coordinate ruler: labels every 10th gridline. pointer-events-none keeps
+          these from interfering with cell clicks/dragging underneath. */}
+      {majorGridlines.x.map((x) => (
+        <RulerLabel key={`x-${x}`} axis="x" coordinate={x} camera={camera} />
+      ))}
+      {majorGridlines.y.map((y) => (
+        <RulerLabel key={`y-${y}`} axis="y" coordinate={y} camera={camera} />
+      ))}
 
       {/* stopPropagation keeps toolbar clicks from reaching the grid's pan/toggle
           handlers below, which would otherwise capture the pointer and either
