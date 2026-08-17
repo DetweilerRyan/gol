@@ -71,25 +71,29 @@ describeFeature(feature, ({ Scenario, ScenarioOutline }) => {
     })
   })
 
-  Scenario('A horizontal blinker becomes vertical after one generation', ({ Given, When, Then }) => {
+  ScenarioOutline('A horizontal blinker becomes vertical after one generation', ({ Given, When, Then }, variables) => {
     let cells: LiveCells
+    let centerX: number
+    let centerY: number
 
-    Given('a horizontal blinker centered at (1, 1)', () => {
+    Given('a horizontal blinker centered at (<x>, <y>)', () => {
+      centerX = Number(variables.x)
+      centerY = Number(variables.y)
       cells = makeLiveCells([
-        [0, 1],
-        [1, 1],
-        [2, 1],
+        [centerX - 1, centerY],
+        [centerX, centerY],
+        [centerX + 1, centerY],
       ])
     })
     When('the next generation is computed', () => {
       cells = getNextGeneration(cells)
     })
     Then('the blinker should be vertical', () => {
-      expect(isCellAlive(cells, 1, 0)).toBe(true)
-      expect(isCellAlive(cells, 1, 1)).toBe(true)
-      expect(isCellAlive(cells, 1, 2)).toBe(true)
-      expect(isCellAlive(cells, 0, 1)).toBe(false)
-      expect(isCellAlive(cells, 2, 1)).toBe(false)
+      expect(isCellAlive(cells, centerX, centerY - 1)).toBe(true)
+      expect(isCellAlive(cells, centerX, centerY)).toBe(true)
+      expect(isCellAlive(cells, centerX, centerY + 1)).toBe(true)
+      expect(isCellAlive(cells, centerX - 1, centerY)).toBe(false)
+      expect(isCellAlive(cells, centerX + 1, centerY)).toBe(false)
     })
   })
 

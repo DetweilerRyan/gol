@@ -30,10 +30,14 @@ Feature: Cell life and death
       | dead  | 3         | alive      |
       | dead  | 4         | dead       |
 
-  Scenario: A horizontal blinker becomes vertical after one generation
-    Given a horizontal blinker centered at (1, 1)
+  Scenario Outline: A horizontal blinker becomes vertical after one generation
+    Given a horizontal blinker centered at (<x>, <y>)
     When the next generation is computed
     Then the blinker should be vertical
+
+    Examples:
+      | x | y |
+      | 1 | 1 |
 
   Scenario: A vertical blinker becomes horizontal after one generation
     Given a vertical blinker centered at (1, 1)
