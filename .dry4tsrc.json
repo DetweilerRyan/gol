@@ -1,0 +1,8 @@
+{
+  "threshold": 0.82,
+  "minLines": 4,
+  "minNodes": 20,
+  "format": "text",
+  "ignorePatterns": ["**/*.d.ts"],
+  "failOnFound": false
+}
