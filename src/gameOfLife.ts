@@ -33,9 +33,8 @@ const NEIGHBOR_OFFSETS: ReadonlyArray<readonly [number, number]> = [
   [1, -1], [1, 0], [1, 1],
 ]
 
-export function getNextGeneration(liveCells: LiveCells): LiveCells {
+function countNeighbors(liveCells: LiveCells): Map<CellKey, number> {
   const neighborCounts = new Map<CellKey, number>()
-
   for (const key of liveCells) {
     const [x, y] = parseCellKey(key)
     for (const [dx, dy] of NEIGHBOR_OFFSETS) {
@@ -43,11 +42,22 @@ export function getNextGeneration(liveCells: LiveCells): LiveCells {
       neighborCounts.set(neighborKey, (neighborCounts.get(neighborKey) ?? 0) + 1)
     }
   }
+  return neighborCounts
+}
+
+function willSurvive(isAlive: boolean, liveNeighborCount: number): boolean {
+  if (isAlive) {
+    return liveNeighborCount === 2 || liveNeighborCount === 3
+  }
+  return liveNeighborCount === 3
+}
+
+export function getNextGeneration(liveCells: LiveCells): LiveCells {
+  const neighborCounts = countNeighbors(liveCells)
 
   const next: LiveCells = new Set()
   for (const [key, count] of neighborCounts) {
-    const isAlive = liveCells.has(key)
-    if (isAlive ? count === 2 || count === 3 : count === 3) {
+    if (willSurvive(liveCells.has(key), count)) {
       next.add(key)
     }
   }

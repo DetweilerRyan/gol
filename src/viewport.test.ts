@@ -1,12 +1,15 @@
 import { describe, expect, it } from 'vitest'
 import {
+  centeredCamera,
   clampCellSize,
   computeVisibleRange,
   DEFAULT_CELL_SIZE,
   MAX_CELL_SIZE,
   MIN_CELL_SIZE,
+  panCamera,
   screenToWorld,
   worldToScreen,
+  zoomCameraAtPoint,
   type Camera,
 } from './viewport'
 
@@ -87,5 +90,56 @@ describe('computeVisibleRange', () => {
     const range = computeVisibleRange(panned, 200, 100)
     expect(range.minX).toBe(Math.floor(4.7) - 2)
     expect(range.minY).toBe(Math.floor(-3.2) - 2)
+  })
+})
+
+describe('panCamera', () => {
+  it('moves the offset opposite the drag direction, scaled by cellSize', () => {
+    const next = panCamera(camera, 20, 40)
+    expect(next.offsetX).toBeCloseTo(-1)
+    expect(next.offsetY).toBeCloseTo(-2)
+  })
+
+  it('preserves cellSize', () => {
+    const zoomed: Camera = { offsetX: 0, offsetY: 0, cellSize: 40 }
+    expect(panCamera(zoomed, 40, 0).cellSize).toBe(40)
+  })
+})
+
+describe('zoomCameraAtPoint', () => {
+  it('keeps the world point under the cursor fixed on screen', () => {
+    const pixelX = 100
+    const pixelY = 50
+    const next = zoomCameraAtPoint(camera, pixelX, pixelY, 2)
+    expect(next.cellSize).toBe(DEFAULT_CELL_SIZE * 2)
+    const screenAfter = worldToScreen(next, 5, 2.5)
+    expect(screenAfter.x).toBeCloseTo(pixelX)
+    expect(screenAfter.y).toBeCloseTo(pixelY)
+  })
+
+  it('clamps to MAX_CELL_SIZE and returns the same camera reference once clamped', () => {
+    const clamped = zoomCameraAtPoint(camera, 0, 0, 1000)
+    expect(clamped.cellSize).toBe(MAX_CELL_SIZE)
+
+    const noop = zoomCameraAtPoint(clamped, 0, 0, 1000)
+    expect(noop).toBe(clamped)
+  })
+
+  it('clamps to MIN_CELL_SIZE and returns the same camera reference once clamped', () => {
+    const clamped = zoomCameraAtPoint(camera, 0, 0, 0.001)
+    expect(clamped.cellSize).toBe(MIN_CELL_SIZE)
+
+    const noop = zoomCameraAtPoint(clamped, 0, 0, 0.001)
+    expect(noop).toBe(clamped)
+  })
+})
+
+describe('centeredCamera', () => {
+  it('resets to the default zoom, centered on the given viewport size', () => {
+    expect(centeredCamera(800, 600)).toEqual({
+      cellSize: DEFAULT_CELL_SIZE,
+      offsetX: -800 / 2 / DEFAULT_CELL_SIZE,
+      offsetY: -600 / 2 / DEFAULT_CELL_SIZE,
+    })
   })
 })

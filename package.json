@@ -8,7 +8,9 @@
     "build": "tsc -b && vite build",
     "lint": "oxlint",
     "preview": "vite preview",
-    "test": "vitest run"
+    "test": "vitest run",
+    "test:coverage": "vitest run --coverage",
+    "crap": "crap4ts"
   },
   "dependencies": {
     "@tailwindcss/vite": "^4.3.3",
@@ -24,6 +26,8 @@
     "@types/react": "^19.2.17",
     "@types/react-dom": "^19.2.3",
     "@vitejs/plugin-react": "^6.0.4",
+    "@vitest/coverage-v8": "^4.1.10",
+    "crap4ts": "^1.0.1",
     "jsdom": "^30.0.1",
     "oxlint": "^1.75.0",
     "typescript": "~6.0.2",
