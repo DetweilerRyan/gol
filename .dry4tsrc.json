@@ -4,5 +4,5 @@
   "minNodes": 20,
   "format": "text",
   "ignorePatterns": ["**/*.d.ts"],
-  "failOnFound": false
+  "failOnFound": true
 }

@@ -29,25 +29,18 @@ describe('useCamera', () => {
     expect(screenAfter.y).toBeCloseTo(pixelY)
   })
 
-  it('zoomAtPoint clamps cellSize to MAX_CELL_SIZE and stops changing state once clamped', () => {
+  it.each([
+    ['MAX_CELL_SIZE', 1000, MAX_CELL_SIZE],
+    ['MIN_CELL_SIZE', 0.001, MIN_CELL_SIZE],
+  ])('zoomAtPoint clamps cellSize to %s and stops changing state once clamped', (_label, factor, expectedCellSize) => {
     const { result } = renderHook(() => useCamera())
-    act(() => result.current.zoomAtPoint(0, 0, 1000))
-    expect(result.current.camera.cellSize).toBe(MAX_CELL_SIZE)
+    act(() => result.current.zoomAtPoint(0, 0, factor))
+    expect(result.current.camera.cellSize).toBe(expectedCellSize)
 
     const clampedCamera = result.current.camera
-    act(() => result.current.zoomAtPoint(0, 0, 1000))
+    act(() => result.current.zoomAtPoint(0, 0, factor))
     // Already clamped: zoomAtPoint should bail out and return the same object,
     // not drift the offset from repeated no-op zoom attempts.
-    expect(result.current.camera).toBe(clampedCamera)
-  })
-
-  it('zoomAtPoint clamps cellSize to MIN_CELL_SIZE and stops changing state once clamped', () => {
-    const { result } = renderHook(() => useCamera())
-    act(() => result.current.zoomAtPoint(0, 0, 0.001))
-    expect(result.current.camera.cellSize).toBe(MIN_CELL_SIZE)
-
-    const clampedCamera = result.current.camera
-    act(() => result.current.zoomAtPoint(0, 0, 0.001))
     expect(result.current.camera).toBe(clampedCamera)
   })
 
