@@ -171,7 +171,7 @@ export default function Grid({ liveCells, onToggleCell }: GridProps) {
       onPointerMove={handlePointerMove}
       onPointerUp={handlePointerUp}
       onPointerCancel={handlePointerCancel}
-      className={`relative h-[32rem] w-full max-w-3xl touch-none overflow-hidden border border-gray-300 bg-gray-100 ${
+      className={`relative h-full w-full touch-none overflow-hidden bg-gray-100 ${
         isPanning ? 'cursor-grabbing' : 'cursor-grab'
       }`}
     >

@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { useImmer } from 'use-immer'
 import Grid from './components/Grid'
 import { createEmptyLiveCells, getNextGeneration, type LiveCells, toggleCell as toggleCellInPlace } from './gameOfLife'
@@ -18,21 +18,41 @@ function App() {
     setGeneration((gen) => gen + 1)
   }
 
-  return (
-    <div className="flex min-h-screen flex-col items-center gap-6 bg-gray-50 py-10">
-      <h1 className="text-3xl font-semibold text-gray-900">Conway's Game of Life</h1>
+  // The grid covers virtually the whole window, so any click focuses a cell
+  // button -- a global shortcut can't skip all button targets or it would
+  // never fire in normal use. Only the Next Generation button itself needs to
+  // be excluded, since it already activates on Enter natively; without this
+  // exclusion, focusing it and pressing Enter would advance the generation
+  // twice (once from its own click handler, once from this listener).
+  useEffect(() => {
+    function handleKeyDown(e: KeyboardEvent) {
+      if (e.key !== 'Enter') return
+      if (e.target instanceof HTMLElement && e.target.id === 'next-generation-button') return
+      handleNextGeneration()
+    }
 
+    window.addEventListener('keydown', handleKeyDown)
+    return () => window.removeEventListener('keydown', handleKeyDown)
+  }, [handleNextGeneration])
+
+  return (
+    <div className="relative h-dvh w-full overflow-hidden bg-gray-50">
       <Grid liveCells={liveCells} onToggleCell={toggleCell} />
 
-      <div className="flex items-center gap-4">
-        <button
-          type="button"
-          onClick={handleNextGeneration}
-          className="rounded bg-gray-900 px-4 py-2 font-medium text-white transition-colors hover:bg-gray-700"
-        >
-          Next Generation
-        </button>
-        <span className="font-medium text-gray-700">Generation: {generation}</span>
+      <div className="absolute top-4 left-4 flex flex-col gap-3 rounded-lg bg-gray-900 p-4 text-white shadow-lg">
+        <h1 className="text-xl font-semibold">Conway's Game of Life</h1>
+
+        <div className="flex items-center gap-3">
+          <button
+            id="next-generation-button"
+            type="button"
+            onClick={handleNextGeneration}
+            className="rounded bg-white px-4 py-2 font-medium text-gray-900 transition-colors hover:bg-gray-200"
+          >
+            Next Generation
+          </button>
+          <span className="font-medium">Generation: {generation}</span>
+        </div>
       </div>
     </div>
   )
