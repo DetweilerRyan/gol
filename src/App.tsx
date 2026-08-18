@@ -1,12 +1,7 @@
 import { useState } from 'react'
 import { useImmer } from 'use-immer'
 import Grid from './components/Grid'
-import {
-  createEmptyLiveCells,
-  getNextGeneration,
-  type LiveCells,
-  toggleCell as toggleCellInPlace,
-} from './gameOfLife'
+import { createEmptyLiveCells, getNextGeneration, type LiveCells, toggleCell as toggleCellInPlace } from './gameOfLife'
 
 function App() {
   const [liveCells, updateLiveCells] = useImmer<LiveCells>(() => createEmptyLiveCells())
@@ -24,7 +19,7 @@ function App() {
   }
 
   return (
-    <div className="min-h-screen flex flex-col items-center gap-6 py-10 bg-gray-50">
+    <div className="flex min-h-screen flex-col items-center gap-6 bg-gray-50 py-10">
       <h1 className="text-3xl font-semibold text-gray-900">Conway's Game of Life</h1>
 
       <Grid liveCells={liveCells} onToggleCell={toggleCell} />
@@ -33,11 +28,11 @@ function App() {
         <button
           type="button"
           onClick={handleNextGeneration}
-          className="px-4 py-2 rounded bg-gray-900 text-white font-medium hover:bg-gray-700 transition-colors"
+          className="rounded bg-gray-900 px-4 py-2 font-medium text-white transition-colors hover:bg-gray-700"
         >
           Next Generation
         </button>
-        <span className="text-gray-700 font-medium">Generation: {generation}</span>
+        <span className="font-medium text-gray-700">Generation: {generation}</span>
       </div>
     </div>
   )

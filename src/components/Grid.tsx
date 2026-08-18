@@ -33,7 +33,7 @@ function RulerLabel({ axis, coordinate, camera }: RulerLabelProps) {
 
   return (
     <span
-      className={`absolute ${edgeClass} rounded bg-gray-50/80 px-0.5 text-[10px] leading-none text-gray-500 pointer-events-none`}
+      className={`absolute ${edgeClass} pointer-events-none rounded bg-gray-50/80 px-0.5 text-[10px] leading-none text-gray-500`}
       style={{ transform }}
     >
       {coordinate}
@@ -177,7 +177,7 @@ export default function Grid({ liveCells, onToggleCell }: GridProps) {
       onPointerMove={handlePointerMove}
       onPointerUp={handlePointerUp}
       onPointerCancel={handlePointerCancel}
-      className={`relative w-full max-w-3xl h-[32rem] overflow-hidden touch-none border border-gray-300 bg-gray-100 ${
+      className={`relative h-[32rem] w-full max-w-3xl touch-none overflow-hidden border border-gray-300 bg-gray-100 ${
         isPanning ? 'cursor-grabbing' : 'cursor-grab'
       }`}
     >
@@ -215,7 +215,7 @@ export default function Grid({ liveCells, onToggleCell }: GridProps) {
       {/* Bottom-right, not top-left, so it never overlaps the coordinate
           ruler labels above, which can appear anywhere along the top/left
           edges depending on pan position. */}
-      <span className="absolute bottom-2 right-2 rounded bg-gray-50/80 px-1.5 py-1 text-xs font-medium text-gray-600 pointer-events-none">
+      <span className="pointer-events-none absolute right-2 bottom-2 rounded bg-gray-50/80 px-1.5 py-1 text-xs font-medium text-gray-600">
         {zoomPercentage(camera)}%
       </span>
 
@@ -227,7 +227,7 @@ export default function Grid({ liveCells, onToggleCell }: GridProps) {
           type="button"
           aria-label="Zoom in"
           onClick={() => zoomAtPoint(containerSize.width / 2, containerSize.height / 2, ZOOM_FACTOR)}
-          className="h-8 w-8 rounded bg-gray-900 text-white font-medium hover:bg-gray-700 transition-colors"
+          className="h-8 w-8 rounded bg-gray-900 font-medium text-white transition-colors hover:bg-gray-700"
         >
           +
         </button>
@@ -235,7 +235,7 @@ export default function Grid({ liveCells, onToggleCell }: GridProps) {
           type="button"
           aria-label="Zoom out"
           onClick={() => zoomAtPoint(containerSize.width / 2, containerSize.height / 2, 1 / ZOOM_FACTOR)}
-          className="h-8 w-8 rounded bg-gray-900 text-white font-medium hover:bg-gray-700 transition-colors"
+          className="h-8 w-8 rounded bg-gray-900 font-medium text-white transition-colors hover:bg-gray-700"
         >
           −
         </button>
@@ -243,7 +243,7 @@ export default function Grid({ liveCells, onToggleCell }: GridProps) {
           type="button"
           aria-label="Reset view"
           onClick={() => centerView(containerSize.width, containerSize.height)}
-          className="h-8 px-2 rounded bg-gray-900 text-white text-sm font-medium hover:bg-gray-700 transition-colors"
+          className="h-8 rounded bg-gray-900 px-2 text-sm font-medium text-white transition-colors hover:bg-gray-700"
         >
           Reset
         </button>

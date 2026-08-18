@@ -28,9 +28,14 @@ export function toggleCell(draft: LiveCells, x: number, y: number): void {
 }
 
 const NEIGHBOR_OFFSETS: ReadonlyArray<readonly [number, number]> = [
-  [-1, -1], [-1, 0], [-1, 1],
-  [0, -1], [0, 1],
-  [1, -1], [1, 0], [1, 1],
+  [-1, -1],
+  [-1, 0],
+  [-1, 1],
+  [0, -1],
+  [0, 1],
+  [1, -1],
+  [1, 0],
+  [1, 1],
 ]
 
 function countNeighbors(liveCells: LiveCells): Map<CellKey, number> {

@@ -42,7 +42,9 @@ function formatLocation(location) {
 }
 
 function printReport(report) {
-  console.log(`Gherkin DRY check -- ${report.summary.step_occurrences} step occurrences, ${report.summary.unique_steps} unique, ${report.findings.length} findings\n`)
+  console.log(
+    `Gherkin DRY check -- ${report.summary.step_occurrences} step occurrences, ${report.summary.unique_steps} unique, ${report.findings.length} findings\n`,
+  )
 
   if (report.findings.length === 0) {
     console.log('No findings.')

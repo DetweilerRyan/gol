@@ -1,5 +1,13 @@
 import { useCallback, useState } from 'react'
-import { applyWheelInput, centeredCamera, panCamera, zoomCameraAtPoint, DEFAULT_CELL_SIZE, type Camera, type WheelInput } from '../viewport'
+import {
+  applyWheelInput,
+  centeredCamera,
+  panCamera,
+  zoomCameraAtPoint,
+  DEFAULT_CELL_SIZE,
+  type Camera,
+  type WheelInput,
+} from '../viewport'
 
 export function useCamera() {
   const [camera, setCamera] = useState<Camera>({

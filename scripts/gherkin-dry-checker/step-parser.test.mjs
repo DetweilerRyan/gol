@@ -28,16 +28,46 @@ describe('parseSteps', () => {
   it('extracts background steps with a null scenario index/name', () => {
     const steps = parseSteps(SAMPLE)
     const background = steps.filter((s) => s.section === 'background')
-    expect(background).toEqual([{ section: 'background', scenarioIndex: null, scenarioName: null, stepIndex: 0, keyword: 'Given', text: 'a shared setup' }])
+    expect(background).toEqual([
+      {
+        section: 'background',
+        scenarioIndex: null,
+        scenarioName: null,
+        stepIndex: 0,
+        keyword: 'Given',
+        text: 'a shared setup',
+      },
+    ])
   })
 
   it('extracts scenario steps with correct 0-based scenario and step indexes', () => {
     const steps = parseSteps(SAMPLE)
     const first = steps.filter((s) => s.scenarioName === 'First')
     expect(first).toEqual([
-      { section: 'scenario', scenarioIndex: 0, scenarioName: 'First', stepIndex: 0, keyword: 'Given', text: 'a precondition' },
-      { section: 'scenario', scenarioIndex: 0, scenarioName: 'First', stepIndex: 1, keyword: 'When', text: 'an action happens' },
-      { section: 'scenario', scenarioIndex: 0, scenarioName: 'First', stepIndex: 2, keyword: 'Then', text: 'a result occurs' },
+      {
+        section: 'scenario',
+        scenarioIndex: 0,
+        scenarioName: 'First',
+        stepIndex: 0,
+        keyword: 'Given',
+        text: 'a precondition',
+      },
+      {
+        section: 'scenario',
+        scenarioIndex: 0,
+        scenarioName: 'First',
+        stepIndex: 1,
+        keyword: 'When',
+        text: 'an action happens',
+      },
+      {
+        section: 'scenario',
+        scenarioIndex: 0,
+        scenarioName: 'First',
+        stepIndex: 2,
+        keyword: 'Then',
+        text: 'a result occurs',
+      },
     ])
   })
 

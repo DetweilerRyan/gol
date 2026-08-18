@@ -1,6 +1,13 @@
 import { describeFeature, loadFeature } from '@amiceli/vitest-cucumber'
 import { expect } from 'vitest'
-import { cellKey, createEmptyLiveCells, getNextGeneration, isCellAlive, toggleCell, type LiveCells } from '../src/gameOfLife'
+import {
+  cellKey,
+  createEmptyLiveCells,
+  getNextGeneration,
+  isCellAlive,
+  toggleCell,
+  type LiveCells,
+} from '../src/gameOfLife'
 
 // ACCEPTANCE_MUTATION_FEATURE_FILE lets the acceptance-mutation runner point
 // this suite at a mutated copy of the feature file (see
@@ -32,29 +39,32 @@ describeFeature(feature, ({ Scenario, ScenarioOutline }) => {
     })
   })
 
-  ScenarioOutline('A pattern evolves identically no matter where it sits on the grid', ({ Given, When, Then }, variables) => {
-    let cells: LiveCells
-    let centerX: number
-    let centerY: number
+  ScenarioOutline(
+    'A pattern evolves identically no matter where it sits on the grid',
+    ({ Given, When, Then }, variables) => {
+      let cells: LiveCells
+      let centerX: number
+      let centerY: number
 
-    Given('a horizontal blinker centered at (<x>, <y>)', () => {
-      centerX = Number(variables.x)
-      centerY = Number(variables.y)
-      cells = makeLiveCells([
-        [centerX - 1, centerY],
-        [centerX, centerY],
-        [centerX + 1, centerY],
-      ])
-    })
-    When('the next generation is computed', () => {
-      cells = getNextGeneration(cells)
-    })
-    Then('the blinker should be vertical', () => {
-      expect(isCellAlive(cells, centerX, centerY - 1)).toBe(true)
-      expect(isCellAlive(cells, centerX, centerY)).toBe(true)
-      expect(isCellAlive(cells, centerX, centerY + 1)).toBe(true)
-      expect(isCellAlive(cells, centerX - 1, centerY)).toBe(false)
-      expect(isCellAlive(cells, centerX + 1, centerY)).toBe(false)
-    })
-  })
+      Given('a horizontal blinker centered at (<x>, <y>)', () => {
+        centerX = Number(variables.x)
+        centerY = Number(variables.y)
+        cells = makeLiveCells([
+          [centerX - 1, centerY],
+          [centerX, centerY],
+          [centerX + 1, centerY],
+        ])
+      })
+      When('the next generation is computed', () => {
+        cells = getNextGeneration(cells)
+      })
+      Then('the blinker should be vertical', () => {
+        expect(isCellAlive(cells, centerX, centerY - 1)).toBe(true)
+        expect(isCellAlive(cells, centerX, centerY)).toBe(true)
+        expect(isCellAlive(cells, centerX, centerY + 1)).toBe(true)
+        expect(isCellAlive(cells, centerX - 1, centerY)).toBe(false)
+        expect(isCellAlive(cells, centerX + 1, centerY)).toBe(false)
+      })
+    },
+  )
 })

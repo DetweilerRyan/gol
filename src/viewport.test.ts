@@ -191,7 +191,7 @@ describe('computeMajorGridlines', () => {
     })
   })
 
-  it('finds the gridline at exactly 0 for the default camera\'s visible range, not -0', () => {
+  it("finds the gridline at exactly 0 for the default camera's visible range, not -0", () => {
     // computeVisibleRange's own test above produces exactly this range for the
     // default camera. Math.ceil(-2 / 10) is -0, not 0 -- toEqual distinguishes
     // them (Object.is semantics), so this specifically guards that regression.

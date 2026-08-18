@@ -99,6 +99,6 @@ describe('against the real feature files', () => {
     const mutated = applyMutation(original, cell, 'MUTATED')
     expect(mutated).not.toBe(original)
     expect(mutated.split('\n')).toHaveLength(original.split('\n').length)
-    expect(mutated).toContain('Scenario Outline: A cell\'s fate depends on its live neighbor count')
+    expect(mutated).toContain("Scenario Outline: A cell's fate depends on its live neighbor count")
   })
 })

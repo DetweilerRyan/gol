@@ -77,14 +77,17 @@ describeFeature(feature, ({ Scenario, ScenarioOutline }) => {
     },
   )
 
-  ScenarioOutline('The zoom percentage reflects the current cell size relative to the default', ({ Given, Then }, variables) => {
-    let camera: Camera
+  ScenarioOutline(
+    'The zoom percentage reflects the current cell size relative to the default',
+    ({ Given, Then }, variables) => {
+      let camera: Camera
 
-    Given('a camera with cell size <cell size>', () => {
-      camera = { offsetX: 0, offsetY: 0, cellSize: Number(variables['cell size']) }
-    })
-    Then('the zoom percentage should be <expected percentage>', () => {
-      expect(zoomPercentage(camera)).toBe(Number(variables['expected percentage']))
-    })
-  })
+      Given('a camera with cell size <cell size>', () => {
+        camera = { offsetX: 0, offsetY: 0, cellSize: Number(variables['cell size']) }
+      })
+      Then('the zoom percentage should be <expected percentage>', () => {
+        expect(zoomPercentage(camera)).toBe(Number(variables['expected percentage']))
+      })
+    },
+  )
 })

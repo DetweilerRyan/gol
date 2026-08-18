@@ -25,28 +25,31 @@ describeFeature(feature, ({ ScenarioOutline }) => {
     })
   })
 
-  ScenarioOutline('The major gridlines within a viewport are the multiples of 10 in range', ({ Given, When, Then, And }, variables) => {
-    let range: VisibleRange
-    let gridlines: MajorGridlines
+  ScenarioOutline(
+    'The major gridlines within a viewport are the multiples of 10 in range',
+    ({ Given, When, Then, And }, variables) => {
+      let range: VisibleRange
+      let gridlines: MajorGridlines
 
-    Given('a visible range from x <minX> to <maxX> and y <minY> to <maxY>', () => {
-      range = {
-        minX: Number(variables.minX),
-        maxX: Number(variables.maxX),
-        minY: Number(variables.minY),
-        maxY: Number(variables.maxY),
-      }
-    })
-    When('the major gridlines are computed', () => {
-      gridlines = computeMajorGridlines(range)
-    })
-    Then('the major x gridlines should be <x gridlines>', () => {
-      expect(gridlines.x).toEqual(parseNumberList(variables['x gridlines']))
-    })
-    And('the major y gridlines should be <y gridlines>', () => {
-      expect(gridlines.y).toEqual(parseNumberList(variables['y gridlines']))
-    })
-  })
+      Given('a visible range from x <minX> to <maxX> and y <minY> to <maxY>', () => {
+        range = {
+          minX: Number(variables.minX),
+          maxX: Number(variables.maxX),
+          minY: Number(variables.minY),
+          maxY: Number(variables.maxY),
+        }
+      })
+      When('the major gridlines are computed', () => {
+        gridlines = computeMajorGridlines(range)
+      })
+      Then('the major x gridlines should be <x gridlines>', () => {
+        expect(gridlines.x).toEqual(parseNumberList(variables['x gridlines']))
+      })
+      And('the major y gridlines should be <y gridlines>', () => {
+        expect(gridlines.y).toEqual(parseNumberList(variables['y gridlines']))
+      })
+    },
+  )
 })
 
 function parseNumberList(commaSeparated: string): number[] {

@@ -1,6 +1,13 @@
 import { describeFeature, loadFeature } from '@amiceli/vitest-cucumber'
 import { expect } from 'vitest'
-import { cellKey, createEmptyLiveCells, getNextGeneration, isCellAlive, toggleCell, type LiveCells } from '../src/gameOfLife'
+import {
+  cellKey,
+  createEmptyLiveCells,
+  getNextGeneration,
+  isCellAlive,
+  toggleCell,
+  type LiveCells,
+} from '../src/gameOfLife'
 
 // ACCEPTANCE_MUTATION_FEATURE_FILE lets the acceptance-mutation runner point
 // this suite at a mutated copy of the feature file (see
@@ -8,9 +15,14 @@ import { cellKey, createEmptyLiveCells, getNextGeneration, isCellAlive, toggleCe
 const feature = await loadFeature(process.env.ACCEPTANCE_MUTATION_FEATURE_FILE ?? './cell-life-and-death.feature')
 
 const NEIGHBOR_OFFSETS: ReadonlyArray<readonly [number, number]> = [
-  [-1, -1], [-1, 0], [-1, 1],
-  [0, -1], [0, 1],
-  [1, -1], [1, 0], [1, 1],
+  [-1, -1],
+  [-1, 0],
+  [-1, 1],
+  [0, -1],
+  [0, 1],
+  [1, -1],
+  [1, 0],
+  [1, 1],
 ]
 
 function makeLiveCells(coords: readonly (readonly [number, number])[]): LiveCells {

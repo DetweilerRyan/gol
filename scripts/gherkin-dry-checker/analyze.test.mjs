@@ -16,7 +16,10 @@ function step(overrides) {
 
 describe('analyzeSteps', () => {
   it('reports no findings for a corpus with no repetition or similarity', () => {
-    const report = analyzeSteps([step({ text: 'a completely unique setup' }), step({ text: 'a totally different assertion', keyword: 'Then', stepIndex: 1 })])
+    const report = analyzeSteps([
+      step({ text: 'a completely unique setup' }),
+      step({ text: 'a totally different assertion', keyword: 'Then', stepIndex: 1 }),
+    ])
     expect(report.findings).toEqual([])
     expect(report.summary).toEqual({ step_occurrences: 2, unique_steps: 2, findings: 0 })
   })
@@ -45,7 +48,10 @@ describe('analyzeSteps', () => {
   })
 
   it('flags identical step text reused across different feature files as exact-duplicate', () => {
-    const report = analyzeSteps([step({ text: 'an empty grid', feature: 'a.feature' }), step({ text: 'an empty grid', feature: 'b.feature', scenarioIndex: 5 })])
+    const report = analyzeSteps([
+      step({ text: 'an empty grid', feature: 'a.feature' }),
+      step({ text: 'an empty grid', feature: 'b.feature', scenarioIndex: 5 }),
+    ])
     expect(report.findings.find((f) => f.kind === 'exact-duplicate')).toBeDefined()
   })
 
@@ -80,14 +86,20 @@ describe('analyzeSteps', () => {
   })
 
   it('flags moderately similar wording as possible-synonym with a score between 0.45 and 0.72', () => {
-    const report = analyzeSteps([step({ text: 'the cell should be alive', scenarioIndex: 0 }), step({ text: 'the cell should end up alive', scenarioIndex: 1 })])
+    const report = analyzeSteps([
+      step({ text: 'the cell should be alive', scenarioIndex: 0 }),
+      step({ text: 'the cell should end up alive', scenarioIndex: 1 }),
+    ])
     const finding = report.findings.find((f) => f.kind === 'possible-synonym' || f.kind === 'near-duplicate')
     expect(finding).toBeDefined()
     expect(finding.score).toBeGreaterThanOrEqual(0.45)
   })
 
   it('reports no similarity finding below the possible-synonym threshold', () => {
-    const report = analyzeSteps([step({ text: 'an empty grid', scenarioIndex: 0 }), step({ text: 'the camera resets to the default zoom', scenarioIndex: 1 })])
+    const report = analyzeSteps([
+      step({ text: 'an empty grid', scenarioIndex: 0 }),
+      step({ text: 'the camera resets to the default zoom', scenarioIndex: 1 }),
+    ])
     expect(report.findings.filter((f) => f.kind === 'near-duplicate' || f.kind === 'possible-synonym')).toEqual([])
   })
 

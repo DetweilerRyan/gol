@@ -44,7 +44,8 @@ function differentChar(rand, exclude) {
 function mutateString(value, rand) {
   if (value.length === 0) return randomChar(rand)
 
-  const strategies = value.length < 2 ? ['insert', 'delete', 'replace', 'case'] : ['insert', 'delete', 'replace', 'swap', 'case']
+  const strategies =
+    value.length < 2 ? ['insert', 'delete', 'replace', 'case'] : ['insert', 'delete', 'replace', 'swap', 'case']
   const strategy = strategies[Math.floor(rand() * strategies.length)]
   const i = Math.floor(rand() * value.length)
 
@@ -64,7 +65,9 @@ function mutateString(value, rand) {
     case 'case': {
       const ch = value[i]
       const swapped = ch === ch.toUpperCase() ? ch.toLowerCase() : ch.toUpperCase()
-      return swapped === ch ? value.slice(0, i) + randomChar(rand) + value.slice(i + 1) : value.slice(0, i) + swapped + value.slice(i + 1)
+      return swapped === ch
+        ? value.slice(0, i) + randomChar(rand) + value.slice(i + 1)
+        : value.slice(0, i) + swapped + value.slice(i + 1)
     }
   }
 }

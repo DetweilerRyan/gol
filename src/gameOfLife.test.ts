@@ -1,12 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import {
-  cellKey,
-  createEmptyLiveCells,
-  getNextGeneration,
-  isCellAlive,
-  toggleCell,
-  type LiveCells,
-} from './gameOfLife'
+import { cellKey, createEmptyLiveCells, getNextGeneration, isCellAlive, toggleCell, type LiveCells } from './gameOfLife'
 
 function makeLiveCells(coords: [number, number][]): LiveCells {
   return new Set(coords.map(([x, y]) => cellKey(x, y)))

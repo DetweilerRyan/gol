@@ -1,14 +1,7 @@
 import { it } from '@fast-check/vitest'
 import fc from 'fast-check'
 import { describe, expect } from 'vitest'
-import {
-  cellKey,
-  createEmptyLiveCells,
-  getNextGeneration,
-  isCellAlive,
-  toggleCell,
-  type LiveCells,
-} from './gameOfLife'
+import { cellKey, createEmptyLiveCells, getNextGeneration, isCellAlive, toggleCell, type LiveCells } from './gameOfLife'
 
 // Bounded coordinate/pattern generators keep the brute-force reference
 // implementation below cheap while still exercising negative coordinates,

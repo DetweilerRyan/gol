@@ -48,7 +48,14 @@ export function parseSteps(featureText) {
     const match = line.match(STEP)
     if (match && section) {
       const [, keyword, text] = match
-      steps.push({ section, scenarioIndex: section === 'background' ? null : scenarioIndex, scenarioName: section === 'background' ? null : scenarioName, stepIndex, keyword, text })
+      steps.push({
+        section,
+        scenarioIndex: section === 'background' ? null : scenarioIndex,
+        scenarioName: section === 'background' ? null : scenarioName,
+        stepIndex,
+        keyword,
+        text,
+      })
       stepIndex += 1
     }
   }
