@@ -16,7 +16,8 @@
     "dry": "dry4ts src",
     "acceptance-mutation": "node scripts/acceptance-mutation/run.mjs",
     "gherkin-dry": "node scripts/gherkin-dry-checker/run.mjs",
-    "test:mutation": "stryker run"
+    "test:mutation": "stryker run",
+    "test:e2e": "playwright test"
   },
   "dependencies": {
     "@tailwindcss/vite": "^4.3.3",
@@ -30,6 +31,7 @@
     "@amiceli/vitest-cucumber": "^7.0.0",
     "@babel/core": "^8.0.1",
     "@fast-check/vitest": "^0.4.1",
+    "@playwright/test": "^1.62.1",
     "@rolldown/plugin-babel": "^0.2.3",
     "@stryker-mutator/core": "^10.0.0",
     "@stryker-mutator/vitest-runner": "^10.0.0",
