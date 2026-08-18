@@ -63,6 +63,19 @@ Vitest excludes `**/*.e2e.spec.ts` (see `vite.config.ts`) so the two runners nev
 
 Both have their own `.test.mjs` unit tests runnable via `npx vitest run scripts/`.
 
+## Subagent pipeline
+
+`.claude/agents/` defines a four-role pipeline adapted from unclebob/swarm-forge's four-pack branch, scoped to this repo's actual commands (Gherkin features, `crap4ts`, `dry4ts`, Stryker, `acceptance-mutation`) rather than swarm-forge's tmux/worktree orchestration. Each role's full instructions and boundaries live in its own file — read the relevant one before invoking it rather than relying on this summary.
+
+Cycle order for a feature: **specifier → coder → refactorer → architect**, looping back to specifier for the next slice.
+
+1. `specifier` — drafts/revises `features/*.feature` scenarios; stops for explicit user approval before committing; never touches `src/`.
+2. `coder` — implements one approved slice via TDD; never runs the quality-gate tools.
+3. `refactorer` — structure-preserving cleanup only (CRAP/DRY/scoped mutation scan on touched files); no new functionality.
+4. `architect` — reviews module boundaries/dependency direction, then runs the full verification sequence (`test:mutation` → `dry4ts` → `acceptance-mutation`) as the final gate.
+
+There's no daemon or persistent process wiring these together — the orchestrating session invokes each role in turn via the `Agent` tool and sequences the handoffs itself.
+
 ## Conventions
 
 - No semicolons, single quotes, 120-char print width (Prettier; `prettier-plugin-tailwindcss` sorts class strings — don't hand-order Tailwind classes).
