@@ -1,4 +1,4 @@
-import { useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react'
+import { useEffect, useLayoutEffect, useRef, useState } from 'react'
 import { cellKey, isCellAlive, type LiveCells } from '../gameOfLife'
 import { useCamera } from '../hooks/useCamera'
 import {
@@ -97,22 +97,16 @@ export default function Grid({ liveCells, onToggleCell }: GridProps) {
     return () => el.removeEventListener('wheel', handleWheel)
   }, [applyWheel])
 
-  const visibleRange = useMemo(
-    () => computeVisibleRange(camera, containerSize.width, containerSize.height),
-    [camera, containerSize],
-  )
+  const visibleRange = computeVisibleRange(camera, containerSize.width, containerSize.height)
 
-  const cells = useMemo(() => {
-    const result: { x: number; y: number }[] = []
-    for (let y = visibleRange.minY; y <= visibleRange.maxY; y++) {
-      for (let x = visibleRange.minX; x <= visibleRange.maxX; x++) {
-        result.push({ x, y })
-      }
+  const cells: { x: number; y: number }[] = []
+  for (let y = visibleRange.minY; y <= visibleRange.maxY; y++) {
+    for (let x = visibleRange.minX; x <= visibleRange.maxX; x++) {
+      cells.push({ x, y })
     }
-    return result
-  }, [visibleRange])
+  }
 
-  const majorGridlines = useMemo(() => computeMajorGridlines(visibleRange), [visibleRange])
+  const majorGridlines = computeMajorGridlines(visibleRange)
 
   function handlePointerDown(e: React.PointerEvent) {
     e.currentTarget.setPointerCapture(e.pointerId)

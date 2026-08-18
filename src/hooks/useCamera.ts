@@ -1,4 +1,4 @@
-import { useCallback, useState } from 'react'
+import { useState } from 'react'
 import {
   applyWheelInput,
   centeredCamera,
@@ -16,21 +16,21 @@ export function useCamera() {
     cellSize: DEFAULT_CELL_SIZE,
   })
 
-  const panByPixels = useCallback((dxPixels: number, dyPixels: number) => {
+  function panByPixels(dxPixels: number, dyPixels: number) {
     setCamera((prev) => panCamera(prev, dxPixels, dyPixels))
-  }, [])
+  }
 
-  const zoomAtPoint = useCallback((pixelX: number, pixelY: number, factor: number) => {
+  function zoomAtPoint(pixelX: number, pixelY: number, factor: number) {
     setCamera((prev) => zoomCameraAtPoint(prev, pixelX, pixelY, factor))
-  }, [])
+  }
 
-  const applyWheel = useCallback((input: WheelInput) => {
+  function applyWheel(input: WheelInput) {
     setCamera((prev) => applyWheelInput(prev, input))
-  }, [])
+  }
 
-  const centerView = useCallback((viewportWidthPx: number, viewportHeightPx: number) => {
+  function centerView(viewportWidthPx: number, viewportHeightPx: number) {
     setCamera(centeredCamera(viewportWidthPx, viewportHeightPx))
-  }, [])
+  }
 
   return { camera, panByPixels, zoomAtPoint, applyWheel, centerView }
 }
