@@ -1,5 +1,13 @@
 import { describe, expect, it } from 'vitest'
-import { cellKey, createEmptyLiveCells, getNextGeneration, isCellAlive, toggleCell, type LiveCells } from './gameOfLife'
+import {
+  cellKey,
+  computeContentBounds,
+  createEmptyLiveCells,
+  getNextGeneration,
+  isCellAlive,
+  toggleCell,
+  type LiveCells,
+} from './gameOfLife'
 
 function makeLiveCells(coords: [number, number][]): LiveCells {
   return new Set(coords.map(([x, y]) => cellKey(x, y)))
@@ -143,5 +151,25 @@ describe('getNextGeneration', () => {
         [0, 1],
       ]),
     )
+  })
+})
+
+describe('computeContentBounds', () => {
+  it('returns null for an empty grid', () => {
+    expect(computeContentBounds(createEmptyLiveCells())).toBeNull()
+  })
+
+  it('gives a single cell a full 1x1 footprint, not a zero-size point', () => {
+    const cells = makeLiveCells([[5, 5]])
+    expect(computeContentBounds(cells)).toEqual({ minX: 5, maxX: 6, minY: 5, maxY: 6 })
+  })
+
+  it('spans the furthest-apart live cells on each axis independently', () => {
+    const cells = makeLiveCells([
+      [-3, 10],
+      [7, -2],
+      [0, 0],
+    ])
+    expect(computeContentBounds(cells)).toEqual({ minX: -3, maxX: 8, minY: -2, maxY: 11 })
   })
 })

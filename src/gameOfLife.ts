@@ -68,3 +68,32 @@ export function getNextGeneration(liveCells: LiveCells): LiveCells {
   }
   return next
 }
+
+export interface ContentBounds {
+  minX: number
+  maxX: number
+  minY: number
+  maxY: number
+}
+
+// maxX/maxY are the highest live cell coordinate plus one, so a single live
+// cell yields a full 1x1 footprint (matching how it actually renders) rather
+// than a zero-size point.
+export function computeContentBounds(liveCells: LiveCells): ContentBounds | null {
+  if (liveCells.size === 0) return null
+
+  let minX = Infinity
+  let maxX = -Infinity
+  let minY = Infinity
+  let maxY = -Infinity
+
+  for (const key of liveCells) {
+    const [x, y] = parseCellKey(key)
+    minX = Math.min(minX, x)
+    maxX = Math.max(maxX, x)
+    minY = Math.min(minY, y)
+    maxY = Math.max(maxY, y)
+  }
+
+  return { minX, maxX: maxX + 1, minY, maxY: maxY + 1 }
+}

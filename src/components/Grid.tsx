@@ -1,8 +1,9 @@
 import { useEffect, useLayoutEffect, useRef, useState } from 'react'
-import { cellKey, isCellAlive, type LiveCells } from '../gameOfLife'
+import { cellKey, computeContentBounds, isCellAlive, type LiveCells } from '../gameOfLife'
 import { useCamera } from '../hooks/useCamera'
 import {
   computeMajorGridlines,
+  computeScrollbarMetrics,
   computeVisibleRange,
   isMajorGridline,
   screenToWorld,
@@ -10,6 +11,8 @@ import {
   zoomPercentage,
   ZOOM_FACTOR,
   type Camera,
+  type ScrollbarAxis,
+  type ScrollbarMetrics,
 } from '../viewport'
 
 interface GridProps {
@@ -41,6 +44,82 @@ function RulerLabel({ axis, coordinate, camera }: RulerLabelProps) {
   )
 }
 
+const MIN_THUMB_PX = 24
+
+interface ScrollbarProps {
+  axis: ScrollbarAxis
+  metrics: ScrollbarMetrics
+  trackLengthPx: number
+  onDrag: (axis: ScrollbarAxis, deltaTrackPx: number, thumbRatio: number) => void
+}
+
+interface ScrollbarDragState {
+  lastClientPos: number
+  thumbRatio: number
+}
+
+// The thumb's rendered size/position (thumbLengthPx/thumbPositionPx) is a
+// pure rendering concern, separate from the drag math in
+// panCameraByScrollbarDrag -- MIN_THUMB_PX keeps the thumb grabbable even
+// when the content is enormous relative to the viewport.
+function Scrollbar({ axis, metrics, trackLengthPx, onDrag }: ScrollbarProps) {
+  const dragStateRef = useRef<ScrollbarDragState | null>(null)
+
+  const thumbLengthPx = Math.min(trackLengthPx, Math.max(MIN_THUMB_PX, metrics.thumbRatio * trackLengthPx))
+  const thumbPositionPx = metrics.thumbOffsetRatio * (trackLengthPx - thumbLengthPx)
+
+  // thumbRatio is frozen at pointer-down and reused for the whole gesture --
+  // recomputing it mid-drag from live metrics would feed back on itself,
+  // since panning the camera changes the content's own pixel position.
+  function handlePointerDown(e: React.PointerEvent) {
+    e.currentTarget.setPointerCapture(e.pointerId)
+    dragStateRef.current = {
+      lastClientPos: axis === 'x' ? e.clientX : e.clientY,
+      thumbRatio: metrics.thumbRatio,
+    }
+  }
+
+  function handlePointerMove(e: React.PointerEvent) {
+    const drag = dragStateRef.current
+    if (!drag) return
+    const clientPos = axis === 'x' ? e.clientX : e.clientY
+    onDrag(axis, clientPos - drag.lastClientPos, drag.thumbRatio)
+    drag.lastClientPos = clientPos
+  }
+
+  function handlePointerUp(e: React.PointerEvent) {
+    if (e.currentTarget.hasPointerCapture(e.pointerId)) {
+      e.currentTarget.releasePointerCapture(e.pointerId)
+    }
+    dragStateRef.current = null
+  }
+
+  const trackClass =
+    axis === 'x' ? 'absolute inset-x-0 right-2.5 bottom-0 h-2.5' : 'absolute inset-y-0 bottom-2.5 right-0 w-2.5'
+  const thumbStyle: React.CSSProperties =
+    axis === 'x'
+      ? { width: thumbLengthPx, height: '100%', transform: `translateX(${thumbPositionPx}px)` }
+      : { height: thumbLengthPx, width: '100%', transform: `translateY(${thumbPositionPx}px)` }
+
+  // stopPropagation on the track keeps clicks/drags anywhere on the
+  // scrollbar (including empty track area -- no click-to-jump here, by
+  // design) from reaching the grid's own pan/toggle handlers underneath.
+  return (
+    <div className={`${trackClass} rounded bg-gray-200/60`} onPointerDown={(e) => e.stopPropagation()}>
+      <div
+        role="scrollbar"
+        aria-orientation={axis === 'x' ? 'horizontal' : 'vertical'}
+        onPointerDown={handlePointerDown}
+        onPointerMove={handlePointerMove}
+        onPointerUp={handlePointerUp}
+        onPointerCancel={handlePointerUp}
+        className="absolute top-0 left-0 touch-none rounded bg-gray-900/70 transition-colors hover:bg-gray-900"
+        style={thumbStyle}
+      />
+    </div>
+  )
+}
+
 const DRAG_THRESHOLD_PX = 4
 
 interface DragState {
@@ -55,7 +134,7 @@ export default function Grid({ liveCells, onToggleCell }: GridProps) {
   const [containerSize, setContainerSize] = useState({ width: 0, height: 0 })
   const hasCenteredRef = useRef(false)
 
-  const { camera, panByPixels, zoomAtPoint, applyWheel, centerView } = useCamera()
+  const { camera, panByPixels, zoomAtPoint, applyWheel, centerView, panByScrollbarDrag } = useCamera()
 
   const dragStateRef = useRef<DragState | null>(null)
   const didDragRef = useRef(false)
@@ -107,6 +186,9 @@ export default function Grid({ liveCells, onToggleCell }: GridProps) {
   }
 
   const majorGridlines = computeMajorGridlines(visibleRange)
+
+  const contentBounds = computeContentBounds(liveCells)
+  const scrollbarMetrics = computeScrollbarMetrics(camera, contentBounds, containerSize.width, containerSize.height)
 
   function handlePointerDown(e: React.PointerEvent) {
     e.currentTarget.setPointerCapture(e.pointerId)
@@ -208,10 +290,29 @@ export default function Grid({ liveCells, onToggleCell }: GridProps) {
 
       {/* Bottom-right, not top-left, so it never overlaps the coordinate
           ruler labels above, which can appear anywhere along the top/left
-          edges depending on pan position. */}
-      <span className="pointer-events-none absolute right-2 bottom-2 rounded bg-gray-50/80 px-1.5 py-1 text-xs font-medium text-gray-600">
+          edges depending on pan position. Nudged in from the corner (rather
+          than the plain right-2/bottom-2 it used before the scrollbars were
+          added) so it clears the new bottom/right scrollbar tracks. */}
+      <span className="pointer-events-none absolute right-4 bottom-4 rounded bg-gray-50/80 px-1.5 py-1 text-xs font-medium text-gray-600">
         {zoomPercentage(camera)}%
       </span>
+
+      {containerSize.width > 0 && containerSize.height > 0 && (
+        <>
+          <Scrollbar
+            axis="x"
+            metrics={scrollbarMetrics.horizontal}
+            trackLengthPx={containerSize.width}
+            onDrag={panByScrollbarDrag}
+          />
+          <Scrollbar
+            axis="y"
+            metrics={scrollbarMetrics.vertical}
+            trackLengthPx={containerSize.height}
+            onDrag={panByScrollbarDrag}
+          />
+        </>
+      )}
 
       {/* stopPropagation keeps toolbar clicks from reaching the grid's pan/toggle
           handlers below, which would otherwise capture the pointer and either

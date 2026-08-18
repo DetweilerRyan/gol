@@ -1,15 +1,18 @@
 import { describe, expect, it } from 'vitest'
+import type { ContentBounds } from './gameOfLife'
 import {
   applyWheelInput,
   centeredCamera,
   clampCellSize,
   computeMajorGridlines,
+  computeScrollbarMetrics,
   computeVisibleRange,
   DEFAULT_CELL_SIZE,
   isMajorGridline,
   MAX_CELL_SIZE,
   MIN_CELL_SIZE,
   panCamera,
+  panCameraByScrollbarDrag,
   screenToWorld,
   worldToScreen,
   zoomCameraAtPoint,
@@ -235,6 +238,74 @@ describe('applyWheelInput', () => {
   it('prefers deltaY over deltaX for zoom direction when both are populated', () => {
     const next = applyWheelInput(camera, { pixelX: 0, pixelY: 0, deltaX: 50, deltaY: -100, shiftKey: true })
     expect(next.cellSize).toBe(DEFAULT_CELL_SIZE * ZOOM_FACTOR)
+  })
+})
+
+describe('computeScrollbarMetrics', () => {
+  it('fills the entire track on both axes when there is no content', () => {
+    const metrics = computeScrollbarMetrics(camera, null, 800, 600)
+    expect(metrics).toEqual({
+      horizontal: { thumbRatio: 1, thumbOffsetRatio: 0 },
+      vertical: { thumbRatio: 1, thumbOffsetRatio: 0 },
+    })
+  })
+
+  it('still fills the track when content is smaller than the viewport', () => {
+    const bounds: ContentBounds = { minX: 5, maxX: 6, minY: 5, maxY: 6 }
+    const metrics = computeScrollbarMetrics(camera, bounds, 800, 600)
+    expect(metrics.horizontal.thumbRatio).toBe(1)
+    expect(metrics.vertical.thumbRatio).toBe(1)
+  })
+
+  it('shrinks only the horizontal thumb when content is wider than the viewport', () => {
+    // Content spans 200 world units * 20px cellSize = 4000px wide, 2 units tall.
+    const bounds: ContentBounds = { minX: 0, maxX: 200, minY: 0, maxY: 2 }
+    const metrics = computeScrollbarMetrics(camera, bounds, 800, 600)
+    expect(metrics.horizontal.thumbRatio).toBeCloseTo(800 / 4000)
+    expect(metrics.vertical.thumbRatio).toBe(1)
+  })
+
+  it('keeps the thumb offset ratio within [0, 1] when panned far from all content', () => {
+    const panned: Camera = { offsetX: 500, offsetY: 0, cellSize: DEFAULT_CELL_SIZE }
+    const bounds: ContentBounds = { minX: 0, maxX: 1, minY: 0, maxY: 1 }
+    const metrics = computeScrollbarMetrics(panned, bounds, 800, 600)
+    expect(metrics.horizontal.thumbOffsetRatio).toBe(1)
+    expect(metrics.horizontal.thumbRatio).toBeLessThan(1)
+  })
+
+  it('bottoms the offset ratio out at 0 when content sits entirely off the opposite edge', () => {
+    // Content entirely to the RIGHT of the viewport this time (opposite of the case above).
+    const bounds: ContentBounds = { minX: 500, maxX: 501, minY: 0, maxY: 1 }
+    const metrics = computeScrollbarMetrics(camera, bounds, 800, 600)
+    expect(metrics.horizontal.thumbOffsetRatio).toBe(0)
+  })
+})
+
+describe('panCameraByScrollbarDrag', () => {
+  it('increases offsetX when dragging the horizontal thumb, the opposite sign from drag-to-pan', () => {
+    const next = panCameraByScrollbarDrag(camera, 'x', 50, 1)
+    expect(next.offsetX).toBeGreaterThan(camera.offsetX)
+    expect(next.offsetY).toBe(camera.offsetY)
+  })
+
+  it('increases offsetY when dragging the vertical thumb', () => {
+    const next = panCameraByScrollbarDrag(camera, 'y', 50, 1)
+    expect(next.offsetY).toBeGreaterThan(camera.offsetY)
+  })
+
+  it('scales the offset delta inversely with thumbRatio', () => {
+    expect(panCameraByScrollbarDrag(camera, 'x', 50, 1).offsetX).toBeCloseTo(2.5)
+    expect(panCameraByScrollbarDrag(camera, 'x', 50, 0.5).offsetX).toBeCloseTo(5)
+    expect(panCameraByScrollbarDrag(camera, 'x', 50, 0.25).offsetX).toBeCloseTo(10)
+  })
+
+  it('is a no-op when thumbRatio is zero or negative', () => {
+    expect(panCameraByScrollbarDrag(camera, 'x', 50, 0)).toBe(camera)
+    expect(panCameraByScrollbarDrag(camera, 'x', 50, -1)).toBe(camera)
+  })
+
+  it('preserves cellSize', () => {
+    expect(panCameraByScrollbarDrag(camera, 'x', 50, 1).cellSize).toBe(camera.cellSize)
   })
 })
 

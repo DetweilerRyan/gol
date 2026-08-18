@@ -23,6 +23,7 @@ const FEATURE_FILES = [
   'camera-pan-and-zoom.feature',
   'grid-reference-lines.feature',
   'mouse-wheel-controls.feature',
+  'grid-scrollbars.feature',
 ]
 
 function loadAllSteps() {

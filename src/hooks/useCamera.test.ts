@@ -58,6 +58,13 @@ describe('useCamera', () => {
     expect(result.current.camera.cellSize).toBeGreaterThan(DEFAULT_CELL_SIZE)
   })
 
+  it('panByScrollbarDrag moves the offset in the same direction as the drag, scaled by thumbRatio and cellSize', () => {
+    const { result } = renderHook(() => useCamera())
+    act(() => result.current.panByScrollbarDrag('x', 50, 0.5))
+    expect(result.current.camera.offsetX).toBeCloseTo(5)
+    expect(result.current.camera.offsetY).toBe(0)
+  })
+
   it('centerView resets to the default zoom, centered on the given viewport size', () => {
     const { result } = renderHook(() => useCamera())
     act(() => result.current.zoomAtPoint(0, 0, 3))

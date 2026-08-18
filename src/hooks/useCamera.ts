@@ -3,9 +3,11 @@ import {
   applyWheelInput,
   centeredCamera,
   panCamera,
+  panCameraByScrollbarDrag,
   zoomCameraAtPoint,
   DEFAULT_CELL_SIZE,
   type Camera,
+  type ScrollbarAxis,
   type WheelInput,
 } from '../viewport'
 
@@ -32,5 +34,9 @@ export function useCamera() {
     setCamera(centeredCamera(viewportWidthPx, viewportHeightPx))
   }
 
-  return { camera, panByPixels, zoomAtPoint, applyWheel, centerView }
+  function panByScrollbarDrag(axis: ScrollbarAxis, deltaTrackPx: number, thumbRatio: number) {
+    setCamera((prev) => panCameraByScrollbarDrag(prev, axis, deltaTrackPx, thumbRatio))
+  }
+
+  return { camera, panByPixels, zoomAtPoint, applyWheel, centerView, panByScrollbarDrag }
 }
