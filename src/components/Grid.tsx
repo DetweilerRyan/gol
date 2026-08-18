@@ -104,8 +104,21 @@ function Scrollbar({ axis, metrics, trackLengthPx, onDrag }: ScrollbarProps) {
   // stopPropagation on the track keeps clicks/drags anywhere on the
   // scrollbar (including empty track area -- no click-to-jump here, by
   // design) from reaching the grid's own pan/toggle handlers underneath.
+  // Pointer capture on the thumb retargets pointermove/pointerup to fire
+  // there instead of wherever the cursor physically is, but those events
+  // still bubble THROUGH this track div same as pointerdown does -- stopping
+  // propagation on down alone left up (and move) reaching the grid's own
+  // handlers, which could spuriously toggle a cell under the button on
+  // release. All four pointer event types need to be stopped here.
+  const stopPropagation = (e: React.PointerEvent) => e.stopPropagation()
   return (
-    <div className={`${trackClass} rounded bg-gray-200/60`} onPointerDown={(e) => e.stopPropagation()}>
+    <div
+      className={`${trackClass} rounded bg-gray-200/60`}
+      onPointerDown={stopPropagation}
+      onPointerMove={stopPropagation}
+      onPointerUp={stopPropagation}
+      onPointerCancel={stopPropagation}
+    >
       <div
         role="scrollbar"
         aria-orientation={axis === 'x' ? 'horizontal' : 'vertical'}
@@ -316,8 +329,15 @@ export default function Grid({ liveCells, onToggleCell }: GridProps) {
 
       {/* stopPropagation keeps toolbar clicks from reaching the grid's pan/toggle
           handlers below, which would otherwise capture the pointer and either
-          suppress the button's click or toggle the cell underneath it. */}
-      <div className="absolute top-2 right-2 flex gap-1" onPointerDown={(e) => e.stopPropagation()}>
+          suppress the button's click or toggle the cell underneath it. Both
+          down and up need it -- pointerdown alone leaves pointerup free to
+          bubble through and spuriously toggle whatever cell is positioned
+          under the button on release. */}
+      <div
+        className="absolute top-2 right-2 flex gap-1"
+        onPointerDown={(e) => e.stopPropagation()}
+        onPointerUp={(e) => e.stopPropagation()}
+      >
         <button
           type="button"
           aria-label="Zoom in"
