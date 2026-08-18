@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import {
+  applyWheelInput,
   centeredCamera,
   clampCellSize,
   computeMajorGridlines,
@@ -12,6 +13,8 @@ import {
   screenToWorld,
   worldToScreen,
   zoomCameraAtPoint,
+  zoomPercentage,
+  ZOOM_FACTOR,
   type Camera,
   type VisibleRange,
 } from './viewport'
@@ -196,5 +199,54 @@ describe('computeMajorGridlines', () => {
     const gridlines = computeMajorGridlines(range)
     expect(gridlines).toEqual({ x: [0, 10], y: [0] })
     expect(Object.is(gridlines.x[0], -0)).toBe(false)
+  })
+})
+
+describe('applyWheelInput', () => {
+  it('pans (leaves cellSize unchanged) when shiftKey is false', () => {
+    const next = applyWheelInput(camera, { pixelX: 0, pixelY: 0, deltaX: 40, deltaY: 100, shiftKey: false })
+    expect(next.cellSize).toBe(camera.cellSize)
+  })
+
+  it('scrolling down/right (positive deltaY/deltaX) increases offsetY/offsetX -- the opposite sign convention from drag-to-pan', () => {
+    const next = applyWheelInput(camera, { pixelX: 0, pixelY: 0, deltaX: 40, deltaY: 100, shiftKey: false })
+    expect(next.offsetX).toBeGreaterThan(camera.offsetX)
+    expect(next.offsetY).toBeGreaterThan(camera.offsetY)
+  })
+
+  it('zooms (leaves offset behaving like zoomCameraAtPoint) when shiftKey is true', () => {
+    const next = applyWheelInput(camera, { pixelX: 100, pixelY: 50, deltaX: 0, deltaY: -100, shiftKey: true })
+    expect(next.cellSize).toBe(DEFAULT_CELL_SIZE * ZOOM_FACTOR)
+    const screenAfter = worldToScreen(next, 5, 2.5)
+    expect(screenAfter.x).toBeCloseTo(100)
+    expect(screenAfter.y).toBeCloseTo(50)
+  })
+
+  it('zooms out when the shift-held scroll direction is positive', () => {
+    const next = applyWheelInput(camera, { pixelX: 0, pixelY: 0, deltaX: 0, deltaY: 100, shiftKey: true })
+    expect(next.cellSize).toBe(DEFAULT_CELL_SIZE / ZOOM_FACTOR)
+  })
+
+  it('falls back to deltaX for zoom direction when deltaY is 0 and shiftKey is true', () => {
+    const next = applyWheelInput(camera, { pixelX: 0, pixelY: 0, deltaX: -100, deltaY: 0, shiftKey: true })
+    expect(next.cellSize).toBe(DEFAULT_CELL_SIZE * ZOOM_FACTOR)
+  })
+
+  it('prefers deltaY over deltaX for zoom direction when both are populated', () => {
+    const next = applyWheelInput(camera, { pixelX: 0, pixelY: 0, deltaX: 50, deltaY: -100, shiftKey: true })
+    expect(next.cellSize).toBe(DEFAULT_CELL_SIZE * ZOOM_FACTOR)
+  })
+})
+
+describe('zoomPercentage', () => {
+  it('is 100 at the default cell size', () => {
+    expect(zoomPercentage(camera)).toBe(100)
+  })
+
+  it('scales proportionally to cell size', () => {
+    expect(zoomPercentage({ ...camera, cellSize: 40 })).toBe(200)
+    expect(zoomPercentage({ ...camera, cellSize: 10 })).toBe(50)
+    expect(zoomPercentage({ ...camera, cellSize: 60 })).toBe(300)
+    expect(zoomPercentage({ ...camera, cellSize: 8 })).toBe(40)
   })
 })

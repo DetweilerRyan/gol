@@ -44,6 +44,20 @@ describe('useCamera', () => {
     expect(result.current.camera).toBe(clampedCamera)
   })
 
+  it('applyWheel pans when shiftKey is false', () => {
+    const { result } = renderHook(() => useCamera())
+    act(() => result.current.applyWheel({ pixelX: 0, pixelY: 0, deltaX: 40, deltaY: 100, shiftKey: false }))
+    expect(result.current.camera.cellSize).toBe(DEFAULT_CELL_SIZE)
+    expect(result.current.camera.offsetX).toBeGreaterThan(0)
+    expect(result.current.camera.offsetY).toBeGreaterThan(0)
+  })
+
+  it('applyWheel zooms when shiftKey is true', () => {
+    const { result } = renderHook(() => useCamera())
+    act(() => result.current.applyWheel({ pixelX: 0, pixelY: 0, deltaX: 0, deltaY: -100, shiftKey: true }))
+    expect(result.current.camera.cellSize).toBeGreaterThan(DEFAULT_CELL_SIZE)
+  })
+
   it('centerView resets to the default zoom, centered on the given viewport size', () => {
     const { result } = renderHook(() => useCamera())
     act(() => result.current.zoomAtPoint(0, 0, 3))

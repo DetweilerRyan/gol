@@ -1,5 +1,5 @@
 import { useCallback, useState } from 'react'
-import { centeredCamera, panCamera, zoomCameraAtPoint, DEFAULT_CELL_SIZE, type Camera } from '../viewport'
+import { applyWheelInput, centeredCamera, panCamera, zoomCameraAtPoint, DEFAULT_CELL_SIZE, type Camera, type WheelInput } from '../viewport'
 
 export function useCamera() {
   const [camera, setCamera] = useState<Camera>({
@@ -16,9 +16,13 @@ export function useCamera() {
     setCamera((prev) => zoomCameraAtPoint(prev, pixelX, pixelY, factor))
   }, [])
 
+  const applyWheel = useCallback((input: WheelInput) => {
+    setCamera((prev) => applyWheelInput(prev, input))
+  }, [])
+
   const centerView = useCallback((viewportWidthPx: number, viewportHeightPx: number) => {
     setCamera(centeredCamera(viewportWidthPx, viewportHeightPx))
   }, [])
 
-  return { camera, panByPixels, zoomAtPoint, centerView }
+  return { camera, panByPixels, zoomAtPoint, applyWheel, centerView }
 }

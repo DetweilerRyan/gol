@@ -1,7 +1,16 @@
 import { useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react'
 import { cellKey, isCellAlive, type LiveCells } from '../gameOfLife'
 import { useCamera } from '../hooks/useCamera'
-import { computeMajorGridlines, computeVisibleRange, isMajorGridline, screenToWorld, worldToScreen, type Camera } from '../viewport'
+import {
+  computeMajorGridlines,
+  computeVisibleRange,
+  isMajorGridline,
+  screenToWorld,
+  worldToScreen,
+  zoomPercentage,
+  ZOOM_FACTOR,
+  type Camera,
+} from '../viewport'
 
 interface GridProps {
   liveCells: LiveCells
@@ -33,7 +42,6 @@ function RulerLabel({ axis, coordinate, camera }: RulerLabelProps) {
 }
 
 const DRAG_THRESHOLD_PX = 4
-const ZOOM_FACTOR = 1.25
 
 interface DragState {
   startX: number
@@ -47,7 +55,7 @@ export default function Grid({ liveCells, onToggleCell }: GridProps) {
   const [containerSize, setContainerSize] = useState({ width: 0, height: 0 })
   const hasCenteredRef = useRef(false)
 
-  const { camera, panByPixels, zoomAtPoint, centerView } = useCamera()
+  const { camera, panByPixels, zoomAtPoint, applyWheel, centerView } = useCamera()
 
   const dragStateRef = useRef<DragState | null>(null)
   const didDragRef = useRef(false)
@@ -76,15 +84,18 @@ export default function Grid({ liveCells, onToggleCell }: GridProps) {
     function handleWheel(e: WheelEvent) {
       e.preventDefault()
       const rect = el!.getBoundingClientRect()
-      const pixelX = e.clientX - rect.left
-      const pixelY = e.clientY - rect.top
-      const factor = e.deltaY < 0 ? ZOOM_FACTOR : 1 / ZOOM_FACTOR
-      zoomAtPoint(pixelX, pixelY, factor)
+      applyWheel({
+        pixelX: e.clientX - rect.left,
+        pixelY: e.clientY - rect.top,
+        deltaX: e.deltaX,
+        deltaY: e.deltaY,
+        shiftKey: e.shiftKey,
+      })
     }
 
     el.addEventListener('wheel', handleWheel, { passive: false })
     return () => el.removeEventListener('wheel', handleWheel)
-  }, [zoomAtPoint])
+  }, [applyWheel])
 
   const visibleRange = useMemo(
     () => computeVisibleRange(camera, containerSize.width, containerSize.height),
@@ -200,6 +211,13 @@ export default function Grid({ liveCells, onToggleCell }: GridProps) {
       {majorGridlines.y.map((y) => (
         <RulerLabel key={`y-${y}`} axis="y" coordinate={y} camera={camera} />
       ))}
+
+      {/* Bottom-right, not top-left, so it never overlaps the coordinate
+          ruler labels above, which can appear anywhere along the top/left
+          edges depending on pan position. */}
+      <span className="absolute bottom-2 right-2 rounded bg-gray-50/80 px-1.5 py-1 text-xs font-medium text-gray-600 pointer-events-none">
+        {zoomPercentage(camera)}%
+      </span>
 
       {/* stopPropagation keeps toolbar clicks from reaching the grid's pan/toggle
           handlers below, which would otherwise capture the pointer and either

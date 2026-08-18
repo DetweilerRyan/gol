@@ -26,6 +26,7 @@ const TARGETS = [
   { feature: 'infinite-grid.feature', steps: 'infinite-grid.steps.test.ts' },
   { feature: 'camera-pan-and-zoom.feature', steps: 'camera-pan-and-zoom.steps.test.ts' },
   { feature: 'grid-reference-lines.feature', steps: 'grid-reference-lines.steps.test.ts' },
+  { feature: 'mouse-wheel-controls.feature', steps: 'mouse-wheel-controls.steps.test.ts' },
 ]
 
 function runScenarioSuite(stepsFile, featureFilePath) {

@@ -7,6 +7,7 @@ export interface Camera {
 export const MIN_CELL_SIZE = 8
 export const MAX_CELL_SIZE = 60
 export const DEFAULT_CELL_SIZE = 20 // matches the previous 1.25rem cell size
+export const ZOOM_FACTOR = 1.25
 
 const VISIBLE_BUFFER_CELLS = 2
 
@@ -100,4 +101,36 @@ export function computeMajorGridlines(range: VisibleRange): MajorGridlines {
     x: gridlinesInRange(range.minX, range.maxX),
     y: gridlinesInRange(range.minY, range.maxY),
   }
+}
+
+export interface WheelInput {
+  pixelX: number
+  pixelY: number
+  deltaX: number
+  deltaY: number
+  shiftKey: boolean
+}
+
+export function applyWheelInput(camera: Camera, input: WheelInput): Camera {
+  if (input.shiftKey) {
+    // Some browser/OS combos (notably Firefox on Windows) convert a
+    // vertical wheel gesture into a horizontal-scroll event under Shift,
+    // zeroing deltaY and populating deltaX instead, before JS sees it. We
+    // key zoom-intent off shiftKey (which we control), then recover the
+    // scroll magnitude from whichever axis the browser actually populated.
+    const zoomDelta = input.deltaY !== 0 ? input.deltaY : input.deltaX
+    const factor = zoomDelta < 0 ? ZOOM_FACTOR : 1 / ZOOM_FACTOR
+    return zoomCameraAtPoint(camera, input.pixelX, input.pixelY, factor)
+  }
+  // Wheel-pan follows the "document scroll" convention (scroll down reveals
+  // lower content, content slides up) -- the opposite feel from drag-to-pan
+  // (panByPixels(dx, dy), no negation), where content follows the pointer
+  // 1:1. To make scroll-down (deltaY > 0) increase offsetY given
+  // panCamera's `offsetY -= dyPixels / cellSize`, the pixel delta passed in
+  // must be negated. This asymmetry with drag-to-pan is intentional.
+  return panCamera(camera, -input.deltaX, -input.deltaY)
+}
+
+export function zoomPercentage(camera: Camera): number {
+  return Math.round((camera.cellSize / DEFAULT_CELL_SIZE) * 100)
 }
