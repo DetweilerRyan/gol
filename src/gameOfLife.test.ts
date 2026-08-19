@@ -10,10 +10,17 @@ import {
   placePattern,
   toggleCell,
   type LiveCells,
+  type Pattern,
 } from './gameOfLife'
 
 function makeLiveCells(coords: [number, number][]): LiveCells {
   return new Set(coords.map(([x, y]) => cellKey(x, y)))
+}
+
+function requirePattern(name: string): Pattern {
+  const pattern = getPatternByName(name)
+  if (!pattern) throw new Error(`${name} pattern not found`)
+  return pattern
 }
 
 describe('cellKey', () => {
@@ -175,9 +182,7 @@ describe('getPatternByName', () => {
 describe('placePattern', () => {
   it('translates the pattern so its bounding-box top-left corner sits at the anchor', () => {
     const cells = createEmptyLiveCells()
-    const blinker = getPatternByName('Blinker')
-    if (!blinker) throw new Error('Blinker pattern not found')
-    placePattern(cells, blinker, 10, 10)
+    placePattern(cells, requirePattern('Blinker'), 10, 10)
     expect(cells).toEqual(
       makeLiveCells([
         [10, 10],
@@ -189,9 +194,7 @@ describe('placePattern', () => {
 
   it('unions the pattern into existing live cells rather than replacing them', () => {
     const cells = makeLiveCells([[0, 0]])
-    const block = getPatternByName('Block')
-    if (!block) throw new Error('Block pattern not found')
-    placePattern(cells, block, 5, 5)
+    placePattern(cells, requirePattern('Block'), 5, 5)
     expect(isCellAlive(cells, 0, 0)).toBe(true)
     expect(isCellAlive(cells, 5, 5)).toBe(true)
     expect(isCellAlive(cells, 6, 6)).toBe(true)
@@ -199,9 +202,7 @@ describe('placePattern', () => {
 
   it('keeps an already-live cell alive rather than toggling it off', () => {
     const cells = makeLiveCells([[5, 5]])
-    const block = getPatternByName('Block')
-    if (!block) throw new Error('Block pattern not found')
-    placePattern(cells, block, 5, 5)
+    placePattern(cells, requirePattern('Block'), 5, 5)
     expect(isCellAlive(cells, 5, 5)).toBe(true)
   })
 })
