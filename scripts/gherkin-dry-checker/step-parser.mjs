@@ -19,7 +19,7 @@ export function parseSteps(featureText) {
     const line = rawLine.trim()
     if (line === '' || line.startsWith('#')) continue
 
-    if (/^Background:/.test(line)) {
+    if (line.startsWith('Background:')) {
       section = 'background'
       scenarioIndex = -1
       scenarioName = null
@@ -35,11 +35,11 @@ export function parseSteps(featureText) {
       inExamples = false
       continue
     }
-    if (/^Examples:/.test(line)) {
+    if (line.startsWith('Examples:')) {
       inExamples = true
       continue
     }
-    if (/^Feature:/.test(line)) {
+    if (line.startsWith('Feature:')) {
       inExamples = false
       continue
     }
