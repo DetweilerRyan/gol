@@ -60,24 +60,6 @@ test('clicking the Patterns button opens the pattern library modal', async ({ pa
   await expect(page.getByRole('heading', { name: 'Pattern Library' })).toBeVisible()
 })
 
-test('clicking the Patterns button again while the modal is open closes it', async ({ page }) => {
-  await openPatternModal(page)
-  await expect(modal(page)).toBeAttached()
-
-  // force: true -- Headless UI's Dialog marks the rest of the page (including
-  // this very button) inert while open, which is correct accessible-modal
-  // behavior, but means the button is no longer hit-testable at the browser
-  // level: a real click at its screen position passes through to the
-  // full-viewport Dialog wrapper underneath instead, closing the dialog via
-  // Headless's own outside-click handling rather than this button's onClick.
-  // Playwright's default actionability check (correctly) refuses to click an
-  // element it detects as obstructed, so force is needed to still dispatch
-  // the click at that location and exercise this real (if roundabout) path.
-  await patternsButton(page).click({ force: true })
-
-  await expect(modal(page)).toHaveCount(0)
-})
-
 test('the modal lists three category sections, in order, each with its patterns in declaration order', async ({
   page,
 }) => {

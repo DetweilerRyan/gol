@@ -382,11 +382,13 @@ export default function Grid({ liveCells, onToggleCell, onPlacePattern, onSuppre
     placeOrToggleAt(x, y)
   }
 
+  // No isPatternModalOpen branch here: Headless UI's Dialog makes the rest
+  // of the page (including this button) inert while open, so this handler
+  // can't fire in that state at all -- the modal closes only via its own
+  // outside-click/Escape handling.
   function handlePatternsButtonClick() {
     if (placingPattern) {
       cancelPlacing()
-    } else if (isPatternModalOpen) {
-      setIsPatternModalOpen(false)
     } else {
       setIsPatternModalOpen(true)
     }
@@ -527,18 +529,12 @@ export default function Grid({ liveCells, onToggleCell, onPlacePattern, onSuppre
         >
           Reset
         </Button>
-        {/* z-30 so this button stays clickable as a close/cancel toggle
-            while the modal it opens is showing, unlike the other toolbar
-            buttons here -- those stay beneath the backdrop by design, per
-            the flex-item z-index exception in the CSS flexbox spec
-            (z-index applies to flex items even without an explicit
-            `position`). */}
         <Button
           plain
           type="button"
           aria-label="Open pattern library"
           onClick={handlePatternsButtonClick}
-          className="z-30 h-8! justify-center rounded! !bg-gray-900 px-2! text-sm! font-medium! !text-white transition-colors hover:!bg-gray-700"
+          className="h-8! justify-center rounded! !bg-gray-900 px-2! text-sm! font-medium! !text-white transition-colors hover:!bg-gray-700"
         >
           Patterns
         </Button>
