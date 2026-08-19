@@ -24,6 +24,7 @@ const FEATURE_FILES = [
   'grid-reference-lines.feature',
   'mouse-wheel-controls.feature',
   'grid-scrollbars.feature',
+  'pattern-library.feature',
 ]
 
 function loadAllSteps() {
