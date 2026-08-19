@@ -30,6 +30,7 @@ npm run test:mutation       # stryker mutation testing (scoped to gameOfLife.ts,
 npm run acceptance-mutation # custom Gherkin-example mutation runner (scripts/acceptance-mutation)
 npm run gherkin-dry         # checks .feature files for step-text vocabulary duplication (report-only)
 npm run crap4ts             # CRAP complexity/coverage score (same 3 files as stryker)
+npm run halstead4ts         # Halstead complexity report via FTA, same 3 files as crap4ts (report-only)
 npm run dry4ts              # duplication checker over src/
 ```
 
@@ -62,8 +63,9 @@ Vitest excludes `**/*.e2e.spec.ts` (see `vite.config.ts`) so the two runners nev
 
 - `scripts/acceptance-mutation/` — mutates individual values in `.feature` Examples tables (never source code) and reruns the corresponding `.steps.test.ts` file to check the scenario actually notices (concept from unclebob's Acceptance-Pipeline-Specification). Each mutant runs the _entire_ steps file, not a filtered subset, since Given/When/Then steps share closure state within a scenario. In practice this hardens the Gherkin layer against itself — the weaknesses it has surfaced so far were in step definitions absorbing a mutated value without noticing, not in `gameOfLife.ts`/`viewport.ts` — so treat it as acceptance-suite quality assurance, not as evidence the Gherkin layer is finding core-logic bugs unit tests miss.
 - `scripts/gherkin-dry-checker/` — advisory-only; scans all `.feature` files for step-text vocabulary duplication/drift. Always exits 0 on a successful run (report-only), writes to `reports/gherkin-dry/report.json`.
+- `scripts/halstead4ts/` — runs `fta-cli` against the same 3 files as `crap4ts.config.ts`'s `include` list and prints a Halstead (volume/difficulty/effort/bugs) + FTA Score table alongside crap4ts's per-function CRAP table. FTA only reports at file granularity (no per-function breakdown), so this is a second, coarser report rather than something merged into crap4ts's output — and since FTA's own score formula isn't published, it's report-only like `gherkin-dry-checker`, never a CI gate. Keep the file list in `run.mjs` in sync with `crap4ts.config.ts` by hand.
 
-Both have their own `.test.mjs` unit tests runnable via `npx vitest run scripts/`.
+All three have their own `.test.mjs` unit tests runnable via `npx vitest run scripts/` (they're also swept into the default `npm test`/`npm run test:unit`, since vitest's default include pattern already matches `scripts/**/*.test.mjs`).
 
 ## Subagent pipeline
 
