@@ -115,24 +115,10 @@ function Scrollbar({ axis, metrics, trackLengthPx, onDrag }: ScrollbarProps) {
       ? { width: thumbLengthPx, height: '100%', transform: `translateX(${thumbPositionPx}px)` }
       : { height: thumbLengthPx, width: '100%', transform: `translateY(${thumbPositionPx}px)` }
 
-  // stopPropagation on the track keeps clicks/drags anywhere on the
-  // scrollbar (including empty track area -- no click-to-jump here, by
-  // design) from reaching the grid's own pan/toggle handlers underneath.
-  // Pointer capture on the thumb retargets pointermove/pointerup to fire
-  // there instead of wherever the cursor physically is, but those events
-  // still bubble THROUGH this track div same as pointerdown does -- stopping
-  // propagation on down alone left up (and move) reaching the grid's own
-  // handlers, which could spuriously toggle a cell under the button on
-  // release. All four pointer event types need to be stopped here.
-  const stopPropagation = (e: React.PointerEvent) => e.stopPropagation()
+  // No click-to-jump on the empty track area, by design -- only the thumb
+  // below has pointer handlers.
   return (
-    <div
-      className={`${trackClass} rounded bg-gray-200/60`}
-      onPointerDown={stopPropagation}
-      onPointerMove={stopPropagation}
-      onPointerUp={stopPropagation}
-      onPointerCancel={stopPropagation}
-    >
+    <div className={`${trackClass} rounded bg-gray-200/60`}>
       <div
         role="scrollbar"
         aria-orientation={axis === 'x' ? 'horizontal' : 'vertical'}
@@ -285,15 +271,7 @@ export default function Grid({ liveCells, onToggleCell, onPlacePattern, onSuppre
   const contentBounds = computeContentBounds(liveCells)
   const scrollbarMetrics = computeScrollbarMetrics(camera, contentBounds, containerSize.width, containerSize.height)
 
-  // isPatternModalOpen guards below: React's synthetic pointer events bubble
-  // through the component tree even across Headless UI's portal, so without
-  // this the modal's backdrop/pattern buttons would still reach these
-  // handlers -- and setPointerCapture below would retarget the pattern
-  // button's own click, silently breaking pattern selection. Repeated across
-  // all 4 handlers rather than centralized; revisit if more overlay
-  // components (Dropdown, Combobox, etc.) get added later.
   function handlePointerDown(e: React.PointerEvent) {
-    if (isPatternModalOpen) return
     e.currentTarget.setPointerCapture(e.pointerId)
     dragStateRef.current = { startX: e.clientX, startY: e.clientY, lastX: e.clientX, lastY: e.clientY }
     didDragRef.current = false
@@ -308,7 +286,6 @@ export default function Grid({ liveCells, onToggleCell, onPlacePattern, onSuppre
   }
 
   function handlePointerMove(e: React.PointerEvent) {
-    if (isPatternModalOpen) return
     // Tracks the cursor's cell for the placing-mode preview on every move,
     // independent of drag state -- pointermove fires on hover too, not just
     // while a button is pressed, and the preview needs to follow the cursor
@@ -343,7 +320,6 @@ export default function Grid({ liveCells, onToggleCell, onPlacePattern, onSuppre
   // coordinates instead. Button onClick still handles keyboard activation
   // (Enter/Space), which never goes through pointer capture.
   function handlePointerUp(e: React.PointerEvent) {
-    if (isPatternModalOpen) return
     if (e.currentTarget.hasPointerCapture(e.pointerId)) {
       e.currentTarget.releasePointerCapture(e.pointerId)
     }
@@ -356,7 +332,6 @@ export default function Grid({ liveCells, onToggleCell, onPlacePattern, onSuppre
   }
 
   function handlePointerCancel(e: React.PointerEvent) {
-    if (isPatternModalOpen) return
     if (e.currentTarget.hasPointerCapture(e.pointerId)) {
       e.currentTarget.releasePointerCapture(e.pointerId)
     }
@@ -401,60 +376,66 @@ export default function Grid({ liveCells, onToggleCell, onPlacePattern, onSuppre
   }
 
   return (
-    <div
-      ref={containerRef}
-      onPointerDown={handlePointerDown}
-      onPointerMove={handlePointerMove}
-      onPointerUp={handlePointerUp}
-      onPointerCancel={handlePointerCancel}
-      className={`relative h-full w-full touch-none overflow-hidden bg-gray-100 ${
-        isPanning ? 'cursor-grabbing' : 'cursor-grab'
-      }`}
-    >
-      {cells.map(({ x, y }) => {
-        const { x: left, y: top } = worldToScreen(camera, x, y)
-        const isAlive = isCellAlive(liveCells, x, y)
-        return (
-          <button
-            key={cellKey(x, y)}
-            type="button"
-            aria-label={`Cell ${x}, ${y}`}
-            onClick={() => handleCellClick(x, y)}
-            style={{
-              width: camera.cellSize,
-              height: camera.cellSize,
-              transform: `translate(${left}px, ${top}px)`,
-              boxSizing: 'border-box',
-            }}
-            className={`absolute top-0 left-0 border border-gray-200 transition-colors ${
-              isAlive ? 'bg-gray-900 hover:bg-gray-700' : 'bg-white hover:bg-gray-100'
-            } ${isMajorGridline(x) ? 'border-l-2 border-l-gray-400' : ''} ${isMajorGridline(y) ? 'border-t-2 border-t-gray-400' : ''}`}
-          />
-        )
-      })}
-
-      {/* Placing-mode preview: uses the same patternCellPositions helper
-          placePattern itself is built on, so the preview can't drift from
-          where a stamp would actually land. pointer-events-none so hovering
-          the preview itself doesn't block the underlying pointermove tracking. */}
-      {placingPattern &&
-        previewCell &&
-        patternCellPositions(placingPattern, previewCell.x, previewCell.y).map(([x, y]) => {
+    <div ref={containerRef} className="relative h-full w-full overflow-hidden bg-gray-100">
+      {/* Owns the pan/toggle pointer handlers and sits below every overlay
+          (ruler, zoom%, scrollbars, toolbar, modal) as a sibling rather than
+          an ancestor, so overlay pointer events never bubble into these
+          handlers in the first place -- no stopPropagation/open-state guards
+          needed on either side. inset-0 keeps its rect identical to the
+          outer container's, which pointerToWorldCell and the wheel handler
+          both rely on. */}
+      <div
+        onPointerDown={handlePointerDown}
+        onPointerMove={handlePointerMove}
+        onPointerUp={handlePointerUp}
+        onPointerCancel={handlePointerCancel}
+        className={`absolute inset-0 touch-none ${isPanning ? 'cursor-grabbing' : 'cursor-grab'}`}
+      >
+        {cells.map(({ x, y }) => {
           const { x: left, y: top } = worldToScreen(camera, x, y)
+          const isAlive = isCellAlive(liveCells, x, y)
           return (
-            <div
-              key={`preview-${x}-${y}`}
-              aria-label={`Pattern preview cell ${x}, ${y}`}
+            <button
+              key={cellKey(x, y)}
+              type="button"
+              aria-label={`Cell ${x}, ${y}`}
+              onClick={() => handleCellClick(x, y)}
               style={{
                 width: camera.cellSize,
                 height: camera.cellSize,
                 transform: `translate(${left}px, ${top}px)`,
                 boxSizing: 'border-box',
               }}
-              className="pointer-events-none absolute top-0 left-0 border border-green-600 bg-green-400/60"
+              className={`absolute top-0 left-0 border border-gray-200 transition-colors ${
+                isAlive ? 'bg-gray-900 hover:bg-gray-700' : 'bg-white hover:bg-gray-100'
+              } ${isMajorGridline(x) ? 'border-l-2 border-l-gray-400' : ''} ${isMajorGridline(y) ? 'border-t-2 border-t-gray-400' : ''}`}
             />
           )
         })}
+
+        {/* Placing-mode preview: uses the same patternCellPositions helper
+            placePattern itself is built on, so the preview can't drift from
+            where a stamp would actually land. pointer-events-none so hovering
+            the preview itself doesn't block the underlying pointermove tracking. */}
+        {placingPattern &&
+          previewCell &&
+          patternCellPositions(placingPattern, previewCell.x, previewCell.y).map(([x, y]) => {
+            const { x: left, y: top } = worldToScreen(camera, x, y)
+            return (
+              <div
+                key={`preview-${x}-${y}`}
+                aria-label={`Pattern preview cell ${x}, ${y}`}
+                style={{
+                  width: camera.cellSize,
+                  height: camera.cellSize,
+                  transform: `translate(${left}px, ${top}px)`,
+                  boxSizing: 'border-box',
+                }}
+                className="pointer-events-none absolute top-0 left-0 border border-green-600 bg-green-400/60"
+              />
+            )
+          })}
+      </div>
 
       {/* Coordinate ruler: labels every 10th gridline. pointer-events-none keeps
           these from interfering with cell clicks/dragging underneath. */}
@@ -491,17 +472,7 @@ export default function Grid({ liveCells, onToggleCell, onPlacePattern, onSuppre
         </>
       )}
 
-      {/* stopPropagation keeps toolbar clicks from reaching the grid's pan/toggle
-          handlers below, which would otherwise capture the pointer and either
-          suppress the button's click or toggle the cell underneath it. Both
-          down and up need it -- pointerdown alone leaves pointerup free to
-          bubble through and spuriously toggle whatever cell is positioned
-          under the button on release. */}
-      <div
-        className="absolute top-2 right-2 flex gap-1"
-        onPointerDown={(e) => e.stopPropagation()}
-        onPointerUp={(e) => e.stopPropagation()}
-      >
+      <div className="absolute top-2 right-2 flex gap-1">
         <Button
           plain
           type="button"

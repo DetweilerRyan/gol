@@ -23,6 +23,13 @@ async function openPatternModal(page: Page) {
 async function selectPattern(page: Page, name: string) {
   await openPatternModal(page)
   await page.getByRole('button', { name, exact: true }).click()
+
+  // Headless UI's Dialog stays mounted through its ~100ms leave transition,
+  // still covering the click point during that window -- waiting for it to
+  // fully unmount here (rather than at each call site) keeps the subsequent
+  // mouse.move/click in every caller from landing on the closing dialog
+  // instead of the grid underneath.
+  await expect(modal(page)).toHaveCount(0)
 }
 
 // Playwright keeps keyboard focus on the button that was last clicked, and
@@ -109,8 +116,6 @@ test('dragging over the open modal does not pan the grid underneath', async ({ p
 
 test('clicking a pattern in the library closes the modal and enters placing mode', async ({ page }) => {
   await selectPattern(page, 'Block')
-
-  await expect(modal(page)).toHaveCount(0)
 
   await page.mouse.move(CENTER.x, CENTER.y)
   await expect(page.locator('[aria-label="Pattern preview cell 0, 0"]')).toBeVisible()
