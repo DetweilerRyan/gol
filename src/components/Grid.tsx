@@ -245,6 +245,7 @@ export default function Grid({ liveCells, onToggleCell, onPlacePattern, onSuppre
           outer container's, which pointerToWorldCell and the wheel handler
           both rely on. */}
       <div
+        id="grid-content"
         onPointerDown={handlePointerDown}
         onPointerMove={handlePointerMove}
         onPointerUp={handlePointerUp}
@@ -322,12 +323,14 @@ export default function Grid({ liveCells, onToggleCell, onPlacePattern, onSuppre
             metrics={scrollbarMetrics.horizontal}
             trackLengthPx={containerSize.width}
             onDrag={panByScrollbarDrag}
+            contentId="grid-content"
           />
           <Scrollbar
             axis="y"
             metrics={scrollbarMetrics.vertical}
             trackLengthPx={containerSize.height}
             onDrag={panByScrollbarDrag}
+            contentId="grid-content"
           />
         </>
       )}

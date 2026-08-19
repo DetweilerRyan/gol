@@ -6,6 +6,7 @@ interface ScrollbarProps {
   metrics: ScrollbarMetrics
   trackLengthPx: number
   onDrag: (axis: ScrollbarAxis, deltaTrackPx: number, thumbRatio: number) => void
+  contentId: string
 }
 
 interface ScrollbarDragState {
@@ -13,7 +14,7 @@ interface ScrollbarDragState {
   thumbRatio: number
 }
 
-export default function Scrollbar({ axis, metrics, trackLengthPx, onDrag }: ScrollbarProps) {
+export default function Scrollbar({ axis, metrics, trackLengthPx, onDrag, contentId }: ScrollbarProps) {
   const dragStateRef = useRef<ScrollbarDragState | null>(null)
 
   const { lengthPx: thumbLengthPx, offsetPx: thumbPositionPx } = computeThumbGeometry(metrics, trackLengthPx)
@@ -58,6 +59,11 @@ export default function Scrollbar({ axis, metrics, trackLengthPx, onDrag }: Scro
       <div
         role="scrollbar"
         aria-orientation={axis === 'x' ? 'horizontal' : 'vertical'}
+        aria-controls={contentId}
+        aria-label={axis === 'x' ? 'Horizontal scroll' : 'Vertical scroll'}
+        aria-valuemin={0}
+        aria-valuemax={100}
+        aria-valuenow={Math.round(metrics.thumbOffsetRatio * 100)}
         onPointerDown={handlePointerDown}
         onPointerMove={handlePointerMove}
         onPointerUp={handlePointerUp}

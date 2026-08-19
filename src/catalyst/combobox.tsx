@@ -55,6 +55,9 @@ export function Combobox<T>({
         ])}
       >
         <Headless.ComboboxInput
+          // caller-opted-in via an explicit `autoFocus` prop, not a hardcoded default;
+          // this is the documented Catalyst escape-hatch pattern.
+          // oxlint-disable-next-line jsx-a11y/no-autofocus
           autoFocus={autoFocus}
           data-slot="control"
           aria-label={ariaLabel}
