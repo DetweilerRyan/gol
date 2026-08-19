@@ -69,11 +69,12 @@ export function getNextGeneration(liveCells: LiveCells): LiveCells {
   return next
 }
 
-export type PatternCategory = 'Still Life' | 'Oscillators' | 'Spaceships'
+// Canonical display order for the pattern library modal. PatternCategory is
+// derived from this array rather than declared separately, so a new category
+// can only be added in one place.
+export const PATTERN_CATEGORIES = ['Still Life', 'Oscillators', 'Spaceships'] as const
 
-// Canonical display order for the pattern library modal -- kept next to the
-// type it enumerates so a new category can't be added to one without the other.
-export const PATTERN_CATEGORIES: readonly PatternCategory[] = ['Still Life', 'Oscillators', 'Spaceships']
+export type PatternCategory = (typeof PATTERN_CATEGORIES)[number]
 
 export interface Pattern {
   name: string

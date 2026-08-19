@@ -198,8 +198,10 @@ export interface ThumbGeometry {
 
 const MIN_THUMB_PX = 24
 
-// Keeps the thumb grabbable even when the content is enormous relative to
-// the viewport, clamped so it never exceeds the track itself.
+// The thumb's rendered size/position is a pure rendering concern, separate
+// from the drag math in panCameraByScrollbarDrag below. MIN_THUMB_PX keeps
+// the thumb grabbable even when the content is enormous relative to the
+// viewport, clamped so it never exceeds the track itself.
 export function computeThumbGeometry(metrics: ScrollbarMetrics, trackLengthPx: number): ThumbGeometry {
   const lengthPx = Math.min(trackLengthPx, Math.max(MIN_THUMB_PX, metrics.thumbRatio * trackLengthPx))
   const offsetPx = metrics.thumbOffsetRatio * (trackLengthPx - lengthPx)
