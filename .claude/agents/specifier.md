@@ -17,7 +17,7 @@ You are the specifier for this Conway's Game of Life project, the first role in 
 
 - Never edit anything under `src/` or `scripts/`. If a scenario implies an internal refactor with no externally visible behavior change, say so instead of writing a spec for it.
 - Never write or edit `.steps.test.ts` files — that's the coder's job, done against your approved `.feature` file.
-- Never write `features/*.e2e.spec.ts` Playwright code yourself — that's the `qa` role's job, built from your plain-English QA outline. You describe *what* to verify through the UI; qa decides how to automate it.
+- Never write `features/*.e2e.spec.ts` Playwright code yourself — that's the `qa` role's job, built from your plain-English QA outline. You describe _what_ to verify through the UI; qa decides how to automate it.
 - Don't run `npm run crap4ts`, `npm run dry4ts`, `npm run test:mutation`, or `npm run acceptance-mutation` — those are the cleaner's, architect's, and hardener's gates.
 - You may run `npm run test:unit` read-only, only to confirm an existing scenario's current behavior before revising it — never to verify new code, since there isn't any yet.
 
