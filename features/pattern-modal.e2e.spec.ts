@@ -50,14 +50,19 @@ test('clicking the Patterns button opens the pattern library modal', async ({ pa
 
   await openPatternModal(page)
 
-  await expect(modal(page)).toBeVisible()
+  // Catalyst's Dialog root has no in-flow content of its own (its backdrop
+  // and panel wrapper are both `fixed`), so it collapses to a 0-height box
+  // that renders correctly but reads as hidden to toBeVisible()'s
+  // bounding-box check -- toBeAttached() plus asserting the heading is
+  // visible covers both "the dialog mounted" and "it's actually on screen".
+  await expect(modal(page)).toBeAttached()
   await expect(modal(page)).toHaveAttribute('aria-modal', 'true')
   await expect(page.getByRole('heading', { name: 'Pattern Library' })).toBeVisible()
 })
 
 test('clicking the Patterns button again while the modal is open closes it', async ({ page }) => {
   await openPatternModal(page)
-  await expect(modal(page)).toBeVisible()
+  await expect(modal(page)).toBeAttached()
 
   // force: true -- Headless UI's Dialog marks the rest of the page (including
   // this very button) inert while open, which is correct accessible-modal

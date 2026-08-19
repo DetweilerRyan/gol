@@ -527,12 +527,12 @@ export default function Grid({ liveCells, onToggleCell, onPlacePattern, onSuppre
         >
           Reset
         </Button>
-        {/* z-30 (above the modal's z-20 backdrop) so this button stays
-            clickable as a close/cancel toggle while the modal it opens is
-            showing, unlike the other toolbar buttons here -- those stay
-            beneath the backdrop by design, per the flex-item z-index
-            exception in the CSS flexbox spec (z-index applies to flex
-            items even without an explicit `position`). */}
+        {/* z-30 so this button stays clickable as a close/cancel toggle
+            while the modal it opens is showing, unlike the other toolbar
+            buttons here -- those stay beneath the backdrop by design, per
+            the flex-item z-index exception in the CSS flexbox spec
+            (z-index applies to flex items even without an explicit
+            `position`). */}
         <Button
           plain
           type="button"
