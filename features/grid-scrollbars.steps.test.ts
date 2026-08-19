@@ -205,7 +205,15 @@ describeFeature(feature, ({ Scenario, ScenarioOutline }) => {
         camera = DEFAULT_CAMERA
       })
       When('I drag the horizontal scrollbar thumb by 50 pixels with a thumb ratio of <thumb ratio>', () => {
-        camera = panCameraByScrollbarDrag(camera, 'x', 50, Number(variables['thumb ratio']))
+        const thumbRatio = Number(variables['thumb ratio'])
+        // Guard against a mutated <thumb ratio> landing below 0:
+        // panCameraByScrollbarDrag's `thumbRatio <= 0` early-return treats 0 and
+        // any negative ratio identically, so a mutation of 0 to e.g. -2 would
+        // otherwise produce the same (no-op) result.
+        if (thumbRatio < 0 || thumbRatio > 1) {
+          throw new Error(`Unexpected thumb ratio: ${variables['thumb ratio']}`)
+        }
+        camera = panCameraByScrollbarDrag(camera, 'x', 50, thumbRatio)
       })
       Then("the camera's offsetX should be <expected offset>", () => {
         expect(camera.offsetX).toBeCloseTo(Number(variables['expected offset']))

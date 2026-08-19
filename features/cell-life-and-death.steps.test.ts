@@ -62,10 +62,24 @@ describeFeature(feature, ({ Scenario, ScenarioOutline }) => {
     let cells: LiveCells
 
     Given('a cell that is <state>', () => {
+      // Guard against a mutated <state> value silently falling into the "dead"
+      // branch (anything that isn't the literal string 'alive' does) -- that
+      // would make a mutation of "dead" itself, or a typo of "alive",
+      // indistinguishable from a correctly-parsed example.
+      if (variables.state !== 'alive' && variables.state !== 'dead') {
+        throw new Error(`Unexpected cell state: ${variables.state}`)
+      }
       cells = variables.state === 'alive' ? makeLiveCells([[0, 0]]) : createEmptyLiveCells()
     })
     And('it has <neighbors> live neighbors', () => {
       const neighborCount = Number(variables.neighbors)
+      // Guard against a mutated <neighbors> value landing outside 0-8, where
+      // Array.prototype.slice's negative-index/overflow semantics can silently
+      // reproduce the original neighbor count (e.g. slice(0, -7) on an
+      // 8-element array behaves like slice(0, 1)).
+      if (!Number.isInteger(neighborCount) || neighborCount < 0 || neighborCount > NEIGHBOR_OFFSETS.length) {
+        throw new Error(`Unexpected neighbor count: ${variables.neighbors}`)
+      }
       for (const [dx, dy] of NEIGHBOR_OFFSETS.slice(0, neighborCount)) {
         toggleCell(cells, dx, dy)
       }
