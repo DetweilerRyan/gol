@@ -1,5 +1,13 @@
 import { useEffect, useLayoutEffect, useRef, useState } from 'react'
-import { cellKey, computeContentBounds, isCellAlive, type LiveCells } from '../gameOfLife'
+import {
+  cellKey,
+  computeContentBounds,
+  isCellAlive,
+  PATTERNS,
+  type LiveCells,
+  type Pattern,
+  type PatternCategory,
+} from '../gameOfLife'
 import { useCamera } from '../hooks/useCamera'
 import {
   computeMajorGridlines,
@@ -18,6 +26,8 @@ import {
 interface GridProps {
   liveCells: LiveCells
   onToggleCell: (x: number, y: number) => void
+  onPlacePattern: (pattern: Pattern, anchorX: number, anchorY: number) => void
+  onSuppressEnterChange: (suppressed: boolean) => void
 }
 
 interface RulerLabelProps {
@@ -133,6 +143,58 @@ function Scrollbar({ axis, metrics, trackLengthPx, onDrag }: ScrollbarProps) {
   )
 }
 
+const PATTERN_CATEGORIES: readonly PatternCategory[] = ['Still Life', 'Oscillators', 'Spaceships']
+
+interface PatternLibraryModalProps {
+  onSelectPattern: (pattern: Pattern) => void
+  onClose: () => void
+}
+
+// Full-screen backdrop, so it needs to block the grid/toolbar underneath the
+// same way the toolbar itself does (see stopPropagation comment below): a
+// click event is native and unaffected by pointer capture, so it fires
+// directly on whichever element the pointerdown/pointerup pair actually hit
+// (here, the backdrop, since it's rendered on top) -- but pointerdown/up
+// still bubble to the container's own pan/toggle handlers unless stopped,
+// which would otherwise let a click-through toggle the cell underneath.
+function PatternLibraryModal({ onSelectPattern, onClose }: PatternLibraryModalProps) {
+  return (
+    <div
+      role="dialog"
+      aria-modal="true"
+      aria-label="Pattern library"
+      onClick={onClose}
+      onPointerDown={(e) => e.stopPropagation()}
+      onPointerUp={(e) => e.stopPropagation()}
+      className="absolute inset-0 z-20 flex items-center justify-center bg-black/50"
+    >
+      <div
+        onClick={(e) => e.stopPropagation()}
+        className="max-h-[80vh] w-full max-w-sm overflow-y-auto rounded-lg bg-white p-4 shadow-lg"
+      >
+        <h2 className="mb-3 text-lg font-semibold text-gray-900">Pattern Library</h2>
+        {PATTERN_CATEGORIES.map((category) => (
+          <section key={category} className="mb-4 last:mb-0">
+            <h3 className="mb-1 text-sm font-semibold text-gray-500">{category}</h3>
+            <div className="flex flex-col">
+              {PATTERNS.filter((pattern) => pattern.category === category).map((pattern) => (
+                <button
+                  key={pattern.name}
+                  type="button"
+                  onClick={() => onSelectPattern(pattern)}
+                  className="rounded px-2 py-1.5 text-left text-sm text-gray-900 transition-colors hover:bg-gray-100"
+                >
+                  {pattern.name}
+                </button>
+              ))}
+            </div>
+          </section>
+        ))}
+      </div>
+    </div>
+  )
+}
+
 const DRAG_THRESHOLD_PX = 4
 
 interface DragState {
@@ -142,7 +204,7 @@ interface DragState {
   lastY: number
 }
 
-export default function Grid({ liveCells, onToggleCell }: GridProps) {
+export default function Grid({ liveCells, onToggleCell, onPlacePattern, onSuppressEnterChange }: GridProps) {
   const containerRef = useRef<HTMLDivElement>(null)
   const [containerSize, setContainerSize] = useState({ width: 0, height: 0 })
   const hasCenteredRef = useRef(false)
@@ -152,6 +214,39 @@ export default function Grid({ liveCells, onToggleCell }: GridProps) {
   const dragStateRef = useRef<DragState | null>(null)
   const didDragRef = useRef(false)
   const [isPanning, setIsPanning] = useState(false)
+
+  const [isPatternModalOpen, setIsPatternModalOpen] = useState(false)
+  const [placingPattern, setPlacingPattern] = useState<Pattern | null>(null)
+  const [previewCell, setPreviewCell] = useState<{ x: number; y: number } | null>(null)
+
+  function cancelPlacing() {
+    setPlacingPattern(null)
+    setPreviewCell(null)
+  }
+
+  // Both the pattern modal and placing mode need to suppress App.tsx's
+  // global Enter-to-advance-generation shortcut (placing mode especially --
+  // otherwise pressing Enter while lining up a pattern would silently
+  // advance the simulation out from under it). Reported up via a callback
+  // rather than lifting this state entirely, since the modal-open/placing
+  // flags are otherwise only relevant to Grid's own pointer/keyboard wiring.
+  useEffect(() => {
+    onSuppressEnterChange(isPatternModalOpen || placingPattern !== null)
+  }, [isPatternModalOpen, placingPattern, onSuppressEnterChange])
+
+  useEffect(() => {
+    function handleKeyDown(e: KeyboardEvent) {
+      if (e.key !== 'Escape') return
+      if (placingPattern) {
+        cancelPlacing()
+      } else if (isPatternModalOpen) {
+        setIsPatternModalOpen(false)
+      }
+    }
+
+    window.addEventListener('keydown', handleKeyDown)
+    return () => window.removeEventListener('keydown', handleKeyDown)
+  }, [placingPattern, isPatternModalOpen])
 
   useLayoutEffect(() => {
     const el = containerRef.current
@@ -210,6 +305,16 @@ export default function Grid({ liveCells, onToggleCell }: GridProps) {
   }
 
   function handlePointerMove(e: React.PointerEvent) {
+    // Tracks the cursor's cell for the placing-mode preview on every move,
+    // independent of drag state -- pointermove fires on hover too, not just
+    // while a button is pressed, and the preview needs to follow the cursor
+    // even before any drag threshold is crossed (or when the pointer never
+    // goes down at all).
+    if (placingPattern) {
+      const rect = e.currentTarget.getBoundingClientRect()
+      setPreviewCell(screenToWorld(camera, e.clientX - rect.left, e.clientY - rect.top))
+    }
+
     const drag = dragStateRef.current
     if (!drag) return
 
@@ -241,7 +346,7 @@ export default function Grid({ liveCells, onToggleCell }: GridProps) {
     if (!didDragRef.current) {
       const rect = e.currentTarget.getBoundingClientRect()
       const { x, y } = screenToWorld(camera, e.clientX - rect.left, e.clientY - rect.top)
-      onToggleCell(x, y)
+      placeOrToggleAt(x, y)
     }
     dragStateRef.current = null
     setIsPanning(false)
@@ -255,8 +360,38 @@ export default function Grid({ liveCells, onToggleCell }: GridProps) {
     setIsPanning(false)
   }
 
+  // Single-shot: stamping via placeOrToggleAt exits placing mode immediately
+  // afterward, rather than leaving the pattern armed for repeat stamps.
+  function placeOrToggleAt(x: number, y: number) {
+    if (placingPattern) {
+      onPlacePattern(placingPattern, x, y)
+      cancelPlacing()
+    } else {
+      onToggleCell(x, y)
+    }
+  }
+
+  // Keyboard activation (Enter/Space) of a cell button never goes through
+  // pointer capture (see handlePointerUp's comment), so it needs the same
+  // placing-vs-toggle branch as the pointer path to behave consistently.
   function handleCellClick(x: number, y: number) {
-    onToggleCell(x, y)
+    placeOrToggleAt(x, y)
+  }
+
+  function handlePatternsButtonClick() {
+    if (placingPattern) {
+      cancelPlacing()
+    } else if (isPatternModalOpen) {
+      setIsPatternModalOpen(false)
+    } else {
+      setIsPatternModalOpen(true)
+    }
+  }
+
+  function handleSelectPattern(pattern: Pattern) {
+    setIsPatternModalOpen(false)
+    setPlacingPattern(pattern)
+    setPreviewCell(null)
   }
 
   return (
@@ -291,6 +426,31 @@ export default function Grid({ liveCells, onToggleCell }: GridProps) {
           />
         )
       })}
+
+      {/* Placing-mode preview: (dx, dy) of the pattern renders at world cell
+          (previewCell.x + dx, previewCell.y + dy), matching placePattern's
+          top-left-anchor convention. pointer-events-none so hovering the
+          preview itself doesn't block the underlying pointermove tracking. */}
+      {placingPattern &&
+        previewCell &&
+        placingPattern.cells.map(([dx, dy]) => {
+          const x = previewCell.x + dx
+          const y = previewCell.y + dy
+          const { x: left, y: top } = worldToScreen(camera, x, y)
+          return (
+            <div
+              key={`preview-${x}-${y}`}
+              aria-label={`Pattern preview cell ${x}, ${y}`}
+              style={{
+                width: camera.cellSize,
+                height: camera.cellSize,
+                transform: `translate(${left}px, ${top}px)`,
+                boxSizing: 'border-box',
+              }}
+              className="pointer-events-none absolute top-0 left-0 border border-green-600 bg-green-400/60"
+            />
+          )
+        })}
 
       {/* Coordinate ruler: labels every 10th gridline. pointer-events-none keeps
           these from interfering with cell clicks/dragging underneath. */}
@@ -362,7 +522,25 @@ export default function Grid({ liveCells, onToggleCell }: GridProps) {
         >
           Reset
         </button>
+        {/* z-30 (above the modal's z-20 backdrop) so this button stays
+            clickable as a close/cancel toggle while the modal it opens is
+            showing, unlike the other toolbar buttons here -- those stay
+            beneath the backdrop by design, per the flex-item z-index
+            exception in the CSS flexbox spec (z-index applies to flex
+            items even without an explicit `position`). */}
+        <button
+          type="button"
+          aria-label="Open pattern library"
+          onClick={handlePatternsButtonClick}
+          className="z-30 h-8 rounded bg-gray-900 px-2 text-sm font-medium text-white transition-colors hover:bg-gray-700"
+        >
+          Patterns
+        </button>
       </div>
+
+      {isPatternModalOpen && (
+        <PatternLibraryModal onSelectPattern={handleSelectPattern} onClose={() => setIsPatternModalOpen(false)} />
+      )}
     </div>
   )
 }
