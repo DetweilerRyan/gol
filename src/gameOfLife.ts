@@ -223,12 +223,25 @@ export function getPatternByName(name: string): Pattern | undefined {
   return PATTERNS.find((pattern) => pattern.name === name)
 }
 
+// Computes the absolute world-space positions a pattern's cells would occupy
+// if its bounding-box top-left corner were placed at (anchorX, anchorY).
+// Single source of truth for the anchor convention -- shared by placePattern
+// (to stamp cells) and the placing-mode preview in Grid.tsx (to render them
+// before committing), so preview and actual placement can't drift apart.
+export function patternCellPositions(
+  pattern: Pattern,
+  anchorX: number,
+  anchorY: number,
+): ReadonlyArray<readonly [number, number]> {
+  return pattern.cells.map(([dx, dy]) => [anchorX + dx, anchorY + dy] as const)
+}
+
 // Translates the pattern's shape so its bounding-box top-left corner sits at
 // (anchorX, anchorY), then unions it into the existing live cells: cells
 // already alive stay alive, matching stamping behavior rather than toggling.
 export function placePattern(draft: LiveCells, pattern: Pattern, anchorX: number, anchorY: number): void {
-  for (const [dx, dy] of pattern.cells) {
-    draft.add(cellKey(anchorX + dx, anchorY + dy))
+  for (const [x, y] of patternCellPositions(pattern, anchorX, anchorY)) {
+    draft.add(cellKey(x, y))
   }
 }
 

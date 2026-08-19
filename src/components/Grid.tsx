@@ -3,6 +3,7 @@ import {
   cellKey,
   computeContentBounds,
   isCellAlive,
+  patternCellPositions,
   PATTERNS,
   type LiveCells,
   type Pattern,
@@ -433,15 +434,13 @@ export default function Grid({ liveCells, onToggleCell, onPlacePattern, onSuppre
         )
       })}
 
-      {/* Placing-mode preview: (dx, dy) of the pattern renders at world cell
-          (previewCell.x + dx, previewCell.y + dy), matching placePattern's
-          top-left-anchor convention. pointer-events-none so hovering the
-          preview itself doesn't block the underlying pointermove tracking. */}
+      {/* Placing-mode preview: uses the same patternCellPositions helper
+          placePattern itself is built on, so the preview can't drift from
+          where a stamp would actually land. pointer-events-none so hovering
+          the preview itself doesn't block the underlying pointermove tracking. */}
       {placingPattern &&
         previewCell &&
-        placingPattern.cells.map(([dx, dy]) => {
-          const x = previewCell.x + dx
-          const y = previewCell.y + dy
+        patternCellPositions(placingPattern, previewCell.x, previewCell.y).map(([x, y]) => {
           const { x: left, y: top } = worldToScreen(camera, x, y)
           return (
             <div
