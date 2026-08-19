@@ -1,4 +1,5 @@
 import { useEffect, useLayoutEffect, useRef, useState } from 'react'
+import { Button } from '../catalyst/button'
 import {
   cellKey,
   computeContentBounds,
@@ -503,44 +504,48 @@ export default function Grid({ liveCells, onToggleCell, onPlacePattern, onSuppre
         onPointerDown={(e) => e.stopPropagation()}
         onPointerUp={(e) => e.stopPropagation()}
       >
-        <button
+        <Button
+          plain
           type="button"
           aria-label="Zoom in"
           onClick={() => zoomAtPoint(containerSize.width / 2, containerSize.height / 2, ZOOM_FACTOR)}
-          className="h-8 w-8 rounded bg-gray-900 font-medium text-white transition-colors hover:bg-gray-700"
+          className="h-8! w-8! justify-center rounded! !bg-gray-900 font-medium! !text-white transition-colors hover:!bg-gray-700"
         >
           +
-        </button>
-        <button
+        </Button>
+        <Button
+          plain
           type="button"
           aria-label="Zoom out"
           onClick={() => zoomAtPoint(containerSize.width / 2, containerSize.height / 2, 1 / ZOOM_FACTOR)}
-          className="h-8 w-8 rounded bg-gray-900 font-medium text-white transition-colors hover:bg-gray-700"
+          className="h-8! w-8! justify-center rounded! !bg-gray-900 font-medium! !text-white transition-colors hover:!bg-gray-700"
         >
           −
-        </button>
-        <button
+        </Button>
+        <Button
+          plain
           type="button"
           aria-label="Reset view"
           onClick={() => centerView(containerSize.width, containerSize.height)}
-          className="h-8 rounded bg-gray-900 px-2 text-sm font-medium text-white transition-colors hover:bg-gray-700"
+          className="h-8! justify-center rounded! !bg-gray-900 px-2! text-sm! font-medium! !text-white transition-colors hover:!bg-gray-700"
         >
           Reset
-        </button>
+        </Button>
         {/* z-30 (above the modal's z-20 backdrop) so this button stays
             clickable as a close/cancel toggle while the modal it opens is
             showing, unlike the other toolbar buttons here -- those stay
             beneath the backdrop by design, per the flex-item z-index
             exception in the CSS flexbox spec (z-index applies to flex
             items even without an explicit `position`). */}
-        <button
+        <Button
+          plain
           type="button"
           aria-label="Open pattern library"
           onClick={handlePatternsButtonClick}
-          className="z-30 h-8 rounded bg-gray-900 px-2 text-sm font-medium text-white transition-colors hover:bg-gray-700"
+          className="z-30 h-8! justify-center rounded! !bg-gray-900 px-2! text-sm! font-medium! !text-white transition-colors hover:!bg-gray-700"
         >
           Patterns
-        </button>
+        </Button>
       </div>
 
       {isPatternModalOpen && (

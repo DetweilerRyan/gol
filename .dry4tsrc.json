@@ -3,6 +3,6 @@
   "minLines": 4,
   "minNodes": 20,
   "format": "text",
-  "ignorePatterns": ["**/*.d.ts"],
+  "ignorePatterns": ["**/*.d.ts", "src/catalyst/**"],
   "failOnFound": true
 }
