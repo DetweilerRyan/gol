@@ -304,6 +304,14 @@ export default function Grid({ liveCells, onToggleCell, onPlacePattern, onSuppre
     didDragRef.current = false
   }
 
+  // Resolves a pointer event's client coordinates to the world cell under it,
+  // relative to the grid container -- shared by cell-toggle resolution
+  // (handlePointerUp) and placing-mode preview tracking (handlePointerMove).
+  function pointerToWorldCell(e: React.PointerEvent) {
+    const rect = e.currentTarget.getBoundingClientRect()
+    return screenToWorld(camera, e.clientX - rect.left, e.clientY - rect.top)
+  }
+
   function handlePointerMove(e: React.PointerEvent) {
     // Tracks the cursor's cell for the placing-mode preview on every move,
     // independent of drag state -- pointermove fires on hover too, not just
@@ -311,8 +319,7 @@ export default function Grid({ liveCells, onToggleCell, onPlacePattern, onSuppre
     // even before any drag threshold is crossed (or when the pointer never
     // goes down at all).
     if (placingPattern) {
-      const rect = e.currentTarget.getBoundingClientRect()
-      setPreviewCell(screenToWorld(camera, e.clientX - rect.left, e.clientY - rect.top))
+      setPreviewCell(pointerToWorldCell(e))
     }
 
     const drag = dragStateRef.current
@@ -344,8 +351,7 @@ export default function Grid({ liveCells, onToggleCell, onPlacePattern, onSuppre
       e.currentTarget.releasePointerCapture(e.pointerId)
     }
     if (!didDragRef.current) {
-      const rect = e.currentTarget.getBoundingClientRect()
-      const { x, y } = screenToWorld(camera, e.clientX - rect.left, e.clientY - rect.top)
+      const { x, y } = pointerToWorldCell(e)
       placeOrToggleAt(x, y)
     }
     dragStateRef.current = null
