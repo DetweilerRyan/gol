@@ -4,7 +4,10 @@ import {
   computeContentBounds,
   createEmptyLiveCells,
   getNextGeneration,
+  getPatternByName,
   isCellAlive,
+  PATTERNS,
+  placePattern,
   toggleCell,
   type LiveCells,
 } from './gameOfLife'
@@ -151,6 +154,55 @@ describe('getNextGeneration', () => {
         [0, 1],
       ]),
     )
+  })
+})
+
+describe('getPatternByName', () => {
+  it('finds a pattern by exact name', () => {
+    expect(getPatternByName('Glider')?.category).toBe('Spaceships')
+  })
+
+  it('returns undefined for an unknown name', () => {
+    expect(getPatternByName('Not A Real Pattern')).toBeUndefined()
+  })
+
+  it('has all 8 patterns with unique names', () => {
+    expect(PATTERNS).toHaveLength(8)
+    expect(new Set(PATTERNS.map((pattern) => pattern.name)).size).toBe(8)
+  })
+})
+
+describe('placePattern', () => {
+  it('translates the pattern so its bounding-box top-left corner sits at the anchor', () => {
+    const cells = createEmptyLiveCells()
+    const blinker = getPatternByName('Blinker')
+    if (!blinker) throw new Error('Blinker pattern not found')
+    placePattern(cells, blinker, 10, 10)
+    expect(cells).toEqual(
+      makeLiveCells([
+        [10, 10],
+        [11, 10],
+        [12, 10],
+      ]),
+    )
+  })
+
+  it('unions the pattern into existing live cells rather than replacing them', () => {
+    const cells = makeLiveCells([[0, 0]])
+    const block = getPatternByName('Block')
+    if (!block) throw new Error('Block pattern not found')
+    placePattern(cells, block, 5, 5)
+    expect(isCellAlive(cells, 0, 0)).toBe(true)
+    expect(isCellAlive(cells, 5, 5)).toBe(true)
+    expect(isCellAlive(cells, 6, 6)).toBe(true)
+  })
+
+  it('keeps an already-live cell alive rather than toggling it off', () => {
+    const cells = makeLiveCells([[5, 5]])
+    const block = getPatternByName('Block')
+    if (!block) throw new Error('Block pattern not found')
+    placePattern(cells, block, 5, 5)
+    expect(isCellAlive(cells, 5, 5)).toBe(true)
   })
 })
 
