@@ -16,6 +16,8 @@ npm run format             # prettier --write .
 npm run format:check       # prettier --check .
 
 npm test                    # vitest run (unit + property + Gherkin acceptance tests, jsdom env)
+npm run test:unit           # vitest run, excluding *.property.test.ts and *.e2e.spec.ts -- fast path for iterative TDD
+npm run test:property       # vitest run, only the *.property.test.ts files
 npm run test:coverage       # vitest run --coverage
 npx vitest run <path>       # run a single test file
 npx vitest run -t "<name>"  # run tests matching a name pattern
@@ -65,14 +67,16 @@ Both have their own `.test.mjs` unit tests runnable via `npx vitest run scripts/
 
 ## Subagent pipeline
 
-`.claude/agents/` defines a four-role pipeline adapted from unclebob/swarm-forge's four-pack branch, scoped to this repo's actual commands (Gherkin features, `crap4ts`, `dry4ts`, Stryker, `acceptance-mutation`) rather than swarm-forge's tmux/worktree orchestration. Each role's full instructions and boundaries live in its own file — read the relevant one before invoking it rather than relying on this summary.
+`.claude/agents/` defines a six-role pipeline adapted from unclebob/swarm-forge's six-pack branch, scoped to this repo's actual commands (Gherkin features, `crap4ts`, `dry4ts`, Stryker, `acceptance-mutation`, Playwright) rather than swarm-forge's tmux/worktree/file-based-handoff orchestration. Each role's full instructions and boundaries live in its own file — read the relevant one before invoking it rather than relying on this summary. Shared house rules ported from swarm-forge's `main`-branch constitution live in `.claude/agents/articles/` (`engineering.md`, `workflow.md`, `handoffs.md`) — every role reads these too.
 
-Cycle order for a feature: **specifier → coder → refactorer → architect**, looping back to specifier for the next slice.
+Cycle order for a feature: **specifier → coder → cleaner → architect → hardener → qa**, looping back to specifier for the next slice.
 
-1. `specifier` — drafts/revises `features/*.feature` scenarios; stops for explicit user approval before committing; never touches `src/`.
-2. `coder` — implements one approved slice via TDD; never runs the quality-gate tools.
-3. `refactorer` — structure-preserving cleanup only (CRAP/DRY/scoped mutation scan on touched files); no new functionality.
-4. `architect` — reviews module boundaries/dependency direction, then runs the full verification sequence (`test:mutation` → `dry4ts` → `acceptance-mutation`) as the final gate.
+1. `specifier` — drafts/revises `features/*.feature` scenarios and a plain-English end-to-end QA outline; stops for explicit user approval before committing; never touches `src/`.
+2. `coder` — implements one approved slice via TDD; never writes `features/*.e2e.spec.ts` and never runs the quality-gate tools.
+3. `cleaner` — structure-preserving cleanup only (CRAP/DRY/scoped mutation scan on touched files); no new functionality. This is the four-pack's old `refactorer`, narrowed: it no longer runs a full mutation suite, only the scoped scan.
+4. `architect` — reviews module boundaries/dependency direction and property-test coverage. Unlike the old four-pack architect, it does **not** run the full quality gate itself — that moved to `hardener`.
+5. `hardener` — new role; owns the full final verification sequence (`test:mutation` → `acceptance-mutation` → `crap4ts` → `dry4ts`, in that order), fixing whatever each stage surfaces before moving to the next.
+6. `qa` — new role; builds and runs `features/*.e2e.spec.ts` (Playwright) from the specifier's QA outline as the final independent, black-box check through the real UI, then re-confirms `crap4ts`/`dry4ts` clean before declaring the feature done.
 
 There's no daemon or persistent process wiring these together — the orchestrating session invokes each role in turn via the `Agent` tool and sequences the handoffs itself.
 

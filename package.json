@@ -11,6 +11,8 @@
     "format:check": "prettier --check .",
     "preview": "vite preview",
     "test": "vitest run",
+    "test:unit": "vitest run --exclude '**/*.property.test.ts' --exclude '**/*.e2e.spec.ts'",
+    "test:property": "vitest run src/gameOfLife.property.test.ts src/viewport.property.test.ts",
     "test:coverage": "vitest run --coverage",
     "crap4ts": "crap4ts",
     "dry4ts": "dry4ts src",
