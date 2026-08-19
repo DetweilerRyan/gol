@@ -1,5 +1,7 @@
 import { useEffect, useLayoutEffect, useRef, useState } from 'react'
 import { Button } from '../catalyst/button'
+import { Dialog, DialogBody, DialogTitle } from '../catalyst/dialog'
+import { Subheading } from '../catalyst/heading'
 import {
   cellKey,
   computeContentBounds,
@@ -148,52 +150,37 @@ function Scrollbar({ axis, metrics, trackLengthPx, onDrag }: ScrollbarProps) {
 const PATTERN_CATEGORIES: readonly PatternCategory[] = ['Still Life', 'Oscillators', 'Spaceships']
 
 interface PatternLibraryModalProps {
+  open: boolean
   onSelectPattern: (pattern: Pattern) => void
   onClose: () => void
 }
 
-// Full-screen backdrop, so it needs to block the grid/toolbar underneath the
-// same way the toolbar itself does (see stopPropagation comment below): a
-// click event is native and unaffected by pointer capture, so it fires
-// directly on whichever element the pointerdown/pointerup pair actually hit
-// (here, the backdrop, since it's rendered on top) -- but pointerdown/up
-// still bubble to the container's own pan/toggle handlers unless stopped,
-// which would otherwise let a click-through toggle the cell underneath.
-function PatternLibraryModal({ onSelectPattern, onClose }: PatternLibraryModalProps) {
+// Headless UI's Dialog owns its own mount/unmount (based on `open`), portal,
+// focus trap, and outside-click/Escape-to-close -- so unlike the previous
+// hand-rolled version, this component no longer needs its own
+// stopPropagation/onClick-to-close wiring. It still unmounts when closed
+// (Headless's default), so the toHaveCount(0) test assertions still hold.
+function PatternLibraryModal({ open, onSelectPattern, onClose }: PatternLibraryModalProps) {
   return (
-    <div
-      role="dialog"
-      aria-modal="true"
-      aria-label="Pattern library"
-      onClick={onClose}
-      onPointerDown={(e) => e.stopPropagation()}
-      onPointerUp={(e) => e.stopPropagation()}
-      className="absolute inset-0 z-20 flex items-center justify-center bg-black/50"
-    >
-      <div
-        onClick={(e) => e.stopPropagation()}
-        className="max-h-[80vh] w-full max-w-sm overflow-y-auto rounded-lg bg-white p-4 shadow-lg"
-      >
-        <h2 className="mb-3 text-lg font-semibold text-gray-900">Pattern Library</h2>
+    <Dialog open={open} onClose={onClose} aria-label="Pattern library" size="sm">
+      <DialogTitle>Pattern Library</DialogTitle>
+      <DialogBody>
         {PATTERN_CATEGORIES.map((category) => (
           <section key={category} className="mb-4 last:mb-0">
-            <h3 className="mb-1 text-sm font-semibold text-gray-500">{category}</h3>
+            <Subheading level={3} className="mb-1 text-sm! font-semibold! text-gray-500!">
+              {category}
+            </Subheading>
             <div className="flex flex-col">
               {PATTERNS.filter((pattern) => pattern.category === category).map((pattern) => (
-                <button
-                  key={pattern.name}
-                  type="button"
-                  onClick={() => onSelectPattern(pattern)}
-                  className="rounded px-2 py-1.5 text-left text-sm text-gray-900 transition-colors hover:bg-gray-100"
-                >
+                <Button key={pattern.name} plain className="justify-start" onClick={() => onSelectPattern(pattern)}>
                   {pattern.name}
-                </button>
+                </Button>
               ))}
             </div>
           </section>
         ))}
-      </div>
-    </div>
+      </DialogBody>
+    </Dialog>
   )
 }
 
@@ -241,14 +228,12 @@ export default function Grid({ liveCells, onToggleCell, onPlacePattern, onSuppre
       if (e.key !== 'Escape') return
       if (placingPattern) {
         cancelPlacing()
-      } else if (isPatternModalOpen) {
-        setIsPatternModalOpen(false)
       }
     }
 
     window.addEventListener('keydown', handleKeyDown)
     return () => window.removeEventListener('keydown', handleKeyDown)
-  }, [placingPattern, isPatternModalOpen])
+  }, [placingPattern])
 
   useLayoutEffect(() => {
     const el = containerRef.current
@@ -300,7 +285,15 @@ export default function Grid({ liveCells, onToggleCell, onPlacePattern, onSuppre
   const contentBounds = computeContentBounds(liveCells)
   const scrollbarMetrics = computeScrollbarMetrics(camera, contentBounds, containerSize.width, containerSize.height)
 
+  // isPatternModalOpen guards below: React's synthetic pointer events bubble
+  // through the component tree even across Headless UI's portal, so without
+  // this the modal's backdrop/pattern buttons would still reach these
+  // handlers -- and setPointerCapture below would retarget the pattern
+  // button's own click, silently breaking pattern selection. Repeated across
+  // all 4 handlers rather than centralized; revisit if more overlay
+  // components (Dropdown, Combobox, etc.) get added later.
   function handlePointerDown(e: React.PointerEvent) {
+    if (isPatternModalOpen) return
     e.currentTarget.setPointerCapture(e.pointerId)
     dragStateRef.current = { startX: e.clientX, startY: e.clientY, lastX: e.clientX, lastY: e.clientY }
     didDragRef.current = false
@@ -315,6 +308,7 @@ export default function Grid({ liveCells, onToggleCell, onPlacePattern, onSuppre
   }
 
   function handlePointerMove(e: React.PointerEvent) {
+    if (isPatternModalOpen) return
     // Tracks the cursor's cell for the placing-mode preview on every move,
     // independent of drag state -- pointermove fires on hover too, not just
     // while a button is pressed, and the preview needs to follow the cursor
@@ -349,6 +343,7 @@ export default function Grid({ liveCells, onToggleCell, onPlacePattern, onSuppre
   // coordinates instead. Button onClick still handles keyboard activation
   // (Enter/Space), which never goes through pointer capture.
   function handlePointerUp(e: React.PointerEvent) {
+    if (isPatternModalOpen) return
     if (e.currentTarget.hasPointerCapture(e.pointerId)) {
       e.currentTarget.releasePointerCapture(e.pointerId)
     }
@@ -361,6 +356,7 @@ export default function Grid({ liveCells, onToggleCell, onPlacePattern, onSuppre
   }
 
   function handlePointerCancel(e: React.PointerEvent) {
+    if (isPatternModalOpen) return
     if (e.currentTarget.hasPointerCapture(e.pointerId)) {
       e.currentTarget.releasePointerCapture(e.pointerId)
     }
@@ -548,9 +544,11 @@ export default function Grid({ liveCells, onToggleCell, onPlacePattern, onSuppre
         </Button>
       </div>
 
-      {isPatternModalOpen && (
-        <PatternLibraryModal onSelectPattern={handleSelectPattern} onClose={() => setIsPatternModalOpen(false)} />
-      )}
+      <PatternLibraryModal
+        open={isPatternModalOpen}
+        onSelectPattern={handleSelectPattern}
+        onClose={() => setIsPatternModalOpen(false)}
+      />
     </div>
   )
 }

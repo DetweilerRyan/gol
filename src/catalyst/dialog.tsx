@@ -25,7 +25,15 @@ export function Dialog({
   'as' | 'className'
 >) {
   return (
-    <Headless.Dialog {...props}>
+    // Headless.Dialog's own root div is otherwise unstyled and has no
+    // in-flow content (both DialogBackdrop and the panel wrapper below are
+    // `fixed`, taken out of normal flow), so it collapses to a 0-height box
+    // -- invisible to Playwright's `toBeVisible()` (empty bounding box) even
+    // though it renders correctly on screen. Giving it the same fixed
+    // full-viewport box directly fixes that without changing appearance,
+    // and doubles as the z-index anchor keeping this modal below the z-30
+    // toolbar button that toggles it.
+    <Headless.Dialog {...props} className="fixed inset-0 z-20">
       <Headless.DialogBackdrop
         transition
         className="fixed inset-0 flex w-screen justify-center overflow-y-auto bg-zinc-950/25 px-2 py-2 transition duration-100 focus:outline-0 data-closed:opacity-0 data-enter:ease-out data-leave:ease-in sm:px-6 sm:py-8 lg:px-8 lg:py-16 dark:bg-zinc-950/50"
