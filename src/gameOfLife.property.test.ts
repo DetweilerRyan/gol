@@ -1,7 +1,16 @@
 import { it } from '@fast-check/vitest'
 import fc from 'fast-check'
 import { describe, expect } from 'vitest'
-import { cellKey, createEmptyLiveCells, getNextGeneration, isCellAlive, toggleCell, type LiveCells } from './gameOfLife'
+import {
+  cellKey,
+  createEmptyLiveCells,
+  getNextGeneration,
+  isCellAlive,
+  PATTERN_CATEGORIES,
+  patternsByCategory,
+  toggleCell,
+  type LiveCells,
+} from './gameOfLife'
 
 // Bounded coordinate/pattern generators keep the brute-force reference
 // implementation below cheap while still exercising negative coordinates,
@@ -113,5 +122,11 @@ describe('getNextGeneration (property)', () => {
 describe('createEmptyLiveCells (property)', () => {
   it.prop([point])('never reports any cell as alive', ([x, y]) => {
     expect(isCellAlive(createEmptyLiveCells(), x, y)).toBe(false)
+  })
+})
+
+describe('patternsByCategory (property)', () => {
+  it.prop([fc.constantFrom(...PATTERN_CATEGORIES)])('only returns patterns matching the given category', (category) => {
+    expect(patternsByCategory(category).every((pattern) => pattern.category === category)).toBe(true)
   })
 })

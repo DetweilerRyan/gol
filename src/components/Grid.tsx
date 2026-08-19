@@ -1,16 +1,11 @@
 import { useEffect, useLayoutEffect, useRef, useState } from 'react'
-import { Button } from '../catalyst/button'
-import { Dialog, DialogBody, DialogTitle } from '../catalyst/dialog'
-import { Subheading } from '../catalyst/heading'
 import {
   cellKey,
   computeContentBounds,
   isCellAlive,
   patternCellPositions,
-  PATTERNS,
   type LiveCells,
   type Pattern,
-  type PatternCategory,
 } from '../gameOfLife'
 import { useCamera } from '../hooks/useCamera'
 import {
@@ -22,152 +17,17 @@ import {
   worldToScreen,
   zoomPercentage,
   ZOOM_FACTOR,
-  type Camera,
-  type ScrollbarAxis,
-  type ScrollbarMetrics,
 } from '../viewport'
+import GridToolbar from './GridToolbar'
+import PatternLibraryModal from './PatternLibraryModal'
+import RulerLabel from './RulerLabel'
+import Scrollbar from './Scrollbar'
 
 interface GridProps {
   liveCells: LiveCells
   onToggleCell: (x: number, y: number) => void
   onPlacePattern: (pattern: Pattern, anchorX: number, anchorY: number) => void
   onSuppressEnterChange: (suppressed: boolean) => void
-}
-
-interface RulerLabelProps {
-  axis: 'x' | 'y'
-  coordinate: number
-  camera: Camera
-}
-
-// pointer-events-none keeps these from interfering with cell clicks/dragging
-// underneath. axis picks which worldToScreen component positions the label
-// and which edge it's pinned to -- otherwise the x and y rulers are identical.
-function RulerLabel({ axis, coordinate, camera }: RulerLabelProps) {
-  const screen = axis === 'x' ? worldToScreen(camera, coordinate, 0) : worldToScreen(camera, 0, coordinate)
-  const edgeClass = axis === 'x' ? 'top-0.5' : 'left-0.5'
-  const transform = axis === 'x' ? `translateX(${screen.x + 2}px)` : `translateY(${screen.y + 2}px)`
-
-  return (
-    <span
-      className={`absolute ${edgeClass} pointer-events-none rounded bg-gray-50/80 px-0.5 text-[10px] leading-none text-gray-500`}
-      style={{ transform }}
-    >
-      {coordinate}
-    </span>
-  )
-}
-
-const MIN_THUMB_PX = 24
-
-interface ScrollbarProps {
-  axis: ScrollbarAxis
-  metrics: ScrollbarMetrics
-  trackLengthPx: number
-  onDrag: (axis: ScrollbarAxis, deltaTrackPx: number, thumbRatio: number) => void
-}
-
-interface ScrollbarDragState {
-  lastClientPos: number
-  thumbRatio: number
-}
-
-// The thumb's rendered size/position (thumbLengthPx/thumbPositionPx) is a
-// pure rendering concern, separate from the drag math in
-// panCameraByScrollbarDrag -- MIN_THUMB_PX keeps the thumb grabbable even
-// when the content is enormous relative to the viewport.
-function Scrollbar({ axis, metrics, trackLengthPx, onDrag }: ScrollbarProps) {
-  const dragStateRef = useRef<ScrollbarDragState | null>(null)
-
-  const thumbLengthPx = Math.min(trackLengthPx, Math.max(MIN_THUMB_PX, metrics.thumbRatio * trackLengthPx))
-  const thumbPositionPx = metrics.thumbOffsetRatio * (trackLengthPx - thumbLengthPx)
-
-  // thumbRatio is frozen at pointer-down and reused for the whole gesture --
-  // recomputing it mid-drag from live metrics would feed back on itself,
-  // since panning the camera changes the content's own pixel position.
-  function handlePointerDown(e: React.PointerEvent) {
-    e.currentTarget.setPointerCapture(e.pointerId)
-    dragStateRef.current = {
-      lastClientPos: axis === 'x' ? e.clientX : e.clientY,
-      thumbRatio: metrics.thumbRatio,
-    }
-  }
-
-  function handlePointerMove(e: React.PointerEvent) {
-    const drag = dragStateRef.current
-    if (!drag) return
-    const clientPos = axis === 'x' ? e.clientX : e.clientY
-    onDrag(axis, clientPos - drag.lastClientPos, drag.thumbRatio)
-    drag.lastClientPos = clientPos
-  }
-
-  function handlePointerUp(e: React.PointerEvent) {
-    if (e.currentTarget.hasPointerCapture(e.pointerId)) {
-      e.currentTarget.releasePointerCapture(e.pointerId)
-    }
-    dragStateRef.current = null
-  }
-
-  const trackClass =
-    axis === 'x' ? 'absolute inset-x-0 right-2.5 bottom-0 h-2.5' : 'absolute inset-y-0 bottom-2.5 right-0 w-2.5'
-  const thumbStyle: React.CSSProperties =
-    axis === 'x'
-      ? { width: thumbLengthPx, height: '100%', transform: `translateX(${thumbPositionPx}px)` }
-      : { height: thumbLengthPx, width: '100%', transform: `translateY(${thumbPositionPx}px)` }
-
-  // No click-to-jump on the empty track area, by design -- only the thumb
-  // below has pointer handlers.
-  return (
-    <div className={`${trackClass} rounded bg-gray-200/60`}>
-      <div
-        role="scrollbar"
-        aria-orientation={axis === 'x' ? 'horizontal' : 'vertical'}
-        onPointerDown={handlePointerDown}
-        onPointerMove={handlePointerMove}
-        onPointerUp={handlePointerUp}
-        onPointerCancel={handlePointerUp}
-        className="absolute top-0 left-0 touch-none rounded bg-gray-900/70 transition-colors hover:bg-gray-900"
-        style={thumbStyle}
-      />
-    </div>
-  )
-}
-
-const PATTERN_CATEGORIES: readonly PatternCategory[] = ['Still Life', 'Oscillators', 'Spaceships']
-
-interface PatternLibraryModalProps {
-  open: boolean
-  onSelectPattern: (pattern: Pattern) => void
-  onClose: () => void
-}
-
-// Headless UI's Dialog owns its own mount/unmount (based on `open`), portal,
-// focus trap, and outside-click/Escape-to-close -- so unlike the previous
-// hand-rolled version, this component no longer needs its own
-// stopPropagation/onClick-to-close wiring. It still unmounts when closed
-// (Headless's default), so the toHaveCount(0) test assertions still hold.
-function PatternLibraryModal({ open, onSelectPattern, onClose }: PatternLibraryModalProps) {
-  return (
-    <Dialog open={open} onClose={onClose} aria-label="Pattern library" size="sm">
-      <DialogTitle>Pattern Library</DialogTitle>
-      <DialogBody>
-        {PATTERN_CATEGORIES.map((category) => (
-          <section key={category} className="mb-4 last:mb-0">
-            <Subheading level={3} className="mb-1 text-sm! font-semibold! text-gray-500!">
-              {category}
-            </Subheading>
-            <div className="flex flex-col">
-              {PATTERNS.filter((pattern) => pattern.category === category).map((pattern) => (
-                <Button key={pattern.name} plain className="justify-start" onClick={() => onSelectPattern(pattern)}>
-                  {pattern.name}
-                </Button>
-              ))}
-            </div>
-          </section>
-        ))}
-      </DialogBody>
-    </Dialog>
-  )
 }
 
 const DRAG_THRESHOLD_PX = 4
@@ -472,44 +332,12 @@ export default function Grid({ liveCells, onToggleCell, onPlacePattern, onSuppre
         </>
       )}
 
-      <div className="absolute top-2 right-2 flex gap-1">
-        <Button
-          plain
-          type="button"
-          aria-label="Zoom in"
-          onClick={() => zoomAtPoint(containerSize.width / 2, containerSize.height / 2, ZOOM_FACTOR)}
-          className="h-8! w-8! justify-center rounded! !bg-gray-900 font-medium! !text-white transition-colors hover:!bg-gray-700"
-        >
-          +
-        </Button>
-        <Button
-          plain
-          type="button"
-          aria-label="Zoom out"
-          onClick={() => zoomAtPoint(containerSize.width / 2, containerSize.height / 2, 1 / ZOOM_FACTOR)}
-          className="h-8! w-8! justify-center rounded! !bg-gray-900 font-medium! !text-white transition-colors hover:!bg-gray-700"
-        >
-          −
-        </Button>
-        <Button
-          plain
-          type="button"
-          aria-label="Reset view"
-          onClick={() => centerView(containerSize.width, containerSize.height)}
-          className="h-8! justify-center rounded! !bg-gray-900 px-2! text-sm! font-medium! !text-white transition-colors hover:!bg-gray-700"
-        >
-          Reset
-        </Button>
-        <Button
-          plain
-          type="button"
-          aria-label="Open pattern library"
-          onClick={handlePatternsButtonClick}
-          className="h-8! justify-center rounded! !bg-gray-900 px-2! text-sm! font-medium! !text-white transition-colors hover:!bg-gray-700"
-        >
-          Patterns
-        </Button>
-      </div>
+      <GridToolbar
+        onZoomIn={() => zoomAtPoint(containerSize.width / 2, containerSize.height / 2, ZOOM_FACTOR)}
+        onZoomOut={() => zoomAtPoint(containerSize.width / 2, containerSize.height / 2, 1 / ZOOM_FACTOR)}
+        onReset={() => centerView(containerSize.width, containerSize.height)}
+        onPatterns={handlePatternsButtonClick}
+      />
 
       <PatternLibraryModal
         open={isPatternModalOpen}

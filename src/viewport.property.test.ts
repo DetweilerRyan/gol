@@ -6,6 +6,7 @@ import {
   centeredCamera,
   clampCellSize,
   computeMajorGridlines,
+  computeThumbGeometry,
   computeVisibleRange,
   DEFAULT_CELL_SIZE,
   isMajorGridline,
@@ -267,4 +268,20 @@ describe('zoomPercentage (property)', () => {
     fc.pre(camA.cellSize <= camB.cellSize)
     expect(zoomPercentage(camA)).toBeLessThanOrEqual(zoomPercentage(camB))
   })
+})
+
+describe('computeThumbGeometry (property)', () => {
+  const ratio = fc.float({ min: 0, max: 1, noNaN: true })
+  const trackLengthPx = fc.integer({ min: 0, max: 4000 })
+
+  it.prop([ratio, ratio, trackLengthPx])(
+    'the thumb never extends past the track, in either length or offset',
+    (thumbRatio, thumbOffsetRatio, track) => {
+      const { lengthPx, offsetPx } = computeThumbGeometry({ thumbRatio, thumbOffsetRatio }, track)
+      expect(lengthPx).toBeLessThanOrEqual(track)
+      expect(offsetPx).toBeGreaterThanOrEqual(0)
+      // +epsilon guards against float rounding in offsetRatio * (track - lengthPx), not a real slack in the invariant.
+      expect(offsetPx + lengthPx).toBeLessThanOrEqual(track + 1e-9)
+    },
+  )
 })

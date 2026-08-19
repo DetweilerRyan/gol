@@ -191,6 +191,21 @@ export function computeScrollbarMetrics(camera: Camera, contentBounds: ContentBo
   }
 }
 
+export interface ThumbGeometry {
+  lengthPx: number
+  offsetPx: number
+}
+
+const MIN_THUMB_PX = 24
+
+// Keeps the thumb grabbable even when the content is enormous relative to
+// the viewport, clamped so it never exceeds the track itself.
+export function computeThumbGeometry(metrics: ScrollbarMetrics, trackLengthPx: number): ThumbGeometry {
+  const lengthPx = Math.min(trackLengthPx, Math.max(MIN_THUMB_PX, metrics.thumbRatio * trackLengthPx))
+  const offsetPx = metrics.thumbOffsetRatio * (trackLengthPx - lengthPx)
+  return { lengthPx, offsetPx }
+}
+
 export type ScrollbarAxis = 'x' | 'y'
 
 // Thumb-drag pixels are 1:1 with on-screen track pixels (the track spans the

@@ -6,6 +6,7 @@ import {
   clampCellSize,
   computeMajorGridlines,
   computeScrollbarMetrics,
+  computeThumbGeometry,
   computeVisibleRange,
   DEFAULT_CELL_SIZE,
   isMajorGridline,
@@ -278,6 +279,26 @@ describe('computeScrollbarMetrics', () => {
     const bounds: ContentBounds = { minX: 500, maxX: 501, minY: 0, maxY: 1 }
     const metrics = computeScrollbarMetrics(camera, bounds, 800, 600)
     expect(metrics.horizontal.thumbOffsetRatio).toBe(0)
+  })
+})
+
+describe('computeThumbGeometry', () => {
+  it('sizes and positions the thumb proportionally to the track in the normal case', () => {
+    const geometry = computeThumbGeometry({ thumbRatio: 0.5, thumbOffsetRatio: 0.5 }, 800)
+    expect(geometry.lengthPx).toBe(400)
+    expect(geometry.offsetPx).toBe(200)
+  })
+
+  it('clamps the thumb up to MIN_THUMB_PX when the ratio would make it too small to grab', () => {
+    const geometry = computeThumbGeometry({ thumbRatio: 0.01, thumbOffsetRatio: 1 }, 800)
+    expect(geometry.lengthPx).toBe(24)
+    expect(geometry.offsetPx).toBe(776)
+  })
+
+  it('clamps the thumb down to the track length when MIN_THUMB_PX would exceed a small track', () => {
+    const geometry = computeThumbGeometry({ thumbRatio: 1, thumbOffsetRatio: 0 }, 20)
+    expect(geometry.lengthPx).toBe(20)
+    expect(geometry.offsetPx).toBe(0)
   })
 })
 

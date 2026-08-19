@@ -71,6 +71,10 @@ export function getNextGeneration(liveCells: LiveCells): LiveCells {
 
 export type PatternCategory = 'Still Life' | 'Oscillators' | 'Spaceships'
 
+// Canonical display order for the pattern library modal -- kept next to the
+// type it enumerates so a new category can't be added to one without the other.
+export const PATTERN_CATEGORIES: readonly PatternCategory[] = ['Still Life', 'Oscillators', 'Spaceships']
+
 export interface Pattern {
   name: string
   category: PatternCategory
@@ -221,6 +225,10 @@ export const PATTERNS: readonly Pattern[] = [
 
 export function getPatternByName(name: string): Pattern | undefined {
   return PATTERNS.find((pattern) => pattern.name === name)
+}
+
+export function patternsByCategory(category: PatternCategory): readonly Pattern[] {
+  return PATTERNS.filter((pattern) => pattern.category === category)
 }
 
 // Computes the absolute world-space positions a pattern's cells would occupy

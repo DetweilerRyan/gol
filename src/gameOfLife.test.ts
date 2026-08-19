@@ -6,7 +6,9 @@ import {
   getNextGeneration,
   getPatternByName,
   isCellAlive,
+  PATTERN_CATEGORIES,
   PATTERNS,
+  patternsByCategory,
   placePattern,
   toggleCell,
   type LiveCells,
@@ -176,6 +178,28 @@ describe('getPatternByName', () => {
   it('has all 8 patterns with unique names', () => {
     expect(PATTERNS).toHaveLength(8)
     expect(new Set(PATTERNS.map((pattern) => pattern.name)).size).toBe(8)
+  })
+})
+
+describe('patternsByCategory', () => {
+  it("returns each category's patterns in PATTERNS declaration order", () => {
+    expect(patternsByCategory('Still Life').map((pattern) => pattern.name)).toEqual(['Block', 'Beehive'])
+    expect(patternsByCategory('Oscillators').map((pattern) => pattern.name)).toEqual([
+      'Blinker',
+      'Toad',
+      'Beacon',
+      'Pulsar',
+    ])
+    expect(patternsByCategory('Spaceships').map((pattern) => pattern.name)).toEqual([
+      'Glider',
+      'LWSS (Lightweight Spaceship)',
+    ])
+  })
+
+  it('every pattern belongs to exactly one PATTERN_CATEGORIES group', () => {
+    const grouped = PATTERN_CATEGORIES.flatMap((category) => patternsByCategory(category))
+    expect(grouped).toHaveLength(PATTERNS.length)
+    expect(new Set(grouped.map((pattern) => pattern.name))).toEqual(new Set(PATTERNS.map((pattern) => pattern.name)))
   })
 })
 
