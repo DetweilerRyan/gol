@@ -57,9 +57,18 @@ function mutateString(value, rand) {
     case 'replace':
       return value.slice(0, i) + differentChar(rand, value[i]) + value.slice(i + 1)
     case 'swap': {
-      const j = i === value.length - 1 ? i - 1 : i + 1
       const chars = value.split('')
-      ;[chars[i], chars[j]] = [chars[j], chars[i]]
+      const differingPairs = []
+      for (let k = 0; k < chars.length - 1; k++) {
+        if (chars[k] !== chars[k + 1]) differingPairs.push(k)
+      }
+      if (differingPairs.length === 0) {
+        // Every adjacent pair is identical (e.g. "aaaa") -- no swap could ever
+        // change the string. Fall back to `replace`'s guaranteed-different char.
+        return value.slice(0, i) + differentChar(rand, value[i]) + value.slice(i + 1)
+      }
+      const k = differingPairs[Math.floor(rand() * differingPairs.length)]
+      ;[chars[k], chars[k + 1]] = [chars[k + 1], chars[k]]
       return chars.join('')
     }
     case 'case': {
@@ -104,9 +113,16 @@ export function mutateValue(originalValue, seedKey) {
   if (/^-?\d+\.\d+$/.test(originalValue)) {
     const decimals = originalValue.split('.')[1].length
     const magnitude = Math.max(1, Number(`1e-${decimals - 1}`))
-    let delta = 0
-    while (delta === 0) delta = Number((rand() * 2 - 1) * magnitude || 0)
-    return (parseFloat(originalValue) + delta).toFixed(decimals)
+    // A nonzero delta can still round back to the original string via toFixed
+    // (e.g. 1.5 + 0.001 -> "1.5"), so retry against the actual formatted
+    // output rather than just guaranteeing the delta itself is nonzero.
+    let mutated
+    do {
+      let delta = 0
+      while (delta === 0) delta = Number((rand() * 2 - 1) * magnitude || 0)
+      mutated = (parseFloat(originalValue) + delta).toFixed(decimals)
+    } while (mutated === originalValue)
+    return mutated
   }
 
   if (ISO_DATE.test(originalValue)) {
@@ -124,7 +140,14 @@ export function mutateValue(originalValue, seedKey) {
   if (ISO_DURATION.test(originalValue) && originalValue !== 'P') {
     const match = originalValue.match(/\d+/)
     if (match) {
-      const bumped = Math.max(1, parseInt(match[0], 10) + nonzeroDelta(rand, 3))
+      const original = parseInt(match[0], 10)
+      // Clamping to a minimum of 1 can reproduce the original value (e.g.
+      // original=1, delta=-1 -> max(1, 0) -> 1), so retry against the actual
+      // clamped output rather than just guaranteeing the delta is nonzero.
+      let bumped
+      do {
+        bumped = Math.max(1, original + nonzeroDelta(rand, 3))
+      } while (bumped === original)
       return originalValue.replace(match[0], String(bumped))
     }
   }

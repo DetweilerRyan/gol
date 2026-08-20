@@ -61,6 +61,12 @@ describe('mutateValue', () => {
       expect(mutated).toMatch(/^-?\d+\.\d{3}$/)
       expect(Number(mutated)).not.toBe(0.001)
     })
+
+    it('never rounds back to the original via toFixed (e.g. 1.5 + 0.001 -> "1.5")', () => {
+      for (let i = 0; i < 50; i++) {
+        expect(mutateValue('1.5', `round-${i}`)).not.toBe('1.5')
+      }
+    })
   })
 
   describe('booleans', () => {
@@ -100,6 +106,21 @@ describe('mutateValue', () => {
     it('still changes a single-character string', () => {
       for (let i = 0; i < 30; i++) {
         expect(mutateValue('x', `single-${i}`)).not.toBe('x')
+      }
+    })
+
+    it('still changes a word with adjacent duplicate characters (swap no-op guard)', () => {
+      // A naive swap of two identical adjacent characters (the "ll"/"oo" in
+      // "balloon") would reproduce the original string unnoticed.
+      for (let i = 0; i < 30; i++) {
+        expect(mutateValue('balloon', `dup-${i}`)).not.toBe('balloon')
+      }
+    })
+
+    it('still changes a string made of one repeated character', () => {
+      // No swap could ever change "aaaa" -- must fall back to another strategy.
+      for (let i = 0; i < 30; i++) {
+        expect(mutateValue('aaaa', `repeat-${i}`)).not.toBe('aaaa')
       }
     })
   })
@@ -142,6 +163,12 @@ describe('mutateValue', () => {
       for (let i = 0; i < 30; i++) {
         const mutated = mutateValue('P1D', `dur-${i}`)
         expect(Number(mutated.match(/\d+/)[0])).toBeGreaterThanOrEqual(1)
+      }
+    })
+
+    it('never clamps back to the original value (e.g. 1 + -1 -> max(1, 0) -> 1)', () => {
+      for (let i = 0; i < 30; i++) {
+        expect(mutateValue('P1D', `clamp-${i}`)).not.toBe('P1D')
       }
     })
   })
