@@ -1,0 +1,20 @@
+id: no-logic-in-composition-root
+valid:
+  - 'const { camera, centerView, applyWheel } = useCamera()'
+  - 'const contentBounds = computeContentBounds(liveCells)'
+  # Self-closing JSX contains a `/`, which must not be read as division.
+  - '<Grid camera={camera} onWheelInput={applyWheel} renderOverlays={renderOverlays} />'
+  - '<GridToolbar onZoomIn={() => zoomInCentered(size.width, size.height)} onPatterns={openOrCancelLibrary} />'
+  - '<PatternLibraryModal open={isLibraryOpen(placement)} onClose={closeLibrary} />'
+invalid:
+  - 'if (size.width > 0) return null'
+  - "const cursor = isPanning ? 'grabbing' : 'grab'"
+  - 'const overlays = <div>{isLibraryOpen(placement) && <PatternLibraryModal />}</div>'
+  - 'const shown = a || b'
+  - 'const shown = a ?? b'
+  - 'const midY = size.height + 1'
+  - 'const inset = size.width - 8'
+  - 'const scaled = size.width * 2'
+  - 'const midX = size.width / 2'
+  - 'const wrapped = index % 10'
+  - 'const id = `grid-${suffix}`'

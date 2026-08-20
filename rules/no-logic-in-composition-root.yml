@@ -1,0 +1,38 @@
+id: no-logic-in-composition-root
+language: Tsx
+severity: warning
+message: Composition root must be wiring only -- no branching, arithmetic, or string building.
+note: >-
+  This file is deliberately outside every quality gate (stryker/crap4ts/halstead4ts/dry4ts), so
+  nothing here is mutation-tested or complexity-scored. Anything with a decision in it belongs in a
+  framework-free src/*.ts module, a hook, or a unit-tested component -- somewhere the gates can see
+  it. Call already-tested pure functions here; don't compute.
+# SCOPE IS A SINGLE FILE PATH ON PURPOSE, and that makes this rule fragile in the one way
+# CLAUDE.md warns about: a `files:` glob matching nothing reports nothing and is
+# indistinguishable from clean code. If LifeBoard.tsx is renamed or moved, update this list --
+# and add any future gate-excluded composition root to it too.
+#
+# src/App.tsx is deliberately NOT in scope. It looks like a composition root but isn't one: it
+# owns the `generation` counter, so `setGeneration((gen) => gen + 1)` is genuine state ownership
+# and would flag here. A report-only rule whose baseline is non-clean trains people to ignore its
+# output, so App keeps its exemption rather than the rule keeping a false positive.
+files:
+  - 'src/components/LifeBoard.tsx'
+rule:
+  any:
+    # Branching, in each of the three forms JSX wiring reaches for.
+    - kind: if_statement
+    - kind: ternary_expression
+    - pattern: $A && $B
+    - pattern: $A || $B
+    - pattern: $A ?? $B
+    # Arithmetic. The viewport-center and 1/ZOOM_FACTOR math that used to live in Grid's toolbar
+    # wiring is exactly what this catches -- it belongs in useCamera, where it is mutation-tested.
+    - pattern: $A + $B
+    - pattern: $A - $B
+    - pattern: $A * $B
+    - pattern: $A / $B
+    - pattern: $A % $B
+    # String building. A derived id/label/className here is untestable formatting logic; a plain
+    # string literal or a constant imported from the component that owns the value is not.
+    - kind: template_string

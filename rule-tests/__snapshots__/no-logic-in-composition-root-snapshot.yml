@@ -1,0 +1,68 @@
+id: no-logic-in-composition-root
+snapshots:
+  'const cursor = isPanning ? ''grabbing'' : ''grab''':
+    labels:
+    - source: 'isPanning ? ''grabbing'' : ''grab'''
+      style: primary
+      start: 15
+      end: 46
+  const id = `grid-${suffix}`:
+    labels:
+    - source: '`grid-${suffix}`'
+      style: primary
+      start: 11
+      end: 27
+  const inset = size.width - 8:
+    labels:
+    - source: size.width - 8
+      style: primary
+      start: 14
+      end: 28
+  const midX = size.width / 2:
+    labels:
+    - source: size.width / 2
+      style: primary
+      start: 13
+      end: 27
+  const midY = size.height + 1:
+    labels:
+    - source: size.height + 1
+      style: primary
+      start: 13
+      end: 28
+  const overlays = <div>{isLibraryOpen(placement) && <PatternLibraryModal />}</div>:
+    labels:
+    - source: isLibraryOpen(placement) && <PatternLibraryModal />
+      style: primary
+      start: 23
+      end: 74
+  const scaled = size.width * 2:
+    labels:
+    - source: size.width * 2
+      style: primary
+      start: 15
+      end: 29
+  const shown = a ?? b:
+    labels:
+    - source: a ?? b
+      style: primary
+      start: 14
+      end: 20
+  const shown = a || b:
+    labels:
+    - source: a || b
+      style: primary
+      start: 14
+      end: 20
+  const wrapped = index % 10:
+    labels:
+    - source: index % 10
+      style: primary
+      start: 16
+      end: 26
+  if (size.width > 0) return null:
+    labels:
+    - source: if (size.width > 0) return null
+      style: primary
+      start: 0
+      end: 31
