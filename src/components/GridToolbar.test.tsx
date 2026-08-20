@@ -21,43 +21,17 @@ describe('GridToolbar', () => {
     expect(screen.getByRole('button', { name: 'Open pattern library' })).toBeInTheDocument()
   })
 
-  it('clicking Zoom in calls onZoomIn only', async () => {
+  it.each([
+    ['Zoom in', 'onZoomIn'],
+    ['Zoom out', 'onZoomOut'],
+    ['Reset view', 'onReset'],
+    ['Open pattern library', 'onPatterns'],
+  ] as const)('clicking %s calls %s only', async (buttonName, expectedHandler) => {
     const user = userEvent.setup()
-    const { onZoomIn, onZoomOut, onReset, onPatterns } = renderToolbar()
-    await user.click(screen.getByRole('button', { name: 'Zoom in' }))
-    expect(onZoomIn).toHaveBeenCalledTimes(1)
-    expect(onZoomOut).not.toHaveBeenCalled()
-    expect(onReset).not.toHaveBeenCalled()
-    expect(onPatterns).not.toHaveBeenCalled()
-  })
-
-  it('clicking Zoom out calls onZoomOut only', async () => {
-    const user = userEvent.setup()
-    const { onZoomIn, onZoomOut, onReset, onPatterns } = renderToolbar()
-    await user.click(screen.getByRole('button', { name: 'Zoom out' }))
-    expect(onZoomOut).toHaveBeenCalledTimes(1)
-    expect(onZoomIn).not.toHaveBeenCalled()
-    expect(onReset).not.toHaveBeenCalled()
-    expect(onPatterns).not.toHaveBeenCalled()
-  })
-
-  it('clicking Reset view calls onReset only', async () => {
-    const user = userEvent.setup()
-    const { onZoomIn, onZoomOut, onReset, onPatterns } = renderToolbar()
-    await user.click(screen.getByRole('button', { name: 'Reset view' }))
-    expect(onReset).toHaveBeenCalledTimes(1)
-    expect(onZoomIn).not.toHaveBeenCalled()
-    expect(onZoomOut).not.toHaveBeenCalled()
-    expect(onPatterns).not.toHaveBeenCalled()
-  })
-
-  it('clicking Open pattern library calls onPatterns only', async () => {
-    const user = userEvent.setup()
-    const { onZoomIn, onZoomOut, onReset, onPatterns } = renderToolbar()
-    await user.click(screen.getByRole('button', { name: 'Open pattern library' }))
-    expect(onPatterns).toHaveBeenCalledTimes(1)
-    expect(onZoomIn).not.toHaveBeenCalled()
-    expect(onZoomOut).not.toHaveBeenCalled()
-    expect(onReset).not.toHaveBeenCalled()
+    const handlers = renderToolbar()
+    await user.click(screen.getByRole('button', { name: buttonName }))
+    for (const [name, handler] of Object.entries(handlers)) {
+      expect(handler).toHaveBeenCalledTimes(name === expectedHandler ? 1 : 0)
+    }
   })
 })
