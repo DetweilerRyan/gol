@@ -15,6 +15,8 @@ import {
   computeScrollbarMetrics,
   computeThumbGeometry,
   computeVisibleRange,
+  DEFAULT_CELL_SIZE,
+  panCamera,
   screenToWorld,
   worldToScreen,
   zoomCameraAtPoint,
@@ -152,6 +154,30 @@ function previewLabels(): string[] {
   )
 }
 
+// Shared by the drag-threshold boundary tests: a pointerdown followed by a single pointermove
+// that doesn't (or just barely doesn't) cross DRAG_THRESHOLD_PX still resolves as a toggle-click
+// at the pointerup coordinates, not a pan.
+function expectPointerMoveStillTogglesAtPointerUp(
+  pointerId: number,
+  downX: number,
+  downY: number,
+  moveX: number,
+  moveY: number,
+) {
+  const onToggleCell = vi.fn()
+  const { container } = renderGrid({ onToggleCell })
+  triggerResize(WIDTH, HEIGHT)
+  const grid = gridContentEl(container)
+  const camera = centeredCamera(WIDTH, HEIGHT)
+
+  fireEvent.pointerDown(grid, { pointerId, clientX: downX, clientY: downY })
+  fireEvent.pointerMove(grid, { pointerId, clientX: moveX, clientY: moveY })
+  fireEvent.pointerUp(grid, { pointerId, clientX: moveX, clientY: moveY })
+
+  const expected = screenToWorld(camera, moveX, moveY)
+  expect(onToggleCell).toHaveBeenCalledWith(expected.x, expected.y)
+}
+
 describe('Grid cell rendering', () => {
   it('renders alive cells with the live style and dead cells with the dead style, aria-labeled "Cell x, y"', () => {
     const liveCells = new Set([cellKey(0, 0)]) as LiveCells
@@ -160,6 +186,7 @@ describe('Grid cell rendering', () => {
 
     const alive = screen.getByRole('button', { name: 'Cell 0, 0' })
     expect(alive.className).toContain('bg-gray-900')
+    expect(alive.style.boxSizing).toBe('border-box')
 
     const dead = screen.getByRole('button', { name: 'Cell 1, 0' })
     expect(dead.className).toContain('bg-white')
@@ -169,6 +196,31 @@ describe('Grid cell rendering', () => {
     renderGrid()
     triggerResize(WIDTH, HEIGHT)
     expect(screen.getByRole('button', { name: 'Cell -3, -2' })).toBeInTheDocument()
+  })
+
+  it('renders a small cell grid immediately on mount, before any ResizeObserver callback fires', () => {
+    // Exercises the initial containerSize state ({ width: 0, height: 0 }), not just the
+    // post-resize value -- computeVisibleRange/cellsInRange still produce a finite (if tiny)
+    // range from that default, centered on the default (uncentered) camera's origin.
+    renderGrid()
+    expect(screen.getByRole('button', { name: 'Cell 0, 0' })).toBeInTheDocument()
+  })
+
+  it('adds major-gridline border classes only to cells on a multiple-of-10 x or y coordinate', () => {
+    renderGrid()
+    triggerResize(WIDTH, HEIGHT)
+
+    const onMajorX = screen.getByRole('button', { name: 'Cell 10, 1' })
+    expect(onMajorX.className).toContain('border-l-2 border-l-gray-400')
+    expect(onMajorX.className).not.toContain('border-t-2 border-t-gray-400')
+
+    const onMajorY = screen.getByRole('button', { name: 'Cell 1, 10' })
+    expect(onMajorY.className).toContain('border-t-2 border-t-gray-400')
+    expect(onMajorY.className).not.toContain('border-l-2 border-l-gray-400')
+
+    const onNeither = screen.getByRole('button', { name: 'Cell 1, 1' })
+    expect(onNeither.className).not.toContain('border-l-2 border-l-gray-400')
+    expect(onNeither.className).not.toContain('border-t-2 border-t-gray-400')
   })
 })
 
@@ -198,6 +250,54 @@ describe('drag-vs-click resolution on the grid-content pointer surface', () => {
     expect(onToggleCell).not.toHaveBeenCalled()
   })
 
+  it('pointerdown captures the pointer with its pointerId', () => {
+    const { container } = renderGrid()
+    triggerResize(WIDTH, HEIGHT)
+    const grid = gridContentEl(container)
+
+    fireEvent.pointerDown(grid, { pointerId: 7, clientX: 0, clientY: 0 })
+
+    expect(setPointerCapture).toHaveBeenCalledWith(7)
+  })
+
+  it('a move of exactly DRAG_THRESHOLD_PX (4px) does not cross the drag threshold -- the check is strictly greater-than', () => {
+    // hypot(4, 0) === 4, the threshold itself.
+    expectPointerMoveStillTogglesAtPointerUp(1, 0, 0, 4, 0)
+  })
+
+  it('pans the camera by each incremental pointer-move delta once the drag threshold is crossed', () => {
+    const liveCells = new Set([cellKey(5, 5)]) as LiveCells
+    const { container } = renderGrid({ liveCells })
+    triggerResize(WIDTH, HEIGHT)
+    const grid = gridContentEl(container)
+    const before = centeredCamera(WIDTH, HEIGHT)
+
+    fireEvent.pointerDown(grid, { pointerId: 1, clientX: 100, clientY: 100 })
+    fireEvent.pointerMove(grid, { pointerId: 1, clientX: 110, clientY: 100 }) // crosses threshold, delta (10, 0)
+    fireEvent.pointerMove(grid, { pointerId: 1, clientX: 120, clientY: 90 }) // delta since *last* move: (10, -10)
+
+    // panByPixels is applied once per move with the delta since the previous move, not the
+    // cumulative drag distance -- panCamera(before, dxPixels, dyPixels) chained the same way.
+    const afterFirstMove = panCamera(before, 10, 0)
+    const expected = panCamera(afterFirstMove, 10, -10)
+    expect(cellTransform(5, 5)).toBe(expectedTransform(expected, 5, 5))
+  })
+
+  it('resolves toggle coordinates relative to a non-zero container rect, not raw clientX/clientY', () => {
+    const onToggleCell = vi.fn()
+    const { container } = renderGrid({ onToggleCell })
+    triggerResize(WIDTH, HEIGHT)
+    stubBoundingClientRect({ left: 50, top: 30, width: WIDTH, height: HEIGHT })
+    const grid = gridContentEl(container)
+    const camera = centeredCamera(WIDTH, HEIGHT)
+
+    fireEvent.pointerDown(grid, { pointerId: 5, clientX: 150, clientY: 130 })
+    fireEvent.pointerUp(grid, { pointerId: 5, clientX: 150, clientY: 130 })
+
+    const expected = screenToWorld(camera, 150 - 50, 130 - 30)
+    expect(onToggleCell).toHaveBeenCalledWith(expected.x, expected.y)
+  })
+
   it('pointerdown -> pointerup with no intervening move toggles using the pointerup coordinates', () => {
     const onToggleCell = vi.fn()
     const { container } = renderGrid({ onToggleCell })
@@ -214,18 +314,8 @@ describe('drag-vs-click resolution on the grid-content pointer surface', () => {
   })
 
   it('a pointermove that stays within the drag threshold still resolves to a toggle at pointerup coordinates', () => {
-    const onToggleCell = vi.fn()
-    const { container } = renderGrid({ onToggleCell })
-    triggerResize(WIDTH, HEIGHT)
-    const grid = gridContentEl(container)
-    const camera = centeredCamera(WIDTH, HEIGHT)
-
-    fireEvent.pointerDown(grid, { pointerId: 3, clientX: 200, clientY: 200 })
-    fireEvent.pointerMove(grid, { pointerId: 3, clientX: 202, clientY: 201 }) // hypot(2,1) < 4px threshold
-    fireEvent.pointerUp(grid, { pointerId: 3, clientX: 202, clientY: 201 })
-
-    const expected = screenToWorld(camera, 202, 201)
-    expect(onToggleCell).toHaveBeenCalledWith(expected.x, expected.y)
+    // hypot(2, 1) < 4px threshold.
+    expectPointerMoveStillTogglesAtPointerUp(3, 200, 200, 202, 201)
   })
 })
 
@@ -294,6 +384,35 @@ describe('handlePointerCancel', () => {
   })
 })
 
+describe('pointer-capture release guard', () => {
+  // Shared by both handlePointerUp and handlePointerCancel: each only releases pointer capture
+  // when the element currently reports having it, so `fireUp` here is either fireEvent.pointerUp
+  // or fireEvent.pointerCancel depending which handler's guard is under test.
+  function expectReleaseGuardedByHasPointerCapture(fireUp: typeof fireEvent.pointerUp) {
+    const { container } = renderGrid()
+    triggerResize(WIDTH, HEIGHT)
+    const grid = gridContentEl(container)
+
+    fireEvent.pointerDown(grid, { pointerId: 1, clientX: 0, clientY: 0 })
+    fireUp(grid, { pointerId: 1, clientX: 0, clientY: 0 })
+    expect(releasePointerCapture).toHaveBeenCalledWith(1)
+
+    releasePointerCapture.mockClear()
+    hasPointerCapture.mockReturnValue(false)
+    fireEvent.pointerDown(grid, { pointerId: 2, clientX: 0, clientY: 0 })
+    fireUp(grid, { pointerId: 2, clientX: 0, clientY: 0 })
+    expect(releasePointerCapture).not.toHaveBeenCalled()
+  }
+
+  it('handlePointerUp releases pointer capture only when the element currently has it', () => {
+    expectReleaseGuardedByHasPointerCapture(fireEvent.pointerUp)
+  })
+
+  it('handlePointerCancel releases pointer capture only when the element currently has it', () => {
+    expectReleaseGuardedByHasPointerCapture(fireEvent.pointerCancel)
+  })
+})
+
 describe('toolbar zoom-in/zoom-out/reset (Grid’s own center-point math)', () => {
   it('zoom in zooms at (containerSize.width / 2, containerSize.height / 2) using ZOOM_FACTOR', () => {
     const liveCells = new Set([cellKey(5, 5)]) as LiveCells
@@ -342,7 +461,17 @@ describe('native wheel listener', () => {
     triggerResize(WIDTH, HEIGHT)
     const before = centeredCamera(WIDTH, HEIGHT)
 
-    fireEvent.wheel(rootEl(container), { deltaX: 40, deltaY: -20, shiftKey: false, clientX: 0, clientY: 0 })
+    const notCancelled = fireEvent.wheel(rootEl(container), {
+      deltaX: 40,
+      deltaY: -20,
+      shiftKey: false,
+      clientX: 0,
+      clientY: 0,
+    })
+    // dispatchEvent's return value is false when preventDefault() actually took effect, which
+    // requires both the call itself and a non-passive listener (jsdom no-ops preventDefault on
+    // passive listeners, same as real browsers) -- so this one assertion covers both.
+    expect(notCancelled).toBe(false)
 
     const expected = applyWheelInput(before, { pixelX: 0, pixelY: 0, deltaX: 40, deltaY: -20, shiftKey: false })
     expect(cellTransform(5, 5)).toBe(expectedTransform(expected, 5, 5))
@@ -393,6 +522,11 @@ describe('placing-mode state machine', () => {
     const expectedPreview = patternCellPositions(GLIDER, anchor.x, anchor.y)
     expect(previewLabels().sort()).toEqual(expectedPreview.map(([x, y]) => `Pattern preview cell ${x}, ${y}`).sort())
 
+    const [firstPreviewX, firstPreviewY] = expectedPreview[0]
+    const firstPreviewEl = screen.getByLabelText(`Pattern preview cell ${firstPreviewX}, ${firstPreviewY}`)
+    expect(firstPreviewEl.style.transform).toBe(expectedTransform(camera, firstPreviewX, firstPreviewY))
+    expect(firstPreviewEl.style.boxSizing).toBe('border-box')
+
     fireEvent.pointerDown(grid, { pointerId: 9, clientX: 240, clientY: 260 })
     fireEvent.pointerUp(grid, { pointerId: 9, clientX: 240, clientY: 260 })
 
@@ -431,6 +565,33 @@ describe('placing-mode state machine', () => {
     fireEvent.pointerUp(grid, { pointerId: 2, clientX: 240, clientY: 260 })
     expect(onPlacePattern).not.toHaveBeenCalled()
     expect(onToggleCell).toHaveBeenCalledTimes(1)
+  })
+
+  it('a non-Escape keydown does not cancel placing mode', () => {
+    const { container } = renderGrid()
+    triggerResize(WIDTH, HEIGHT)
+    const grid = gridContentEl(container)
+
+    openPatternModal()
+    selectPattern(GLIDER)
+    fireEvent.pointerMove(grid, { pointerId: 1, clientX: 240, clientY: 260 })
+    expect(previewLabels().length).toBeGreaterThan(0)
+
+    fireEvent.keyDown(window, { key: 'a' })
+
+    expect(previewLabels().length).toBeGreaterThan(0)
+  })
+
+  it('Escape closes the pattern library modal via its own onClose while no pattern is armed yet', async () => {
+    renderGrid()
+    triggerResize(WIDTH, HEIGHT)
+
+    openPatternModal()
+    expect(screen.getByText('Pattern Library')).toBeInTheDocument()
+
+    fireEvent.keyDown(document, { key: 'Escape' })
+
+    await waitFor(() => expect(screen.queryByText('Pattern Library')).not.toBeInTheDocument())
   })
 
   it('clicking the Patterns toolbar button while already placing cancels instead of reopening the modal', async () => {
@@ -508,6 +669,25 @@ describe('initial centering via ResizeObserver', () => {
     // re-run centerView -- the camera should still reflect afterPan.
     triggerResize(900, 700)
     expect(cellTransform(0, 0)).toBe(expectedTransform(afterPan, 0, 0))
+  })
+
+  it('does not center, or render scrollbars, while only one dimension of a resize observation is nonzero', () => {
+    const liveCells = new Set([cellKey(0, 0)]) as LiveCells
+    renderGrid({ liveCells })
+    const uncentered: Camera = { offsetX: 0, offsetY: 0, cellSize: DEFAULT_CELL_SIZE } // useCamera's initial value
+
+    triggerResize(0, HEIGHT)
+    expect(cellTransform(0, 0)).toBe(expectedTransform(uncentered, 0, 0))
+    expect(screen.queryAllByRole('scrollbar')).toHaveLength(0)
+
+    triggerResize(WIDTH, 0)
+    expect(cellTransform(0, 0)).toBe(expectedTransform(uncentered, 0, 0))
+    expect(screen.queryAllByRole('scrollbar')).toHaveLength(0)
+
+    triggerResize(WIDTH, HEIGHT)
+    const centered = centeredCamera(WIDTH, HEIGHT)
+    expect(cellTransform(0, 0)).toBe(expectedTransform(centered, 0, 0))
+    expect(screen.queryAllByRole('scrollbar')).toHaveLength(2)
   })
 })
 

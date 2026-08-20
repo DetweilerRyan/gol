@@ -47,6 +47,20 @@ export function computeVisibleRange(camera: Camera, viewportWidthPx: number, vie
   }
 }
 
+// Enumerates every cell coordinate within a visible range, row-major (y outer,
+// x inner) to match the order Grid renders them in. Pulled out of Grid.tsx as
+// a pure function so the (x, y) enumeration itself stays independently
+// testable rather than living only inside JSX-adjacent render logic.
+export function cellsInRange(range: VisibleRange): { x: number; y: number }[] {
+  const cells: { x: number; y: number }[] = []
+  for (let y = range.minY; y <= range.maxY; y++) {
+    for (let x = range.minX; x <= range.maxX; x++) {
+      cells.push({ x, y })
+    }
+  }
+  return cells
+}
+
 export function panCamera(camera: Camera, dxPixels: number, dyPixels: number): Camera {
   return {
     ...camera,

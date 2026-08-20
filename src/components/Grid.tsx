@@ -9,6 +9,7 @@ import {
 } from '../gameOfLife'
 import { useCamera } from '../hooks/useCamera'
 import {
+  cellsInRange,
   computeMajorGridlines,
   computeScrollbarMetrics,
   computeVisibleRange,
@@ -118,14 +119,7 @@ export default function Grid({ liveCells, onToggleCell, onPlacePattern, onSuppre
   }, [applyWheel])
 
   const visibleRange = computeVisibleRange(camera, containerSize.width, containerSize.height)
-
-  const cells: { x: number; y: number }[] = []
-  for (let y = visibleRange.minY; y <= visibleRange.maxY; y++) {
-    for (let x = visibleRange.minX; x <= visibleRange.maxX; x++) {
-      cells.push({ x, y })
-    }
-  }
-
+  const cells = cellsInRange(visibleRange)
   const majorGridlines = computeMajorGridlines(visibleRange)
 
   const contentBounds = computeContentBounds(liveCells)
