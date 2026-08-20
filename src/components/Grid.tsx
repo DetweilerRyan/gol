@@ -1,10 +1,11 @@
-import { useLayoutEffect, useRef, useState } from 'react'
+import { useRef, useState } from 'react'
 import { rectRelativePixels, screenToWorld, worldToScreen, zoomPercentage } from '../camera'
 import { advanceDrag, beginDrag, type DragGesture } from '../dragGesture'
 import { cellKey, computeContentBounds, isCellAlive, type LiveCells } from '../gameOfLife'
 import { cellsInRange, computeMajorGridlines, computeVisibleRange, isMajorGridline } from '../gridGeometry'
 import { useCamera } from '../hooks/useCamera'
 import { useElementSize } from '../hooks/useElementSize'
+import { useInitialCentering } from '../hooks/useInitialCentering'
 import { usePatternPlacement } from '../hooks/usePatternPlacement'
 import { useWheelInput } from '../hooks/useWheelInput'
 import { type Pattern } from '../patternLibrary'
@@ -24,27 +25,16 @@ interface GridProps {
 export default function Grid({ liveCells, onToggleCell, onPlacePattern }: GridProps) {
   const containerRef = useRef<HTMLDivElement>(null)
   const containerSize = useElementSize(containerRef)
-  const hasCenteredRef = useRef(false)
 
   const { camera, panByPixels, applyWheel, centerView, zoomInCentered, zoomOutCentered, panByScrollbarDrag } =
     useCamera()
   useWheelInput(containerRef, applyWheel)
+  useInitialCentering(containerSize, centerView)
 
   const dragStateRef = useRef<DragGesture | null>(null)
   const [isPanning, setIsPanning] = useState(false)
 
   const { placement, openOrCancelLibrary, closeLibrary, selectPattern, previewAt, disarm } = usePatternPlacement()
-
-  // Centers on the first measured size only. A layout effect (rather than a
-  // plain effect) so the re-centered camera is committed before paint, leaving
-  // no frame in which the grid is rendered at full size but still uncentered.
-  useLayoutEffect(() => {
-    const { width, height } = containerSize
-    if (!hasCenteredRef.current && width > 0 && height > 0) {
-      hasCenteredRef.current = true
-      centerView(width, height)
-    }
-  }, [containerSize, centerView])
 
   const visibleRange = computeVisibleRange(camera, containerSize.width, containerSize.height)
   const cells = cellsInRange(visibleRange)
