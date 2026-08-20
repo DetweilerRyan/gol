@@ -171,6 +171,12 @@ describe('Grid cell rendering', () => {
     const onNeither = screen.getByRole('button', { name: 'Cell 1, 1' })
     expect(onNeither.className).not.toContain('border-l-2 border-l-gray-400')
     expect(onNeither.className).not.toContain('border-t-2 border-t-gray-400')
+    // Pins down the exact class list (not just the absence of the gridline classes above), so a
+    // mutation that swaps either '' fallback for stray literal text is still caught even though
+    // that text isn't one of the specific substrings checked above.
+    expect(onNeither.className.split(/\s+/).filter(Boolean)).toEqual(
+      'absolute top-0 left-0 border border-gray-200 transition-colors bg-white hover:bg-gray-100'.split(' '),
+    )
   })
 })
 
@@ -266,6 +272,37 @@ describe('drag-vs-click resolution on the grid-content pointer surface', () => {
   it('a pointermove that stays within the drag threshold still resolves to a toggle at pointerup coordinates', () => {
     // hypot(2, 1) < 4px threshold.
     expectPointerMoveStillTogglesAtPointerUp(3, 200, 200, 202, 201)
+  })
+
+  it('does not resolve pointer-to-world coordinates on pointermove while no pattern is armed', () => {
+    // previewAt itself is a no-op outside placing mode, but the armedPattern guard exists so an
+    // ordinary pan drag never pays for the getBoundingClientRect layout call pointerToWorldCell
+    // needs -- assert on that call directly, since previewPositions() staying empty either way
+    // wouldn't distinguish "guarded" from "computed and discarded".
+    const rectSpy = stubBoundingClientRect({ left: 0, top: 0, width: WIDTH, height: HEIGHT })
+    const { container } = renderGrid()
+    triggerResize(WIDTH, HEIGHT)
+    const grid = gridContentEl(container)
+    rectSpy.mockClear()
+
+    fireEvent.pointerMove(grid, { pointerId: 1, clientX: 10, clientY: 10 })
+
+    expect(rectSpy).not.toHaveBeenCalled()
+  })
+
+  it('a pointerup with no prior pointerdown still resolves as a toggle-click rather than throwing', () => {
+    // dragStateRef.current is null here (no pointerdown primed it), which is exactly the case
+    // the optional chaining in `!dragStateRef.current?.isPanning` guards against.
+    const onToggleCell = vi.fn()
+    const { container } = renderGrid({ onToggleCell })
+    triggerResize(WIDTH, HEIGHT)
+    const grid = gridContentEl(container)
+    const camera = centeredCamera(WIDTH, HEIGHT)
+
+    fireEvent.pointerUp(grid, { pointerId: 99, clientX: 10, clientY: 10 })
+
+    const expected = screenToWorld(camera, 10, 10)
+    expect(onToggleCell).toHaveBeenCalledWith(expected.x, expected.y)
   })
 })
 
@@ -517,6 +554,29 @@ describe('placing-mode state machine', () => {
     expect(onToggleCell).toHaveBeenCalledTimes(1)
   })
 
+  it('remounts preview-cell DOM nodes (rather than reusing them) when the preview anchor moves to a new cell', () => {
+    // The preview cell's key encodes its world position (`preview-${x}-${y}`), not a stable
+    // per-slot index, so moving the anchor changes every preview cell's key at once and React
+    // tears down and recreates all of them -- this is the one place an incorrect/constant key is
+    // observable through testing-library, since it changes DOM node identity, not just the props
+    // rendered on it (which end up correct either way once React finishes reconciling).
+    const { container } = renderGrid()
+    triggerResize(WIDTH, HEIGHT)
+    const grid = gridContentEl(container)
+
+    openPatternModal()
+    selectPattern(GLIDER)
+    fireEvent.pointerMove(grid, { pointerId: 1, clientX: 240, clientY: 260 })
+    const before = [...document.querySelectorAll('[aria-label^="Pattern preview cell"]')]
+    expect(before.length).toBe(GLIDER.cells.length)
+
+    fireEvent.pointerMove(grid, { pointerId: 1, clientX: 300, clientY: 300 })
+    const after = [...document.querySelectorAll('[aria-label^="Pattern preview cell"]')]
+
+    expect(after.length).toBe(GLIDER.cells.length)
+    expect(after.some((el) => before.includes(el))).toBe(false)
+  })
+
   it('a non-Escape keydown does not cancel placing mode', () => {
     const { container } = renderGrid()
     triggerResize(WIDTH, HEIGHT)
@@ -680,5 +740,64 @@ describe('scrollbar and ruler wiring', () => {
 
     const rulerLabels = [...document.querySelectorAll('span')].filter((el) => el.className.includes('text-[10px]'))
     expect(rulerLabels).toHaveLength(gridlines.x.length + gridlines.y.length)
+  })
+
+  it('reuses a ruler-label DOM node (either axis) for a coordinate that stays visible across a pan, and mounts a fresh node for the newly visible one', () => {
+    // RulerLabel's key encodes its coordinate value (`x-${x}` / `y-${y}`), not a stable per-slot
+    // index, so a pan that shifts the visible gridline set by one entry should move the
+    // persisting coordinates' labels in place (same node, updated position) rather than
+    // remounting the whole row -- this is the one place a wrong/constant key is observable
+    // through testing-library. Pans both axes at once so both RulerLabel key expressions are
+    // exercised in a single test.
+    const { container } = renderGrid()
+    triggerResize(WIDTH, HEIGHT)
+    const before = centeredCamera(WIDTH, HEIGHT)
+    const rangeBefore = computeVisibleRange(before, WIDTH, HEIGHT)
+    const gridlinesBefore = computeMajorGridlines(rangeBefore)
+
+    function labelNodesByText(edgeClass: 'top-0.5' | 'left-0.5'): Map<string, Element> {
+      const nodes = [...document.querySelectorAll('span')].filter((el) => el.className.includes(edgeClass))
+      return new Map(nodes.map((el) => [el.textContent ?? '', el]))
+    }
+    const xNodesBefore = labelNodesByText('top-0.5')
+    const yNodesBefore = labelNodesByText('left-0.5')
+
+    const wheelInput = {
+      pixelX: 0,
+      pixelY: 0,
+      deltaX: 10 * before.cellSize,
+      deltaY: 10 * before.cellSize,
+      shiftKey: false,
+    }
+    fireEvent.wheel(rootEl(container), { ...wheelInput, clientX: 0, clientY: 0 })
+    const after = applyWheelInput(before, wheelInput)
+    const gridlinesAfter = computeMajorGridlines(computeVisibleRange(after, WIDTH, HEIGHT))
+
+    function assertKeyedByCoordinate(
+      before: readonly number[],
+      after: readonly number[],
+      nodesBefore: Map<string, Element>,
+      nodesAfter: Map<string, Element>,
+    ) {
+      const persisting = before.filter((v) => after.includes(v))
+      const newlyVisible = after.filter((v) => !before.includes(v))
+      const noLongerVisible = before.filter((v) => !after.includes(v))
+      expect(persisting.length).toBeGreaterThan(0)
+      expect(newlyVisible.length).toBeGreaterThan(0)
+      expect(noLongerVisible.length).toBeGreaterThan(0)
+
+      for (const v of persisting) {
+        expect(nodesAfter.get(String(v))).toBe(nodesBefore.get(String(v)))
+      }
+      for (const v of newlyVisible) {
+        expect(nodesBefore.get(String(v))).toBeUndefined()
+      }
+      for (const v of noLongerVisible) {
+        expect(nodesAfter.get(String(v))).toBeUndefined()
+      }
+    }
+
+    assertKeyedByCoordinate(gridlinesBefore.x, gridlinesAfter.x, xNodesBefore, labelNodesByText('top-0.5'))
+    assertKeyedByCoordinate(gridlinesBefore.y, gridlinesAfter.y, yNodesBefore, labelNodesByText('left-0.5'))
   })
 })

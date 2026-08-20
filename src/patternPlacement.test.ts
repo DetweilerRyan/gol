@@ -10,6 +10,7 @@ import {
   previewPositions,
   suppressesEnter,
   toggleLibrary,
+  type PlacementState,
 } from './patternPlacement'
 
 const GLIDER = PATTERNS.find((pattern) => pattern.name === 'Glider') as Pattern
@@ -107,5 +108,17 @@ describe('suppressesEnter', () => {
 describe('isLibraryOpen', () => {
   it('is false while placing, so an armed pattern never leaves the modal open', () => {
     expect(isLibraryOpen(movePreviewTo(placing, 0, 0))).toBe(false)
+  })
+})
+
+describe('previewPositions', () => {
+  // idle/browsing states never actually carry a previewCell (the discriminated union makes
+  // that unrepresentable through the exported constructors), so the `!state.previewCell` half
+  // of the guard alone happens to return [] for every state reachable through normal use --
+  // the `state.mode !== 'placing'` half is redundant *given the type*, but still load-bearing
+  // defense-in-depth against exactly the kind of malformed state this cast constructs.
+  it('returns [] for a non-placing state even if it were to carry a previewCell', () => {
+    const malformed = { mode: 'browsing', previewCell: { x: 1, y: 1 } } as unknown as PlacementState
+    expect(previewPositions(malformed)).toEqual([])
   })
 })

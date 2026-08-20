@@ -74,4 +74,37 @@ describe('useWheelInput', () => {
     expect(() => renderHook(() => useWheelInput({ current: null }, onWheelInput))).not.toThrow()
     expect(onWheelInput).not.toHaveBeenCalled()
   })
+
+  // The preventDefault-based test above can't tell an explicit { passive: false } apart from
+  // jsdom's own default (also non-passive) -- asserting the exact options object addEventListener
+  // was called with is what actually pins down the comment's stated reason for registering this
+  // listener imperatively rather than via React's (passive) onWheel prop. Spied on the element
+  // itself (not Element.prototype) so it doesn't also pick up React's own delegated root
+  // listeners, which the renderHook call underneath mounts as a side effect.
+  it('registers the wheel listener with an explicit { passive: false }', () => {
+    const el = document.createElement('div')
+    document.body.append(el)
+    const addSpy = vi.spyOn(el, 'addEventListener')
+
+    renderHook(() => useWheelInput({ current: el }, vi.fn()))
+
+    const wheelCall = addSpy.mock.calls.find(([type]) => type === 'wheel')
+    expect(wheelCall?.[2]).toEqual({ passive: false })
+  })
+
+  it('re-subscribes with the latest onWheelInput after it changes, rather than keeping the stale mount-time closure', () => {
+    const el = document.createElement('div')
+    document.body.append(el)
+    const first = vi.fn()
+    const second = vi.fn()
+    const { rerender } = renderHook(({ cb }) => useWheelInput({ current: el }, cb), {
+      initialProps: { cb: first },
+    })
+
+    rerender({ cb: second })
+    fireEvent.wheel(el, { clientX: 0, clientY: 0, deltaX: 0, deltaY: 1, shiftKey: false })
+
+    expect(second).toHaveBeenCalledTimes(1)
+    expect(first).not.toHaveBeenCalled()
+  })
 })

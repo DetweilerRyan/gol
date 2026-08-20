@@ -44,4 +44,19 @@ describe('useElementSize', () => {
     expect(resizeObserver.instances).toHaveLength(0)
     expect(result.current).toEqual({ width: 0, height: 0 })
   })
+
+  it('disconnects the old observer and observes the new element when the ref object identity changes', () => {
+    const elA = document.createElement('div')
+    const elB = document.createElement('div')
+    const { rerender } = renderHook(({ ref }) => useElementSize(ref), {
+      initialProps: { ref: { current: elA } as { current: HTMLElement | null } },
+    })
+    const firstInstance = resizeObserver.latest()
+    expect(firstInstance.observed).toEqual([elA])
+
+    rerender({ ref: { current: elB } })
+
+    expect(firstInstance.disconnectCount).toBe(1)
+    expect(resizeObserver.latest().observed).toEqual([elB])
+  })
 })
