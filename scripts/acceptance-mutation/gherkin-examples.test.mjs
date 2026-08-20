@@ -89,8 +89,13 @@ describe('against the real feature files', () => {
     expect(findExamplesTables(infiniteGrid)[0].header).toEqual(['x', 'y', 'expected center x', 'expected center y'])
     expect(findExamplesTables(infiniteGrid)[0].rows).toHaveLength(3)
 
-    expect(findExamplesTables(cameraPanAndZoom)[0].header).toEqual(['factor', 'expected size'])
+    // camera-pan-and-zoom.feature carries two outlines, so it also covers the
+    // multi-table case against a real file rather than the SAMPLE fixture.
+    expect(findExamplesTables(cameraPanAndZoom)).toHaveLength(2)
+    expect(findExamplesTables(cameraPanAndZoom)[0].header).toEqual(['zoom factor', 'resulting cell size'])
     expect(findExamplesTables(cameraPanAndZoom)[0].rows).toHaveLength(2)
+    expect(findExamplesTables(cameraPanAndZoom)[1].header).toEqual(['factor', 'expected size'])
+    expect(findExamplesTables(cameraPanAndZoom)[1].rows).toHaveLength(2)
   })
 
   it('round-trips a mutation on the real cell-life-and-death.feature without corrupting the rest of the file', () => {

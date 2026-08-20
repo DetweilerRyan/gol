@@ -53,12 +53,37 @@ describeFeature(feature, ({ Scenario, ScenarioOutline }) => {
     })
   })
 
+  ScenarioOutline('A single zoom step scales the cell size by the zoom factor', ({ Given, When, Then }, variables) => {
+    let camera: Camera
+
+    Given('a camera centered on the origin at the default zoom', () => {
+      camera = { offsetX: 0, offsetY: 0, cellSize: DEFAULT_CELL_SIZE }
+    })
+    When('I zoom at pixel (100, 50) by a factor of <zoom factor>', () => {
+      camera = zoomCameraAtPoint(camera, 100, 50, Number(variables['zoom factor']))
+    })
+    // Both expected sizes sit strictly inside the 8..60 clamp, so <zoom
+    // factor> drives the result directly here -- the complement of the
+    // clamp-saturation scenario below, where it deliberately cannot.
+    Then('the resulting cell size should be <resulting cell size>', () => {
+      expect(camera.cellSize).toBe(Number(variables['resulting cell size']))
+    })
+  })
+
   ScenarioOutline('Zoom is clamped to a sane range', ({ Given, When, Then }, variables) => {
     let camera: Camera
 
     Given('a camera centered on the origin at the default zoom', () => {
       camera = { offsetX: 0, offsetY: 0, cellSize: DEFAULT_CELL_SIZE }
     })
+    // Acceptance mutation cannot kill a mutated <factor> here, and shouldn't:
+    // this scenario zooms *until the clamp saturates*, so by construction every
+    // sufficiently extreme factor converges on the same clamped cell size --
+    // that magnitude-invariance past the clamp threshold is the scenario's
+    // literal purpose. Both <factor> mutants are therefore confirmed-equivalent
+    // (same category as the documented Stryker equivalent mutant in 41573c5);
+    // asserting anything magnitude-dependent here would be asserting something
+    // untrue. The scenario above is where <zoom factor> carries real weight.
     When('I zoom repeatedly by a factor of <factor> until the cell size stops changing', () => {
       const factor = Number(variables.factor)
       let previousCellSize: number

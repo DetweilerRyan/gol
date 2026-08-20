@@ -17,13 +17,15 @@ Feature: Mouse wheel controls
 
   Scenario Outline: Shift-held zoom resolves the scroll direction from whichever axis carries it
     Given a camera centered on the origin at the default zoom
-    When I scroll the wheel with deltaY <deltaY> and deltaX <deltaX> while holding shift
-    Then the cell size should increase
+    When I scroll the wheel <direction> with shift held, carried on the <carrying axis> axis
+    Then the cell size should <zoom outcome>
 
     Examples:
-      | deltaY | deltaX |
-      | 0      | -100   |
-      | -100   | 50     |
+      | carrying axis | direction | zoom outcome |
+      | x             | up        | increase     |
+      | x             | down      | decrease     |
+      | y             | up        | increase     |
+      | y             | down      | decrease     |
 
   Scenario Outline: The zoom percentage reflects the current cell size relative to the default
     Given a camera with cell size <cell size>

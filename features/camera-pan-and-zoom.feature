@@ -15,6 +15,16 @@ Feature: Camera pan and zoom
     Then the cell size should double
     And the world point that was under the cursor should still be under the cursor
 
+  Scenario Outline: A single zoom step scales the cell size by the zoom factor
+    Given a camera centered on the origin at the default zoom
+    When I zoom at pixel (100, 50) by a factor of <zoom factor>
+    Then the resulting cell size should be <resulting cell size>
+
+    Examples:
+      | zoom factor | resulting cell size |
+      | 0.5         | 10                  |
+      | 1.5         | 30                  |
+
   Scenario Outline: Zoom is clamped to a sane range
     Given a camera centered on the origin at the default zoom
     When I zoom repeatedly by a factor of <factor> until the cell size stops changing
