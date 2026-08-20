@@ -15,8 +15,8 @@
 //
 // Keep FILES in sync with crap4ts.config.ts's `include` array -- both target
 // the same unit-tested modules: the framework-free logic (grid rules, camera
-// math, the pan/zoom hook) plus the four presentational components that have
-// their own render()-based unit tests.
+// math, the pan/zoom hook), the four presentational components that have
+// their own render()-based unit tests, and Grid.tsx itself.
 
 import path from 'node:path'
 import { fileURLToPath } from 'node:url'
@@ -34,6 +34,7 @@ const FILES = [
   'src/components/PatternLibraryModal.tsx',
   'src/components/RulerLabel.tsx',
   'src/components/Scrollbar.tsx',
+  'src/components/Grid.tsx',
 ]
 
 function analyzeFile(file) {

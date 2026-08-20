@@ -11,7 +11,8 @@
     "src/components/GridToolbar.tsx",
     "src/components/PatternLibraryModal.tsx",
     "src/components/RulerLabel.tsx",
-    "src/components/Scrollbar.tsx"
+    "src/components/Scrollbar.tsx",
+    "src/components/Grid.tsx"
   ],
   "thresholds": {
     "high": 90,
