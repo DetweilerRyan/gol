@@ -14,5 +14,21 @@
     "import/no-named-as-default": "error",
     "import/no-cycle": "error",
     "import/no-named-as-default-member": "off"
-  }
+  },
+  "overrides": [
+    {
+      "files": ["scripts/**"],
+      "plugins": ["typescript", "oxc", "import", "unicorn", "node"],
+      "rules": {
+        "unicorn/prefer-node-protocol": "error",
+        "node/handle-callback-err": "error",
+        "node/no-new-require": "error",
+        "node/no-mixed-requires": "error",
+        "node/no-exports-assign": "error",
+        "node/exports-style": "error",
+        "node/callback-return": "error",
+        "node/no-path-concat": "error"
+      }
+    }
+  ]
 }
