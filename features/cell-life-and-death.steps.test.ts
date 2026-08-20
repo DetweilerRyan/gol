@@ -97,31 +97,46 @@ describeFeature(feature, ({ Scenario, ScenarioOutline }) => {
     })
   })
 
-  ScenarioOutline('A horizontal blinker becomes vertical after one generation', ({ Given, When, Then }, variables) => {
-    let cells: LiveCells
-    let centerX: number
-    let centerY: number
+  ScenarioOutline(
+    'A horizontal blinker becomes vertical after one generation',
+    ({ Given, When, Then, And }, variables) => {
+      let cells: LiveCells
+      let centerX: number
+      let centerY: number
 
-    Given('a horizontal blinker centered at (<x>, <y>)', () => {
-      centerX = Number(variables.x)
-      centerY = Number(variables.y)
-      cells = makeLiveCells([
-        [centerX - 1, centerY],
-        [centerX, centerY],
-        [centerX + 1, centerY],
-      ])
-    })
-    When('the next generation is computed', () => {
-      cells = getNextGeneration(cells)
-    })
-    Then('the blinker should be vertical', () => {
-      expect(isCellAlive(cells, centerX, centerY - 1)).toBe(true)
-      expect(isCellAlive(cells, centerX, centerY)).toBe(true)
-      expect(isCellAlive(cells, centerX, centerY + 1)).toBe(true)
-      expect(isCellAlive(cells, centerX - 1, centerY)).toBe(false)
-      expect(isCellAlive(cells, centerX + 1, centerY)).toBe(false)
-    })
-  })
+      Given('a horizontal blinker centered at (<x>, <y>)', () => {
+        centerX = Number(variables.x)
+        centerY = Number(variables.y)
+        cells = makeLiveCells([
+          [centerX - 1, centerY],
+          [centerX, centerY],
+          [centerX + 1, centerY],
+        ])
+      })
+      When('the next generation is computed', () => {
+        cells = getNextGeneration(cells)
+      })
+      Then('the blinker should be vertical', () => {
+        expect(isCellAlive(cells, centerX, centerY - 1)).toBe(true)
+        expect(isCellAlive(cells, centerX, centerY)).toBe(true)
+        expect(isCellAlive(cells, centerX, centerY + 1)).toBe(true)
+        expect(isCellAlive(cells, centerX - 1, centerY)).toBe(false)
+        expect(isCellAlive(cells, centerX + 1, centerY)).toBe(false)
+      })
+      And('the blinker should be centered at the literal coordinate (<expected center x>, <expected center y>)', () => {
+        // Unlike the relative assertions above (derived from centerX/centerY,
+        // which move in lockstep with a mutated <x>/<y>), this reads
+        // independent literal columns pinned in the Examples table -- so it
+        // still catches a mutated <x> or <y> even though the shape assertion
+        // above can't.
+        const expectedCenterX = Number(variables['expected center x'])
+        const expectedCenterY = Number(variables['expected center y'])
+        expect(isCellAlive(cells, expectedCenterX, expectedCenterY - 1)).toBe(true)
+        expect(isCellAlive(cells, expectedCenterX, expectedCenterY)).toBe(true)
+        expect(isCellAlive(cells, expectedCenterX, expectedCenterY + 1)).toBe(true)
+      })
+    },
+  )
 
   Scenario('A vertical blinker becomes horizontal after one generation', ({ Given, When, Then }) => {
     let cells: LiveCells

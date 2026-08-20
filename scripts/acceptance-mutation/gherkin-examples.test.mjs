@@ -86,7 +86,7 @@ describe('against the real feature files', () => {
     expect(findExamplesTables(cellLifeAndDeath)[0].header).toEqual(['state', 'neighbors', 'next state'])
     expect(findExamplesTables(cellLifeAndDeath)[0].rows).toHaveLength(8)
 
-    expect(findExamplesTables(infiniteGrid)[0].header).toEqual(['x', 'y'])
+    expect(findExamplesTables(infiniteGrid)[0].header).toEqual(['x', 'y', 'expected center x', 'expected center y'])
     expect(findExamplesTables(infiniteGrid)[0].rows).toHaveLength(3)
 
     expect(findExamplesTables(cameraPanAndZoom)[0].header).toEqual(['factor', 'expected size'])
