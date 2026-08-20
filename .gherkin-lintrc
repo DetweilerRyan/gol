@@ -1,0 +1,26 @@
+{
+  "indentation": [
+    "on",
+    {
+      "Feature": 0,
+      "Background": 2,
+      "Rule": 0,
+      "Scenario": 2,
+      "Step": 4,
+      "Examples": 4,
+      "example": 6,
+      "given": 4,
+      "when": 4,
+      "then": 4,
+      "and": 4,
+      "but": 4,
+      "feature tag": 0,
+      "scenario tag": 2
+    }
+  ],
+  "no-trailing-spaces": "on",
+  "new-line-at-eof": ["on", "yes"],
+  "no-dupe-scenario-names": "on",
+  "keywords-in-logical-order": "on",
+  "no-unused-variables": "on"
+}

@@ -12,7 +12,7 @@ Conway's Game of Life, built as an infinite, pannable/zoomable grid (React 19 + 
 npm run dev              # start dev server (vite, http://localhost:5173)
 npm run build             # tsc -b && vite build
 npm run lint               # oxlint
-npm run format             # prettier --write .
+npm run format             # prettier --write . (covers .feature Examples-table alignment too, via prettier-plugin-gherkin)
 npm run format:check       # prettier --check .
 
 npm test                    # vitest run (unit + property + Gherkin acceptance tests, jsdom env)
@@ -29,6 +29,7 @@ npx playwright install chromium   # one-time browser install after npm install
 npm run test:mutation       # stryker mutation testing (scoped to the 3 core modules, 4 hooks, and 5 components in the Architecture section's file list)
 npm run acceptance-mutation # custom Gherkin-example mutation runner (scripts/acceptance-mutation, tsx scripts/acceptance-mutation/run.ts)
 npm run gherkin-dry         # checks .feature files for step-text vocabulary duplication (report-only, tsx scripts/gherkin-dry-checker/run.ts)
+npm run gherkin-lint        # structural/style lint for .feature files (indentation, dupe scenario names, keyword order -- gherkin-lint-plus, see .gherkin-lintrc)
 npm run crap4ts             # CRAP complexity/coverage score, src/ only (same files as stryker)
 npm run halstead4ts         # Halstead complexity report via FTA, same files as crap4ts (report-only, tsx scripts/halstead4ts/run.ts)
 npm run dry4ts              # duplication checker over src/

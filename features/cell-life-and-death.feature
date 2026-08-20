@@ -43,7 +43,7 @@ Feature: Cell life and death
 
     Examples:
       | x | y | expected center x | expected center y |
-      | 1 | 1 | 1                 | 1                  |
+      | 1 | 1 | 1                 | 1                 |
 
   Scenario: A vertical blinker becomes horizontal after one generation
     Given a vertical blinker centered at (1, 1)

@@ -25,8 +25,8 @@ Feature: Grid reference lines and coordinates
     And the major y gridlines should be <y gridlines>
 
     Examples:
-      | minX | maxX | minY | maxY | x gridlines      | y gridlines |
-      | -23  | 17   | -5   | 26   | -20, -10, 0, 10  | 0, 10, 20   |
-      | 1    | 9    | 1    | 9    |                  |             |
-      | -10  | 10   | -10  | 10   | -10, 0, 10       | -10, 0, 10  |
-      | -2   | 12   | -2   | 7    | 0, 10            | 0           |
+      | minX | maxX | minY | maxY | x gridlines     | y gridlines |
+      | -23  | 17   | -5   | 26   | -20, -10, 0, 10 | 0, 10, 20   |
+      | 1    | 9    | 1    | 9    |                 |             |
+      | -10  | 10   | -10  | 10   | -10, 0, 10      | -10, 0, 10  |
+      | -2   | 12   | -2   | 7    | 0, 10           | 0           |

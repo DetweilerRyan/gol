@@ -32,8 +32,8 @@ Feature: Camera pan and zoom
 
     Examples:
       | factor | expected size |
-      | 1000   | 60             |
-      | 0.001  | 8              |
+      | 1000   | 60            |
+      | 0.001  | 8             |
 
   Scenario: Resetting the view returns to the default centered zoom
     Given a camera centered on the origin at the default zoom

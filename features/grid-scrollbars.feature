@@ -61,7 +61,7 @@ Feature: Grid scrollbars
 
     Examples:
       | thumb ratio | expected offset |
-      | 1           | 2.5              |
-      | 0.5         | 5                |
-      | 0.25        | 10               |
-      | 0           | 0                |
+      | 1           | 2.5             |
+      | 0.5         | 5               |
+      | 0.25        | 10              |
+      | 0           | 0               |

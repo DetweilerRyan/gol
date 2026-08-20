@@ -22,7 +22,7 @@ Feature: Infinite grid
     And the blinker should be centered at the literal coordinate (<expected center x>, <expected center y>)
 
     Examples:
-      | x       | y        | expected center x | expected center y |
-      | 0       | 0        | 0                  | 0                  |
-      | -500    | -500     | -500               | -500               |
-      | 250000  | -250000  | 250000             | -250000            |
+      | x      | y       | expected center x | expected center y |
+      | 0      | 0       | 0                 | 0                 |
+      | -500   | -500    | -500              | -500              |
+      | 250000 | -250000 | 250000            | -250000           |

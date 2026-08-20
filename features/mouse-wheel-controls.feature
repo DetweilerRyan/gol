@@ -33,8 +33,8 @@ Feature: Mouse wheel controls
 
     Examples:
       | cell size | expected percentage |
-      | 20        | 100                  |
-      | 40        | 200                  |
-      | 10        | 50                   |
-      | 60        | 300                  |
-      | 8         | 40                   |
+      | 20        | 100                 |
+      | 40        | 200                 |
+      | 10        | 50                  |
+      | 60        | 300                 |
+      | 8         | 40                  |
