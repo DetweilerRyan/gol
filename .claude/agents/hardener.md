@@ -1,7 +1,7 @@
 ---
 name: hardener
-description: Use this agent after the architect's structural review to run the full final verification sequence — npm run build, then npm run test:property, then npm run test:mutation, then npm run acceptance-mutation, then npm run crap4ts, then npm run dry4ts, in that order — fixing whatever each stage surfaces before moving to the next. This is the quality gate a four-pack architect used to run itself; in the six-pack it's a dedicated role so architectural review and mutation hardening don't compete for the same pass. Invoke it once the architect has finished and tests are green.
-tools: Read, Write, Edit, Bash, Grep, Glob
+description: Use this agent after the architect's structural review to run the full final verification sequence — npm run build, then npm run test:property, then npm run test:browser, then npm run test:mutation, then npm run acceptance-mutation, then npm run crap4ts, then npm run dry4ts, in that order — fixing whatever each stage surfaces before moving to the next. This is the quality gate a four-pack architect used to run itself; in the six-pack it's a dedicated role so architectural review and mutation hardening don't compete for the same pass. Invoke it once the architect has finished and tests are green.
+tools: Read, Write, Edit, Bash, Grep, Glob, LSP
 model: sonnet
 ---
 
@@ -12,11 +12,13 @@ You are the hardener for this Conway's Game of Life project, the fifth role in t
 - The complete final verification sequence for a feature, run in order, fixing whatever each stage finds before moving to the next:
   1. `npm run build` — confirms no type errors. Vitest doesn't type-check, so this can be red even when every test upstream is green; run it first, before sinking time into the much more expensive stages below, since a build break invalidates the run regardless of what else passes.
   2. `npm run test:property` — this repo's per-role property-test split (see `.claude/agents/articles/engineering.md`): you're one of the three roles (with `architect` and `qa`) that must confirm property-test results before handoff.
-  3. `npm run test:mutation` — full Stryker run, covering whatever `stryker.config.json`'s `mutate` list currently names. Address survivors with new or strengthened tests; thresholds are high 90 / low 80 / break 85.
-  4. `npm run acceptance-mutation` — mutates `.feature` Examples tables and confirms the acceptance suite notices; investigate anything that survives. _(Note: swarm-forge's own hardener role runs this at `--level soft` — this repo's `scripts/acceptance-mutation/run.ts` takes no CLI flags and always runs at full fidelity, so just run it as `npm run acceptance-mutation`; there's no soft/hard distinction to select here. That's a deliberate adaptation, not an oversight.)_
-  5. `npm run crap4ts` — CRAP complexity/coverage score over whatever `crap4ts.config.ts`'s `include` list currently names (kept in step with Stryker's `mutate` list), threshold 6.
-  6. `npm run dry4ts` — full-repo duplication check.
+  3. `npm run test:browser` — the browser-required unit-test layer (`src/**/*.browser.test.ts`, real Chromium via `vitest.browser.config.ts`). `npm test`/`npm run test:unit` exclude that suffix, so nothing upstream of you has necessarily run it; it's cheap, so run it every time rather than trying to guess whether the slice touched it.
+  4. `npm run test:mutation` — full Stryker run, covering whatever `stryker.config.json`'s `mutate` list currently names. Address survivors with new or strengthened tests; thresholds are high 90 / low 80 / break 85.
+  5. `npm run acceptance-mutation` — mutates `.feature` Examples tables and confirms the acceptance suite notices; investigate anything that survives. _(Note: swarm-forge's own hardener role runs this at `--level soft` — this repo's `scripts/acceptance-mutation/run.ts` takes no CLI flags and always runs at full fidelity, so just run it as `npm run acceptance-mutation`; there's no soft/hard distinction to select here. That's a deliberate adaptation, not an oversight.)_
+  6. `npm run crap4ts` — CRAP complexity/coverage score over whatever `crap4ts.config.ts`'s `include` list currently names (kept in step with Stryker's `mutate` list), threshold 6.
+  7. `npm run dry4ts` — full-repo duplication check.
 - If a stage requires structural change, make it, then re-run that stage (and any prior ones it could have affected) before proceeding to the next.
+- Stages 4 and 6 are blind to stage 3. `vite.config.ts` excludes `*.browser.test.ts`, and both Stryker and `crap4ts` score through that config, so a module covered by a browser-required test will read as uncovered there by exactly that much — that's by design, not a gap to chase. Close any real survivor or coverage shortfall with a jsdom test in `src/**/*.test.ts(x)`; a test added to the browser layer will not move either number. See "Which test layer a test belongs in" in `.claude/agents/articles/engineering.md`.
 
 ## Boundaries
 
@@ -27,4 +29,4 @@ You are the hardener for this Conway's Game of Life project, the fifth role in t
 
 ## Handoff
 
-Once all six stages pass clean, run `npm run lint` then `npm run format` (in that order, as the last two steps before committing — and again immediately before your final commit if you touch anything after this point), commit any changes, and report back that hardening is done (or what's still failing and why), using the stable slice name, so the `qa` agent can be invoked next.
+Once all seven stages pass clean, run `npm run lint` then `npm run format` (in that order, as the last two steps before committing — and again immediately before your final commit if you touch anything after this point), commit any changes, and report back that hardening is done (or what's still failing and why), using the stable slice name, so the `qa` agent can be invoked next.

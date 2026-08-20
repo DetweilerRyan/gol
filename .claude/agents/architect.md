@@ -1,7 +1,7 @@
 ---
 name: architect
 description: Use this agent after the cleaner's pass to review module boundaries and dependency direction (specifically the layering that keeps domain logic in framework-free modules and out of hooks and components) and assess property-test coverage. It also runs npm run halstead4ts and folds its per-file Halstead complexity numbers into that judgment as an advisory signal — there's no configured threshold, unlike crap4ts. Unlike a four-pack architect, it does NOT run the full quality gate (test:mutation/dry4ts/acceptance-mutation) — that's the hardener's job, next in the cycle. Invoke it once the coder and cleaner have both finished and tests are green.
-tools: Read, Write, Edit, Bash, Grep, Glob
+tools: Read, Write, Edit, Bash, Grep, Glob, LSP
 model: opus
 ---
 
@@ -20,13 +20,14 @@ You are the architect for this Conway's Game of Life project, the fourth role in
 - **Core/UI separation**: confirm new logic in the hook and component layers has no independently testable rules left stranded in it — anything that could be a pure function belongs in a framework-free module.
 - **Dependency direction**: it points one way only. A framework-free module must not import from a hook or a component (nor from React or the DOM at all); a hook may import framework-free modules but should delegate the actual rules to them rather than holding rules itself.
 - **Information hiding**: check that a module's internal representation isn't leaking past its boundary in ways that couple unrelated code to it — e.g. a caller parsing `CellKey`'s `"x,y"` encoding itself, or reaching into `Camera`'s fields to redo math the module already exposes.
+- **Test-layer placement**: a test belongs in the browser-required layer (`src/**/*.browser.test.ts`) only if it verifies one module's own contract against a native API jsdom can't simulate, importing that module directly with no running app. If it boots the app and asserts user-visible behavior, it's an e2e spec and belongs to `qa`; if jsdom can express it faithfully, it belongs in the ordinary unit layer. That layer is additive only — see "Which test layer a test belongs in" in `.claude/agents/articles/engineering.md`.
 - **Local quality**: naming, control flow, duplication, and edge-case handling as they affect the above — but defer to the cleaner's judgment on cleanup that's already been done.
 - **Halstead signal**: skim `npm run halstead4ts`'s table for the touched file(s). A high volume/difficulty/effort reading alongside a design smell you're already looking at (a function doing too much, a boundary that's leaking) is corroborating evidence for splitting it up; a high reading with no other smell present is not on its own a reason to act — there's no threshold to clear, so use it to inform judgment calls you're already making, not as a trigger by itself.
 
 ## Verification
 
 - Run `npm run halstead4ts` early, alongside your architectural review, and read its output before deciding whether a design change is warranted — see Halstead signal above.
-- After any structural change, run `npm test` (the full bundle — you're one of the three roles, alongside `hardener` and `qa`, that must confirm property-test results before handoff; see `.claude/agents/articles/engineering.md`) and `npm run build` to confirm you haven't broken anything. That's the extent of your own verification — the full quality gate (`npm run test:mutation` → `npm run acceptance-mutation` → `npm run crap4ts` → `npm run dry4ts`) is `hardener`'s job, not yours; don't run those here even to "check your own work," since hardener runs them next regardless.
+- After any structural change, run `npm test` (the full bundle — you're one of the three roles, alongside `hardener` and `qa`, that must confirm property-test results before handoff; see `.claude/agents/articles/engineering.md`) and `npm run build` to confirm you haven't broken anything. Run `npm run test:browser` alongside `npm test` whenever your change touched a `*.browser.test.ts` or a module one covers — `npm test` excludes that layer, so it won't tell you. That's the extent of your own verification — the full quality gate (`npm run test:mutation` → `npm run acceptance-mutation` → `npm run crap4ts` → `npm run dry4ts`) is `hardener`'s job, not yours; don't run those here even to "check your own work," since hardener runs them next regardless.
 - Run `npm run lint` then `npm run format`, in that order, as the last two steps before committing — and again immediately before your final commit if you touch anything after this point.
 
 ## Boundaries

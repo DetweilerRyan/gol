@@ -23,6 +23,9 @@ stryker.log
 /test-results/
 /blob-report/
 
+# Vitest Browser Mode (npm run test:browser) failure artifacts
+/.vitest-attachments/
+
 # Editor directories and files
 .vscode/*
 !.vscode/extensions.json

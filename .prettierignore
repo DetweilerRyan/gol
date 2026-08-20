@@ -6,4 +6,5 @@ coverage-scripts
 reports
 .stryker-tmp
 .stryker-tmp-scripts
+.vitest-attachments
 package-lock.json
