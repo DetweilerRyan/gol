@@ -73,11 +73,10 @@ export async function selectPattern(page: Page, name: string) {
   await expect(patternLibraryModal(page)).toHaveCount(0)
 }
 
-// Playwright keeps keyboard focus on the button that was last clicked, and
-// Enter on a focused <button> triggers its own native click too (after the
-// global window keydown listener runs, per the ordering documented in
-// hud-layout-and-shortcuts.e2e.spec.ts) -- blurring first isolates the
-// Enter-suppression assertions from that unrelated double-activation.
+// Playwright keeps keyboard focus on the button that was last clicked.
+// "Enter with nothing focused" scenarios need an explicit blur first --
+// otherwise Enter would trigger that button's own native click instead of
+// exercising the no-op case they're meant to check.
 export async function blurFocus(page: Page) {
   await page.evaluate(() => (document.activeElement as HTMLElement | null)?.blur())
 }
