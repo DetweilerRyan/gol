@@ -24,6 +24,13 @@ describe('INITIAL_PLACEMENT', () => {
     expect(armedPattern(INITIAL_PLACEMENT)).toBeNull()
     expect(previewPositions(INITIAL_PLACEMENT)).toEqual([])
   })
+
+  it('is the idle-mode literal exactly, not just something the other queries treat as idle', () => {
+    // The queries above (isLibraryOpen/armedPattern/previewPositions) all treat any non-'browsing',
+    // non-'placing' mode as equivalent, so they can't tell 'idle' apart from a mutated or malformed
+    // mode string -- assert the literal directly to pin it down.
+    expect(INITIAL_PLACEMENT).toEqual({ mode: 'idle' })
+  })
 })
 
 describe('toggleLibrary', () => {
