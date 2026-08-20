@@ -27,11 +27,17 @@ npx playwright test features/grid-scrollbars.e2e.spec.ts   # run a single e2e sp
 npx playwright install chromium   # one-time browser install after npm install
 
 npm run test:mutation       # stryker mutation testing (scoped to the 3 core modules, 4 hooks, and 5 components in the Architecture section's file list)
-npm run acceptance-mutation # custom Gherkin-example mutation runner (scripts/acceptance-mutation)
-npm run gherkin-dry         # checks .feature files for step-text vocabulary duplication (report-only)
-npm run crap4ts             # CRAP complexity/coverage score (same files as stryker)
-npm run halstead4ts         # Halstead complexity report via FTA, same files as crap4ts (report-only)
+npm run acceptance-mutation # custom Gherkin-example mutation runner (scripts/acceptance-mutation, tsx scripts/acceptance-mutation/run.ts)
+npm run gherkin-dry         # checks .feature files for step-text vocabulary duplication (report-only, tsx scripts/gherkin-dry-checker/run.ts)
+npm run crap4ts             # CRAP complexity/coverage score, src/ only (same files as stryker)
+npm run halstead4ts         # Halstead complexity report via FTA, same files as crap4ts (report-only, tsx scripts/halstead4ts/run.ts)
 npm run dry4ts              # duplication checker over src/
+
+npm run test:scripts          # vitest run, scripts/ only -- separate node-env config from the src/ suite above
+npm run test:coverage:scripts # vitest run --coverage, scripts/ only, writes to coverage-scripts/
+npm run crap4ts:scripts       # CRAP complexity/coverage score, scripts/ only
+npm run dry4ts:scripts        # duplication checker over scripts/
+npm run test:mutation:scripts # stryker mutation testing, scripts/ only
 ```
 
 There is no separate typecheck script — `npm run build` runs `tsc -b` as its first step. Lint (oxlint) has type-aware rules disabled by default; see README.md if enabling `oxlint-tsgolint`.
@@ -62,11 +68,13 @@ Vitest excludes `**/*.e2e.spec.ts` (see `vite.config.ts`) so the two runners nev
 
 ### Custom quality tooling in `scripts/`
 
+`scripts/` is TypeScript, not JavaScript, and is its own project — separate `tsconfig.scripts.json`, `vitest.scripts.config.ts`, `crap4ts.scripts.config.ts`, and `stryker.scripts.config.json` from the ones covering `src/`/`features/` above. It's the tooling every other role's quality gate runs on, so it's held to the same CRAP threshold (6) as `src/`, via its own parallel commands (`npm run test:scripts`, `npm run test:coverage:scripts`, `npm run crap4ts:scripts`, `npm run dry4ts:scripts`, `npm run test:mutation:scripts`) — see `.claude/agents/articles/engineering.md`'s "Working inside scripts/" section for exactly which command each pipeline role substitutes for its usual `src/`-scoped one.
+
 - `scripts/acceptance-mutation/` — mutates individual values in `.feature` Examples tables (never source code) and reruns the corresponding `.steps.test.ts` file to check the scenario actually notices (concept from unclebob's Acceptance-Pipeline-Specification). Each mutant runs the _entire_ steps file, not a filtered subset, since Given/When/Then steps share closure state within a scenario. In practice this hardens the Gherkin layer against itself — the weaknesses it has surfaced so far were in step definitions absorbing a mutated value without noticing, not in `gameOfLife.ts`/`viewport.ts` — so treat it as acceptance-suite quality assurance, not as evidence the Gherkin layer is finding core-logic bugs unit tests miss.
 - `scripts/gherkin-dry-checker/` — advisory-only; scans all `.feature` files for step-text vocabulary duplication/drift. Always exits 0 on a successful run (report-only), writes to `reports/gherkin-dry/report.json`.
-- `scripts/halstead4ts/` — runs `fta-cli` against the same files as `crap4ts.config.ts`'s `include` list and prints a Halstead (volume/difficulty/effort/bugs) + FTA Score table alongside crap4ts's per-function CRAP table. FTA only reports at file granularity (no per-function breakdown), so this is a second, coarser report rather than something merged into crap4ts's output — and since FTA's own score formula isn't published, it's report-only like `gherkin-dry-checker`, never a CI gate. Keep the file list in `run.mjs` in sync with `crap4ts.config.ts` by hand.
+- `scripts/halstead4ts/` — runs `fta-cli` against the same files as `crap4ts.config.ts`'s `include` list and prints a Halstead (volume/difficulty/effort/bugs) + FTA Score table alongside crap4ts's per-function CRAP table. FTA only reports at file granularity (no per-function breakdown), so this is a second, coarser report rather than something merged into crap4ts's output — and since FTA's own score formula isn't published, it's report-only like `gherkin-dry-checker`, never a CI gate. Keep the file list in `run.ts` in sync with `crap4ts.config.ts` by hand.
 
-All three have their own `.test.mjs` unit tests runnable via `npx vitest run scripts/` (they're also swept into the default `npm test`/`npm run test:unit`, since vitest's default include pattern already matches `scripts/**/*.test.mjs`).
+All three run via `tsx` (`npm run halstead4ts`/`acceptance-mutation`/`gherkin-dry`, each `tsx scripts/.../run.ts`) and have their own `.test.ts` unit tests runnable via `npm run test:scripts` — a dedicated Node-environment vitest config; `vite.config.ts` excludes `scripts/**` from the main `npm test`/`npm run test:unit` run, so scripts' tests no longer run there.
 
 ## Subagent pipeline
 
