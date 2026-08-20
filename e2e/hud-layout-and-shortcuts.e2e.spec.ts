@@ -1,11 +1,22 @@
 import { test, expect } from '@playwright/test'
-import { cellLocator, elementAtPoint } from './e2e-helpers'
+import { blurFocus, cellLocator, CENTER, elementAtPoint, openPatternModal, selectPattern } from './e2e-helpers'
 
-// No matching .feature file: these two UI behaviors (full-window grid + HUD
-// panel, Enter-key shortcut) were built directly in App.tsx/Grid.tsx without
-// Gherkin/unit coverage, per this project's convention that pure DOM/layout
-// work is verified by browser testing rather than unit tests. This spec is
-// that verification, made permanent instead of one-off.
+// No matching .feature file (see CLAUDE.md's black-box e2e section for when a
+// spec is unpaired): the behaviors here -- full-window grid + HUD panel layout,
+// the Enter-key shortcut, and Enter's suppression while the pattern library is
+// open or a pattern is armed -- are DOM/layout/App-wiring concerns built
+// directly in App.tsx/Grid.tsx with no pure-logic layer to specify in Gherkin.
+// This spec is that verification, made permanent instead of one-off.
+//
+// QA outline this spec records:
+//   - The grid fills the window edge to edge, with the HUD panel top-left
+//     showing the title, Next Generation button, and generation counter.
+//   - Next Generation, and Enter with nothing focused, both advance the real
+//     app's state; Enter on a focused cell advances once and also toggles that
+//     cell; Enter on the focused button advances exactly once.
+//   - Enter does nothing while the pattern library modal is open or while a
+//     pattern is armed, and works again once a stamp ends placing mode -- and
+//     that stamp really does bring the pattern's cells to life.
 
 const ALIVE_CLASS = /bg-gray-900/
 const DEAD_CLASS = /bg-white/
@@ -96,4 +107,41 @@ test('Enter on the focused Next Generation button does not double-fire', async (
   await page.keyboard.press('Enter')
 
   await expect(page.getByText(/^Generation: \d+$/)).toHaveText('Generation: 2')
+})
+
+test('Enter does not advance the generation while the pattern modal is open', async ({ page }) => {
+  await openPatternModal(page)
+  await blurFocus(page)
+
+  await page.keyboard.press('Enter')
+
+  await expect(page.getByText(/^Generation: \d+$/)).toHaveText('Generation: 0')
+})
+
+test('Enter does not advance the generation while placing a pattern', async ({ page }) => {
+  await selectPattern(page, 'Block')
+  await blurFocus(page)
+
+  await page.keyboard.press('Enter')
+
+  await expect(page.getByText(/^Generation: \d+$/)).toHaveText('Generation: 0')
+})
+
+test('Enter resumes advancing the generation once placing mode ends via a stamp', async ({ page }) => {
+  await selectPattern(page, 'Block')
+  await page.mouse.click(CENTER.x, CENTER.y)
+
+  // Block's own cells are (0,0),(1,0),(0,1),(1,1) and CENTER is world cell
+  // (0, 0) under the default camera (see e2e-helpers.ts), so this is the one
+  // place the real App.tsx Immer stamp wiring is verified to produce live
+  // cells end to end -- not just to leave placing mode.
+  await expect(cellLocator(page, 0, 0)).toHaveClass(ALIVE_CLASS)
+  await expect(cellLocator(page, 1, 0)).toHaveClass(ALIVE_CLASS)
+  await expect(cellLocator(page, 0, 1)).toHaveClass(ALIVE_CLASS)
+  await expect(cellLocator(page, 1, 1)).toHaveClass(ALIVE_CLASS)
+
+  await blurFocus(page)
+  await page.keyboard.press('Enter')
+
+  await expect(page.getByText(/^Generation: \d+$/)).toHaveText('Generation: 1')
 })

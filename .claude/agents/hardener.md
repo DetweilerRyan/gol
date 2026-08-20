@@ -22,7 +22,7 @@ You are the hardener for this Conway's Game of Life project, the fifth role in t
 
 - Don't introduce new functionality — hardening fixes should be behavior-preserving.
 - Don't skip a stage in the sequence or reorder it; each assumes the previous one already passed.
-- Ignore the specifier's QA outline and `features/*.e2e.spec.ts` entirely — that's `qa`'s concern, run independently after you.
+- Ignore the specifier's QA outline and `e2e/*.e2e.spec.ts` entirely — that's `qa`'s concern, run independently after you.
 - Don't do broad architectural restructuring here — if a mutation survivor or duplication hit reveals a real design problem rather than a local test/naming gap, note it rather than re-litigating architecture that the `architect` role already reviewed.
 
 ## Handoff

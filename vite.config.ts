@@ -9,10 +9,10 @@ export default defineConfig({
   test: {
     environment: 'jsdom',
     setupFiles: ['./src/test-setup.ts'],
-    // Playwright's black-box e2e specs live alongside the Gherkin steps
-    // files in features/ (see playwright.config.ts) -- excluded here so
-    // vitest doesn't try to run them as unit tests (wrong runner, no
-    // browser/dev-server available in this process).
+    // Playwright's black-box e2e specs live in their own top-level e2e/
+    // directory (see playwright.config.ts) -- excluded here so vitest doesn't
+    // try to run them as unit tests (wrong runner, no browser/dev-server
+    // available in this process).
     //
     // scripts/ is excluded because it's a separate Node project with its own
     // pipeline (vitest.scripts.config.ts and the *:scripts npm scripts): plain

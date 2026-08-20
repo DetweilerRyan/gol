@@ -3,7 +3,7 @@ import { defineConfig, devices } from '@playwright/test'
 // One-time setup after `npm install`: run `npx playwright install chromium`
 // to fetch the browser binary this config drives.
 export default defineConfig({
-  testDir: './features',
+  testDir: './e2e',
   testMatch: '**/*.e2e.spec.ts',
   fullyParallel: true,
   forbidOnly: !!process.env.CI,

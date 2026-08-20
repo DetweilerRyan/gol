@@ -98,6 +98,15 @@ function selectPattern(pattern: Pattern) {
   fireEvent.click(screen.getByRole('button', { name: pattern.name }))
 }
 
+// Headless UI's Dialog stays mounted through its leave transition after a
+// pattern is selected, and treats a pointerdown landing outside it during that
+// window as a dismiss -- which runs onClose and disarms the pattern. Tests that
+// drive pointer events at the grid right after selecting must wait this out
+// first, or they'd be exercising idle mode instead of placing mode.
+async function waitForModalToUnmount() {
+  await waitFor(() => expect(screen.queryByText('Pattern Library')).not.toBeInTheDocument())
+}
+
 function previewLabels(): string[] {
   return [...document.querySelectorAll('[aria-label^="Pattern preview cell"]')].map(
     (el) => el.getAttribute('aria-label') as string,
@@ -527,6 +536,63 @@ describe('placing-mode state machine', () => {
     fireEvent.pointerUp(grid, { pointerId: 10, clientX: 240, clientY: 260 })
     expect(onPlacePattern).toHaveBeenCalledTimes(1)
     expect(onToggleCell).toHaveBeenCalledTimes(1)
+  })
+
+  it('a past-threshold drag while placing pans instead of stamping, and leaves the pattern armed', async () => {
+    const onPlacePattern = vi.fn()
+    const onToggleCell = vi.fn()
+    const { container } = renderGrid({ onPlacePattern, onToggleCell })
+    triggerResize(WIDTH, HEIGHT)
+    const grid = gridContentEl(container)
+
+    openPatternModal()
+    selectPattern(GLIDER)
+    await waitForModalToUnmount()
+
+    fireEvent.pointerDown(grid, { pointerId: 1, clientX: 240, clientY: 260 })
+    fireEvent.pointerMove(grid, { pointerId: 1, clientX: 300, clientY: 260 }) // crosses DRAG_THRESHOLD_PX
+    fireEvent.pointerUp(grid, { pointerId: 1, clientX: 300, clientY: 260 })
+
+    expect(onPlacePattern).not.toHaveBeenCalled()
+    expect(onToggleCell).not.toHaveBeenCalled()
+
+    // A pan-drag isn't a stamp, but it isn't a cancel either: the pattern is
+    // still armed, so the very next plain click does stamp it.
+    fireEvent.pointerDown(grid, { pointerId: 2, clientX: 300, clientY: 260 })
+    fireEvent.pointerUp(grid, { pointerId: 2, clientX: 300, clientY: 260 })
+    expect(onPlacePattern).toHaveBeenCalledTimes(1)
+    expect(onToggleCell).not.toHaveBeenCalled()
+  })
+
+  it('anchors the preview on the panned camera, not the pre-pan one, once a drag has moved the view', async () => {
+    const { container } = renderGrid()
+    triggerResize(WIDTH, HEIGHT)
+    const grid = gridContentEl(container)
+
+    openPatternModal()
+    selectPattern(GLIDER)
+    await waitForModalToUnmount()
+
+    fireEvent.pointerDown(grid, { pointerId: 1, clientX: 240, clientY: 260 })
+    fireEvent.pointerMove(grid, { pointerId: 1, clientX: 300, clientY: 260 }) // crosses threshold, pans by (60, 0)
+    fireEvent.pointerUp(grid, { pointerId: 1, clientX: 300, clientY: 260 })
+
+    // A hover move at the same screen point as the drag ended: the pointer
+    // hasn't moved, but the camera under it has, so the anchor must come out
+    // different from the pre-pan one -- that difference is what proves
+    // pointerToWorldCell reads the current camera rather than a stale capture.
+    const panned = panCamera(centeredCamera(WIDTH, HEIGHT), 60, 0)
+    fireEvent.pointerMove(grid, { pointerId: 1, clientX: 300, clientY: 260 })
+
+    const anchor = screenToWorld(panned, 300, 260)
+    expect(anchor).not.toEqual(screenToWorld(centeredCamera(WIDTH, HEIGHT), 300, 260))
+
+    const expectedPreview = patternCellPositions(GLIDER, anchor.x, anchor.y)
+    expect(previewLabels().sort()).toEqual(expectedPreview.map(([x, y]) => `Pattern preview cell ${x}, ${y}`).sort())
+    const [firstX, firstY] = expectedPreview[0]
+    expect(screen.getByLabelText(`Pattern preview cell ${firstX}, ${firstY}`).style.transform).toBe(
+      expectedTransform(panned, firstX, firstY),
+    )
   })
 
   it('Escape cancels placing mode', () => {

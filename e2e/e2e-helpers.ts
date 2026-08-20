@@ -1,4 +1,4 @@
-import type { Locator, Page } from '@playwright/test'
+import { expect, type Locator, type Page } from '@playwright/test'
 
 // Derived from centeredCamera(1280, 900) in src/viewport.ts: default camera
 // is { offsetX: -32, offsetY: -22.5, cellSize: 20 }, so world (0,0) renders
@@ -47,6 +47,39 @@ export async function dragPan(page: Page, fromX: number, fromY: number, dx: numb
   await page.mouse.down()
   await page.mouse.move(fromX + dx, fromY + dy, { steps })
   await page.mouse.up()
+}
+
+export function patternsButton(page: Page): Locator {
+  return page.locator('button[aria-label="Open pattern library"]')
+}
+
+export function patternLibraryModal(page: Page): Locator {
+  return page.getByRole('dialog', { name: 'Pattern library' })
+}
+
+export async function openPatternModal(page: Page) {
+  await patternsButton(page).click()
+}
+
+export async function selectPattern(page: Page, name: string) {
+  await openPatternModal(page)
+  await page.getByRole('button', { name, exact: true }).click()
+
+  // Headless UI's Dialog stays mounted through its ~100ms leave transition,
+  // still covering the click point during that window -- waiting for it to
+  // fully unmount here (rather than at each call site) keeps the subsequent
+  // mouse.move/click in every caller from landing on the closing dialog
+  // instead of the grid underneath.
+  await expect(patternLibraryModal(page)).toHaveCount(0)
+}
+
+// Playwright keeps keyboard focus on the button that was last clicked, and
+// Enter on a focused <button> triggers its own native click too (after the
+// global window keydown listener runs, per the ordering documented in
+// hud-layout-and-shortcuts.e2e.spec.ts) -- blurring first isolates the
+// Enter-suppression assertions from that unrelated double-activation.
+export async function blurFocus(page: Page) {
+  await page.evaluate(() => (document.activeElement as HTMLElement | null)?.blur())
 }
 
 export async function shiftWheel(page: Page, atX: number, atY: number, deltaX: number, deltaY: number) {
