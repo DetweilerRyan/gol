@@ -1,4 +1,4 @@
-import { patternCellPositions, type Pattern } from './gameOfLife'
+import { patternCellPositions, type Pattern } from './patternLibrary'
 
 // The pattern-library interaction as an explicit three-state machine, kept
 // framework-free the same way viewport.ts is (useCamera : viewport.ts ::

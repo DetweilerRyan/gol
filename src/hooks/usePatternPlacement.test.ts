@@ -1,6 +1,6 @@
 import { act, fireEvent, renderHook, type RenderHookResult } from '@testing-library/react'
 import { describe, expect, it, vi } from 'vitest'
-import { PATTERNS, type Pattern } from '../gameOfLife'
+import { PATTERNS, type Pattern } from '../patternLibrary'
 import { armedPattern, isLibraryOpen, previewPositions, suppressesEnter } from '../patternPlacement'
 import { usePatternPlacement } from './usePatternPlacement'
 

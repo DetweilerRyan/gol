@@ -1,7 +1,8 @@
 import { it } from '@fast-check/vitest'
 import fc from 'fast-check'
 import { describe, expect } from 'vitest'
-import { cellKey, createEmptyLiveCells, PATTERNS, placePattern, type Pattern } from './gameOfLife'
+import { cellKey, createEmptyLiveCells } from './gameOfLife'
+import { PATTERNS, placePattern, type Pattern } from './patternLibrary'
 import {
   armedPattern,
   armPattern,

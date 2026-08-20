@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { patternCellPositions, PATTERNS, type Pattern } from './gameOfLife'
+import { patternCellPositions, PATTERNS, type Pattern } from './patternLibrary'
 import {
   armedPattern,
   armPattern,

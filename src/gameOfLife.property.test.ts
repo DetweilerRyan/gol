@@ -3,11 +3,10 @@ import fc from 'fast-check'
 import { describe, expect } from 'vitest'
 import {
   cellKey,
+  computeContentBounds,
   createEmptyLiveCells,
   getNextGeneration,
   isCellAlive,
-  PATTERN_CATEGORIES,
-  patternsByCategory,
   toggleCell,
   type LiveCells,
 } from './gameOfLife'
@@ -125,8 +124,47 @@ describe('createEmptyLiveCells (property)', () => {
   })
 })
 
-describe('patternsByCategory (property)', () => {
-  it.prop([fc.constantFrom(...PATTERN_CATEGORIES)])('only returns patterns matching the given category', (category) => {
-    expect(patternsByCategory(category).every((pattern) => pattern.category === category)).toBe(true)
+describe('computeContentBounds (property)', () => {
+  const nonEmptyPattern = fc.uniqueArray(point, { minLength: 1, maxLength: 25 })
+
+  it.prop([nonEmptyPattern])('is the tightest half-open box containing every live cell', (coords) => {
+    const bounds = computeContentBounds(makeLiveCells(coords))
+    if (!bounds) throw new Error('expected bounds for a non-empty grid')
+
+    // Containment: maxX/maxY are exclusive (one past the last live cell), so
+    // every cell satisfies min <= c < max on both axes.
+    for (const [x, y] of coords) {
+      expect(x).toBeGreaterThanOrEqual(bounds.minX)
+      expect(x).toBeLessThan(bounds.maxX)
+      expect(y).toBeGreaterThanOrEqual(bounds.minY)
+      expect(y).toBeLessThan(bounds.maxY)
+    }
+
+    // Tightness: some live cell touches each of the four edges, so no smaller
+    // box would still contain them all.
+    expect(coords.some(([x]) => x === bounds.minX)).toBe(true)
+    expect(coords.some(([x]) => x === bounds.maxX - 1)).toBe(true)
+    expect(coords.some(([, y]) => y === bounds.minY)).toBe(true)
+    expect(coords.some(([, y]) => y === bounds.maxY - 1)).toBe(true)
   })
+
+  it.prop([
+    nonEmptyPattern,
+    fc.integer({ min: -1_000_000, max: 1_000_000 }),
+    fc.integer({ min: -1_000_000, max: 1_000_000 }),
+  ])(
+    'is translation equivariant: shifting every cell shifts the bounds by the same amount',
+    (coords, shiftX, shiftY) => {
+      const bounds = computeContentBounds(makeLiveCells(coords))
+      if (!bounds) throw new Error('expected bounds for a non-empty grid')
+
+      const shifted = computeContentBounds(makeLiveCells(coords.map(([x, y]) => [x + shiftX, y + shiftY])))
+      expect(shifted).toEqual({
+        minX: bounds.minX + shiftX,
+        maxX: bounds.maxX + shiftX,
+        minY: bounds.minY + shiftY,
+        maxY: bounds.maxY + shiftY,
+      })
+    },
+  )
 })

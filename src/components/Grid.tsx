@@ -1,9 +1,10 @@
 import { useEffect, useLayoutEffect, useRef, useState } from 'react'
-import { cellKey, computeContentBounds, isCellAlive, type LiveCells, type Pattern } from '../gameOfLife'
+import { cellKey, computeContentBounds, isCellAlive, type LiveCells } from '../gameOfLife'
 import { useCamera } from '../hooks/useCamera'
 import { useElementSize } from '../hooks/useElementSize'
 import { usePatternPlacement } from '../hooks/usePatternPlacement'
 import { useWheelInput } from '../hooks/useWheelInput'
+import { type Pattern } from '../patternLibrary'
 import { armedPattern, isLibraryOpen, previewPositions, suppressesEnter } from '../patternPlacement'
 import {
   advanceDrag,

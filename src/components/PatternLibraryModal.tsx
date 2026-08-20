@@ -1,7 +1,7 @@
 import { Button } from '../catalyst/button'
 import { Dialog, DialogBody, DialogTitle } from '../catalyst/dialog'
 import { Subheading } from '../catalyst/heading'
-import { PATTERN_CATEGORIES, patternsByCategory, type Pattern } from '../gameOfLife'
+import { PATTERN_CATEGORIES, patternsByCategory, type Pattern } from '../patternLibrary'
 
 interface PatternLibraryModalProps {
   open: boolean

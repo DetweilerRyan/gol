@@ -6,6 +6,7 @@
   "reporters": ["progress", "clear-text", "html"],
   "mutate": [
     "src/gameOfLife.ts",
+    "src/patternLibrary.ts",
     "src/viewport.ts",
     "src/patternPlacement.ts",
     "src/hooks/useCamera.ts",

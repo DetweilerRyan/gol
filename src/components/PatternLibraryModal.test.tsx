@@ -1,6 +1,6 @@
 import { fireEvent, render, screen } from '@testing-library/react'
 import { describe, expect, it, vi } from 'vitest'
-import { PATTERN_CATEGORIES, patternsByCategory } from '../gameOfLife'
+import { PATTERN_CATEGORIES, patternsByCategory } from '../patternLibrary'
 import PatternLibraryModal from './PatternLibraryModal'
 
 describe('PatternLibraryModal', () => {

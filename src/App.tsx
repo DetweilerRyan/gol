@@ -1,14 +1,8 @@
 import { useEffect, useState } from 'react'
 import { useImmer } from 'use-immer'
 import Grid from './components/Grid'
-import {
-  createEmptyLiveCells,
-  getNextGeneration,
-  placePattern,
-  type LiveCells,
-  type Pattern,
-  toggleCell as toggleCellInPlace,
-} from './gameOfLife'
+import { createEmptyLiveCells, getNextGeneration, type LiveCells, toggleCell as toggleCellInPlace } from './gameOfLife'
+import { placePattern, type Pattern } from './patternLibrary'
 
 function App() {
   const [liveCells, updateLiveCells] = useImmer<LiveCells>(() => createEmptyLiveCells())

@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import type { Pattern } from '../gameOfLife'
+import type { Pattern } from '../patternLibrary'
 import {
   armPattern,
   cancelPlacing,

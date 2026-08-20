@@ -1,13 +1,7 @@
 import { fireEvent, render, screen, waitFor, type RenderResult } from '@testing-library/react'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
-import {
-  cellKey,
-  computeContentBounds,
-  patternCellPositions,
-  PATTERNS,
-  type LiveCells,
-  type Pattern,
-} from '../gameOfLife'
+import { cellKey, computeContentBounds, type LiveCells } from '../gameOfLife'
+import { patternCellPositions, PATTERNS, type Pattern } from '../patternLibrary'
 import {
   applyWheelInput,
   centeredCamera,

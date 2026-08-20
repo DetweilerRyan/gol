@@ -1,15 +1,7 @@
 import { describeFeature, loadFeature } from '@amiceli/vitest-cucumber'
 import { expect } from 'vitest'
-import {
-  cellKey,
-  createEmptyLiveCells,
-  getPatternByName,
-  isCellAlive,
-  placePattern,
-  toggleCell,
-  type LiveCells,
-  type Pattern,
-} from '../src/gameOfLife'
+import { cellKey, createEmptyLiveCells, isCellAlive, toggleCell, type LiveCells } from '../src/gameOfLife'
+import { getPatternByName, placePattern, type Pattern } from '../src/patternLibrary'
 
 // ACCEPTANCE_MUTATION_FEATURE_FILE lets the acceptance-mutation runner point
 // this suite at a mutated copy of the feature file (see
