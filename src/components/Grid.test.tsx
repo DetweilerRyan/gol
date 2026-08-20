@@ -40,8 +40,8 @@ beforeEach(() => {
   pointerCapture = stubPointerCapture()
 })
 
-const WIDTH = 800
-const HEIGHT = 600
+const WIDTH = 400
+const HEIGHT = 300
 
 function triggerResize(width: number, height: number) {
   resizeObserver.resize(width, height)
@@ -761,8 +761,13 @@ describe('scrollbar and ruler wiring', () => {
 
     const { lengthPx: hLength } = computeThumbGeometry(metrics.horizontal, WIDTH)
     const { lengthPx: vLength } = computeThumbGeometry(metrics.vertical, HEIGHT)
-    expect(horizontal).toHaveStyle({ width: `${hLength}px` })
-    expect(vertical).toHaveStyle({ height: `${vLength}px` })
+    // Asserting on the inline style directly (not toHaveStyle's
+    // getComputedStyle-based comparison) -- jsdom's cssstyle rounds
+    // getComputedStyle's serialized px values to 3 decimal places, which a
+    // non-terminating thumbLengthPx at this viewport size would fail on even
+    // though the actual rendered style is exact.
+    expect(horizontal?.style.width).toBe(`${hLength}px`)
+    expect(vertical?.style.height).toBe(`${vLength}px`)
   })
 
   it('renders one RulerLabel per axis per majorGridlines entry', () => {
