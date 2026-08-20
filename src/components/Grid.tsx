@@ -1,10 +1,10 @@
-import { useRef, useState } from 'react'
-import { rectRelativePixels, screenToWorld, worldToScreen, zoomPercentage } from '../camera'
-import { advanceDrag, beginDrag, type DragGesture } from '../dragGesture'
+import { useRef } from 'react'
+import { screenToWorld, worldToScreen, zoomPercentage } from '../camera'
 import { cellKey, computeContentBounds, isCellAlive, type LiveCells } from '../gameOfLife'
 import { cellsInRange, computeMajorGridlines, computeVisibleRange, isMajorGridline } from '../gridGeometry'
 import { useCamera } from '../hooks/useCamera'
 import { useElementSize } from '../hooks/useElementSize'
+import { useGridPointerGestures } from '../hooks/useGridPointerGestures'
 import { useInitialCentering } from '../hooks/useInitialCentering'
 import { usePatternPlacement } from '../hooks/usePatternPlacement'
 import { useWheelInput } from '../hooks/useWheelInput'
@@ -31,9 +31,6 @@ export default function Grid({ liveCells, onToggleCell, onPlacePattern }: GridPr
   useWheelInput(containerRef, applyWheel)
   useInitialCentering(containerSize, centerView)
 
-  const dragStateRef = useRef<DragGesture | null>(null)
-  const [isPanning, setIsPanning] = useState(false)
-
   const { placement, openOrCancelLibrary, closeLibrary, selectPattern, previewAt, disarm } = usePatternPlacement()
 
   const visibleRange = computeVisibleRange(camera, containerSize.width, containerSize.height)
@@ -43,71 +40,23 @@ export default function Grid({ liveCells, onToggleCell, onPlacePattern }: GridPr
   const contentBounds = computeContentBounds(liveCells)
   const scrollbarMetrics = computeScrollbarMetrics(camera, contentBounds, containerSize.width, containerSize.height)
 
-  function handlePointerDown(e: React.PointerEvent) {
-    e.currentTarget.setPointerCapture(e.pointerId)
-    dragStateRef.current = beginDrag(e.clientX, e.clientY)
-  }
-
-  // Resolves a pointer event's client coordinates to the world cell under it,
-  // relative to the grid container -- shared by cell-toggle resolution
-  // (handlePointerUp) and placing-mode preview tracking (handlePointerMove).
-  function pointerToWorldCell(e: React.PointerEvent) {
-    const { pixelX, pixelY } = rectRelativePixels(e.currentTarget.getBoundingClientRect(), e.clientX, e.clientY)
-    return screenToWorld(camera, pixelX, pixelY)
-  }
-
-  function handlePointerMove(e: React.PointerEvent) {
-    // Tracks the cursor's cell for the placing-mode preview on every move,
-    // independent of drag state -- pointermove fires on hover too, not just
-    // while a button is pressed, and the preview needs to follow the cursor
-    // even before any drag threshold is crossed (or when the pointer never
-    // goes down at all). Guarded on something actually being armed even
-    // though previewAt itself is a no-op otherwise, so an ordinary pan drag
-    // doesn't force a synchronous layout (getBoundingClientRect) per move.
-    if (armedPattern(placement)) {
-      const { x, y } = pointerToWorldCell(e)
-      previewAt(x, y)
-    }
-
-    const drag = dragStateRef.current
-    if (!drag) return
-
-    const advance = advanceDrag(drag, e.clientX, e.clientY)
-    dragStateRef.current = advance.gesture
-    // Guarded rather than panning by advanceDrag's zeroed deltas, so a
-    // sub-threshold move doesn't re-render on a camera that didn't move.
-    if (advance.gesture.isPanning) {
-      panByPixels(advance.panDxPixels, advance.panDyPixels)
-      setIsPanning(true)
-    }
-  }
-
-  // Pointer capture on the container retargets the subsequent native "click"
-  // event to the container too, so per-button onClick never fires for
-  // pointer-driven interaction — toggle is resolved here from pointerup
-  // coordinates instead. Button onClick still handles keyboard activation
-  // (Enter/Space), which never goes through pointer capture.
-  function handlePointerUp(e: React.PointerEvent) {
-    releaseCapture(e)
-    if (!dragStateRef.current?.isPanning) {
-      const { x, y } = pointerToWorldCell(e)
+  // trackHover mirrors the armedPattern check the place-vs-toggle branch below
+  // also makes: only in placing mode does a pointermove need pointer-to-world
+  // resolution for the preview, so an ordinary pan drag doesn't pay for that
+  // per-move getBoundingClientRect call. See useGridPointerGestures for the
+  // guard itself.
+  const { isPanning, handlers } = useGridPointerGestures({
+    trackHover: !!armedPattern(placement),
+    onPan: panByPixels,
+    onTap: (pixelX, pixelY) => {
+      const { x, y } = screenToWorld(camera, pixelX, pixelY)
       placeOrToggleAt(x, y)
-    }
-    dragStateRef.current = null
-    setIsPanning(false)
-  }
-
-  function handlePointerCancel(e: React.PointerEvent) {
-    releaseCapture(e)
-    dragStateRef.current = null
-    setIsPanning(false)
-  }
-
-  function releaseCapture(e: React.PointerEvent) {
-    if (e.currentTarget.hasPointerCapture(e.pointerId)) {
-      e.currentTarget.releasePointerCapture(e.pointerId)
-    }
-  }
+    },
+    onHover: (pixelX, pixelY) => {
+      const { x, y } = screenToWorld(camera, pixelX, pixelY)
+      previewAt(x, y)
+    },
+  })
 
   // Single-shot: stamping disarms the pattern immediately afterward, rather
   // than leaving it armed for repeat stamps.
@@ -128,14 +77,11 @@ export default function Grid({ liveCells, onToggleCell, onPlacePattern }: GridPr
           an ancestor, so overlay pointer events never bubble into these
           handlers in the first place -- no stopPropagation/open-state guards
           needed on either side. inset-0 keeps its rect identical to the
-          outer container's, which pointerToWorldCell and useWheelInput both
-          rely on. */}
+          outer container's, which useGridPointerGestures' pointer handlers
+          and useWheelInput both rely on. */}
       <div
         id="grid-content"
-        onPointerDown={handlePointerDown}
-        onPointerMove={handlePointerMove}
-        onPointerUp={handlePointerUp}
-        onPointerCancel={handlePointerCancel}
+        {...handlers}
         className={`absolute inset-0 touch-none ${isPanning ? 'cursor-grabbing' : 'cursor-grab'}`}
       >
         {cells.map(({ x, y }) => {
@@ -147,8 +93,9 @@ export default function Grid({ liveCells, onToggleCell, onPlacePattern }: GridPr
               type="button"
               aria-label={`Cell ${x}, ${y}`}
               // Keyboard activation (Enter/Space) never goes through pointer
-              // capture (see handlePointerUp), so it needs the same
-              // place-vs-toggle branch as the pointer path.
+              // capture (see useGridPointerGestures' pointer-capture
+              // comment), so it needs the same place-vs-toggle branch as the
+              // pointer path.
               onClick={() => placeOrToggleAt(x, y)}
               style={{
                 width: camera.cellSize,
