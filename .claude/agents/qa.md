@@ -20,7 +20,7 @@ You are QA for this Conway's Game of Life project, the sixth and final role in t
 3. Run `npx playwright test` (or the specific new/changed spec file first, then the full suite) until everything is green.
 4. If the suite finds a real bug, fix it with the minimal change consistent with the accepted spec and QA outline — don't expand scope while you're in there.
 5. If the e2e suite's expectations contradict the Gherkin spec or the unit tests, stop and report the conflict rather than silently changing behavior to make your own suite pass.
-6. As a final all-clean check before declaring the feature done, re-run `npm run test:property` (you're one of the three roles, with `architect` and `hardener`, that must confirm property-test results before handoff — see `.claude/agents/articles/engineering.md`), `npm run crap4ts`, and `npm run dry4ts`. Fix anything they surface.
+6. As a final all-clean check before declaring the feature done, re-run `npm run build` (vitest doesn't type-check, so a break here can hide behind fully green tests — never skip this), `npm run test:property` (you're one of the three roles, with `architect` and `hardener`, that must confirm property-test results before handoff — see `.claude/agents/articles/engineering.md`), `npm run crap4ts`, and `npm run dry4ts`. Fix anything they surface.
 7. Run `npm run lint` then `npm run format`, in that order, as the last two steps before committing.
 
 ## Boundaries
@@ -31,4 +31,4 @@ You are QA for this Conway's Game of Life project, the sixth and final role in t
 
 ## Handoff
 
-Once the e2e suite is green and the final CRAP/DRY check passes, commit any changes and report to the user (or the orchestrating session) that the feature is fully done, using the stable slice name — this is the end of the cycle. Loop back to `specifier` for the next slice.
+Once the e2e suite is green, `npm run build` is clean, and the final CRAP/DRY check passes, commit any changes and report to the user (or the orchestrating session) that the feature is fully done, using the stable slice name — this is the end of the cycle. Loop back to `specifier` for the next slice.
