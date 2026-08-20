@@ -1,4 +1,4 @@
-#!/usr/bin/env node
+#!/usr/bin/env tsx
 // Halstead complexity report, run alongside crap4ts on the same tested-core
 // files. FTA (fta-cli) computes real Halstead metrics (volume, difficulty,
 // effort, bugs) plus its own file-level cyclomatic complexity and FTA Score,
@@ -21,8 +21,8 @@
 
 import path from 'node:path'
 import { fileURLToPath } from 'node:url'
-import { runFta } from 'fta-cli'
-import { buildReport } from './report.mjs'
+import { runFta, type AnalyzedFile } from 'fta-cli'
+import { buildReport, type FileAnalysis } from './report.ts'
 
 const SCRIPT_DIR = path.dirname(fileURLToPath(import.meta.url))
 const REPO_ROOT = path.resolve(SCRIPT_DIR, '../..')
@@ -42,15 +42,15 @@ const FILES = [
   'src/components/Grid.tsx',
 ]
 
-function analyzeFile(file) {
+function analyzeFile(file: string): FileAnalysis {
   const absolutePath = path.join(REPO_ROOT, file)
-  const [result] = JSON.parse(runFta(absolutePath, { json: true }))
+  const [result] = JSON.parse(runFta(absolutePath, { json: true })) as AnalyzedFile[]
   // fta-cli returns an empty file_name when given a single-file path rather
   // than a directory to walk -- fill it in ourselves.
   return { ...result, file }
 }
 
-function main() {
+function main(): void {
   const results = FILES.map(analyzeFile)
   console.log(buildReport(results))
 }

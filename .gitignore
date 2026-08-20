@@ -11,8 +11,10 @@ node_modules
 dist
 dist-ssr
 coverage
+coverage-scripts
 reports
 .stryker-tmp
+.stryker-tmp-scripts
 stryker.log
 *.local
 

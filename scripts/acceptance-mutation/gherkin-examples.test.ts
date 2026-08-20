@@ -2,7 +2,7 @@ import { readFileSync } from 'node:fs'
 import path from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { describe, expect, it } from 'vitest'
-import { applyMutation, findExamplesTables, listMutableCells } from './gherkin-examples.mjs'
+import { applyMutation, findExamplesTables, listMutableCells } from './gherkin-examples.ts'
 
 const FEATURES_DIR = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '../../features')
 
@@ -43,6 +43,41 @@ describe('findExamplesTables', () => {
   it('ignores an Examples: heading at the end of the file', () => {
     const trailing = 'Feature: Odd\n  Scenario Outline: Broken\n    Given a thing\n\n    Examples:'
     expect(findExamplesTables(trailing)).toEqual([])
+  })
+
+  it('ignores an Examples: heading followed by something that is not a table', () => {
+    const notATable = 'Feature: Odd\n  Scenario Outline: Broken\n    Examples:\n    just some prose\n'
+    expect(findExamplesTables(notATable)).toEqual([])
+  })
+
+  it('ignores a line that only mentions Examples: as part of a longer line', () => {
+    const mention = 'Feature: F\n  Scenario: S\n    Given a step about Examples:\n      | a |\n      | 1 |\n'
+    expect(findExamplesTables(mention)).toEqual([])
+  })
+
+  it('ignores an Examples: heading with a title after it', () => {
+    const titled = 'Feature: F\n  Scenario Outline: S\n    Examples: named\n      | a |\n      | 1 |\n'
+    expect(findExamplesTables(titled)).toEqual([])
+  })
+
+  it('skips whitespace-only lines between the heading and the table', () => {
+    const spaced = 'Feature: F\n  Scenario Outline: S\n    Examples:\n   \n\n      | a |\n      | 1 |\n'
+    const [table] = findExamplesTables(spaced)
+    expect(table.header).toEqual(['a'])
+    expect(table.rows).toHaveLength(1)
+  })
+
+  it('requires a row to start with a pipe, not merely end with one', () => {
+    const trailingPipe = 'Feature: F\n  Scenario Outline: S\n    Examples:\n      | a |\n      | 1 |\n    not a row |\n'
+    const [table] = findExamplesTables(trailingPipe)
+    expect(table.rows).toHaveLength(1)
+  })
+
+  it('handles a table whose last row is the last line, with no trailing newline', () => {
+    const noTrailingNewline = 'Feature: F\n  Scenario Outline: S\n    Examples:\n      | a |\n      | 1 |'
+    const [table] = findExamplesTables(noTrailingNewline)
+    expect(table.rows).toHaveLength(1)
+    expect(table.rows[0].cells).toEqual(['1'])
   })
 })
 

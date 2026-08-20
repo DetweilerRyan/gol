@@ -1,9 +1,12 @@
 import { describe, expect, it } from 'vitest'
-import { buildReport } from './report.mjs'
+import { buildReport, type FileAnalysis } from './report.ts'
 
-// Shaped like fta-cli's real --json output for src/gameOfLife.ts.
-const SAMPLE_RESULT = {
+// Shaped like fta-cli's real --json output for src/gameOfLife.ts, including
+// the empty file_name it returns for a single-file path, plus the `file` field
+// run.ts adds.
+const SAMPLE_RESULT: FileAnalysis = {
   file: 'src/gameOfLife.ts',
+  file_name: '',
   cyclo: 11,
   halstead: {
     uniq_operators: 21,
@@ -39,6 +42,13 @@ describe('buildReport', () => {
     expect(report).toContain('59.2')
   })
 
+  it('labels every column it prints', () => {
+    const report = buildReport([SAMPLE_RESULT])
+    for (const title of ['File', 'CC', 'Volume', 'Difficulty', 'Effort', 'Bugs', 'FTA', 'Assessment']) {
+      expect(report).toContain(title)
+    }
+  })
+
   it('reports the file-level cyclomatic complexity from FTA, not per-function', () => {
     const report = buildReport([SAMPLE_RESULT])
     expect(report).toContain('11')
@@ -47,8 +57,9 @@ describe('buildReport', () => {
   it('right-pads every column to the widest value or header, whichever is longer', () => {
     const report = buildReport([SAMPLE_RESULT])
     const lines = report.split('\n')
-    const headerLine = lines.find((line) => line.startsWith('File'))
-    const separatorLine = lines[lines.indexOf(headerLine) + 1]
+    const headerIndex = lines.findIndex((line) => line.startsWith('File'))
+    const headerLine = lines[headerIndex]
+    const separatorLine = lines[headerIndex + 1]
     expect(headerLine.length).toBe(separatorLine.length)
   })
 

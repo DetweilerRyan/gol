@@ -1,0 +1,27 @@
+{
+  "$schema": "./node_modules/@stryker-mutator/core/schema/stryker-schema.json",
+  "packageManager": "npm",
+  "testRunner": "vitest",
+  "coverageAnalysis": "perTest",
+  "reporters": ["progress", "clear-text", "html"],
+  "vitest": {
+    "configFile": "vitest.scripts.config.ts"
+  },
+  "mutate": [
+    "scripts/acceptance-mutation/gherkin-examples.ts",
+    "scripts/acceptance-mutation/mutation-rules.ts",
+    "scripts/gherkin-dry-checker/analyze.ts",
+    "scripts/gherkin-dry-checker/similarity.ts",
+    "scripts/gherkin-dry-checker/step-parser.ts",
+    "scripts/halstead4ts/report.ts"
+  ],
+  "thresholds": {
+    "high": 90,
+    "low": 80,
+    "break": 85
+  },
+  "tempDirName": ".stryker-tmp-scripts",
+  "htmlReporter": {
+    "fileName": "reports/mutation/scripts.html"
+  }
+}

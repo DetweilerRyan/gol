@@ -1,4 +1,4 @@
-#!/usr/bin/env node
+#!/usr/bin/env tsx
 // Gherkin DRY checker, following the concept of
 // https://github.com/unclebob/Acceptance-Pipeline-Specification's
 // gherkin-ir-dry-checker: find step-text vocabulary duplication/drift across
@@ -10,8 +10,8 @@
 import { mkdirSync, readFileSync, writeFileSync } from 'node:fs'
 import path from 'node:path'
 import { fileURLToPath } from 'node:url'
-import { analyzeSteps } from './analyze.mjs'
-import { parseSteps } from './step-parser.mjs'
+import { analyzeSteps, type CorpusStep, type DryReport, type StepLocation } from './analyze.ts'
+import { parseSteps } from './step-parser.ts'
 
 const SCRIPT_DIR = path.dirname(fileURLToPath(import.meta.url))
 const FEATURES_DIR = path.resolve(SCRIPT_DIR, '../../features')
@@ -27,8 +27,8 @@ const FEATURE_FILES = [
   'pattern-library.feature',
 ]
 
-function loadAllSteps() {
-  const steps = []
+function loadAllSteps(): CorpusStep[] {
+  const steps: CorpusStep[] = []
   for (const file of FEATURE_FILES) {
     const text = readFileSync(path.join(FEATURES_DIR, file), 'utf8')
     for (const step of parseSteps(text)) {
@@ -38,12 +38,12 @@ function loadAllSteps() {
   return steps
 }
 
-function formatLocation(location) {
+function formatLocation(location: StepLocation): string {
   const scene = location.scenario_name ? ` "${location.scenario_name}"` : ''
   return `${location.feature} / ${location.section}${scene}`
 }
 
-function printReport(report) {
+function printReport(report: DryReport): void {
   console.log(
     `Gherkin DRY check -- ${report.summary.step_occurrences} step occurrences, ${report.summary.unique_steps} unique, ${report.findings.length} findings\n`,
   )
@@ -64,7 +64,7 @@ function printReport(report) {
   }
 }
 
-function main() {
+function main(): void {
   const steps = loadAllSteps()
   const report = analyzeSteps(steps)
 

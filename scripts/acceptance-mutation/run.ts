@@ -1,10 +1,10 @@
-#!/usr/bin/env node
+#!/usr/bin/env tsx
 // Acceptance mutation runner, following the concept (not the toolchain) of
 // https://github.com/unclebob/Acceptance-Pipeline-Specification: mutate one
 // Gherkin example cell at a time and check whether the acceptance scenario
 // notices. This mutates *specification data*, never source code -- see
-// scripts/acceptance-mutation/mutation-rules.mjs for the value rules and
-// gherkin-examples.mjs for the table locator/rewriter.
+// scripts/acceptance-mutation/mutation-rules.ts for the value rules and
+// gherkin-examples.ts for the table locator/rewriter.
 //
 // Each mutant is written to a temp file and the *entire* corresponding
 // .steps.test.ts file is run against it via ACCEPTANCE_MUTATION_FEATURE_FILE
@@ -16,12 +16,39 @@ import { mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import path from 'node:path'
 import { fileURLToPath } from 'node:url'
-import { listMutableCells, applyMutation } from './gherkin-examples.mjs'
-import { mutateValue } from './mutation-rules.mjs'
+import { listMutableCells, applyMutation } from './gherkin-examples.ts'
+import { mutateValue } from './mutation-rules.ts'
+
+// A .feature file paired 1:1 with the .steps.test.ts file that implements it.
+interface MutationTarget {
+  feature: string
+  steps: string
+}
+
+// `killed` = the scenario failed, i.e. it noticed the mutated example value.
+// `survived` = it passed anyway. `error` = the run never got as far as
+// executing a test, so it proves nothing either way.
+type Outcome = 'killed' | 'survived' | 'error'
+
+// spawnSync reports a null status when the child was terminated by a signal
+// rather than exiting normally.
+interface SuiteRun {
+  exitCode: number | null
+  output: string
+}
+
+interface MutantResult {
+  feature: string
+  row: number
+  column: string
+  original: string
+  mutated: string
+  outcome: Outcome
+}
 
 const FEATURES_DIR = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '../../features')
 
-const TARGETS = [
+const TARGETS: MutationTarget[] = [
   { feature: 'cell-life-and-death.feature', steps: 'cell-life-and-death.steps.test.ts' },
   { feature: 'infinite-grid.feature', steps: 'infinite-grid.steps.test.ts' },
   { feature: 'camera-pan-and-zoom.feature', steps: 'camera-pan-and-zoom.steps.test.ts' },
@@ -31,7 +58,7 @@ const TARGETS = [
   { feature: 'pattern-library.feature', steps: 'pattern-library.steps.test.ts' },
 ]
 
-function runScenarioSuite(stepsFile, featureFilePath) {
+function runScenarioSuite(stepsFile: string, featureFilePath: string): SuiteRun {
   const result = spawnSync('npx', ['vitest', 'run', path.join(FEATURES_DIR, stepsFile)], {
     encoding: 'utf8',
     env: { ...process.env, ACCEPTANCE_MUTATION_FEATURE_FILE: featureFilePath },
@@ -39,7 +66,7 @@ function runScenarioSuite(stepsFile, featureFilePath) {
   return { exitCode: result.status, output: `${result.stdout ?? ''}${result.stderr ?? ''}` }
 }
 
-function classify({ exitCode, output }) {
+function classify({ exitCode, output }: SuiteRun): Outcome {
   if (exitCode === 0) return 'survived'
   // A normal vitest failure prints a "Test Files" summary line even when
   // some tests failed. Its absence means the run crashed before any test
@@ -48,9 +75,9 @@ function classify({ exitCode, output }) {
   return /Test Files\s+\d+/.test(output) ? 'killed' : 'error'
 }
 
-function main() {
+function main(): void {
   const tmpDir = mkdtempSync(path.join(tmpdir(), 'gol-acceptance-mutation-'))
-  const results = []
+  const results: MutantResult[] = []
 
   try {
     for (const target of TARGETS) {
@@ -87,7 +114,7 @@ function main() {
   process.exit(survivedOrErrored.length > 0 ? 1 : 0)
 }
 
-function report(results) {
+function report(results: MutantResult[]): void {
   const widths = {
     feature: Math.max(7, ...results.map((r) => r.feature.length)),
     row: 3,
@@ -96,7 +123,7 @@ function report(results) {
     mutated: Math.max(7, ...results.map((r) => r.mutated.length)),
     outcome: 8,
   }
-  const pad = (s, w) => String(s).padEnd(w)
+  const pad = (s: string | number, w: number) => String(s).padEnd(w)
   const header = `${pad('Feature', widths.feature)}  ${pad('Row', widths.row)}  ${pad('Column', widths.column)}  ${pad('Original', widths.original)}  ${pad('Mutated', widths.mutated)}  Outcome`
   console.log(header)
   console.log('-'.repeat(header.length))

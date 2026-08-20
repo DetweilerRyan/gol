@@ -2,7 +2,7 @@ import { readFileSync } from 'node:fs'
 import path from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { describe, expect, it } from 'vitest'
-import { extractPlaceholderNames, parseSteps } from './step-parser.mjs'
+import { extractPlaceholderNames, parseSteps } from './step-parser.ts'
 
 const FEATURES_DIR = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '../../features')
 
@@ -91,6 +91,74 @@ describe('parseSteps', () => {
   it('returns an empty array for a feature with no scenarios', () => {
     expect(parseSteps('Feature: Empty\n')).toEqual([])
   })
+
+  it('keeps a step whose own text ends in a # -- only a leading # marks a comment', () => {
+    const steps = parseSteps('Feature: F\n  Scenario: S\n    Given a step about C#\n')
+    expect(steps.map((s) => s.text)).toEqual(['a step about C#'])
+  })
+
+  it('recognizes a named Background:, not just a bare one', () => {
+    const steps = parseSteps('Feature: F\n  Background: shared setup\n    Given a shared thing\n')
+    expect(steps).toHaveLength(1)
+    expect(steps[0].section).toBe('background')
+  })
+
+  it('treats a step that merely mentions "Scenario:" as a step, not a new scenario', () => {
+    const steps = parseSteps('Feature: F\n  Scenario: Real\n    Given a step naming Scenario: inline\n')
+    expect(steps).toHaveLength(1)
+    expect(steps[0]).toMatchObject({ scenarioName: 'Real', text: 'a step naming Scenario: inline' })
+  })
+
+  it('trims all the whitespace after Scenario:, not just one space', () => {
+    const steps = parseSteps('Feature: F\n  Scenario:    Padded\n    Given a step\n')
+    expect(steps[0].scenarioName).toBe('Padded')
+  })
+
+  it('drops a step written before any Background or Scenario declaration', () => {
+    expect(parseSteps('Feature: F\n  Given an orphan step\n')).toEqual([])
+  })
+
+  it('resumes recording steps once a new Scenario ends an Examples table', () => {
+    const steps = parseSteps(
+      'Feature: F\n' +
+        '  Scenario Outline: Outlined\n' +
+        '    Given <a>\n' +
+        '    Examples:\n' +
+        '      | a |\n' +
+        '      | 1 |\n' +
+        '  Scenario: After the table\n' +
+        '    Then a later step\n',
+    )
+    expect(steps.map((s) => s.text)).toEqual(['<a>', 'a later step'])
+    expect(steps[1]).toMatchObject({ scenarioIndex: 1, stepIndex: 0 })
+  })
+
+  it('keeps ignoring steps that follow an Examples table inside the same scenario', () => {
+    const steps = parseSteps(
+      'Feature: F\n  Scenario Outline: Outlined\n    Given <a>\n    Examples:\n      | a |\n      | 1 |\n    Then a trailing step\n',
+    )
+    expect(steps.map((s) => s.text)).toEqual(['<a>'])
+  })
+
+  it('lets a following Feature: line end an Examples table', () => {
+    const steps = parseSteps(
+      'Feature: One\n' +
+        '  Scenario Outline: Outlined\n' +
+        '    Given <a>\n' +
+        '    Examples:\n' +
+        '      | a |\n' +
+        '      | 1 |\n' +
+        'Feature: Two\n' +
+        '  Scenario: Fresh\n' +
+        '    Then a step in the second feature\n',
+    )
+    expect(steps.map((s) => s.text)).toEqual(['<a>', 'a step in the second feature'])
+  })
+
+  it('keeps only a single separator between the keyword and the step text', () => {
+    const steps = parseSteps('Feature: F\n  Scenario: S\n    Given   spaced out\n')
+    expect(steps[0].text).toBe('spaced out')
+  })
 })
 
 describe('extractPlaceholderNames', () => {
@@ -100,6 +168,10 @@ describe('extractPlaceholderNames', () => {
 
   it('returns an empty array for text with no placeholders', () => {
     expect(extractPlaceholderNames('a plain step')).toEqual([])
+  })
+
+  it('captures the whole placeholder name, not just its first character', () => {
+    expect(extractPlaceholderNames('a value of <row_index> and <col2>')).toEqual(['row_index', 'col2'])
   })
 })
 

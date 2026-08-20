@@ -14,12 +14,17 @@
     "test:unit": "vitest run --exclude '**/*.property.test.ts' --exclude '**/*.e2e.spec.ts'",
     "test:property": "vitest run src/gameOfLife.property.test.ts src/viewport.property.test.ts src/patternPlacement.property.test.ts",
     "test:coverage": "vitest run --coverage",
+    "test:scripts": "vitest run --config vitest.scripts.config.ts",
+    "test:coverage:scripts": "vitest run --coverage --config vitest.scripts.config.ts",
     "crap4ts": "crap4ts",
-    "halstead4ts": "node scripts/halstead4ts/run.mjs",
+    "crap4ts:scripts": "crap4ts --config crap4ts.scripts.config.ts --coverage coverage-scripts/coverage-final.json",
+    "halstead4ts": "tsx scripts/halstead4ts/run.ts",
     "dry4ts": "dry4ts src",
-    "acceptance-mutation": "node scripts/acceptance-mutation/run.mjs",
-    "gherkin-dry": "node scripts/gherkin-dry-checker/run.mjs",
+    "dry4ts:scripts": "dry4ts scripts",
+    "acceptance-mutation": "tsx scripts/acceptance-mutation/run.ts",
+    "gherkin-dry": "tsx scripts/gherkin-dry-checker/run.ts",
     "test:mutation": "stryker run",
+    "test:mutation:scripts": "stryker run stryker.scripts.config.json",
     "test:e2e": "playwright test"
   },
   "dependencies": {
@@ -60,6 +65,7 @@
     "oxlint": "^1.75.0",
     "prettier": "^3.9.6",
     "prettier-plugin-tailwindcss": "^0.8.1",
+    "tsx": "^4.23.12",
     "typescript": "~6.0.2",
     "vite": "^8.2.0",
     "vitest": "^4.1.10"

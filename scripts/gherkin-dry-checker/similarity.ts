@@ -51,19 +51,20 @@ export const POSSIBLE_SYNONYM_THRESHOLD = 0.45
 // Replaces each distinct placeholder *name* with a generic ordered slot
 // (<_1>, <_2>, ...) so two steps differing only in placeholder naming
 // normalize to the same shape.
-export function slotPlaceholders(text) {
-  const slotByName = new Map()
+export function slotPlaceholders(text: string): string {
+  const slotByName = new Map<string, string>()
   let nextIndex = 0
-  return text.replace(/<([A-Za-z0-9_]+)>/g, (_match, name) => {
-    if (!slotByName.has(name)) {
-      nextIndex += 1
-      slotByName.set(name, `<_${nextIndex}>`)
-    }
-    return slotByName.get(name)
+  return text.replace(/<([A-Za-z0-9_]+)>/g, (_match: string, name: string) => {
+    const existing = slotByName.get(name)
+    if (existing !== undefined) return existing
+    nextIndex += 1
+    const slot = `<_${nextIndex}>`
+    slotByName.set(name, slot)
+    return slot
   })
 }
 
-export function tokenize(text) {
+export function tokenize(text: string): string[] {
   return text
     .replace(/<[A-Za-z0-9_]+>/g, ' ')
     .toLowerCase()
@@ -71,7 +72,7 @@ export function tokenize(text) {
     .filter((token) => token.length > 0 && !STOPWORDS.has(token))
 }
 
-export function jaccardSimilarity(tokensA, tokensB) {
+export function jaccardSimilarity(tokensA: string[], tokensB: string[]): number {
   const setA = new Set(tokensA)
   const setB = new Set(tokensB)
   const union = new Set([...setA, ...setB])

@@ -1,13 +1,22 @@
 // Formats FTA's per-file analysis results into a plain-text table, mirroring
 // crap4ts's table so the two reports read consistently when run back to
 // back. Pure/no I/O so it's unit-testable without shelling out to the fta
-// binary -- see run.mjs for the part that actually calls it.
+// binary -- see run.ts for the part that actually calls it.
 
-function formatNumber(value, decimals) {
+import type { AnalyzedFile } from 'fta-cli'
+
+// One row of the report: fta-cli's own per-file analysis plus the repo-relative
+// path run.ts fills in (fta-cli leaves file_name empty when handed a single
+// file rather than a directory to walk).
+export interface FileAnalysis extends AnalyzedFile {
+  file: string
+}
+
+function formatNumber(value: number, decimals: number): string {
   return value.toFixed(decimals)
 }
 
-function buildRow(result) {
+function buildRow(result: FileAnalysis): string[] {
   return [
     result.file,
     String(result.cyclo),
@@ -22,10 +31,10 @@ function buildRow(result) {
 
 const HEADER = ['File', 'CC', 'Volume', 'Difficulty', 'Effort', 'Bugs', 'FTA', 'Assessment']
 
-export function buildReport(results) {
+export function buildReport(results: FileAnalysis[]): string {
   const rows = results.map(buildRow)
   const widths = HEADER.map((title, i) => Math.max(title.length, ...rows.map((row) => row[i].length)))
-  const formatRow = (cells) => cells.map((cell, i) => cell.padEnd(widths[i])).join('  ')
+  const formatRow = (cells: string[]) => cells.map((cell, i) => cell.padEnd(widths[i])).join('  ')
 
   const lines = [
     'Halstead complexity report (FTA) -- advisory, not a CI gate',
