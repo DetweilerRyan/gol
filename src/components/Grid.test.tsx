@@ -1,5 +1,5 @@
-import { act, fireEvent, render, screen, waitFor, type RenderResult } from '@testing-library/react'
-import { beforeEach, describe, expect, it, vi, type Mock } from 'vitest'
+import { fireEvent, render, screen, waitFor, type RenderResult } from '@testing-library/react'
+import { beforeEach, describe, expect, it, vi } from 'vitest'
 import {
   cellKey,
   computeContentBounds,
@@ -24,85 +24,35 @@ import {
   ZOOM_FACTOR,
   type Camera,
 } from '../viewport'
+import {
+  stubBoundingClientRect,
+  stubPointerCapture,
+  stubResizeObserver,
+  type PointerCaptureStubs,
+  type ResizeObserverController,
+} from '../test-support/domStubs'
 import Grid from './Grid'
 
-// jsdom has no ResizeObserver at all. Grid's initial-centering effect
-// constructs one and calls .observe() on mount, then reacts to entries
-// pushed through the callback it was constructed with -- so the stub only
-// needs to capture that callback per-instance and let tests invoke it with a
-// controlled contentRect, exactly the way a real observation would.
-class ResizeObserverStub {
-  callback: ResizeObserverCallback
-  constructor(callback: ResizeObserverCallback) {
-    this.callback = callback
-    resizeObserverInstances.push(this)
-  }
-  observe(): void {}
-  unobserve(): void {}
-  disconnect(): void {}
-}
-
-let resizeObserverInstances: ResizeObserverStub[]
-
-// jsdom's Element.prototype.getBoundingClientRect returns an all-zero rect by
-// default. pointerToWorldCell and the native wheel listener both compute
-// coordinates relative to a container rect, so tests exercising those paths
-// need a controlled, non-default stub. Typed to the exact
-// Element.prototype.getBoundingClientRect signature (`(): DOMRect`) rather
-// than a bare vi.fn(), per the precedent/warning in Scrollbar.test.tsx: a
-// loosely-typed spy assigned to a prototype method can pass `npm run
-// test:unit` while still failing `npm run build`, since vitest doesn't
-// typecheck.
-let getBoundingClientRect: Mock<() => DOMRect>
-
-function stubBoundingClientRect(rect: { left: number; top: number; width: number; height: number }) {
-  const domRect: DOMRect = {
-    ...rect,
-    right: rect.left + rect.width,
-    bottom: rect.top + rect.height,
-    x: rect.left,
-    y: rect.top,
-    toJSON() {
-      return this
-    },
-  }
-  getBoundingClientRect = vi.fn<() => DOMRect>(() => domRect)
-  Element.prototype.getBoundingClientRect = getBoundingClientRect
-}
-
-// jsdom doesn't implement pointer capture either -- same spirit as
-// Scrollbar.test.tsx's stub, since Grid's own pointer handlers (and the
-// Scrollbar/thumb children it renders) call these.
-let setPointerCapture: Mock<(pointerId: number) => void>
-let hasPointerCapture: Mock<(pointerId: number) => boolean>
-let releasePointerCapture: Mock<(pointerId: number) => void>
+// Grid composes three hooks that each touch a browser API jsdom doesn't
+// usefully provide -- useElementSize (ResizeObserver), useWheelInput and
+// pointerToWorldCell (getBoundingClientRect), and its own pan handlers
+// (pointer capture). Each hook has its own focused test for the API wiring
+// itself; these stubs are here so Grid can be exercised as the composition it
+// is. See src/test-support/domStubs.ts for why each is needed.
+let resizeObserver: ResizeObserverController
+let pointerCapture: PointerCaptureStubs
 
 beforeEach(() => {
-  resizeObserverInstances = []
-  vi.stubGlobal('ResizeObserver', ResizeObserverStub)
-
+  resizeObserver = stubResizeObserver()
   stubBoundingClientRect({ left: 0, top: 0, width: WIDTH, height: HEIGHT })
-
-  setPointerCapture = vi.fn<(pointerId: number) => void>()
-  hasPointerCapture = vi.fn<(pointerId: number) => boolean>(() => true)
-  releasePointerCapture = vi.fn<(pointerId: number) => void>()
-  Element.prototype.setPointerCapture = setPointerCapture
-  Element.prototype.hasPointerCapture = hasPointerCapture
-  Element.prototype.releasePointerCapture = releasePointerCapture
+  pointerCapture = stubPointerCapture()
 })
 
 const WIDTH = 800
 const HEIGHT = 600
 
 function triggerResize(width: number, height: number) {
-  const instance = resizeObserverInstances.at(-1)
-  if (!instance) throw new Error('ResizeObserver was never constructed -- render Grid first')
-  act(() => {
-    instance.callback(
-      [{ contentRect: { width, height } } as unknown as ResizeObserverEntry],
-      instance as unknown as ResizeObserver,
-    )
-  })
+  resizeObserver.resize(width, height)
 }
 
 type GridProps = React.ComponentProps<typeof Grid>
@@ -257,7 +207,7 @@ describe('drag-vs-click resolution on the grid-content pointer surface', () => {
 
     fireEvent.pointerDown(grid, { pointerId: 7, clientX: 0, clientY: 0 })
 
-    expect(setPointerCapture).toHaveBeenCalledWith(7)
+    expect(pointerCapture.setPointerCapture).toHaveBeenCalledWith(7)
   })
 
   it('a move of exactly DRAG_THRESHOLD_PX (4px) does not cross the drag threshold -- the check is strictly greater-than', () => {
@@ -395,13 +345,13 @@ describe('pointer-capture release guard', () => {
 
     fireEvent.pointerDown(grid, { pointerId: 1, clientX: 0, clientY: 0 })
     fireUp(grid, { pointerId: 1, clientX: 0, clientY: 0 })
-    expect(releasePointerCapture).toHaveBeenCalledWith(1)
+    expect(pointerCapture.releasePointerCapture).toHaveBeenCalledWith(1)
 
-    releasePointerCapture.mockClear()
-    hasPointerCapture.mockReturnValue(false)
+    pointerCapture.releasePointerCapture.mockClear()
+    pointerCapture.hasPointerCapture.mockReturnValue(false)
     fireEvent.pointerDown(grid, { pointerId: 2, clientX: 0, clientY: 0 })
     fireUp(grid, { pointerId: 2, clientX: 0, clientY: 0 })
-    expect(releasePointerCapture).not.toHaveBeenCalled()
+    expect(pointerCapture.releasePointerCapture).not.toHaveBeenCalled()
   }
 
   it('handlePointerUp releases pointer capture only when the element currently has it', () => {

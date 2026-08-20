@@ -12,7 +12,7 @@
     "preview": "vite preview",
     "test": "vitest run",
     "test:unit": "vitest run --exclude '**/*.property.test.ts' --exclude '**/*.e2e.spec.ts'",
-    "test:property": "vitest run src/gameOfLife.property.test.ts src/viewport.property.test.ts",
+    "test:property": "vitest run src/gameOfLife.property.test.ts src/viewport.property.test.ts src/patternPlacement.property.test.ts",
     "test:coverage": "vitest run --coverage",
     "crap4ts": "crap4ts",
     "halstead4ts": "node scripts/halstead4ts/run.mjs",

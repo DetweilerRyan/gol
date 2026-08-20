@@ -1,29 +1,17 @@
 import { fireEvent, render, screen } from '@testing-library/react'
-import { beforeEach, describe, expect, it, vi, type Mock } from 'vitest'
+import { beforeEach, describe, expect, it, vi } from 'vitest'
+import { stubPointerCapture, type PointerCaptureStubs } from '../test-support/domStubs'
 import { computeThumbGeometry, type ScrollbarMetrics } from '../viewport'
 import Scrollbar from './Scrollbar'
 
-// jsdom doesn't implement pointer capture -- stub it out (as spies, so the
-// pointer-down/pointer-up handlers' calls into it can be asserted on below)
-// so setPointerCapture/hasPointerCapture/releasePointerCapture calls in the
-// component don't throw when fireEvent.pointerDown/pointerUp run. Reassigned
-// fresh per test so call counts/return values from one test don't leak into
-// the next.
-// Each spy is typed with the exact Element.prototype signature it replaces:
-// a bare vi.fn() infers as Mock<Procedure | Constructable>, which tsc rejects
-// on assignment to the prototype method (vitest doesn't typecheck, so that
-// only shows up in `npm run build`).
-let setPointerCapture: Mock<(pointerId: number) => void>
-let hasPointerCapture: Mock<(pointerId: number) => boolean>
-let releasePointerCapture: Mock<(pointerId: number) => void>
+// jsdom doesn't implement pointer capture -- stubbed as spies so the
+// pointer-down/pointer-up handlers' calls into it can be asserted on below,
+// and reinstalled fresh per test so call counts/return values from one test
+// don't leak into the next.
+let pointerCapture: PointerCaptureStubs
 
 beforeEach(() => {
-  setPointerCapture = vi.fn<(pointerId: number) => void>()
-  hasPointerCapture = vi.fn<(pointerId: number) => boolean>(() => true)
-  releasePointerCapture = vi.fn<(pointerId: number) => void>()
-  Element.prototype.setPointerCapture = setPointerCapture
-  Element.prototype.hasPointerCapture = hasPointerCapture
-  Element.prototype.releasePointerCapture = releasePointerCapture
+  pointerCapture = stubPointerCapture()
 })
 
 const metrics: ScrollbarMetrics = { thumbRatio: 0.4, thumbOffsetRatio: 0.25 }
@@ -118,21 +106,21 @@ describe('Scrollbar', () => {
     const thumb = screen.getByRole('scrollbar')
 
     fireEvent.pointerDown(thumb, { pointerId: 3, clientX: 10, clientY: 0 })
-    expect(setPointerCapture).toHaveBeenCalledWith(3)
-    expect(releasePointerCapture).not.toHaveBeenCalled()
+    expect(pointerCapture.setPointerCapture).toHaveBeenCalledWith(3)
+    expect(pointerCapture.releasePointerCapture).not.toHaveBeenCalled()
 
     fireEvent.pointerUp(thumb, { pointerId: 3, clientX: 10, clientY: 0 })
-    expect(hasPointerCapture).toHaveBeenCalledWith(3)
-    expect(releasePointerCapture).toHaveBeenCalledWith(3)
+    expect(pointerCapture.hasPointerCapture).toHaveBeenCalledWith(3)
+    expect(pointerCapture.releasePointerCapture).toHaveBeenCalledWith(3)
   })
 
   it('does not call releasePointerCapture on pointerup once the pointer no longer has capture', () => {
-    hasPointerCapture.mockReturnValue(false)
+    pointerCapture.hasPointerCapture.mockReturnValue(false)
     render(<Scrollbar axis="x" metrics={metrics} trackLengthPx={trackLengthPx} onDrag={vi.fn()} contentId="grid" />)
     const thumb = screen.getByRole('scrollbar')
 
     fireEvent.pointerDown(thumb, { pointerId: 4, clientX: 10, clientY: 0 })
     fireEvent.pointerUp(thumb, { pointerId: 4, clientX: 10, clientY: 0 })
-    expect(releasePointerCapture).not.toHaveBeenCalled()
+    expect(pointerCapture.releasePointerCapture).not.toHaveBeenCalled()
   })
 })

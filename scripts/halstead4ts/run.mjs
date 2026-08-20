@@ -15,8 +15,9 @@
 //
 // Keep FILES in sync with crap4ts.config.ts's `include` array -- both target
 // the same unit-tested modules: the framework-free logic (grid rules, camera
-// math, the pan/zoom hook), the four presentational components that have
-// their own render()-based unit tests, and Grid.tsx itself.
+// math, the pattern-placing state machine), the four hooks that adapt it to
+// React, the four presentational components that have their own
+// render()-based unit tests, and Grid.tsx itself.
 
 import path from 'node:path'
 import { fileURLToPath } from 'node:url'
@@ -29,7 +30,11 @@ const REPO_ROOT = path.resolve(SCRIPT_DIR, '../..')
 const FILES = [
   'src/gameOfLife.ts',
   'src/viewport.ts',
+  'src/patternPlacement.ts',
   'src/hooks/useCamera.ts',
+  'src/hooks/useElementSize.ts',
+  'src/hooks/usePatternPlacement.ts',
+  'src/hooks/useWheelInput.ts',
   'src/components/GridToolbar.tsx',
   'src/components/PatternLibraryModal.tsx',
   'src/components/RulerLabel.tsx',

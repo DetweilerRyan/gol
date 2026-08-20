@@ -1,23 +1,24 @@
 import { useEffect, useLayoutEffect, useRef, useState } from 'react'
-import {
-  cellKey,
-  computeContentBounds,
-  isCellAlive,
-  patternCellPositions,
-  type LiveCells,
-  type Pattern,
-} from '../gameOfLife'
+import { cellKey, computeContentBounds, isCellAlive, type LiveCells, type Pattern } from '../gameOfLife'
 import { useCamera } from '../hooks/useCamera'
+import { useElementSize } from '../hooks/useElementSize'
+import { usePatternPlacement } from '../hooks/usePatternPlacement'
+import { useWheelInput } from '../hooks/useWheelInput'
+import { armedPattern, isLibraryOpen, previewPositions, suppressesEnter } from '../patternPlacement'
 import {
+  advanceDrag,
+  beginDrag,
   cellsInRange,
   computeMajorGridlines,
   computeScrollbarMetrics,
   computeVisibleRange,
   isMajorGridline,
+  rectRelativePixels,
   screenToWorld,
   worldToScreen,
   zoomPercentage,
   ZOOM_FACTOR,
+  type DragGesture,
 } from '../viewport'
 import GridToolbar from './GridToolbar'
 import PatternLibraryModal from './PatternLibraryModal'
@@ -31,92 +32,37 @@ interface GridProps {
   onSuppressEnterChange: (suppressed: boolean) => void
 }
 
-const DRAG_THRESHOLD_PX = 4
-
-interface DragState {
-  startX: number
-  startY: number
-  lastX: number
-  lastY: number
-}
-
 export default function Grid({ liveCells, onToggleCell, onPlacePattern, onSuppressEnterChange }: GridProps) {
   const containerRef = useRef<HTMLDivElement>(null)
-  const [containerSize, setContainerSize] = useState({ width: 0, height: 0 })
+  const containerSize = useElementSize(containerRef)
   const hasCenteredRef = useRef(false)
 
   const { camera, panByPixels, zoomAtPoint, applyWheel, centerView, panByScrollbarDrag } = useCamera()
+  useWheelInput(containerRef, applyWheel)
 
-  const dragStateRef = useRef<DragState | null>(null)
-  const didDragRef = useRef(false)
+  const dragStateRef = useRef<DragGesture | null>(null)
   const [isPanning, setIsPanning] = useState(false)
 
-  const [isPatternModalOpen, setIsPatternModalOpen] = useState(false)
-  const [placingPattern, setPlacingPattern] = useState<Pattern | null>(null)
-  const [previewCell, setPreviewCell] = useState<{ x: number; y: number } | null>(null)
+  const { placement, openOrCancelLibrary, closeLibrary, selectPattern, previewAt, disarm } = usePatternPlacement()
 
-  function cancelPlacing() {
-    setPlacingPattern(null)
-    setPreviewCell(null)
-  }
-
-  // Both the pattern modal and placing mode need to suppress App.tsx's
-  // global Enter-to-advance-generation shortcut (placing mode especially --
-  // otherwise pressing Enter while lining up a pattern would silently
-  // advance the simulation out from under it). Reported up via a callback
-  // rather than lifting this state entirely, since the modal-open/placing
-  // flags are otherwise only relevant to Grid's own pointer/keyboard wiring.
-  useEffect(() => {
-    onSuppressEnterChange(isPatternModalOpen || placingPattern !== null)
-  }, [isPatternModalOpen, placingPattern, onSuppressEnterChange])
-
-  useEffect(() => {
-    function handleKeyDown(e: KeyboardEvent) {
-      if (e.key !== 'Escape') return
-      if (placingPattern) {
-        cancelPlacing()
-      }
-    }
-
-    window.addEventListener('keydown', handleKeyDown)
-    return () => window.removeEventListener('keydown', handleKeyDown)
-  }, [placingPattern])
-
+  // Centers on the first measured size only. A layout effect (rather than a
+  // plain effect) so the re-centered camera is committed before paint, leaving
+  // no frame in which the grid is rendered at full size but still uncentered.
   useLayoutEffect(() => {
-    const el = containerRef.current
-    if (!el) return
-
-    const observer = new ResizeObserver((entries) => {
-      const { width, height } = entries[0].contentRect
-      setContainerSize({ width, height })
-      if (!hasCenteredRef.current && width > 0 && height > 0) {
-        hasCenteredRef.current = true
-        centerView(width, height)
-      }
-    })
-    observer.observe(el)
-    return () => observer.disconnect()
-  }, [centerView])
-
-  useEffect(() => {
-    const el = containerRef.current
-    if (!el) return
-
-    function handleWheel(e: WheelEvent) {
-      e.preventDefault()
-      const rect = el!.getBoundingClientRect()
-      applyWheel({
-        pixelX: e.clientX - rect.left,
-        pixelY: e.clientY - rect.top,
-        deltaX: e.deltaX,
-        deltaY: e.deltaY,
-        shiftKey: e.shiftKey,
-      })
+    const { width, height } = containerSize
+    if (!hasCenteredRef.current && width > 0 && height > 0) {
+      hasCenteredRef.current = true
+      centerView(width, height)
     }
+  }, [containerSize, centerView])
 
-    el.addEventListener('wheel', handleWheel, { passive: false })
-    return () => el.removeEventListener('wheel', handleWheel)
-  }, [applyWheel])
+  // Both browsing the pattern library and placing a pattern need to suppress
+  // App.tsx's global Enter-to-advance-generation shortcut. Reported up via a
+  // callback rather than lifting the placement state entirely, since it's
+  // otherwise only relevant to Grid's own pointer/keyboard wiring.
+  useEffect(() => {
+    onSuppressEnterChange(suppressesEnter(placement))
+  }, [placement, onSuppressEnterChange])
 
   const visibleRange = computeVisibleRange(camera, containerSize.width, containerSize.height)
   const cells = cellsInRange(visibleRange)
@@ -127,16 +73,15 @@ export default function Grid({ liveCells, onToggleCell, onPlacePattern, onSuppre
 
   function handlePointerDown(e: React.PointerEvent) {
     e.currentTarget.setPointerCapture(e.pointerId)
-    dragStateRef.current = { startX: e.clientX, startY: e.clientY, lastX: e.clientX, lastY: e.clientY }
-    didDragRef.current = false
+    dragStateRef.current = beginDrag(e.clientX, e.clientY)
   }
 
   // Resolves a pointer event's client coordinates to the world cell under it,
   // relative to the grid container -- shared by cell-toggle resolution
   // (handlePointerUp) and placing-mode preview tracking (handlePointerMove).
   function pointerToWorldCell(e: React.PointerEvent) {
-    const rect = e.currentTarget.getBoundingClientRect()
-    return screenToWorld(camera, e.clientX - rect.left, e.clientY - rect.top)
+    const { pixelX, pixelY } = rectRelativePixels(e.currentTarget.getBoundingClientRect(), e.clientX, e.clientY)
+    return screenToWorld(camera, pixelX, pixelY)
   }
 
   function handlePointerMove(e: React.PointerEvent) {
@@ -144,28 +89,25 @@ export default function Grid({ liveCells, onToggleCell, onPlacePattern, onSuppre
     // independent of drag state -- pointermove fires on hover too, not just
     // while a button is pressed, and the preview needs to follow the cursor
     // even before any drag threshold is crossed (or when the pointer never
-    // goes down at all).
-    if (placingPattern) {
-      setPreviewCell(pointerToWorldCell(e))
+    // goes down at all). Guarded on something actually being armed even
+    // though previewAt itself is a no-op otherwise, so an ordinary pan drag
+    // doesn't force a synchronous layout (getBoundingClientRect) per move.
+    if (armedPattern(placement)) {
+      const { x, y } = pointerToWorldCell(e)
+      previewAt(x, y)
     }
 
     const drag = dragStateRef.current
     if (!drag) return
 
-    const dx = e.clientX - drag.lastX
-    const dy = e.clientY - drag.lastY
-    const totalDx = e.clientX - drag.startX
-    const totalDy = e.clientY - drag.startY
-
-    if (!didDragRef.current && Math.hypot(totalDx, totalDy) > DRAG_THRESHOLD_PX) {
-      didDragRef.current = true
+    const advance = advanceDrag(drag, e.clientX, e.clientY)
+    dragStateRef.current = advance.gesture
+    // Guarded rather than panning by advanceDrag's zeroed deltas, so a
+    // sub-threshold move doesn't re-render on a camera that didn't move.
+    if (advance.gesture.isPanning) {
+      panByPixels(advance.panDxPixels, advance.panDyPixels)
       setIsPanning(true)
     }
-    if (didDragRef.current) {
-      panByPixels(dx, dy)
-    }
-    drag.lastX = e.clientX
-    drag.lastY = e.clientY
   }
 
   // Pointer capture on the container retargets the subsequent native "click"
@@ -174,10 +116,8 @@ export default function Grid({ liveCells, onToggleCell, onPlacePattern, onSuppre
   // coordinates instead. Button onClick still handles keyboard activation
   // (Enter/Space), which never goes through pointer capture.
   function handlePointerUp(e: React.PointerEvent) {
-    if (e.currentTarget.hasPointerCapture(e.pointerId)) {
-      e.currentTarget.releasePointerCapture(e.pointerId)
-    }
-    if (!didDragRef.current) {
+    releaseCapture(e)
+    if (!dragStateRef.current?.isPanning) {
       const { x, y } = pointerToWorldCell(e)
       placeOrToggleAt(x, y)
     }
@@ -186,47 +126,27 @@ export default function Grid({ liveCells, onToggleCell, onPlacePattern, onSuppre
   }
 
   function handlePointerCancel(e: React.PointerEvent) {
-    if (e.currentTarget.hasPointerCapture(e.pointerId)) {
-      e.currentTarget.releasePointerCapture(e.pointerId)
-    }
+    releaseCapture(e)
     dragStateRef.current = null
     setIsPanning(false)
   }
 
-  // Single-shot: stamping via placeOrToggleAt exits placing mode immediately
-  // afterward, rather than leaving the pattern armed for repeat stamps.
+  function releaseCapture(e: React.PointerEvent) {
+    if (e.currentTarget.hasPointerCapture(e.pointerId)) {
+      e.currentTarget.releasePointerCapture(e.pointerId)
+    }
+  }
+
+  // Single-shot: stamping disarms the pattern immediately afterward, rather
+  // than leaving it armed for repeat stamps.
   function placeOrToggleAt(x: number, y: number) {
-    if (placingPattern) {
-      onPlacePattern(placingPattern, x, y)
-      cancelPlacing()
+    const pattern = armedPattern(placement)
+    if (pattern) {
+      onPlacePattern(pattern, x, y)
+      disarm()
     } else {
       onToggleCell(x, y)
     }
-  }
-
-  // Keyboard activation (Enter/Space) of a cell button never goes through
-  // pointer capture (see handlePointerUp's comment), so it needs the same
-  // placing-vs-toggle branch as the pointer path to behave consistently.
-  function handleCellClick(x: number, y: number) {
-    placeOrToggleAt(x, y)
-  }
-
-  // No isPatternModalOpen branch here: Headless UI's Dialog makes the rest
-  // of the page (including this button) inert while open, so this handler
-  // can't fire in that state at all -- the modal closes only via its own
-  // outside-click/Escape handling.
-  function handlePatternsButtonClick() {
-    if (placingPattern) {
-      cancelPlacing()
-    } else {
-      setIsPatternModalOpen(true)
-    }
-  }
-
-  function handleSelectPattern(pattern: Pattern) {
-    setIsPatternModalOpen(false)
-    setPlacingPattern(pattern)
-    setPreviewCell(null)
   }
 
   return (
@@ -236,8 +156,8 @@ export default function Grid({ liveCells, onToggleCell, onPlacePattern, onSuppre
           an ancestor, so overlay pointer events never bubble into these
           handlers in the first place -- no stopPropagation/open-state guards
           needed on either side. inset-0 keeps its rect identical to the
-          outer container's, which pointerToWorldCell and the wheel handler
-          both rely on. */}
+          outer container's, which pointerToWorldCell and useWheelInput both
+          rely on. */}
       <div
         id="grid-content"
         onPointerDown={handlePointerDown}
@@ -254,7 +174,10 @@ export default function Grid({ liveCells, onToggleCell, onPlacePattern, onSuppre
               key={cellKey(x, y)}
               type="button"
               aria-label={`Cell ${x}, ${y}`}
-              onClick={() => handleCellClick(x, y)}
+              // Keyboard activation (Enter/Space) never goes through pointer
+              // capture (see handlePointerUp), so it needs the same
+              // place-vs-toggle branch as the pointer path.
+              onClick={() => placeOrToggleAt(x, y)}
               style={{
                 width: camera.cellSize,
                 height: camera.cellSize,
@@ -268,28 +191,24 @@ export default function Grid({ liveCells, onToggleCell, onPlacePattern, onSuppre
           )
         })}
 
-        {/* Placing-mode preview: uses the same patternCellPositions helper
-            placePattern itself is built on, so the preview can't drift from
-            where a stamp would actually land. pointer-events-none so hovering
-            the preview itself doesn't block the underlying pointermove tracking. */}
-        {placingPattern &&
-          previewCell &&
-          patternCellPositions(placingPattern, previewCell.x, previewCell.y).map(([x, y]) => {
-            const { x: left, y: top } = worldToScreen(camera, x, y)
-            return (
-              <div
-                key={`preview-${x}-${y}`}
-                aria-label={`Pattern preview cell ${x}, ${y}`}
-                style={{
-                  width: camera.cellSize,
-                  height: camera.cellSize,
-                  transform: `translate(${left}px, ${top}px)`,
-                  boxSizing: 'border-box',
-                }}
-                className="pointer-events-none absolute top-0 left-0 border border-green-600 bg-green-400/60"
-              />
-            )
-          })}
+        {/* Placing-mode preview. pointer-events-none so hovering the preview
+            itself doesn't block the underlying pointermove tracking. */}
+        {previewPositions(placement).map(([x, y]) => {
+          const { x: left, y: top } = worldToScreen(camera, x, y)
+          return (
+            <div
+              key={`preview-${x}-${y}`}
+              aria-label={`Pattern preview cell ${x}, ${y}`}
+              style={{
+                width: camera.cellSize,
+                height: camera.cellSize,
+                transform: `translate(${left}px, ${top}px)`,
+                boxSizing: 'border-box',
+              }}
+              className="pointer-events-none absolute top-0 left-0 border border-green-600 bg-green-400/60"
+            />
+          )
+        })}
       </div>
 
       {/* Coordinate ruler: labels every 10th gridline. pointer-events-none keeps
@@ -329,18 +248,17 @@ export default function Grid({ liveCells, onToggleCell, onPlacePattern, onSuppre
         </>
       )}
 
+      {/* No open-state guard on onPatterns: Headless UI's Dialog makes the
+          rest of the page (including the toolbar) inert while the library is
+          open, so that handler can't fire in the browsing state at all. */}
       <GridToolbar
         onZoomIn={() => zoomAtPoint(containerSize.width / 2, containerSize.height / 2, ZOOM_FACTOR)}
         onZoomOut={() => zoomAtPoint(containerSize.width / 2, containerSize.height / 2, 1 / ZOOM_FACTOR)}
         onReset={() => centerView(containerSize.width, containerSize.height)}
-        onPatterns={handlePatternsButtonClick}
+        onPatterns={openOrCancelLibrary}
       />
 
-      <PatternLibraryModal
-        open={isPatternModalOpen}
-        onSelectPattern={handleSelectPattern}
-        onClose={() => setIsPatternModalOpen(false)}
-      />
+      <PatternLibraryModal open={isLibraryOpen(placement)} onSelectPattern={selectPattern} onClose={closeLibrary} />
     </div>
   )
 }
