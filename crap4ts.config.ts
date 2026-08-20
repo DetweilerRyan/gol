@@ -16,7 +16,10 @@ export default defineConfig({
   include: [
     'src/gameOfLife.ts',
     'src/patternLibrary.ts',
-    'src/viewport.ts',
+    'src/camera.ts',
+    'src/gridGeometry.ts',
+    'src/dragGesture.ts',
+    'src/scrollbars.ts',
     'src/patternPlacement.ts',
     'src/hooks/useCamera.ts',
     'src/hooks/useElementSize.ts',

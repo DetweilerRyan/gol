@@ -1,7 +1,7 @@
 import { fireEvent, renderHook } from '@testing-library/react'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { stubBoundingClientRect } from '../test-support/domStubs'
-import type { WheelInput } from '../viewport'
+import type { WheelInput } from '../camera'
 import { useWheelInput } from './useWheelInput'
 
 // jsdom's Element.prototype.getBoundingClientRect returns an all-zero rect by

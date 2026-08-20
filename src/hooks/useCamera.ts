@@ -3,13 +3,12 @@ import {
   applyWheelInput,
   centeredCamera,
   panCamera,
-  panCameraByScrollbarDrag,
   zoomCameraAtPoint,
   DEFAULT_CELL_SIZE,
   type Camera,
-  type ScrollbarAxis,
   type WheelInput,
-} from '../viewport'
+} from '../camera'
+import { panCameraByScrollbarDrag, type ScrollbarAxis } from '../scrollbars'
 
 export function useCamera() {
   const [camera, setCamera] = useState<Camera>({

@@ -1,6 +1,6 @@
 import { act, renderHook } from '@testing-library/react'
 import { describe, expect, it } from 'vitest'
-import { DEFAULT_CELL_SIZE, MAX_CELL_SIZE, MIN_CELL_SIZE, worldToScreen } from '../viewport'
+import { DEFAULT_CELL_SIZE, MAX_CELL_SIZE, MIN_CELL_SIZE, worldToScreen } from '../camera'
 import { useCamera } from './useCamera'
 
 describe('useCamera', () => {

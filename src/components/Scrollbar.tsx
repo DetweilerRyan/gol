@@ -1,5 +1,5 @@
 import { useRef } from 'react'
-import { computeThumbGeometry, type ScrollbarAxis, type ScrollbarMetrics } from '../viewport'
+import { computeThumbGeometry, type ScrollbarAxis, type ScrollbarMetrics } from '../scrollbars'
 
 interface ScrollbarProps {
   axis: ScrollbarAxis

@@ -11,7 +11,7 @@ import {
 
 // Owns the pattern-library/placing state and its one keyboard input, and
 // delegates every transition to the pure functions in patternPlacement.ts --
-// the same split useCamera has with viewport.ts.
+// the same split useCamera has with camera.ts.
 export function usePatternPlacement() {
   const [placement, setPlacement] = useState<PlacementState>(INITIAL_PLACEMENT)
 

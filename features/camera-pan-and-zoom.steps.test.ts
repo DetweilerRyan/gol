@@ -7,7 +7,7 @@ import {
   worldToScreen,
   zoomCameraAtPoint,
   type Camera,
-} from '../src/viewport'
+} from '../src/camera'
 
 // ACCEPTANCE_MUTATION_FEATURE_FILE lets the acceptance-mutation runner point
 // this suite at a mutated copy of the feature file (see

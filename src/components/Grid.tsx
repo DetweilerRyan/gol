@@ -1,26 +1,15 @@
 import { useEffect, useLayoutEffect, useRef, useState } from 'react'
+import { rectRelativePixels, screenToWorld, worldToScreen, zoomPercentage, ZOOM_FACTOR } from '../camera'
+import { advanceDrag, beginDrag, type DragGesture } from '../dragGesture'
 import { cellKey, computeContentBounds, isCellAlive, type LiveCells } from '../gameOfLife'
+import { cellsInRange, computeMajorGridlines, computeVisibleRange, isMajorGridline } from '../gridGeometry'
 import { useCamera } from '../hooks/useCamera'
 import { useElementSize } from '../hooks/useElementSize'
 import { usePatternPlacement } from '../hooks/usePatternPlacement'
 import { useWheelInput } from '../hooks/useWheelInput'
 import { type Pattern } from '../patternLibrary'
 import { armedPattern, isLibraryOpen, previewPositions, suppressesEnter } from '../patternPlacement'
-import {
-  advanceDrag,
-  beginDrag,
-  cellsInRange,
-  computeMajorGridlines,
-  computeScrollbarMetrics,
-  computeVisibleRange,
-  isMajorGridline,
-  rectRelativePixels,
-  screenToWorld,
-  worldToScreen,
-  zoomPercentage,
-  ZOOM_FACTOR,
-  type DragGesture,
-} from '../viewport'
+import { computeScrollbarMetrics } from '../scrollbars'
 import GridToolbar from './GridToolbar'
 import PatternLibraryModal from './PatternLibraryModal'
 import RulerLabel from './RulerLabel'

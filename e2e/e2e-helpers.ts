@@ -1,6 +1,6 @@
 import { expect, type Locator, type Page } from '@playwright/test'
 
-// Derived from centeredCamera(1280, 900) in src/viewport.ts: default camera
+// Derived from centeredCamera(1280, 900) in src/camera.ts: default camera
 // is { offsetX: -32, offsetY: -22.5, cellSize: 20 }, so world (0,0) renders
 // at screen (640, 450) -- the exact viewport center under playwright.config.ts's
 // fixed 1280x900 viewport. Every pixel-math assertion in this suite is

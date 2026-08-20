@@ -1,6 +1,6 @@
 import { describeFeature, loadFeature } from '@amiceli/vitest-cucumber'
 import { expect } from 'vitest'
-import { applyWheelInput, DEFAULT_CELL_SIZE, worldToScreen, zoomPercentage, type Camera } from '../src/viewport'
+import { applyWheelInput, DEFAULT_CELL_SIZE, worldToScreen, zoomPercentage, type Camera } from '../src/camera'
 
 // ACCEPTANCE_MUTATION_FEATURE_FILE lets the acceptance-mutation runner point
 // this suite at a mutated copy of the feature file (see

@@ -5,10 +5,6 @@ import { patternCellPositions, PATTERNS, type Pattern } from '../patternLibrary'
 import {
   applyWheelInput,
   centeredCamera,
-  computeMajorGridlines,
-  computeScrollbarMetrics,
-  computeThumbGeometry,
-  computeVisibleRange,
   DEFAULT_CELL_SIZE,
   panCamera,
   screenToWorld,
@@ -17,7 +13,9 @@ import {
   zoomPercentage,
   ZOOM_FACTOR,
   type Camera,
-} from '../viewport'
+} from '../camera'
+import { computeMajorGridlines, computeVisibleRange } from '../gridGeometry'
+import { computeScrollbarMetrics, computeThumbGeometry } from '../scrollbars'
 import {
   stubBoundingClientRect,
   stubPointerCapture,

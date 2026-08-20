@@ -2,17 +2,10 @@ import { it } from '@fast-check/vitest'
 import fc from 'fast-check'
 import { describe, expect } from 'vitest'
 import {
-  advanceDrag,
   applyWheelInput,
-  beginDrag,
   centeredCamera,
   clampCellSize,
-  computeMajorGridlines,
-  computeThumbGeometry,
-  computeVisibleRange,
   DEFAULT_CELL_SIZE,
-  DRAG_THRESHOLD_PX,
-  isMajorGridline,
   MAX_CELL_SIZE,
   MIN_CELL_SIZE,
   panCamera,
@@ -23,18 +16,14 @@ import {
   zoomPercentage,
   ZOOM_FACTOR,
   type Camera,
-  type DragGesture,
-  type VisibleRange,
-} from './viewport'
+} from './camera'
+import {
+  cameraArbitrary as camera,
+  cellSizeArbitrary as cellSize,
+  pixelArbitrary as pixel,
+} from './test-support/arbitraries'
 
-const cellSize = fc.integer({ min: MIN_CELL_SIZE, max: MAX_CELL_SIZE })
-const pixel = fc.float({ min: Math.fround(-2000), max: Math.fround(2000), noNaN: true })
 const worldCoord = fc.integer({ min: -10_000, max: 10_000 })
-
-// General-purpose camera with a fractional offset, for properties that
-// already tolerate floating-point rounding (toBeCloseTo).
-const offset = fc.float({ min: Math.fround(-1000), max: Math.fround(1000), noNaN: true })
-const camera: fc.Arbitrary<Camera> = fc.record({ offsetX: offset, offsetY: offset, cellSize })
 
 // Integer-offset camera, reserved for the exact (non-toBeCloseTo)
 // screenToWorld/worldToScreen round-trip property below. With an integer
@@ -84,28 +73,6 @@ describe('worldToScreen / screenToWorld (property)', () => {
       const p2 = worldToScreen(cam, x2, y2)
       expect(p2.x - p1.x).toBeCloseTo((x2 - x1) * cam.cellSize)
       expect(p2.y - p1.y).toBeCloseTo((y2 - y1) * cam.cellSize)
-    },
-  )
-})
-
-describe('computeVisibleRange (property)', () => {
-  const viewportDimension = fc.integer({ min: 0, max: 4000 })
-
-  it.prop([camera, viewportDimension, viewportDimension])(
-    'always produces a well-formed, non-inverted range',
-    (cam, width, height) => {
-      const range = computeVisibleRange(cam, width, height)
-      expect(range.minX).toBeLessThanOrEqual(range.maxX)
-      expect(range.minY).toBeLessThanOrEqual(range.maxY)
-    },
-  )
-
-  it.prop([camera, viewportDimension, viewportDimension])(
-    'is always wide/tall enough to cover the requested viewport size in cells',
-    (cam, width, height) => {
-      const range = computeVisibleRange(cam, width, height)
-      expect(range.maxX - range.minX).toBeGreaterThanOrEqual(width / cam.cellSize)
-      expect(range.maxY - range.minY).toBeGreaterThanOrEqual(height / cam.cellSize)
     },
   )
 })
@@ -190,53 +157,6 @@ describe('centeredCamera (property)', () => {
   )
 })
 
-describe('isMajorGridline (property)', () => {
-  it.prop([worldCoord])('is periodic with period 10', (n) => {
-    expect(isMajorGridline(n + 10)).toBe(isMajorGridline(n))
-    expect(isMajorGridline(n - 10)).toBe(isMajorGridline(n))
-  })
-
-  it.prop([fc.integer({ min: -10_000, max: 10_000 })])('is true for every exact multiple of 10', (n) => {
-    expect(isMajorGridline(n * 10)).toBe(true)
-  })
-})
-
-describe('computeMajorGridlines (property)', () => {
-  const rangeEndpoint = fc.integer({ min: -500, max: 500 })
-
-  function bruteForceGridlines(min: number, max: number): number[] {
-    const lines: number[] = []
-    for (let i = min; i <= max; i++) {
-      if (isMajorGridline(i)) lines.push(i)
-    }
-    return lines
-  }
-
-  it.prop([rangeEndpoint, rangeEndpoint, rangeEndpoint, rangeEndpoint])(
-    'matches a brute-force scan of every coordinate in range, on both axes',
-    (a, b, c, d) => {
-      const range: VisibleRange = {
-        minX: Math.min(a, b),
-        maxX: Math.max(a, b),
-        minY: Math.min(c, d),
-        maxY: Math.max(c, d),
-      }
-      const gridlines = computeMajorGridlines(range)
-      expect(gridlines.x).toEqual(bruteForceGridlines(range.minX, range.maxX))
-      expect(gridlines.y).toEqual(bruteForceGridlines(range.minY, range.maxY))
-    },
-  )
-
-  it.prop([rangeEndpoint, rangeEndpoint])('every returned gridline is within range and a multiple of 10', (a, b) => {
-    const range: VisibleRange = { minX: Math.min(a, b), maxX: Math.max(a, b), minY: 0, maxY: 0 }
-    for (const x of computeMajorGridlines(range).x) {
-      expect(x).toBeGreaterThanOrEqual(range.minX)
-      expect(x).toBeLessThanOrEqual(range.maxX)
-      expect(isMajorGridline(x)).toBe(true)
-    }
-  })
-})
-
 describe('applyWheelInput (property)', () => {
   it.prop([camera, pixel, pixel, pixel, pixel])(
     'never changes cellSize when shiftKey is false',
@@ -291,95 +211,4 @@ describe('rectRelativePixels (property)', () => {
   it.prop([coord, coord])('a point at the rect origin is always (0, 0)', (left, top) => {
     expect(rectRelativePixels({ left, top }, left, top)).toEqual({ pixelX: 0, pixelY: 0 })
   })
-})
-
-describe('beginDrag / advanceDrag (property)', () => {
-  const clientCoord = fc.integer({ min: -4000, max: 4000 })
-  const point = fc.tuple(clientCoord, clientCoord)
-  // A gesture already past the drag threshold, i.e. mid-pan.
-  const panningGesture: fc.Arbitrary<DragGesture> = fc.record({
-    startX: clientCoord,
-    startY: clientCoord,
-    lastX: clientCoord,
-    lastY: clientCoord,
-    isPanning: fc.constant(true),
-  })
-  // Any offset that stays within the drag threshold, expressed in polar form
-  // so the whole disc (not just the axis-aligned points) gets explored. The
-  // radius stops just short of the threshold: at exactly DRAG_THRESHOLD_PX,
-  // hypot(r*cos, r*sin) can land a float ULP above r and flip the
-  // strictly-greater-than comparison, which is a rounding artifact of the test's
-  // own polar construction rather than a property violation. The exact-boundary
-  // case is pinned down by a unit test in viewport.test.ts instead.
-  const withinThreshold = fc
-    .tuple(
-      fc.float({ min: 0, max: Math.fround(DRAG_THRESHOLD_PX * 0.999), noNaN: true }),
-      fc.float({ min: 0, max: Math.fround(2 * Math.PI), noNaN: true }),
-    )
-    .map(([radius, angle]) => [radius * Math.cos(angle), radius * Math.sin(angle)] as const)
-
-  it.prop([clientCoord, clientCoord, withinThreshold])(
-    'never pans while the pointer stays within the drag threshold of where it went down',
-    (startX, startY, [dx, dy]) => {
-      const advance = advanceDrag(beginDrag(startX, startY), startX + dx, startY + dy)
-      expect(advance.gesture.isPanning).toBe(false)
-      expect(advance.panDxPixels).toBe(0)
-      expect(advance.panDyPixels).toBe(0)
-    },
-  )
-
-  it.prop([panningGesture, clientCoord, clientCoord])(
-    'once panning, every subsequent move keeps panning -- isPanning never un-latches',
-    (gesture, x, y) => {
-      expect(advanceDrag(gesture, x, y).gesture.isPanning).toBe(true)
-    },
-  )
-
-  it.prop([panningGesture, fc.array(point, { minLength: 1, maxLength: 20 })])(
-    'once panning, the incremental pan deltas sum to the total displacement of the gesture',
-    (gesture, points) => {
-      let current = gesture
-      let totalDx = 0
-      let totalDy = 0
-      for (const [x, y] of points) {
-        const advance = advanceDrag(current, x, y)
-        totalDx += advance.panDxPixels
-        totalDy += advance.panDyPixels
-        current = advance.gesture
-      }
-      const [finalX, finalY] = points.at(-1) as [number, number]
-      expect(totalDx).toBe(finalX - gesture.lastX)
-      expect(totalDy).toBe(finalY - gesture.lastY)
-    },
-  )
-
-  it.prop([clientCoord, clientCoord, fc.array(point, { minLength: 1, maxLength: 20 })])(
-    'the start point stays anchored at pointer-down, and the last point always tracks the newest position',
-    (startX, startY, points) => {
-      let current = beginDrag(startX, startY)
-      for (const [x, y] of points) {
-        current = advanceDrag(current, x, y).gesture
-        expect(current.startX).toBe(startX)
-        expect(current.startY).toBe(startY)
-        expect(current.lastX).toBe(x)
-        expect(current.lastY).toBe(y)
-      }
-    },
-  )
-})
-
-describe('computeThumbGeometry (property)', () => {
-  const ratio = fc.float({ min: 0, max: 1, noNaN: true })
-  const trackLengthPx = fc.integer({ min: 0, max: 4000 })
-
-  it.prop([ratio, ratio, trackLengthPx])(
-    'the thumb never extends past the track, in either length or offset',
-    (thumbRatio, thumbOffsetRatio, track) => {
-      const { lengthPx, offsetPx } = computeThumbGeometry({ thumbRatio, thumbOffsetRatio }, track)
-      expect(lengthPx).toBeLessThanOrEqual(track)
-      expect(offsetPx).toBeGreaterThanOrEqual(0)
-      // +epsilon guards against float rounding in offsetRatio * (track - lengthPx), not a real slack in the invariant.
-      expect(offsetPx + lengthPx).toBeLessThanOrEqual(track + 1e-9)
-    },
-  )
 })

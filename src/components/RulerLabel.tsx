@@ -1,4 +1,4 @@
-import { worldToScreen, type Camera } from '../viewport'
+import { worldToScreen, type Camera } from '../camera'
 
 interface RulerLabelProps {
   axis: 'x' | 'y'

@@ -1,6 +1,6 @@
 import { describeFeature, loadFeature } from '@amiceli/vitest-cucumber'
 import { expect } from 'vitest'
-import { computeMajorGridlines, isMajorGridline, type MajorGridlines, type VisibleRange } from '../src/viewport'
+import { computeMajorGridlines, isMajorGridline, type MajorGridlines, type VisibleRange } from '../src/gridGeometry'
 
 // ACCEPTANCE_MUTATION_FEATURE_FILE lets the acceptance-mutation runner point
 // this suite at a mutated copy of the feature file (see

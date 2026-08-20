@@ -7,7 +7,8 @@ import {
   type ContentBounds,
   type LiveCells,
 } from '../src/gameOfLife'
-import { computeScrollbarMetrics, panCameraByScrollbarDrag, DEFAULT_CELL_SIZE, type Camera } from '../src/viewport'
+import { DEFAULT_CELL_SIZE, type Camera } from '../src/camera'
+import { computeScrollbarMetrics, panCameraByScrollbarDrag } from '../src/scrollbars'
 
 // ACCEPTANCE_MUTATION_FEATURE_FILE lets the acceptance-mutation runner point
 // this suite at a mutated copy of the feature file (see

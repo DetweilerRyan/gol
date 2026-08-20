@@ -1,7 +1,7 @@
 import { useEffect, type RefObject } from 'react'
-import { rectRelativePixels, type WheelInput } from '../viewport'
+import { rectRelativePixels, type WheelInput } from '../camera'
 
-// Bridges native wheel events on an element to viewport.ts's WheelInput,
+// Bridges native wheel events on an element to camera.ts's WheelInput,
 // converting the event's client coordinates into element-relative pixels so
 // callers never see a DOM event at all.
 //

@@ -1,7 +1,7 @@
 import { patternCellPositions, type Pattern } from './patternLibrary'
 
 // The pattern-library interaction as an explicit three-state machine, kept
-// framework-free the same way viewport.ts is (useCamera : viewport.ts ::
+// framework-free the same way camera.ts is (useCamera : camera.ts ::
 // usePatternPlacement : this module). Modeling it as one state rather than
 // separate "modal open" / "pattern armed" / "preview cell" flags makes the
 // impossible combinations (library open *and* a pattern armed, a preview cell

@@ -30,7 +30,10 @@ const REPO_ROOT = path.resolve(SCRIPT_DIR, '../..')
 const FILES = [
   'src/gameOfLife.ts',
   'src/patternLibrary.ts',
-  'src/viewport.ts',
+  'src/camera.ts',
+  'src/gridGeometry.ts',
+  'src/dragGesture.ts',
+  'src/scrollbars.ts',
   'src/patternPlacement.ts',
   'src/hooks/useCamera.ts',
   'src/hooks/useElementSize.ts',

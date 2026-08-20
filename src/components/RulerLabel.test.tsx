@@ -1,6 +1,6 @@
 import { render, screen } from '@testing-library/react'
 import { describe, expect, it } from 'vitest'
-import { worldToScreen, type Camera } from '../viewport'
+import { worldToScreen, type Camera } from '../camera'
 import RulerLabel from './RulerLabel'
 
 const camera: Camera = { offsetX: -32, offsetY: -22.5, cellSize: 20 }

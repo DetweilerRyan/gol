@@ -1,7 +1,7 @@
 import { fireEvent, render, screen } from '@testing-library/react'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { stubPointerCapture, type PointerCaptureStubs } from '../test-support/domStubs'
-import { computeThumbGeometry, type ScrollbarMetrics } from '../viewport'
+import { computeThumbGeometry, type ScrollbarMetrics } from '../scrollbars'
 import Scrollbar from './Scrollbar'
 
 // jsdom doesn't implement pointer capture -- stubbed as spies so the
