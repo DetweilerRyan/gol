@@ -4,7 +4,15 @@
   "testRunner": "vitest",
   "coverageAnalysis": "perTest",
   "reporters": ["progress", "clear-text", "html"],
-  "mutate": ["src/gameOfLife.ts", "src/viewport.ts", "src/hooks/useCamera.ts"],
+  "mutate": [
+    "src/gameOfLife.ts",
+    "src/viewport.ts",
+    "src/hooks/useCamera.ts",
+    "src/components/GridToolbar.tsx",
+    "src/components/PatternLibraryModal.tsx",
+    "src/components/RulerLabel.tsx",
+    "src/components/Scrollbar.tsx"
+  ],
   "thresholds": {
     "high": 90,
     "low": 80,

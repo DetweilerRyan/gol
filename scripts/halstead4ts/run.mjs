@@ -14,8 +14,9 @@
 // formula to gate on" reason.
 //
 // Keep FILES in sync with crap4ts.config.ts's `include` array -- both target
-// the same unit-tested, framework-free logic modules (grid rules, camera
-// math, the pan/zoom hook).
+// the same unit-tested modules: the framework-free logic (grid rules, camera
+// math, the pan/zoom hook) plus the four presentational components that have
+// their own render()-based unit tests.
 
 import path from 'node:path'
 import { fileURLToPath } from 'node:url'
@@ -25,7 +26,15 @@ import { buildReport } from './report.mjs'
 const SCRIPT_DIR = path.dirname(fileURLToPath(import.meta.url))
 const REPO_ROOT = path.resolve(SCRIPT_DIR, '../..')
 
-const FILES = ['src/gameOfLife.ts', 'src/viewport.ts', 'src/hooks/useCamera.ts']
+const FILES = [
+  'src/gameOfLife.ts',
+  'src/viewport.ts',
+  'src/hooks/useCamera.ts',
+  'src/components/GridToolbar.tsx',
+  'src/components/PatternLibraryModal.tsx',
+  'src/components/RulerLabel.tsx',
+  'src/components/Scrollbar.tsx',
+]
 
 function analyzeFile(file) {
   const absolutePath = path.join(REPO_ROOT, file)
