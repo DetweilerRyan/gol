@@ -1,0 +1,7 @@
+id: no-manual-memo-tsx
+valid:
+  - const value = compute(a, b)
+  - const [state, setState] = useState(0)
+invalid:
+  - const value = useMemo(() => compute(a), [a])
+  - const cb = useCallback(() => go(), [])

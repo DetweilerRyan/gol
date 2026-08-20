@@ -1,0 +1,13 @@
+id: no-manual-memo-tsx
+language: Tsx
+severity: warning
+message: React Compiler is enabled -- avoid manual useMemo/useCallback.
+note: See CLAUDE.md Conventions. Only reach for these when the compiler demonstrably can't handle the case.
+ignores:
+  - 'src/catalyst/**'
+# ast-grep parses TypeScript and TSX with different parsers and a rule (or util) is bound
+# to one of them, so this matcher is duplicated in no-manual-memo-ts/-tsx by necessity.
+rule:
+  any:
+    - pattern: useMemo($$$ARGS)
+    - pattern: useCallback($$$ARGS)

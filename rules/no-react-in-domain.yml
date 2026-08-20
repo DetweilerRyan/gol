@@ -1,0 +1,23 @@
+id: no-react-in-domain
+language: TypeScript
+severity: warning
+message: Framework-free domain module must not import React.
+note: Domain logic stays testable without jsdom. Put React wiring in a hook under src/hooks/.
+# Domain modules are the framework-free .ts files at src/ root. Matching by glob rather
+# than by name means a NEW domain module is covered automatically -- a hand-listed set
+# would silently skip it, and a rule that matches nothing looks exactly like clean code.
+files:
+  - 'src/*.ts'
+# NB: ast-grep's `*` crosses `/`, so src/*.ts also reaches src/hooks/ etc. -- the
+# subdirectories must be excluded explicitly. Hooks legitimately import React and
+# touch the DOM; that's their job as adapters.
+ignores:
+  - 'src/hooks/**'
+  - 'src/components/**'
+  - 'src/catalyst/**'
+  - 'src/test-support/**'
+  - 'src/*.test.ts'
+  - 'src/test-setup.ts'
+rule:
+  kind: import_statement
+  regex: 'from [''"]react[''"]'

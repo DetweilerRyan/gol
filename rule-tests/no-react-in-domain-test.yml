@@ -1,0 +1,8 @@
+id: no-react-in-domain
+valid:
+  - import { produce } from 'immer'
+  - import type { Pattern } from './gameOfLife'
+invalid:
+  - import React from 'react'
+  - import { useState } from 'react'
+  - import type { ReactNode } from 'react'

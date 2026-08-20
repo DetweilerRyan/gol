@@ -25,6 +25,8 @@
     "acceptance-mutation": "tsx scripts/acceptance-mutation/run.ts",
     "gherkin-dry": "tsx scripts/gherkin-dry-checker/run.ts",
     "gherkin-lint": "gherkin-lint-plus features",
+    "ast-grep": "ast-grep scan",
+    "ast-grep:test": "ast-grep test",
     "test:mutation": "stryker run",
     "test:mutation:scripts": "stryker run stryker.scripts.config.json",
     "test:e2e": "playwright test"
@@ -43,6 +45,7 @@
   },
   "devDependencies": {
     "@amiceli/vitest-cucumber": "^7.0.0",
+    "@ast-grep/cli": "^0.45.1",
     "@babel/core": "^8.0.1",
     "@fast-check/vitest": "^0.4.1",
     "@playwright/test": "^1.62.1",

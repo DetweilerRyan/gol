@@ -1,0 +1,8 @@
+id: domain-imports-upward
+valid:
+  - import { cellKey } from './gameOfLife'
+  - import { produce } from 'immer'
+invalid:
+  - import { useCamera } from './hooks/useCamera'
+  - import Grid from './components/Grid'
+  - import { useCamera } from '../hooks/useCamera'

@@ -1,0 +1,8 @@
+id: no-dom-in-domain
+valid:
+  - const size = camera.cellSize * 2
+  - const rect = element.getBoundingClientRect()
+invalid:
+  - const el = document.getElementById('grid')
+  - const w = window.innerWidth
+  - document.addEventListener('keydown', onKey)

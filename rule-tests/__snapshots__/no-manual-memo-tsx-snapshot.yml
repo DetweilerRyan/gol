@@ -1,0 +1,14 @@
+id: no-manual-memo-tsx
+snapshots:
+  const cb = useCallback(() => go(), []):
+    labels:
+    - source: useCallback(() => go(), [])
+      style: primary
+      start: 11
+      end: 38
+  const value = useMemo(() => compute(a), [a]):
+    labels:
+    - source: useMemo(() => compute(a), [a])
+      style: primary
+      start: 14
+      end: 44

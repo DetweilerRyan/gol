@@ -1,0 +1,20 @@
+id: domain-imports-upward
+snapshots:
+  import Grid from './components/Grid':
+    labels:
+    - source: import Grid from './components/Grid'
+      style: primary
+      start: 0
+      end: 36
+  import { useCamera } from '../hooks/useCamera':
+    labels:
+    - source: import { useCamera } from '../hooks/useCamera'
+      style: primary
+      start: 0
+      end: 46
+  import { useCamera } from './hooks/useCamera':
+    labels:
+    - source: import { useCamera } from './hooks/useCamera'
+      style: primary
+      start: 0
+      end: 45

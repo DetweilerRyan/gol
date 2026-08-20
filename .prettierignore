@@ -8,3 +8,6 @@ reports
 .stryker-tmp-scripts
 .vitest-attachments
 package-lock.json
+
+# ast-grep regenerates these; formatting them would churn on every `npm run ast-grep:test`
+rule-tests/__snapshots__/

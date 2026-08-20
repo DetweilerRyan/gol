@@ -31,6 +31,8 @@ npm run test:mutation       # stryker mutation testing (scoped to stryker.config
 npm run acceptance-mutation # custom Gherkin-example mutation runner (scripts/acceptance-mutation, tsx scripts/acceptance-mutation/run.ts)
 npm run gherkin-dry         # checks .feature files for step-text vocabulary duplication (report-only, tsx scripts/gherkin-dry-checker/run.ts)
 npm run gherkin-lint        # structural/style lint for .feature files (indentation, dupe scenario names, keyword order -- gherkin-lint-plus, see .gherkin-lintrc)
+npm run ast-grep            # structural lint for architectural invariants (report-only, rules/*.yml via sgconfig.yml)
+npm run ast-grep:test       # runs rules/ against their rule-tests/ fixtures -- proves each rule still fires
 npm run crap4ts             # CRAP complexity/coverage score, src/ only (same files as stryker)
 npm run halstead4ts         # Halstead complexity report via FTA, same files as crap4ts (report-only, tsx scripts/halstead4ts/run.ts)
 npm run dry4ts              # duplication checker over src/
@@ -80,6 +82,10 @@ The default jsdom run excludes both `**/*.e2e.spec.ts` and `**/*.browser.test.ts
 - `scripts/halstead4ts/` — runs `fta-cli` against the same files as `crap4ts.config.ts`'s `include` list and prints a Halstead (volume/difficulty/effort/bugs) + FTA Score table alongside crap4ts's per-function CRAP table. FTA only reports at file granularity (no per-function breakdown), so this is a second, coarser report rather than something merged into crap4ts's output — and since FTA's own score formula isn't published, it's report-only like `gherkin-dry-checker`, never a CI gate. Keep the file list in `run.ts` in sync with `crap4ts.config.ts` by hand.
 
 All three run via `tsx` (`npm run halstead4ts`/`acceptance-mutation`/`gherkin-dry`, each `tsx scripts/.../run.ts`) and have their own `.test.ts` unit tests runnable via `npm run test:scripts` — a dedicated Node-environment vitest config; `vite.config.ts` excludes `scripts/**` from the main `npm test`/`npm run test:unit` run, so scripts' tests no longer run there.
+
+`sgconfig.yml` + `rules/*.yml` are a fourth checker, and the only one that isn't a `scripts/` program: [ast-grep](https://ast-grep.github.io) structural rules encoding the architectural invariants that were previously prose only — domain modules importing React or touching the DOM, imports pointing the wrong way through the framework-free-module → hook → component layering, and manual `useMemo`/`useCallback` under an enabled React Compiler. Report-only like the two above: every rule is `severity: warning`, so `npm run ast-grep` always exits 0; promote one to a gate by changing it to `error`.
+
+**Every rule ships with a fixture in `rule-tests/` and `npm run ast-grep:test` must pass.** This is not ceremony. A malformed ast-grep rule matches nothing and reports nothing — it looks exactly like a clean codebase — and two of these rules were silently inert when first written (metavariables don't interpolate inside string literals, so an import path needs `kind:` + `regex:`; and a `matches:` util is bound to one language, so it never applied to the `.tsx` files the rule existed to check). A rule with no failing fixture has not been shown to work. Note also that TypeScript and TSX use different parsers, which is why `no-manual-memo-ts` and `-tsx` are near-duplicates by necessity rather than by oversight.
 
 ## Subagent pipeline
 

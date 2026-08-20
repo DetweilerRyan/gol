@@ -1,0 +1,20 @@
+id: no-react-in-domain
+snapshots:
+  import React from 'react':
+    labels:
+    - source: import React from 'react'
+      style: primary
+      start: 0
+      end: 25
+  import type { ReactNode } from 'react':
+    labels:
+    - source: import type { ReactNode } from 'react'
+      style: primary
+      start: 0
+      end: 38
+  import { useState } from 'react':
+    labels:
+    - source: import { useState } from 'react'
+      style: primary
+      start: 0
+      end: 32
