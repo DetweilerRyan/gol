@@ -7,7 +7,20 @@ Adapted from unclebob/swarm-forge's `main`-branch constitution (`swarmforge/cons
 - Work in small, reviewable increments — one approved behavior slice at a time, not a batch of unrelated changes.
 - Prefer the simplest design that supports the current behavior and leaves clear options for the next step.
 - Keep tests close to the behavior being changed.
-- This repo's testable/environmentally-unsuitable split is documented in `CLAUDE.md`'s Architecture section: three framework-free modules (`src/gameOfLife.ts`, `src/viewport.ts`, `src/patternPlacement.ts`) hold independently testable domain logic; four hooks in `src/hooks/` (`useCamera.ts`, `useElementSize.ts`, `usePatternPlacement.ts`, `useWheelInput.ts`) each own exactly one piece of state or one browser API and delegate the actual rules to a framework-free module; five components in `src/components/` (`GridToolbar.tsx`, `PatternLibraryModal.tsx`, `RulerLabel.tsx`, `Scrollbar.tsx`, `Grid.tsx`) are unit-tested as compositions of those hooks and modules. `src/App.tsx`/`src/main.tsx` remain the UI-adapter layer excluded from unit testing. Push new logic into a framework-free module whenever it can be expressed as a pure function — a hook should stay a thin adapter around one browser API — so it stays covered by unit tests, property tests, and mutation testing, not stranded where it can't be.
+- This repo's layering is three-deep, and `CLAUDE.md`'s Architecture section names the concrete files at each layer (read it there rather than from a list restated here):
+  1. **Framework-free modules** in `src/` hold the independently testable domain logic — no React, no DOM.
+  2. **Hooks** in `src/hooks/` each own exactly one piece of state or one browser API and delegate the actual rules down to a framework-free module.
+  3. **Components** in `src/components/` compose those hooks and modules and hold only what's genuinely DOM-coupled; above them sits a thin UI-adapter/bootstrap layer that stays outside unit testing.
+
+  Push new logic down into a framework-free module whenever it can be expressed as a pure function — a hook should stay a thin adapter around one browser API — so it stays covered by unit tests, property tests, and mutation testing, not stranded where it can't be.
+
+## Where guidance and file names live
+
+These docs describe the codebase as it currently stands, not a contract that freezes it. Three standing rules follow from that:
+
+- **File and module names in these docs are a snapshot, not a permanent architecture.** A sentence naming `Grid.tsx` (or any other file) as the place some concern currently lives is describing today's structure — it is never a reason to avoid a split that's otherwise the right call. The layering above (framework-free module → hook → component) _is_ the durable contract; which files realize it is not.
+- **`cleaner` and `architect` may update the docs as part of a split they perform.** Both charters already include behavior-preserving splits/relocations. When one of them does that, updating `CLAUDE.md`'s Architecture section to describe the new structure, and fixing any file-list mentions elsewhere in `CLAUDE.md` or `.claude/agents/**` that the split just made stale, is a normal, expected part of the work — no separate per-task authorization needed. This is a factual-correctness exception to `workflow.md`'s "don't change another role's file" rule and nothing more: correct a stale file name or list, never a role's scope, boundaries, or workflow. If a split suggests some role's _responsibilities_ should change, say so and ask, as that rule requires. Prefer fixing the root cause — if a doc restates a tool's `include`/`mutate` list or re-enumerates the Architecture section's files, replace the copy with a pointer to the config file or to `CLAUDE.md` so it can't go stale again.
+- **Guidance that applies to more than one role belongs in a shared article**, and facts about the codebase itself belong in `CLAUDE.md` (which every session loads automatically, so it already reaches every role). Don't copy either into an individual role file: duplicates drift out of sync, and putting a general concern in one role's file implies that role owns it. A role file should carry only what's specific to that role's own responsibilities.
 
 ## Acceptance pipeline
 
