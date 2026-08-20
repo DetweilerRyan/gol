@@ -1,5 +1,5 @@
 import { fireEvent, render, screen } from '@testing-library/react'
-import { beforeEach, describe, expect, it, vi } from 'vitest'
+import { beforeEach, describe, expect, it, vi, type Mock } from 'vitest'
 import { computeThumbGeometry, type ScrollbarMetrics } from '../viewport'
 import Scrollbar from './Scrollbar'
 
@@ -9,14 +9,18 @@ import Scrollbar from './Scrollbar'
 // component don't throw when fireEvent.pointerDown/pointerUp run. Reassigned
 // fresh per test so call counts/return values from one test don't leak into
 // the next.
-let setPointerCapture: ReturnType<typeof vi.fn>
-let hasPointerCapture: ReturnType<typeof vi.fn>
-let releasePointerCapture: ReturnType<typeof vi.fn>
+// Each spy is typed with the exact Element.prototype signature it replaces:
+// a bare vi.fn() infers as Mock<Procedure | Constructable>, which tsc rejects
+// on assignment to the prototype method (vitest doesn't typecheck, so that
+// only shows up in `npm run build`).
+let setPointerCapture: Mock<(pointerId: number) => void>
+let hasPointerCapture: Mock<(pointerId: number) => boolean>
+let releasePointerCapture: Mock<(pointerId: number) => void>
 
 beforeEach(() => {
-  setPointerCapture = vi.fn()
-  hasPointerCapture = vi.fn(() => true)
-  releasePointerCapture = vi.fn()
+  setPointerCapture = vi.fn<(pointerId: number) => void>()
+  hasPointerCapture = vi.fn<(pointerId: number) => boolean>(() => true)
+  releasePointerCapture = vi.fn<(pointerId: number) => void>()
   Element.prototype.setPointerCapture = setPointerCapture
   Element.prototype.hasPointerCapture = hasPointerCapture
   Element.prototype.releasePointerCapture = releasePointerCapture
