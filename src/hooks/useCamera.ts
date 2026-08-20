@@ -5,6 +5,7 @@ import {
   panCamera,
   zoomCameraAtPoint,
   DEFAULT_CELL_SIZE,
+  ZOOM_FACTOR,
   type Camera,
   type WheelInput,
 } from '../camera'
@@ -33,9 +34,29 @@ export function useCamera() {
     setCamera(centeredCamera(viewportWidthPx, viewportHeightPx))
   }
 
+  // Symmetric with centerView: zoom about the viewport's own center point,
+  // so callers (the toolbar's zoom buttons) don't need to know the camera's
+  // pixel-space zoom-at-point convention, only their own measured size.
+  function zoomInCentered(viewportWidthPx: number, viewportHeightPx: number) {
+    zoomAtPoint(viewportWidthPx / 2, viewportHeightPx / 2, ZOOM_FACTOR)
+  }
+
+  function zoomOutCentered(viewportWidthPx: number, viewportHeightPx: number) {
+    zoomAtPoint(viewportWidthPx / 2, viewportHeightPx / 2, 1 / ZOOM_FACTOR)
+  }
+
   function panByScrollbarDrag(axis: ScrollbarAxis, deltaTrackPx: number, thumbRatio: number) {
     setCamera((prev) => panCameraByScrollbarDrag(prev, axis, deltaTrackPx, thumbRatio))
   }
 
-  return { camera, panByPixels, zoomAtPoint, applyWheel, centerView, panByScrollbarDrag }
+  return {
+    camera,
+    panByPixels,
+    zoomAtPoint,
+    applyWheel,
+    centerView,
+    zoomInCentered,
+    zoomOutCentered,
+    panByScrollbarDrag,
+  }
 }

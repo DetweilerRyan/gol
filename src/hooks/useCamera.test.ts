@@ -1,7 +1,16 @@
 import { act, renderHook } from '@testing-library/react'
 import { describe, expect, it } from 'vitest'
-import { DEFAULT_CELL_SIZE, MAX_CELL_SIZE, MIN_CELL_SIZE, worldToScreen } from '../camera'
+import {
+  DEFAULT_CELL_SIZE,
+  MAX_CELL_SIZE,
+  MIN_CELL_SIZE,
+  worldToScreen,
+  zoomCameraAtPoint,
+  ZOOM_FACTOR,
+} from '../camera'
 import { useCamera } from './useCamera'
+
+const initialCamera = { offsetX: 0, offsetY: 0, cellSize: DEFAULT_CELL_SIZE }
 
 describe('useCamera', () => {
   it('starts centered on the origin at the default zoom', () => {
@@ -63,6 +72,20 @@ describe('useCamera', () => {
     act(() => result.current.panByScrollbarDrag('x', 50, 0.5))
     expect(result.current.camera.offsetX).toBeCloseTo(5)
     expect(result.current.camera.offsetY).toBe(0)
+  })
+
+  it('zoomInCentered zooms at the viewport center using ZOOM_FACTOR', () => {
+    const { result } = renderHook(() => useCamera())
+    act(() => result.current.zoomInCentered(800, 600))
+
+    expect(result.current.camera).toEqual(zoomCameraAtPoint(initialCamera, 800 / 2, 600 / 2, ZOOM_FACTOR))
+  })
+
+  it('zoomOutCentered zooms at the viewport center using 1 / ZOOM_FACTOR', () => {
+    const { result } = renderHook(() => useCamera())
+    act(() => result.current.zoomOutCentered(800, 600))
+
+    expect(result.current.camera).toEqual(zoomCameraAtPoint(initialCamera, 800 / 2, 600 / 2, 1 / ZOOM_FACTOR))
   })
 
   it('centerView resets to the default zoom, centered on the given viewport size', () => {

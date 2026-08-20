@@ -1,5 +1,5 @@
 import { useLayoutEffect, useRef, useState } from 'react'
-import { rectRelativePixels, screenToWorld, worldToScreen, zoomPercentage, ZOOM_FACTOR } from '../camera'
+import { rectRelativePixels, screenToWorld, worldToScreen, zoomPercentage } from '../camera'
 import { advanceDrag, beginDrag, type DragGesture } from '../dragGesture'
 import { cellKey, computeContentBounds, isCellAlive, type LiveCells } from '../gameOfLife'
 import { cellsInRange, computeMajorGridlines, computeVisibleRange, isMajorGridline } from '../gridGeometry'
@@ -26,7 +26,8 @@ export default function Grid({ liveCells, onToggleCell, onPlacePattern }: GridPr
   const containerSize = useElementSize(containerRef)
   const hasCenteredRef = useRef(false)
 
-  const { camera, panByPixels, zoomAtPoint, applyWheel, centerView, panByScrollbarDrag } = useCamera()
+  const { camera, panByPixels, applyWheel, centerView, zoomInCentered, zoomOutCentered, panByScrollbarDrag } =
+    useCamera()
   useWheelInput(containerRef, applyWheel)
 
   const dragStateRef = useRef<DragGesture | null>(null)
@@ -233,8 +234,8 @@ export default function Grid({ liveCells, onToggleCell, onPlacePattern }: GridPr
           rest of the page (including the toolbar) inert while the library is
           open, so that handler can't fire in the browsing state at all. */}
       <GridToolbar
-        onZoomIn={() => zoomAtPoint(containerSize.width / 2, containerSize.height / 2, ZOOM_FACTOR)}
-        onZoomOut={() => zoomAtPoint(containerSize.width / 2, containerSize.height / 2, 1 / ZOOM_FACTOR)}
+        onZoomIn={() => zoomInCentered(containerSize.width, containerSize.height)}
+        onZoomOut={() => zoomOutCentered(containerSize.width, containerSize.height)}
         onReset={() => centerView(containerSize.width, containerSize.height)}
         onPatterns={openOrCancelLibrary}
       />
