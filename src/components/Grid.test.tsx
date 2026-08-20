@@ -54,7 +54,6 @@ function renderGrid(props: Partial<GridProps> = {}): RenderResult & GridProps {
     liveCells: new Set<string>() as LiveCells,
     onToggleCell: vi.fn(),
     onPlacePattern: vi.fn(),
-    onSuppressEnterChange: vi.fn(),
     ...props,
   }
   const utils = render(<Grid {...merged} />)
@@ -590,8 +589,7 @@ describe('placing-mode state machine', () => {
   it('Escape cancels placing mode', () => {
     const onPlacePattern = vi.fn()
     const onToggleCell = vi.fn()
-    const onSuppressEnterChange = vi.fn()
-    const { container } = renderGrid({ onPlacePattern, onToggleCell, onSuppressEnterChange })
+    const { container } = renderGrid({ onPlacePattern, onToggleCell })
     triggerResize(WIDTH, HEIGHT)
     const grid = gridContentEl(container)
 
@@ -599,12 +597,10 @@ describe('placing-mode state machine', () => {
     selectPattern(GLIDER)
     fireEvent.pointerMove(grid, { pointerId: 1, clientX: 240, clientY: 260 })
     expect(previewLabels().length).toBeGreaterThan(0)
-    expect(onSuppressEnterChange).toHaveBeenLastCalledWith(true)
 
     fireEvent.keyDown(window, { key: 'Escape' })
 
     expect(previewLabels()).toHaveLength(0)
-    expect(onSuppressEnterChange).toHaveBeenLastCalledWith(false)
 
     fireEvent.pointerDown(grid, { pointerId: 2, clientX: 240, clientY: 260 })
     fireEvent.pointerUp(grid, { pointerId: 2, clientX: 240, clientY: 260 })
@@ -685,26 +681,6 @@ describe('placing-mode state machine', () => {
     fireEvent.pointerDown(grid, { pointerId: 2, clientX: 240, clientY: 260 })
     fireEvent.pointerUp(grid, { pointerId: 2, clientX: 240, clientY: 260 })
     expect(onToggleCell).toHaveBeenCalledTimes(1)
-  })
-})
-
-describe('onSuppressEnterChange', () => {
-  it('reports false on mount, true while the modal is open, true while placing is armed, then false again once placed', () => {
-    const onSuppressEnterChange = vi.fn()
-    const { container } = renderGrid({ onSuppressEnterChange })
-    triggerResize(WIDTH, HEIGHT)
-    expect(onSuppressEnterChange).toHaveBeenLastCalledWith(false)
-
-    openPatternModal()
-    expect(onSuppressEnterChange).toHaveBeenLastCalledWith(true)
-
-    selectPattern(GLIDER)
-    expect(onSuppressEnterChange).toHaveBeenLastCalledWith(true)
-
-    const grid = gridContentEl(container)
-    fireEvent.pointerDown(grid, { pointerId: 1, clientX: 240, clientY: 260 })
-    fireEvent.pointerUp(grid, { pointerId: 1, clientX: 240, clientY: 260 })
-    expect(onSuppressEnterChange).toHaveBeenLastCalledWith(false)
   })
 })
 

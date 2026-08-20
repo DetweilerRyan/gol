@@ -11,7 +11,6 @@ import {
   isLibraryOpen,
   movePreviewTo,
   previewPositions,
-  suppressesEnter,
   toggleLibrary,
   type PlacementState,
 } from './patternPlacement'
@@ -62,14 +61,6 @@ describe('placement state machine (property)', () => {
     }
   })
 
-  it.prop([actions])('suppresses Enter exactly while browsing or placing, never otherwise', (sequence) => {
-    let state = INITIAL_PLACEMENT
-    for (const next of sequence) {
-      state = apply(state, next)
-      expect(suppressesEnter(state)).toBe(isLibraryOpen(state) || armedPattern(state) !== null)
-    }
-  })
-
   it.prop([actions])('only ever previews cells while a pattern is armed', (sequence) => {
     let state = INITIAL_PLACEMENT
     for (const next of sequence) {
@@ -88,7 +79,7 @@ describe('placement state machine (property)', () => {
     // in a mode with no exit.
     const escaped = cancelPlacing(state)
     expect(armedPattern(escaped)).toBeNull()
-    expect(isLibraryOpen(toggleLibrary(escaped)) || suppressesEnter(escaped)).toBe(true)
+    expect(isLibraryOpen(toggleLibrary(escaped))).toBe(true)
   })
 })
 

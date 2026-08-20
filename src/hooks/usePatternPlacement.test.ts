@@ -1,7 +1,7 @@
 import { act, fireEvent, renderHook, type RenderHookResult } from '@testing-library/react'
 import { describe, expect, it, vi } from 'vitest'
 import { PATTERNS, type Pattern } from '../patternLibrary'
-import { armedPattern, isLibraryOpen, previewPositions, suppressesEnter } from '../patternPlacement'
+import { armedPattern, isLibraryOpen, previewPositions } from '../patternPlacement'
 import { usePatternPlacement } from './usePatternPlacement'
 
 const GLIDER = PATTERNS.find((pattern) => pattern.name === 'Glider') as Pattern
@@ -28,7 +28,7 @@ function pressKey(key: string) {
 describe('usePatternPlacement', () => {
   it('starts idle', () => {
     const { result } = setup()
-    expect(suppressesEnter(result.current.placement)).toBe(false)
+    expect(armedPattern(result.current.placement)).toBeNull()
     expect(isLibraryOpen(result.current.placement)).toBe(false)
   })
 
@@ -53,7 +53,7 @@ describe('usePatternPlacement', () => {
     act(() => result.current.openOrCancelLibrary())
     act(() => result.current.closeLibrary())
     expect(isLibraryOpen(result.current.placement)).toBe(false)
-    expect(suppressesEnter(result.current.placement)).toBe(false)
+    expect(armedPattern(result.current.placement)).toBeNull()
   })
 
   it('previewAt moves the armed pattern’s preview, and does nothing when nothing is armed', () => {

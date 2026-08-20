@@ -54,13 +54,6 @@ export function armedPattern(state: PlacementState): Pattern | null {
   return state.mode === 'placing' ? state.pattern : null
 }
 
-// Both browsing and placing suppress the global Enter-to-advance shortcut:
-// advancing a generation out from under a user who's picking or lining up a
-// pattern is never what they meant.
-export function suppressesEnter(state: PlacementState): boolean {
-  return state.mode !== 'idle'
-}
-
 // World cells the armed pattern would occupy if stamped at the current preview
 // cell -- empty whenever there's nothing to preview. Built on the same
 // patternCellPositions helper placePattern itself uses, so the preview can't

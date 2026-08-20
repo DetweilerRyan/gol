@@ -1,4 +1,4 @@
-import { useEffect, useLayoutEffect, useRef, useState } from 'react'
+import { useLayoutEffect, useRef, useState } from 'react'
 import { rectRelativePixels, screenToWorld, worldToScreen, zoomPercentage, ZOOM_FACTOR } from '../camera'
 import { advanceDrag, beginDrag, type DragGesture } from '../dragGesture'
 import { cellKey, computeContentBounds, isCellAlive, type LiveCells } from '../gameOfLife'
@@ -8,7 +8,7 @@ import { useElementSize } from '../hooks/useElementSize'
 import { usePatternPlacement } from '../hooks/usePatternPlacement'
 import { useWheelInput } from '../hooks/useWheelInput'
 import { type Pattern } from '../patternLibrary'
-import { armedPattern, isLibraryOpen, previewPositions, suppressesEnter } from '../patternPlacement'
+import { armedPattern, isLibraryOpen, previewPositions } from '../patternPlacement'
 import { computeScrollbarMetrics } from '../scrollbars'
 import GridToolbar from './GridToolbar'
 import PatternLibraryModal from './PatternLibraryModal'
@@ -19,10 +19,9 @@ interface GridProps {
   liveCells: LiveCells
   onToggleCell: (x: number, y: number) => void
   onPlacePattern: (pattern: Pattern, anchorX: number, anchorY: number) => void
-  onSuppressEnterChange: (suppressed: boolean) => void
 }
 
-export default function Grid({ liveCells, onToggleCell, onPlacePattern, onSuppressEnterChange }: GridProps) {
+export default function Grid({ liveCells, onToggleCell, onPlacePattern }: GridProps) {
   const containerRef = useRef<HTMLDivElement>(null)
   const containerSize = useElementSize(containerRef)
   const hasCenteredRef = useRef(false)
@@ -45,14 +44,6 @@ export default function Grid({ liveCells, onToggleCell, onPlacePattern, onSuppre
       centerView(width, height)
     }
   }, [containerSize, centerView])
-
-  // Both browsing the pattern library and placing a pattern need to suppress
-  // App.tsx's global Enter-to-advance-generation shortcut. Reported up via a
-  // callback rather than lifting the placement state entirely, since it's
-  // otherwise only relevant to Grid's own pointer/keyboard wiring.
-  useEffect(() => {
-    onSuppressEnterChange(suppressesEnter(placement))
-  }, [placement, onSuppressEnterChange])
 
   const visibleRange = computeVisibleRange(camera, containerSize.width, containerSize.height)
   const cells = cellsInRange(visibleRange)

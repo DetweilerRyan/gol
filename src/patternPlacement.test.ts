@@ -8,7 +8,6 @@ import {
   isLibraryOpen,
   movePreviewTo,
   previewPositions,
-  suppressesEnter,
   toggleLibrary,
   type PlacementState,
 } from './patternPlacement'
@@ -20,10 +19,9 @@ const browsing = toggleLibrary(INITIAL_PLACEMENT)
 const placing = armPattern(GLIDER)
 
 describe('INITIAL_PLACEMENT', () => {
-  it('starts idle: library closed, nothing armed, Enter not suppressed, nothing to preview', () => {
+  it('starts idle: library closed, nothing armed, nothing to preview', () => {
     expect(isLibraryOpen(INITIAL_PLACEMENT)).toBe(false)
     expect(armedPattern(INITIAL_PLACEMENT)).toBeNull()
-    expect(suppressesEnter(INITIAL_PLACEMENT)).toBe(false)
     expect(previewPositions(INITIAL_PLACEMENT)).toEqual([])
   })
 })
@@ -68,7 +66,6 @@ describe('cancelPlacing', () => {
   it('returns to idle from placing', () => {
     const next = cancelPlacing(movePreviewTo(placing, 1, 1))
     expect(armedPattern(next)).toBeNull()
-    expect(suppressesEnter(next)).toBe(false)
     expect(previewPositions(next)).toEqual([])
   })
 
@@ -93,15 +90,6 @@ describe('movePreviewTo', () => {
   it('returns the exact same state reference when nothing is armed', () => {
     expect(movePreviewTo(INITIAL_PLACEMENT, 3, 3)).toBe(INITIAL_PLACEMENT)
     expect(movePreviewTo(browsing, 3, 3)).toBe(browsing)
-  })
-})
-
-describe('suppressesEnter', () => {
-  it('is true while browsing and while placing, false only when idle', () => {
-    expect(suppressesEnter(browsing)).toBe(true)
-    expect(suppressesEnter(placing)).toBe(true)
-    expect(suppressesEnter(movePreviewTo(placing, 0, 0))).toBe(true)
-    expect(suppressesEnter(INITIAL_PLACEMENT)).toBe(false)
   })
 })
 
