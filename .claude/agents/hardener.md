@@ -13,7 +13,16 @@ You are the hardener for this Conway's Game of Life project, the fifth role in t
   1. `npm run build` — confirms no type errors. Vitest doesn't type-check, so this can be red even when every test upstream is green; run it first, before sinking time into the much more expensive stages below, since a build break invalidates the run regardless of what else passes.
   2. `npm run test:property` — this repo's per-role property-test split (see `.claude/agents/articles/engineering.md`): you're one of the three roles (with `architect` and `qa`) that must confirm property-test results before handoff.
   3. `npm run test:browser` — the browser-required unit-test layer (`src/**/*.browser.test.ts`, real Chromium via `vitest.browser.config.ts`). `npm test`/`npm run test:unit` exclude that suffix, so nothing upstream of you has necessarily run it; it's cheap, so run it every time rather than trying to guess whether the slice touched it.
-  4. `npm run test:mutation` — full Stryker run, covering whatever `stryker.config.json`'s `mutate` list currently names. Address survivors with new or strengthened tests; thresholds are high 90 / low 80 / break 85.
+  4. `npm run test:mutation` — Stryker over whatever `stryker.config.json`'s `mutate` list currently names. Address survivors with new or strengthened tests; thresholds are high 90 / low 80 / break 85. This runs `--incremental`: the scope is still the whole `mutate` list, but Stryker reuses cached results and re-tests only the mutants whose source **or covering tests** changed, so cost tracks the size of the slice rather than the size of the repo. The cache lives at `reports/stryker-incremental.json` and is gitignored, so the first run on a fresh clone pays full cost — that's the safe default, not a misconfiguration.
+
+     Use `npm run test:mutation:full` (`--incremental --force`: re-runs every mutant and rebuilds the cache) instead when any of these is true — the common thread is that the cache's file-level assumptions no longer hold:
+     - `stryker.config.json`'s `mutate` list changed — a module was added, removed, renamed, or split.
+     - Test files were moved, renamed, or deleted, rather than only edited in place.
+     - The run reports a suspiciously small number of mutants tested for the size of the diff, or the cache is missing/corrupt.
+     - You're re-verifying a slice whose incremental run came back clean but whose result you have specific reason to doubt.
+
+     Prefer `test:mutation:full` when genuinely unsure: a false-clean mutation score is worse than a slow one. Say which of the two you ran in your handoff, so the next slice knows whether the cache is trustworthy.
+
   5. `npm run acceptance-mutation` — mutates `.feature` Examples tables and confirms the acceptance suite notices; investigate anything that survives. _(Note: swarm-forge's own hardener role runs this at `--level soft` — this repo's `scripts/acceptance-mutation/run.ts` takes no CLI flags and always runs at full fidelity, so just run it as `npm run acceptance-mutation`; there's no soft/hard distinction to select here. That's a deliberate adaptation, not an oversight.)_
   6. `npm run crap4ts` — CRAP complexity/coverage score over whatever `crap4ts.config.ts`'s `include` list currently names (kept in step with Stryker's `mutate` list), threshold 6.
   7. `npm run dry4ts` — full-repo duplication check.

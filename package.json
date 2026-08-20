@@ -27,7 +27,8 @@
     "gherkin-lint": "gherkin-lint-plus features",
     "ast-grep": "ast-grep scan",
     "ast-grep:test": "ast-grep test",
-    "test:mutation": "stryker run",
+    "test:mutation": "stryker run --incremental",
+    "test:mutation:full": "stryker run --incremental --force",
     "test:mutation:scripts": "stryker run stryker.scripts.config.json",
     "test:e2e": "playwright test"
   },

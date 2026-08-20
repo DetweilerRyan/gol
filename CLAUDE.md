@@ -27,7 +27,8 @@ npm run test:e2e            # playwright test (black-box e2e, real browser, auto
 npx playwright test e2e/grid-scrollbars.e2e.spec.ts   # run a single e2e spec
 npx playwright install chromium   # one-time browser install after npm install
 
-npm run test:mutation       # stryker mutation testing (scoped to stryker.config.json's `mutate` list -- see the Architecture section)
+npm run test:mutation       # stryker mutation testing, --incremental (scoped to stryker.config.json's `mutate` list -- see the Architecture section)
+npm run test:mutation:full  # same scope, --force: re-runs every mutant and rebuilds the incremental cache
 npm run acceptance-mutation # custom Gherkin-example mutation runner (scripts/acceptance-mutation, tsx scripts/acceptance-mutation/run.ts)
 npm run gherkin-dry         # checks .feature files for step-text vocabulary duplication (report-only, tsx scripts/gherkin-dry-checker/run.ts)
 npm run gherkin-lint        # structural/style lint for .feature files (indentation, dupe scenario names, keyword order -- gherkin-lint-plus, see .gherkin-lintrc)
@@ -45,6 +46,10 @@ npm run test:mutation:scripts # stryker mutation testing, scripts/ only
 ```
 
 There is no separate typecheck script — `npm run build` runs `tsc -b` as its first step. Lint (oxlint) has type-aware rules disabled by default; see README.md if enabling `oxlint-tsgolint`.
+
+**Mutation testing runs incrementally.** `npm run test:mutation` still covers the whole `mutate` list, but Stryker caches results and re-tests only the mutants whose source _or covering tests_ changed — a full run over `src/` takes ~10 minutes, an incremental one tracks the size of the diff. This matters because Stryker kills a mutant when _any_ test fails, so a mutant in one module is often killed by a test in another; scoping a run to changed source files alone would be blind to "a test moved, and now a mutant in an untouched file survives," whereas incremental mode accounts for it. Reach for `npm run test:mutation:full` whenever the cache's file-level assumptions break — the `mutate` list changed, a module was split or renamed, or test files were moved/deleted rather than edited in place — and prefer it when genuinely unsure, since a false-clean score is worse than a slow one.
+
+The two Stryker configs keep **separate** caches (`incrementalFile`: `reports/stryker-incremental.json` for `src/`, `reports/stryker-incremental-scripts.json` for `scripts/`), the same way they already separate `tempDirName` and their HTML reports — one shared cache across two different `mutate` lists would corrupt both. For the same reason, a `--mutate`-scoped run (as in `cleaner`'s workflow step 3) must never pass `--incremental`: it would record that subset as if it were the whole project and make the next full-scope run report a false-clean score. Both caches are gitignored, so a fresh clone or CI pays full cost on the first run — that's the safe default, not a misconfiguration.
 
 ## Architecture
 

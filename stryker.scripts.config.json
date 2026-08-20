@@ -23,5 +23,6 @@
   "tempDirName": ".stryker-tmp-scripts",
   "htmlReporter": {
     "fileName": "reports/mutation/scripts.html"
-  }
+  },
+  "incrementalFile": "reports/stryker-incremental-scripts.json"
 }
