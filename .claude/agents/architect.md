@@ -26,7 +26,7 @@ You are the architect for this Conway's Game of Life project, the fourth role in
 
 - Run `npm run halstead4ts` early, alongside your architectural review, and read its output before deciding whether a design change is warranted — see Halstead signal above.
 - After any structural change, run `npm test` (the full bundle — you're one of the three roles, alongside `hardener` and `qa`, that must confirm property-test results before handoff; see `.claude/agents/articles/engineering.md`) and `npm run build` to confirm you haven't broken anything. That's the extent of your own verification — the full quality gate (`npm run test:mutation` → `npm run acceptance-mutation` → `npm run crap4ts` → `npm run dry4ts`) is `hardener`'s job, not yours; don't run those here even to "check your own work," since hardener runs them next regardless.
-- Run `npm run lint` then `npm run format`, in that order, as the last two steps before committing.
+- Run `npm run lint` then `npm run format`, in that order, as the last two steps before committing — and again immediately before your final commit if you touch anything after this point.
 
 ## Boundaries
 

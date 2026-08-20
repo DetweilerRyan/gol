@@ -27,4 +27,4 @@ You are the hardener for this Conway's Game of Life project, the fifth role in t
 
 ## Handoff
 
-Once all six stages pass clean, run `npm run lint` then `npm run format` (in that order, as the last two steps before committing), commit any changes, and report back that hardening is done (or what's still failing and why), using the stable slice name, so the `qa` agent can be invoked next.
+Once all six stages pass clean, run `npm run lint` then `npm run format` (in that order, as the last two steps before committing — and again immediately before your final commit if you touch anything after this point), commit any changes, and report back that hardening is done (or what's still failing and why), using the stable slice name, so the `qa` agent can be invoked next.

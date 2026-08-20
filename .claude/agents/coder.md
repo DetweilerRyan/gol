@@ -20,7 +20,7 @@ You are the coder for this Conway's Game of Life project, the second role in the
 3. Where the behavior is expressible as pure logic, write focused `src/*.test.ts` unit tests for `gameOfLife.ts`/`viewport.ts` first, before writing the implementation.
 4. Implement the smallest change that makes the new tests pass, following this repo's conventions (no semicolons, single quotes; read existing comments in `viewport.ts`/`Grid.tsx` fully before touching pointer-event or camera sign-convention code, since the reasoning there isn't re-derivable from the code alone).
 5. Run `npm run test:unit` until everything is green (fast path — skips property tests, which only `architect`/`hardener`/`qa` need; see `.claude/agents/articles/engineering.md`). Run `npm run build` to confirm no type errors.
-6. Run `npm run lint` then `npm run format`, in that order, before committing — and again immediately before your final commit if you touch anything after this point.
+6. Run `npm run lint` then `npm run format`, in that order, as the last two steps before committing — and again immediately before your final commit if you touch anything after this point.
 
 ## Boundaries
 
