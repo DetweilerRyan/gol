@@ -10,8 +10,7 @@ import {
   checkNoDuplicateIds,
   checkSeverityValid,
   checkStaleOptOuts,
-  decide,
-  type RawFile,
+  type GlobHasMatch,
 } from './checks.ts'
 import type { FixtureFile } from './fixture-file.ts'
 import type { RuleFile } from './rule-file.ts'
@@ -226,6 +225,15 @@ describe('checkFixtureIdMatchesFilename', () => {
     const failures = checkFixtureIdMatchesFilename([fixture({ filenameStem: 'no-foo-test', id: 'no-foo' })])
     expect(failures).toEqual([])
   })
+
+  it('anchors the -test suffix strip to the end of the filename, not the first occurrence anywhere in it', () => {
+    // 'no-test-thing' does not *end* in '-test', so the anchored regex leaves
+    // it untouched and expectedId stays 'no-test-thing'. An unanchored strip
+    // would instead delete the first '-test' it finds mid-string, producing
+    // expectedId 'no-thing' and reporting a spurious mismatch here.
+    const failures = checkFixtureIdMatchesFilename([fixture({ filenameStem: 'no-test-thing', id: 'no-test-thing' })])
+    expect(failures).toEqual([])
+  })
 })
 
 describe('checkAnyRulesFound', () => {
@@ -233,6 +241,7 @@ describe('checkAnyRulesFound', () => {
     const failures = checkAnyRulesFound([])
     expect(failures).toHaveLength(1)
     expect(failures[0].check).toBe('rules-found')
+    expect(failures[0].file).toBe('(none)')
   })
 
   it('passes when at least one rule was found', () => {
@@ -251,23 +260,51 @@ describe('checkStaleOptOuts', () => {
     expect(failures[0].message).toContain('not built yet')
   })
 
-  it('does not report a marker while at least one glob still fails to resolve', () => {
-    const failures = checkStaleOptOuts(
-      [rule({ files: ['src/App.tsx'], unresolvedFilesMarker: { present: true, reason: 'not built yet' } })],
-      () => false,
-    )
-    expect(failures).toEqual([])
-  })
-
-  it('does not report a rule with no marker at all, even if every glob resolves', () => {
-    expect(checkStaleOptOuts([rule({ files: ['src/App.tsx'] })], () => true)).toEqual([])
-  })
-
-  it('does not report a marker on a rule with no files: glob to have excused in the first place', () => {
-    const failures = checkStaleOptOuts(
-      [rule({ files: undefined, unresolvedFilesMarker: { present: true, reason: 'not built yet' } })],
-      () => true,
-    )
+  // One table for every negative-space combination -- each row's `files`/
+  // `marker`/`globHasMatch` pins down one way the guard must stay silent, and
+  // two rows exist specifically to distinguish real mutants: 'no reason' kills
+  // a `||` -> `&&` mutant (with `||`, a present-but-reason-less marker already
+  // short-circuits to "not stale" without even looking at files:), and 'only
+  // some resolve' kills a `.every` -> `.some` mutant (one resolving glob
+  // alongside one unresolved one must not count as "every glob resolves").
+  it.each<{
+    scenario: string
+    files: string[] | undefined
+    marker: RuleFile['unresolvedFilesMarker']
+    globHasMatch: GlobHasMatch
+  }>([
+    {
+      scenario: 'at least one glob still fails to resolve',
+      files: ['src/App.tsx'],
+      marker: { present: true, reason: 'not built yet' },
+      globHasMatch: () => false,
+    },
+    {
+      scenario: 'there is no marker at all, even though every glob resolves',
+      files: ['src/App.tsx'],
+      marker: { present: false, reason: null },
+      globHasMatch: () => true,
+    },
+    {
+      scenario: 'the rule has no files: glob to have excused in the first place',
+      files: undefined,
+      marker: { present: true, reason: 'not built yet' },
+      globHasMatch: () => true,
+    },
+    {
+      scenario: 'the marker is present but reason-less, even with a resolving glob',
+      files: ['src/App.tsx'],
+      marker: { present: true, reason: null },
+      globHasMatch: () => true,
+    },
+    {
+      scenario: 'only some of its files: globs resolve, not all',
+      files: ['src/resolved.ts', 'src/unresolved.ts'],
+      marker: { present: true, reason: 'not built yet' },
+      globHasMatch: (pattern) => pattern === 'src/resolved.ts',
+    },
+  ])('does not report a marker when $scenario', ({ files, marker, globHasMatch }) => {
+    const failures = checkStaleOptOuts([rule({ files, unresolvedFilesMarker: marker })], globHasMatch)
     expect(failures).toEqual([])
   })
 })
@@ -297,45 +334,5 @@ describe('checkAllRules', () => {
   it('reports checkAnyRulesFound when the rule list is empty', () => {
     const checkNames = checkAllRules([], [], () => true).map((f) => f.check)
     expect(checkNames).toEqual(['rules-found'])
-  })
-})
-
-describe('decide', () => {
-  const GOOD_RULE = 'id: no-foo\nseverity: warning\nrule:\n  pattern: foo\n'
-  const GOOD_FIXTURE = 'id: no-foo\nvalid:\n  - bar\ninvalid:\n  - foo\n'
-
-  function ruleFile(overrides: Partial<RawFile> = {}): RawFile {
-    return { path: 'rules/no-foo.yml', text: GOOD_RULE, ...overrides }
-  }
-
-  function fixtureFile(overrides: Partial<RawFile> = {}): RawFile {
-    return { path: 'rule-tests/no-foo-test.yml', text: GOOD_FIXTURE, ...overrides }
-  }
-
-  it('exits 0 with a summary line for a fully well-formed rule and fixture', () => {
-    const result = decide([ruleFile()], [fixtureFile()], () => true)
-    expect(result.exitCode).toBe(0)
-    expect(result.lines).toEqual(['ast-grep rule check -- 1 rules, 1 fixtures, no failures.'])
-  })
-
-  it('exits 1 and reports each failure on its own two lines', () => {
-    const result = decide([], [], () => true)
-    expect(result.exitCode).toBe(1)
-    expect(result.lines[0]).toContain('1 failure(s)')
-    expect(result.lines.some((line) => line.includes('[rules-found]'))).toBe(true)
-  })
-
-  it('catches a multi-document rule file and reports a named parse failure instead of throwing', () => {
-    const brokenRuleFile = ruleFile({ text: `${GOOD_RULE}---\nid: no-bar\nseverity: warning\n` })
-    const result = decide([brokenRuleFile], [fixtureFile()], () => true)
-    expect(result.exitCode).toBe(1)
-    expect(result.lines.some((line) => line.includes('[parse] rules/no-foo.yml'))).toBe(true)
-  })
-
-  it('catches a multi-document fixture file and reports a named parse failure instead of throwing', () => {
-    const brokenFixtureFile = fixtureFile({ text: `${GOOD_FIXTURE}---\nid: no-bar\n` })
-    const result = decide([ruleFile()], [brokenFixtureFile], () => true)
-    expect(result.exitCode).toBe(1)
-    expect(result.lines.some((line) => line.includes('[parse] rule-tests/no-foo-test.yml'))).toBe(true)
   })
 })

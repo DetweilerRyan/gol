@@ -9,20 +9,27 @@
 // glob fails *safe* (the rule merely over-applies, which shows up as noisy
 // findings). That asymmetry is why check 6 below covers `files:` only.
 //
-// decide() -- the pure rules/fixtures/failures -> {exitCode, lines} decision,
-// including parsing raw file text and catching parse errors -- lives at the
-// bottom of this file so run.ts's I/O shell (recursive directory reads,
-// console.log, process.exit) has a single pure function to call into and a
-// test can pin its exit code without touching the filesystem.
+// This file is the nine checks and checkAllRules, which just runs all of
+// them -- the surrounding orchestration (parsing raw file text, catching
+// parse errors, and formatting the exit code/output lines) lives in
+// decide.ts instead, which imports checkAllRules from here. See decide.ts's
+// module comment for why that's a separate file rather than living here too.
 
-import { parseFixtureFile, type FixtureFile } from './fixture-file.ts'
-import { parseRuleFile, type RuleFile } from './rule-file.ts'
+import type { FixtureFile } from './fixture-file.ts'
+import type { RuleFile } from './rule-file.ts'
 
 export interface Failure {
   check: string
   file: string
   message: string
 }
+
+// Shared across checks 6 and 9 (and decide()'s glob-driven checkAllRules
+// call): whether a `files:` glob pattern currently resolves to a real file.
+// Named so its six call sites don't each spell out the same inline function
+// type -- see rule-file.ts's UnresolvedFilesMarker for the marker it's paired
+// with.
+export type GlobHasMatch = (pattern: string) => boolean
 
 // Confirmed directly against ast-grep 0.45.1: `severity: bogus` fails to
 // parse with exactly this list. A typo'd *key* (`sevrity:`) is a different
@@ -145,7 +152,7 @@ function unresolvedFilesMarkerFailure(rule: RuleFile): Failure {
 
 // The glob half of check 6, kept separate from the marker handling below it
 // -- it has no opinion on the marker, only on `files:` globs.
-function checkGlobsResolve(rule: RuleFile, globHasMatch: (pattern: string) => boolean): Failure[] {
+function checkGlobsResolve(rule: RuleFile, globHasMatch: GlobHasMatch): Failure[] {
   const failures: Failure[] = []
   for (const pattern of rule.files ?? []) {
     if (!globHasMatch(pattern)) {
@@ -164,7 +171,7 @@ function checkGlobsResolve(rule: RuleFile, globHasMatch: (pattern: string) => bo
 // suppresses both the no-reason failure and the glob check below it -- any
 // other combination (no marker, or a marker with no reason) runs the glob
 // check as normal.
-function checkRuleFilesGlobsResolve(rule: RuleFile, globHasMatch: (pattern: string) => boolean): Failure[] {
+function checkRuleFilesGlobsResolve(rule: RuleFile, globHasMatch: GlobHasMatch): Failure[] {
   const marker = rule.unresolvedFilesMarker
   const suppressed = marker.present && Boolean(marker.reason)
   if (suppressed) return []
@@ -178,7 +185,7 @@ function checkRuleFilesGlobsResolve(rule: RuleFile, globHasMatch: (pattern: stri
 // A marker present without a reason does not suppress the check -- it's
 // reported as its own failure instead, since the opt-out requires the reason
 // to actually be written down.
-export function checkFilesGlobsResolve(rules: RuleFile[], globHasMatch: (pattern: string) => boolean): Failure[] {
+export function checkFilesGlobsResolve(rules: RuleFile[], globHasMatch: GlobHasMatch): Failure[] {
   return rules.flatMap((rule) => checkRuleFilesGlobsResolve(rule, globHasMatch))
 }
 
@@ -221,6 +228,18 @@ export function checkAnyRulesFound(rules: RuleFile[]): Failure[] {
   ]
 }
 
+// One rule's contribution to check 9, kept separate from the loop in
+// checkStaleOptOuts below -- mirrors the check-6 split above (a guard
+// function the loop just calls) rather than inlining every early-return into
+// one long function body.
+function isStaleOptOut(rule: RuleFile, globHasMatch: GlobHasMatch): boolean {
+  const marker = rule.unresolvedFilesMarker
+  if (!marker.present || !marker.reason) return false
+  const files = rule.files ?? []
+  if (files.length === 0) return false
+  return files.every((pattern) => globHasMatch(pattern))
+}
+
 // Check 9: an `allow-unresolved-files` marker whose reason no longer applies.
 // The marker is meant to be temporary (see check 6's reason requirement) --
 // once every `files:` glob it was excusing actually resolves, the marker
@@ -228,28 +247,21 @@ export function checkAnyRulesFound(rules: RuleFile[]): Failure[] {
 // this program exists to catch. A rule with no `files:` glob at all isn't
 // "stale" in this sense (there was never anything to excuse), so that case is
 // left to check 6 rather than reported here.
-export function checkStaleOptOuts(rules: RuleFile[], globHasMatch: (pattern: string) => boolean): Failure[] {
+export function checkStaleOptOuts(rules: RuleFile[], globHasMatch: GlobHasMatch): Failure[] {
   const failures: Failure[] = []
   for (const rule of rules) {
-    const marker = rule.unresolvedFilesMarker
-    if (!marker.present || !marker.reason) continue
-    const files = rule.files ?? []
-    if (files.length === 0) continue
-    if (!files.every((pattern) => globHasMatch(pattern))) continue
+    if (!isStaleOptOut(rule, globHasMatch)) continue
+    const reason = rule.unresolvedFilesMarker.reason
     failures.push({
       check: 'stale-allow-unresolved-files',
       file: rule.path,
-      message: `every \`files:\` glob now resolves -- the allow-unresolved-files marker (reason: "${marker.reason}") is stale and should be deleted`,
+      message: `every \`files:\` glob now resolves -- the allow-unresolved-files marker (reason: "${reason}") is stale and should be deleted`,
     })
   }
   return failures
 }
 
-export function checkAllRules(
-  rules: RuleFile[],
-  fixtures: FixtureFile[],
-  globHasMatch: (pattern: string) => boolean,
-): Failure[] {
+export function checkAllRules(rules: RuleFile[], fixtures: FixtureFile[], globHasMatch: GlobHasMatch): Failure[] {
   return [
     ...checkAnyRulesFound(rules),
     ...checkFixtureExists(rules, fixtures),
@@ -261,86 +273,4 @@ export function checkAllRules(
     ...checkFixtureIdMatchesFilename(fixtures),
     ...checkStaleOptOuts(rules, globHasMatch),
   ]
-}
-
-// A rule or fixture file's path plus its unparsed text -- what run.ts has
-// after reading a file off disk, before either parser has looked at it.
-export interface RawFile {
-  path: string
-  text: string
-}
-
-export interface DecideResult {
-  exitCode: number
-  lines: string[]
-}
-
-// ast-grep 0.45.1 accepts multi-document (`---`-separated) rule and fixture
-// files, but `yaml`'s parse() throws `Source contains multiple documents` on
-// them -- and since parseRuleFile/parseFixtureFile only receive text, an
-// uncaught throw here would surface as a stack trace with no filename. This
-// wraps a single file's parse so that failure becomes an ordinary Failure
-// record instead, naming the file it came from.
-function safeParse<T>(
-  file: RawFile,
-  parse: (path: string, text: string) => T,
-): { parsed: T; failure?: undefined } | { parsed?: undefined; failure: Failure } {
-  try {
-    return { parsed: parse(file.path, file.text) }
-  } catch (error) {
-    return {
-      failure: {
-        check: 'parse',
-        file: file.path,
-        message: error instanceof Error ? error.message : String(error),
-      },
-    }
-  }
-}
-
-function partitionParsed<T>(
-  files: RawFile[],
-  parse: (path: string, text: string) => T,
-): { parsed: T[]; failures: Failure[] } {
-  const parsed: T[] = []
-  const failures: Failure[] = []
-  for (const file of files) {
-    const result = safeParse(file, parse)
-    if (result.failure) failures.push(result.failure)
-    else parsed.push(result.parsed)
-  }
-  return { parsed, failures }
-}
-
-function formatLines(rules: RuleFile[], fixtures: FixtureFile[], failures: Failure[]): string[] {
-  if (failures.length === 0) {
-    return [`ast-grep rule check -- ${rules.length} rules, ${fixtures.length} fixtures, no failures.`]
-  }
-  return [
-    `ast-grep rule check -- ${failures.length} failure(s):`,
-    '',
-    ...failures.flatMap((failure) => [`[${failure.check}] ${failure.file}`, `  ${failure.message}`]),
-  ]
-}
-
-// The whole program's decision, as one pure function: parse every rule/
-// fixture file (catching parse errors rather than throwing), run every check
-// over what parsed, and turn the result into an exit code plus the exact
-// lines to print. run.ts's job shrinks to gathering RawFile[] off disk
-// (recursively, per sgconfig.yml) and handing them here -- which is what lets
-// a test pin the exit code without touching the filesystem.
-export function decide(
-  ruleFiles: RawFile[],
-  fixtureFiles: RawFile[],
-  globHasMatch: (pattern: string) => boolean,
-): DecideResult {
-  const { parsed: rules, failures: ruleParseFailures } = partitionParsed(ruleFiles, parseRuleFile)
-  const { parsed: fixtures, failures: fixtureParseFailures } = partitionParsed(fixtureFiles, parseFixtureFile)
-
-  const failures = [...ruleParseFailures, ...fixtureParseFailures, ...checkAllRules(rules, fixtures, globHasMatch)]
-
-  return {
-    exitCode: failures.length === 0 ? 0 : 1,
-    lines: formatLines(rules, fixtures, failures),
-  }
 }

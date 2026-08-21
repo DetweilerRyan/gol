@@ -19,19 +19,19 @@
 // a hardcoded top-level-only pair would fail open on both a nested rule and a
 // second `ruleDirs` entry, silently.
 //
-// Everything that can be pure lives in checks.ts's decide(): parsing (with
-// parse-error handling), every check, and formatting the exit code/output
-// lines. What's left here is genuinely I/O -- recursive directory reads,
-// sgconfig.yml parsing, console.log, process.exit -- so a test can pin
-// decide()'s exit code without touching the filesystem, and run.test.ts can
-// still exercise the recursive/sgconfig-driven parts directly against a real
-// temp directory.
+// Everything that can be pure lives in decide.ts's decide(): parsing (with
+// parse-error handling), running every check.ts check, and formatting the
+// exit code/output lines. What's left here is genuinely I/O -- recursive
+// directory reads, sgconfig.yml parsing, console.log, process.exit -- so a
+// test can pin decide()'s exit code without touching the filesystem, and
+// run.test.ts can still exercise the recursive/sgconfig-driven parts directly
+// against a real temp directory.
 
 import { globSync, readdirSync, readFileSync } from 'node:fs'
 import path from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { parse as parseYaml } from 'yaml'
-import { decide, type DecideResult, type RawFile } from './checks.ts'
+import { decide, type DecideResult, type RawFile } from './decide.ts'
 
 const SCRIPT_DIR = path.dirname(fileURLToPath(import.meta.url))
 const REPO_ROOT = path.resolve(SCRIPT_DIR, '../..')
@@ -86,7 +86,7 @@ export function readYamlFilesRecursive(absoluteDir: string, relativeDir: string)
   return files
 }
 
-// Gathers the real file set off disk and hands it to checks.ts's pure
+// Gathers the real file set off disk and hands it to decide.ts's pure
 // decide() -- the one function in this module a test can call without
 // mocking process.exit, given a repoRoot pointing at a real (or temporary)
 // directory tree.

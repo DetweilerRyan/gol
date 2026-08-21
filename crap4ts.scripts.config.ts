@@ -31,6 +31,7 @@ export default defineConfig({
     'scripts/gherkin-dry-checker/step-parser.ts',
     'scripts/halstead4ts/report.ts',
     'scripts/ast-grep-rule-check/checks.ts',
+    'scripts/ast-grep-rule-check/decide.ts',
     'scripts/ast-grep-rule-check/rule-file.ts',
     'scripts/ast-grep-rule-check/fixture-file.ts',
   ],
