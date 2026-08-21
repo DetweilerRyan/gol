@@ -1,6 +1,9 @@
 # Structural lint rules for this repo's architectural invariants -- the ones that
 # were previously only prose in CLAUDE.md and .claude/agents/articles/engineering.md.
-# Report-only: every rule is `warning`, so `npm run ast-grep` always exits 0.
+# Report-only for findings: every rule is `warning`, so a rule matching your code
+# does not move the exit code -- read the output, not `$?`. The exit code answers a
+# different question: 8 means a rule file failed to parse, 1 means an `error`-severity
+# rule matched. Verified against ast-grep 0.45.1.
 # Promote a rule to a gate by changing its severity to `error`.
 ruleDirs:
   - rules
