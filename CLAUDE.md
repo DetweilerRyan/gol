@@ -186,6 +186,9 @@ If you use the native `EnterWorktree({ name })` or `Agent({ isolation: 'worktree
    After the fast-forward in step 4 the slice's tip _is_ `main`'s tip, so this marks both. Tag after step 5 rather than before it: the tag says the slice is done, and it isn't done until the gate on `main` passes. The `slice/` prefix is load-bearing — a bare tag sharing the slice branch's name makes every `git log <name>` ambiguous until the branch is deleted in step 9 — and it makes `git tag -l 'slice/*'` a list of every completed slice. Annotated rather than lightweight, so the tag carries its own date and message.
 
 7. **Push `main` and the tag:** `git push --follow-tags` (plain `git push` leaves the tag behind).
+
+   This repo sets `push.followTags = true` locally, so a plain `git push` already carries the tag — but the flag stays written out here because `.git/config` isn't tracked, so a fresh clone or a CI checkout won't have the setting. Note the setting only follows **annotated** tags reachable from what you're pushing; a lightweight tag is silently left behind, which is one more reason step 6 specifies `git tag -a`.
+
 8. **Re-record the acceptance-mutation baseline** in `.claude/agents/articles/engineering.md` if it moved.
 9. **Retire the worktree:** `git worktree remove <path> && git branch -d <slice> && git worktree prune`, or `ExitWorktree({ action: 'remove' })`. The tag is what preserves the slice's identity once the branch is gone.
 
