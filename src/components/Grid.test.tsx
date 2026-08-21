@@ -105,27 +105,23 @@ describe('DOM structure', () => {
 })
 
 describe('cell activation dispatch (place vs toggle)', () => {
-  it('a plain activation toggles when no pattern is armed', () => {
-    const onToggleCell = vi.fn()
-    const onStampPattern = vi.fn()
-    renderGrid({ onToggleCell, onStampPattern, isPatternArmed: false })
+  it.each([
+    { isPatternArmed: false, expectCalled: 'onToggleCell', expectNotCalled: 'onStampPattern' },
+    { isPatternArmed: true, expectCalled: 'onStampPattern', expectNotCalled: 'onToggleCell' },
+  ] as const)(
+    'a plain activation calls $expectCalled, not $expectNotCalled, when isPatternArmed is $isPatternArmed',
+    ({ isPatternArmed, expectCalled, expectNotCalled }) => {
+      const onToggleCell = vi.fn()
+      const onStampPattern = vi.fn()
+      const handlers = { onToggleCell, onStampPattern }
+      renderGrid({ ...handlers, isPatternArmed })
 
-    fireEvent.click(screen.getByRole('button', { name: 'Cell 0, 0' }))
+      fireEvent.click(screen.getByRole('button', { name: 'Cell 0, 0' }))
 
-    expect(onToggleCell).toHaveBeenCalledWith(0, 0)
-    expect(onStampPattern).not.toHaveBeenCalled()
-  })
-
-  it('a plain activation stamps when a pattern is armed', () => {
-    const onToggleCell = vi.fn()
-    const onStampPattern = vi.fn()
-    renderGrid({ onToggleCell, onStampPattern, isPatternArmed: true })
-
-    fireEvent.click(screen.getByRole('button', { name: 'Cell 0, 0' }))
-
-    expect(onStampPattern).toHaveBeenCalledWith(0, 0)
-    expect(onToggleCell).not.toHaveBeenCalled()
-  })
+      expect(handlers[expectCalled]).toHaveBeenCalledWith(0, 0)
+      expect(handlers[expectNotCalled]).not.toHaveBeenCalled()
+    },
+  )
 })
 
 describe('pointer surface wiring', () => {
