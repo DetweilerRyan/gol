@@ -172,14 +172,19 @@ function sumTaskDurationAndWallClock(samples: RawScenarioSample[]): RatioSums {
   return { taskDurationSum, wallClockSum, sawTaskDuration: taskDurations.length > 0 }
 }
 
-// A sanity signal, not a conversion: CDP's Performance.getMetrics reports
-// TaskDuration as a float whose unit this codebase is not asserting from
-// memory. Computed from raw sums across every rep of every sample (including
-// rep 0 -- this is about unit-correctness, not about the discard policy the
-// rest of this module applies to warm-ups) so it's one headline ratio in the
-// run header; if the ratio ever reads ~1000x off from 1, that's the sign a
-// unit assumption was wrong, not something for this function to "fix".
-// `undefined` (never NaN) when no rep recorded a TaskDuration key at all.
+// A sanity signal, not a conversion: this function is itself unit-agnostic,
+// dividing whatever TaskDuration/wallClockMs values it's handed. In the real
+// pipeline (format.ts's buildLatestReport) that input has already had
+// units.ts's CDP-seconds-to-ms conversion applied, so the ratio reads close
+// to 1.0 -- see units.ts's header comment for the empirical values (~0.0009
+// before that conversion existed, ~0.93 after). Computed from raw sums
+// across every rep of every sample (including rep 0 -- this is about
+// unit-correctness, not about the discard policy the rest of this module
+// applies to warm-ups) so it's one headline ratio in the run header; if the
+// ratio ever reads ~1000x off from 1 again, that's the sign a unit
+// assumption broke somewhere upstream, not something for this function to
+// "fix". `undefined` (never NaN) when no rep recorded a TaskDuration key at
+// all.
 export function taskDurationToWallClockRatio(samples: RawScenarioSample[]): number | undefined {
   const { taskDurationSum, wallClockSum, sawTaskDuration } = sumTaskDurationAndWallClock(samples)
   if (!sawTaskDuration || wallClockSum === 0) return undefined

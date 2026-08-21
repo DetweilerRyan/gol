@@ -157,13 +157,14 @@ test('zoom-toolbar-clamp', async ({ page }, testInfo) => {
     testInfo,
     'zoom-toolbar-clamp',
     async () => {
-      // Unmeasured setup, run inside the gesture callback (rather than once
-      // before the rep loop) so every rep starts from the same 100% state --
-      // measureReps's before/after CDP snapshot brackets this whole
-      // callback, so the reset click's own cost is folded into each rep the
-      // same way the sweep itself is. Renders back to ~3.4k buttons before
-      // the sweep begins; see pan.perf.spec.ts's #1 for that count measured
-      // in isolation.
+      // Reset-to-100% runs inside the gesture callback (rather than once
+      // before the rep loop) so every rep starts from the same state -- but
+      // that means it is *not* excluded from measurement: measureReps's
+      // before/after CDP snapshot brackets this whole callback, so each
+      // rep's numbers include one reset transition's cost folded in
+      // alongside the sweep itself. Renders back to ~3.4k buttons before the
+      // sweep begins; see pan.perf.spec.ts's #1 for that count measured in
+      // isolation, unmixed with a reset.
       await resetButton.click()
       await expect(page.getByText('100%')).toBeVisible()
 
