@@ -22,3 +22,9 @@ rule:
   any:
     - pattern: document.$$$REST
     - pattern: window.$$$REST
+    # `location` is reachable as a bare global, so it slips past the two above --
+    # `location.search` never mentions `window`. Called out because reading the URL is
+    # exactly the shortcut a domain module is tempted into: src/liveCellSeed.ts takes the
+    # query string as a plain argument precisely so it stays a pure function, and this is
+    # what keeps a later "simplification" from reaching for the global instead.
+    - pattern: location.$$$REST

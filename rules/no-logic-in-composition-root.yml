@@ -14,6 +14,16 @@ note: >-
 # on that specific mistake, so the rename shows up as a gate failure rather than as silence; the
 # reminder stays because the gate tells you the path is dead, not what the new path should be.
 #
+# src/main.tsx is deliberately NOT in scope either, and for a reason the App exemption below
+# does not cover. main.tsx is the bootstrap entry, not a composition root: it is the only file
+# that may read `import.meta.env`, because a mode check has to be *at* the entry for Rolldown to
+# constant-fold it and tree-shake the dead branch out of the production bundle. Moving that
+# ternary anywhere this rule could reach would either ship perf-only code to users or push
+# environment reads into a module that must stay pure (which rules/no-build-env-in-domain.yml
+# now forbids outright). The invariant that actually matters for main.tsx is "reads the
+# environment, calls one already-tested function, passes the result down as a plain argument" --
+# and that is guarded by no-build-env-in-domain from the other side, not by this rule.
+#
 # src/App.tsx is deliberately NOT in scope. It looks like a composition root but isn't one: it
 # owns the `generation` counter, so `setGeneration((gen) => gen + 1)` is genuine state ownership
 # and would flag here. A report-only rule whose baseline is non-clean trains people to ignore its

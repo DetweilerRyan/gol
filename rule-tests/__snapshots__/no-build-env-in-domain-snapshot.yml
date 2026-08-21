@@ -1,0 +1,26 @@
+id: no-build-env-in-domain
+snapshots:
+  const env = import.meta.env:
+    labels:
+    - source: import.meta.env
+      style: primary
+      start: 12
+      end: 27
+  const mode = import.meta.env.MODE:
+    labels:
+    - source: import.meta.env
+      style: primary
+      start: 13
+      end: 28
+  const port = process.env.GOL_DEV_PORT:
+    labels:
+    - source: process.env
+      style: primary
+      start: 13
+      end: 24
+  if (import.meta.env.DEV) seed():
+    labels:
+    - source: import.meta.env
+      style: primary
+      start: 4
+      end: 19

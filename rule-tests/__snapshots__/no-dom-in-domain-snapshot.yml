@@ -6,6 +6,12 @@ snapshots:
       style: primary
       start: 11
       end: 34
+  const q = location.search:
+    labels:
+    - source: location.search
+      style: primary
+      start: 10
+      end: 25
   const w = window.innerWidth:
     labels:
     - source: window.innerWidth

@@ -1,0 +1,33 @@
+id: no-build-env-in-domain
+language: TypeScript
+severity: warning
+message: Framework-free domain module must not read the build or process environment.
+note: >-
+  A domain module that branches on import.meta.env stops being a pure function of its arguments:
+  the unit and property tests can only ever exercise whichever mode vitest happens to run under, so
+  the other branch is untestable and unmutatable while every gate still reports green. Environment
+  is the entry point's business -- src/main.tsx reads import.meta.env.MODE and passes the *result*
+  down as an ordinary argument. Keep the decision there and the computation here.
+# Domain modules are the framework-free .ts files at src/ root. Matching by glob rather
+# than by name means a NEW domain module is covered automatically -- a hand-listed set
+# would silently skip it, and a rule that matches nothing looks exactly like clean code.
+files:
+  - 'src/*.ts'
+# NB: ast-grep's `*` crosses `/`, so src/*.ts also reaches src/hooks/ etc. -- the
+# subdirectories must be excluded explicitly. Hooks legitimately import React and
+# touch the DOM; that's their job as adapters.
+ignores:
+  - 'src/hooks/**'
+  - 'src/components/**'
+  - 'src/catalyst/**'
+  - 'src/test-support/**'
+  - 'src/*.test.ts'
+  - 'src/test-setup.ts'
+rule:
+  any:
+    # Bare `import.meta.env` rather than `import.meta.env.$$$REST`, so a whole-object
+    # read (`const env = import.meta.env`) is caught too -- the property-access form
+    # is a subset of this one. Verified against ast-grep 0.45.1 that this does NOT
+    # match `import.meta.url`, which is a legitimate module-identity read.
+    - pattern: import.meta.env
+    - pattern: process.env

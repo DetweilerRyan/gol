@@ -3,6 +3,7 @@ valid:
   - const size = camera.cellSize * 2
   - const rect = element.getBoundingClientRect()
 invalid:
+  - const q = location.search
   - const el = document.getElementById('grid')
   - const w = window.innerWidth
   - document.addEventListener('keydown', onKey)

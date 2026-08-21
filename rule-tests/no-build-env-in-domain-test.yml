@@ -1,0 +1,10 @@
+id: no-build-env-in-domain
+valid:
+  - const url = import.meta.url
+  - const mode = options.mode
+  - const size = camera.cellSize * 2
+invalid:
+  - const mode = import.meta.env.MODE
+  - const env = import.meta.env
+  - if (import.meta.env.DEV) seed()
+  - const port = process.env.GOL_DEV_PORT
