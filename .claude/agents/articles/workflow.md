@@ -1,6 +1,6 @@
 # Article: Workflow Rules
 
-Adapted from unclebob/swarm-forge's `main`-branch constitution (`swarmforge/constitution/articles/workflow.prompt`) for this repo, which has no multi-worktree/tmux orchestration — a single Claude Code session invokes each role in turn via the `Agent` tool, per `CLAUDE.md`'s Subagent pipeline section.
+Adapted from unclebob/swarm-forge's `main`-branch constitution (`swarmforge/constitution/articles/workflow.prompt`) for this repo, which has no tmux orchestration — a single Claude Code session invokes each role in turn via the `Agent` tool, per `CLAUDE.md`'s Subagent pipeline section. It does have worktrees, but along a different axis than the source article's: one per **slice**, not one per role (see below).
 
 ## Lint and format
 
@@ -12,13 +12,15 @@ Adapted from unclebob/swarm-forge's `main`-branch constitution (`swarmforge/cons
 
 ## Commit messages
 
-- Include your role in every commit message you make, in this form: `By <role>.`
+- Prefix the subject with the slice name, and name your role in the body, in this form:
 
   ```text
-  Implement pattern-library placement logic
+  pattern-library-placement: implement placement logic
 
   By coder.
   ```
+
+- Both halves are required. `By <role>.` alone no longer identifies a commit: five of the six roles run in every slice, and several slices may be in flight at once, so without the prefix a `git log` on `main` interleaves two slices' role sequences with nothing to tell them apart.
 
 ## Announcements
 
@@ -31,7 +33,15 @@ Adapted from unclebob/swarm-forge's `main`-branch constitution (`swarmforge/cons
 ## Failure conditions
 
 - If something you expect to exist is missing (an approved `.feature` file, a prior role's commit, a config file a workflow step depends on), stop and report the discrepancy instead of silently working around it or guessing what should be there.
+- **If a whole-repo gate fails on a file outside your slice's changed-files manifest, do not fix it.** Your worktree is isolated from every other slice, so a failure there is either a pre-existing break on `main` or something a rebase just brought in — both belong to the orchestrating session, not to you. Report the failing gate, the failing file, and the fact that it sits outside your manifest, then stop. Fixing it widens your diff across a slice boundary and turns a clean fast-forward into a conflicted merge.
+
+## Worktrees and branches
+
+- **One slice, one git worktree, one branch, one Claude Code session.** The branch is named for the slice — the same stable name the specifier invents, per `handoffs.md`. Every role in a cycle runs in that slice's worktree and commits to that slice's branch.
+- **Never commit to `main`.** `main` is written to only by the merge protocol in `CLAUDE.md`'s "Running slices concurrently" section, which the orchestrating session drives. If you find yourself on `main`, or in a directory that isn't your slice's worktree, stop and report it rather than committing.
+- The worktree may live outside the repo (`../gol-claude-worktrees/<slice>`) or inside it (`.claude/worktrees/<slice>`, where Claude Code's own `EnterWorktree` puts it). Both are supported and both are invisible to git, Prettier, oxlint, and vitest. Each worktree has its own `node_modules` (run `npm ci` once when it's created) and its own dev-server port, derived in `dev-port.ts`.
+- **Never `git checkout`, `rebase`, `merge`, or `push`.** Those are the orchestrating session's, for the same reason: you can only see your own slice.
 
 ## Dropped from the source article (not applicable here)
 
-- Worktree discovery/discipline, `.worktrees/<role>` directories, and the prohibition on running `./swarm` from an agent worktree — this repo has no per-role worktrees; every role operates in the same single checkout, sequenced by the orchestrating session.
+- `.worktrees/<role>` directories and the prohibition on running `./swarm` from an agent worktree. This repo's worktrees are per-slice, not per-role: all six roles run in the same worktree, one after another, and it's the slices that run in parallel.
