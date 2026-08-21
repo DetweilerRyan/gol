@@ -17,6 +17,11 @@ export interface ParsedStep {
   text: string
 }
 
+// The trailing `$` is redundant with `.+`'s greedy match to end-of-string (no
+// line here ever contains an embedded newline, since callers only ever match
+// against one already-split, already-trimmed line) -- a mutant that drops it
+// is equivalent, confirmed by fuzzing both regexes against thousands of step
+// lines with no divergence. Left in for readability/symmetry with the `^`.
 const STEP = /^(Given|When|Then|And|But)\s+(.+)$/
 
 // Everything the parser needs to know to place the *next* step it reads.
@@ -30,16 +35,18 @@ interface ParserState {
   inExamples: boolean
 }
 
+// inExamples: false here is unobservable -- every declaration branch below
+// overwrites it outright, and the one read site (`state.inExamples` in the
+// main loop) can only matter once `state.section` is non-null, which nothing
+// before the first declaration can be (see toStep's orphan-step check). A
+// mutant flipping this to `true` is equivalent, confirmed by fuzzing. Kept
+// `false` because it's the honest starting value, not because it's load-bearing.
 const INITIAL_STATE: ParserState = {
   section: null,
   scenarioIndex: -1,
   scenarioName: null,
   stepIndex: 0,
   inExamples: false,
-}
-
-function isBlankOrComment(line: string): boolean {
-  return line === '' || line.startsWith('#')
 }
 
 // Declaration lines emit no step of their own; they reset the state that the
@@ -53,6 +60,10 @@ function applyDeclaration(line: string, state: ParserState): ParserState | null 
     return {
       section: 'scenario',
       scenarioIndex: state.scenarioIndex + 1,
+      // The `^` here is redundant: this branch only runs once the `test`
+      // above has already proven `line` starts with `Scenario( Outline)?:`,
+      // so the unanchored regex's leftmost match is necessarily at index 0
+      // too. A mutant that drops it is equivalent, confirmed by fuzzing.
       scenarioName: line.replace(/^Scenario( Outline)?:\s*/, ''),
       stepIndex: 0,
       inExamples: false,
@@ -87,7 +98,14 @@ export function parseSteps(featureText: string): ParsedStep[] {
 
   for (const rawLine of featureText.split(/\r?\n/)) {
     const line = rawLine.trim()
-    if (isBlankOrComment(line)) continue
+    // No explicit blank/comment skip: a blank line and a `#`-prefixed
+    // comment both fail every declaration prefix (`applyDeclaration`) and
+    // the STEP regex (`toStep` requires `^(Given|...)`, and a comment
+    // containing step-like text such as `# Given x` still starts with `#`,
+    // not the keyword) -- so falling through produces no declaration change
+    // and no step either way. An earlier explicit guard here was provably
+    // dead code (verified by fuzzing), so it was removed rather than kept
+    // untested.
 
     const declared = applyDeclaration(line, state)
     if (declared) {

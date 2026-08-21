@@ -159,6 +159,38 @@ describe('parseSteps', () => {
     const steps = parseSteps('Feature: F\n  Scenario: S\n    Given   spaced out\n')
     expect(steps[0].text).toBe('spaced out')
   })
+
+  it('recognizes a named Examples:, not just a bare one, so a following step in the same scenario is still ignored', () => {
+    const steps = parseSteps(
+      'Feature: F\n' +
+        '  Scenario Outline: Outlined\n' +
+        '    Given <a>\n' +
+        '    Examples: some cases\n' +
+        '      | a |\n' +
+        '      | 1 |\n' +
+        '    Then a trailing step\n',
+    )
+    expect(steps.map((s) => s.text)).toEqual(['<a>'])
+  })
+
+  it('lets a Feature: line end an Examples table even without a following Scenario/Background', () => {
+    const steps = parseSteps(
+      'Feature: One\n' +
+        '  Scenario Outline: Outlined\n' +
+        '    Given <a>\n' +
+        '    Examples:\n' +
+        '      | a |\n' +
+        '      | 1 |\n' +
+        'Feature: Two\n' +
+        '    Then a step without a new scenario\n',
+    )
+    expect(steps.map((s) => s.text)).toEqual(['<a>', 'a step without a new scenario'])
+  })
+
+  it('does not treat a step keyword as a step unless it starts the line', () => {
+    const steps = parseSteps('Feature: F\n  Scenario: S\n    not a step Given inline text\n')
+    expect(steps).toEqual([])
+  })
 })
 
 describe('extractPlaceholderNames', () => {
