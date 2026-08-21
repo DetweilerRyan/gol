@@ -8,6 +8,7 @@
 import type { RunEnvironment } from './environment.ts'
 import { aggregate, taskDurationToWallClockRatio, type ScenarioStats } from './stats.ts'
 import type { RawScenarioSample } from './raw-sample.ts'
+import { convertSampleMetricsToMs, DURATION_METRIC_KEYS } from './units.ts'
 
 export interface RunHeader {
   environment: RunEnvironment
@@ -15,6 +16,14 @@ export interface RunHeader {
   buildModes: string[]
   taskDurationToWallClockRatio: number | undefined
   sampleCount: number
+  // The metricsDelta keys that units.ts converted CDP-seconds -> ms before
+  // any scenario stat was computed -- every other key in a scenario's
+  // metricsDeltaPerMoveEvent/metricsDeltaPer1000Cells (in latest.json) is a
+  // raw CDP count or byte total, unconverted. Carried in the header (rather
+  // than repeated per scenario) since the set is fixed for a whole run, and
+  // read from units.ts's own list rather than duplicated here, so the two
+  // can't drift apart.
+  metricsDeltaMsKeys: string[]
 }
 
 export interface LatestReport {
@@ -33,6 +42,7 @@ export function buildRunHeader(environment: RunEnvironment, samples: RawScenario
     buildModes: uniqueSorted(samples.map((sample) => sample.buildMode)),
     taskDurationToWallClockRatio: taskDurationToWallClockRatio(samples),
     sampleCount: samples.length,
+    metricsDeltaMsKeys: [...DURATION_METRIC_KEYS].sort(),
   }
 }
 
@@ -40,10 +50,15 @@ function compareScenarios(a: ScenarioStats, b: ScenarioStats): number {
   return a.scenario === b.scenario ? a.project.localeCompare(b.project) : a.scenario.localeCompare(b.scenario)
 }
 
+// The one call site for units.ts's conversion -- every sample stats.ts and
+// buildRunHeader see from here on has already had its CDP-seconds duration
+// keys converted to milliseconds; see units.ts's header comment for why
+// report entry, not perf/ and not stats.ts, is where that has to happen.
 export function buildLatestReport(environment: RunEnvironment, samples: RawScenarioSample[]): LatestReport {
+  const msSamples = samples.map(convertSampleMetricsToMs)
   return {
-    header: buildRunHeader(environment, samples),
-    scenarios: samples.map(aggregate).sort(compareScenarios),
+    header: buildRunHeader(environment, msSamples),
+    scenarios: msSamples.map(aggregate).sort(compareScenarios),
   }
 }
 
@@ -108,11 +123,20 @@ function formatRunHeaderLines(header: RunHeader): string[] {
     `git ${env.gitSha}  |  node ${env.nodeVersion}  |  chromium ${joinOrFallback(header.chromiumVersions)}`,
     `cpu ${env.cpuModel} (${env.cpuCoreCount} cores)  |  build mode ${joinOrFallback(header.buildModes)}`,
     `generated ${env.timestampIso}  |  samples ${header.sampleCount}`,
-    // See stats.ts's taskDurationToWallClockRatio: a raw sanity ratio, never
-    // used to rescale anything -- if it reads ~1000x off from what a rep's
-    // own duration should be relative to its wall clock, that is a unit
-    // assumption to go re-check, not something this report corrects for.
-    `TaskDuration/wallClock ratio (raw, unit not asserted): ${formatRatio(header.taskDurationToWallClockRatio)}`,
+    // units.ts converts these metricsDelta keys from CDP's native seconds to
+    // milliseconds before any stat below is computed; every other
+    // metricsDelta key (LayoutCount, Nodes, JSHeapUsedSize, ...) is a raw
+    // CDP count or byte total, left unscaled.
+    `metricsDelta keys converted CDP-seconds -> ms: ${joinOrFallback(header.metricsDeltaMsKeys)}`,
+    // See units.ts's header comment: this ratio is what surfaced the
+    // seconds-vs-ms bug in the first place (it read ~0.0009 before the
+    // fix -- TaskDuration in seconds compared against a wallClockMs in
+    // milliseconds). It now sits near 1.0, since a pan gesture keeps the
+    // main thread essentially fully busy -- and stays here as a standing
+    // tripwire, not just a one-time fix: if a future CDP behavior change
+    // moves it back toward 0.001, that is a unit assumption to go re-check,
+    // not something this report should silently correct for.
+    `TaskDuration/wallClock ratio (ms/ms, expect ~1.0): ${formatRatio(header.taskDurationToWallClockRatio)}`,
   ]
 }
 
@@ -127,7 +151,7 @@ export function renderLatestMarkdown(report: LatestReport): string {
     '',
     formatTable(SCENARIO_HEADER, rows),
     '',
-    'Full metricsDelta breakdown (per-move-event and per-1000-cells): reports/perf/latest.json',
+    'Full metricsDelta breakdown (per-move-event and per-1000-cells, ms for the keys listed above / raw counts+bytes for everything else): reports/perf/latest.json',
   ].join('\n')
 }
 

@@ -24,6 +24,16 @@ export interface PerfHarnessConfig {
   // durationThreshold; passed through explicitly rather than hardcoded so a
   // future scenario can choose to widen/narrow it without editing this file.
   eventDurationThresholdMs: number
+  // load.perf.spec.ts's initial-load scenarios have no gesture to bracket
+  // with an explicit start() call -- the thing being measured is page load
+  // itself, and by the time a test's own page.evaluate(startCollecting) could
+  // run, the page has already finished loading and the frames worth counting
+  // are gone. addInitScript runs this function before any of the page's own
+  // scripts, so starting the collector here -- synchronously, at install
+  // time -- is the only way to capture rAF ticks from document creation
+  // through first stable frame. Every other scenario leaves this unset and
+  // calls start()/stop() explicitly around its own gesture instead.
+  autoStart?: boolean
 }
 
 export interface PerfHarnessSnapshot {
@@ -98,4 +108,7 @@ export function installPerfInstrumentation(config: PerfHarnessConfig): void {
     },
   }
   Object.assign(window, { __perfHarness: api })
+  if (config.autoStart) {
+    api.start()
+  }
 }

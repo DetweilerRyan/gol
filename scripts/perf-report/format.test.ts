@@ -60,6 +60,14 @@ describe('buildRunHeader', () => {
     const header = buildRunHeader(ENV, [sample()])
     expect(header.environment).toBe(ENV)
   })
+
+  it('lists the metricsDelta keys that get converted CDP-seconds -> ms', () => {
+    const header = buildRunHeader(ENV, [sample()])
+    expect(header.metricsDeltaMsKeys).toContain('TaskDuration')
+    expect(header.metricsDeltaMsKeys).toContain('ScriptDuration')
+    expect(header.metricsDeltaMsKeys).not.toContain('JSHeapUsedSize')
+    expect(header.metricsDeltaMsKeys).not.toContain('Nodes')
+  })
 })
 
 describe('buildLatestReport', () => {
@@ -118,6 +126,24 @@ describe('renderLatestMarkdown', () => {
     const report = buildLatestReport(ENV, [sample({ reps: [noTaskDuration, noTaskDuration] })])
     expect(renderLatestMarkdown(report)).toContain('TaskDuration/wallClock ratio')
     expect(renderLatestMarkdown(report)).toContain('n/a (no TaskDuration samples)')
+  })
+
+  it('labels which metricsDelta keys were converted to ms, in the header', () => {
+    const report = buildLatestReport(ENV, [sample()])
+    const md = renderLatestMarkdown(report)
+    expect(md).toContain('converted CDP-seconds -> ms')
+    expect(md).toContain('TaskDuration')
+  })
+
+  it('converts a realistic CDP-seconds TaskDuration into a ratio near 1.0, not 0.001', () => {
+    // A pan gesture that keeps the main thread essentially fully busy: CDP
+    // reports TaskDuration in seconds (2.02), wallClockMs already in
+    // milliseconds (2350) -- see units.ts. Left unconverted this ratio would
+    // read ~0.00086 (seconds compared against milliseconds).
+    const busyRep = rep({ metricsDelta: { TaskDuration: 2.02 }, wallClockMs: 2350 })
+    const report = buildLatestReport(ENV, [sample({ reps: [busyRep, busyRep] })])
+    expect(report.header.taskDurationToWallClockRatio).toBeGreaterThan(0.5)
+    expect(report.header.taskDurationToWallClockRatio).toBeLessThan(1.5)
   })
 })
 
