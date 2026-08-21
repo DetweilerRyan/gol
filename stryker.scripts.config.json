@@ -7,19 +7,7 @@
   "vitest": {
     "configFile": "vitest.scripts.config.ts"
   },
-  "mutate": [
-    "scripts/acceptance-mutation/gherkin-examples.ts",
-    "scripts/acceptance-mutation/mutation-rules.ts",
-    "scripts/gherkin-dry-checker/analyze.ts",
-    "scripts/gherkin-dry-checker/similarity.ts",
-    "scripts/gherkin-dry-checker/step-parser.ts",
-    "scripts/halstead4ts/report.ts",
-    "scripts/ast-grep-rule-check/checks.ts",
-    "scripts/ast-grep-rule-check/decide.ts",
-    "scripts/ast-grep-rule-check/rule-file.ts",
-    "scripts/ast-grep-rule-check/fixture-file.ts",
-    "scripts/ast-grep-rule-check/filenames.ts"
-  ],
+  "mutate": ["scripts/**/*.ts", "!scripts/**/*.test.ts", "!scripts/**/run.ts"],
   "thresholds": {
     "high": 90,
     "low": 80,

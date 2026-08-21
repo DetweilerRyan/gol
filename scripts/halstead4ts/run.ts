@@ -13,44 +13,25 @@
 // gherkin-dry-checker takes for the same "advisory signal, not a transparent
 // formula to gate on" reason.
 //
-// Keep FILES in sync with crap4ts.config.ts's `include` array -- both target
-// the same unit-tested modules: the framework-free logic (grid rules, the
-// pattern catalog, camera math, the pattern-placing state machine), the six
-// hooks that adapt it to React, and the eight presentational components that
-// have their own render()-based unit tests (GridToolbar, PatternLibraryModal,
-// RulerLabel, Scrollbar, Grid, GridCells, GridRuler, GridScrollbars).
+// The file set is crap4ts.config.ts's, resolved from that config rather than
+// restated here. It used to be a hand-maintained copy of the same 21 paths,
+// which is a list that goes stale silently: a module missing from it is simply
+// never reported on, and nothing fails.
 
+import { globSync } from 'node:fs'
 import path from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { runFta, type AnalyzedFile } from 'fta-cli'
+import crap4tsConfig from '../../crap4ts.config.ts'
 import { buildReport, type FileAnalysis } from './report.ts'
 
 const SCRIPT_DIR = path.dirname(fileURLToPath(import.meta.url))
 const REPO_ROOT = path.resolve(SCRIPT_DIR, '../..')
 
-const FILES = [
-  'src/gameOfLife.ts',
-  'src/patternLibrary.ts',
-  'src/camera.ts',
-  'src/gridGeometry.ts',
-  'src/dragGesture.ts',
-  'src/scrollbars.ts',
-  'src/patternPlacement.ts',
-  'src/hooks/useCamera.ts',
-  'src/hooks/useElementSize.ts',
-  'src/hooks/usePatternPlacement.ts',
-  'src/hooks/useWheelInput.ts',
-  'src/hooks/useGridPointerGestures.ts',
-  'src/hooks/useInitialCentering.ts',
-  'src/components/GridToolbar.tsx',
-  'src/components/PatternLibraryModal.tsx',
-  'src/components/RulerLabel.tsx',
-  'src/components/Scrollbar.tsx',
-  'src/components/Grid.tsx',
-  'src/components/GridCells.tsx',
-  'src/components/GridRuler.tsx',
-  'src/components/GridScrollbars.tsx',
-]
+const FILES = globSync(crap4tsConfig.include ?? [], {
+  cwd: REPO_ROOT,
+  exclude: crap4tsConfig.exclude ?? [],
+}).sort()
 
 function analyzeFile(file: string): FileAnalysis {
   const absolutePath = path.join(REPO_ROOT, file)
