@@ -177,9 +177,17 @@ If you use the native `EnterWorktree({ name })` or `Agent({ isolation: 'worktree
 
    then invoke `hardener` on `main` with the whole tree as its scope. Deleting the caches is the honest expression of intent: they aren't stale, they're describing a tree that no longer exists — the situation the mutation-testing note in Commands already names.
 
-6. **Push `main`.**
-7. **Re-record the acceptance-mutation baseline** in `.claude/agents/articles/engineering.md` if it moved.
-8. **Retire the worktree:** `git worktree remove <path> && git branch -d <slice> && git worktree prune`, or `ExitWorktree({ action: 'remove' })`.
+6. **Tag the slice's final commit**, annotated, as `slice/<slice-name>`:
+
+   ```bash
+   git tag -a slice/<slice> -m "<slice>: <one line on what the slice delivered>"
+   ```
+
+   After the fast-forward in step 4 the slice's tip _is_ `main`'s tip, so this marks both. Tag after step 5 rather than before it: the tag says the slice is done, and it isn't done until the gate on `main` passes. The `slice/` prefix is load-bearing — a bare tag sharing the slice branch's name makes every `git log <name>` ambiguous until the branch is deleted in step 9 — and it makes `git tag -l 'slice/*'` a list of every completed slice. Annotated rather than lightweight, so the tag carries its own date and message.
+
+7. **Push `main` and the tag:** `git push --follow-tags` (plain `git push` leaves the tag behind).
+8. **Re-record the acceptance-mutation baseline** in `.claude/agents/articles/engineering.md` if it moved.
+9. **Retire the worktree:** `git worktree remove <path> && git branch -d <slice> && git worktree prune`, or `ExitWorktree({ action: 'remove' })`. The tag is what preserves the slice's identity once the branch is gone.
 
 The next slice repeats from step 1 against the new `main`.
 
