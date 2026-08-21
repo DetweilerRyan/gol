@@ -13,11 +13,13 @@ import { gridContentEl } from '../test-support/gridDom'
 import LifeBoard from './LifeBoard'
 
 // LifeBoard is the composition root: this file exists only to recover the two
-// behaviors that live entirely in its own wiring (single-shot stamping via
-// stampPattern's disarm() call, and the Patterns-button-while-placing cancel
-// path) which would otherwise be e2e-only. Grid's own composition (pointer
-// surface, DOM layering, measurement) is Grid.test.tsx's job -- this file
-// stays deliberately small.
+// behaviors that no single unit below it can prove on its own -- that a
+// pointer tap on the grid reaches usePatternPlacement's single-shot
+// stampArmedPattern (whose own disarm-in-the-same-action rule is
+// usePatternPlacement.test.ts's job), and the Patterns-button-while-placing
+// cancel path -- which would otherwise be e2e-only. Grid's own composition
+// (pointer surface, DOM layering, measurement) is Grid.test.tsx's job -- this
+// file stays deliberately small.
 let resizeObserver: ResizeObserverController
 
 // Small on purpose -- this file only exists to recover two wiring behaviors

@@ -6,13 +6,19 @@ import { usePatternPlacement } from './usePatternPlacement'
 
 const GLIDER = PATTERNS.find((pattern) => pattern.name === 'Glider') as Pattern
 
-type Hook = RenderHookResult<ReturnType<typeof usePatternPlacement>, unknown>
+type Hook = RenderHookResult<ReturnType<typeof usePatternPlacement>, unknown> & {
+  onPlacePattern: ReturnType<typeof vi.fn>
+}
 
 // Shared by every test below: renders the hook, and gives the many tests that just arm the
 // Glider and/or press a key a one-line way to do it, rather than each repeating the same
 // renderHook/act/fireEvent skeleton with only the method or key name varying.
 function setup(): Hook {
-  return renderHook(() => usePatternPlacement())
+  const onPlacePattern = vi.fn()
+  return Object.assign(
+    renderHook(() => usePatternPlacement(onPlacePattern)),
+    { onPlacePattern },
+  )
 }
 
 function arm({ result }: Hook) {
@@ -68,11 +74,36 @@ describe('usePatternPlacement', () => {
     expect(previewPositions(result.current.placement)).toHaveLength(GLIDER.cells.length)
   })
 
-  it('disarm clears an armed pattern', () => {
+  it('stampArmedPattern commits the armed pattern at the given cell and disarms in the same action', () => {
     const hook = setup()
     arm(hook)
-    act(() => hook.result.current.disarm())
+
+    act(() => hook.result.current.stampArmedPattern(3, -4))
+
+    expect(hook.onPlacePattern).toHaveBeenCalledWith(GLIDER, 3, -4)
     expect(armedPattern(hook.result.current.placement)).toBeNull()
+  })
+
+  it('stampArmedPattern commits nothing a second time -- stamping is single-shot, not repeatable', () => {
+    const hook = setup()
+    arm(hook)
+
+    act(() => hook.result.current.stampArmedPattern(3, -4))
+    act(() => hook.result.current.stampArmedPattern(9, 9))
+
+    expect(hook.onPlacePattern).toHaveBeenCalledTimes(1)
+  })
+
+  it.each([
+    ['idle', (_hook: Hook) => {}],
+    ['browsing', (hook: Hook) => act(() => hook.result.current.openOrCancelLibrary())],
+  ])('stampArmedPattern commits nothing while %s, since no pattern is armed', (_mode, enterMode) => {
+    const hook = setup()
+    enterMode(hook)
+
+    act(() => hook.result.current.stampArmedPattern(3, -4))
+
+    expect(hook.onPlacePattern).not.toHaveBeenCalled()
   })
 
   it('Escape cancels placing', () => {

@@ -26,17 +26,10 @@ interface LifeBoardProps {
 export default function LifeBoard({ liveCells, onToggleCell, onPlacePattern }: LifeBoardProps) {
   const { camera, panByPixels, applyWheel, centerView, zoomInCentered, zoomOutCentered, panByScrollbarDrag } =
     useCamera()
-  const { placement, openOrCancelLibrary, closeLibrary, selectPattern, previewAt, disarm } = usePatternPlacement()
+  const { placement, openOrCancelLibrary, closeLibrary, selectPattern, previewAt, stampArmedPattern } =
+    usePatternPlacement(onPlacePattern)
 
   const contentBounds = computeContentBounds(liveCells)
-
-  // Single-shot: stamping disarms the pattern immediately afterward, rather
-  // than leaving it armed for repeat stamps. Grid guarantees this only fires
-  // while isPatternArmed is true, so armedPattern(placement) is non-null here.
-  function stampPattern(x: number, y: number) {
-    onPlacePattern(armedPattern(placement)!, x, y)
-    disarm()
-  }
 
   function renderOverlays({ size, visibleRange }: GridOverlayContext) {
     return (
@@ -89,7 +82,7 @@ export default function LifeBoard({ liveCells, onToggleCell, onPlacePattern }: L
       previewPositions={previewPositions(placement)}
       isPatternArmed={Boolean(armedPattern(placement))}
       onToggleCell={onToggleCell}
-      onStampPattern={stampPattern}
+      onStampPattern={stampArmedPattern}
       onPan={panByPixels}
       onPreviewCell={previewAt}
       onWheelInput={applyWheel}

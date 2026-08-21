@@ -69,9 +69,10 @@ export default function Grid({
     },
   })
 
-  // Single-shot stamping (disarming immediately after a placement) is a
-  // LifeBoard concern -- this branch only decides which of the two upward
-  // callbacks a given activation resolves to.
+  // Single-shot stamping (disarming immediately after a placement) belongs to
+  // whoever owns the placement state -- usePatternPlacement's
+  // stampArmedPattern -- not here: this branch only decides which of the two
+  // upward callbacks a given activation resolves to.
   function activateCell(x: number, y: number) {
     if (isPatternArmed) {
       onStampPattern(x, y)
@@ -82,9 +83,10 @@ export default function Grid({
 
   return (
     <div ref={containerRef} className="relative h-full w-full overflow-hidden bg-gray-100">
-      {/* Owns the pan/toggle pointer handlers and sits below every overlay
-          (ruler, zoom%, scrollbars, toolbar, modal) as a sibling rather than
-          an ancestor, so overlay pointer events never bubble into these
+      {/* Owns the pan/toggle pointer handlers and sits below every overlay the
+          caller supplies (today: ruler, zoom%, scrollbars, toolbar, modal) as
+          a sibling rather than an ancestor, so overlay pointer events never
+          bubble into these
           handlers in the first place -- no stopPropagation/open-state guards
           needed on either side. inset-0 keeps its rect identical to the
           outer container's, which useGridPointerGestures' pointer handlers

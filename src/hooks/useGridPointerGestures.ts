@@ -78,6 +78,10 @@ export function useGridPointerGestures({
   // the mirror of this comment on the cell button in GridCells/Grid).
   function handlePointerUp(e: ReactPointerEvent) {
     releaseCapture(e)
+    // Optional chaining, not a plain property read: a pointerup can arrive
+    // with no drag state primed (no preceding pointerdown on this element --
+    // e.g. the pointer went down elsewhere), and that still resolves as a tap
+    // rather than throwing.
     if (!dragStateRef.current?.isPanning) {
       const { pixelX, pixelY } = pointerPixels(e)
       onTap(pixelX, pixelY)
