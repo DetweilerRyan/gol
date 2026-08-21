@@ -29,8 +29,11 @@ beforeEach(() => {
   stubPointerCapture()
 })
 
-const WIDTH = 400
-const HEIGHT = 300
+// Small on purpose: nothing left in this file depends on how many cells are
+// on screen (see the composition described in the file header comment), so
+// there's no reason to pay for a large GridCells render here.
+const WIDTH = 40
+const HEIGHT = 40
 
 // Fixed at the origin (not viewport-centered) so every assertion here is
 // independent of WIDTH/HEIGHT -- Grid no longer owns centering itself
