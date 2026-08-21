@@ -27,6 +27,7 @@
     "gherkin-lint": "gherkin-lint-plus features",
     "ast-grep": "ast-grep scan",
     "ast-grep:test": "ast-grep test",
+    "ast-grep:rules": "tsx scripts/ast-grep-rule-check/run.ts",
     "test:mutation": "stryker run --incremental",
     "test:mutation:full": "stryker run --incremental --force",
     "test:mutation:scripts": "stryker run stryker.scripts.config.json",
@@ -77,6 +78,7 @@
     "tsx": "^4.23.12",
     "typescript": "~6.0.2",
     "vite": "^8.2.0",
-    "vitest": "^4.1.10"
+    "vitest": "^4.1.10",
+    "yaml": "^2.9.0"
   }
 }
