@@ -23,7 +23,7 @@ import path from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { runFta, type AnalyzedFile } from 'fta-cli'
 import crap4tsConfig from '../../crap4ts.config.ts'
-import { buildReport, type FileAnalysis } from './report.ts'
+import { buildReport, type FileResult } from './report.ts'
 
 const SCRIPT_DIR = path.dirname(fileURLToPath(import.meta.url))
 const REPO_ROOT = path.resolve(SCRIPT_DIR, '../..')
@@ -33,12 +33,14 @@ const FILES = globSync(crap4tsConfig.include ?? [], {
   exclude: crap4tsConfig.exclude ?? [],
 }).sort()
 
-function analyzeFile(file: string): FileAnalysis {
+function analyzeFile(file: string): FileResult {
   const absolutePath = path.join(REPO_ROOT, file)
   const [result] = JSON.parse(runFta(absolutePath, { json: true })) as AnalyzedFile[]
-  // fta-cli returns an empty file_name when given a single-file path rather
-  // than a directory to walk -- fill it in ourselves.
-  return { ...result, file }
+  // fta-cli returns [] (so `result` is undefined here) for any file under its
+  // size floor, rather than an AnalyzedFile with zeroed-out fields -- report.ts
+  // renders that as an explicit "not scored" row rather than crashing on a
+  // missing `.halstead`.
+  return { file, analysis: result ?? null }
 }
 
 function main(): void {

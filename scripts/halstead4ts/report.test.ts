@@ -1,29 +1,31 @@
 import { describe, expect, it } from 'vitest'
-import { buildReport, type FileAnalysis } from './report.ts'
+import { buildReport, type FileResult } from './report.ts'
 
 // Shaped like fta-cli's real --json output for src/gameOfLife.ts, including
-// the empty file_name it returns for a single-file path, plus the `file` field
-// run.ts adds.
-const SAMPLE_RESULT: FileAnalysis = {
+// the empty file_name it returns for a single-file path, wrapped the way
+// run.ts wraps every result.
+const SAMPLE_RESULT: FileResult = {
   file: 'src/gameOfLife.ts',
-  file_name: '',
-  cyclo: 11,
-  halstead: {
-    uniq_operators: 21,
-    uniq_operands: 74,
-    total_operators: 199,
-    total_operands: 413,
-    program_length: 612,
-    vocabulary_size: 95,
-    volume: 4020.7516322985402,
-    difficulty: 55.810810810810814,
-    effort: 224401.4086674726,
-    time: 12466.7449259707,
-    bugs: 1.3402505440995134,
+  analysis: {
+    file_name: '',
+    cyclo: 11,
+    halstead: {
+      uniq_operators: 21,
+      uniq_operands: 74,
+      total_operators: 199,
+      total_operands: 413,
+      program_length: 612,
+      vocabulary_size: 95,
+      volume: 4020.7516322985402,
+      difficulty: 55.810810810810814,
+      effort: 224401.4086674726,
+      time: 12466.7449259707,
+      bugs: 1.3402505440995134,
+    },
+    line_count: 245,
+    fta_score: 59.159159323850076,
+    assessment: 'Could be better',
   },
-  line_count: 245,
-  fta_score: 59.159159323850076,
-  assessment: 'Could be better',
 }
 
 describe('buildReport', () => {
@@ -69,11 +71,21 @@ describe('buildReport', () => {
   })
 
   it('renders one row per input result, in the given order', () => {
-    const second = { ...SAMPLE_RESULT, file: 'src/viewport.ts', assessment: 'OK' }
+    const second: FileResult = {
+      file: 'src/viewport.ts',
+      analysis: { ...SAMPLE_RESULT.analysis!, assessment: 'OK' },
+    }
     const report = buildReport([SAMPLE_RESULT, second])
     const gameOfLifeIndex = report.indexOf('src/gameOfLife.ts')
     const viewportIndex = report.indexOf('src/viewport.ts')
     expect(gameOfLifeIndex).toBeGreaterThan(-1)
     expect(viewportIndex).toBeGreaterThan(gameOfLifeIndex)
+  })
+
+  it('renders a file under FTA size floor as a visible "not scored" row instead of crashing or vanishing', () => {
+    const underFloor: FileResult = { file: 'src/equality/is-strict-equal.ts', analysis: null }
+    const report = buildReport([SAMPLE_RESULT, underFloor])
+    expect(report).toContain('src/equality/is-strict-equal.ts')
+    expect(report).toContain('not scored (under FTA size floor)')
   })
 })
