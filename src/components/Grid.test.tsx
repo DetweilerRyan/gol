@@ -23,7 +23,7 @@ import {
   type PointerCaptureStubs,
   type ResizeObserverController,
 } from '../test-support/domStubs'
-import Grid from './Grid'
+import LifeBoard from './LifeBoard'
 
 // Grid composes three hooks that each touch a browser API jsdom doesn't
 // usefully provide -- useElementSize (ResizeObserver), useWheelInput and
@@ -47,7 +47,7 @@ function triggerResize(width: number, height: number) {
   resizeObserver.resize(width, height)
 }
 
-type GridProps = React.ComponentProps<typeof Grid>
+type GridProps = React.ComponentProps<typeof LifeBoard>
 
 function renderGrid(props: Partial<GridProps> = {}): RenderResult & GridProps {
   const merged: GridProps = {
@@ -56,7 +56,7 @@ function renderGrid(props: Partial<GridProps> = {}): RenderResult & GridProps {
     onPlacePattern: vi.fn(),
     ...props,
   }
-  const utils = render(<Grid {...merged} />)
+  const utils = render(<LifeBoard {...merged} />)
   return { ...utils, ...merged }
 }
 

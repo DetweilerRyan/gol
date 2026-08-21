@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { useImmer } from 'use-immer'
-import Grid from './components/Grid'
+import LifeBoard from './components/LifeBoard'
 import { createEmptyLiveCells, getNextGeneration, type LiveCells, toggleCell as toggleCellInPlace } from './gameOfLife'
 import { placePattern, type Pattern } from './patternLibrary'
 
@@ -27,7 +27,7 @@ function App() {
 
   return (
     <div className="relative h-dvh w-full overflow-hidden bg-gray-50">
-      <Grid liveCells={liveCells} onToggleCell={toggleCell} onPlacePattern={placePatternOnGrid} />
+      <LifeBoard liveCells={liveCells} onToggleCell={toggleCell} onPlacePattern={placePatternOnGrid} />
 
       <div className="absolute top-4 left-4 flex flex-col gap-3 rounded-lg bg-gray-900 p-4 text-white shadow-lg">
         <h1 className="text-xl font-semibold">Conway's Game of Life</h1>
