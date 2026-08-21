@@ -15,6 +15,7 @@
 // decide.ts instead, which imports checkAllRules from here. See decide.ts's
 // module comment for why that's a separate file rather than living here too.
 
+import { fixtureStemForRuleId, ruleIdForFixtureStem } from './filenames.ts'
 import type { FixtureFile } from './fixture-file.ts'
 import type { RuleFile } from './rule-file.ts'
 
@@ -52,7 +53,7 @@ export function checkFixtureExists(rules: RuleFile[], fixtures: FixtureFile[]): 
       })
       continue
     }
-    const expectedStem = `${rule.id}-test`
+    const expectedStem = fixtureStemForRuleId(rule.id)
     if (!fixtureStems.has(expectedStem)) {
       failures.push({
         check: 'fixture-exists',
@@ -201,7 +202,7 @@ export function checkFilesGlobsResolve(rules: RuleFile[], globHasMatch: GlobHasM
 export function checkFixtureIdMatchesFilename(fixtures: FixtureFile[]): Failure[] {
   const failures: Failure[] = []
   for (const fixture of fixtures) {
-    const expectedId = fixture.filenameStem.replace(/-test$/, '')
+    const expectedId = ruleIdForFixtureStem(fixture.filenameStem)
     if (fixture.id === expectedId) continue
     failures.push({
       check: 'fixture-id-matches-filename',

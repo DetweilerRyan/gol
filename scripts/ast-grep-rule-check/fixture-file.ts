@@ -2,18 +2,13 @@
 // rule-file.ts for why parsing is split from I/O and from the checks.
 
 import { parse } from 'yaml'
+import { filenameStemOf } from './filenames.ts'
 
 export interface FixtureFile {
   path: string
   filenameStem: string
   id: string | undefined
   hasInvalidCases: boolean
-}
-
-// See rule-file.ts's identical filenameStemOf for why the directory half is
-// sliced at the last `/` while the extension half stays an anchored regex.
-function filenameStemOf(relativePath: string): string {
-  return relativePath.slice(relativePath.lastIndexOf('/') + 1).replace(/\.ya?ml$/, '')
 }
 
 export function parseFixtureFile(relativePath: string, rawText: string): FixtureFile {

@@ -227,10 +227,11 @@ describe('checkFixtureIdMatchesFilename', () => {
   })
 
   it('anchors the -test suffix strip to the end of the filename, not the first occurrence anywhere in it', () => {
-    // 'no-test-thing' does not *end* in '-test', so the anchored regex leaves
-    // it untouched and expectedId stays 'no-test-thing'. An unanchored strip
-    // would instead delete the first '-test' it finds mid-string, producing
-    // expectedId 'no-thing' and reporting a spurious mismatch here.
+    // The strip itself is filenames.ts's ruleIdForFixtureStem (tested there);
+    // this pins down the consequence for *this* check -- 'no-test-thing' does
+    // not end in '-test', so expectedId stays 'no-test-thing'. A strip that
+    // deleted the first '-test' it found mid-string would produce expectedId
+    // 'no-thing' and report a spurious mismatch here.
     const failures = checkFixtureIdMatchesFilename([fixture({ filenameStem: 'no-test-thing', id: 'no-test-thing' })])
     expect(failures).toEqual([])
   })

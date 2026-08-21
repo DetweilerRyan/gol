@@ -9,9 +9,11 @@ describe('parseFixtureFile', () => {
     expect(fixture.hasInvalidCases).toBe(true)
   })
 
+  // As in rule-file.test.ts: the stem rule belongs to filenames.ts and is
+  // tested there; this pins down only that the parser records it.
   it('derives filenameStem from the path, stripping the .yml extension', () => {
     const text = 'id: no-dom-in-domain\ninvalid:\n  - document.getElementById(x)\n'
-    const fixture = parseFixtureFile('rule-tests/no-dom-in-domain-test.yml', text)
+    const fixture = parseFixtureFile('rule-tests/nested/no-dom-in-domain-test.yml', text)
     expect(fixture.filenameStem).toBe('no-dom-in-domain-test')
   })
 
@@ -51,21 +53,5 @@ describe('parseFixtureFile', () => {
     const fixture = parseFixtureFile('rule-tests/empty-test.yml', '# nothing here but a comment\n')
     expect(fixture.id).toBeUndefined()
     expect(fixture.hasInvalidCases).toBe(false)
-  })
-
-  it('derives filenameStem from the last path segment, whatever precedes it', () => {
-    // See the equivalent rule-file.ts test: "the last slash wins" has to hold
-    // for every string, including one containing a line terminator.
-    const text = 'id: x\ninvalid:\n  - document.getElementById(x)\n'
-    expect(parseFixtureFile('rule-tests/nested/dir/orphan-test.yml', text).filenameStem).toBe('orphan-test')
-    expect(parseFixtureFile('a\nb/orphan-test.yml', text).filenameStem).toBe('orphan-test')
-  })
-
-  it('strips only a trailing .yml/.yaml extension, not one appearing mid-filename', () => {
-    // Distinguishes the `$`-anchored extension regex from an unanchored one --
-    // see the equivalent rule-file.ts test for the full explanation.
-    const text = 'id: x\ninvalid:\n  - document.getElementById(x)\n'
-    const fixture = parseFixtureFile('rule-tests/no.yaml-thing-test.yml', text)
-    expect(fixture.filenameStem).toBe('no.yaml-thing-test')
   })
 })

@@ -21,8 +21,11 @@ describe('parseRuleFile', () => {
     expect(rule.files).toEqual(['src/*.ts', 'src/other/*.ts'])
   })
 
+  // The stem rule itself (last slash wins, only a trailing extension is
+  // stripped) is filenames.ts's, and tested there -- this only pins down that
+  // the parser puts the derived stem on the record it returns.
   it('derives filenameStem from the path, stripping the .yml extension', () => {
-    const rule = parseRuleFile('rules/no-dom-in-domain.yml', FULL_RULE)
+    const rule = parseRuleFile('rules/nested/no-dom-in-domain.yml', FULL_RULE)
     expect(rule.filenameStem).toBe('no-dom-in-domain')
   })
 
@@ -72,24 +75,6 @@ describe('parseRuleFile', () => {
     expect(rule.id).toBeUndefined()
     expect(rule.severity).toBeUndefined()
     expect(rule.files).toBeUndefined()
-  })
-
-  it('derives filenameStem from the last path segment, whatever precedes it', () => {
-    // Pins down "the last slash wins" for every string, not just for the
-    // single-segment `rules/<name>.yml` that readdirSync happens to produce:
-    // an earlier line terminator must not stop the directory strip. This is
-    // exactly where the previously-used `/^.*\//` regex disagreed with its
-    // unanchored form, since `.` never matches a newline.
-    expect(parseRuleFile('rules/nested/dir/no-dom-in-domain.yml', FULL_RULE).filenameStem).toBe('no-dom-in-domain')
-    expect(parseRuleFile('a\nb/no-dom-in-domain.yml', FULL_RULE).filenameStem).toBe('no-dom-in-domain')
-  })
-
-  it('strips only a trailing .yml/.yaml extension, not one appearing mid-filename', () => {
-    // Distinguishes the `$`-anchored extension regex from an unanchored one:
-    // an unanchored regex would strip the *first* ".yaml"/".yml" it finds,
-    // which for this filename is the one in the middle, not the real suffix.
-    const rule = parseRuleFile('rules/no.yaml-thing-test.yml', 'id: x\nseverity: warning\n')
-    expect(rule.filenameStem).toBe('no.yaml-thing-test')
   })
 })
 

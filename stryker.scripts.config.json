@@ -17,7 +17,8 @@
     "scripts/ast-grep-rule-check/checks.ts",
     "scripts/ast-grep-rule-check/decide.ts",
     "scripts/ast-grep-rule-check/rule-file.ts",
-    "scripts/ast-grep-rule-check/fixture-file.ts"
+    "scripts/ast-grep-rule-check/fixture-file.ts",
+    "scripts/ast-grep-rule-check/filenames.ts"
   ],
   "thresholds": {
     "high": 90,

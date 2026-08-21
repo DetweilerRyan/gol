@@ -2,9 +2,9 @@ import { defineConfig } from 'crap4ts'
 
 // The scripts/-scoped twin of crap4ts.config.ts. scripts/ holds this repo's
 // own quality tooling -- the Gherkin acceptance mutator, the Gherkin DRY
-// checker, and the Halstead reporter -- which sits underneath every other
-// role's quality gate and so gets held to the same bar as src/ rather than
-// being exempt from it.
+// checker, the Halstead reporter, and the ast-grep rule checker -- which sits
+// underneath every other role's quality gate and so gets held to the same bar
+// as src/ rather than being exempt from it.
 //
 // The four run.ts entry points are excluded: they're I/O shells (argv-free
 // CLI mains that read the filesystem, spawn vitest, and console.log a table),
@@ -34,6 +34,7 @@ export default defineConfig({
     'scripts/ast-grep-rule-check/decide.ts',
     'scripts/ast-grep-rule-check/rule-file.ts',
     'scripts/ast-grep-rule-check/fixture-file.ts',
+    'scripts/ast-grep-rule-check/filenames.ts',
   ],
   exclude: ['**/*.test.*'],
 })

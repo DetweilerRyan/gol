@@ -3,6 +3,7 @@
 // each half can be unit-tested against literal strings, with no filesystem.
 
 import { parse } from 'yaml'
+import { filenameStemOf } from './filenames.ts'
 
 export interface UnresolvedFilesMarker {
   present: boolean
@@ -45,17 +46,6 @@ export function extractUnresolvedFilesMarker(rawText: string): UnresolvedFilesMa
   if (!match) return { present: false, reason: null }
   const reason = match[1].trim()
   return { present: true, reason: reason.length > 0 ? reason : null }
-}
-
-// Directories are stripped by slicing at the last `/` rather than by an
-// anchored `/^.*\//` regex. The two agree on every path without a line
-// terminator, which made the `^` unfalsifiable-looking -- but `.` doesn't
-// match a newline, so the anchored regex and its unanchored mutant really do
-// diverge on `a\nb/c.yml` (`a\nb/c` vs `c`), and slicing simply says the last
-// slash wins for every string. The `.ya?ml$` anchor below *is* load-bearing
-// -- see the mid-filename ".yaml" test in rule-file.test.ts.
-function filenameStemOf(relativePath: string): string {
-  return relativePath.slice(relativePath.lastIndexOf('/') + 1).replace(/\.ya?ml$/, '')
 }
 
 function toStringArray(value: unknown): string[] | undefined {

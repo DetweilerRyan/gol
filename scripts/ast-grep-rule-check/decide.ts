@@ -27,14 +27,15 @@ export interface DecideResult {
 }
 
 // One rule or fixture file's parse: either the value it parsed to, or the
-// Failure explaining why it didn't. Named (rather than left as an inline
-// union on safeParse) purely so that signature fits Prettier's print width
-// on one line -- see partitionParsed's ParseFn<T> below for the sibling case.
+// Failure explaining why it didn't. Named rather than spelled inline at
+// safeParse and partitionParsed both -- which also keeps those signatures to
+// one line each, sidestepping crap4ts's multi-line-signature artifact (see
+// CLAUDE.md's note on it, since a future edit that wraps one of these will
+// make a fully covered function report 0%).
 type ParseResult<T> = { parsed: T; failure?: undefined } | { parsed?: undefined; failure: Failure }
 
 // parseRuleFile/parseFixtureFile's shared shape: a relative path plus raw
-// text in, a parsed record out. Named for the same reason as ParseResult<T>
-// above -- both safeParse and partitionParsed take one of these.
+// text in, a parsed record out. Both safeParse and partitionParsed take one.
 type ParseFn<T> = (path: string, text: string) => T
 
 // ast-grep 0.45.1 accepts multi-document (`---`-separated) rule and fixture
@@ -57,8 +58,7 @@ function safeParse<T>(file: RawFile, parse: ParseFn<T>): ParseResult<T> {
   }
 }
 
-// The parsed values and the parse failures a batch of raw files produced --
-// named for the same reason as ParseResult<T> above.
+// The parsed values and the parse failures a batch of raw files produced.
 type PartitionResult<T> = { parsed: T[]; failures: Failure[] }
 
 function partitionParsed<T>(files: RawFile[], parse: ParseFn<T>): PartitionResult<T> {
