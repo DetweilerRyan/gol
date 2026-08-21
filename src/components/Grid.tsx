@@ -10,12 +10,11 @@ import { usePatternPlacement } from '../hooks/usePatternPlacement'
 import { useWheelInput } from '../hooks/useWheelInput'
 import { type Pattern } from '../patternLibrary'
 import { armedPattern, isLibraryOpen, previewPositions } from '../patternPlacement'
-import { computeScrollbarMetrics } from '../scrollbars'
 import GridCells from './GridCells'
+import GridRuler from './GridRuler'
+import GridScrollbars from './GridScrollbars'
 import GridToolbar from './GridToolbar'
 import PatternLibraryModal from './PatternLibraryModal'
-import RulerLabel from './RulerLabel'
-import Scrollbar from './Scrollbar'
 
 interface GridProps {
   liveCells: LiveCells
@@ -39,7 +38,6 @@ export default function Grid({ liveCells, onToggleCell, onPlacePattern }: GridPr
   const majorGridlines = computeMajorGridlines(visibleRange)
 
   const contentBounds = computeContentBounds(liveCells)
-  const scrollbarMetrics = computeScrollbarMetrics(camera, contentBounds, containerSize.width, containerSize.height)
 
   // trackHover mirrors the armedPattern check the place-vs-toggle branch below
   // also makes: only in placing mode does a pointermove need pointer-to-world
@@ -94,14 +92,7 @@ export default function Grid({ liveCells, onToggleCell, onPlacePattern }: GridPr
         />
       </div>
 
-      {/* Coordinate ruler: labels every 10th gridline. pointer-events-none keeps
-          these from interfering with cell clicks/dragging underneath. */}
-      {majorGridlines.x.map((x) => (
-        <RulerLabel key={`x-${x}`} axis="x" coordinate={x} camera={camera} />
-      ))}
-      {majorGridlines.y.map((y) => (
-        <RulerLabel key={`y-${y}`} axis="y" coordinate={y} camera={camera} />
-      ))}
+      <GridRuler gridlines={majorGridlines} camera={camera} />
 
       {/* Bottom-right, not top-left, so it never overlaps the coordinate
           ruler labels above, which can appear anywhere along the top/left
@@ -112,24 +103,13 @@ export default function Grid({ liveCells, onToggleCell, onPlacePattern }: GridPr
         {zoomPercentage(camera)}%
       </span>
 
-      {containerSize.width > 0 && containerSize.height > 0 && (
-        <>
-          <Scrollbar
-            axis="x"
-            metrics={scrollbarMetrics.horizontal}
-            trackLengthPx={containerSize.width}
-            onDrag={panByScrollbarDrag}
-            contentId="grid-content"
-          />
-          <Scrollbar
-            axis="y"
-            metrics={scrollbarMetrics.vertical}
-            trackLengthPx={containerSize.height}
-            onDrag={panByScrollbarDrag}
-            contentId="grid-content"
-          />
-        </>
-      )}
+      <GridScrollbars
+        camera={camera}
+        contentBounds={contentBounds}
+        size={containerSize}
+        contentId="grid-content"
+        onDrag={panByScrollbarDrag}
+      />
 
       {/* No open-state guard on onPatterns: Headless UI's Dialog makes the
           rest of the page (including the toolbar) inert while the library is
