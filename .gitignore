@@ -18,6 +18,9 @@ reports
 stryker.log
 *.local
 
+# Per-slice git worktrees created by Claude Code's EnterWorktree
+/.claude/worktrees/
+
 # Playwright
 /playwright-report/
 /test-results/

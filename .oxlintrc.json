@@ -1,5 +1,6 @@
 {
   "$schema": "./node_modules/oxlint/configuration_schema.json",
+  "ignorePatterns": [".claude/worktrees/**"],
   "plugins": ["react", "typescript", "oxc", "import", "unicorn", "jsx-a11y"],
   "rules": {
     "react/rules-of-hooks": "error",

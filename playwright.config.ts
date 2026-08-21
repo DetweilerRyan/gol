@@ -1,7 +1,13 @@
 import { defineConfig, devices } from '@playwright/test'
+import { devPort } from './dev-port.ts'
 
 // One-time setup after `npm install`: run `npx playwright install chromium`
-// to fetch the browser binary this config drives.
+// to fetch the browser binary this config drives. The binary lives in a
+// machine-global cache, so a new worktree needs `npm ci` but not this.
+//
+// The port is this worktree's own (see dev-port.ts), not a fixed 5173.
+const baseURL = `http://localhost:${devPort()}`
+
 export default defineConfig({
   testDir: './e2e',
   testMatch: '**/*.e2e.spec.ts',
@@ -11,7 +17,7 @@ export default defineConfig({
   reporter: [['html', { open: 'never' }]],
   outputDir: 'test-results',
   use: {
-    baseURL: 'http://localhost:5173',
+    baseURL,
     // Fixed viewport is required: Grid centers its camera via a
     // ResizeObserver on first measurement, so every pixel/cell formula in
     // this suite assumes exactly this size.
@@ -24,5 +30,10 @@ export default defineConfig({
   // explicitly here so every pixel-math formula in this suite can rely on
   // exactly 1280x900.
   projects: [{ name: 'chromium', use: { ...devices['Desktop Chrome'], viewport: { width: 1280, height: 900 } } }],
-  webServer: { command: 'npm run dev', url: 'http://localhost:5173', reuseExistingServer: !process.env.CI },
+  // reuseExistingServer is safe only because the port is per-worktree and
+  // vite.config.ts sets strictPort: anything answering on this URL is this
+  // worktree's own dev server, or nothing at all. On a shared 5173 it would
+  // silently attach to another worktree's server and report a green suite
+  // against the wrong build.
+  webServer: { command: 'npm run dev', url: baseURL, reuseExistingServer: !process.env.CI },
 })

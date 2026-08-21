@@ -9,5 +9,8 @@ reports
 .vitest-attachments
 package-lock.json
 
+# Per-slice git worktrees: another slice's checkout, not this one's source
+.claude/worktrees
+
 # ast-grep regenerates these; formatting them would churn on every `npm run ast-grep:test`
 rule-tests/__snapshots__/

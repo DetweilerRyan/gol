@@ -2,6 +2,7 @@ import { defineConfig } from 'vitest/config'
 import react, { reactCompilerPreset } from '@vitejs/plugin-react'
 import babel from '@rolldown/plugin-babel'
 import { playwright } from '@vitest/browser-playwright'
+import { browserApiPort } from './dev-port.ts'
 
 // The browser-required unit-test layer (npm run test:browser): the same kind of
 // module-level unit test as src/**/*.test.ts, but for the handful of contracts
@@ -26,6 +27,12 @@ export default defineConfig({
       provider: playwright(),
       headless: true,
       instances: [{ browser: 'chromium' }],
+      // Browser mode serves the tests over its own HTTP server (default
+      // 63315). Vite would auto-increment past a collision, so two concurrent
+      // runs wouldn't break -- but pin it per worktree and strictly anyway, so
+      // which port a run is on is a fact rather than an accident. See
+      // dev-port.ts.
+      api: { port: browserApiPort(), strictPort: true },
       // Failure screenshots default to a __screenshots__/ directory beside the
       // test file; redirected into the already-gitignored test-results/ so a
       // failed run can't leave binary artifacts sitting in src/.

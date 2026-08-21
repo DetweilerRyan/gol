@@ -20,6 +20,7 @@
     "noFallthroughCasesInSwitch": true
   },
   "include": [
+    "dev-port.ts",
     "vite.config.ts",
     "vitest.browser.config.ts",
     "vitest.scripts.config.ts",
