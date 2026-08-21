@@ -114,6 +114,24 @@ Cycle order for a feature: **specifier → coder → cleaner → architect → h
 
 There's no daemon or persistent process wiring these together — the orchestrating session invokes each role in turn via the `Agent` tool and sequences the handoffs itself.
 
+### The optional architect design pass
+
+`architect` may be invoked a **second time, before `coder`**, as a design pass that ratifies a file set and interface rather than reviewing landed code. It still runs in its normal post-`cleaner` slot afterward, so the slice gets both a design and a review — the two jobs compete for one pass otherwise, which is the same reasoning that split `hardener` out of the four-pack architect.
+
+**The orchestrating session decides this, not `specifier`.** Every trigger below is a fact about the current shape of `src/`, and `specifier` is deliberately blind to it — it touches neither `src/` nor `scripts/` and doesn't carry `LSP`, precisely so its reach stays honest. `specifier` may _flag_ that a slice smells structurally large; it doesn't make the call.
+
+Reach for a design pass when:
+
+- The slice is a refactor or restructure with no behavior change — then the design **is** the deliverable, and there's nothing for `coder` to TDD against without one.
+- It will create new modules, or move/split existing ones.
+- It crosses the framework-free module → hook → component layering.
+- A target file is already flagged as oversized — `cleaner`'s 100+ mutant heuristic, or `coder`'s ~1s per-file test-duration budget.
+- The change spans three or more existing modules.
+
+A design pass writes **no product code**. Its output is a ratified file set, the interfaces between the new pieces, and an ordering of behavior-preserving steps each of which leaves the suite green — plus, where useful, a mechanical guard (an `ast-grep` rule and fixture) for an invariant the design depends on. `coder` then executes that ordering, usually in more than one invocation, with the existing test suite as the regression net at each step.
+
+The `split-grid-render-props` slice is the worked example: the design pass corrected the prop shape before any code existed, split the riskiest step in two so the pre-existing tests could verify it, and authored `rules/no-logic-in-composition-root.yml` to keep the new composition root wiring-only.
+
 The five roles that edit TypeScript (`coder`, `cleaner`, `architect`, `hardener`, `qa`) also carry the `LSP` tool in their frontmatter allowlist, giving them go-to-definition, find-references, and type errors reported in-turn rather than at the next `npm run build`. `specifier` deliberately does not have it — it touches neither `src/` nor `scripts/`, so the allowlist stays an honest statement of each role's reach. This needs the `typescript-lsp` plugin installed (`/plugin`) plus a **global** `npm install -g typescript-language-server typescript`; the binary is not a project dependency, so `npm ci` alone does not reproduce it on a new machine. If the server is missing the roles silently fall back to `Grep`/`Read`, so a clean `npm test` is not evidence it's working — check `claude --debug`, which names any LSP server it skipped and why.
 
 The file names in the Architecture section above are a current snapshot, not a frozen contract: `cleaner` and `architect` are expected to update that section (and fix any file-list mention elsewhere in these docs that a split makes stale) as part of performing a behavior-preserving split — see "Where guidance and file names live" in `.claude/agents/articles/engineering.md`.
