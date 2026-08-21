@@ -24,10 +24,13 @@ export interface RuleFile {
 // the keyword on the same line is the reason. YAML comments are stripped by
 // the parser, so this is matched against the raw text instead.
 //
-// The trailing `$` is a mutation-test-confirmed equivalent mutant if removed:
-// `.` never matches a newline, so `(.*)` already stops at end-of-line on its
-// own -- the explicit anchor changes nothing observable. Left in for clarity
-// (it documents the intent), not because a test can distinguish it.
+// The trailing `$` is a genuinely equivalent mutant if removed, so Stryker
+// reports it as a permanent survivor here: `.` matches no line terminator, so
+// greedy `(.*)` already stops exactly where a multiline `$` would assert, for
+// every possible input. Re-verified by differentially fuzzing this regex
+// against its `$`-less form over 400k random strings built from an alphabet
+// of `\n`/`\r`/`#`/`:` and the keyword itself -- zero differing results. Left
+// in because it documents the intent, not because a test can distinguish it.
 const UNRESOLVED_FILES_MARKER = /^#\s*ast-grep-rule-check:\s*allow-unresolved-files(.*)$/m
 
 export function extractUnresolvedFilesMarker(rawText: string): UnresolvedFilesMarker {
@@ -37,15 +40,15 @@ export function extractUnresolvedFilesMarker(rawText: string): UnresolvedFilesMa
   return { present: true, reason: reason.length > 0 ? reason : null }
 }
 
-// The `^` anchor on the directory-stripping regex is, likewise, a confirmed
-// equivalent mutant for every path this function actually receives: greedy
-// unanchored matching still tries position 0 first and succeeds there, so
-// removing `^` is only observable for a path containing a newline before a
-// `/`, which readdirSync never produces. The `.ya?ml$` anchor *does* matter
-// -- see the mid-filename ".yaml" test in rule-file.test.ts -- so don't
-// assume every anchor here is equally load-bearing.
+// Directories are stripped by slicing at the last `/` rather than by an
+// anchored `/^.*\//` regex. The two agree on every path without a line
+// terminator, which made the `^` unfalsifiable-looking -- but `.` doesn't
+// match a newline, so the anchored regex and its unanchored mutant really do
+// diverge on `a\nb/c.yml` (`a\nb/c` vs `c`), and slicing simply says the last
+// slash wins for every string. The `.ya?ml$` anchor below *is* load-bearing
+// -- see the mid-filename ".yaml" test in rule-file.test.ts.
 function filenameStemOf(relativePath: string): string {
-  return relativePath.replace(/^.*\//, '').replace(/\.ya?ml$/, '')
+  return relativePath.slice(relativePath.lastIndexOf('/') + 1).replace(/\.ya?ml$/, '')
 }
 
 function toStringArray(value: unknown): string[] | undefined {

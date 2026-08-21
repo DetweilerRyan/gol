@@ -74,6 +74,16 @@ describe('parseRuleFile', () => {
     expect(rule.files).toBeUndefined()
   })
 
+  it('derives filenameStem from the last path segment, whatever precedes it', () => {
+    // Pins down "the last slash wins" for every string, not just for the
+    // single-segment `rules/<name>.yml` that readdirSync happens to produce:
+    // an earlier line terminator must not stop the directory strip. This is
+    // exactly where the previously-used `/^.*\//` regex disagreed with its
+    // unanchored form, since `.` never matches a newline.
+    expect(parseRuleFile('rules/nested/dir/no-dom-in-domain.yml', FULL_RULE).filenameStem).toBe('no-dom-in-domain')
+    expect(parseRuleFile('a\nb/no-dom-in-domain.yml', FULL_RULE).filenameStem).toBe('no-dom-in-domain')
+  })
+
   it('strips only a trailing .yml/.yaml extension, not one appearing mid-filename', () => {
     // Distinguishes the `$`-anchored extension regex from an unanchored one:
     // an unanchored regex would strip the *first* ".yaml"/".yml" it finds,

@@ -53,6 +53,14 @@ describe('parseFixtureFile', () => {
     expect(fixture.hasInvalidCases).toBe(false)
   })
 
+  it('derives filenameStem from the last path segment, whatever precedes it', () => {
+    // See the equivalent rule-file.ts test: "the last slash wins" has to hold
+    // for every string, including one containing a line terminator.
+    const text = 'id: x\ninvalid:\n  - document.getElementById(x)\n'
+    expect(parseFixtureFile('rule-tests/nested/dir/orphan-test.yml', text).filenameStem).toBe('orphan-test')
+    expect(parseFixtureFile('a\nb/orphan-test.yml', text).filenameStem).toBe('orphan-test')
+  })
+
   it('strips only a trailing .yml/.yaml extension, not one appearing mid-filename', () => {
     // Distinguishes the `$`-anchored extension regex from an unanchored one --
     // see the equivalent rule-file.ts test for the full explanation.

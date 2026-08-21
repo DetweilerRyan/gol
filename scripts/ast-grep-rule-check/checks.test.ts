@@ -59,21 +59,24 @@ describe('checkFixtureExists', () => {
 })
 
 describe('checkIdMatchesFilename', () => {
-  it('reports a rule whose id does not equal its filename stem', () => {
-    const failures = checkIdMatchesFilename([rule({ filenameStem: 'no-dom-in-domain', id: 'no-dom-in-domian' })])
+  // Both mismatch cases assert the same three things about the one failure
+  // they produce, so they're one table rather than two near-identical blocks:
+  // a typoed id is reported verbatim, and an absent one as '(missing)' rather
+  // than as the literal undefined.
+  it.each([
+    { mismatch: 'an id that does not equal its filename stem', id: 'no-dom-in-domian', shownAs: 'no-dom-in-domian' },
+    { mismatch: 'a missing id', id: undefined, shownAs: '(missing)' },
+  ])('reports $mismatch, naming it as `$shownAs`', ({ id, shownAs }) => {
+    const failures = checkIdMatchesFilename([rule({ filenameStem: 'no-dom-in-domain', id })])
     expect(failures).toHaveLength(1)
     expect(failures[0].check).toBe('id-matches-filename')
+    expect(failures[0].message).toContain(shownAs)
+    expect(failures[0].message).toContain('no-dom-in-domain')
   })
 
   it('passes when id equals the filename stem', () => {
     const failures = checkIdMatchesFilename([rule({ filenameStem: 'x', id: 'x' })])
     expect(failures).toEqual([])
-  })
-
-  it("reports a missing id as '(missing)' in the message rather than the literal undefined", () => {
-    const failures = checkIdMatchesFilename([rule({ filenameStem: 'x', id: undefined })])
-    expect(failures).toHaveLength(1)
-    expect(failures[0].message).toContain('(missing)')
   })
 })
 
@@ -101,20 +104,17 @@ describe('checkNoDuplicateIds', () => {
     expect(failures).toHaveLength(2)
   })
 
-  it('passes when every rule has a unique id', () => {
+  // The two passing cases are the same two-rule call with different ids, so
+  // they're one table. The id-less pair matters because an id-less rule is
+  // already reported by checkFixtureExists -- grouping such rules together
+  // here would pile on a second, spurious "duplicate id" failure.
+  it.each<{ ids: string; first: string | undefined; second: string | undefined }>([
+    { ids: 'unique', first: 'a', second: 'b' },
+    { ids: 'both absent', first: undefined, second: undefined },
+  ])('passes when the ids are $ids', ({ first, second }) => {
     const failures = checkNoDuplicateIds([
-      rule({ path: 'rules/a.yml', id: 'a' }),
-      rule({ path: 'rules/b.yml', id: 'b' }),
-    ])
-    expect(failures).toEqual([])
-  })
-
-  it('ignores an id-less rule rather than grouping it with other id-less rules as duplicates', () => {
-    // An id-less rule is already reported by checkFixtureExists -- this check
-    // must not pile on a second, spurious "duplicate id" failure for it.
-    const failures = checkNoDuplicateIds([
-      rule({ path: 'rules/a.yml', id: undefined }),
-      rule({ path: 'rules/b.yml', id: undefined }),
+      rule({ path: 'rules/a.yml', id: first }),
+      rule({ path: 'rules/b.yml', id: second }),
     ])
     expect(failures).toEqual([])
   })
