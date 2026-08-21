@@ -2,7 +2,8 @@ import { test, expect, type Page } from '@playwright/test'
 import { CENTER, cellLocator, dragPan } from './e2e-helpers'
 
 // Ruler labels are <span> elements whose text is just the coordinate number
-// (RulerLabel in Grid.tsx), bucketed by axis via the class it's pinned to
+// (RulerLabel, rendered per major gridline by GridRuler.tsx, supplied through
+// Grid's overlay slot), bucketed by axis via the class it's pinned to
 // (top-0.5 for the x-axis strip, left-0.5 for the y-axis strip). No other
 // on-screen text matches a bare "-?\d+" pattern (the zoom badge has a "%"
 // suffix, the generation counter has a "Generation: " prefix).

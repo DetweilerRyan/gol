@@ -39,9 +39,9 @@ export async function elementAtPoint(page: Page, x: number, y: number): Promise<
   ] as const)
 }
 
-// Grid.tsx applies panByPixels per pointermove with the incremental delta
-// (drag.lastX/lastY), so the net camera shift always equals the requested
-// (dx, dy) regardless of step count.
+// useGridPointerGestures reports panByPixels per pointermove with the
+// incremental delta (drag.lastX/lastY), so the net camera shift always equals
+// the requested (dx, dy) regardless of step count.
 export async function dragPan(page: Page, fromX: number, fromY: number, dx: number, dy: number, steps = 10) {
   await page.mouse.move(fromX, fromY)
   await page.mouse.down()

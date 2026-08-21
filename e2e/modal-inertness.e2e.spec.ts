@@ -6,14 +6,16 @@ import { CENTER, cellLocator, dragPan, openPatternModal } from './e2e-helpers'
 // is hit-testing and stacking order in a real browser -- jsdom has neither, so
 // these three cases can only be checked here.
 //
-// They protect the assumptions behind two comments in src/components/Grid.tsx:
-// the overlay-layering comment on the #grid-content div (every overlay sits
-// above #grid-content as a sibling rather than a descendant, so overlay pointer
-// events never bubble into the pan/toggle handlers, and no stopPropagation or
-// open-state guard is needed on either side), and the dialog-inertness comment
-// on GridToolbar's onPatterns prop (Headless UI's Dialog makes the rest of the
-// page inert while the library is open, so the toolbar handler can't fire in
-// the browsing state).
+// They protect the assumptions behind two comments in
+// src/components/LifeBoard.tsx: the overlay-order comment on the overlay slot
+// (every overlay -- ruler, zoom%, scrollbars, toolbar, modal -- sits above
+// #grid-content as a sibling rather than a descendant, a containment
+// src/components/Grid.tsx's #grid-content div owns and documents, so overlay
+// pointer events never bubble into the pan/toggle handlers, and no
+// stopPropagation or open-state guard is needed on either side), and the
+// dialog-inertness comment on the PatternLibraryModal wiring (Headless UI's
+// Dialog makes the rest of the page inert while the library is open, so
+// GridToolbar's onPatterns handler can't fire in the browsing state).
 //
 // Precisely: what these assert is that with the library open, a pointer aimed
 // at the grid or toolbar lands on an intercepting overlay instead -- the

@@ -1,12 +1,21 @@
 import { test, expect } from '@playwright/test'
-import { blurFocus, cellLocator, CENTER, elementAtPoint, selectPattern } from './e2e-helpers'
+import {
+  blurFocus,
+  cellLocator,
+  CENTER,
+  elementAtPoint,
+  patternLibraryModal,
+  patternsButton,
+  selectPattern,
+} from './e2e-helpers'
 
 // No matching .feature file (see CLAUDE.md's black-box e2e section for when a
 // spec is unpaired): the behaviors here -- full-window grid + HUD panel layout,
-// the Next Generation button's own native Enter activation, and App.tsx's
-// pattern-stamp wiring -- are DOM/layout/App-wiring concerns built directly in
-// App.tsx/Grid.tsx with no pure-logic layer to specify in Gherkin. This spec
-// is that verification, made permanent instead of one-off.
+// the Next Generation button's own native Enter activation, and the
+// pattern-stamp wiring (usePatternPlacement's stampArmedPattern, wired through
+// LifeBoard.tsx) -- are DOM/layout/App-wiring concerns with no pure-logic
+// layer to specify in Gherkin. This spec is that verification, made permanent
+// instead of one-off.
 //
 // QA outline this spec records (remove-enter-shortcut slice):
 //   - The grid fills the window edge to edge, with the HUD panel top-left
@@ -26,6 +35,18 @@ import { blurFocus, cellLocator, CENTER, elementAtPoint, selectPattern } from '.
 //     generation counter stays at 0.
 //   - Arming a pattern from the library and stamping it onto the grid with a
 //     click brings that pattern's cells to life in the real app state.
+//
+// QA outline addendum (split-grid-render-props slice):
+//   - Stamping is single-shot: after a pattern is stamped once, the armed
+//     pattern is gone, so a second click on a clearly separate empty cell
+//     toggles only that one cell -- no second copy of the pattern appears,
+//     and the first stamp is unaffected.
+//   - While a pattern is armed and its preview is following the pointer,
+//     clicking the toolbar's Patterns button again cancels placement instead
+//     of reopening the library: the modal stays closed, the preview
+//     disappears and does not return on further pointer movement, and the
+//     next click toggles a single cell rather than stamping -- proving the
+//     armed pattern was genuinely cancelled, not just hidden.
 
 const ALIVE_CLASS = /bg-gray-900/
 const DEAD_CLASS = /bg-white/
@@ -126,4 +147,68 @@ test('stamping a pattern from the library brings its cells to life in the real a
   await expect(cellLocator(page, 1, 0)).toHaveClass(ALIVE_CLASS)
   await expect(cellLocator(page, 0, 1)).toHaveClass(ALIVE_CLASS)
   await expect(cellLocator(page, 1, 1)).toHaveClass(ALIVE_CLASS)
+})
+
+test('stamping a pattern is single-shot -- a second click toggles only that one cell', async ({ page }) => {
+  await selectPattern(page, 'Block')
+  await page.mouse.click(CENTER.x, CENTER.y)
+
+  await expect(cellLocator(page, 0, 0)).toHaveClass(ALIVE_CLASS)
+  await expect(cellLocator(page, 1, 0)).toHaveClass(ALIVE_CLASS)
+  await expect(cellLocator(page, 0, 1)).toHaveClass(ALIVE_CLASS)
+  await expect(cellLocator(page, 1, 1)).toHaveClass(ALIVE_CLASS)
+
+  // stampArmedPattern disarms in the same action as committing the pattern
+  // (see usePatternPlacement.ts), so this second click at a clearly separate
+  // empty cell must be an ordinary single-cell toggle, not a second stamp.
+  await cellLocator(page, 5, 5).click()
+
+  await expect(cellLocator(page, 5, 5)).toHaveClass(ALIVE_CLASS)
+  await expect(cellLocator(page, 6, 5)).toHaveClass(DEAD_CLASS)
+  await expect(cellLocator(page, 5, 6)).toHaveClass(DEAD_CLASS)
+  await expect(cellLocator(page, 6, 6)).toHaveClass(DEAD_CLASS)
+
+  // The first stamp is unaffected by the second click.
+  await expect(cellLocator(page, 0, 0)).toHaveClass(ALIVE_CLASS)
+  await expect(cellLocator(page, 1, 0)).toHaveClass(ALIVE_CLASS)
+  await expect(cellLocator(page, 0, 1)).toHaveClass(ALIVE_CLASS)
+  await expect(cellLocator(page, 1, 1)).toHaveClass(ALIVE_CLASS)
+})
+
+test('clicking Patterns again while a pattern is armed cancels placement instead of reopening the library', async ({
+  page,
+}) => {
+  await selectPattern(page, 'Glider')
+
+  // Move the pointer over the grid so a preview follows it (Grid's
+  // trackHover guard only computes/calls onHover once a pattern is armed).
+  await page.mouse.move(CENTER.x + 60, CENTER.y + 60)
+  const preview = page.locator('[aria-label^="Pattern preview cell"]')
+  await expect(preview.first()).toBeVisible()
+  await expect(preview).toHaveCount(5) // Glider has 5 live cells
+  const boxAtFirstPosition = (await preview.first().boundingBox())!
+
+  await page.mouse.move(CENTER.x + 120, CENTER.y + 120)
+  const boxAtSecondPosition = (await preview.first().boundingBox())!
+  expect(boxAtSecondPosition.x).not.toBe(boxAtFirstPosition.x)
+  expect(boxAtSecondPosition.y).not.toBe(boxAtFirstPosition.y)
+
+  await patternsButton(page).click()
+
+  // toggleLibrary's rule: while a pattern is armed, Patterns disarms rather
+  // than reopening the modal (there's no browsing case to reach here at all).
+  await expect(patternLibraryModal(page)).toHaveCount(0)
+  await expect(preview).toHaveCount(0)
+
+  // Moving again must not resurrect a preview -- the pattern was genuinely
+  // disarmed by cancelPlacing, not merely hidden.
+  await page.mouse.move(CENTER.x - 60, CENTER.y - 60)
+  await expect(preview).toHaveCount(0)
+
+  await cellLocator(page, -3, -3).click()
+
+  await expect(cellLocator(page, -3, -3)).toHaveClass(ALIVE_CLASS)
+  await expect(cellLocator(page, -2, -3)).toHaveClass(DEAD_CLASS)
+  await expect(cellLocator(page, -3, -2)).toHaveClass(DEAD_CLASS)
+  await expect(cellLocator(page, -2, -2)).toHaveClass(DEAD_CLASS)
 })
