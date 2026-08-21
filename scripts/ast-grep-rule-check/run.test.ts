@@ -6,6 +6,9 @@ import { loadSgConfig, readYamlFilesRecursive, runCheck } from './run.ts'
 
 const GOOD_RULE = 'id: no-foo\nseverity: warning\nrule:\n  pattern: foo\n'
 const GOOD_FIXTURE = 'id: no-foo\nvalid:\n  - bar\ninvalid:\n  - foo\n'
+// What `ast-grep test` writes into a snapshot directory: fixture-shaped enough
+// that reading it as a fixture would produce failures, which is the point.
+const SNAPSHOT = 'id: no-foo\nsnapshots:\n  foo: {}\n'
 
 let repoRoot: string | undefined
 
@@ -57,40 +60,54 @@ describe('loadSgConfig', () => {
 })
 
 describe('readYamlFilesRecursive', () => {
-  it("finds a rule nested in a subdirectory, matching ast-grep's own recursive scan of ruleDirs", () => {
+  // Table-driven because every scan case is the same three steps -- write a
+  // file set into a fresh temp repo, scan one directory, pin the exact
+  // relative paths found -- differing only in what's on disk and whether a
+  // snapshot directory is named. Written as four separate `it` bodies these
+  // were byte-identical in shape and tripped dry4ts at score 1.00.
+  it.each([
+    {
+      name: "finds a rule nested in a subdirectory, matching ast-grep's own recursive scan of ruleDirs",
+      files: { 'rules/top.yml': GOOD_RULE, 'rules/nested/deep.yml': GOOD_RULE },
+      dir: 'rules',
+      skipChildDir: undefined,
+      expected: ['rules/nested/deep.yml', 'rules/top.yml'],
+    },
+    {
+      // Measured against ast-grep 0.45.1: 'Running 1 tests' whether or not a
+      // fixture-shaped file exists under the snapshot directory, so ast-grep
+      // itself never counts one as a fixture and neither may this.
+      name: 'skips the named snapshot directory, which ast-grep test never counts a file under as a fixture',
+      files: { 'rule-tests/no-foo-test.yml': GOOD_FIXTURE, 'rule-tests/__snapshots__/no-foo-snapshot.yml': SNAPSHOT },
+      dir: 'rule-tests',
+      skipChildDir: '__snapshots__',
+      expected: ['rule-tests/no-foo-test.yml'],
+    },
+    {
+      name: 'skips only the direct child, not a same-named directory nested deeper -- that depth has no meaning to ast-grep',
+      files: { 'rule-tests/nested/__snapshots__/deep-test.yml': GOOD_FIXTURE },
+      dir: 'rule-tests',
+      skipChildDir: '__snapshots__',
+      expected: ['rule-tests/nested/__snapshots__/deep-test.yml'],
+    },
+    {
+      name: 'skips nothing when no snapshot directory is named, so a ruleDirs scan sees every rule ast-grep scan does',
+      files: { 'rules/__snapshots__/no-hidden.yml': GOOD_RULE },
+      dir: 'rules',
+      skipChildDir: undefined,
+      expected: ['rules/__snapshots__/no-hidden.yml'],
+    },
+  ])('$name', ({ files, dir, skipChildDir, expected }) => {
     const root = tempRepo()
-    writeFile(root, 'rules/top.yml', GOOD_RULE)
-    writeFile(root, 'rules/nested/deep.yml', GOOD_RULE)
-    const files = readYamlFilesRecursive(path.join(root, 'rules'), 'rules')
-    expect(files.map((f) => f.path).sort()).toEqual(['rules/nested/deep.yml', 'rules/top.yml'])
+    for (const [relativePath, contents] of Object.entries(files)) writeFile(root, relativePath, contents)
+    const found = readYamlFilesRecursive(path.join(root, dir), dir, skipChildDir)
+    expect(found.map((file) => file.path).sort()).toEqual(expected)
   })
 
   it('returns nothing for an empty directory', () => {
     const root = tempRepo()
     mkdirSync(path.join(root, 'rules'), { recursive: true })
     expect(readYamlFilesRecursive(path.join(root, 'rules'), 'rules')).toEqual([])
-  })
-
-  it("skips the named snapshot directory -- ast-grep test itself never counts a file under it as a fixture (measured against 0.45.1: 'Running 1 tests' whether or not a fixture-shaped file exists there)", () => {
-    const root = tempRepo()
-    writeFile(root, 'rule-tests/no-foo-test.yml', GOOD_FIXTURE)
-    writeFile(root, 'rule-tests/__snapshots__/no-foo-snapshot.yml', 'id: no-foo\nsnapshots:\n  foo: {}\n')
-    const files = readYamlFilesRecursive(path.join(root, 'rule-tests'), 'rule-tests', '__snapshots__')
-    expect(files.map((f) => f.path)).toEqual(['rule-tests/no-foo-test.yml'])
-  })
-
-  it('skips only the direct child, not a same-named directory nested deeper -- that depth has no meaning to ast-grep', () => {
-    const root = tempRepo()
-    writeFile(root, 'rule-tests/nested/__snapshots__/deep-test.yml', GOOD_FIXTURE)
-    const files = readYamlFilesRecursive(path.join(root, 'rule-tests'), 'rule-tests', '__snapshots__')
-    expect(files.map((f) => f.path)).toEqual(['rule-tests/nested/__snapshots__/deep-test.yml'])
-  })
-
-  it('skips nothing when no snapshot directory is named, so a ruleDirs scan sees every rule ast-grep scan does', () => {
-    const root = tempRepo()
-    writeFile(root, 'rules/__snapshots__/no-hidden.yml', GOOD_RULE)
-    const files = readYamlFilesRecursive(path.join(root, 'rules'), 'rules')
-    expect(files.map((f) => f.path)).toEqual(['rules/__snapshots__/no-hidden.yml'])
   })
 })
 
@@ -123,7 +140,7 @@ describe('runCheck', () => {
     )
     writeFile(root, 'rules/no-foo.yml', GOOD_RULE)
     writeFile(root, 'rule-tests/no-foo-test.yml', GOOD_FIXTURE)
-    writeFile(root, 'rule-tests/snaps/no-foo-snapshot.yml', 'id: no-foo\nsnapshots:\n  foo: {}\n')
+    writeFile(root, 'rule-tests/snaps/no-foo-snapshot.yml', SNAPSHOT)
     const result = runCheck(root)
     expect(result.exitCode).toBe(0)
   })
