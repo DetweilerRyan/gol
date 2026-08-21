@@ -4,8 +4,14 @@ import LifeBoard from './components/LifeBoard'
 import { createEmptyLiveCells, getNextGeneration, type LiveCells, toggleCell as toggleCellInPlace } from './gameOfLife'
 import { placePattern, type Pattern } from './patternLibrary'
 
-function App() {
-  const [liveCells, updateLiveCells] = useImmer<LiveCells>(() => createEmptyLiveCells())
+interface AppProps {
+  // Perf-harness seeding only -- see src/main.tsx and src/liveCellSeed.ts.
+  // Undefined (the normal app boot) still yields an empty grid.
+  initialLiveCells?: LiveCells
+}
+
+function App({ initialLiveCells }: AppProps = {}) {
+  const [liveCells, updateLiveCells] = useImmer<LiveCells>(() => initialLiveCells ?? createEmptyLiveCells())
   const [generation, setGeneration] = useState(0)
 
   function toggleCell(x: number, y: number) {
