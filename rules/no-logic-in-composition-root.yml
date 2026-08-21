@@ -10,7 +10,9 @@ note: >-
 # SCOPE IS A SINGLE FILE PATH ON PURPOSE, and that makes this rule fragile in the one way
 # CLAUDE.md warns about: a `files:` glob matching nothing reports nothing and is
 # indistinguishable from clean code. If LifeBoard.tsx is renamed or moved, update this list --
-# and add any future gate-excluded composition root to it too.
+# and add any future gate-excluded composition root to it too. `npm run ast-grep:rules` now fails
+# on that specific mistake, so the rename shows up as a gate failure rather than as silence; the
+# reminder stays because the gate tells you the path is dead, not what the new path should be.
 #
 # src/App.tsx is deliberately NOT in scope. It looks like a composition root but isn't one: it
 # owns the `generation` counter, so `setGeneration((gen) => gen + 1)` is genuine state ownership
