@@ -38,16 +38,24 @@ describe('GridRuler', () => {
   // mount fresh nodes for newly visible ones, rather than remounting the whole row -- this is the
   // one place a wrong/constant key is observable through testing-library. Rerendering with a
   // shifted array is strictly better here than firing a real wheel event over a full grid, which
-  // is what this extraction exists to avoid paying for.
-  it('reuses a label DOM node for a coordinate that stays visible across a gridlines change, and mounts a fresh node for a newly visible one', () => {
+  // is what this extraction exists to avoid paying for. Both axes are shifted in the same
+  // rerender -- a constant/empty key on either axis alone would otherwise go unnoticed, since a
+  // single shared key collision only shows up as a wrongly-reused node once more than one label
+  // on that axis is on screen at once.
+  it('reuses a label DOM node for a coordinate that stays visible across a gridlines change, and mounts a fresh node for a newly visible one, on both axes', () => {
     const { rerender } = render(<GridRuler gridlines={gridlines} camera={camera} />)
-    const persistingBefore = screen.getByText('0')
+    const persistingXBefore = screen.getByText('0')
+    const persistingYBefore = screen.getByText('110')
 
-    const shifted: MajorGridlines = { x: [0, 10, 20], y: [100, 110] }
+    const shifted: MajorGridlines = { x: [0, 10, 20], y: [110, 120] }
     rerender(<GridRuler gridlines={shifted} camera={camera} />)
 
-    expect(screen.getByText('0')).toBe(persistingBefore)
+    expect(screen.getByText('0')).toBe(persistingXBefore)
     expect(screen.getByText('20')).toBeInTheDocument()
     expect(screen.queryByText('-10')).not.toBeInTheDocument()
+
+    expect(screen.getByText('110')).toBe(persistingYBefore)
+    expect(screen.getByText('120')).toBeInTheDocument()
+    expect(screen.queryByText('100')).not.toBeInTheDocument()
   })
 })

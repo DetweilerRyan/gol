@@ -9,6 +9,7 @@ import {
   stubResizeObserver,
   type ResizeObserverController,
 } from '../test-support/domStubs'
+import { gridContentEl } from '../test-support/gridDom'
 import Grid, { GRID_CONTENT_ID } from './Grid'
 
 // Grid itself composes useElementSize (ResizeObserver), useWheelInput and
@@ -69,12 +70,6 @@ function renderGrid(
     utils.rerender(<Grid {...merged} {...overrides} />)
   }
   return { ...utils, ...merged, rerenderWith }
-}
-
-function gridContentEl(container: HTMLElement): HTMLElement {
-  const el = container.querySelector('#grid-content')
-  if (!el) throw new Error('#grid-content not found')
-  return el as HTMLElement
 }
 
 function rootEl(container: HTMLElement): HTMLElement {

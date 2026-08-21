@@ -9,6 +9,7 @@ import {
   stubResizeObserver,
   type ResizeObserverController,
 } from '../test-support/domStubs'
+import { gridContentEl } from '../test-support/gridDom'
 import LifeBoard from './LifeBoard'
 
 // LifeBoard is the composition root: this file exists only to recover the two
@@ -46,12 +47,6 @@ function renderBoard(props: Partial<React.ComponentProps<typeof LifeBoard>> = {}
   }
   const utils = render(<LifeBoard {...merged} />)
   return { ...utils, ...merged }
-}
-
-function gridContentEl(container: HTMLElement): HTMLElement {
-  const el = container.querySelector('#grid-content')
-  if (!el) throw new Error('#grid-content not found')
-  return el as HTMLElement
 }
 
 function openPatternModal() {
