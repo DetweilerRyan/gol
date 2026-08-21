@@ -1,0 +1,12 @@
+id: no-value-import-across-perf-boundary
+valid:
+  - import type { RepSample } from '../scripts/perf-report/raw-sample.ts'
+  - import type { RawScenarioSample } from '../scripts/perf-report/raw-sample.ts'
+  - import { centeredCamera } from '../src/camera.ts'
+  - import { writeRawSample } from './raw-sink'
+  - import { aggregate } from './stats.ts'
+invalid:
+  - import { percentile } from '../scripts/perf-report/stats.ts'
+  - import { writeRawSample } from '../perf/raw-sink.ts'
+  - import { type RepSample } from '../scripts/perf-report/raw-sample.ts'
+  - import '../scripts/perf-report/stats.ts'

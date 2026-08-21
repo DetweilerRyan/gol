@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { buildSeededLiveCells, parseSeedRequest } from './liveCellSeed'
+import { buildSeededLiveCells, parseSeedRequest, seedFromSearch } from './liveCellSeed'
 
 describe('parseSeedRequest', () => {
   it('returns undefined when the cells param is absent -- no seeding requested', () => {
@@ -115,5 +115,24 @@ describe('buildSeededLiveCells', () => {
   it('places cells at the exact positions this seed/spread/count produces', () => {
     const result = buildSeededLiveCells({ count: 6, spread: 2, seed: 3 })
     expect([...result].sort()).toEqual(['-1,2', '-2,-1', '0,2', '1,0', '2,-1', '2,1'])
+  })
+})
+
+describe('seedFromSearch', () => {
+  it('builds the requested population for a satisfiable query string', () => {
+    const cells = seedFromSearch('?cells=6&spread=2&seed=3')
+    expect(cells?.size).toBe(6)
+  })
+
+  // Every "no seeding requested" and "malformed request" path collapses to
+  // undefined here, which src/main.tsx hands to App.tsx as an ordinary empty
+  // grid -- the alternative (throwing, or asserting non-null at the entry)
+  // would crash the perf build at boot on a typo'd URL.
+  it.each([
+    ['no cells param', ''],
+    ['a malformed cells param', '?cells=1e3'],
+    ['a count above the spread capacity', '?cells=10&spread=1'],
+  ])('returns undefined for %s', (_label, search) => {
+    expect(seedFromSearch(search)).toBeUndefined()
   })
 })

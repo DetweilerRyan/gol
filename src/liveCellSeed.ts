@@ -89,3 +89,18 @@ export function buildSeededLiveCells(request: SeedRequest): LiveCells {
 
   return live
 }
+
+// The whole seeding pipeline as one call: parse, and build only if the query
+// string actually asked for a satisfiable population. Lives here rather than
+// in src/main.tsx because the `request ? ... : undefined` decision is real
+// logic, and main.tsx is bootstrap code outside every quality gate -- a
+// branch there is neither mutation-tested nor complexity-scored. main.tsx
+// keeps only what has to be there: the import.meta.env.MODE check Rolldown
+// must see at the entry module to constant-fold this call away in a normal
+// production build (see rules/no-build-env-in-domain.yml), and the raw
+// location.search read this module may never do itself
+// (rules/no-dom-in-domain.yml).
+export function seedFromSearch(search: string): LiveCells | undefined {
+  const request = parseSeedRequest(search)
+  return request ? buildSeededLiveCells(request) : undefined
+}

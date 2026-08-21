@@ -3,6 +3,12 @@ import fc from 'fast-check'
 import { describe, expect } from 'vitest'
 import { buildSeededLiveCells, parseSeedRequest, type SeedRequest } from './liveCellSeed'
 
+// parseSeedRequest's documented fallbacks, restated here because the property
+// below asserts against them from the outside -- an omitted param must land
+// on exactly these, not merely on "some number".
+const DEFAULT_SPREAD = 200
+const DEFAULT_SEED = 1
+
 // spread first, then count bounded by that spread's capacity -- drawing count
 // unconstrained would mostly generate unsatisfiable requests (count >
 // capacity) and prove nothing about buildSeededLiveCells itself. Spread is
@@ -19,25 +25,56 @@ const seedRequestArbitrary: fc.Arbitrary<SeedRequest> = spreadArbitrary.chain((s
 })
 
 // Query strings built from the same valid shape, but with each of the three
-// values sometimes swapped for arbitrary garbage -- so parseSeedRequest sees
+// values sometimes swapped for something malformed -- so parseSeedRequest sees
 // a realistic mix of satisfiable and unsatisfiable requests, not just one or
 // the other.
-const paramValueArbitrary = (validValue: fc.Arbitrary<number>) =>
-  fc.option(fc.oneof(validValue.map(String), fc.string()), { nil: undefined })
+//
+// The malformed half is deliberately weighted toward NEAR-MISSES rather than
+// left to fc.string(): a random string almost never starts with a digit, so
+// against pure garbage a parser that only checks a *leading* run of digits
+// (/^\d+/) behaves identically to one anchored at both ends (/^\d+$/), and
+// the canonical-decimal property below would pass on both. "Digits followed by
+// junk" is exactly the input class where the two diverge, and exactly the
+// class Number() silently widens ("1e3" -> 1000, "0x10" -> 16).
+const digitsWithSuffixArbitrary = fc
+  .tuple(fc.nat({ max: 5000 }), fc.string({ minLength: 1 }))
+  .map(([digits, suffix]) => `${digits}${suffix}`)
 
-const queryStringArbitrary = fc
+const numericLookalikeArbitrary = fc.constantFrom('1e3', '0x10', '0b11', '+7', ' 7', '7 ', '7.0', '1_000', '1n')
+
+const paramValueArbitrary = (validValue: fc.Arbitrary<number>) =>
+  fc.option(fc.oneof(validValue.map(String), digitsWithSuffixArbitrary, numericLookalikeArbitrary, fc.string()), {
+    nil: undefined,
+  })
+
+// Carries the raw per-param strings alongside the rendered query string, so a
+// property can hold parseSeedRequest's *output* up against the exact text it
+// was given -- checking that it only ever accepts a value, rather than only
+// that it doesn't throw on one.
+interface QueryCase {
+  search: string
+  raw: { cells?: string; spread?: string; seed?: string }
+}
+
+const queryCaseArbitrary: fc.Arbitrary<QueryCase> = fc
   .record({
     cells: paramValueArbitrary(fc.nat({ max: 5000 })),
     spread: paramValueArbitrary(fc.nat({ max: 100 })),
     seed: paramValueArbitrary(fc.nat()),
   })
-  .map(({ cells, spread, seed }) => {
+  .map((raw) => {
     const params = new URLSearchParams()
-    if (cells !== undefined) params.set('cells', cells)
-    if (spread !== undefined) params.set('spread', spread)
-    if (seed !== undefined) params.set('seed', seed)
-    return params.toString()
+    if (raw.cells !== undefined) params.set('cells', raw.cells)
+    if (raw.spread !== undefined) params.set('spread', raw.spread)
+    if (raw.seed !== undefined) params.set('seed', raw.seed)
+    return { search: params.toString(), raw }
   })
+
+const queryStringArbitrary = queryCaseArbitrary.map((queryCase) => queryCase.search)
+
+function stripLeadingZeros(raw: string | undefined): string | undefined {
+  return raw?.replace(/^0+(?=\d)/, '')
+}
 
 function parseCellKey(key: string): [number, number] {
   const [x, y] = key.split(',')
@@ -77,5 +114,44 @@ describe('parseSeedRequest (property)', () => {
 
   it.prop([fc.string()])('never throws on an arbitrary string', (search) => {
     expect(() => parseSeedRequest(search)).not.toThrow()
+  })
+
+  // The validity half of the contract, which totality alone can't express: an
+  // accepted param must be its own number written back out in decimal digits.
+  // That rules out every string Number() would happily widen -- "1e3", "0x10",
+  // "0b11", " 7", "7.0", "+7" -- as a class rather than one literal at a time,
+  // because each of those renders back differently from what was given. A
+  // seeder that quietly reads "1e3" as 1000 produces a population nobody asked
+  // for, and every perf number measured against it inherits the error silently
+  // (see perf/population.ts on why a wrong population is the failure mode this
+  // module is gated to prevent).
+  //
+  // Leading zeros are the one accepted non-canonical spelling, so they're
+  // normalised away before comparing: "007" is digits-only, Number() reads it
+  // as plain decimal 7 (not octal), and rejecting it would buy no safety --
+  // the risk this property guards is a value Number() reads as a DIFFERENT
+  // number than the digits say, which a zero-padded decimal never is.
+  it.prop([queryCaseArbitrary])(
+    'accepts a param value only if it is that number in plain decimal digits',
+    ({ search, raw }) => {
+      const request = parseSeedRequest(search)
+      fc.pre(request !== undefined)
+      expect({
+        cells: stripLeadingZeros(raw.cells),
+        spread: stripLeadingZeros(raw.spread) ?? String(DEFAULT_SPREAD),
+        seed: stripLeadingZeros(raw.seed) ?? String(DEFAULT_SEED),
+      }).toEqual({
+        cells: String(request?.count),
+        spread: String(request?.spread),
+        seed: String(request?.seed),
+      })
+    },
+  )
+
+  // The mirror of the property above, and the reason it can't drift into
+  // over-rejection: every SeedRequest, rendered as the query string a perf
+  // scenario would really put in a URL, parses back to exactly itself.
+  it.prop([seedRequestArbitrary])('round-trips a rendered query string back to the same request', (request) => {
+    expect(parseSeedRequest(`?cells=${request.count}&spread=${request.spread}&seed=${request.seed}`)).toEqual(request)
   })
 })

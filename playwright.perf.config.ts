@@ -44,9 +44,9 @@ export default defineConfig({
   // Two viewports. 1280x900 matches playwright.config.ts's fixed e2e
   // viewport (see e2e/e2e-helpers.ts's CENTER comment), so numbers from this
   // project land in a world already pinned down by that suite; 1920x1080
-  // is the second reference size the design calls for. Both projects are
-  // wired here, but only chromium-1280x900 is exercised for scenario 1 in
-  // this step -- see pan.perf.spec.ts.
+  // is the second reference size the design calls for. Every scenario runs
+  // under both, so each raw sample is keyed on (scenario, project) -- see
+  // perf/raw-sink.ts's filename comment.
   projects: [
     {
       name: 'chromium-1280x900',

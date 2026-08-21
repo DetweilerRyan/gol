@@ -1,0 +1,26 @@
+id: no-value-import-across-perf-boundary
+snapshots:
+  import '../scripts/perf-report/stats.ts':
+    labels:
+    - source: import '../scripts/perf-report/stats.ts'
+      style: primary
+      start: 0
+      end: 40
+  import { percentile } from '../scripts/perf-report/stats.ts':
+    labels:
+    - source: import { percentile } from '../scripts/perf-report/stats.ts'
+      style: primary
+      start: 0
+      end: 60
+  import { type RepSample } from '../scripts/perf-report/raw-sample.ts':
+    labels:
+    - source: import { type RepSample } from '../scripts/perf-report/raw-sample.ts'
+      style: primary
+      start: 0
+      end: 69
+  import { writeRawSample } from '../perf/raw-sink.ts':
+    labels:
+    - source: import { writeRawSample } from '../perf/raw-sink.ts'
+      style: primary
+      start: 0
+      end: 52

@@ -88,6 +88,13 @@ the population check, that assertion belongs in
 `scripts/perf-report/`'s test suite, not as inline arithmetic in a
 `perf/*.perf.spec.ts` file.
 
+The half of that boundary a tool can check -- that the two directories
+exchange types and never runtime code -- is checked by
+`rules/no-value-import-across-perf-boundary.yml`: `import type` across the
+boundary is fine (it is erased), any value import in either direction warns
+in `npm run ast-grep`. What no tool can check is the other half, "no median
+computed here"; that one is on the reader.
+
 ## CDP reports durations in seconds, not milliseconds
 
 Every duration in a `RepSample` that this directory produces directly

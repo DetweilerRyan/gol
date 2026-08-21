@@ -6,7 +6,9 @@
 // this file's TS program (tsconfig.app.json: `moduleResolution: "bundler"`,
 // `lib: DOM`) across a resolution boundary from scripts/'s own
 // `moduleResolution: "nodenext"` program -- don't add one, in either
-// direction.
+// direction. rules/no-value-import-across-perf-boundary.yml is the
+// mechanical check for that, so the erosion shows up in `npm run ast-grep`
+// rather than only in this comment.
 import { mkdirSync, writeFileSync } from 'node:fs'
 import path from 'node:path'
 import { fileURLToPath } from 'node:url'

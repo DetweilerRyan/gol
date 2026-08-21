@@ -1,5 +1,5 @@
-// The contract between perf/ (Playwright, ungated, built in a later step of
-// this slice) and this reporter (scripts/, fully covered by crap4ts/Stryker).
+// The contract between perf/ (Playwright, ungated) and this reporter
+// (scripts/, fully covered by crap4ts/Stryker).
 // perf/ writes one JSON file per scenario run under reports/perf/raw/; this
 // module is the only place that trusts its shape. Validating on read is
 // load-bearing, not defensive boilerplate: perf/ carries no type checking of

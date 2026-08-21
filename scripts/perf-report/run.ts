@@ -1,6 +1,6 @@
 #!/usr/bin/env tsx
 // CLI shell for the render-perf reporter: reads every raw sample under
-// reports/perf/raw/ (written by perf/, a later step of this slice) and
+// reports/perf/raw/ (written by perf/) and
 // writes reports/perf/latest.json, reports/perf/latest.md (also echoed to
 // stdout), and one appended reports/perf/history.jsonl line. Report-only,
 // no thresholds -- same stance as gherkin-dry-checker and halstead4ts.
@@ -12,7 +12,8 @@
 //
 // The boundary to perf/ is a JSON file on disk, not a module import -- see
 // raw-sample.ts. Don't add an import from this file into perf/, and don't
-// add one from perf/ into scripts/perf-report/.
+// add one from perf/ into scripts/perf-report/;
+// rules/no-value-import-across-perf-boundary.yml checks both directions.
 
 import { appendFileSync, existsSync, globSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs'
 import { spawnSync } from 'node:child_process'

@@ -1,0 +1,38 @@
+id: no-value-import-across-perf-boundary
+language: TypeScript
+severity: warning
+message: perf/ and scripts/perf-report/ may exchange types only -- the runtime boundary is a JSON file on disk.
+note: >-
+  perf/ (ungated Playwright measurement) hands scripts/perf-report/ (gated: unit-tested,
+  Stryker-covered) one thing -- a RawScenarioSample JSON file under reports/perf/raw/. Keeping the
+  runtime graphs disjoint is what lets every number-producing function live on the gated side: a
+  value import would let a median or a percentile drift back into perf/ where nothing measures it.
+  It also crosses a real compiler boundary -- perf/ is in tsconfig.app.json (moduleResolution
+  "bundler", lib DOM, types vite/client) and scripts/ is in tsconfig.scripts.json
+  (moduleResolution "nodenext", no DOM). `import type` is fine in either direction: it is erased,
+  so it links no runtime module graph. See perf/raw-sink.ts's header comment.
+# Both sides of the boundary, so the rule reads the same whichever direction someone
+# reaches across. A glob matching nothing reports nothing, so `npm run ast-grep:rules`
+# is what catches either directory being renamed.
+files:
+  - 'perf/**'
+  - 'scripts/**'
+rule:
+  all:
+    - kind: import_statement
+    # Matched on the import's source text rather than via a metavariable: metavariables
+    # do not interpolate inside string literals (see CLAUDE.md), which is the same reason
+    # domain-imports-upward is written as kind + regex.
+    # Matches the module specifier itself rather than `from '...'`, so a side-effect
+    # import (`import '../scripts/...'`, no `from` at all) is caught too. An
+    # import_statement's only string literal IS its specifier, so there is nothing else
+    # in the node for this to hit by accident.
+    - any:
+        - regex: '[''"][^''"]*/scripts/'
+        - regex: '[''"][^''"]*/perf/'
+    # `import type { RawScenarioSample } from '../scripts/...'` is the sanctioned form and must
+    # not warn. Note verbatimModuleSyntax is on in BOTH tsconfigs, so the inline
+    # `import { type X } from ...` variant really does emit a runtime import -- it is a value
+    # import for this rule's purposes, and flagging it is correct rather than a false positive.
+    - not:
+        regex: '^import\s+type\s'
