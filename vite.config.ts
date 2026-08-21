@@ -4,6 +4,17 @@ import babel from '@rolldown/plugin-babel'
 import tailwindcss from '@tailwindcss/vite'
 import { devPort } from './dev-port.ts'
 
+const sharedExclude = [
+  ...configDefaults.exclude,
+  '**/*.e2e.spec.ts',
+  '**/*.browser.test.ts?(x)',
+  'scripts/**',
+  '.claude/worktrees/**',
+]
+
+const domTests = ['src/components/**/*.{test,spec}.?(c|m)[jt]s?(x)', 'src/hooks/**/*.{test,spec}.?(c|m)[jt]s?(x)']
+const propertyTests = ['**/*.property.test.ts']
+
 // https://vite.dev/config/
 export default defineConfig({
   plugins: [react(), babel({ presets: [reactCompilerPreset()] }), tailwindcss()],
@@ -38,16 +49,69 @@ export default defineConfig({
     // checkout. configDefaults.exclude covers node_modules/dist/.git but not
     // .claude, so without that last entry a run from the primary checkout would
     // collect and run another slice's src/ and features/ tests as its own.
-    exclude: [
-      ...configDefaults.exclude,
-      '**/*.e2e.spec.ts',
-      '**/*.browser.test.ts?(x)',
-      'scripts/**',
-      '.claude/worktrees/**',
-    ],
+    exclude: sharedExclude,
     coverage: {
       provider: 'v8',
       reporter: ['text', 'json'],
     },
+    // SPLIT INTO THREE PROJECTS ON PURPOSE. jsdom construction measured at
+    // ~78% of CPU on a run where fewer than half the collected files touch
+    // the DOM -- most of the suite (framework-free modules under src/,
+    // property tests, Gherkin steps) never needs a document. Splitting lets
+    // only the files that actually render pay for jsdom.
+    //
+    // `unit` SUBTRACTS domTests+propertyTests rather than declaring its own
+    // `include`, on purpose: it inherits configDefaults.include and narrows
+    // from there, so a newly added test file lands in `unit` by default and
+    // fails loudly with "document is not defined" if it actually needed
+    // jsdom. A file can never fall between all three projects and run nowhere.
+    //
+    // THE ONE THING THAT CAN GO SILENTLY DEAD: `dom`'s include list names the
+    // directories src/components/ and src/hooks/ by path. A vitest project
+    // whose glob matches nothing exits 0 with no warning -- measured on
+    // 4.1.10. Rename either directory and `dom` silently stops running its
+    // 15 test files while `npm test` stays green. Renaming either means
+    // updating this list too, as well as crap4ts.config.ts,
+    // stryker.config.json, and rules/domain-imports-upward.yml's `ignores`.
+    //
+    // `--exclude` on the CLI is a no-op once `projects` is set -- vitest's
+    // cliExclude override is not in the cliOverrides allowlist for a
+    // multi-project run. Filter which project(s) run with `--project`
+    // instead; that's why package.json's test:unit changed shape.
+    //
+    // Root `environment`/`setupFiles`/`coverage` stay set even though every
+    // leaf project now sets its own. `coverage` is structurally root-only
+    // (ProjectConfig has no coverage field), and root env/setup are kept so
+    // this config degrades to today's exact single-project behavior if
+    // `projects` is ever removed.
+    projects: [
+      {
+        test: {
+          name: 'unit',
+          environment: 'node',
+          setupFiles: [],
+          exclude: [...sharedExclude, ...domTests, ...propertyTests],
+        },
+      },
+      {
+        test: {
+          name: 'property',
+          environment: 'node',
+          setupFiles: [],
+          include: propertyTests,
+          exclude: sharedExclude,
+        },
+      },
+      {
+        plugins: [react(), babel({ presets: [reactCompilerPreset()] }), tailwindcss()],
+        test: {
+          name: 'dom',
+          environment: 'jsdom',
+          setupFiles: ['./src/test-setup.ts'],
+          include: domTests,
+          exclude: sharedExclude,
+        },
+      },
+    ],
   },
 })
