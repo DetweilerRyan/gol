@@ -118,78 +118,65 @@ describe('parseSteps', () => {
     expect(parseSteps('Feature: F\n  Given an orphan step\n')).toEqual([])
   })
 
-  it('resumes recording steps once a new Scenario ends an Examples table', () => {
-    const steps = parseSteps(
-      'Feature: F\n' +
-        '  Scenario Outline: Outlined\n' +
-        '    Given <a>\n' +
-        '    Examples:\n' +
-        '      | a |\n' +
-        '      | 1 |\n' +
-        '  Scenario: After the table\n' +
-        '    Then a later step\n',
-    )
-    expect(steps.map((s) => s.text)).toEqual(['<a>', 'a later step'])
-    expect(steps[1]).toMatchObject({ scenarioIndex: 1, stepIndex: 0 })
-  })
-
-  it('keeps ignoring steps that follow an Examples table inside the same scenario', () => {
-    const steps = parseSteps(
-      'Feature: F\n  Scenario Outline: Outlined\n    Given <a>\n    Examples:\n      | a |\n      | 1 |\n    Then a trailing step\n',
-    )
-    expect(steps.map((s) => s.text)).toEqual(['<a>'])
-  })
-
-  it('lets a following Feature: line end an Examples table', () => {
-    const steps = parseSteps(
-      'Feature: One\n' +
-        '  Scenario Outline: Outlined\n' +
-        '    Given <a>\n' +
-        '    Examples:\n' +
-        '      | a |\n' +
-        '      | 1 |\n' +
-        'Feature: Two\n' +
-        '  Scenario: Fresh\n' +
-        '    Then a step in the second feature\n',
-    )
-    expect(steps.map((s) => s.text)).toEqual(['<a>', 'a step in the second feature'])
-  })
-
   it('keeps only a single separator between the keyword and the step text', () => {
     const steps = parseSteps('Feature: F\n  Scenario: S\n    Given   spaced out\n')
     expect(steps[0].text).toBe('spaced out')
   })
 
-  it('recognizes a named Examples:, not just a bare one, so a following step in the same scenario is still ignored', () => {
-    const steps = parseSteps(
-      'Feature: F\n' +
-        '  Scenario Outline: Outlined\n' +
-        '    Given <a>\n' +
-        '    Examples: some cases\n' +
-        '      | a |\n' +
-        '      | 1 |\n' +
-        '    Then a trailing step\n',
-    )
-    expect(steps.map((s) => s.text)).toEqual(['<a>'])
-  })
-
-  it('lets a Feature: line end an Examples table even without a following Scenario/Background', () => {
-    const steps = parseSteps(
-      'Feature: One\n' +
-        '  Scenario Outline: Outlined\n' +
-        '    Given <a>\n' +
-        '    Examples:\n' +
-        '      | a |\n' +
-        '      | 1 |\n' +
-        'Feature: Two\n' +
-        '    Then a step without a new scenario\n',
-    )
-    expect(steps.map((s) => s.text)).toEqual(['<a>', 'a step without a new scenario'])
-  })
-
   it('does not treat a step keyword as a step unless it starts the line', () => {
     const steps = parseSteps('Feature: F\n  Scenario: S\n    not a step Given inline text\n')
     expect(steps).toEqual([])
+  })
+
+  // A lone `\r` and U+2028/U+2029 are line terminators the `split(/\r?\n/)`
+  // above doesn't split on, and `.` refuses to cross them -- so the step regex
+  // can't reach its `$` and the line is no step at all. The alternative (an
+  // unanchored regex quietly recording the text up to the terminator) would be
+  // worse: a silently truncated step, indistinguishable from a real one.
+  it.each([
+    ['a carriage return', '\r'],
+    ['a line separator', '\u2028'],
+    ['a paragraph separator', '\u2029'],
+  ])('records no step at all for a line broken by %s', (_name, terminator) => {
+    expect(parseSteps(`Feature: F\n  Scenario: S\n    Given a${terminator}b\n`)).toEqual([])
+  })
+
+  // An Examples: table swallows every following line until a declaration ends
+  // it. Each keyword involved may be bare or carry a name, and the parser
+  // matches on the keyword *prefix*, so both forms of each need covering: a
+  // named `Examples:` went unrecognized for a while precisely because every
+  // fixture here happened to use the bare form.
+  const outlineWithExamples = (examplesLine: string, afterTable: string) =>
+    [
+      'Feature: One',
+      '  Scenario Outline: Outlined',
+      '    Given <a>',
+      `    ${examplesLine}`,
+      '      | a |',
+      '      | 1 |',
+      afterTable,
+      '    Then a later step',
+    ].join('\n')
+
+  it.each([
+    { examples: 'Examples:', after: '  Scenario: After', ends: true },
+    { examples: 'Examples:', after: '  Scenario Outline: After', ends: true },
+    { examples: 'Examples:', after: '  Background:', ends: true },
+    { examples: 'Examples:', after: '  Background: named', ends: true },
+    { examples: 'Examples:', after: 'Feature:', ends: true },
+    { examples: 'Examples:', after: 'Feature: Two', ends: true },
+    { examples: 'Examples:', after: '      | 2 |', ends: false },
+    { examples: 'Examples: some cases', after: '  Scenario: After', ends: true },
+    { examples: 'Examples: some cases', after: 'Feature: Two', ends: true },
+    { examples: 'Examples: some cases', after: '      | 2 |', ends: false },
+  ])('after "$examples", a "$after" line ends the table: $ends', ({ examples, after, ends }) => {
+    const steps = parseSteps(outlineWithExamples(examples, after))
+    expect(steps.map((s) => s.text)).toEqual(ends ? ['<a>', 'a later step'] : ['<a>'])
+  })
+
+  it('starts a fresh scenario index and step index on the Scenario that ends an Examples table', () => {
+    const steps = parseSteps(outlineWithExamples('Examples:', '  Scenario: After'))
+    expect(steps[1]).toMatchObject({ scenarioIndex: 1, scenarioName: 'After', stepIndex: 0 })
   })
 })
 

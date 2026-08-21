@@ -2,6 +2,12 @@
 // the same feature-file subset described in the Acceptance Pipeline
 // Specification's parser-spec.md: Feature/Background/Scenario/Scenario
 // Outline/Examples declarations, Given/When/Then/And/But steps.
+//
+// Outside that subset: tags, `Rule:`, data tables, and doc strings. The first
+// three fall through harmlessly -- they match no declaration prefix and no
+// step keyword -- but a doc-string line that begins with a step keyword would
+// be read as a step. No feature file here uses doc strings, and supporting one
+// means tracking its `"""` fences, not just skipping lines.
 
 // A step belongs either to a Background (shared, no owning scenario) or to a
 // Scenario/Scenario Outline. Background steps carry null scenario index/name
@@ -17,11 +23,12 @@ export interface ParsedStep {
   text: string
 }
 
-// The trailing `$` is redundant with `.+`'s greedy match to end-of-string (no
-// line here ever contains an embedded newline, since callers only ever match
-// against one already-split, already-trimmed line) -- a mutant that drops it
-// is equivalent, confirmed by fuzzing both regexes against thousands of step
-// lines with no divergence. Left in for readability/symmetry with the `^`.
+// The trailing `$` is load-bearing, not symmetry with the `^`: `.` never
+// matches a line terminator, and `parseSteps`'s `split(/\r?\n/)` doesn't split
+// on a *lone* `\r` (nor on U+2028/U+2029), so a line reaching here can still
+// contain one. With the `$`, such a line matches nothing and yields no step at
+// all; without it, `(.+)` would stop at the terminator and silently record a
+// step whose text is truncated there. Pinned by the bare-terminator test.
 const STEP = /^(Given|When|Then|And|But)\s+(.+)$/
 
 // Everything the parser needs to know to place the *next* step it reads.
@@ -35,12 +42,14 @@ interface ParserState {
   inExamples: boolean
 }
 
-// inExamples: false here is unobservable -- every declaration branch below
-// overwrites it outright, and the one read site (`state.inExamples` in the
-// main loop) can only matter once `state.section` is non-null, which nothing
-// before the first declaration can be (see toStep's orphan-step check). A
-// mutant flipping this to `true` is equivalent, confirmed by fuzzing. Kept
-// `false` because it's the honest starting value, not because it's load-bearing.
+// inExamples: false here is unobservable, and a mutant flipping it to `true`
+// is equivalent. The argument is exhaustive rather than statistical: all four
+// `applyDeclaration` branches below set `inExamples` explicitly, so this value
+// survives only until the first declaration line. Until then `state.section`
+// is still null, so the one read site (`if (state.inExamples)` in the main
+// loop) can only choose between `continue` and a `toStep` that returns null on
+// its own orphan-step check -- both emit no step and leave state untouched.
+// Kept `false` because it's the honest starting value, not because it matters.
 const INITIAL_STATE: ParserState = {
   section: null,
   scenarioIndex: -1,
@@ -60,10 +69,12 @@ function applyDeclaration(line: string, state: ParserState): ParserState | null 
     return {
       section: 'scenario',
       scenarioIndex: state.scenarioIndex + 1,
-      // The `^` here is redundant: this branch only runs once the `test`
-      // above has already proven `line` starts with `Scenario( Outline)?:`,
-      // so the unanchored regex's leftmost match is necessarily at index 0
-      // too. A mutant that drops it is equivalent, confirmed by fuzzing.
+      // The `^` here is redundant, and a mutant dropping it is equivalent.
+      // This branch only runs once the `test` above has proven `line` starts
+      // with `Scenario( Outline)?:`, and this pattern is that same prefix plus
+      // a `\s*` that can match empty -- so the unanchored form is guaranteed a
+      // match at index 0, and `replace` takes the leftmost one. Same start,
+      // same backtracking, same extent.
       scenarioName: line.replace(/^Scenario( Outline)?:\s*/, ''),
       stepIndex: 0,
       inExamples: false,
@@ -103,9 +114,10 @@ export function parseSteps(featureText: string): ParsedStep[] {
     // the STEP regex (`toStep` requires `^(Given|...)`, and a comment
     // containing step-like text such as `# Given x` still starts with `#`,
     // not the keyword) -- so falling through produces no declaration change
-    // and no step either way. An earlier explicit guard here was provably
-    // dead code (verified by fuzzing), so it was removed rather than kept
-    // untested.
+    // and no step either way. That's an exhaustive argument over the four
+    // prefixes and the one regex, not a sampled one, which is why an earlier
+    // explicit guard here was removed rather than kept untested. The
+    // "ignores blank lines and comments" test still pins the behavior.
 
     const declared = applyDeclaration(line, state)
     if (declared) {
