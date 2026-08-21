@@ -16,7 +16,7 @@ describe('a basic cache of primitives', () => {
   }
 
   it('can insert and retrieve entries at key-paths.', () => {
-    // Key-paths are typed as tupples and can have
+    // Key-paths are typed as tuples and can have
     //  any type. Here we're only using strings.
     type KeyPath = [string, string, string]
     // An instance of a cache is created using
@@ -51,7 +51,7 @@ describe('a basic cache of primitives', () => {
 
   it('can be created with initial entries.', () => {
     // The createCache factory method is overloaded
-    //  to accept an Iterable of [key-path, entry-value] tupples.
+    //  to accept an Iterable of [key-path, entry-value] tuples.
     //
     // This overload was provided to make these unit
     //  tests cleaner, but it may have real world uses
@@ -76,7 +76,7 @@ describe('a basic cache of primitives', () => {
 
     expect(cache.has(['retros', 1])).toBe(false)
 
-    // Be careful, attepting to remove an
+    // Be careful, attempting to remove an
     //  entry that doesn't exist will throw.
     expect(() => cache.remove(['retros', 1])).toThrow(/no entry exist/)
   })
@@ -135,7 +135,7 @@ describe('a basic cache of primitives', () => {
 
   it('can have falsey as keys.', () => {
     // Create a cache populated with entries with
-    //  key-paths that contian every possible key
+    //  key-paths that contain every possible key
     //  that evaluates to falsey.
     const cache = createCache<[Primitive], Primitive>([
       [[undefined], 'undefined'],
@@ -195,7 +195,7 @@ describe('a basic cache of primitives', () => {
     expect(cache.retrieve([john])).toBe(44)
     expect(cache.retrieve([jane])).toBe(73)
 
-    // Keys are evaulated by reference, not via
+    // Keys are evaluated by reference, not via
     //  a deep equality check.
     expect(cache.has([createUser('John Smith')])).toBe(false)
     expect(() => cache.retrieve([createUser('John Smith')])).toThrow(/no entry exists/)
@@ -204,7 +204,7 @@ describe('a basic cache of primitives', () => {
   it('can have arrays as keys.', () => {
     const myArray = ['ok', 433, false]
     const myOtherArray: unknown[] = []
-    const myThridArray = [3, 4, 2]
+    const myThirdArray = [3, 4, 2]
 
     const cache = createCache([
       [[myArray], 'my array'],
@@ -213,13 +213,13 @@ describe('a basic cache of primitives', () => {
 
     expect(cache.has([myArray])).toBe(true)
     expect(cache.has([myOtherArray])).toBe(true)
-    expect(cache.has([myThridArray])).toBe(false)
+    expect(cache.has([myThirdArray])).toBe(false)
   })
 
   it('can have functions as keys.', () => {
     const myFunc = () => {}
     const myOtherFunc = () => {}
-    const myThridFunc = () => {}
+    const myThirdFunc = () => {}
 
     const cache = createCache([
       [[myFunc], 'my function'],
@@ -228,13 +228,13 @@ describe('a basic cache of primitives', () => {
 
     expect(cache.has([myFunc])).toBe(true)
     expect(cache.has([myOtherFunc])).toBe(true)
-    expect(cache.has([myThridFunc])).toBe(false)
+    expect(cache.has([myThirdFunc])).toBe(false)
   })
 
   it('can have Symbols as keys.', () => {
     const mySymbol = Symbol()
     const myOtherSymbol = Symbol()
-    const myThridSymbol = Symbol()
+    const myThirdSymbol = Symbol()
 
     const cache = createCache([
       [[mySymbol], 'my symbol'],
@@ -243,7 +243,7 @@ describe('a basic cache of primitives', () => {
 
     expect(cache.has([mySymbol])).toBe(true)
     expect(cache.has([myOtherSymbol])).toBe(true)
-    expect(cache.has([myThridSymbol])).toBe(false)
+    expect(cache.has([myThirdSymbol])).toBe(false)
   })
 
   // Shared by the super-/sub-entries tests below: both mutate one entry
@@ -280,19 +280,19 @@ describe('a basic cache of primitives', () => {
       [['retros', 1, 'notes', 5], 'note 5'],
     ]
 
-    // Inserting a new sub-entry... has no affect on the super-entries
+    // Inserting a new sub-entry... has no effect on the super-entries
     cache.insert(['retros', 0], 'retro 0')
     assertUnaffected(cache.has, cache.retrieve, superEntries)
 
-    // Updating the sub-entry... has no affect on the super-entries
+    // Updating the sub-entry... has no effect on the super-entries
     cache.update(['retros', 0], 'Sprint Retro 0')
     assertUnaffected(cache.has, cache.retrieve, superEntries)
 
-    // Updating the sub-entry to falsey... has no affect on the super-entries.
+    // Updating the sub-entry to falsey... has no effect on the super-entries.
     cache.update(['retros', 0], null)
     assertUnaffected(cache.has, cache.retrieve, superEntries)
 
-    // Removing the sub-entry... has no affect on the super-entries.
+    // Removing the sub-entry... has no effect on the super-entries.
     cache.remove(['retros', 0])
     assertUnaffected(cache.has, cache.retrieve, superEntries)
 
@@ -320,19 +320,19 @@ describe('a basic cache of primitives', () => {
       [['retros', 1], 'retro 1'],
     ]
 
-    // Inserting a super-entry... has no affect on the sub-entries
+    // Inserting a super-entry... has no effect on the sub-entries
     cache.insert(['retros', 0, 'notes', 3], 'notes 3')
     assertUnaffected(cache.has, cache.retrieve, subEntries)
 
-    // Updating the super-entry... has no affect on the sub-entries
+    // Updating the super-entry... has no effect on the sub-entries
     cache.update(['retros', 0, 'notes', 3], 'NOTE 3!!')
     assertUnaffected(cache.has, cache.retrieve, subEntries)
 
-    // Updating the super-entry to falsey... has no affect on the sub-entries
+    // Updating the super-entry to falsey... has no effect on the sub-entries
     cache.update(['retros', 0, 'notes', 3], null)
     assertUnaffected(cache.has, cache.retrieve, subEntries)
 
-    // Removing the super-entry... has no affect on the sub-entries
+    // Removing the super-entry... has no effect on the sub-entries
     cache.remove(['retros', 0, 'notes', 3])
     assertUnaffected(cache.has, cache.retrieve, subEntries)
   })
@@ -413,7 +413,7 @@ describe('a cache is iterable', () => {
         const [collection, id] = keyPath
         // inserting is safe here because the call, Array.from(cache),
         //  has already iterated over the entire cache and now
-        //  we are simply looping through all the the entries
+        //  we are simply looping through all the entries
         //  that existing in the cache at the time that
         //  Array.from was called.
         cache.insert([collection, id + 100], value)
@@ -443,7 +443,7 @@ describe('a cache is iterable', () => {
     }).toThrow('The cache was mutated while being iterated over')
 
     // because the iterator above threw
-    //  after the first removal, we will ahve
+    //  after the first removal, we will have
     //  only removed one entry.
     expect(cache.size).toBe(initialSize - 1)
 

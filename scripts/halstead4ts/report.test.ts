@@ -44,11 +44,22 @@ describe('buildReport', () => {
     expect(report).toContain('59.2')
   })
 
-  it('labels every column it prints', () => {
+  it('labels every column it prints, in the header row specifically', () => {
+    // Asserting against the header row's own cells (not just "does this
+    // string appear anywhere in the report") matters here because 'FTA'
+    // already appears in the title line above the table -- a
+    // report.toContain('FTA') check alone can't tell a corrupted 'FTA'
+    // header cell apart from an intact one.
     const report = buildReport([SAMPLE_RESULT])
-    for (const title of ['File', 'CC', 'Volume', 'Difficulty', 'Effort', 'Bugs', 'FTA', 'Assessment']) {
-      expect(report).toContain(title)
-    }
+    const headerLine = report.split('\n').find((line) => line.startsWith('File'))!
+    const cells = headerLine.trim().split(/\s{2,}/)
+    expect(cells).toEqual(['File', 'CC', 'Volume', 'Difficulty', 'Effort', 'Bugs', 'FTA', 'Assessment'])
+  })
+
+  it('separates the title line from the header with a single blank line', () => {
+    const report = buildReport([SAMPLE_RESULT])
+    const lines = report.split('\n')
+    expect(lines[1]).toBe('')
   })
 
   it('reports the file-level cyclomatic complexity from FTA, not per-function', () => {
@@ -87,5 +98,17 @@ describe('buildReport', () => {
     const report = buildReport([SAMPLE_RESULT, underFloor])
     expect(report).toContain('src/equality/is-strict-equal.ts')
     expect(report).toContain('not scored (under FTA size floor)')
+  })
+
+  it('placeholders every metric column, not just the file and assessment, for a not-scored row', () => {
+    // The file name itself ('is-strict-equal.ts') contains hyphens, so a
+    // loose substring check for '-' can't tell a placeholder-less row apart
+    // from an intact one -- this reads the row's own cells instead.
+    const underFloor: FileResult = { file: 'src/equality/is-strict-equal.ts', analysis: null }
+    const report = buildReport([SAMPLE_RESULT, underFloor])
+    const rowLine = report.split('\n').find((line) => line.includes('is-strict-equal.ts'))!
+    const cells = rowLine.trim().split(/\s{2,}/)
+    // File, then CC/Volume/Difficulty/Effort/Bugs/FTA, then Assessment.
+    expect(cells.slice(1, 7)).toEqual(['-', '-', '-', '-', '-', '-'])
   })
 })

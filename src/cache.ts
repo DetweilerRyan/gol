@@ -1,34 +1,31 @@
 /**
- *
- *
- *
  * The performance exception for Mutability
  *
- * TLDR: When fast read/write algorithms and memory effecient data structures
- * are the priority then Mutability wins over Immutability. Therefore,
+ * TLDR: When fast read/write algorithms and memory-efficient data structures
+ * are the priority, Mutability wins over Immutability. Therefore,
  *
- * In order to ensure that this cache is as performant as possible we
+ * in order to ensure that this cache is as performant as possible we
  * will be deviating from some of the established conventions of the
- * Functional Paradigm. Namely, immutibily, pureity, and statelessness.
+ * Functional Paradigm. Namely, immutability, purity, and statelessness.
  *
  * For performance reasons the following methods will mutate the cache instance:
  *  - insert
  *  - update
  *  - remove
  *
- * How does embracing mutibility here increase performance?
+ * How does embracing mutability here increase performance?
  *
  * Each time an entry is inserted, updated, or removed from the cache,
- * the node where the entry exists must be replaced (no big deal right?)
- * AND the every nodes map at each node in the keypath may be mutated.
+ * the node where the entry exists must be replaced (no big deal, right?)
+ * AND every node's map along the keypath may be mutated.
  *
- * The standard approach for seting and deleted values from a Map in javascript
- * that doesn't mutate the original map instance requires us to clone
- * old map and then performing the mutation on the clone. Meaning,
- * we have to loop over the entire map every time we add new value or
- * update/remove an existing value and therefore is O(n).
+ * The standard approach for setting and deleting values on a Map in
+ * JavaScript without mutating the original map instance requires us to
+ * clone the old map and then perform the mutation on the clone. Meaning,
+ * we have to loop over the entire map every time we add a new value or
+ * update/remove an existing value, and therefore it's O(n).
  *
- * immtable set:
+ * immutable set:
  *
  * function set<K,V>(oldMap: ReadOnlyMap<K,V>, key: K, value: V): ReadOnlyMap<K,V> {
  *   // clone the map.
@@ -41,28 +38,28 @@
  *   return clone as ReadOnlyMap<K, V>;
  * }
  *
- * The immutable algorithms for the insert, update, and remove will have
- * an asymptotic complexity that is a function of the number of entries
- * in the cache O(n). While the muttable algorithms are constant time O(1).
+ * The immutable algorithms for insert, update, and remove will have an
+ * asymptotic complexity that is a function of the number of entries in
+ * the cache, O(n), while the mutable algorithms are constant time O(1).
  *
- * Simpmly put, an immutable apporach will cause calls to insert, update,
- * and remove to become slower as the cache grows larger and thats no
+ * Simply put, an immutable approach will cause calls to insert, update,
+ * and remove to become slower as the cache grows larger, and that's no
  * good.
  *
- * Is it possible to create an Immuable Map who's insertion and removal
- * althorithms are O(1)? yes, of course.
+ * Is it possible to create an immutable Map whose insertion and removal
+ * algorithms are O(1)? Yes, of course.
  *
- * Immer does have support for manipulating maps in an immutable way,
- * but their approach also creates shallow clones of maps and are O(n)
- *  as can be see here in their source code:
- * https://github.com/immerjs/immer/blob/f6736a4beef727c6e5b41c312ce1b202ad3afb23/src/plugins/mapset.ts#L169
+ * Immer does have support for manipulating maps in an immutable way (this
+ * repo itself opts into it via `enableMapSet()` in `src/main.tsx`, for
+ * `App.tsx`'s `liveCells` Set), but their approach also creates a shallow
+ * clone of the base Map/Set on first write within a `produce()` call, and
+ * that clone is O(n) -- see `prepareMapCopy`/`prepareSetCopy` in
+ * https://github.com/immerjs/immer/blob/v11.1.17/src/plugins/mapset.ts#L197-L201,
+ * verified against immer 11.1.17, the version in this repo's lockfile at
+ * the time of writing.
  *
- * Immutable.js and muri both have immutable Maps with near constant time algorithms
- * that do not rely on cloning.
- *
- *
- *
- *
+ * Immutable.js and mori both have immutable Maps with near-constant-time
+ * algorithms that do not rely on cloning.
  */
 
 type KeyPath = unknown[]
@@ -142,7 +139,6 @@ function _has<T>(node: NullableNode<T>, keyPath: KeyPath): boolean {
 function _retrieve<T>(node: NullableNode<T>, keyPath: KeyPath): T {
   // base case:
   if (!node) {
-    // to do throw when there is no node?
     throw new CacheError('RetrieveError: no entry exists at the key path.')
   }
 
@@ -260,14 +256,14 @@ function _removeAtNode<T>(node: NonNullNode<T>): NullableNode<T> {
     throw new CacheError('RemoveError: no entry exists at the key path.')
   }
 
-  // the node that we are removing has no decendants
+  // the node that we are removing has no descendants
   //  so let's remove the entire thing
   if (node.nodes.size === 0) {
     return null
   }
-  // otherwise, the node does have decendants
+  // otherwise, the node does have descendants
   //  so return a new node without the entry
-  //  but we preserve all of it's decendants
+  //  but we preserve all of its descendants
   return {
     type: 'PATH',
     nodes: node.nodes,
@@ -290,7 +286,7 @@ function _removeAtChild<T>(node: NonNullNode<T>, key: unknown, restKeyPath: KeyP
 
     // else the node has been deleted
 
-    // SIDE EFFECT: then remove it's entry form my node's map
+    // SIDE EFFECT: then remove its entry from my node's map
     node.nodes.delete(key)
     // if my nodes map is now empty AND I don't have an entry
     //  then my node also needs to be deleted so return null
@@ -337,7 +333,7 @@ export interface Cache<TKeyPath extends unknown[], T> extends ReadonlyCache<TKey
    * may already exist in the cache:
    *
    * ```typescript
-   * if(cashe.has(keyPath)) {
+   * if(cache.has(keyPath)) {
    *   cache.insert(keyPath, value);
    * }
    * ```
@@ -348,7 +344,7 @@ export interface Cache<TKeyPath extends unknown[], T> extends ReadonlyCache<TKey
    * the chances of code errors when keeping track of key paths for
    * entries that have been inserted.
    * ```typescript
-   * cosnt { remove } = cache.insert(keyPath, value);
+   * const { remove } = cache.insert(keyPath, value);
    * try {
    *   await doThingsWithValue(value);
    * } finally {
@@ -364,12 +360,12 @@ export interface Cache<TKeyPath extends unknown[], T> extends ReadonlyCache<TKey
   /**
    * Removes the entry from the cache at the provided key path.
    *
-   * Throws if an entry does not exist at the key path. Ues the
+   * Throws if an entry does not exist at the key path. Use the
    * {@link Cache.has} method to guard before removing the entry
    * at a key path you're unsure exists in the cache.
    *
    * ```typescript
-   * if(cashe.has(keyPath)) {
+   * if(cache.has(keyPath)) {
    *   cache.remove(keyPath);
    * }
    * ```
