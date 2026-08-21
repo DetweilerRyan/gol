@@ -190,7 +190,15 @@ If you use the native `EnterWorktree({ name })` or `Agent({ isolation: 'worktree
    This repo sets `push.followTags = true` locally, so a plain `git push` already carries the tag — but the flag stays written out here because `.git/config` isn't tracked, so a fresh clone or a CI checkout won't have the setting. Note the setting only follows **annotated** tags reachable from what you're pushing; a lightweight tag is silently left behind, which is one more reason step 6 specifies `git tag -a`.
 
 8. **Re-record the acceptance-mutation baseline** in `.claude/agents/articles/engineering.md` if it moved.
-9. **Retire the worktree:** `git worktree remove <path> && git branch -d <slice> && git worktree prune`, or `ExitWorktree({ action: 'remove' })`. The tag is what preserves the slice's identity once the branch is gone.
+9. **Retire the worktree:**
+
+   ```bash
+   git worktree remove <path>
+   git merge-base --is-ancestor <slice> main && git branch -D <slice>
+   git worktree prune
+   ```
+
+   Assert the ancestry yourself rather than leaning on `git branch -d`. `-d`'s built-in "fully merged" test measures against whatever branch is currently checked out — and under concurrency the primary checkout is normally sitting on some _other_ slice's branch, so `-d` refuses a slice that is in fact already `main`. (Safe, but it stops you every time.) The check above asserts the condition you actually care about, and `-D` can't do damage because it only runs once that assertion has passed. The tag is what preserves the slice's identity once the branch is gone.
 
 The next slice repeats from step 1 against the new `main`.
 
