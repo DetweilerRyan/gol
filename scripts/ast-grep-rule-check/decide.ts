@@ -28,10 +28,8 @@ export interface DecideResult {
 
 // One rule or fixture file's parse: either the value it parsed to, or the
 // Failure explaining why it didn't. Named rather than spelled inline at
-// safeParse and partitionParsed both -- which also keeps those signatures to
-// one line each, sidestepping crap4ts's multi-line-signature artifact (see
-// CLAUDE.md's note on it, since a future edit that wraps one of these will
-// make a fully covered function report 0%).
+// safeParse and partitionParsed both, which keeps those signatures to one
+// line each and the union in one place to change.
 type ParseResult<T> = { parsed: T; failure?: undefined } | { parsed?: undefined; failure: Failure }
 
 // parseRuleFile/parseFixtureFile's shared shape: a relative path plus raw

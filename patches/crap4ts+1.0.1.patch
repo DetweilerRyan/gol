@@ -1,0 +1,48 @@
+diff --git a/node_modules/crap4ts/dist/chunk-OHOZMDXW.cjs b/node_modules/crap4ts/dist/chunk-OHOZMDXW.cjs
+index 80b846a..2b1d24f 100644
+--- a/node_modules/crap4ts/dist/chunk-OHOZMDXW.cjs
++++ b/node_modules/crap4ts/dist/chunk-OHOZMDXW.cjs
+@@ -18,11 +18,17 @@ function findCandidates(compSpan, compName, fileCoverages, usedCoverage, overlap
+   for (const cov of fileCoverages) {
+     if (usedCoverage.has(cov)) continue;
+     const ratio = overlapRatio(compSpan, cov.span);
+-    if (ratio < overlapThreshold) continue;
++    // Istanbul records fnMap.loc as the function *body*, starting at the opening
++    // brace, while the complexity span starts at the signature. A signature that
++    // wraps across lines therefore sinks overlapRatio below the 0.8 gate and the
++    // function is reported as 0% covered. Accept either containment direction so
++    // that case matches. Mirrors upstream PR breezy-bays-labs/crap4ts#37.
++    const contains = spanContains(cov.span, compSpan) || spanContains(compSpan, cov.span);
++    if (!contains && ratio < overlapThreshold) continue;
+     candidates.push({
+       cov,
+       ratio,
+-      contains: spanContains(cov.span, compSpan),
++      contains,
+       nameMatch: cov.name === compName
+     });
+   }
+diff --git a/node_modules/crap4ts/dist/chunk-W6RIPRFD.js b/node_modules/crap4ts/dist/chunk-W6RIPRFD.js
+index efb2910..13f3e41 100644
+--- a/node_modules/crap4ts/dist/chunk-W6RIPRFD.js
++++ b/node_modules/crap4ts/dist/chunk-W6RIPRFD.js
+@@ -18,11 +18,17 @@ function findCandidates(compSpan, compName, fileCoverages, usedCoverage, overlap
+   for (const cov of fileCoverages) {
+     if (usedCoverage.has(cov)) continue;
+     const ratio = overlapRatio(compSpan, cov.span);
+-    if (ratio < overlapThreshold) continue;
++    // Istanbul records fnMap.loc as the function *body*, starting at the opening
++    // brace, while the complexity span starts at the signature. A signature that
++    // wraps across lines therefore sinks overlapRatio below the 0.8 gate and the
++    // function is reported as 0% covered. Accept either containment direction so
++    // that case matches. Mirrors upstream PR breezy-bays-labs/crap4ts#37.
++    const contains = spanContains(cov.span, compSpan) || spanContains(compSpan, cov.span);
++    if (!contains && ratio < overlapThreshold) continue;
+     candidates.push({
+       cov,
+       ratio,
+-      contains: spanContains(cov.span, compSpan),
++      contains,
+       nameMatch: cov.name === compName
+     });
+   }
