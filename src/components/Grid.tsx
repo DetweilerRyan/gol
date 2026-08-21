@@ -1,7 +1,7 @@
 import { useRef } from 'react'
-import { screenToWorld, worldToScreen, zoomPercentage } from '../camera'
-import { cellKey, computeContentBounds, isCellAlive, type LiveCells } from '../gameOfLife'
-import { cellsInRange, computeMajorGridlines, computeVisibleRange, isMajorGridline } from '../gridGeometry'
+import { screenToWorld, zoomPercentage } from '../camera'
+import { computeContentBounds, type LiveCells } from '../gameOfLife'
+import { cellsInRange, computeMajorGridlines, computeVisibleRange } from '../gridGeometry'
 import { useCamera } from '../hooks/useCamera'
 import { useElementSize } from '../hooks/useElementSize'
 import { useGridPointerGestures } from '../hooks/useGridPointerGestures'
@@ -11,6 +11,7 @@ import { useWheelInput } from '../hooks/useWheelInput'
 import { type Pattern } from '../patternLibrary'
 import { armedPattern, isLibraryOpen, previewPositions } from '../patternPlacement'
 import { computeScrollbarMetrics } from '../scrollbars'
+import GridCells from './GridCells'
 import GridToolbar from './GridToolbar'
 import PatternLibraryModal from './PatternLibraryModal'
 import RulerLabel from './RulerLabel'
@@ -84,50 +85,13 @@ export default function Grid({ liveCells, onToggleCell, onPlacePattern }: GridPr
         {...handlers}
         className={`absolute inset-0 touch-none ${isPanning ? 'cursor-grabbing' : 'cursor-grab'}`}
       >
-        {cells.map(({ x, y }) => {
-          const { x: left, y: top } = worldToScreen(camera, x, y)
-          const isAlive = isCellAlive(liveCells, x, y)
-          return (
-            <button
-              key={cellKey(x, y)}
-              type="button"
-              aria-label={`Cell ${x}, ${y}`}
-              // Keyboard activation (Enter/Space) never goes through pointer
-              // capture (see useGridPointerGestures' pointer-capture
-              // comment), so it needs the same place-vs-toggle branch as the
-              // pointer path.
-              onClick={() => placeOrToggleAt(x, y)}
-              style={{
-                width: camera.cellSize,
-                height: camera.cellSize,
-                transform: `translate(${left}px, ${top}px)`,
-                boxSizing: 'border-box',
-              }}
-              className={`absolute top-0 left-0 border border-gray-200 transition-colors ${
-                isAlive ? 'bg-gray-900 hover:bg-gray-700' : 'bg-white hover:bg-gray-100'
-              } ${isMajorGridline(x) ? 'border-l-2 border-l-gray-400' : ''} ${isMajorGridline(y) ? 'border-t-2 border-t-gray-400' : ''}`}
-            />
-          )
-        })}
-
-        {/* Placing-mode preview. pointer-events-none so hovering the preview
-            itself doesn't block the underlying pointermove tracking. */}
-        {previewPositions(placement).map(([x, y]) => {
-          const { x: left, y: top } = worldToScreen(camera, x, y)
-          return (
-            <div
-              key={`preview-${x}-${y}`}
-              aria-label={`Pattern preview cell ${x}, ${y}`}
-              style={{
-                width: camera.cellSize,
-                height: camera.cellSize,
-                transform: `translate(${left}px, ${top}px)`,
-                boxSizing: 'border-box',
-              }}
-              className="pointer-events-none absolute top-0 left-0 border border-green-600 bg-green-400/60"
-            />
-          )
-        })}
+        <GridCells
+          camera={camera}
+          cells={cells}
+          liveCells={liveCells}
+          previewPositions={previewPositions(placement)}
+          onActivateCell={placeOrToggleAt}
+        />
       </div>
 
       {/* Coordinate ruler: labels every 10th gridline. pointer-events-none keeps
