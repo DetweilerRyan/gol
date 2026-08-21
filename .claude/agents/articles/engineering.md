@@ -49,7 +49,11 @@ These docs describe the codebase as it currently stands, not a contract that fre
 
 ## Working inside scripts/
 
-`scripts/` (the acceptance mutator, the Gherkin DRY checker, the Halstead reporter) is a separate TypeScript project from `src/`/`features/`, with its own vitest config, coverage directory, CRAP config, and Stryker config. It's the tooling every other role's quality gate runs on, so it's held to the same bar as `src/` — but through a parallel set of commands, never the `src/`-scoped ones.
+`scripts/` (the acceptance mutator, the Gherkin DRY checker, the Halstead reporter, the ast-grep rule checker — see `CLAUDE.md` for what each does) is a separate TypeScript project from `src/`/`features/`, with its own vitest config, coverage directory, CRAP config, and Stryker config. It's the tooling every other role's quality gate runs on, so it's held to the same bar as `src/` — but through a parallel set of commands, never the `src/`-scoped ones.
+
+Three of the four are report-only; **`npm run ast-grep:rules` is the exception and genuinely gates**, exiting non-zero when a rule file is misconfigured. Don't generalize "the `scripts/` tools are advisory" to it.
+
+**A new program in `scripts/` must be added by hand to `crap4ts.scripts.config.ts`'s `include` and `stryker.scripts.config.json`'s `mutate`** (the `run.ts` I/O shell stays excluded, as it is for all four). Neither config globs, so a program omitted from them is invisible to `crap4ts:scripts` and `test:mutation:scripts` while both still report success — the same silent-blindness failure that `ast-grep:rules` exists to catch in the rule files, and it has already happened once in `scripts/` itself.
 
 - Work performed inside `scripts/` runs the scripts-scoped pipeline: `npm run test:scripts`, `npm run test:coverage:scripts`, `npm run crap4ts:scripts`, `npm run dry4ts:scripts`, `npm run test:mutation:scripts`. The `src/`-scoped commands (`npm test`, `npm run test:unit`, `npm run crap4ts`, `npm run dry4ts`, `npm run test:mutation`) can't see `scripts/` at all — `vite.config.ts` excludes it, and the three tool configs are scoped to `src/`. The reverse holds too: don't reach for the `:scripts` commands when your change was in `src/`/`features/`; they'd report on code you didn't touch.
 - `coder` substitutes `npm run test:scripts` for `npm run test:unit`. (There's no fast/slow split to make here — `scripts/` has no property-test layer, so `test:scripts` already _is_ the fast path.)
