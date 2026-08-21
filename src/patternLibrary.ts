@@ -173,8 +173,8 @@ export function patternsByCategory(category: PatternCategory): readonly Pattern[
 // Computes the absolute world-space positions a pattern's cells would occupy
 // if its bounding-box top-left corner were placed at (anchorX, anchorY).
 // Single source of truth for the anchor convention -- shared by placePattern
-// (to stamp cells) and the placing-mode preview in Grid.tsx (to render them
-// before committing), so preview and actual placement can't drift apart.
+// (to stamp cells) and the placing-mode preview in GridCells.tsx (to render
+// them before committing), so preview and actual placement can't drift apart.
 export function patternCellPositions(
   pattern: Pattern,
   anchorX: number,

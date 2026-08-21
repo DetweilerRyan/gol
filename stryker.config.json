@@ -16,11 +16,16 @@
     "src/hooks/useElementSize.ts",
     "src/hooks/usePatternPlacement.ts",
     "src/hooks/useWheelInput.ts",
+    "src/hooks/useGridPointerGestures.ts",
+    "src/hooks/useInitialCentering.ts",
     "src/components/GridToolbar.tsx",
     "src/components/PatternLibraryModal.tsx",
     "src/components/RulerLabel.tsx",
     "src/components/Scrollbar.tsx",
-    "src/components/Grid.tsx"
+    "src/components/Grid.tsx",
+    "src/components/GridCells.tsx",
+    "src/components/GridRuler.tsx",
+    "src/components/GridScrollbars.tsx"
   ],
   "thresholds": {
     "high": 90,

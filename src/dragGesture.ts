@@ -2,7 +2,8 @@
 // a pan rather than a click, and reporting how far to pan. Intentionally knows
 // nothing about the Camera -- it deals only in client pixels, so the same
 // click-vs-drag rule can be reasoned about (and tested) without a camera at
-// all. Grid.tsx feeds the reported deltas to useCamera's panByPixels.
+// all. useGridPointerGestures.ts (Grid.tsx's pointer-handling hook) is the
+// consumer; its onPan callback ultimately feeds useCamera's panByPixels.
 
 export const DRAG_THRESHOLD_PX = 4
 

@@ -15,9 +15,10 @@
 //
 // Keep FILES in sync with crap4ts.config.ts's `include` array -- both target
 // the same unit-tested modules: the framework-free logic (grid rules, the
-// pattern catalog, camera math, the pattern-placing state machine), the four
-// hooks that adapt it to React, the four presentational components that have
-// their own render()-based unit tests, and Grid.tsx itself.
+// pattern catalog, camera math, the pattern-placing state machine), the six
+// hooks that adapt it to React, and the eight presentational components that
+// have their own render()-based unit tests (GridToolbar, PatternLibraryModal,
+// RulerLabel, Scrollbar, Grid, GridCells, GridRuler, GridScrollbars).
 
 import path from 'node:path'
 import { fileURLToPath } from 'node:url'
@@ -39,11 +40,16 @@ const FILES = [
   'src/hooks/useElementSize.ts',
   'src/hooks/usePatternPlacement.ts',
   'src/hooks/useWheelInput.ts',
+  'src/hooks/useGridPointerGestures.ts',
+  'src/hooks/useInitialCentering.ts',
   'src/components/GridToolbar.tsx',
   'src/components/PatternLibraryModal.tsx',
   'src/components/RulerLabel.tsx',
   'src/components/Scrollbar.tsx',
   'src/components/Grid.tsx',
+  'src/components/GridCells.tsx',
+  'src/components/GridRuler.tsx',
+  'src/components/GridScrollbars.tsx',
 ]
 
 function analyzeFile(file: string): FileAnalysis {
