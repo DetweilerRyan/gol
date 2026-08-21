@@ -70,9 +70,18 @@ export default defineConfig({
     // directories src/components/ and src/hooks/ by path. A vitest project
     // whose glob matches nothing exits 0 with no warning -- measured on
     // 4.1.10. Rename either directory and `dom` silently stops running its
-    // 15 test files while `npm test` stays green. Renaming either means
-    // updating this list too, as well as crap4ts.config.ts,
-    // stryker.config.json, and rules/domain-imports-upward.yml's `ignores`.
+    // 15 test files while `npm test` stays green. It stays green only at that
+    // granularity, though: the next quality gate fails loudly, because the
+    // hook/component coverage those 15 files provide is exactly what keeps
+    // crap4ts under its threshold and Stryker above its break score. Renaming
+    // either directory means updating this list, plus every other place those
+    // two directory names are hardcoded: crap4ts.config.ts and
+    // stryker.config.json (their src/components/LifeBoard.tsx exclusion), the
+    // `ignores` lists in all three of rules/no-dom-in-domain.yml,
+    // rules/no-react-in-domain.yml and rules/domain-imports-upward.yml, and
+    // the `files:` glob in rules/no-logic-in-composition-root.yml -- that
+    // last one is the only one that reports its own breakage, via the
+    // npm run ast-grep:rules gate.
     //
     // `--exclude` on the CLI is a no-op once `projects` is set -- vitest's
     // cliExclude override is not in the cliOverrides allowlist for a
