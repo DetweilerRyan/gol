@@ -21,10 +21,15 @@ import { defineConfig } from 'crap4ts'
 // exceeded 6 turned out to be a dispatcher inlining its branches' bodies
 // (mutateValue's typed-rule chain, mutateString's strategy switch, parseSteps'
 // line classifier) and split cleanly, so no special pleading was needed.
+//
+// **/test-support.ts is excluded for the same reason src/test-support/** is
+// excluded from crap4ts.config.ts: it's shared fixture-builder infrastructure
+// for the test files that import it (currently scripts/perf-report/'s
+// format.test.ts/stats.test.ts/units.test.ts), not product code.
 export default defineConfig({
   threshold: 6,
   coverageMetric: 'line',
   src: ['scripts'],
   include: ['scripts/**/*.ts'],
-  exclude: ['**/*.test.*', '**/run.ts'],
+  exclude: ['**/*.test.*', '**/run.ts', '**/test-support.ts'],
 })

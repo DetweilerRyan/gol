@@ -46,28 +46,56 @@ describe('parseRawScenarioSample', () => {
     expect(result.reps[1].metricsDelta).toEqual({})
   })
 
-  it.each([null, undefined, 1, 'string', []])('rejects a non-object top-level value: %s', (value) => {
-    expect(() => parseRawScenarioSample(value)).toThrow()
+  // The exact "expected an object, got <kind>" message, not just "it threw
+  // something" -- a value this guard rejects still often makes a *later*
+  // field-level check throw its own, differently-worded error (e.g. a bare
+  // number has no .scenario property, so requireField's own "invalid or
+  // missing" fires instead) -- so a bare toThrow() can't tell "the top-level
+  // shape guard caught this" from "it slipped past that guard and failed
+  // downstream instead."
+  it.each([
+    [null, 'null'],
+    [undefined, 'undefined'],
+    [1, 'number'],
+    ['string', 'string'],
+    [[], 'an array'],
+  ] as const)('rejects a non-object top-level value %s, naming its kind in the message', (value, description) => {
+    expect(() => parseRawScenarioSample(value)).toThrow(
+      new RegExp(`^raw scenario sample: expected an object, got ${description}$`),
+    )
   })
 
-  it.each(['scenario', 'project', 'url', 'chromiumVersion', 'buildMode'])('rejects a missing %s', (key) => {
-    const sample = validSample()
-    delete (sample as Record<string, unknown>)[key]
-    expect(() => parseRawScenarioSample(sample)).toThrow(new RegExp(key))
-  })
+  it.each(['scenario', 'project', 'url', 'chromiumVersion', 'buildMode'])(
+    'rejects a missing %s, with the field context in the message',
+    (key) => {
+      const sample = validSample()
+      delete (sample as Record<string, unknown>)[key]
+      expect(() => parseRawScenarioSample(sample)).toThrow(
+        new RegExp(`^raw scenario sample\\.${key}: invalid or missing \\(got undefined\\)$`),
+      )
+    },
+  )
 
   it('rejects an empty-string scenario', () => {
     expect(() => parseRawScenarioSample(validSample({ scenario: '' }))).toThrow(/scenario/)
   })
 
-  it('rejects a non-finite cpuThrottlingRate', () => {
-    expect(() => parseRawScenarioSample(validSample({ cpuThrottlingRate: Number.NaN }))).toThrow(/cpuThrottlingRate/)
+  it('rejects a non-finite cpuThrottlingRate, with the field context in the message', () => {
+    expect(() => parseRawScenarioSample(validSample({ cpuThrottlingRate: Number.NaN }))).toThrow(
+      /^raw scenario sample\.cpuThrottlingRate: invalid or missing \(got number\)$/,
+    )
   })
 
-  it('rejects a missing reps field', () => {
+  it('rejects a non-numeric cpuThrottlingRate', () => {
+    expect(() => parseRawScenarioSample(validSample({ cpuThrottlingRate: 'fast' }))).toThrow(/cpuThrottlingRate/)
+  })
+
+  it('rejects a missing reps field, with the field context in the message', () => {
     const sample = validSample()
     delete (sample as Record<string, unknown>).reps
-    expect(() => parseRawScenarioSample(sample)).toThrow(/reps/)
+    expect(() => parseRawScenarioSample(sample)).toThrow(
+      /^raw scenario sample\.reps: invalid or missing \(got undefined\)$/,
+    )
   })
 
   it('rejects reps that is not an array', () => {
@@ -86,29 +114,47 @@ describe('parseRawScenarioSample', () => {
     expect(() => parseRawScenarioSample(validSample({ reps: [validRep(), 'nope'] }))).toThrow(/reps\[1\]/)
   })
 
-  it('rejects a rep with a non-array frameIntervalsMs', () => {
-    const rep = { ...validRep(), frameIntervalsMs: 'not an array' }
-    expect(() => parseRawScenarioSample(validSample({ reps: [validRep(), rep] }))).toThrow(/frameIntervalsMs/)
-  })
-
-  it('rejects a rep whose frameIntervalsMs contains a non-finite value', () => {
-    const rep = { ...validRep(), frameIntervalsMs: [16, Number.NaN] }
-    expect(() => parseRawScenarioSample(validSample({ reps: [validRep(), rep] }))).toThrow(/frameIntervalsMs/)
-  })
-
-  it('rejects a rep with a non-finite longTaskCount', () => {
-    const rep = { ...validRep(), longTaskCount: Number.POSITIVE_INFINITY }
-    expect(() => parseRawScenarioSample(validSample({ reps: [validRep(), rep] }))).toThrow(/longTaskCount/)
-  })
-
-  it('rejects a rep whose metricsDelta is an array rather than an object', () => {
-    const rep = { ...validRep(), metricsDelta: [1, 2, 3] }
-    expect(() => parseRawScenarioSample(validSample({ reps: [validRep(), rep] }))).toThrow(/metricsDelta/)
-  })
-
-  it('rejects a rep whose metricsDelta contains a non-finite value', () => {
-    const rep = { ...validRep(), metricsDelta: { TaskDuration: Number.NaN } }
-    expect(() => parseRawScenarioSample(validSample({ reps: [validRep(), rep] }))).toThrow(/metricsDelta/)
+  it.each([
+    {
+      name: 'a non-array frameIntervalsMs',
+      field: 'frameIntervalsMs',
+      value: 'not an array',
+      pattern: /frameIntervalsMs/,
+    },
+    {
+      name: 'a frameIntervalsMs containing a non-finite value',
+      field: 'frameIntervalsMs',
+      value: [16, Number.NaN],
+      pattern: /frameIntervalsMs/,
+    },
+    {
+      name: 'a non-finite longTaskCount',
+      field: 'longTaskCount',
+      value: Number.POSITIVE_INFINITY,
+      pattern: /longTaskCount/,
+    },
+    {
+      name: 'a metricsDelta that is an array rather than an object',
+      field: 'metricsDelta',
+      value: [1, 2, 3],
+      pattern: /metricsDelta/,
+    },
+    { name: 'a null metricsDelta', field: 'metricsDelta', value: null, pattern: /metricsDelta/ },
+    {
+      name: 'a metricsDelta that is not an object at all (a bare number)',
+      field: 'metricsDelta',
+      value: 5,
+      pattern: /metricsDelta/,
+    },
+    {
+      name: 'a metricsDelta containing a non-finite value',
+      field: 'metricsDelta',
+      value: { TaskDuration: Number.NaN },
+      pattern: /metricsDelta/,
+    },
+  ])('rejects a rep with $name', ({ field, value, pattern }) => {
+    const rep = { ...validRep(), [field]: value }
+    expect(() => parseRawScenarioSample(validSample({ reps: [validRep(), rep] }))).toThrow(pattern)
   })
 
   it('rejects a rep with a missing wallClockMs', () => {

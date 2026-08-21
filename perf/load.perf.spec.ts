@@ -13,25 +13,21 @@
 import { expect, test, type Page } from '@playwright/test'
 import { startMetrics } from './cdp-metrics'
 import { clickPaced } from './gestures'
-import { installPerfInstrumentation, type PerfHarnessWindow } from './instrumentation'
+import {
+  CPU_THROTTLING_RATE,
+  EVENT_DURATION_THRESHOLD_MS,
+  readSnapshot,
+  startCollecting,
+  writeScenarioSample,
+} from './harness'
+import { installPerfInstrumentation } from './instrumentation'
 import { assertInViewAlivePopulation, assertOffscreenSeedTookEffect } from './population'
-import { writeRawSample } from './raw-sink'
 import type { RepSample } from '../scripts/perf-report/raw-sample.ts'
 
 // Higher than pan/zoom's REP_COUNT=5 -- see generation.perf.spec.ts's
 // identical comment. initial-load's own wall clock is sub-200ms, short
 // enough that OS scheduling jitter dominates the median at 5 reps.
 const REP_COUNT = 9
-const EVENT_DURATION_THRESHOLD_MS = 16
-const CPU_THROTTLING_RATE = 1
-
-function readSnapshot() {
-  return (window as unknown as PerfHarnessWindow).__perfHarness.stop()
-}
-
-function startCollecting() {
-  ;(window as unknown as PerfHarnessWindow).__perfHarness.start()
-}
 
 function runLoadScenario(
   scenario: string,
@@ -95,15 +91,7 @@ function runLoadScenario(
 
     await metrics.dispose()
 
-    writeRawSample({
-      scenario,
-      project: testInfo.project.name,
-      url: page.url(),
-      cpuThrottlingRate: CPU_THROTTLING_RATE,
-      chromiumVersion: page.context().browser()?.version() ?? 'unknown',
-      buildMode: 'perf',
-      reps,
-    })
+    writeScenarioSample(page, testInfo, scenario, reps)
   })
 }
 
@@ -168,15 +156,7 @@ function runPlaybackSustainedScenario(scenario: string, seedQuery: string) {
 
     await metrics.dispose()
 
-    writeRawSample({
-      scenario,
-      project: testInfo.project.name,
-      url: page.url(),
-      cpuThrottlingRate: CPU_THROTTLING_RATE,
-      chromiumVersion: page.context().browser()?.version() ?? 'unknown',
-      buildMode: 'perf',
-      reps,
-    })
+    writeScenarioSample(page, testInfo, scenario, reps)
   })
 }
 

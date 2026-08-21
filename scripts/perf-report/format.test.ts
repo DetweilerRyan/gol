@@ -8,33 +8,7 @@ import {
   renderNoSamplesMessage,
 } from './format.ts'
 import type { RunEnvironment } from './environment.ts'
-import type { RawScenarioSample, RepSample } from './raw-sample.ts'
-
-function rep(overrides: Partial<RepSample> = {}): RepSample {
-  return {
-    frameIntervalsMs: [16, 17, 18],
-    eventDurationsMs: [],
-    longTaskCount: 0,
-    moveEventCount: 100,
-    renderedCellCount: 2000,
-    metricsDelta: { TaskDuration: 10 },
-    wallClockMs: 1000,
-    ...overrides,
-  }
-}
-
-function sample(overrides: Partial<RawScenarioSample> = {}): RawScenarioSample {
-  return {
-    scenario: 'pan-across-populated-grid',
-    project: '1280x900',
-    url: 'http://localhost:5173/',
-    cpuThrottlingRate: 1,
-    chromiumVersion: '140.0.0.0',
-    buildMode: 'perf',
-    reps: [rep(), rep(), rep()],
-    ...overrides,
-  }
-}
+import { rep, sample } from './test-support.ts'
 
 const ENV: RunEnvironment = {
   gitSha: 'abc1234',
@@ -128,6 +102,19 @@ describe('renderLatestMarkdown', () => {
     expect(renderLatestMarkdown(report)).toContain('n/a (no TaskDuration samples)')
   })
 
+  // run.ts never calls buildLatestReport with zero samples (it short-circuits
+  // to renderNoSamplesMessage first -- see its own header comment), but
+  // buildRunHeader/buildLatestReport are exported functions in their own
+  // right and this fallback is real, documented behaviour of theirs, not
+  // dead code -- so it's tested directly against the public API rather than
+  // only through run.ts's guard.
+  it('falls back to "n/a" for chromiumVersions/buildModes when given zero samples', () => {
+    const report = buildLatestReport(ENV, [])
+    const md = renderLatestMarkdown(report)
+    expect(md).toContain('chromium n/a')
+    expect(md).toContain('build mode n/a')
+  })
+
   it('labels which metricsDelta keys were converted to ms, in the header', () => {
     const report = buildLatestReport(ENV, [sample()])
     const md = renderLatestMarkdown(report)
@@ -145,6 +132,32 @@ describe('renderLatestMarkdown', () => {
     expect(report.header.taskDurationToWallClockRatio).toBeGreaterThan(0.5)
     expect(report.header.taskDurationToWallClockRatio).toBeLessThan(1.5)
   })
+
+  // A golden-master render of test-support's default fixture, exact byte for
+  // byte -- the `.toContain` assertions above each check one fact in
+  // isolation and can't tell "the table's column widths/padding/header text
+  // are exactly right" from "close enough that a substring still matches."
+  // For a renderer the exact output *is* the contract; re-generate this
+  // string (buildLatestReport(ENV, [sample()]), then
+  // console.log(JSON.stringify(renderLatestMarkdown(report)))) if a
+  // deliberate formatting change makes it stale.
+  it('renders the exact markdown for the default single-scenario fixture', () => {
+    const report = buildLatestReport(ENV, [sample()])
+    expect(renderLatestMarkdown(report)).toBe(
+      'Perf report -- render-perf-harness\n' +
+        'git abc1234  |  node v24.0.0  |  chromium 140.0.0.0\n' +
+        'cpu Apple M2 (8 cores)  |  build mode perf\n' +
+        'generated 2026-08-21T12:00:00.000Z  |  samples 1\n' +
+        'metricsDelta keys converted CDP-seconds -> ms: DevToolsCommandDuration, LayoutDuration, ProcessTime, RecalcStyleDuration, ScriptDuration, TaskDuration, TaskOtherDuration, ThreadTime, V8CompileDuration\n' +
+        'TaskDuration/wallClock ratio (ms/ms, expect ~1.0): 10.0000\n' +
+        '\n' +
+        'Scenario                   Project   CPU throttle  Reps  Frame Δ median  Frame Δ p95(max)  Event dur median  Event dur p95(max)  Long tasks (median)  Wall clock (median)\n' +
+        '-------------------------  --------  ------------  ----  --------------  ----------------  ----------------  ------------------  -------------------  -------------------\n' +
+        'pan-across-populated-grid  1280x900  1             2     17.00ms         17.90ms           n/a               n/a                 0                    1000.00ms          \n' +
+        '\n' +
+        'Full metricsDelta breakdown (per-move-event and per-1000-cells, ms for the keys listed above / raw counts+bytes for everything else): reports/perf/latest.json',
+    )
+  })
 })
 
 describe('formatHistoryLine', () => {
@@ -155,5 +168,15 @@ describe('formatHistoryLine', () => {
     const parsed = JSON.parse(line)
     expect(parsed.gitSha).toBe('abc1234')
     expect(parsed.scenarios).toHaveLength(2)
+  })
+
+  // Exact JSON, for the same reason renderLatestMarkdown gets a golden-master
+  // test above: pins field names/order/values that a `.toContain` assertion
+  // can't distinguish from a value that merely happens to also be present.
+  it('produces the exact JSON for the default single-scenario fixture', () => {
+    const report = buildLatestReport(ENV, [sample()])
+    expect(formatHistoryLine(report)).toBe(
+      '{"timestampIso":"2026-08-21T12:00:00.000Z","gitSha":"abc1234","scenarios":[{"scenario":"pan-across-populated-grid","project":"1280x900","frameIntervalsMsMedian":17,"eventDurationsMsMedian":null}]}',
+    )
   })
 })

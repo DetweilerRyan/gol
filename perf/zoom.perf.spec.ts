@@ -16,22 +16,18 @@
 import { expect, test, type Page, type TestInfo } from '@playwright/test'
 import { startMetrics } from './cdp-metrics'
 import { clickPaced, zoomWheelPaced } from './gestures'
-import { installPerfInstrumentation, type PerfHarnessWindow } from './instrumentation'
+import {
+  CPU_THROTTLING_RATE,
+  EVENT_DURATION_THRESHOLD_MS,
+  readSnapshot,
+  startCollecting,
+  writeScenarioSample,
+} from './harness'
+import { installPerfInstrumentation } from './instrumentation'
 import { assertInViewAlivePopulation, assertOffscreenSeedTookEffect } from './population'
-import { writeRawSample } from './raw-sink'
 import type { RepSample } from '../scripts/perf-report/raw-sample.ts'
 
 const REP_COUNT = 5
-const EVENT_DURATION_THRESHOLD_MS = 16
-const CPU_THROTTLING_RATE = 1
-
-function readSnapshot() {
-  return (window as unknown as PerfHarnessWindow).__perfHarness.stop()
-}
-
-function startCollecting() {
-  ;(window as unknown as PerfHarnessWindow).__perfHarness.start()
-}
 
 async function gotoAndSettle(page: Page, seedQuery?: string): Promise<{ width: number; height: number }> {
   await page.addInitScript(installPerfInstrumentation, { eventDurationThresholdMs: EVENT_DURATION_THRESHOLD_MS })
@@ -81,15 +77,7 @@ async function measureReps(
 
   await metrics.dispose()
 
-  writeRawSample({
-    scenario,
-    project: testInfo.project.name,
-    url: page.url(),
-    cpuThrottlingRate: CPU_THROTTLING_RATE,
-    chromiumVersion: page.context().browser()?.version() ?? 'unknown',
-    buildMode: 'perf',
-    reps,
-  })
+  writeScenarioSample(page, testInfo, scenario, reps)
 }
 
 // Even, so an equal number of zoom-in/zoom-out ticks run per rep --

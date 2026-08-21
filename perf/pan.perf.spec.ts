@@ -23,9 +23,15 @@
 import { expect, test, type Page, type TestInfo } from '@playwright/test'
 import { startMetrics } from './cdp-metrics'
 import { panPaced } from './gestures'
-import { installPerfInstrumentation, type PerfHarnessWindow } from './instrumentation'
+import {
+  CPU_THROTTLING_RATE,
+  EVENT_DURATION_THRESHOLD_MS,
+  readSnapshot,
+  startCollecting,
+  writeScenarioSample,
+} from './harness'
+import { installPerfInstrumentation } from './instrumentation'
 import { assertInViewAlivePopulation, assertOffscreenSeedTookEffect } from './population'
-import { writeRawSample } from './raw-sink'
 import type { RepSample } from '../scripts/perf-report/raw-sample.ts'
 
 // Rep 0 is a discarded warm-up (see raw-sample.ts's MIN_REPS comment) --
@@ -34,23 +40,6 @@ import type { RepSample } from '../scripts/perf-report/raw-sample.ts'
 const REP_COUNT = 5
 const MOVES_PER_REP = 40
 const PAN_DELTA = { x: 400, y: 0 }
-// Event Timing API's minimum durationThreshold.
-const EVENT_DURATION_THRESHOLD_MS = 16
-// No artificial throttling for these baseline scenarios -- 1 is CDP's
-// "normal speed" rate, not "disabled".
-const CPU_THROTTLING_RATE = 1
-
-// page.evaluate(fn) runs `fn` inside the page with no implicit argument --
-// `window` below is the page's own global, resolved the same way any other
-// script running in that page would resolve it, not a parameter these
-// functions receive from Node.
-function readSnapshot() {
-  return (window as unknown as PerfHarnessWindow).__perfHarness.stop()
-}
-
-function startCollecting() {
-  ;(window as unknown as PerfHarnessWindow).__perfHarness.start()
-}
 
 // Setup for the min-zoom scenarios (#4, #5): repeatedly clicks the
 // toolbar's own "Zoom out" button until clampCellSize floors it at
@@ -155,15 +144,7 @@ async function runPanScenario(page: Page, testInfo: TestInfo, spec: PanScenarioS
 
   await metrics.dispose()
 
-  writeRawSample({
-    scenario: spec.scenario,
-    project: testInfo.project.name,
-    url: page.url(),
-    cpuThrottlingRate: CPU_THROTTLING_RATE,
-    chromiumVersion: page.context().browser()?.version() ?? 'unknown',
-    buildMode: 'perf',
-    reps,
-  })
+  writeScenarioSample(page, testInfo, spec.scenario, reps)
 }
 
 test('pan-default-empty', async ({ page }, testInfo) => {

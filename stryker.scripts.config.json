@@ -7,7 +7,7 @@
   "vitest": {
     "configFile": "vitest.scripts.config.ts"
   },
-  "mutate": ["scripts/**/*.ts", "!scripts/**/*.test.ts", "!scripts/**/run.ts"],
+  "mutate": ["scripts/**/*.ts", "!scripts/**/*.test.ts", "!scripts/**/run.ts", "!scripts/**/test-support.ts"],
   "thresholds": {
     "high": 90,
     "low": 80,

@@ -19,9 +19,15 @@
 import { expect, test, type Page } from '@playwright/test'
 import { startMetrics } from './cdp-metrics'
 import { clickPaced } from './gestures'
-import { installPerfInstrumentation, type PerfHarnessWindow } from './instrumentation'
+import {
+  CPU_THROTTLING_RATE,
+  EVENT_DURATION_THRESHOLD_MS,
+  readSnapshot,
+  startCollecting,
+  writeScenarioSample,
+} from './harness'
+import { installPerfInstrumentation } from './instrumentation'
 import { assertInViewAlivePopulation, assertOffscreenSeedTookEffect } from './population'
-import { writeRawSample } from './raw-sink'
 import type { RepSample } from '../scripts/perf-report/raw-sample.ts'
 
 // Higher than pan/zoom's REP_COUNT=5 -- discovered empirically while
@@ -32,16 +38,6 @@ import type { RepSample } from '../scripts/perf-report/raw-sample.ts'
 // already average out that jitter within a single rep.
 const REP_COUNT = 9
 const GENERATIONS_PER_REP = 10
-const EVENT_DURATION_THRESHOLD_MS = 16
-const CPU_THROTTLING_RATE = 1
-
-function readSnapshot() {
-  return (window as unknown as PerfHarnessWindow).__perfHarness.stop()
-}
-
-function startCollecting() {
-  ;(window as unknown as PerfHarnessWindow).__perfHarness.start()
-}
 
 function runGenerationScenario(
   scenario: string,
@@ -97,15 +93,7 @@ function runGenerationScenario(
 
     await metrics.dispose()
 
-    writeRawSample({
-      scenario,
-      project: testInfo.project.name,
-      url: page.url(),
-      cpuThrottlingRate: CPU_THROTTLING_RATE,
-      chromiumVersion: page.context().browser()?.version() ?? 'unknown',
-      buildMode: 'perf',
-      reps,
-    })
+    writeScenarioSample(page, testInfo, scenario, reps)
   })
 }
 

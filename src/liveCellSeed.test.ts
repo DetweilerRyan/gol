@@ -44,6 +44,15 @@ describe('parseSeedRequest', () => {
     expect(parseSeedRequest('?cells=abc')).toBeUndefined()
   })
 
+  // The digit-only regex is anchored at both ends specifically so trailing
+  // junk after valid-looking digits is rejected outright, rather than
+  // reaching Number() -- which parses "1e3" as 1000 and "0x10" as 16, both
+  // safe integers that would otherwise slip through as a valid count.
+  it('rejects trailing non-digit characters that Number() would otherwise parse', () => {
+    expect(parseSeedRequest('?cells=1e3')).toBeUndefined()
+    expect(parseSeedRequest('?cells=0x10')).toBeUndefined()
+  })
+
   it('rejects a count above Number.MAX_SAFE_INTEGER', () => {
     expect(parseSeedRequest('?cells=99999999999999999999')).toBeUndefined()
   })
@@ -96,5 +105,15 @@ describe('buildSeededLiveCells', () => {
     const a = buildSeededLiveCells({ count: 200, spread: 40, seed: 1 })
     const b = buildSeededLiveCells({ count: 200, spread: 40, seed: 2 })
     expect([...a].sort()).not.toEqual([...b].sort())
+  })
+
+  // Pins the exact LCG output for one small, hand-verifiable case rather than
+  // only checking count/uniqueness/bounds -- those coarser invariants hold
+  // for many different recurrences, so on their own they don't distinguish
+  // this specific multiplier/increment pair (or its sign) from a different
+  // one that would place the same count of cells somewhere else entirely.
+  it('places cells at the exact positions this seed/spread/count produces', () => {
+    const result = buildSeededLiveCells({ count: 6, spread: 2, seed: 3 })
+    expect([...result].sort()).toEqual(['-1,2', '-2,-1', '0,2', '1,0', '2,-1', '2,1'])
   })
 })

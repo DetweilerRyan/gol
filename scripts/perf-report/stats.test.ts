@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import { aggregate, median, percentile, taskDurationToWallClockRatio } from './stats.ts'
-import type { RawScenarioSample, RepSample } from './raw-sample.ts'
+import { rep, sample } from './test-support.ts'
 
 describe('percentile', () => {
   it('interpolates the median of an even-length array', () => {
@@ -56,36 +56,16 @@ describe('median', () => {
     expect(input).toEqual([4, 1, 3, 2])
   })
 
-  it('throws on empty input', () => {
-    expect(() => median([])).toThrow(/empty/)
+  // Exact message, not just /empty/ -- percentile() throws its own "must not
+  // be empty" error too, on a message that also matches /empty/, so a loose
+  // pattern here can't tell "median's own guard fired" from "median's guard
+  // was skipped and percentile's fired instead" (which happens to produce a
+  // very similar-looking failure for this input, since median just sorts
+  // and delegates).
+  it('throws its own error on empty input, distinct from percentile', () => {
+    expect(() => median([])).toThrow(/^median: values must not be empty$/)
   })
 })
-
-function rep(overrides: Partial<RepSample> = {}): RepSample {
-  return {
-    frameIntervalsMs: [16, 17, 18],
-    eventDurationsMs: [],
-    longTaskCount: 0,
-    moveEventCount: 100,
-    renderedCellCount: 2000,
-    metricsDelta: { TaskDuration: 10, JSHeapUsedSize: 500 },
-    wallClockMs: 1000,
-    ...overrides,
-  }
-}
-
-function sample(overrides: Partial<RawScenarioSample> = {}): RawScenarioSample {
-  return {
-    scenario: 'pan-across-populated-grid',
-    project: '1280x900',
-    url: 'http://localhost:5173/',
-    cpuThrottlingRate: 1,
-    chromiumVersion: '140.0.0.0',
-    buildMode: 'perf',
-    reps: [rep(), rep(), rep()],
-    ...overrides,
-  }
-}
 
 describe('aggregate', () => {
   it('discards rep 0 (the warm-up) from every computed field', () => {
@@ -114,12 +94,38 @@ describe('aggregate', () => {
     expect(stats.eventDurationsMs.maxOfP95s).not.toBeNull()
   })
 
-  it('takes the max, not the average, of per-rep p95s', () => {
+  it.each([
+    {
+      name: 'takes the max, not the average, of per-rep p95s',
+      measuredReps: [rep({ frameIntervalsMs: [10, 10, 10] }), rep({ frameIntervalsMs: [100, 100, 100] })],
+      field: 'maxOfP95s' as const,
+      expected: 100,
+    },
+    {
+      name: 'sorts each rep own series before taking its median/p95, not just its input order',
+      measuredReps: [rep({ frameIntervalsMs: [30, 10, 20] })],
+      field: 'medianOfMedians' as const,
+      expected: 20,
+    },
+  ])('$name', ({ measuredReps, field, expected }) => {
+    const stats = aggregate(sample({ reps: [rep(), ...measuredReps] }))
+    expect(stats.frameIntervalsMs[field]).toBe(expected)
+  })
+
+  it('computes moveEventCount/renderedCellCount medians, not a placeholder', () => {
     const warmup = rep()
-    const low = rep({ frameIntervalsMs: [10, 10, 10] })
-    const high = rep({ frameIntervalsMs: [100, 100, 100] })
-    const stats = aggregate(sample({ reps: [warmup, low, high] }))
-    expect(stats.frameIntervalsMs.maxOfP95s).toBe(100)
+    const repA = rep({ moveEventCount: 10, renderedCellCount: 100 })
+    const repB = rep({ moveEventCount: 20, renderedCellCount: 200 })
+    const stats = aggregate(sample({ reps: [warmup, repA, repB] }))
+    expect(stats.moveEventCount.median).toBe(15)
+    expect(stats.renderedCellCount.median).toBe(150)
+  })
+
+  it('collects metricsDelta keys across reps sorted alphabetically, not in insertion order', () => {
+    const warmup = rep()
+    const measured = rep({ metricsDelta: { Zebra: 1, Apple: 2 } })
+    const stats = aggregate(sample({ reps: [warmup, measured] }))
+    expect(Object.keys(stats.metricsDeltaPerMoveEvent)).toEqual(['Apple', 'Zebra'])
   })
 
   it('normalises metricsDelta per move-event, median across reps', () => {
@@ -131,19 +137,24 @@ describe('aggregate', () => {
     expect(stats.metricsDeltaPerMoveEvent.TaskDuration).toBe(2)
   })
 
-  it('normalises metricsDelta per 1000 rendered cells', () => {
+  it.each([
+    {
+      name: 'normalises metricsDelta per 1000 rendered cells',
+      measuredOverrides: { renderedCellCount: 2000, metricsDelta: { TaskDuration: 40 } },
+      field: 'metricsDeltaPer1000Cells' as const,
+      expected: 20, // 40 / (2000/1000) = 20
+    },
+    {
+      name: 'reports null (not a divide-by-zero) for a key whose denominator is 0 in every rep',
+      measuredOverrides: { moveEventCount: 0, metricsDelta: { TaskDuration: 40 } },
+      field: 'metricsDeltaPerMoveEvent' as const,
+      expected: null,
+    },
+  ])('$name', ({ measuredOverrides, field, expected }) => {
     const warmup = rep()
-    const measured = rep({ renderedCellCount: 2000, metricsDelta: { TaskDuration: 40 } })
+    const measured = rep(measuredOverrides)
     const stats = aggregate(sample({ reps: [warmup, measured] }))
-    // 40 / (2000/1000) = 20
-    expect(stats.metricsDeltaPer1000Cells.TaskDuration).toBe(20)
-  })
-
-  it('reports null (not a divide-by-zero) for a key whose denominator is 0 in every rep', () => {
-    const warmup = rep()
-    const measured = rep({ moveEventCount: 0, metricsDelta: { TaskDuration: 40 } })
-    const stats = aggregate(sample({ reps: [warmup, measured] }))
-    expect(stats.metricsDeltaPerMoveEvent.TaskDuration).toBeNull()
+    expect(stats[field].TaskDuration).toBe(expected)
   })
 
   it('never reports a key present only in the discarded warm-up rep', () => {

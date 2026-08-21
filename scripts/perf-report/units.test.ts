@@ -1,32 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import { convertMetricsDeltaToMs, convertSampleMetricsToMs, DURATION_METRIC_KEYS } from './units.ts'
-import type { RawScenarioSample, RepSample } from './raw-sample.ts'
-
-function rep(overrides: Partial<RepSample> = {}): RepSample {
-  return {
-    frameIntervalsMs: [16, 17, 18],
-    eventDurationsMs: [],
-    longTaskCount: 0,
-    moveEventCount: 100,
-    renderedCellCount: 2000,
-    metricsDelta: {},
-    wallClockMs: 1000,
-    ...overrides,
-  }
-}
-
-function sample(overrides: Partial<RawScenarioSample> = {}): RawScenarioSample {
-  return {
-    scenario: 'some-scenario',
-    project: '1280x900',
-    url: 'http://localhost:5173/',
-    cpuThrottlingRate: 1,
-    chromiumVersion: '140.0.0.0',
-    buildMode: 'perf',
-    reps: [rep(), rep()],
-    ...overrides,
-  }
-}
+import { rep, sample } from './test-support.ts'
 
 describe('convertMetricsDeltaToMs', () => {
   it('scales every named duration key by 1000 (CDP seconds -> ms)', () => {

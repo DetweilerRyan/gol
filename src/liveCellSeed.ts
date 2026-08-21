@@ -28,8 +28,8 @@ export function parseSeedRequest(search: string): SeedRequest | undefined {
   if (cellsRaw === null) return undefined
 
   const count = parseNonNegativeInteger(cellsRaw)
-  const spread = params.has('spread') ? parseNonNegativeInteger(params.get('spread')) : DEFAULT_SPREAD
-  const seed = params.has('seed') ? parseNonNegativeInteger(params.get('seed')) : DEFAULT_SEED
+  const spread = parseParamWithDefault(params, 'spread', DEFAULT_SPREAD)
+  const seed = parseParamWithDefault(params, 'seed', DEFAULT_SEED)
   if (count === undefined || spread === undefined || seed === undefined) return undefined
 
   const side = 2 * spread + 1
@@ -37,6 +37,15 @@ export function parseSeedRequest(search: string): SeedRequest | undefined {
   if (count > capacity) return undefined
 
   return { count, spread, seed }
+}
+
+// `spread`/`seed` fall back to their default only when the query string
+// omits the key entirely -- an explicit but malformed value (e.g.
+// `?spread=abc`) still parses to `undefined` rather than silently defaulting,
+// so parseSeedRequest can tell "not given" from "given badly."
+function parseParamWithDefault(params: URLSearchParams, key: string, fallback: number): number | undefined {
+  if (!params.has(key)) return fallback
+  return parseNonNegativeInteger(params.get(key))
 }
 
 // Digits only -- no sign, no decimal point, no exponent -- so this rejects

@@ -13,8 +13,9 @@
 // around it) for that reason; don't add a second helper that also gets
 // passed to addInitScript.
 //
-// gestures.ts and pan.perf.spec.ts read the installed API back out via
-// page.evaluate(() => window.__perfHarness.stop()) -- a *separate*
+// harness.ts's readSnapshot/startCollecting (shared by every
+// perf/*.perf.spec.ts file) read the installed API back out via
+// page.evaluate(() => window.__perfHarness.stop()/.start()) -- a *separate*
 // evaluation in the page context, which is why PerfHarnessWindow below is a
 // type import only, never a value used inside installPerfInstrumentation
 // itself.
