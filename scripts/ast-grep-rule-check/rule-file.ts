@@ -24,6 +24,13 @@ export interface RuleFile {
 // the keyword on the same line is the reason. YAML comments are stripped by
 // the parser, so this is matched against the raw text instead.
 //
+// The marker is file-scoped, not glob-scoped: a rule with two `files:` globs
+// and one marker suppresses check 6 for *both* globs, including one that
+// already resolves. Fine at today's scale (no rule file has ever needed two
+// globs where only one was unresolved), but worth knowing if that changes --
+// see checks.ts's checkStaleOptOuts for the complementary case, a marker that
+// no longer excuses anything.
+//
 // The trailing `$` is a genuinely equivalent mutant if removed, so Stryker
 // reports it as a permanent survivor here: `.` matches no line terminator, so
 // greedy `(.*)` already stops exactly where a multiline `$` would assert, for

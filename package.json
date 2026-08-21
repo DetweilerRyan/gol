@@ -47,7 +47,7 @@
   },
   "devDependencies": {
     "@amiceli/vitest-cucumber": "^7.0.0",
-    "@ast-grep/cli": "^0.45.1",
+    "@ast-grep/cli": "0.45.1",
     "@babel/core": "^8.0.1",
     "@fast-check/vitest": "^0.4.1",
     "@playwright/test": "^1.62.1",

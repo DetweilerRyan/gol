@@ -8,55 +8,105 @@
 // unpublished score formula); every check here is a binary fact, so this
 // process exits non-zero on any failure rather than always exiting 0.
 //
-// Rule files are discovered by globbing rules/*.yml, not by a hand-maintained
-// list like gherkin-dry-checker's FEATURE_FILES -- a hand list would defeat
-// the point: a new rule silently missing from it is exactly the drift this
-// checker exists to catch.
+// Rule and fixture files are discovered by reading sgconfig.yml's `ruleDirs`
+// and `testConfigs[].testDir` and recursing into them -- not a hand-maintained
+// list like gherkin-dry-checker's FEATURE_FILES, and not a hardcoded
+// `rules`/`rule-tests` pair either. ast-grep itself recurses into subdirectories
+// of `ruleDirs`/`testDir` (measured against 0.45.1: a rule at
+// `rules/nested/no-qux.yml` is scanned by `ast-grep scan` and its fixture run
+// by `ast-grep test`), so reading sgconfig.yml and recursing the same way is
+// what keeps this checker's file set equal to the one ast-grep actually uses --
+// a hardcoded top-level-only pair would fail open on both a nested rule and a
+// second `ruleDirs` entry, silently.
+//
+// Everything that can be pure lives in checks.ts's decide(): parsing (with
+// parse-error handling), every check, and formatting the exit code/output
+// lines. What's left here is genuinely I/O -- recursive directory reads,
+// sgconfig.yml parsing, console.log, process.exit -- so a test can pin
+// decide()'s exit code without touching the filesystem, and run.test.ts can
+// still exercise the recursive/sgconfig-driven parts directly against a real
+// temp directory.
 
 import { globSync, readdirSync, readFileSync } from 'node:fs'
 import path from 'node:path'
 import { fileURLToPath } from 'node:url'
-import { checkAllRules, type Failure } from './checks.ts'
-import { parseFixtureFile } from './fixture-file.ts'
-import { parseRuleFile } from './rule-file.ts'
+import { parse as parseYaml } from 'yaml'
+import { decide, type DecideResult, type RawFile } from './checks.ts'
 
 const SCRIPT_DIR = path.dirname(fileURLToPath(import.meta.url))
 const REPO_ROOT = path.resolve(SCRIPT_DIR, '../..')
-const RULES_DIR = path.join(REPO_ROOT, 'rules')
-const RULE_TESTS_DIR = path.join(REPO_ROOT, 'rule-tests')
 
-function readYamlFiles(dir: string, relativeDir: string): { path: string; text: string }[] {
-  return readdirSync(dir)
-    .filter((name) => name.endsWith('.yml') || name.endsWith('.yaml'))
-    .map((name) => ({
-      path: `${relativeDir}/${name}`,
-      text: readFileSync(path.join(dir, name), 'utf8'),
-    }))
+interface SgConfig {
+  ruleDirs: string[]
+  testDirs: string[]
 }
 
-function printFailures(failures: Failure[]): void {
-  console.log(`ast-grep rule check -- ${failures.length} failure(s):\n`)
-  for (const failure of failures) {
-    console.log(`[${failure.check}] ${failure.file}\n  ${failure.message}`)
+function toStringArray(value: unknown): string[] {
+  return Array.isArray(value) ? value.filter((entry): entry is string => typeof entry === 'string') : []
+}
+
+// Reads `ruleDirs` and `testConfigs[].testDir` off sgconfig.yml rather than
+// assuming the `rules`/`rule-tests` pair this repo happens to have today --
+// see the module comment above for why a hardcoded pair fails open.
+export function loadSgConfig(repoRoot: string): SgConfig {
+  const raw = readFileSync(path.join(repoRoot, 'sgconfig.yml'), 'utf8')
+  const parsed = (parseYaml(raw) ?? {}) as Record<string, unknown>
+  const testConfigs = Array.isArray(parsed.testConfigs) ? parsed.testConfigs : []
+  const testDirs = testConfigs
+    .map((testConfig: unknown) => (testConfig as { testDir?: unknown } | null)?.testDir)
+    .filter((testDir): testDir is string => typeof testDir === 'string')
+  return { ruleDirs: toStringArray(parsed.ruleDirs), testDirs }
+}
+
+// `ast-grep test` auto-manages a `__snapshots__` subdirectory under each
+// testDir for rules that rewrite code (Jest-style snapshot storage, not a
+// fixture) -- measured directly: a fixture-shaped file dropped under
+// `__snapshots__` is never counted towards "Running N tests", while the exact
+// same file one directory name over is. Recursing into it would make this
+// checker apply fixture-only checks (e.g. checkFixtureHasInvalidCases) to
+// files ast-grep itself never treats as fixtures.
+const SNAPSHOTS_DIR_NAME = '__snapshots__'
+
+// Recurses into subdirectories, matching ast-grep's own scan of `ruleDirs`/
+// `testDir` (see the module comment above) -- a plain, non-recursive
+// `readdirSync` would miss a rule or fixture ast-grep itself still sees.
+export function readYamlFilesRecursive(absoluteDir: string, relativeDir: string): RawFile[] {
+  const files: RawFile[] = []
+  for (const entry of readdirSync(absoluteDir, { withFileTypes: true })) {
+    if (entry.isDirectory() && entry.name === SNAPSHOTS_DIR_NAME) continue
+    const entryRelativePath = `${relativeDir}/${entry.name}`
+    if (entry.isDirectory()) {
+      files.push(...readYamlFilesRecursive(path.join(absoluteDir, entry.name), entryRelativePath))
+      continue
+    }
+    if (entry.name.endsWith('.yml') || entry.name.endsWith('.yaml')) {
+      files.push({ path: entryRelativePath, text: readFileSync(path.join(absoluteDir, entry.name), 'utf8') })
+    }
   }
+  return files
+}
+
+// Gathers the real file set off disk and hands it to checks.ts's pure
+// decide() -- the one function in this module a test can call without
+// mocking process.exit, given a repoRoot pointing at a real (or temporary)
+// directory tree.
+export function runCheck(repoRoot: string): DecideResult {
+  const { ruleDirs, testDirs } = loadSgConfig(repoRoot)
+  const ruleFiles = ruleDirs.flatMap((dir) => readYamlFilesRecursive(path.join(repoRoot, dir), dir))
+  const fixtureFiles = testDirs.flatMap((dir) => readYamlFilesRecursive(path.join(repoRoot, dir), dir))
+  const globHasMatch = (pattern: string): boolean => globSync(pattern, { cwd: repoRoot }).length > 0
+  return decide(ruleFiles, fixtureFiles, globHasMatch)
 }
 
 function main(): void {
-  const rules = readYamlFiles(RULES_DIR, 'rules').map(({ path: filePath, text }) => parseRuleFile(filePath, text))
-  const fixtures = readYamlFiles(RULE_TESTS_DIR, 'rule-tests').map(({ path: filePath, text }) =>
-    parseFixtureFile(filePath, text),
-  )
-  const globHasMatch = (pattern: string): boolean => globSync(pattern, { cwd: REPO_ROOT }).length > 0
-
-  const failures = checkAllRules(rules, fixtures, globHasMatch)
-
-  if (failures.length === 0) {
-    console.log(`ast-grep rule check -- ${rules.length} rules, ${fixtures.length} fixtures, no failures.`)
-    process.exit(0)
-  }
-
-  printFailures(failures)
-  process.exit(1)
+  const { exitCode, lines } = runCheck(REPO_ROOT)
+  for (const line of lines) console.log(line)
+  process.exit(exitCode)
 }
 
-main()
+// Guards against running main() as a side effect of being imported for tests
+// -- run.test.ts imports loadSgConfig/readYamlFilesRecursive/runCheck above
+// directly, and none of those should trigger a real process.exit.
+if (process.argv[1] === fileURLToPath(import.meta.url)) {
+  main()
+}
