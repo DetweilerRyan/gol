@@ -2,11 +2,12 @@ import { configDefaults, defineConfig } from 'vitest/config'
 import react, { reactCompilerPreset } from '@vitejs/plugin-react'
 import babel from '@rolldown/plugin-babel'
 import tailwindcss from '@tailwindcss/vite'
-import { devPort } from './dev-port.ts'
+import { devPort, previewPort } from './dev-port.ts'
 
 const sharedExclude = [
   ...configDefaults.exclude,
   '**/*.e2e.spec.ts',
+  '**/*.perf.spec.ts',
   '**/*.browser.test.ts?(x)',
   'scripts/**',
   '.claude/worktrees/**',
@@ -23,6 +24,10 @@ export default defineConfig({
   // for why an auto-incremented port lets another worktree's Playwright run
   // report green against this worktree's build.
   server: { port: devPort(), strictPort: true },
+  // Serves the perf-harness production build (see playwright.perf.config.ts
+  // / package.json's preview:perf) on its own per-worktree port, same
+  // reasoning as `server` above.
+  preview: { port: previewPort(), strictPort: true },
   test: {
     environment: 'jsdom',
     setupFiles: ['./src/test-setup.ts'],

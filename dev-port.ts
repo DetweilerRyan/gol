@@ -27,6 +27,7 @@ const ROOT = path.dirname(fileURLToPath(import.meta.url))
 
 const BASE_PORT = 5173
 const BROWSER_API_BASE_PORT = 21000
+const PREVIEW_BASE_PORT = 41000
 const SLOT_COUNT = 1000
 
 // A linked worktree's `.git` is a file pointing at the primary's gitdir; the
@@ -59,4 +60,12 @@ export function devPort(): number {
 // server's so the two schemes can never collide with each other.
 export function browserApiPort(): number {
   return BROWSER_API_BASE_PORT + slot()
+}
+
+// vite preview (npm run preview:perf), used by playwright.perf.config.ts to
+// serve a production perf build rather than dev's unminified one. A third
+// disjoint range from the dev (5173+) and browser-api (21000+) ports above,
+// for the same reason: two live worktrees must never be able to collide.
+export function previewPort(): number {
+  return PREVIEW_BASE_PORT + slot()
 }

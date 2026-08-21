@@ -25,6 +25,8 @@
     "vitest.browser.config.ts",
     "vitest.scripts.config.ts",
     "crap4ts.config.ts",
-    "crap4ts.scripts.config.ts"
+    "crap4ts.scripts.config.ts",
+    "playwright.config.ts",
+    "playwright.perf.config.ts"
   ]
 }
