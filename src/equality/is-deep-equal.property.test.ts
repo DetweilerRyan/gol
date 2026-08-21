@@ -19,6 +19,23 @@ const anyValue = fc.anything({ withDate: true, withMap: true, withSet: true, max
 // than "fixed" here.
 const cloneableValue = fc.anything({ withDate: true, withMap: false, withSet: true, maxDepth: 3 })
 
+// A set of distinct object references drawn from a deliberately tiny value
+// space, so several members are routinely deeply equal to each other --
+// that's the case where consumeEquivalent's matching has a real choice to
+// make, and where a wrong choice could strand a later member.
+const setMembers = fc.array(fc.record({ a: fc.integer({ min: 0, max: 3 }), b: fc.string({ maxLength: 2 }) }), {
+  maxLength: 6,
+})
+
+// The same members in an arbitrary order, cloned so nothing matches by
+// reference: every member has to be found by the fallback scan, whose
+// result must not depend on the order it happens to visit them in.
+const membersAndPermutedClone = setMembers.chain((members) =>
+  fc
+    .shuffledSubarray(members, { minLength: members.length, maxLength: members.length })
+    .map((permuted) => ({ members, permutedClone: structuredClone(permuted) })),
+)
+
 describe('isDeepEqual (property)', () => {
   it.prop([anyValue])('is reflexive', (x) => {
     expect(isDeepEqual(x, x)).toBe(true)
@@ -40,4 +57,17 @@ describe('isDeepEqual (property)', () => {
     const clone = structuredClone(value)
     expect(isDeepEqual(value, clone)).toBe(true)
   })
+
+  // Set members are matched greedily and consumed as they're matched, so
+  // correctness depends on any two equivalent members being interchangeable
+  // -- true because deep equality is an equivalence relation, but nothing
+  // else in the suite constrains it. A greedy walk that could strand a
+  // member (by consuming the only match some *later* member needed) would
+  // show up here as an order-dependent result.
+  it.prop([membersAndPermutedClone])(
+    'matches Set members irrespective of iteration order',
+    ({ members, permutedClone }) => {
+      expect(isDeepEqual(new Set(members), new Set(permutedClone))).toBe(true)
+    },
+  )
 })
