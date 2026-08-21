@@ -10,6 +10,8 @@ export interface FixtureFile {
   hasInvalidCases: boolean
 }
 
+// See rule-file.ts's identical filenameStemOf for why the `^` anchor here is
+// a confirmed equivalent mutant (unlike the `.ya?ml$` one) if removed.
 function filenameStemOf(relativePath: string): string {
   return relativePath.replace(/^.*\//, '').replace(/\.ya?ml$/, '')
 }

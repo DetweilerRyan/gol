@@ -32,4 +32,32 @@ describe('parseFixtureFile', () => {
     const fixture = parseFixtureFile('rule-tests/no-dom-in-domain-test.yml', text)
     expect(fixture.hasInvalidCases).toBe(false)
   })
+
+  it('leaves id undefined when the fixture has no id: key', () => {
+    const text = 'invalid:\n  - document.getElementById(x)\n'
+    const fixture = parseFixtureFile('rule-tests/orphan-test.yml', text)
+    expect(fixture.id).toBeUndefined()
+  })
+
+  it('leaves id undefined when the id: value is not a string (e.g. a bare YAML number)', () => {
+    const text = 'id: 42\ninvalid:\n  - document.getElementById(x)\n'
+    const fixture = parseFixtureFile('rule-tests/numeric-id-test.yml', text)
+    expect(fixture.id).toBeUndefined()
+  })
+
+  it('parses a comment-only document without crashing, leaving every field empty', () => {
+    // Same `?? {}` fallback as rule-file.ts's parseRuleFile -- yaml's parse()
+    // returns null, not {}, for a document with no content.
+    const fixture = parseFixtureFile('rule-tests/empty-test.yml', '# nothing here but a comment\n')
+    expect(fixture.id).toBeUndefined()
+    expect(fixture.hasInvalidCases).toBe(false)
+  })
+
+  it('strips only a trailing .yml/.yaml extension, not one appearing mid-filename', () => {
+    // Distinguishes the `$`-anchored extension regex from an unanchored one --
+    // see the equivalent rule-file.ts test for the full explanation.
+    const text = 'id: x\ninvalid:\n  - document.getElementById(x)\n'
+    const fixture = parseFixtureFile('rule-tests/no.yaml-thing-test.yml', text)
+    expect(fixture.filenameStem).toBe('no.yaml-thing-test')
+  })
 })

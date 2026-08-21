@@ -13,7 +13,10 @@
     "scripts/gherkin-dry-checker/analyze.ts",
     "scripts/gherkin-dry-checker/similarity.ts",
     "scripts/gherkin-dry-checker/step-parser.ts",
-    "scripts/halstead4ts/report.ts"
+    "scripts/halstead4ts/report.ts",
+    "scripts/ast-grep-rule-check/checks.ts",
+    "scripts/ast-grep-rule-check/rule-file.ts",
+    "scripts/ast-grep-rule-check/fixture-file.ts"
   ],
   "thresholds": {
     "high": 90,

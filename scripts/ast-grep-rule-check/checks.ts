@@ -62,8 +62,10 @@ export function checkIdMatchesFilename(rules: RuleFile[]): Failure[] {
     }))
 }
 
-// Check 3: no two rule files declare the same id.
-export function checkNoDuplicateIds(rules: RuleFile[]): Failure[] {
+// Groups rules by declared id, dropping id-less rules (those are already
+// covered by checkFixtureExists) -- split out of checkNoDuplicateIds purely
+// to keep that function's own cyclomatic complexity under crap4ts's threshold.
+function groupRulesById(rules: RuleFile[]): Map<string, RuleFile[]> {
   const filesById = new Map<string, RuleFile[]>()
   for (const rule of rules) {
     if (!rule.id) continue
@@ -71,9 +73,13 @@ export function checkNoDuplicateIds(rules: RuleFile[]): Failure[] {
     existing.push(rule)
     filesById.set(rule.id, existing)
   }
+  return filesById
+}
 
+// Check 3: no two rule files declare the same id.
+export function checkNoDuplicateIds(rules: RuleFile[]): Failure[] {
   const failures: Failure[] = []
-  for (const [id, files] of filesById) {
+  for (const [id, files] of groupRulesById(rules)) {
     if (files.length < 2) continue
     for (const rule of files) {
       const others = files.filter((other) => other !== rule).map((other) => other.path)
@@ -123,35 +129,52 @@ export function checkFixtureHasInvalidCases(fixtures: FixtureFile[]): Failure[] 
     }))
 }
 
+function unresolvedFilesMarkerFailure(rule: RuleFile): Failure {
+  return {
+    check: 'files-globs-resolve',
+    file: rule.path,
+    message: 'allow-unresolved-files marker has no reason -- the opt-out requires one to be stated',
+  }
+}
+
+// The glob half of check 6, split out purely to keep
+// checkRuleFilesGlobsResolve's own cyclomatic complexity under crap4ts's
+// threshold -- it has no opinion on the marker, only on `files:` globs.
+function checkGlobsResolve(rule: RuleFile, globHasMatch: (pattern: string) => boolean): Failure[] {
+  const failures: Failure[] = []
+  for (const pattern of rule.files ?? []) {
+    if (!globHasMatch(pattern)) {
+      failures.push({
+        check: 'files-globs-resolve',
+        file: rule.path,
+        message: `\`files:\` glob \`${pattern}\` matches no file`,
+      })
+    }
+  }
+  return failures
+}
+
+// One rule's contribution to check 6, split out of checkFilesGlobsResolve to
+// keep that function's own cyclomatic complexity under crap4ts's threshold.
+// A marker present *with* a reason suppresses both the no-reason failure and
+// the glob check below it -- any other combination (no marker, or a marker
+// with no reason) runs the glob check as normal.
+function checkRuleFilesGlobsResolve(rule: RuleFile, globHasMatch: (pattern: string) => boolean): Failure[] {
+  const marker = rule.unresolvedFilesMarker
+  const suppressed = marker.present && Boolean(marker.reason)
+  if (suppressed) return []
+
+  const markerFailure = marker.present ? [unresolvedFilesMarkerFailure(rule)] : []
+  return [...markerFailure, ...checkGlobsResolve(rule, globHasMatch)]
+}
+
 // Check 6: every `files:` glob resolves to at least one existing file, unless
 // the rule carries an `allow-unresolved-files` marker with a stated reason.
 // A marker present without a reason does not suppress the check -- it's
 // reported as its own failure instead, since the opt-out requires the reason
 // to actually be written down.
 export function checkFilesGlobsResolve(rules: RuleFile[], globHasMatch: (pattern: string) => boolean): Failure[] {
-  const failures: Failure[] = []
-  for (const rule of rules) {
-    const marker = rule.unresolvedFilesMarker
-    if (marker.present && !marker.reason) {
-      failures.push({
-        check: 'files-globs-resolve',
-        file: rule.path,
-        message: 'allow-unresolved-files marker has no reason -- the opt-out requires one to be stated',
-      })
-    }
-    if (marker.present && marker.reason) continue
-
-    for (const pattern of rule.files ?? []) {
-      if (!globHasMatch(pattern)) {
-        failures.push({
-          check: 'files-globs-resolve',
-          file: rule.path,
-          message: `\`files:\` glob \`${pattern}\` matches no file`,
-        })
-      }
-    }
-  }
-  return failures
+  return rules.flatMap((rule) => checkRuleFilesGlobsResolve(rule, globHasMatch))
 }
 
 export function checkAllRules(

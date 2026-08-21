@@ -23,6 +23,11 @@ export interface RuleFile {
 // `# ast-grep-rule-check: allow-unresolved-files <reason>` -- anything after
 // the keyword on the same line is the reason. YAML comments are stripped by
 // the parser, so this is matched against the raw text instead.
+//
+// The trailing `$` is a mutation-test-confirmed equivalent mutant if removed:
+// `.` never matches a newline, so `(.*)` already stops at end-of-line on its
+// own -- the explicit anchor changes nothing observable. Left in for clarity
+// (it documents the intent), not because a test can distinguish it.
 const UNRESOLVED_FILES_MARKER = /^#\s*ast-grep-rule-check:\s*allow-unresolved-files(.*)$/m
 
 export function extractUnresolvedFilesMarker(rawText: string): UnresolvedFilesMarker {
@@ -32,6 +37,13 @@ export function extractUnresolvedFilesMarker(rawText: string): UnresolvedFilesMa
   return { present: true, reason: reason.length > 0 ? reason : null }
 }
 
+// The `^` anchor on the directory-stripping regex is, likewise, a confirmed
+// equivalent mutant for every path this function actually receives: greedy
+// unanchored matching still tries position 0 first and succeeds there, so
+// removing `^` is only observable for a path containing a newline before a
+// `/`, which readdirSync never produces. The `.ya?ml$` anchor *does* matter
+// -- see the mid-filename ".yaml" test in rule-file.test.ts -- so don't
+// assume every anchor here is equally load-bearing.
 function filenameStemOf(relativePath: string): string {
   return relativePath.replace(/^.*\//, '').replace(/\.ya?ml$/, '')
 }

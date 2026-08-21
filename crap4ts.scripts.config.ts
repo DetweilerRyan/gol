@@ -6,12 +6,12 @@ import { defineConfig } from 'crap4ts'
 // role's quality gate and so gets held to the same bar as src/ rather than
 // being exempt from it.
 //
-// The three run.ts entry points are excluded: they're I/O shells (argv-free
+// The four run.ts entry points are excluded: they're I/O shells (argv-free
 // CLI mains that read the filesystem, spawn vitest, and console.log a table),
 // exercised end to end by actually running `npm run acceptance-mutation` /
-// `gherkin-dry` / `halstead4ts`, not by unit tests -- the same reason
-// App.tsx/main.tsx are excluded from crap4ts.config.ts. Everything they
-// delegate to is a pure module listed below.
+// `gherkin-dry` / `halstead4ts` / `ast-grep:rules`, not by unit tests -- the
+// same reason App.tsx/main.tsx are excluded from crap4ts.config.ts. Everything
+// they delegate to is a pure module listed below.
 //
 // Threshold 6 is deliberately the same number crap4ts.config.ts uses rather
 // than a looser scripts-specific bar. The parsing/dispatch code here does read
@@ -30,6 +30,9 @@ export default defineConfig({
     'scripts/gherkin-dry-checker/similarity.ts',
     'scripts/gherkin-dry-checker/step-parser.ts',
     'scripts/halstead4ts/report.ts',
+    'scripts/ast-grep-rule-check/checks.ts',
+    'scripts/ast-grep-rule-check/rule-file.ts',
+    'scripts/ast-grep-rule-check/fixture-file.ts',
   ],
   exclude: ['**/*.test.*'],
 })

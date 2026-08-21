@@ -42,6 +42,7 @@ describe('checkFixtureExists', () => {
     expect(failures).toHaveLength(1)
     expect(failures[0].check).toBe('fixture-exists')
     expect(failures[0].file).toBe('rules/example.yml')
+    expect(failures[0].message).toContain('rule-tests/orphan-test.yml')
   })
 
   it('passes when a matching fixture exists', () => {
@@ -52,6 +53,8 @@ describe('checkFixtureExists', () => {
   it('reports a rule with no id, since its fixture cannot be located', () => {
     const failures = checkFixtureExists([rule({ id: undefined })], [])
     expect(failures).toHaveLength(1)
+    expect(failures[0].check).toBe('fixture-exists')
+    expect(failures[0].message).toContain('cannot be located')
   })
 })
 
@@ -66,22 +69,52 @@ describe('checkIdMatchesFilename', () => {
     const failures = checkIdMatchesFilename([rule({ filenameStem: 'x', id: 'x' })])
     expect(failures).toEqual([])
   })
+
+  it("reports a missing id as '(missing)' in the message rather than the literal undefined", () => {
+    const failures = checkIdMatchesFilename([rule({ filenameStem: 'x', id: undefined })])
+    expect(failures).toHaveLength(1)
+    expect(failures[0].message).toContain('(missing)')
+  })
 })
 
 describe('checkNoDuplicateIds', () => {
-  it('reports every rule file sharing a duplicated id', () => {
+  it('reports every rule file sharing a duplicated id, naming only the *other* files in its message', () => {
     const a = rule({ path: 'rules/a.yml', id: 'dup' })
     const b = rule({ path: 'rules/b.yml', id: 'dup' })
-    const failures = checkNoDuplicateIds([a, b])
-    expect(failures).toHaveLength(2)
-    expect(failures.map((f) => f.file).sort()).toEqual(['rules/a.yml', 'rules/b.yml'])
+    const c = rule({ path: 'rules/c.yml', id: 'dup' })
+    const failures = checkNoDuplicateIds([a, b, c])
+    expect(failures).toHaveLength(3)
+    expect(failures.map((f) => f.file).sort()).toEqual(['rules/a.yml', 'rules/b.yml', 'rules/c.yml'])
     expect(failures.every((f) => f.check === 'no-duplicate-ids')).toBe(true)
+
+    const failureForA = failures.find((f) => f.file === 'rules/a.yml')
+    // Names the two *other* files, comma-separated -- and never itself.
+    expect(failureForA?.message).toContain('rules/b.yml, rules/c.yml')
+    expect(failureForA?.message).not.toContain('rules/a.yml')
+  })
+
+  it('reports a duplicate at exactly two files sharing an id (the boundary of "duplicate")', () => {
+    const failures = checkNoDuplicateIds([
+      rule({ path: 'rules/a.yml', id: 'dup' }),
+      rule({ path: 'rules/b.yml', id: 'dup' }),
+    ])
+    expect(failures).toHaveLength(2)
   })
 
   it('passes when every rule has a unique id', () => {
     const failures = checkNoDuplicateIds([
       rule({ path: 'rules/a.yml', id: 'a' }),
       rule({ path: 'rules/b.yml', id: 'b' }),
+    ])
+    expect(failures).toEqual([])
+  })
+
+  it('ignores an id-less rule rather than grouping it with other id-less rules as duplicates', () => {
+    // An id-less rule is already reported by checkFixtureExists -- this check
+    // must not pile on a second, spurious "duplicate id" failure for it.
+    const failures = checkNoDuplicateIds([
+      rule({ path: 'rules/a.yml', id: undefined }),
+      rule({ path: 'rules/b.yml', id: undefined }),
     ])
     expect(failures).toEqual([])
   })
@@ -92,11 +125,17 @@ describe('checkSeverityValid', () => {
     const failures = checkSeverityValid([rule({ severity: undefined })])
     expect(failures).toHaveLength(1)
     expect(failures[0].check).toBe('severity-valid')
+    // "missing" distinguishes this from the bogus-value message below --
+    // both would otherwise leave `failures` at the same length.
+    expect(failures[0].message).toContain('missing')
   })
 
   it('reports a rule with a severity value ast-grep does not recognize', () => {
     const failures = checkSeverityValid([rule({ severity: 'bogus' })])
     expect(failures).toHaveLength(1)
+    expect(failures[0].check).toBe('severity-valid')
+    expect(failures[0].message).toContain('bogus')
+    expect(failures[0].message).toContain('hint, info, warning, error, off')
   })
 
   it('passes for every valid ast-grep severity level', () => {
@@ -111,6 +150,7 @@ describe('checkFixtureHasInvalidCases', () => {
     const failures = checkFixtureHasInvalidCases([fixture({ hasInvalidCases: false })])
     expect(failures).toHaveLength(1)
     expect(failures[0].check).toBe('fixture-has-invalid-cases')
+    expect(failures[0].message).not.toBe('')
   })
 
   it('passes for a fixture carrying at least one invalid: case', () => {
@@ -148,6 +188,7 @@ describe('checkFilesGlobsResolve', () => {
       () => false,
     )
     expect(failures).toHaveLength(2)
+    expect(failures.every((f) => f.check === 'files-globs-resolve')).toBe(true)
     expect(failures.some((f) => f.message.includes('no reason'))).toBe(true)
     expect(failures.some((f) => f.message.includes('matches no file'))).toBe(true)
   })

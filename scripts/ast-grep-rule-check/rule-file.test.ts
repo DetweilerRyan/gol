@@ -45,6 +45,42 @@ describe('parseRuleFile', () => {
     const rule = parseRuleFile('rules/no-id.yml', 'severity: warning\n')
     expect(rule.id).toBeUndefined()
   })
+
+  it('leaves id undefined when the id: value is not a string (e.g. a bare YAML number)', () => {
+    const rule = parseRuleFile('rules/numeric-id.yml', 'id: 42\nseverity: warning\n')
+    expect(rule.id).toBeUndefined()
+  })
+
+  it('leaves severity undefined when the severity: value is not a string (e.g. a bare YAML number)', () => {
+    const rule = parseRuleFile('rules/numeric-severity.yml', 'id: x\nseverity: 42\n')
+    expect(rule.severity).toBeUndefined()
+  })
+
+  it('drops non-string entries from a files: list rather than passing them through', () => {
+    const rule = parseRuleFile(
+      'rules/mixed-files.yml',
+      "id: x\nseverity: warning\nfiles:\n  - 'src/a.ts'\n  - 42\n  - 'src/b.ts'\n",
+    )
+    expect(rule.files).toEqual(['src/a.ts', 'src/b.ts'])
+  })
+
+  it('parses a comment-only document without crashing, leaving every field empty', () => {
+    // `yaml`'s parse() returns null (not {}) for a document with no content --
+    // this pins down the `?? {}` fallback that keeps the rest of the parser
+    // from throwing on `parsed.id`/`parsed.severity`/etc.
+    const rule = parseRuleFile('rules/empty.yml', '# nothing here but a comment\n')
+    expect(rule.id).toBeUndefined()
+    expect(rule.severity).toBeUndefined()
+    expect(rule.files).toBeUndefined()
+  })
+
+  it('strips only a trailing .yml/.yaml extension, not one appearing mid-filename', () => {
+    // Distinguishes the `$`-anchored extension regex from an unanchored one:
+    // an unanchored regex would strip the *first* ".yaml"/".yml" it finds,
+    // which for this filename is the one in the middle, not the real suffix.
+    const rule = parseRuleFile('rules/no.yaml-thing-test.yml', 'id: x\nseverity: warning\n')
+    expect(rule.filenameStem).toBe('no.yaml-thing-test')
+  })
 })
 
 describe('extractUnresolvedFilesMarker', () => {
@@ -68,5 +104,15 @@ describe('extractUnresolvedFilesMarker', () => {
   it('treats a marker with only whitespace after the keyword as reason-less', () => {
     const text = '# ast-grep-rule-check: allow-unresolved-files   \nid: x\n'
     expect(extractUnresolvedFilesMarker(text)).toEqual({ present: true, reason: null })
+  })
+
+  it('finds a marker with unusual spacing (no space after #, no space before the reason)', () => {
+    const text = '#ast-grep-rule-check:allow-unresolved-files reason\nid: x\n'
+    expect(extractUnresolvedFilesMarker(text)).toEqual({ present: true, reason: 'reason' })
+  })
+
+  it('does not treat marker-like text as a marker unless it starts the line -- a quoted string on an otherwise unrelated line is not a real comment', () => {
+    const text = 'message: "# ast-grep-rule-check: allow-unresolved-files fake reason"\nid: x\n'
+    expect(extractUnresolvedFilesMarker(text)).toEqual({ present: false, reason: null })
   })
 })
