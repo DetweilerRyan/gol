@@ -20,8 +20,16 @@ function isPlainMap(value: unknown): value is Map<unknown, unknown> {
   return value instanceof Map
 }
 
+// Object.is rather than ===, because two Invalid Dates both have a
+// getTime() of NaN and `NaN === NaN` is false -- which would make a Date
+// unequal to its own structuredClone, and make an Invalid Date the one
+// container this walker reports as unequal to a member-by-member copy of
+// itself. Node's util.isDeepStrictEqual treats two Invalid Dates as equal,
+// and this now matches. There's no +0/-0 hazard in the swap: TimeClip
+// normalizes -0 to +0, so getTime() never returns -0 and Object.is differs
+// from === here only on the NaN case.
 function datesEqual(a: Date, b: Date): boolean {
-  return a.getTime() === b.getTime()
+  return isStrictEqual(a.getTime(), b.getTime())
 }
 
 // Tries to find, and consume, a member of `remaining` equivalent to `item`.

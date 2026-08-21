@@ -76,6 +76,20 @@ describe.each(comparators)('%s - shared structural-equality contract', (_name, c
     expect(compare(new Date(2020, 1, 1), new Date(2021, 1, 1))).toBe(false)
   })
 
+  // Invalid Dates are the one Date case where getTime() can't be compared
+  // with ===: both sides are NaN. Pinned deterministically here because the
+  // property suite only reaches it when fast-check happens to draw an
+  // Invalid Date (~0.2% of fc.date() samples), which made it an
+  // intermittent failure rather than a reproducible one.
+  it('returns true for two Invalid Dates', () => {
+    expect(compare(new Date(NaN), new Date(NaN))).toBe(true)
+  })
+
+  it('returns false for an Invalid Date compared with a valid one (both directions)', () => {
+    expect(compare(new Date(NaN), new Date(2020, 1, 1))).toBe(false)
+    expect(compare(new Date(2020, 1, 1), new Date(NaN))).toBe(false)
+  })
+
   it('returns true for equal plain objects with primitive values', () => {
     expect(compare({ a: 1, b: 'test', c: true }, { a: 1, b: 'test', c: true })).toBe(true)
   })
