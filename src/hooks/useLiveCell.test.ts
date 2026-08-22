@@ -27,9 +27,17 @@ describe('useLiveCell', () => {
     expect(result.current).toBe(false)
   })
 
-  it('re-renders with the new value when its own cell toggles', () => {
+  // Both toggle cases below watch the same cell from an empty store and differ
+  // only in which cell gets toggled, so the setup is shared and each case
+  // keeps its own act/assert sequence.
+  function renderWatcherOnEmptyStore(x: number, y: number) {
     const store = createLiveCellStore()
-    const { result } = renderHook(() => useLiveCell(store, cellKey(2, 2)))
+    const { result } = renderHook(() => useLiveCell(store, cellKey(x, y)))
+    return { store, result }
+  }
+
+  it('re-renders with the new value when its own cell toggles', () => {
+    const { store, result } = renderWatcherOnEmptyStore(2, 2)
     expect(result.current).toBe(false)
 
     act(() => store.toggle(2, 2))
@@ -40,8 +48,7 @@ describe('useLiveCell', () => {
   })
 
   it('does not re-render when a different cell toggles', () => {
-    const store = createLiveCellStore()
-    const { result } = renderHook(() => useLiveCell(store, cellKey(2, 2)))
+    const { store, result } = renderWatcherOnEmptyStore(2, 2)
 
     act(() => store.toggle(9, 9))
 

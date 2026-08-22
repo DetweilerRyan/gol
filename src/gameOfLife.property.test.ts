@@ -11,7 +11,11 @@ import {
   toggleCell,
   type LiveCells,
 } from './gameOfLife'
-import { referenceChangedCells, referenceNextGeneration } from './test-support/lifeReference'
+import {
+  expectNoChangeFromEmptyGrid,
+  referenceChangedCells,
+  referenceNextGeneration,
+} from './test-support/lifeReference'
 
 // Bounded coordinate/pattern generators keep the brute-force reference
 // implementations in test-support/lifeReference cheap while still exercising negative coordinates,
@@ -126,9 +130,7 @@ describe('advanceGeneration (property)', () => {
   // a still life (every candidate survives, so the delta must be empty even
   // though the candidate map is full).
   it('reports nothing for the empty grid', () => {
-    const { next, changed } = advanceGeneration(createEmptyLiveCells())
-    expect(next.size).toBe(0)
-    expect(changed).toEqual([])
+    expectNoChangeFromEmptyGrid(advanceGeneration(createEmptyLiveCells()))
   })
 
   it('reports the isolated live cell that dies with zero live neighbors', () => {

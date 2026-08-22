@@ -9,6 +9,7 @@ import {
   toggleCell,
   type LiveCells,
 } from './gameOfLife'
+import { expectNoChangeFromEmptyGrid } from './test-support/lifeReference'
 
 function makeLiveCells(coords: [number, number][]): LiveCells {
   return new Set(coords.map(([x, y]) => cellKey(x, y)))
@@ -161,9 +162,7 @@ function sortedKeys(keys: readonly string[]): string[] {
 
 describe('advanceGeneration', () => {
   it('reports no change for an empty grid', () => {
-    const { next, changed } = advanceGeneration(createEmptyLiveCells())
-    expect(next.size).toBe(0)
-    expect(changed).toEqual([])
+    expectNoChangeFromEmptyGrid(advanceGeneration(createEmptyLiveCells()))
   })
 
   it('reports the lone cell that dies of underpopulation', () => {

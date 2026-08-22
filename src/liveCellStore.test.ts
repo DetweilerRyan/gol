@@ -1,6 +1,6 @@
 import { describe, expect, it, vi } from 'vitest'
 import { createLiveCellStore } from './liveCellStore'
-import { cellKey } from './gameOfLife'
+import { cellKey, type CellKey } from './gameOfLife'
 import { getPatternByName } from './patternLibrary'
 
 const BLOCK = getPatternByName('Block')!
@@ -149,30 +149,28 @@ describe('createLiveCellStore', () => {
       expect(listener).toHaveBeenCalledTimes(1)
     })
 
-    it('trackedCellCount returns to 0 after the last unsubscribe', () => {
+    // Bucket count after subscribing two listeners, then after dropping each
+    // in turn. The two cases below differ only in whether the listeners share
+    // a cell, so the walk is shared and each case asserts its own triple --
+    // which is the distinction being drawn, and stays visible here.
+    function bucketCountsWhileUnsubscribing(keyA: CellKey, keyB: CellKey): [number, number, number] {
       const store = createLiveCellStore()
-      const unsubA = store.subscribeCell(cellKey(1, 1), vi.fn())
-      const unsubB = store.subscribeCell(cellKey(2, 2), vi.fn())
-      expect(store.trackedCellCount()).toBe(2)
+      const unsubA = store.subscribeCell(keyA, vi.fn())
+      const unsubB = store.subscribeCell(keyB, vi.fn())
 
+      const withBoth = store.trackedCellCount()
       unsubA()
-      expect(store.trackedCellCount()).toBe(1)
-
+      const withB = store.trackedCellCount()
       unsubB()
-      expect(store.trackedCellCount()).toBe(0)
+      return [withBoth, withB, store.trackedCellCount()]
+    }
+
+    it('trackedCellCount returns to 0 after the last unsubscribe', () => {
+      expect(bucketCountsWhileUnsubscribing(cellKey(1, 1), cellKey(2, 2))).toEqual([2, 1, 0])
     })
 
     it('trackedCellCount stays at 1 bucket for multiple listeners on the same cell until all unsubscribe', () => {
-      const store = createLiveCellStore()
-      const unsubA = store.subscribeCell(cellKey(1, 1), vi.fn())
-      const unsubB = store.subscribeCell(cellKey(1, 1), vi.fn())
-      expect(store.trackedCellCount()).toBe(1)
-
-      unsubA()
-      expect(store.trackedCellCount()).toBe(1)
-
-      unsubB()
-      expect(store.trackedCellCount()).toBe(0)
+      expect(bucketCountsWhileUnsubscribing(cellKey(1, 1), cellKey(1, 1))).toEqual([1, 1, 0])
     })
 
     it('double-unsubscribe is idempotent', () => {
