@@ -75,30 +75,16 @@ describe('useCellTiles', () => {
     expect(result.current.range).toBe(before.range)
   })
 
-  it('rebuilds onto a fresh range once a pan crosses a tile boundary beyond hysteresis on the x axis', () => {
+  it.each<['x' | 'y', (c: Camera) => Camera]>([
+    ['x', (c) => ({ ...c, offsetX: c.offsetX + 50 })],
+    ['y', (c) => ({ ...c, offsetY: c.offsetY + 50 })],
+  ])('rebuilds onto a fresh range once a pan crosses a tile boundary beyond hysteresis on the %s axis', (_, pan) => {
     const { result, rerender } = renderHook(({ camera }: { camera: Camera }) => useCellTiles(camera, size), {
       initialProps: { camera },
     })
     const before = result.current
 
-    const crossingPan: Camera = { ...camera, offsetX: camera.offsetX + 50 }
-    const initialRange = coveringTileRange(camera, size.width, size.height, TILE_SPAN_CELLS)
-    const required = coveringTileRange(crossingPan, size.width, size.height, TILE_SPAN_CELLS)
-    expect(tileRangeHolds(initialRange, required, EVICT_LAG_TILES)).toBe(false)
-
-    rerender({ camera: crossingPan })
-
-    expect(result.current.range).not.toBe(before.range)
-    expect(result.current.range).toEqual(required)
-  })
-
-  it('rebuilds onto a fresh range once a pan crosses a tile boundary beyond hysteresis on the y axis', () => {
-    const { result, rerender } = renderHook(({ camera }: { camera: Camera }) => useCellTiles(camera, size), {
-      initialProps: { camera },
-    })
-    const before = result.current
-
-    const crossingPan: Camera = { ...camera, offsetY: camera.offsetY + 50 }
+    const crossingPan = pan(camera)
     const initialRange = coveringTileRange(camera, size.width, size.height, TILE_SPAN_CELLS)
     const required = coveringTileRange(crossingPan, size.width, size.height, TILE_SPAN_CELLS)
     expect(tileRangeHolds(initialRange, required, EVICT_LAG_TILES)).toBe(false)
@@ -180,12 +166,15 @@ describe('useCellTiles', () => {
     expect(result.current.anchorY).toBe(before.anchorY)
   })
 
-  it('re-quantises the anchor once a pan drifts beyond ANCHOR_DRIFT_CELLS on the x axis', () => {
+  it.each<['x' | 'y', (c: Camera) => Camera]>([
+    ['x', (c) => ({ ...c, offsetX: c.offsetX + (ANCHOR_DRIFT_CELLS + 100) })],
+    ['y', (c) => ({ ...c, offsetY: c.offsetY + (ANCHOR_DRIFT_CELLS + 100) })],
+  ])('re-quantises the anchor once a pan drifts beyond ANCHOR_DRIFT_CELLS on the %s axis', (_, pan) => {
     const { result, rerender } = renderHook(({ camera }: { camera: Camera }) => useCellTiles(camera, size), {
       initialProps: { camera },
     })
 
-    const beyondDriftPan: Camera = { ...camera, offsetX: camera.offsetX + (ANCHOR_DRIFT_CELLS + 100) }
+    const beyondDriftPan = pan(camera)
     const initialAnchor = computeAnchor(camera, TILE_SPAN_CELLS)
     expect(anchorHolds(initialAnchor, beyondDriftPan)).toBe(false)
 
@@ -197,26 +186,6 @@ describe('useCellTiles', () => {
 
     // The returned offset must correspond to the rebased anchor, never a
     // stale pairing with the pre-rebase one.
-    const { xPx, yPx } = anchorOffsetPx(rebasedAnchor, beyondDriftPan)
-    expect(result.current.offsetXPx).toBe(xPx)
-    expect(result.current.offsetYPx).toBe(yPx)
-  })
-
-  it('re-quantises the anchor once a pan drifts beyond ANCHOR_DRIFT_CELLS on the y axis', () => {
-    const { result, rerender } = renderHook(({ camera }: { camera: Camera }) => useCellTiles(camera, size), {
-      initialProps: { camera },
-    })
-
-    const beyondDriftPan: Camera = { ...camera, offsetY: camera.offsetY + (ANCHOR_DRIFT_CELLS + 100) }
-    const initialAnchor = computeAnchor(camera, TILE_SPAN_CELLS)
-    expect(anchorHolds(initialAnchor, beyondDriftPan)).toBe(false)
-
-    rerender({ camera: beyondDriftPan })
-
-    const rebasedAnchor = computeAnchor(beyondDriftPan, TILE_SPAN_CELLS)
-    expect(result.current.anchorX).toBe(rebasedAnchor.x)
-    expect(result.current.anchorY).toBe(rebasedAnchor.y)
-
     const { xPx, yPx } = anchorOffsetPx(rebasedAnchor, beyondDriftPan)
     expect(result.current.offsetXPx).toBe(xPx)
     expect(result.current.offsetYPx).toBe(yPx)
