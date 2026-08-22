@@ -3,6 +3,7 @@ import fc from 'fast-check'
 import { describe, expect } from 'vitest'
 import {
   cellKey,
+  changedCells,
   computeContentBounds,
   createEmptyLiveCells,
   getNextGeneration,
@@ -121,6 +122,47 @@ describe('getNextGeneration (property)', () => {
 describe('createEmptyLiveCells (property)', () => {
   it.prop([point])('never reports any cell as alive', ([x, y]) => {
     expect(isCellAlive(createEmptyLiveCells(), x, y)).toBe(false)
+  })
+})
+
+// Brute-force oracle: the symmetric difference, computed with plain array
+// filtering rather than changedCells' own O(n) loop, so the property doesn't
+// just restate the implementation.
+function referenceChangedCells(previous: LiveCells, next: LiveCells): Set<string> {
+  const previousKeys = [...previous]
+  const nextKeys = [...next]
+  const onlyInPrevious = previousKeys.filter((key) => !next.has(key))
+  const onlyInNext = nextKeys.filter((key) => !previous.has(key))
+  return new Set([...onlyInPrevious, ...onlyInNext])
+}
+
+describe('changedCells (property)', () => {
+  it.prop([pattern, pattern])('matches an independent brute-force symmetric-difference reference', (a, b) => {
+    const previous = makeLiveCells(a)
+    const next = makeLiveCells(b)
+    expect(new Set(changedCells(previous, next))).toEqual(referenceChangedCells(previous, next))
+  })
+
+  it.prop([pattern, pattern])(
+    'is symmetric: changedCells(a, b) and changedCells(b, a) contain the same keys',
+    (a, b) => {
+      const previous = makeLiveCells(a)
+      const next = makeLiveCells(b)
+      expect(new Set(changedCells(previous, next))).toEqual(new Set(changedCells(next, previous)))
+    },
+  )
+
+  it.prop([pattern])('is empty when compared against itself', (coords) => {
+    const cells = makeLiveCells(coords)
+    expect(changedCells(cells, cells)).toEqual([])
+  })
+
+  it.prop([pattern, pattern])('every reported key is a member of exactly one of the two sets', (a, b) => {
+    const previous = makeLiveCells(a)
+    const next = makeLiveCells(b)
+    for (const key of changedCells(previous, next)) {
+      expect(previous.has(key)).not.toBe(next.has(key))
+    }
   })
 })
 

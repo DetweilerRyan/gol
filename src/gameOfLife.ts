@@ -4,7 +4,12 @@
 // other way round.
 
 export type CellKey = string
+// The draft/mutable type -- immer producers (toggleCell, placePattern) need a
+// mutable Set to write into.
 export type LiveCells = Set<CellKey>
+// Published state: application state is always immutable, so anything handed
+// out to a reader (rather than a producer) is typed as a ReadonlySet.
+export type ReadonlyLiveCells = ReadonlySet<CellKey>
 
 export function cellKey(x: number, y: number): CellKey {
   return `${x},${y}`
@@ -19,7 +24,7 @@ export function createEmptyLiveCells(): LiveCells {
   return new Set()
 }
 
-export function isCellAlive(liveCells: LiveCells, x: number, y: number): boolean {
+export function isCellAlive(liveCells: ReadonlyLiveCells, x: number, y: number): boolean {
   return liveCells.has(cellKey(x, y))
 }
 
@@ -43,7 +48,7 @@ const NEIGHBOR_OFFSETS: ReadonlyArray<readonly [number, number]> = [
   [1, 1],
 ]
 
-function countNeighbors(liveCells: LiveCells): Map<CellKey, number> {
+function countNeighbors(liveCells: ReadonlyLiveCells): Map<CellKey, number> {
   const neighborCounts = new Map<CellKey, number>()
   for (const key of liveCells) {
     const [x, y] = parseCellKey(key)
@@ -62,7 +67,7 @@ function willSurvive(isAlive: boolean, liveNeighborCount: number): boolean {
   return liveNeighborCount === 3
 }
 
-export function getNextGeneration(liveCells: LiveCells): LiveCells {
+export function getNextGeneration(liveCells: ReadonlyLiveCells): LiveCells {
   const neighborCounts = countNeighbors(liveCells)
 
   const next: LiveCells = new Set()
@@ -84,7 +89,7 @@ export interface ContentBounds {
 // maxX/maxY are the highest live cell coordinate plus one, so a single live
 // cell yields a full 1x1 footprint (matching how it actually renders) rather
 // than a zero-size point.
-export function computeContentBounds(liveCells: LiveCells): ContentBounds | null {
+export function computeContentBounds(liveCells: ReadonlyLiveCells): ContentBounds | null {
   if (liveCells.size === 0) return null
 
   let minX = Infinity
@@ -101,4 +106,21 @@ export function computeContentBounds(liveCells: LiveCells): ContentBounds | null
   }
 
   return { minX, maxX: maxX + 1, minY, maxY: maxY + 1 }
+}
+
+// The symmetric difference of two live-cell sets: every key present in
+// exactly one of the two. Used by the store (not implemented in this module)
+// to notify only the cells whose state actually changed between generations,
+// rather than every subscriber. Lives here rather than fused into
+// getNextGeneration because it's set math over two LiveCells in the model's
+// own vocabulary, independent of how the next generation was produced.
+export function changedCells(previous: ReadonlyLiveCells, next: ReadonlyLiveCells): CellKey[] {
+  const changed: CellKey[] = []
+  for (const key of previous) {
+    if (!next.has(key)) changed.push(key)
+  }
+  for (const key of next) {
+    if (!previous.has(key)) changed.push(key)
+  }
+  return changed
 }

@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest'
 import {
   cellKey,
+  changedCells,
   computeContentBounds,
   createEmptyLiveCells,
   getNextGeneration,
@@ -151,6 +152,66 @@ describe('getNextGeneration', () => {
         [0, 1],
       ]),
     )
+  })
+})
+
+function sortedKeys(keys: readonly string[]): string[] {
+  return [...keys].sort()
+}
+
+describe('changedCells', () => {
+  it('is empty for two empty sets', () => {
+    expect(changedCells(createEmptyLiveCells(), createEmptyLiveCells())).toEqual([])
+  })
+
+  it('reports every cell of the non-empty side when the other is empty', () => {
+    const next = makeLiveCells([
+      [0, 0],
+      [1, 1],
+    ])
+    expect(sortedKeys(changedCells(createEmptyLiveCells(), next))).toEqual(sortedKeys([cellKey(0, 0), cellKey(1, 1)]))
+    expect(sortedKeys(changedCells(next, createEmptyLiveCells()))).toEqual(sortedKeys([cellKey(0, 0), cellKey(1, 1)]))
+  })
+
+  it('is empty for identical sets', () => {
+    const cells = makeLiveCells([
+      [0, 0],
+      [3, 4],
+    ])
+    expect(changedCells(cells, cells)).toEqual([])
+    expect(
+      changedCells(
+        cells,
+        makeLiveCells([
+          [0, 0],
+          [3, 4],
+        ]),
+      ),
+    ).toEqual([])
+  })
+
+  it('reports every cell of both sides for disjoint sets', () => {
+    const previous = makeLiveCells([[0, 0]])
+    const next = makeLiveCells([[9, 9]])
+    expect(sortedKeys(changedCells(previous, next))).toEqual(sortedKeys([cellKey(0, 0), cellKey(9, 9)]))
+  })
+
+  it('reports only the added cell', () => {
+    const previous = makeLiveCells([[0, 0]])
+    const next = makeLiveCells([
+      [0, 0],
+      [1, 0],
+    ])
+    expect(changedCells(previous, next)).toEqual([cellKey(1, 0)])
+  })
+
+  it('reports only the removed cell', () => {
+    const previous = makeLiveCells([
+      [0, 0],
+      [1, 0],
+    ])
+    const next = makeLiveCells([[0, 0]])
+    expect(changedCells(previous, next)).toEqual([cellKey(1, 0)])
   })
 })
 
