@@ -47,8 +47,7 @@
     "motion": "^13.1.0",
     "react": "^19.2.8",
     "react-dom": "^19.2.8",
-    "tailwindcss": "^4.3.3",
-    "use-immer": "^0.11.0"
+    "tailwindcss": "^4.3.3"
   },
   "devDependencies": {
     "@amiceli/vitest-cucumber": "^7.0.0",

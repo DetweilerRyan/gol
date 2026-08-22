@@ -182,6 +182,35 @@ describe('createLiveCellStore', () => {
       expect(() => unsubscribe()).not.toThrow()
       expect(store.trackedCellCount()).toBe(0)
     })
+
+    it('a stale unsubscribe closure called again after resubscribing the same listener does not remove the new subscription', () => {
+      const store = createLiveCellStore()
+      const listener = vi.fn()
+      const unsubFirst = store.subscribeCell(cellKey(1, 1), listener)
+      unsubFirst()
+      // Resubscribe the same listener reference to the same key -- unsubFirst
+      // is now stale, but nothing has invalidated it. Calling it again must
+      // stay a no-op rather than tearing down the new subscription.
+      store.subscribeCell(cellKey(1, 1), listener)
+      unsubFirst()
+
+      store.toggle(1, 1)
+      expect(listener).toHaveBeenCalledTimes(1)
+    })
+
+    it('unsubscribing via a second closure for an already-fully-removed key does not throw', () => {
+      // subscribeCell twice with the same (key, listener) pair returns two
+      // independent Unsubscribe closures over one Set entry (add is
+      // idempotent). Calling the first removes the key's bucket entirely;
+      // the second closure's own first call must then find no bucket left
+      // to delete from, rather than dereferencing it.
+      const store = createLiveCellStore()
+      const listener = vi.fn()
+      const unsubA = store.subscribeCell(cellKey(1, 1), listener)
+      const unsubB = store.subscribeCell(cellKey(1, 1), listener)
+      unsubA()
+      expect(() => unsubB()).not.toThrow()
+    })
   })
 
   describe('dispatch-order edge cases', () => {
@@ -284,6 +313,18 @@ describe('createLiveCellStore', () => {
 
       unsubscribe()
       store.toggle(1, 1)
+      expect(listener).toHaveBeenCalledTimes(1)
+    })
+
+    it('a stale bounds-unsubscribe closure called again after resubscribing the same listener does not remove the new subscription', () => {
+      const store = createLiveCellStore()
+      const listener = vi.fn()
+      const unsubFirst = store.subscribeBounds(listener)
+      unsubFirst()
+      store.subscribeBounds(listener)
+      unsubFirst()
+
+      store.toggle(0, 0)
       expect(listener).toHaveBeenCalledTimes(1)
     })
   })

@@ -170,6 +170,26 @@ export function createLiveCellStore(initialLiveCells: ReadonlyLiveCells = create
     }
   }
 
+  // Mutation-scan note (cleaner, live-cell-store slice): a scoped `npx
+  // stryker run --mutate` over this file leaves 6 mutants surviving in this
+  // function, all hand-verified rather than left unexamined:
+  //   - !boundsDirty -> false, boundsDirty = false -> true, and the two
+  //     ConditionalExpression variants that each drop one half of
+  //     `boundsSnapshot !== null && next !== null` are equivalent: forcing
+  //     an always-recompute (or narrowing which null-check gates the
+  //     isShallowEqual call) never changes the returned value or its
+  //     identity, because isShallowEqual(a, b) already returns false
+  //     whenever exactly one of a/b is null (comparing a plain object
+  //     against null), so the `boundsSnapshot = next` fallback still runs
+  //     and still yields the correct answer. Confirmed by hand-applying
+  //     each mutant and running the suite directly (not just under Stryker).
+  //   - the `&&` -> `||` LogicalOperator mutant on the same line is *not*
+  //     equivalent -- hand-applying it directly breaks 3 existing tests
+  //     (liveCellStore.test.ts's "returns a new object identity when the
+  //     box actually moves" and two useContentBounds.test.ts cases). Stryker
+  //     reports it [Survived] with those exact tests listed as having run,
+  //     which is a perTest coverage-attribution anomaly in the tool, not a
+  //     gap in this suite -- see the live-cell-store cleaner handoff.
   function getBoundsSnapshot(): ContentBounds | null {
     if (!boundsDirty) return boundsSnapshot
     boundsDirty = false

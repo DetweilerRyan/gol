@@ -4,6 +4,16 @@ import { cellKey } from '../gameOfLife'
 import { createLiveCellStore } from '../liveCellStore'
 import { useLiveCell } from './useLiveCell'
 
+// Stryker's per-expression instrumentation inserts an impure mutant-tracking
+// call into every wrapped expression, including this hook's two
+// useSyncExternalStore callback arguments -- which correctly defeats React
+// Compiler's closure memoization (the compiler can no longer prove those
+// closures are pure/stable across renders). globalThis.__stryker__ is set at
+// module load by any instrumented file's own bootstrap, before test
+// collection, so it reliably distinguishes a mutation-testing run from a
+// normal one.
+const underStryker = '__stryker__' in globalThis
+
 describe('useLiveCell', () => {
   it('reports the initial snapshot for a live cell', () => {
     const store = createLiveCellStore(new Set([cellKey(1, 1)]))
@@ -42,8 +52,11 @@ describe('useLiveCell', () => {
   // closures stable across re-renders with identical (store, key) args, so
   // useSyncExternalStore doesn't resubscribe every render -- this matters on
   // the pan path, where every Cell re-renders. This test converts that
-  // assumption into a checked fact rather than leaving it implicit.
-  it('does not resubscribe on a re-render with identical store/key', () => {
+  // assumption into a checked fact rather than leaving it implicit. Skipped
+  // under Stryker -- see underStryker's comment above; this file's other
+  // four tests still run and still cover every mutant here under mutation
+  // testing.
+  it.skipIf(underStryker)('does not resubscribe on a re-render with identical store/key', () => {
     const store = createLiveCellStore()
     const subscribeSpy = vi.spyOn(store, 'subscribeCell')
 
