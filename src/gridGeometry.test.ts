@@ -1,12 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import { DEFAULT_CELL_SIZE, type Camera } from './camera'
-import {
-  cellsInRange,
-  computeMajorGridlines,
-  computeVisibleRange,
-  isMajorGridline,
-  type VisibleRange,
-} from './gridGeometry'
+import { computeMajorGridlines, computeVisibleRange, isMajorGridline, type VisibleRange } from './gridGeometry'
 
 const camera: Camera = { offsetX: 0, offsetY: 0, cellSize: DEFAULT_CELL_SIZE }
 
@@ -31,37 +25,6 @@ describe('computeVisibleRange', () => {
     const range = computeVisibleRange(panned, 200, 100)
     expect(range.minX).toBe(Math.floor(4.7) - 2)
     expect(range.minY).toBe(Math.floor(-3.2) - 2)
-  })
-})
-
-describe('cellsInRange', () => {
-  it('enumerates every coordinate in the range, row-major (y outer, x inner)', () => {
-    const range: VisibleRange = { minX: 0, maxX: 2, minY: 0, maxY: 1 }
-    expect(cellsInRange(range)).toEqual([
-      { x: 0, y: 0 },
-      { x: 1, y: 0 },
-      { x: 2, y: 0 },
-      { x: 0, y: 1 },
-      { x: 1, y: 1 },
-      { x: 2, y: 1 },
-    ])
-  })
-
-  it('returns an empty array when the range is inverted (max < min)', () => {
-    const range: VisibleRange = { minX: 5, maxX: 2, minY: 0, maxY: 1 }
-    expect(cellsInRange(range)).toEqual([])
-  })
-
-  it('returns a single cell for a single-cell range', () => {
-    const range: VisibleRange = { minX: 3, maxX: 3, minY: -1, maxY: -1 }
-    expect(cellsInRange(range)).toEqual([{ x: 3, y: -1 }])
-  })
-
-  it('matches the cell count implied by computeVisibleRange', () => {
-    const range = computeVisibleRange(camera, 200, 100)
-    const width = range.maxX - range.minX + 1
-    const height = range.maxY - range.minY + 1
-    expect(cellsInRange(range)).toHaveLength(width * height)
   })
 })
 

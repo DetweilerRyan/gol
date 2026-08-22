@@ -1,13 +1,14 @@
-import { worldToScreen, type Camera } from '../camera'
 import { cellKey } from '../gameOfLife'
 import { isMajorGridline } from '../gridGeometry'
 import { useLiveCell } from '../hooks/useLiveCell'
 import type { LiveCellStore } from '../liveCellStore'
 
 interface CellProps {
-  x: number
+  x: number // world coordinate: aria-label, gridline classes, store key
   y: number
-  camera: Camera
+  leftPx: number
+  topPx: number
+  cellSize: number
   store: LiveCellStore
   onActivate: (x: number, y: number) => void
 }
@@ -19,10 +20,18 @@ interface CellProps {
 // each tick -- see liveCellStore.ts's module header. The key is computed once
 // here (not passed down from GridCells' map) so getCellSnapshot stays an
 // allocation-free Set.has rather than building a string every render.
-export default function Cell({ x, y, camera, store, onActivate }: CellProps) {
+//
+// Takes leftPx/topPx/cellSize as plain scalars rather than a Camera: a
+// Camera's identity changes on every pointermove during a pan, and this
+// component sits at the base of the render tree GridCells maps over, so a
+// Camera-typed prop here would defeat the pan-stable lattice GridCells reads
+// from (see useCellLattice.ts) -- every Cell would still re-render on every
+// pan tick even though its own world position never moved. leftPx/topPx come
+// from the lattice's per-slot pixel math, not from worldToScreen(camera, x, y)
+// -- see GridCells.tsx.
+export default function Cell({ x, y, leftPx, topPx, cellSize, store, onActivate }: CellProps) {
   const key = cellKey(x, y)
   const isAlive = useLiveCell(store, key)
-  const { x: left, y: top } = worldToScreen(camera, x, y)
   return (
     <button
       type="button"
@@ -33,9 +42,9 @@ export default function Cell({ x, y, camera, store, onActivate }: CellProps) {
       // path.
       onClick={() => onActivate(x, y)}
       style={{
-        width: camera.cellSize,
-        height: camera.cellSize,
-        transform: `translate(${left}px, ${top}px)`,
+        width: cellSize,
+        height: cellSize,
+        transform: `translate(${leftPx}px, ${topPx}px)`,
         boxSizing: 'border-box',
       }}
       // No transition-colors: a generation step flips thousands of cells at

@@ -4,6 +4,16 @@ import type { Camera } from './camera'
 // coordinates are reference lines. Everything here is derived from a
 // VisibleRange, which is the only thing that ties it to the camera -- these
 // functions never produce a new Camera, unlike camera.ts's transforms.
+//
+// computeVisibleRange is used two ways: Grid's renderOverlays context (the
+// ruler needs the exact camera-derived range so its label set matches what's
+// actually on screen), and, historically, to enumerate exactly the cells to
+// render. That second use is gone -- the cell button layer now reads
+// cellLattice.ts's fixed-size Lattice instead (see useCellLattice.ts and
+// GridCells.tsx), which is pan-stable in a way a fresh VisibleRange every
+// render never was. This module no longer has a cell-enumeration function;
+// it stays camera-exact because the ruler's correctness depends on that,
+// unlike the cell layer's.
 
 const VISIBLE_BUFFER_CELLS = 2
 
@@ -21,22 +31,6 @@ export function computeVisibleRange(camera: Camera, viewportWidthPx: number, vie
     minY: Math.floor(camera.offsetY) - VISIBLE_BUFFER_CELLS,
     maxY: Math.ceil(camera.offsetY + viewportHeightPx / camera.cellSize) + VISIBLE_BUFFER_CELLS,
   }
-}
-
-// Enumerates every cell coordinate within a visible range, row-major (y outer,
-// x inner) to match the order GridCells renders them in. Pulled out of
-// Grid.tsx (which computes the range and calls this, then hands the result to
-// GridCells) as a pure function so the (x, y) enumeration itself stays
-// independently testable rather than living only inside JSX-adjacent render
-// logic.
-export function cellsInRange(range: VisibleRange): { x: number; y: number }[] {
-  const cells: { x: number; y: number }[] = []
-  for (let y = range.minY; y <= range.maxY; y++) {
-    for (let x = range.minX; x <= range.maxX; x++) {
-      cells.push({ x, y })
-    }
-  }
-  return cells
 }
 
 export const MAJOR_GRIDLINE_INTERVAL = 10

@@ -102,6 +102,19 @@ describe('DOM structure', () => {
     expect(content).not.toBeNull()
     expect(content?.id).toBe(GRID_CONTENT_ID)
   })
+
+  it('renders the pattern preview after the cell buttons in DOM order', () => {
+    // compareDocumentPosition rather than a sibling-index comparison
+    // (container.children.indexOf(...)): GridCells' cell buttons sit inside
+    // their own transformed layer div, not as direct siblings of the
+    // preview, so an index-based assertion would break on that nesting even
+    // though the actual paint order (later-in-DOM wins for same-stacking-
+    // context absolutely-positioned elements) is unaffected by it.
+    renderGrid({ previewPositions: [[0, 0]] })
+    const cellButton = screen.getByRole('button', { name: 'Cell 0, 0' })
+    const preview = screen.getByLabelText('Pattern preview cell 0, 0')
+    expect(cellButton.compareDocumentPosition(preview) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy()
+  })
 })
 
 describe('cell activation dispatch (place vs toggle)', () => {
@@ -169,8 +182,8 @@ describe('pointer surface wiring', () => {
 describe('measurement wiring', () => {
   it('renders a small cell grid immediately on mount, before any ResizeObserver callback fires', () => {
     // Exercises the initial containerSize state ({ width: 0, height: 0 }), not just the
-    // post-resize value -- computeVisibleRange/cellsInRange still produce a finite (if tiny)
-    // range from that default.
+    // post-resize value -- useCellLattice/computeLattice still produce a finite (if
+    // slack-only) lattice from that default, via LATTICE_SLACK_CELLS.
     renderGrid()
     expect(screen.getByRole('button', { name: 'Cell 0, 0' })).toBeInTheDocument()
   })
@@ -221,5 +234,53 @@ describe('wheel and preview wiring', () => {
     rerenderWith({ camera: otherCamera, previewPositions: [[5, 5]] })
 
     expect(previewTransform(5, 5)).toBe(expectedTransform(otherCamera, 5, 5))
+  })
+})
+
+// This is the slice's named deliverable: proof that a sub-cell pan re-renders
+// no cell at all (the whole point of the lattice layer -- see
+// useCellLattice.ts/cellLattice.ts), paired with proof that the guard isn't
+// vacuous -- a pan large enough to force a lattice rebase *does* re-render.
+// getCellSnapshot is the right probe: useSyncExternalStore (inside
+// useLiveCell, which every Cell calls) invokes it on every render of every
+// Cell, so its call count is a direct per-cell render counter, cheaper and
+// more direct than counting DOM mutations.
+describe('lattice pan-stability', () => {
+  it('a sub-cell pan (same Math.floor(offsetX/offsetY)) re-renders zero cells', () => {
+    const store = createLiveCellStore()
+    const { container, rerenderWith } = renderGrid({ store })
+    const beforeCell = screen.getByRole('button', { name: 'Cell 0, 0' })
+    const layerDiv = gridContentEl(container).firstElementChild as HTMLElement
+    const transformBefore = layerDiv.style.transform
+    const classNameBefore = layerDiv.className
+
+    const spy = vi.spyOn(store, 'getCellSnapshot')
+    spy.mockClear()
+
+    // 0 -> 0.5: Math.floor stays 0 on both axes, so useCellLattice's origin
+    // doesn't move and every Cell slot keeps identical props -- only the
+    // fractional pixel offset the transformed layer div applies changes.
+    const subCellPan: Camera = { ...CAMERA, offsetX: CAMERA.offsetX + 0.5, offsetY: CAMERA.offsetY + 0.5 }
+    rerenderWith({ camera: subCellPan })
+
+    expect(spy).not.toHaveBeenCalled()
+    expect(screen.getByRole('button', { name: 'Cell 0, 0' })).toBe(beforeCell)
+    expect(layerDiv.className).toBe(classNameBefore)
+    expect(layerDiv.style.transform).not.toBe(transformBefore)
+  })
+
+  it('a pan crossing a whole cell boundary does re-render cells (the guard above is not vacuous)', () => {
+    const store = createLiveCellStore()
+    const { rerenderWith } = renderGrid({ store })
+
+    const spy = vi.spyOn(store, 'getCellSnapshot')
+    spy.mockClear()
+
+    // 0 -> 1.2: Math.floor moves from 0 to 1 on the x axis, so the lattice
+    // rebases and every slot's world coordinate shifts.
+    const rebasePan: Camera = { ...CAMERA, offsetX: CAMERA.offsetX + 1.2 }
+    rerenderWith({ camera: rebasePan })
+
+    expect(spy).toHaveBeenCalled()
   })
 })

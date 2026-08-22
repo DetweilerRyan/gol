@@ -1,44 +1,32 @@
 import { fireEvent, render, screen } from '@testing-library/react'
 import { describe, expect, it, vi } from 'vitest'
-import { worldToScreen, type Camera } from '../camera'
+import { slotPixelPosition, slotWorldCoordinate } from '../cellLattice'
 import { createLiveCellStore } from '../liveCellStore'
 import GridCells from './GridCells'
 
-const camera: Camera = { offsetX: 0, offsetY: 0, cellSize: 20 }
-
-// Explicit small fixtures, not a viewport-derived range -- the whole point of
+// Explicit small lattice, not a viewport-derived one -- the whole point of
 // extracting this component is that its tests no longer pay for hundreds of
-// buttons. 3x3 is enough to cover the major-gridline (x-only, y-only,
-// neither) and alive/dead branches at once.
-const NINE_CELLS = [
-  { x: -1, y: -1 },
-  { x: 0, y: -1 },
-  { x: 1, y: -1 },
-  { x: -1, y: 0 },
-  { x: 0, y: 0 },
-  { x: 1, y: 0 },
-  { x: -1, y: 10 },
-  { x: 10, y: 1 },
-  { x: 1, y: 1 },
-]
+// buttons. 3x3 is enough to cover the enumeration (origin offset, row-major
+// order, slot-index keying) this component itself is now responsible for.
+const LATTICE = { originX: -1, originY: -1, cols: 3, rows: 3, cellSize: 20 }
 
 function renderCells(props: Partial<React.ComponentProps<typeof GridCells>> = {}) {
   const merged: React.ComponentProps<typeof GridCells> = {
-    camera,
-    cells: NINE_CELLS,
+    ...LATTICE,
     store: createLiveCellStore(),
-    previewPositions: [],
     onActivateCell: vi.fn(),
     ...props,
   }
   return { ...render(<GridCells {...merged} />), ...merged }
 }
 
-// Cell-level rendering (alive/dead style, aria-label, worldToScreen
-// positioning, major-gridline border classes, its own store subscription) is
-// Cell.test.tsx's job now -- see Cell.tsx. What's left here is GridCells' own
-// contract: that it wires onActivate through to Cell correctly, and the
-// preview-overlay stacking/remount behavior below.
+// Cell-level rendering (alive/dead style, aria-label, major-gridline border
+// classes, its own store subscription) is Cell.test.tsx's job now -- see
+// Cell.tsx. What's left here is GridCells' own contract: that it wires
+// onActivate through to Cell correctly, and the lattice-slot enumeration
+// (world coordinate + pixel position per slot) that replaced the old
+// camera-derived cells array. The placing-mode preview overlay this used to
+// also render is PatternPreview.test.tsx's job now -- see PatternPreview.tsx.
 describe('GridCells click-to-activate', () => {
   it('a plain click on a cell button calls onActivateCell with that cell’s world coordinates', () => {
     const onActivateCell = vi.fn()
@@ -50,45 +38,25 @@ describe('GridCells click-to-activate', () => {
   })
 })
 
-describe('GridCells preview overlay', () => {
-  it('renders a preview cell per position, after the cell buttons in DOM order', () => {
-    const { container } = renderCells({ previewPositions: [[0, 0]] })
-    const preview = screen.getByLabelText('Pattern preview cell 0, 0')
-    expect(preview.className).toContain('pointer-events-none')
-    expect(preview.style.boxSizing).toBe('border-box')
+describe('GridCells lattice enumeration', () => {
+  it('renders one cell per (col, row) slot, offset by originX/originY', () => {
+    renderCells()
 
-    const children = [...container.children]
-    const lastButtonIndex = children.map((el) => el.tagName).lastIndexOf('BUTTON')
-    const previewIndex = children.indexOf(preview)
-    expect(previewIndex).toBeGreaterThan(lastButtonIndex)
+    for (let j = 0; j < LATTICE.rows; j++) {
+      for (let i = 0; i < LATTICE.cols; i++) {
+        const x = slotWorldCoordinate(LATTICE.originX, i)
+        const y = slotWorldCoordinate(LATTICE.originY, j)
+        expect(screen.getByRole('button', { name: `Cell ${x}, ${y}` })).toBeInTheDocument()
+      }
+    }
+    expect(screen.getAllByRole('button')).toHaveLength(LATTICE.cols * LATTICE.rows)
   })
 
-  it('positions a preview cell via worldToScreen(camera, x, y)', () => {
-    renderCells({ previewPositions: [[1, -1]] })
-    const { x: left, y: top } = worldToScreen(camera, 1, -1)
-    expect(screen.getByLabelText('Pattern preview cell 1, -1').style.transform).toBe(`translate(${left}px, ${top}px)`)
-  })
+  it('positions each slot via slotPixelPosition(index, cellSize), independent of origin', () => {
+    renderCells()
 
-  it('remounts preview-cell DOM nodes (rather than reusing them) when the preview positions change', () => {
-    // The preview cell's key encodes its world position (`preview-${x}-${y}`), not a stable
-    // per-slot index, so a changed position changes the key and React tears down and recreates
-    // the node -- this is the one place a wrong/constant key is observable through
-    // testing-library, since it changes DOM node identity, not just the rendered props.
-    const { rerender } = renderCells({ previewPositions: [[0, 0]] })
-    const before = screen.getByLabelText('Pattern preview cell 0, 0')
-
-    rerender(
-      <GridCells
-        camera={camera}
-        cells={NINE_CELLS}
-        store={createLiveCellStore()}
-        previewPositions={[[1, 1]]}
-        onActivateCell={vi.fn()}
-      />,
-    )
-
-    expect(screen.queryByLabelText('Pattern preview cell 0, 0')).not.toBeInTheDocument()
-    const after = screen.getByLabelText('Pattern preview cell 1, 1')
-    expect(after).not.toBe(before)
+    const leftPx = slotPixelPosition(2, LATTICE.cellSize) // column index of world x=1
+    const topPx = slotPixelPosition(2, LATTICE.cellSize) // row index of world y=1
+    expect(screen.getByRole('button', { name: 'Cell 1, 1' }).style.transform).toBe(`translate(${leftPx}px, ${topPx}px)`)
   })
 })

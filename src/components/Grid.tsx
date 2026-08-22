@@ -1,12 +1,14 @@
 import { useRef, type ReactNode } from 'react'
 import { screenToWorld, type Camera, type WheelInput } from '../camera'
-import { cellsInRange, computeVisibleRange, type VisibleRange } from '../gridGeometry'
+import { computeVisibleRange, type VisibleRange } from '../gridGeometry'
+import { useCellLattice } from '../hooks/useCellLattice'
 import { useElementSize, type ElementSize } from '../hooks/useElementSize'
 import { useGridPointerGestures } from '../hooks/useGridPointerGestures'
 import { useInitialCentering } from '../hooks/useInitialCentering'
 import { useWheelInput } from '../hooks/useWheelInput'
 import type { LiveCellStore } from '../liveCellStore'
 import GridCells from './GridCells'
+import PatternPreview from './PatternPreview'
 
 export interface GridOverlayContext {
   size: ElementSize
@@ -49,10 +51,31 @@ export default function Grid({
   useInitialCentering(containerSize, onFirstMeasure)
 
   const visibleRange = computeVisibleRange(camera, containerSize.width, containerSize.height)
-  const cells = cellsInRange(visibleRange)
+  const lattice = useCellLattice(camera, containerSize)
+
+  // Single-shot stamping (disarming immediately after a placement) belongs to
+  // whoever owns the placement state -- usePatternPlacement's
+  // stampArmedPattern -- not here: this branch only decides which of the two
+  // upward callbacks a given activation resolves to.
+  //
+  // Declared as a const arrow above its first use (rather than a hoisted
+  // function declaration below it, as this used to read) so React Compiler
+  // memoizes it against its own dependencies (isPatternArmed, onStampPattern,
+  // onToggleCell) -- see the compiled output referenced from Grid.test.tsx's
+  // lattice pan-stability tests. A function declaration referenced from
+  // inside the onTap closure below it compiled to a fresh function every
+  // render, which defeated GridCells' own memoization even though every
+  // lattice-derived prop it receives was unchanged.
+  const activateCell = (x: number, y: number) => {
+    if (isPatternArmed) {
+      onStampPattern(x, y)
+    } else {
+      onToggleCell(x, y)
+    }
+  }
 
   // trackHover mirrors the isPatternArmed check the place-vs-toggle branch
-  // below also makes: only in placing mode does a pointermove need
+  // above also makes: only in placing mode does a pointermove need
   // pointer-to-world resolution for the preview, so an ordinary pan drag
   // doesn't pay for that per-move getBoundingClientRect call. See
   // useGridPointerGestures for the guard itself.
@@ -68,18 +91,6 @@ export default function Grid({
       onPreviewCell(x, y)
     },
   })
-
-  // Single-shot stamping (disarming immediately after a placement) belongs to
-  // whoever owns the placement state -- usePatternPlacement's
-  // stampArmedPattern -- not here: this branch only decides which of the two
-  // upward callbacks a given activation resolves to.
-  function activateCell(x: number, y: number) {
-    if (isPatternArmed) {
-      onStampPattern(x, y)
-    } else {
-      onToggleCell(x, y)
-    }
-  }
 
   return (
     <div ref={containerRef} className="relative h-full w-full overflow-hidden bg-gray-100">
@@ -100,18 +111,41 @@ export default function Grid({
         {...handlers}
         className={`absolute inset-0 touch-none ${isPanning ? 'cursor-grabbing' : 'cursor-grab'}`}
       >
+        {/* NO transform here -- #grid-content's client rect is load-bearing.
+            useGridPointerGestures and useWheelInput both call
+            getBoundingClientRect() on this element, and a transform here
+            would shift that rect, silently resolving every tap/hover to the
+            wrong world cell (rectRelativePixels -> screenToWorld). The
+            transform that makes a pan pan-stable-cell-cheap lives one level
+            deeper, on the layer div below, which affects only where its
+            children paint, not this element's own rect. */}
         {/* Grid -> GridCells is a real component edge, kept even though every
             other sibling component was inverted into the overlay slot: cells
             must render *inside* #grid-content, and owning that containment is
             exactly why Grid exists as a component rather than folding into
             LifeBoard. Do not invert this edge too. */}
-        <GridCells
-          camera={camera}
-          cells={cells}
-          store={store}
-          previewPositions={previewPositions}
-          onActivateCell={activateCell}
-        />
+        <div
+          className="absolute inset-0"
+          style={{ transform: `translate(${lattice.offsetXPx}px, ${lattice.offsetYPx}px)`, willChange: 'transform' }}
+        >
+          <GridCells
+            originX={lattice.originX}
+            originY={lattice.originY}
+            cols={lattice.cols}
+            rows={lattice.rows}
+            cellSize={lattice.cellSize}
+            store={store}
+            onActivateCell={activateCell}
+          />
+        </div>
+
+        {/* PatternPreview renders after GridCells' layer, deliberately: both
+            are absolutely positioned with auto z-index, so later-in-DOM wins,
+            and the preview must paint over the cell buttons rather than
+            behind them. See Grid.test.tsx's DOM-order assertion below. It
+            stays outside the transformed layer and camera-exact -- see
+            PatternPreview.tsx. */}
+        <PatternPreview camera={camera} positions={previewPositions} />
       </div>
 
       {renderOverlays({ size: containerSize, visibleRange })}
