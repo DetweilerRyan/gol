@@ -2,7 +2,13 @@ import { fireEvent, render, screen, type RenderResult } from '@testing-library/r
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { DEFAULT_CELL_SIZE, screenToWorld, worldToScreen, type Camera } from '../camera'
 import { anchorOffsetPx, computeAnchor } from '../cellAnchor'
-import { coveringTileRange, nextTileRange, TILE_SPAN_CELLS } from '../cellTiles'
+import {
+  coveringTileRange,
+  enteringStripCellCount,
+  nextTileRange,
+  TILE_SPAN_CELLS,
+  tileRangeCellCount,
+} from '../cellTiles'
 import { DRAG_THRESHOLD_PX } from '../dragGesture'
 import { createLiveCellStore } from '../liveCellStore'
 import {
@@ -383,5 +389,102 @@ describe('tile pan-stability', () => {
     rerenderWith({ camera: crossingPan })
 
     expect(spy).toHaveBeenCalled()
+  })
+
+  // Step 5b's deliverable, and a DIFFERENT mechanism from the zero-calls test
+  // above -- conflating the two is the way to ship this step looking green
+  // while proving nothing (see the design's "the two bailout mechanisms are
+  // different" section):
+  //
+  //   (A) within-range pan (above): GridCells' own props are unchanged, so
+  //       React Compiler's memo on Grid's <GridCells> element means
+  //       GridCells never runs at all.
+  //   (B) strip event (here): GridCells DOES run, and creates a fresh
+  //       <CellTile> element for every tile in the new range -- including
+  //       retained ones. A retained tile's own body still runs, but hits
+  //       React Compiler's memoization of THAT call (same props in, so the
+  //       same children element out), and React bails below it without
+  //       calling useLiveCell/getCellSnapshot again. Only an ENTERING
+  //       tile's Cells are genuinely new function calls.
+  //
+  // The 40x40 fixture used everywhere else in this file can't discriminate
+  // (B): at that size the covering range is a single tile, so "entering"
+  // and "everything" are the same set and a call-count assertion would pass
+  // even with no per-tile memoization at all. This needs a fixture spanning
+  // multiple tiles per axis, with at least one tile that's RETAINED across
+  // the pan, so "only the entering strip mounted" is actually falsifiable.
+  describe('a strip event mounts only the entering strip (the O(entering) proof)', () => {
+    // 160x160px at cellSize 20 = 8x8 cells (2 x TILE_SPAN_CELLS). An offset
+    // that's a MULTIPLE of TILE_SPAN_CELLS -- like the module CAMERA
+    // constant's 0 -- aligns that window exactly to 2 whole tiles per axis,
+    // with no partially-covered tile at either edge, and panning by exactly
+    // one tile span then evicts and admits a whole tile with nothing
+    // retained in between. offsetX/offsetY -2 is NOT a multiple of 4, so the
+    // same 8-cell window instead straddles 3 tile boundaries per axis
+    // (confirmed below, not assumed) -- a 3x3, 144-cell covering range with
+    // room for a genuinely RETAINED middle tile column as well as an
+    // entering edge one.
+    const STRIP_WIDTH = 160
+    const STRIP_HEIGHT = 160
+    const STRIP_CAMERA: Camera = { offsetX: -2, offsetY: -2, cellSize: DEFAULT_CELL_SIZE }
+
+    it.skipIf(underStryker)(
+      'a pan crossing one tile boundary mounts exactly the 48-cell entering column, not the 144-cell viewport',
+      () => {
+        const store = createLiveCellStore()
+        const { rerenderWith } = renderGrid({ store, camera: STRIP_CAMERA })
+        // Grid measures its own container via ResizeObserver (useElementSize),
+        // not from stubBoundingClientRect -- it renders at containerSize
+        // {0, 0} until an observer callback fires (see "measurement wiring"
+        // above), and a 0x0 viewport collapses to a single tile regardless of
+        // STRIP_WIDTH/STRIP_HEIGHT. Trigger it explicitly so the covering
+        // range actually reflects the fixture size before the pan under test.
+        triggerResize(STRIP_WIDTH, STRIP_HEIGHT)
+
+        // Confirmed, not assumed: the starting range really is 3x3 tiles /
+        // 144 cells, the pan really does force a rebuild, and the rebuilt
+        // range's entering column really is 48 cells -- see cellTiles.ts's
+        // own table-driven test for these same figures pinned against the
+        // design.
+        const before = coveringTileRange(STRIP_CAMERA, STRIP_WIDTH, STRIP_HEIGHT, TILE_SPAN_CELLS)
+        expect(tileRangeCellCount(before)).toBe(144)
+
+        const crossingPan: Camera = { ...STRIP_CAMERA, offsetX: STRIP_CAMERA.offsetX + TILE_SPAN_CELLS }
+        const after = nextTileRange(before, crossingPan, STRIP_WIDTH, STRIP_HEIGHT)
+        expect(after).not.toBe(before)
+        expect(tileRangeCellCount(after)).toBe(144)
+        expect(enteringStripCellCount(after, 'x')).toBe(48)
+
+        const spy = vi.spyOn(store, 'getCellSnapshot')
+        spy.mockClear()
+
+        rerenderWith({ camera: crossingPan })
+
+        // Distinct keys, not raw call count: mounting calls getCellSnapshot
+        // during render and again after subscribe (useSyncExternalStore's
+        // own consistency check), so an exact call count is brittle.
+        const distinctCells = new Set(spy.mock.calls.map((call) => call[0]))
+        expect(distinctCells.size).toBe(48)
+      },
+    )
+
+    // Non-vacuous companion, unskipped: proves this strip scenario really
+    // does reach getCellSnapshot at all -- independent of whether React
+    // Compiler's per-tile memoization (what the skipped test above actually
+    // measures) survives Stryker's instrumentation -- so the skip above
+    // doesn't remove all signal for this describe under mutation testing.
+    it('a pan crossing one tile boundary does call getCellSnapshot (the skipped assertion above is not vacuous)', () => {
+      const store = createLiveCellStore()
+      const { rerenderWith } = renderGrid({ store, camera: STRIP_CAMERA })
+      triggerResize(STRIP_WIDTH, STRIP_HEIGHT)
+
+      const spy = vi.spyOn(store, 'getCellSnapshot')
+      spy.mockClear()
+
+      const crossingPan: Camera = { ...STRIP_CAMERA, offsetX: STRIP_CAMERA.offsetX + TILE_SPAN_CELLS }
+      rerenderWith({ camera: crossingPan })
+
+      expect(spy).toHaveBeenCalled()
+    })
   })
 })
