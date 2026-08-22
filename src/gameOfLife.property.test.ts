@@ -2,8 +2,8 @@ import { it } from '@fast-check/vitest'
 import fc from 'fast-check'
 import { describe, expect } from 'vitest'
 import {
+  advanceGeneration,
   cellKey,
-  changedCells,
   computeContentBounds,
   createEmptyLiveCells,
   getNextGeneration,
@@ -11,9 +11,10 @@ import {
   toggleCell,
   type LiveCells,
 } from './gameOfLife'
+import { referenceChangedCells, referenceNextGeneration } from './test-support/lifeReference'
 
 // Bounded coordinate/pattern generators keep the brute-force reference
-// implementation below cheap while still exercising negative coordinates,
+// implementations in test-support/lifeReference cheap while still exercising negative coordinates,
 // which is the case the old fixed-array implementation couldn't represent.
 const coordinate = fc.integer({ min: -8, max: 8 })
 const point = fc.tuple(coordinate, coordinate)
@@ -21,40 +22,6 @@ const pattern = fc.uniqueArray(point, { maxLength: 25 })
 
 function makeLiveCells(coords: readonly (readonly [number, number])[]): LiveCells {
   return new Set(coords.map(([x, y]) => cellKey(x, y)))
-}
-
-// An intentionally naive, obviously-correct implementation of the same rule:
-// scan every cell in the padded bounding box and count neighbors by brute
-// force. This is the specification getNextGeneration's sparse, O(live cells)
-// algorithm is supposed to be a faster reformulation of.
-function referenceNextGeneration(liveCells: LiveCells): LiveCells {
-  const coords = [...liveCells].map((key) => key.split(',').map(Number) as [number, number])
-  const next: LiveCells = new Set()
-  if (coords.length === 0) return next
-
-  const xs = coords.map(([x]) => x)
-  const ys = coords.map(([, y]) => y)
-  const minX = Math.min(...xs) - 1
-  const maxX = Math.max(...xs) + 1
-  const minY = Math.min(...ys) - 1
-  const maxY = Math.max(...ys) + 1
-
-  for (let x = minX; x <= maxX; x++) {
-    for (let y = minY; y <= maxY; y++) {
-      let liveNeighbors = 0
-      for (let dx = -1; dx <= 1; dx++) {
-        for (let dy = -1; dy <= 1; dy++) {
-          if (dx === 0 && dy === 0) continue
-          if (liveCells.has(cellKey(x + dx, y + dy))) liveNeighbors++
-        }
-      }
-      const isAlive = liveCells.has(cellKey(x, y))
-      if (isAlive ? liveNeighbors === 2 || liveNeighbors === 3 : liveNeighbors === 3) {
-        next.add(cellKey(x, y))
-      }
-    }
-  }
-  return next
 }
 
 describe('cellKey (property)', () => {
@@ -125,44 +92,57 @@ describe('createEmptyLiveCells (property)', () => {
   })
 })
 
-// Brute-force oracle: the symmetric difference, computed with plain array
-// filtering rather than changedCells' own O(n) loop, so the property doesn't
-// just restate the implementation.
-function referenceChangedCells(previous: LiveCells, next: LiveCells): Set<string> {
-  const previousKeys = [...previous]
-  const nextKeys = [...next]
-  const onlyInPrevious = previousKeys.filter((key) => !next.has(key))
-  const onlyInNext = nextKeys.filter((key) => !previous.has(key))
-  return new Set([...onlyInPrevious, ...onlyInNext])
-}
-
-describe('changedCells (property)', () => {
-  it.prop([pattern, pattern])('matches an independent brute-force symmetric-difference reference', (a, b) => {
-    const previous = makeLiveCells(a)
-    const next = makeLiveCells(b)
-    expect(new Set(changedCells(previous, next))).toEqual(referenceChangedCells(previous, next))
+describe('advanceGeneration (property)', () => {
+  it.prop([pattern])('reports exactly the symmetric difference between the two generations', (coords) => {
+    const previous = makeLiveCells(coords)
+    const { next, changed } = advanceGeneration(previous)
+    expect(new Set(changed)).toEqual(referenceChangedCells(previous, next))
   })
 
-  it.prop([pattern, pattern])(
-    'is symmetric: changedCells(a, b) and changedCells(b, a) contain the same keys',
-    (a, b) => {
-      const previous = makeLiveCells(a)
-      const next = makeLiveCells(b)
-      expect(new Set(changedCells(previous, next))).toEqual(new Set(changedCells(next, previous)))
-    },
-  )
-
-  it.prop([pattern])('is empty when compared against itself', (coords) => {
-    const cells = makeLiveCells(coords)
-    expect(changedCells(cells, cells)).toEqual([])
+  it.prop([pattern])('reports every changed key exactly once', (coords) => {
+    // Not implied by the set-equality property above: a duplicate collapses
+    // in a Set. The store turns each entry into one listener dispatch, so a
+    // repeat is a double re-render of the same cell.
+    const { changed } = advanceGeneration(makeLiveCells(coords))
+    expect(changed.length).toBe(new Set(changed).size)
   })
 
-  it.prop([pattern, pattern])('every reported key is a member of exactly one of the two sets', (a, b) => {
-    const previous = makeLiveCells(a)
-    const next = makeLiveCells(b)
-    for (const key of changedCells(previous, next)) {
+  it.prop([pattern])('never reports a cell whose aliveness is the same in both generations', (coords) => {
+    const previous = makeLiveCells(coords)
+    const { next, changed } = advanceGeneration(previous)
+    for (const key of changed) {
       expect(previous.has(key)).not.toBe(next.has(key))
     }
+  })
+
+  it.prop([pattern])('leaves next identical to getNextGeneration, which projects it', (coords) => {
+    const cells = makeLiveCells(coords)
+    expect(advanceGeneration(cells).next).toEqual(getNextGeneration(cells))
+  })
+
+  // Degenerate inputs pinned deterministically rather than left to the
+  // generator: the empty grid (no candidates at all), the isolated live cell
+  // (the only case whose candidacy depends on countNeighbors' zero seed), and
+  // a still life (every candidate survives, so the delta must be empty even
+  // though the candidate map is full).
+  it('reports nothing for the empty grid', () => {
+    const { next, changed } = advanceGeneration(createEmptyLiveCells())
+    expect(next.size).toBe(0)
+    expect(changed).toEqual([])
+  })
+
+  it('reports the isolated live cell that dies with zero live neighbors', () => {
+    expect(advanceGeneration(makeLiveCells([[0, 0]])).changed).toEqual([cellKey(0, 0)])
+  })
+
+  it('reports nothing for a still life whose every cell survives', () => {
+    const block = makeLiveCells([
+      [0, 0],
+      [1, 0],
+      [0, 1],
+      [1, 1],
+    ])
+    expect(advanceGeneration(block).changed).toEqual([])
   })
 })
 

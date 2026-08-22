@@ -48,9 +48,22 @@ const NEIGHBOR_OFFSETS: ReadonlyArray<readonly [number, number]> = [
   [1, 1],
 ]
 
+// The candidate set for the next generation, with each candidate's live
+// neighbor count. Keys are every live cell plus every cell adjacent to one --
+// nothing outside that can change state, which is what makes this O(live
+// cells) rather than O(area).
+//
+// The `?? 0` seed on the cell itself is load-bearing, not defensive: without
+// it a live cell with zero live neighbors never becomes a key at all, and
+// advanceGeneration's single pass could not see it die of underpopulation.
+// Seeding it makes the key set a superset of the live set, so "absent from
+// this map" stops being a state a caller has to compensate for. It cannot
+// clobber a count already accumulated by an earlier neighbor (hence `??`),
+// and it changes no survival outcome, since willSurvive(true, 0) is false.
 function countNeighbors(liveCells: ReadonlyLiveCells): Map<CellKey, number> {
   const neighborCounts = new Map<CellKey, number>()
   for (const key of liveCells) {
+    neighborCounts.set(key, neighborCounts.get(key) ?? 0)
     const [x, y] = parseCellKey(key)
     for (const [dx, dy] of NEIGHBOR_OFFSETS) {
       const neighborKey = cellKey(x + dx, y + dy)
@@ -67,16 +80,43 @@ function willSurvive(isAlive: boolean, liveNeighborCount: number): boolean {
   return liveNeighborCount === 3
 }
 
-export function getNextGeneration(liveCells: ReadonlyLiveCells): LiveCells {
-  const neighborCounts = countNeighbors(liveCells)
+// One generation, plus the exact set of cells whose aliveness flipped.
+//
+// The delta is collected in the same pass that decides survival rather than
+// recovered afterwards by diffing the two sets: willSurvive(wasAlive, count)
+// already answers "is it alive next" for a candidate whose "was it alive"
+// this pass has in hand, so `isAlive !== wasAlive` is the change decision
+// itself, not a re-derivation of it. Every cell that can change is a key of
+// neighborCounts (see that function on why that includes the isolated live
+// cell), so this single loop is exhaustive.
+export interface GenerationStep {
+  next: LiveCells
+  // Every key whose membership differs between the previous generation and
+  // `next`, in no particular order. The store notifies exactly these.
+  changed: CellKey[]
+}
+
+export function advanceGeneration(previous: ReadonlyLiveCells): GenerationStep {
+  const neighborCounts = countNeighbors(previous)
 
   const next: LiveCells = new Set()
+  const changed: CellKey[] = []
   for (const [key, count] of neighborCounts) {
-    if (willSurvive(liveCells.has(key), count)) {
-      next.add(key)
-    }
+    const wasAlive = previous.has(key)
+    const isAlive = willSurvive(wasAlive, count)
+    if (isAlive) next.add(key)
+    if (isAlive !== wasAlive) changed.push(key)
   }
-  return next
+  return { next, changed }
+}
+
+// The generation alone, for callers with no use for the delta (the Gherkin
+// step definitions, which speak in whole generations). Deliberately a
+// projection of advanceGeneration rather than a second implementation of the
+// rules: two loops applying willSurvive could drift, and the survival rule
+// living in exactly one place is the point.
+export function getNextGeneration(liveCells: ReadonlyLiveCells): LiveCells {
+  return advanceGeneration(liveCells).next
 }
 
 export interface ContentBounds {
@@ -106,21 +146,4 @@ export function computeContentBounds(liveCells: ReadonlyLiveCells): ContentBound
   }
 
   return { minX, maxX: maxX + 1, minY, maxY: maxY + 1 }
-}
-
-// The symmetric difference of two live-cell sets: every key present in
-// exactly one of the two. Used by the store (not implemented in this module)
-// to notify only the cells whose state actually changed between generations,
-// rather than every subscriber. Lives here rather than fused into
-// getNextGeneration because it's set math over two LiveCells in the model's
-// own vocabulary, independent of how the next generation was produced.
-export function changedCells(previous: ReadonlyLiveCells, next: ReadonlyLiveCells): CellKey[] {
-  const changed: CellKey[] = []
-  for (const key of previous) {
-    if (!next.has(key)) changed.push(key)
-  }
-  for (const key of next) {
-    if (!previous.has(key)) changed.push(key)
-  }
-  return changed
 }

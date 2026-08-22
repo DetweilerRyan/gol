@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest'
 import {
+  advanceGeneration,
   cellKey,
-  changedCells,
   computeContentBounds,
   createEmptyLiveCells,
   getNextGeneration,
@@ -159,59 +159,63 @@ function sortedKeys(keys: readonly string[]): string[] {
   return [...keys].sort()
 }
 
-describe('changedCells', () => {
-  it('is empty for two empty sets', () => {
-    expect(changedCells(createEmptyLiveCells(), createEmptyLiveCells())).toEqual([])
+describe('advanceGeneration', () => {
+  it('reports no change for an empty grid', () => {
+    const { next, changed } = advanceGeneration(createEmptyLiveCells())
+    expect(next.size).toBe(0)
+    expect(changed).toEqual([])
   })
 
-  it('reports every cell of the non-empty side when the other is empty', () => {
-    const next = makeLiveCells([
+  it('reports the lone cell that dies of underpopulation', () => {
+    // The zero-neighbor case: this cell contributes counts to its eight
+    // neighbors but receives none, so it is only a key of the candidate map
+    // because countNeighbors seeds it. Without that seed the delta pass
+    // cannot see it die, and the cell would go dark on screen with nobody
+    // notified.
+    const { next, changed } = advanceGeneration(makeLiveCells([[4, 4]]))
+    expect(next.size).toBe(0)
+    expect(changed).toEqual([cellKey(4, 4)])
+  })
+
+  it('reports no change for a still life', () => {
+    const block = makeLiveCells([
       [0, 0],
+      [1, 0],
+      [0, 1],
       [1, 1],
     ])
-    expect(sortedKeys(changedCells(createEmptyLiveCells(), next))).toEqual(sortedKeys([cellKey(0, 0), cellKey(1, 1)]))
-    expect(sortedKeys(changedCells(next, createEmptyLiveCells()))).toEqual(sortedKeys([cellKey(0, 0), cellKey(1, 1)]))
+    const { next, changed } = advanceGeneration(block)
+    expect(next).toEqual(block)
+    expect(changed).toEqual([])
   })
 
-  it('is empty for identical sets', () => {
+  it('reports both the deaths and the births of an oscillator', () => {
+    const horizontal = makeLiveCells([
+      [0, 0],
+      [1, 0],
+      [2, 0],
+    ])
+    const { next, changed } = advanceGeneration(horizontal)
+    expect(next).toEqual(
+      makeLiveCells([
+        [1, -1],
+        [1, 0],
+        [1, 1],
+      ]),
+    )
+    // (0,0) and (2,0) die; (1,-1) and (1,1) are born; (1,0) survives and is
+    // deliberately absent -- notifying it would re-render an unchanged cell.
+    expect(sortedKeys(changed)).toEqual(sortedKeys([cellKey(0, 0), cellKey(2, 0), cellKey(1, -1), cellKey(1, 1)]))
+  })
+
+  it('agrees with getNextGeneration, which is defined in terms of it', () => {
     const cells = makeLiveCells([
       [0, 0],
-      [3, 4],
-    ])
-    expect(changedCells(cells, cells)).toEqual([])
-    expect(
-      changedCells(
-        cells,
-        makeLiveCells([
-          [0, 0],
-          [3, 4],
-        ]),
-      ),
-    ).toEqual([])
-  })
-
-  it('reports every cell of both sides for disjoint sets', () => {
-    const previous = makeLiveCells([[0, 0]])
-    const next = makeLiveCells([[9, 9]])
-    expect(sortedKeys(changedCells(previous, next))).toEqual(sortedKeys([cellKey(0, 0), cellKey(9, 9)]))
-  })
-
-  it('reports only the added cell', () => {
-    const previous = makeLiveCells([[0, 0]])
-    const next = makeLiveCells([
-      [0, 0],
       [1, 0],
+      [2, 0],
+      [7, 7],
     ])
-    expect(changedCells(previous, next)).toEqual([cellKey(1, 0)])
-  })
-
-  it('reports only the removed cell', () => {
-    const previous = makeLiveCells([
-      [0, 0],
-      [1, 0],
-    ])
-    const next = makeLiveCells([[0, 0]])
-    expect(changedCells(previous, next)).toEqual([cellKey(1, 0)])
+    expect(advanceGeneration(cells).next).toEqual(getNextGeneration(cells))
   })
 })
 

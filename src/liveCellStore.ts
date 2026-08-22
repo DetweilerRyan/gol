@@ -1,10 +1,9 @@
 import { enableMapSet, freeze, produce } from 'immer'
 import {
+  advanceGeneration,
   cellKey,
-  changedCells,
   computeContentBounds,
   createEmptyLiveCells,
-  getNextGeneration,
   toggleCell,
   type CellKey,
   type ContentBounds,
@@ -93,6 +92,21 @@ export function createLiveCellStore(initialLiveCells: ReadonlyLiveCells = create
     boundsDirty = true
   }
 
+  // Always called *after* publish(), never before: every listener, whenever
+  // it runs during this dispatch, reads the new generation from
+  // getCellSnapshot. That ordering is what makes the copy-then-dispatch
+  // guarantee below a scheduling detail rather than a correctness one.
+  //
+  // Note the guarantee is per bucket, not per notification. A listener that
+  // subscribes to a *different* cell from inside another listener's body will
+  // be visited if that cell's bucket happens to come later in `keys` -- only
+  // same-bucket late subscribers are excluded. Deliberately not pinned as a
+  // contract: React subscribes at commit time via useEffect and never
+  // synchronously from a listener body, so no caller can observe the
+  // difference, and freezing an order no caller depends on would make a
+  // future batched dispatch a breaking change for no one's benefit. What
+  // does matter -- that a late-visited listener still reads correct state --
+  // follows from the publish-before-notify ordering above.
   function notify(keys: readonly CellKey[]): void {
     for (const key of keys) {
       const bucket = cellListeners.get(key)
@@ -117,10 +131,11 @@ export function createLiveCellStore(initialLiveCells: ReadonlyLiveCells = create
   }
 
   function advance(): void {
-    const previous = cells
-    const next = getNextGeneration(previous)
+    // advanceGeneration hands back the delta the rules pass already computed,
+    // so nothing here re-diffs the two generations to find it.
+    const { next, changed } = advanceGeneration(cells)
     publish(next)
-    notify(changedCells(previous, next))
+    notify(changed)
   }
 
   function toggle(x: number, y: number): void {

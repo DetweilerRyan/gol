@@ -232,6 +232,40 @@ describe('createLiveCellStore', () => {
       expect(lateListener).toHaveBeenCalledTimes(1)
     })
 
+    it('every listener reads the already-published generation, whenever in the dispatch it runs', () => {
+      // publish() precedes notify(), so dispatch order can never be a
+      // correctness question -- an early listener and a late one see the same
+      // (new) state. This is what lets notify's copy-then-dispatch ordering
+      // stay an implementation detail rather than a contract; see its comment
+      // on the per-bucket limit of that guarantee.
+      const store = createLiveCellStore(new Set([cellKey(0, 0), cellKey(1, 0), cellKey(2, 0)]))
+      // Keyed, not ordered: which bucket is dispatched first is deliberately
+      // not part of the contract (see notify's comment), so asserting a
+      // sequence here would pin down something no caller may rely on.
+      const seen = new Map<string, boolean>()
+      // The blinker's two dying ends and one born cell are all notified in a
+      // single advance, so this reads state from three different buckets
+      // mid-flight.
+      for (const [x, y] of [
+        [0, 0],
+        [2, 0],
+        [1, -1],
+      ]) {
+        store.subscribeCell(cellKey(x, y), () => seen.set(cellKey(x, y), store.getCellSnapshot(cellKey(x, y))))
+      }
+
+      store.advance()
+
+      // (0,0) and (2,0) are dead in the new generation; (1,-1) is newly alive.
+      expect(seen).toEqual(
+        new Map([
+          [cellKey(0, 0), false],
+          [cellKey(2, 0), false],
+          [cellKey(1, -1), true],
+        ]),
+      )
+    })
+
     it('a listener unsubscribed mid-dispatch by another listener still receives its already-snapshotted call', () => {
       const store = createLiveCellStore()
       const victim = vi.fn()
