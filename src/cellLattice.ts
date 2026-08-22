@@ -7,11 +7,31 @@ import { worldToScreen, type Camera } from './camera'
 // transformed offset (latticeOffsetPx) needs to change, not any individual
 // cell's own position -- which is what lets a pan stop re-rendering cells
 // altogether. A zoom (cellSize change) or a pan that outgrows the lattice's
-// slack forces a rebase (a fresh computeLattice call, and every cell slot
-// remounts against the new origin).
+// slack forces a rebase: a fresh computeLattice call, after which every slot
+// holds a different world coordinate. A rebase re-renders the cell layer but
+// does not remount it -- GridCells keys each cell by its slot index, so the
+// DOM nodes are reused with new props. Only a zoom remounts, because
+// changing cellSize changes cols/rows and so the shape of the slot keyspace
+// itself.
 //
-// This module has no consumer yet -- it's pure groundwork for the render
-// layer that will read it.
+// TWO CONSUMERS, AT TWO LAYERS, and the split is the point:
+//
+//   - src/hooks/useCellLattice.ts owns the *anchor*. It holds one Lattice in
+//     useState and calls nextLattice on each render to decide whether that
+//     anchor still covers the viewport or has to rebase. Deciding that is
+//     the only stateful part of the design, which is why it is the only part
+//     that needs a hook -- and the rule it delegates to (nextLattice) stays
+//     here, where a property test can reach it.
+//   - src/components/GridCells.tsx owns the *slot geometry*. It calls
+//     slotWorldCoordinate, slotPixelPosition and slotIndex directly, once per
+//     slot, turning the anchor's scalars into each cell's world coordinate,
+//     pixel position and React key. Those three are scalar-in/scalar-out
+//     precisely so that hot per-cell loop allocates nothing and hands React
+//     Compiler primitive props.
+//
+// Nothing else in src/ imports this module, deliberately. Cell.tsx receives a
+// finished CSS transform string and knows nothing of a lattice at all, and
+// Grid.tsx only forwards the hook's scalars through to GridCells.
 
 // How many cells of slack surround the viewport on each side, so a pan can
 // move that far before the lattice needs to rebase (see latticeCovers).
