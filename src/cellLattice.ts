@@ -78,6 +78,31 @@ export function latticeCovers(
   )
 }
 
+// The sticky-anchor rule: keep the existing lattice while it still covers the
+// viewport, and rebase onto a fresh one only when it doesn't. Pure, and
+// deliberately here rather than as a ternary inside useCellLattice, because
+// two things the hook's setState-during-render pattern depends on are
+// properties of this function alone rather than of React:
+//
+//   1. It returns `previous` BY REFERENCE when coverage holds. That reference
+//      identity is what the hook's `current !== lattice` guard tests, so an
+//      implementation returning a structurally-equal copy would make the hook
+//      call setState on every render forever.
+//   2. Applying it to its own result is a no-op (see the idempotence property
+//      in cellLattice.property.test.ts). That is the no-infinite-loop
+//      guarantee: the hook's second render re-runs this against the lattice
+//      the first render just stored, and gets that same object back.
+export function nextLattice(
+  previous: Lattice,
+  camera: Camera,
+  viewportWidthPx: number,
+  viewportHeightPx: number,
+): Lattice {
+  return latticeCovers(previous, camera, viewportWidthPx, viewportHeightPx)
+    ? previous
+    : computeLattice(camera, viewportWidthPx, viewportHeightPx)
+}
+
 // The pixel offset of the lattice's own origin slot (col 0, row 0) under the
 // current camera -- this is what a transformed layer wrapping every cell
 // slot applies as its own translate, so panning moves that one offset
