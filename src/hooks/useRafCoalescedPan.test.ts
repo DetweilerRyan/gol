@@ -102,6 +102,16 @@ describe('useRafCoalescedPan', () => {
     expect(onPan).not.toHaveBeenCalled()
   })
 
+  it('flushes when only one axis has accumulated a delta (not just when both have)', () => {
+    const onPan = vi.fn()
+    const { result } = renderHook(() => useRafCoalescedPan(onPan))
+
+    result.current.push(3, 0)
+    result.current.flush()
+
+    expect(onPan).toHaveBeenCalledWith(3, 0)
+  })
+
   it('a push after flush() starts a new accumulation rather than reusing stale state', () => {
     const onPan = vi.fn()
     const { result } = renderHook(() => useRafCoalescedPan(onPan))
