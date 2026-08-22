@@ -77,6 +77,22 @@ describe('tileRangeHolds', () => {
     const previous: TileRange = { ...required, maxTileX: 4 }
     expect(tileRangeHolds(previous, required, EVICT_LAG_TILES)).toBe(false)
   })
+
+  it('rebuilds when previous no longer contains required on the leading (min) side', () => {
+    // The above case is a hole on the trailing (max) side only; this pins the
+    // other side of axisHolds's containment check, which the trailing-side
+    // case alone leaves unexercised.
+    const previous: TileRange = { ...required, minTileX: 1 }
+    expect(tileRangeHolds(previous, required, EVICT_LAG_TILES)).toBe(false)
+  })
+
+  it('rebuilds when previous exceeds the lag tolerance on the trailing (max) side, with the leading side exact', () => {
+    // The lag-tolerance test above varies only the leading (min) side; this
+    // pins the trailing side of the same check with the leading side held at
+    // zero margin, so the two conditions can't be satisfied by coincidence.
+    const previous: TileRange = { ...required, maxTileX: 7 }
+    expect(tileRangeHolds(previous, required, EVICT_LAG_TILES)).toBe(false)
+  })
 })
 
 describe('nextTileRange', () => {
@@ -110,6 +126,15 @@ describe('tileRangeCellCount / enteringStripCellCount', () => {
 
   it('an entering y-strip is one tile tall and spans the full mounted width', () => {
     expect(enteringStripCellCount(range, 'y')).toBe(4 * 12)
+  })
+
+  it('subtracts tile bounds rather than adding them, for a range not anchored at tile 0', () => {
+    // `range` above has minTileX/minTileY at 0, where maxTileX - minTileX and
+    // maxTileX + minTileX coincide -- too weak to distinguish the two. This
+    // range is offset so they diverge: 5 tiles wide (1..5), 3 tiles tall
+    // (2..4).
+    const offsetRange: TileRange = { minTileX: 1, maxTileX: 5, minTileY: 2, maxTileY: 4, spanCells: 4 }
+    expect(enteringStripCellCount(offsetRange, 'y')).toBe(5 * 4 * 4)
   })
 })
 

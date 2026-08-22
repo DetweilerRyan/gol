@@ -118,6 +118,24 @@ export function coveringTileRange(camera: Camera, widthPx: number, heightPx: num
   }
 }
 
+// One axis's half of tileRangeHolds below: does [previousMin, previousMax]
+// still contain [requiredMin, requiredMax], and if so, by no more than
+// evictLagTiles on either side? Private -- tileRangeHolds is the only
+// exported contract; this exists only to give the X and Y checks (identical
+// in shape, applied to different fields of TileRange) a single body instead
+// of two, which is also what keeps tileRangeHolds itself under the CRAP
+// threshold.
+function axisHolds(
+  previousMin: number,
+  previousMax: number,
+  requiredMin: number,
+  requiredMax: number,
+  evictLagTiles: number,
+): boolean {
+  if (previousMin > requiredMin || previousMax < requiredMax) return false
+  return requiredMin - previousMin <= evictLagTiles && previousMax - requiredMax <= evictLagTiles
+}
+
 // Whether `previous` may stay mounted rather than being rebuilt onto
 // `required`: it must still fully contain `required` (never a hole in the
 // viewport), and it must not exceed `required` by more than `evictLagTiles`
@@ -128,15 +146,9 @@ export function coveringTileRange(camera: Camera, widthPx: number, heightPx: num
 // required set then moves strictly inside it until it grows past the margin
 // again.
 export function tileRangeHolds(previous: TileRange, required: TileRange, evictLagTiles: number): boolean {
-  const containsX = previous.minTileX <= required.minTileX && previous.maxTileX >= required.maxTileX
-  const containsY = previous.minTileY <= required.minTileY && previous.maxTileY >= required.maxTileY
-  if (!containsX || !containsY) return false
-
   return (
-    required.minTileX - previous.minTileX <= evictLagTiles &&
-    previous.maxTileX - required.maxTileX <= evictLagTiles &&
-    required.minTileY - previous.minTileY <= evictLagTiles &&
-    previous.maxTileY - required.maxTileY <= evictLagTiles
+    axisHolds(previous.minTileX, previous.maxTileX, required.minTileX, required.maxTileX, evictLagTiles) &&
+    axisHolds(previous.minTileY, previous.maxTileY, required.minTileY, required.maxTileY, evictLagTiles)
   )
 }
 
