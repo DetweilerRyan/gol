@@ -1,4 +1,5 @@
-import { computeLattice, latticeOffsetPx, type Lattice } from '../cellLattice'
+import { useState } from 'react'
+import { computeLattice, latticeCovers, latticeOffsetPx, type Lattice } from '../cellLattice'
 import type { Camera } from '../camera'
 import type { ElementSize } from './useElementSize'
 
@@ -12,30 +13,46 @@ export interface CellLatticeView {
   offsetYPx: number
 }
 
-// Thin adapter over cellLattice.ts: computes a Lattice for the current
-// camera/viewport and flattens it (plus the transformed-layer pixel offset)
-// into scalars, so Grid holds no object identity from this hook -- a fresh
-// Lattice object every render would be exactly the kind of prop churn this
-// module exists to eliminate for GridCells' children.
+// Thin adapter over cellLattice.ts: holds a sticky Lattice anchor (via
+// useState) and flattens it -- plus the transformed-layer pixel offset --
+// into scalars, so Grid holds no object identity from this hook, and so a
+// pan only rebases when it actually needs to.
 //
-// Deliberately stateless this step: it recomputes computeLattice on every
-// call rather than keeping a rebase-only anchor, so it rebases whenever
-// Math.floor(camera.offsetX/offsetY) changes or cellSize changes -- the same
-// cells-in-viewport range gridGeometry.ts's computeVisibleRange would derive,
-// just organized as a lattice. The slack in LATTICE_SLACK_CELLS therefore
-// buys nothing yet; a later step adds the sticky anchor (only rebasing once
-// latticeCovers fails) that lets a sub-cell pan skip cell re-renders
-// entirely.
+// The coverage check runs during render, not in a useEffect: `current` below
+// is either the stored lattice (if it still covers the viewport) or a freshly
+// computed one, and whichever it is gets stored back with setLattice *and*
+// is the same value the returned offset is derived from. Calling setState
+// during render like this is the documented "adjusting state when a prop
+// changes" pattern -- React discards this render's output and re-renders
+// immediately with the new state, before anything commits to the DOM, so no
+// frame ever paints the fresh lattice's coordinates against a transform
+// derived from the stale one (or vice versa). Deferring the rebase to a
+// useEffect would commit one frame first, painting cells positioned for a
+// lattice the transformed layer hasn't caught up to yet.
+//
+// A freshly computed lattice always covers the camera/viewport it was
+// computed for (LATTICE_SLACK_CELLS >= 1 guarantees this -- see the comment
+// on computeLattice's `+ 1`), so the second render's coverage check always
+// passes and this cannot loop.
 export function useCellLattice(camera: Camera, size: ElementSize): CellLatticeView {
-  const lattice: Lattice = computeLattice(camera, size.width, size.height)
-  const { xPx: offsetXPx, yPx: offsetYPx } = latticeOffsetPx(lattice, camera)
+  const [lattice, setLattice] = useState<Lattice>(() => computeLattice(camera, size.width, size.height))
+
+  const current: Lattice = latticeCovers(lattice, camera, size.width, size.height)
+    ? lattice
+    : computeLattice(camera, size.width, size.height)
+
+  if (current !== lattice) {
+    setLattice(current)
+  }
+
+  const { xPx: offsetXPx, yPx: offsetYPx } = latticeOffsetPx(current, camera)
 
   return {
-    originX: lattice.originX,
-    originY: lattice.originY,
-    cols: lattice.cols,
-    rows: lattice.rows,
-    cellSize: lattice.cellSize,
+    originX: current.originX,
+    originY: current.originY,
+    cols: current.cols,
+    rows: current.rows,
+    cellSize: current.cellSize,
     offsetXPx,
     offsetYPx,
   }

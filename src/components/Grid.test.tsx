@@ -1,7 +1,7 @@
 import { fireEvent, render, screen, type RenderResult } from '@testing-library/react'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { DEFAULT_CELL_SIZE, screenToWorld, worldToScreen, type Camera } from '../camera'
-import { computeLattice, latticeOffsetPx } from '../cellLattice'
+import { computeLattice, latticeCovers, latticeOffsetPx } from '../cellLattice'
 import { DRAG_THRESHOLD_PX } from '../dragGesture'
 import { createLiveCellStore } from '../liveCellStore'
 import {
@@ -22,8 +22,9 @@ import Grid, { GRID_CONTENT_ID } from './Grid'
 // getBoundingClientRect), the place-vs-toggle dispatch, one thin wiring test
 // per hook proving Grid actually connects its handlers rather than testing
 // the handlers' own logic again, and the "lattice pan-stability" pair
-// proving a sub-cell pan skips cell re-renders while a whole-cell pan still
-// triggers them (the guard isn't vacuous). See src/test-support/domStubs.ts
+// proving a pan that stays within the sticky lattice's slack skips cell
+// re-renders while a pan that outgrows the slack still triggers them (the
+// guard isn't vacuous). See src/test-support/domStubs.ts
 // for why each stub is needed. Pointer capture is stubbed (unused beyond
 // that) purely so jsdom doesn't throw when a pointerdown-driven test calls
 // setPointerCapture -- its own release-guard behavior is
@@ -302,7 +303,7 @@ describe('lattice pan-stability', () => {
   // *do* happen), which holds regardless of whether the memoization survives
   // instrumentation, so it stays unskipped and still exercises this
   // describe's setup under mutation testing.
-  it.skipIf(underStryker)('a sub-cell pan (same Math.floor(offsetX/offsetY)) re-renders zero cells', () => {
+  it.skipIf(underStryker)('a multi-cell pan that stays within the lattice slack re-renders zero cells', () => {
     const store = createLiveCellStore()
     const { container, rerenderWith } = renderGrid({ store })
     const beforeCell = screen.getByRole('button', { name: 'Cell 0, 0' })
@@ -313,11 +314,18 @@ describe('lattice pan-stability', () => {
     const spy = vi.spyOn(store, 'getCellSnapshot')
     spy.mockClear()
 
-    // 0 -> 0.5: Math.floor stays 0 on both axes, so useCellLattice's origin
-    // doesn't move and every Cell slot keeps identical props -- only the
-    // fractional pixel offset the transformed layer div applies changes.
-    const subCellPan: Camera = { ...CAMERA, offsetX: CAMERA.offsetX + 0.5, offsetY: CAMERA.offsetY + 0.5 }
-    rerenderWith({ camera: subCellPan })
+    // 0 -> 3.5: crosses several whole-cell boundaries (Math.floor(offsetX)
+    // moves from 0 to 3), but stays within the sticky lattice's slack (see
+    // LATTICE_SLACK_CELLS / latticeCovers), confirmed just below rather
+    // than assumed, so useCellLattice reuses the same anchor and every
+    // Cell slot keeps identical props -- only the fractional pixel offset
+    // the transformed layer div applies changes. This is the larger
+    // tolerance the sticky anchor buys over a bare Math.floor comparison.
+    const withinSlackPan: Camera = { ...CAMERA, offsetX: CAMERA.offsetX + 3.5, offsetY: CAMERA.offsetY + 0.5 }
+    const originalLattice = computeLattice(CAMERA, WIDTH, HEIGHT)
+    expect(latticeCovers(originalLattice, withinSlackPan, WIDTH, HEIGHT)).toBe(true)
+
+    rerenderWith({ camera: withinSlackPan })
 
     expect(spy).not.toHaveBeenCalled()
     expect(screen.getByRole('button', { name: 'Cell 0, 0' })).toBe(beforeCell)
@@ -325,17 +333,21 @@ describe('lattice pan-stability', () => {
     expect(layerDiv.style.transform).not.toBe(transformBefore)
   })
 
-  it('a pan crossing a whole cell boundary does re-render cells (the guard above is not vacuous)', () => {
+  it('a pan that outgrows the lattice slack does re-render cells (the guard above is not vacuous)', () => {
     const store = createLiveCellStore()
     const { rerenderWith } = renderGrid({ store })
 
     const spy = vi.spyOn(store, 'getCellSnapshot')
     spy.mockClear()
 
-    // 0 -> 1.2: Math.floor moves from 0 to 1 on the x axis, so the lattice
-    // rebases and every slot's world coordinate shifts.
-    const rebasePan: Camera = { ...CAMERA, offsetX: CAMERA.offsetX + 1.2 }
-    rerenderWith({ camera: rebasePan })
+    // 0 -> 8: well beyond LATTICE_SLACK_CELLS, confirmed just below rather
+    // than assumed, so the lattice rebases and every slot's world coordinate
+    // shifts.
+    const beyondSlackPan: Camera = { ...CAMERA, offsetX: CAMERA.offsetX + 8 }
+    const originalLattice = computeLattice(CAMERA, WIDTH, HEIGHT)
+    expect(latticeCovers(originalLattice, beyondSlackPan, WIDTH, HEIGHT)).toBe(false)
+
+    rerenderWith({ camera: beyondSlackPan })
 
     expect(spy).toHaveBeenCalled()
   })
