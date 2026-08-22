@@ -46,6 +46,19 @@ Both rules were paid for. In `import-utilities`, `datesEqual` compared two Inval
 
 **Narrowing an arbitrary to make a finding go away is not a fix.** Filtering Invalid Dates out of the generator would have left the defect in the module and removed the only thing that could find it — the same move as weakening an ast-grep rule to clear a violation. Fix the module.
 
+## Skipping a test under the mutation runner
+
+`it.skipIf('__stryker__' in globalThis)(...)` is an accepted idiom, under narrow conditions. Stryker instruments every expression with an impure mutant-tracking call, and a few assertions are about behavior that instrumentation structurally destroys rather than merely perturbs — the landed case is `useLiveCell.test.ts`'s "does not resubscribe on identical `(store, key)`", where wrapping `useSyncExternalStore`'s callback arguments defeats React Compiler's closure memoization and the assertion cannot hold. Left unskipped it fails during Stryker's dry run, before a single mutant executes, so `npm run test:mutation` never starts.
+
+All four conditions must hold:
+
+1. **The instrumentation destroys the asserted behavior**, not just makes it slow or flaky. If it's flakiness, fix the flake.
+2. **Per test, never per file or per describe.** The skip is an exemption for one assertion; widening it exempts assertions nobody examined.
+3. **The module's mutation coverage survives without it.** A skipped test kills no mutants, so the surrounding tests have to. Say at handoff that mutation score is unchanged, and let `hardener`'s run confirm it.
+4. **A comment says why**, naming the mechanism — the next reader must not have to rediscover it.
+
+The abuse shape is the mirror image: skipping a test _because_ it kills a mutant that is awkward to keep alive, or because it fails under Stryker for a reason nobody has explained. That converts a real gap into a green score, invisibly. `architect` rules on new uses of the idiom; anyone else who needs one reports it rather than adding it.
+
 ## Structural rules (ast-grep)
 
 `rules/*.yml`, wired up by `sgconfig.yml`, encode architectural invariants that were previously prose — the framework-free layering, and repo conventions like "no manual `useMemo`/`useCallback` under an enabled React Compiler". `CLAUDE.md`'s Custom quality tooling section lists what they currently cover; read it there rather than from a list restated here, which would go stale the moment a rule is added.

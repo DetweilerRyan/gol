@@ -50,10 +50,10 @@
  * algorithms are O(1)? Yes, of course.
  *
  * Immer does have support for manipulating maps in an immutable way (this
- * repo itself opts into it via `enableMapSet()` in `src/main.tsx`, for
- * `App.tsx`'s `liveCells` Set), but their approach also creates a shallow
- * clone of the base Map/Set on first write within a `produce()` call, and
- * that clone is O(n) -- see `prepareMapCopy`/`prepareSetCopy` in
+ * repo itself opts into it via `enableMapSet()` inside `createLiveCellStore`,
+ * for the live-cell Set that store owns), but their approach also creates a
+ * shallow clone of the base Map/Set on first write within a `produce()` call,
+ * and that clone is O(n) -- see `prepareMapCopy`/`prepareSetCopy` in
  * https://github.com/immerjs/immer/blob/v11.1.17/src/plugins/mapset.ts#L197-L201,
  * verified against immer 11.1.17, the version in this repo's lockfile at
  * the time of writing.
