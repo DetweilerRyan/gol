@@ -26,6 +26,7 @@ function renderHarness(overrides: Partial<GridPointerGestureCallbacks> = {}) {
   const callbacks: GridPointerGestureCallbacks = {
     trackHover: true,
     onPan: vi.fn(),
+    onPanEnd: vi.fn(),
     onTap: vi.fn(),
     onHover: vi.fn(),
     ...overrides,
@@ -171,6 +172,51 @@ describe('pointer capture', () => {
 
   it('pointercancel releases capture only when the element currently has it', () => {
     expectReleaseGuardedByHasPointerCapture(fireEvent.pointerCancel)
+  })
+})
+
+describe('onPanEnd', () => {
+  it('is called on pointerup, whether or not the release resolves as a tap', () => {
+    const { surface, onPanEnd } = renderHarness()
+
+    fireEvent.pointerDown(surface, { pointerId: 1, clientX: 0, clientY: 0 })
+    fireEvent.pointerUp(surface, { pointerId: 1, clientX: 0, clientY: 0 })
+
+    expect(onPanEnd).toHaveBeenCalledTimes(1)
+  })
+
+  it('is called on pointercancel', () => {
+    const { surface, onPanEnd } = renderHarness()
+
+    fireEvent.pointerDown(surface, { pointerId: 1, clientX: 0, clientY: 0 })
+    fireEvent.pointerMove(surface, { pointerId: 1, clientX: 20, clientY: 0 })
+    fireEvent.pointerCancel(surface, { pointerId: 1, clientX: 20, clientY: 0 })
+
+    expect(onPanEnd).toHaveBeenCalledTimes(1)
+  })
+
+  it('runs before onTap is resolved on pointerup', () => {
+    const callOrder: string[] = []
+    const onPanEnd = vi.fn(() => callOrder.push('onPanEnd'))
+    const onTap = vi.fn(() => callOrder.push('onTap'))
+    const { surface } = renderHarness({ onPanEnd, onTap })
+
+    fireEvent.pointerDown(surface, { pointerId: 1, clientX: 0, clientY: 0 })
+    fireEvent.pointerUp(surface, { pointerId: 1, clientX: 0, clientY: 0 })
+
+    expect(callOrder).toEqual(['onPanEnd', 'onTap'])
+  })
+
+  it('runs before pointer capture is released on pointerup', () => {
+    const callOrder: string[] = []
+    const onPanEnd = vi.fn(() => callOrder.push('onPanEnd'))
+    pointerCapture.releasePointerCapture.mockImplementation(() => callOrder.push('release'))
+    const { surface } = renderHarness({ onPanEnd })
+
+    fireEvent.pointerDown(surface, { pointerId: 1, clientX: 0, clientY: 0 })
+    fireEvent.pointerUp(surface, { pointerId: 1, clientX: 0, clientY: 0 })
+
+    expect(callOrder).toEqual(['onPanEnd', 'release'])
   })
 })
 

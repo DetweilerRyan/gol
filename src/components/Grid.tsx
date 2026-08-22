@@ -5,6 +5,7 @@ import { useCellLattice } from '../hooks/useCellLattice'
 import { useElementSize, type ElementSize } from '../hooks/useElementSize'
 import { useGridPointerGestures } from '../hooks/useGridPointerGestures'
 import { useInitialCentering } from '../hooks/useInitialCentering'
+import { useRafCoalescedPan } from '../hooks/useRafCoalescedPan'
 import { useWheelInput } from '../hooks/useWheelInput'
 import type { LiveCellStore } from '../liveCellStore'
 import GridCells from './GridCells'
@@ -74,6 +75,14 @@ export default function Grid({
     }
   }
 
+  // Coalesces however many pointermove-driven onPan calls land within one
+  // animation frame into a single call carrying their sum -- a real win for
+  // trackpad input, which can deliver several pointermoves per frame; a
+  // once-per-frame mouse cadence has nothing to coalesce either way. See
+  // useRafCoalescedPan's own header for the invariant (net shift == sum of
+  // pushes, regardless of flush timing) this must preserve.
+  const coalescedPan = useRafCoalescedPan(onPan)
+
   // trackHover mirrors the isPatternArmed check the place-vs-toggle branch
   // above also makes: only in placing mode does a pointermove need
   // pointer-to-world resolution for the preview, so an ordinary pan drag
@@ -81,7 +90,12 @@ export default function Grid({
   // useGridPointerGestures for the guard itself.
   const { isPanning, handlers } = useGridPointerGestures({
     trackHover: isPatternArmed,
-    onPan,
+    onPan: coalescedPan.push,
+    // Flushes synchronously on release/cancel so a pan mid-frame settles
+    // immediately rather than waiting on a queued animation frame -- see
+    // useGridPointerGestures' onPanEnd doc comment for why it must run
+    // first, before capture release or tap resolution.
+    onPanEnd: coalescedPan.flush,
     onTap: (pixelX, pixelY) => {
       const { x, y } = screenToWorld(camera, pixelX, pixelY)
       activateCell(x, y)

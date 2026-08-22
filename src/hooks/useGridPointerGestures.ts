@@ -14,6 +14,12 @@ export interface GridPointerGestureCallbacks {
   // (see the trackHover prop's own comment at the call site).
   trackHover: boolean
   onPan: (dxPixels: number, dyPixels: number) => void
+  // Called at the start of both handlePointerUp and handlePointerCancel,
+  // before anything else in either handler runs -- the hook has no opinion
+  // on why a caller needs this (useRafCoalescedPan's flush is the current
+  // reason: a pan mid-frame at release must settle synchronously rather than
+  // waiting on a queued animation frame), only that the drag is ending.
+  onPanEnd: () => void
   onTap: (pixelX: number, pixelY: number) => void
   onHover: (pixelX: number, pixelY: number) => void
 }
@@ -31,6 +37,7 @@ export interface GridPointerGestures {
 export function useGridPointerGestures({
   trackHover,
   onPan,
+  onPanEnd,
   onTap,
   onHover,
 }: GridPointerGestureCallbacks): GridPointerGestures {
@@ -77,6 +84,7 @@ export function useGridPointerGestures({
   // activation (Enter/Space), which never goes through pointer capture (see
   // the mirror of this comment on the cell button in GridCells/Grid).
   function handlePointerUp(e: ReactPointerEvent) {
+    onPanEnd()
     releaseCapture(e)
     // Optional chaining, not a plain property read: a pointerup can arrive
     // with no drag state primed (no preceding pointerdown on this element --
@@ -91,6 +99,7 @@ export function useGridPointerGestures({
   }
 
   function handlePointerCancel(e: ReactPointerEvent) {
+    onPanEnd()
     releaseCapture(e)
     dragStateRef.current = null
     setIsPanning(false)
