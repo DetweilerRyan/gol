@@ -222,6 +222,46 @@ describe('useCellTiles', () => {
     expect(result.current.offsetYPx).toBe(yPx)
   })
 
+  it('keeps the re-quantised anchor as the sticky anchor: a later within-drift pan does not re-derive it', () => {
+    // Regression for a mutant that no-ops the setAnchor(currentAnchor) call
+    // inside useCellTiles: the *return value* of the render that re-quantises
+    // is unaffected by that mutant (currentAnchor is used directly, never
+    // anchor), so this needs a second render to observe -- the same shape as
+    // the sticky-range regression test above, and the same shape
+    // useCellLattice.test.ts used for its own sticky-anchor regression.
+    // Without the state update, useCellTiles's `anchor` state is stuck at
+    // the pre-rebase anchor forever, so every later render re-fails
+    // anchorHolds against that stale anchor and recomputes computeAnchor
+    // from scratch on every render -- still numerically correct for a lone
+    // render, but it silently defeats the sticky anchor (re-quantising every
+    // ANCHOR_DRIFT_CELLS instead of, worst case, every render), which is the
+    // whole reason cellAnchor.ts exists.
+    const { result, rerender } = renderHook(({ camera }: { camera: Camera }) => useCellTiles(camera, size), {
+      initialProps: { camera },
+    })
+
+    const beyondDriftPan: Camera = { ...camera, offsetX: camera.offsetX + (ANCHOR_DRIFT_CELLS + 100) }
+    rerender({ camera: beyondDriftPan })
+    const rebasedAnchorX = result.current.anchorX
+    const rebasedAnchorY = result.current.anchorY
+
+    // Well within the *rebased* anchor's drift budget -- confirmed by
+    // anchorHolds below rather than assumed -- and the freshly-computed
+    // alternative is confirmed to actually differ, so this test would fail
+    // loudly (not pass vacuously) if ANCHOR_DRIFT_CELLS or the floor
+    // arithmetic ever changed underneath it.
+    const withinNewDriftPan: Camera = { ...beyondDriftPan, offsetX: beyondDriftPan.offsetX + 100 }
+    const rebasedAnchor = { x: rebasedAnchorX, y: rebasedAnchorY }
+    expect(anchorHolds(rebasedAnchor, withinNewDriftPan)).toBe(true)
+    const freshAnchorForThirdCamera = computeAnchor(withinNewDriftPan, TILE_SPAN_CELLS)
+    expect(freshAnchorForThirdCamera.x).not.toBe(rebasedAnchorX)
+
+    rerender({ camera: withinNewDriftPan })
+
+    expect(result.current.anchorX).toBe(rebasedAnchorX)
+    expect(result.current.anchorY).toBe(rebasedAnchorY)
+  })
+
   it('produces a finite range from the 0x0 pre-measurement viewport', () => {
     const unmeasured: ElementSize = { width: 0, height: 0 }
     const { result } = renderHook(() => useCellTiles(camera, unmeasured))
