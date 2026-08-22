@@ -103,6 +103,20 @@ describe('DOM structure', () => {
     expect(content?.id).toBe(GRID_CONTENT_ID)
   })
 
+  it('#grid-content itself never carries a transform, before or after a pan', () => {
+    // Load-bearing: useGridPointerGestures and useWheelInput both call
+    // getBoundingClientRect() on #grid-content, so a transform here (rather
+    // than on the layer div one level inside it) would shift that rect and
+    // silently resolve every tap/hover to the wrong world cell. See the "NO
+    // transform here" comment in Grid.tsx.
+    const { container, rerenderWith } = renderGrid()
+    const content = gridContentEl(container)
+    expect(content.style.transform).toBe('')
+
+    rerenderWith({ camera: { ...CAMERA, offsetX: CAMERA.offsetX + 5, offsetY: CAMERA.offsetY + 5 } })
+    expect(content.style.transform).toBe('')
+  })
+
   it('renders the pattern preview after the cell buttons in DOM order', () => {
     // compareDocumentPosition rather than a sibling-index comparison
     // (container.children.indexOf(...)): GridCells' cell buttons sit inside
