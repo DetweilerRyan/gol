@@ -291,6 +291,19 @@ describe('wheel and preview wiring', () => {
 // useLiveCell, which every Cell calls) invokes it on every render of every
 // Cell, so its call count is a direct per-cell render counter, cheaper and
 // more direct than counting DOM mutations.
+//
+// IF THE ZERO-CALLS TEST BELOW FAILS AND YOU DID NOT TOUCH THE LATTICE, the
+// first thing to check is the *declaration form* of activateCell in Grid.tsx
+// -- see its comment there. As a hoisted `function` declaration referenced
+// from the onTap closure, React Compiler leaves it unmemoized, GridCells gets
+// a new onActivateCell identity every render, and every cell re-renders on
+// every pan even though every lattice-derived prop is unchanged. That defeats
+// the whole slice while every other test in the suite stays green, and the
+// failure here reads as a call count (~162 in this fixture, ~19k in the real
+// app) rather than as a cause. An ast-grep rule was considered for this and
+// rejected: "declared as a const arrow before its first use" is not something
+// a structural matcher expresses, and this assertion already discriminates
+// the exact regression in a plain npm test run.
 describe('lattice pan-stability', () => {
   // The zero-calls half below is skipped under Stryker for the same reason
   // useLiveCell.test.ts skips its resubscription test (see that file's
