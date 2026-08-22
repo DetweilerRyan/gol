@@ -1,0 +1,20 @@
+id: no-camera-in-cell-leaf
+snapshots:
+  import type { Camera } from '../camera':
+    labels:
+    - source: import type { Camera } from '../camera'
+      style: primary
+      start: 0
+      end: 39
+  import { screenToWorld } from '../camera':
+    labels:
+    - source: import { screenToWorld } from '../camera'
+      style: primary
+      start: 0
+      end: 41
+  import { worldToScreen, type Camera } from '../camera':
+    labels:
+    - source: import { worldToScreen, type Camera } from '../camera'
+      style: primary
+      start: 0
+      end: 54

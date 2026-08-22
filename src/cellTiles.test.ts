@@ -248,6 +248,30 @@ describe('design table: TILE_SPAN_CELLS = 4 mounted/tile/entering counts', () =>
   // actually carried from -- coincidence, not the same quantity.) Pinned
   // here as what it actually is, per the design's own instruction to report
   // a disagreement rather than silently resolve it.
+  // The figure the perf run's Guard 1 is actually measured against, and the
+  // one the design document did NOT carry (it labelled 35,712 below as the
+  // single-axis transient; coder's correction, ratified at the architect
+  // review pass, is that 35,712 is the two-sided bound). perf/'s pan
+  // scenarios drive PAN_DELTA = { x: 400, y: 0 } -- purely horizontal -- so
+  // the y covering range is invariant across the whole gesture and is already
+  // at its own per-axis maximum (35 tiles for a 135-cell viewport, whatever
+  // the alignment), which leaves 62 x 35 tiles = 248 x 140 cells as the most
+  // a genuine single-axis pan can hold.
+  it('the most a SINGLE-AXIS pan can hold: one lag tile on the x side only, 248x140 = 34,720 mounted', () => {
+    const camera: Camera = { offsetX: -0.1, offsetY: -0.1, cellSize: 8 }
+    const steady = coveringTileRange(camera, 1920, 1080, TILE_SPAN_CELLS)
+    const held: TileRange = { ...steady, minTileX: steady.minTileX - 1 }
+
+    expect(tileRangeHolds(held, steady, EVICT_LAG_TILES)).toBe(true)
+    expect(tileRangeCellCount(held)).toBe(34_720)
+    expect(tileRangeCellCount(held)).toBeLessThan(35_856)
+    // The y half of the claim, asserted rather than assumed: an x-only pan
+    // cannot add a y lag tile, because the y cover never moves.
+    const panned: Camera = { ...camera, offsetX: camera.offsetX + 400 / camera.cellSize }
+    const afterPan = coveringTileRange(panned, 1920, 1080, TILE_SPAN_CELLS)
+    expect([afterPan.minTileY, afterPan.maxTileY]).toEqual([steady.minTileY, steady.maxTileY])
+  })
+
   it('a range held one tile of lag past the steady 61x35 cover, on one side of each axis: 248x144 = 35,712 mounted, still under 35,856', () => {
     const camera: Camera = { offsetX: -0.1, offsetY: -0.1, cellSize: 8 }
     const steady = coveringTileRange(camera, 1920, 1080, TILE_SPAN_CELLS)

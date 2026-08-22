@@ -1,0 +1,31 @@
+id: no-camera-in-cell-leaf
+language: Tsx
+severity: warning
+message: The per-cell leaf components must not import Camera -- they take pan-stable scalars instead.
+note: >-
+  A Camera's identity changes on every pointermove during a pan. These two components are the base
+  of the tile-virtualized render tree (one CellTile per mounted tile, spanCells^2 Cells inside
+  each), so a Camera-typed prop -- value OR type -- would defeat the whole point of the world-
+  anchored tile range: every mounted cell would re-render on every pan tick even though its own
+  world position never moved. Positions reach these components as finished scalars derived once,
+  one level up, from cellAnchor.ts's anchorOffsetPx/cellOffsetPx. If you need camera-exact
+  geometry down here, you want PatternPreview.tsx's shape instead -- a sibling *outside* the
+  transformed layer, bounded by the armed pattern's own size rather than by the viewport.
+# SCOPE IS TWO CONCRETE FILE PATHS ON PURPOSE, the same fragility no-logic-in-composition-root.yml
+# carries and for the same reason: the invariant is about these specific leaves, not about
+# src/components/ generally -- Grid.tsx, PatternPreview.tsx and LifeBoard.tsx all import Camera
+# legitimately, so a directory-wide rule would have a non-clean baseline and train people to
+# ignore its output. `npm run ast-grep:rules` fails if either path stops resolving, so a rename
+# surfaces as a gate failure rather than as silence.
+files:
+  - 'src/components/Cell.tsx'
+  - 'src/components/CellTile.tsx'
+# Metavariables do not interpolate inside string literals, so an import PATH has to be matched
+# with kind: + regex: rather than with a pattern -- two of this repo's rules were silently inert
+# for exactly that mistake. `files:` above pins both matches to src/components/, so the relative
+# specifier is always '../camera'; the trailing quote in the regex stops it also matching a
+# hypothetical '../cameraFoo'. Deliberately matches `import type { Camera }` as well as a value
+# import: a type-only import is precisely how a Camera prop gets reintroduced.
+rule:
+  kind: import_statement
+  regex: 'from [''"]\.\./camera[''"]'

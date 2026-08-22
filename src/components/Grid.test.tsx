@@ -482,6 +482,28 @@ describe('tile pan-stability', () => {
       },
     )
 
+    // The EVICTION half of a strip event, which neither test above can see:
+    // an unmounting Cell must release its store subscription, or a long pan
+    // leaks one bucket per evicted cell for the life of the session --
+    // invisible to every rendering assertion in this file, and unbounded.
+    // liveCellStore.property.test.ts proves the store releases correctly when
+    // it is asked to; this is what proves the tile layer actually asks.
+    it('an evicted tile releases its cells subscriptions rather than leaking them', () => {
+      const store = createLiveCellStore()
+      const { rerenderWith } = renderGrid({ store, camera: STRIP_CAMERA })
+      triggerResize(STRIP_WIDTH, STRIP_HEIGHT)
+
+      // One bucket per mounted cell, across the 3x3 tile range.
+      expect(store.trackedCellCount()).toBe(144)
+
+      const crossingPan: Camera = { ...STRIP_CAMERA, offsetX: STRIP_CAMERA.offsetX + TILE_SPAN_CELLS }
+      rerenderWith({ camera: crossingPan })
+
+      // 96 retained + 48 entering, with 48 evicted: still 144. A leak reads
+      // 192 here, and grows by another 48 on every further tile crossed.
+      expect(store.trackedCellCount()).toBe(144)
+    })
+
     // Non-vacuous companion, unskipped: proves this strip scenario really
     // does reach getCellSnapshot at all -- independent of whether React
     // Compiler's per-tile memoization (what the skipped test above actually

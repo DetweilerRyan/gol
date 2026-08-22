@@ -35,14 +35,20 @@ interface CellTileProps {
 // retained tile keeps the exact same props across a pan that doesn't evict
 // it); cellSize changes only on zoom; anchorX/anchorY only on re-anchor (see
 // cellAnchor.ts's ANCHOR_DRIFT_CELLS -- rare, once per ~4,096 cells of
-// travel). This is the same trap as Grid.tsx's activateCell being declared
-// as a const arrow rather than a hoisted function -- see that comment --
-// one level deeper: if a caller ever reconstructs any of these props fresh
-// on every render (e.g. passing an inline object, or re-deriving
-// onActivate per tile instead of threading the same function reference
-// through), React Compiler's memoization of this component's own render
-// stops applying and every retained tile re-renders on every pan tick, the
-// same failure mode that comment already documents one layer up.
+// travel). Break it and React Compiler's memoization of this component stops
+// applying, so every retained tile re-renders on every pan tick -- the same
+// failure mode Grid.tsx's activateCell comment documents one layer up, and
+// the suite stays green everywhere except Grid.test.tsx's pan-stability
+// block.
+//
+// The hazard is NARROWER than "never construct a prop at the call site",
+// though, and the narrowing is measured rather than reasoned: wrapping
+// onActivate in an inline arrow where GridCells passes it does NOT break
+// anything, because React Compiler memoizes that wrapper against its own
+// (stable) dependency. What actually defeats it is a prop the compiler
+// cannot memoize at all -- specifically the hoisted `function` declaration
+// referenced from a closure above it that Grid.tsx's comment describes,
+// which compiles to a fresh identity on every render.
 //
 // This same invariant is also the PRECONDITION FOR IMPERATIVE CELL PAINTING,
 // a possible future slice (see the tile-virtualized-cells design's review

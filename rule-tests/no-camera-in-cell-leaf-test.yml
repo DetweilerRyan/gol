@@ -1,0 +1,11 @@
+id: no-camera-in-cell-leaf
+valid:
+  # The scalars these leaves actually take -- pan-stable, derived one level up.
+  - "import { cellOffsetPx } from '../cellAnchor'"
+  - "import { tileOriginCell } from '../cellTiles'"
+  - "import type { LiveCellStore } from '../liveCellStore'"
+  - "import { cellKey } from '../gameOfLife'"
+invalid:
+  - "import { worldToScreen, type Camera } from '../camera'"
+  - "import type { Camera } from '../camera'"
+  - "import { screenToWorld } from '../camera'"
