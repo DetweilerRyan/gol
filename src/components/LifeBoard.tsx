@@ -1,9 +1,9 @@
 import { zoomPercentage } from '../camera'
-import { computeContentBounds, type LiveCells } from '../gameOfLife'
 import { computeMajorGridlines } from '../gridGeometry'
 import { useCamera } from '../hooks/useCamera'
+import { useContentBounds } from '../hooks/useContentBounds'
 import { usePatternPlacement } from '../hooks/usePatternPlacement'
-import { type Pattern } from '../patternLibrary'
+import type { LiveCellStore } from '../liveCellStore'
 import { armedPattern, isLibraryOpen, previewPositions } from '../patternPlacement'
 import Grid, { GRID_CONTENT_ID, type GridOverlayContext } from './Grid'
 import GridRuler from './GridRuler'
@@ -12,9 +12,7 @@ import GridToolbar from './GridToolbar'
 import PatternLibraryModal from './PatternLibraryModal'
 
 interface LifeBoardProps {
-  liveCells: LiveCells
-  onToggleCell: (x: number, y: number) => void
-  onPlacePattern: (pattern: Pattern, anchorX: number, anchorY: number) => void
+  store: LiveCellStore
 }
 
 // The composition root: owns the camera and placement state, derives what
@@ -23,13 +21,13 @@ interface LifeBoardProps {
 // everything above it. Kept wiring-only -- rules/no-logic-in-composition-root.yml
 // enforces that mechanically -- so any branching/arithmetic/string-building
 // belongs in a hook or pure module instead.
-export default function LifeBoard({ liveCells, onToggleCell, onPlacePattern }: LifeBoardProps) {
+export default function LifeBoard({ store }: LifeBoardProps) {
   const { camera, panByPixels, applyWheel, centerView, zoomInCentered, zoomOutCentered, panByScrollbarDrag } =
     useCamera()
   const { placement, openOrCancelLibrary, closeLibrary, selectPattern, previewAt, stampArmedPattern } =
-    usePatternPlacement(onPlacePattern)
+    usePatternPlacement(store.place)
 
-  const contentBounds = computeContentBounds(liveCells)
+  const contentBounds = useContentBounds(store)
 
   function renderOverlays({ size, visibleRange }: GridOverlayContext) {
     return (
@@ -78,10 +76,10 @@ export default function LifeBoard({ liveCells, onToggleCell, onPlacePattern }: L
   return (
     <Grid
       camera={camera}
-      liveCells={liveCells}
+      store={store}
       previewPositions={previewPositions(placement)}
       isPatternArmed={Boolean(armedPattern(placement))}
-      onToggleCell={onToggleCell}
+      onToggleCell={store.toggle}
       onStampPattern={stampArmedPattern}
       onPan={panByPixels}
       onPreviewCell={previewAt}

@@ -3,6 +3,7 @@ import {
   cellKey,
   changedCells,
   computeContentBounds,
+  createEmptyLiveCells,
   getNextGeneration,
   toggleCell,
   type CellKey,
@@ -49,7 +50,7 @@ export interface LiveCellStore {
   trackedCellCount(): number
 }
 
-export function createLiveCellStore(initialLiveCells?: ReadonlyLiveCells): LiveCellStore {
+export function createLiveCellStore(initialLiveCells: ReadonlyLiveCells = createEmptyLiveCells()): LiveCellStore {
   // Called here rather than at module scope: the unit/property vitest
   // projects run in plain Node with setupFiles: [], so nothing else on this
   // import path ever calls enableMapSet(), and a produce() over a Set would

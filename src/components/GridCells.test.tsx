@@ -1,7 +1,7 @@
 import { fireEvent, render, screen } from '@testing-library/react'
 import { describe, expect, it, vi } from 'vitest'
 import { worldToScreen, type Camera } from '../camera'
-import { cellKey, type LiveCells } from '../gameOfLife'
+import { createLiveCellStore } from '../liveCellStore'
 import GridCells from './GridCells'
 
 const camera: Camera = { offsetX: 0, offsetY: 0, cellSize: 20 }
@@ -26,7 +26,7 @@ function renderCells(props: Partial<React.ComponentProps<typeof GridCells>> = {}
   const merged: React.ComponentProps<typeof GridCells> = {
     camera,
     cells: NINE_CELLS,
-    liveCells: new Set<string>() as LiveCells,
+    store: createLiveCellStore(),
     previewPositions: [],
     onActivateCell: vi.fn(),
     ...props,
@@ -34,55 +34,11 @@ function renderCells(props: Partial<React.ComponentProps<typeof GridCells>> = {}
   return { ...render(<GridCells {...merged} />), ...merged }
 }
 
-describe('GridCells cell rendering', () => {
-  it('renders alive cells with the live style and dead cells with the dead style, aria-labeled "Cell x, y"', () => {
-    const liveCells = new Set([cellKey(0, 0)]) as LiveCells
-    renderCells({ liveCells })
-
-    const alive = screen.getByRole('button', { name: 'Cell 0, 0' })
-    expect(alive.className).toContain('bg-gray-900')
-    expect(alive.style.boxSizing).toBe('border-box')
-
-    const dead = screen.getByRole('button', { name: 'Cell 1, 0' })
-    expect(dead.className).toContain('bg-white')
-  })
-
-  it('positions a cell via worldToScreen(camera, x, y)', () => {
-    renderCells()
-    const { x: left, y: top } = worldToScreen(camera, 1, 1)
-    expect(screen.getByRole('button', { name: 'Cell 1, 1' }).style.transform).toBe(`translate(${left}px, ${top}px)`)
-  })
-
-  it('adds major-gridline border classes only to cells on a multiple-of-10 x or y coordinate', () => {
-    renderCells()
-
-    const onMajorX = screen.getByRole('button', { name: 'Cell 10, 1' })
-    expect(onMajorX.className).toContain('border-l-2 border-l-gray-400')
-    expect(onMajorX.className).not.toContain('border-t-2 border-t-gray-400')
-
-    const onMajorY = screen.getByRole('button', { name: 'Cell -1, 10' })
-    expect(onMajorY.className).toContain('border-t-2 border-t-gray-400')
-    expect(onMajorY.className).not.toContain('border-l-2 border-l-gray-400')
-
-    const onNeither = screen.getByRole('button', { name: 'Cell 1, 1' })
-    expect(onNeither.className).not.toContain('border-l-2 border-l-gray-400')
-    expect(onNeither.className).not.toContain('border-t-2 border-t-gray-400')
-    // Pins down the exact class list (not just the absence of the gridline classes above), so a
-    // mutation that swaps either '' fallback for stray literal text is still caught even though
-    // that text isn't one of the specific substrings checked above.
-    expect(onNeither.className.split(/\s+/).filter(Boolean)).toEqual(
-      'absolute top-0 left-0 border border-gray-200 transition-colors bg-white hover:bg-gray-100'.split(' '),
-    )
-  })
-
-  it('a cell on both a major-x and major-y coordinate gets both border classes', () => {
-    renderCells({ cells: [{ x: 0, y: 0 }] })
-    const cell = screen.getByRole('button', { name: 'Cell 0, 0' })
-    expect(cell.className).toContain('border-l-2 border-l-gray-400')
-    expect(cell.className).toContain('border-t-2 border-t-gray-400')
-  })
-})
-
+// Cell-level rendering (alive/dead style, aria-label, worldToScreen
+// positioning, major-gridline border classes, its own store subscription) is
+// Cell.test.tsx's job now -- see Cell.tsx. What's left here is GridCells' own
+// contract: that it wires onActivate through to Cell correctly, and the
+// preview-overlay stacking/remount behavior below.
 describe('GridCells click-to-activate', () => {
   it('a plain click on a cell button calls onActivateCell with that cell’s world coordinates', () => {
     const onActivateCell = vi.fn()
@@ -125,7 +81,7 @@ describe('GridCells preview overlay', () => {
       <GridCells
         camera={camera}
         cells={NINE_CELLS}
-        liveCells={new Set<string>() as LiveCells}
+        store={createLiveCellStore()}
         previewPositions={[[1, 1]]}
         onActivateCell={vi.fn()}
       />,

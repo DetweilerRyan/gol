@@ -1,11 +1,8 @@
-import { enableMapSet } from 'immer'
 import { StrictMode } from 'react'
 import { createRoot } from 'react-dom/client'
 import './index.css'
 import App from './App.tsx'
 import { seedFromSearch } from './liveCellSeed'
-
-enableMapSet()
 
 // The MODE check has to live at the entry module, not in App.tsx or a hook,
 // so Rolldown can constant-fold `import.meta.env.MODE === 'perf'` to `false`

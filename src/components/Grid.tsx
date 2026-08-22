@@ -1,11 +1,11 @@
 import { useRef, type ReactNode } from 'react'
 import { screenToWorld, type Camera, type WheelInput } from '../camera'
-import { type LiveCells } from '../gameOfLife'
 import { cellsInRange, computeVisibleRange, type VisibleRange } from '../gridGeometry'
 import { useElementSize, type ElementSize } from '../hooks/useElementSize'
 import { useGridPointerGestures } from '../hooks/useGridPointerGestures'
 import { useInitialCentering } from '../hooks/useInitialCentering'
 import { useWheelInput } from '../hooks/useWheelInput'
+import type { LiveCellStore } from '../liveCellStore'
 import GridCells from './GridCells'
 
 export interface GridOverlayContext {
@@ -17,7 +17,7 @@ export const GRID_CONTENT_ID = 'grid-content'
 
 interface GridProps {
   camera: Camera
-  liveCells: LiveCells
+  store: LiveCellStore
   previewPositions: ReadonlyArray<readonly [number, number]>
   isPatternArmed: boolean
   onToggleCell: (x: number, y: number) => void
@@ -31,7 +31,7 @@ interface GridProps {
 
 export default function Grid({
   camera,
-  liveCells,
+  store,
   previewPositions,
   isPatternArmed,
   onToggleCell,
@@ -108,7 +108,7 @@ export default function Grid({
         <GridCells
           camera={camera}
           cells={cells}
-          liveCells={liveCells}
+          store={store}
           previewPositions={previewPositions}
           onActivateCell={activateCell}
         />

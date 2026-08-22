@@ -1,7 +1,7 @@
 import { fireEvent, render, screen, waitFor } from '@testing-library/react'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { centeredCamera, screenToWorld } from '../camera'
-import { type LiveCells } from '../gameOfLife'
+import { createLiveCellStore } from '../liveCellStore'
 import { PATTERNS, type Pattern } from '../patternLibrary'
 import {
   stubBoundingClientRect,
@@ -42,9 +42,7 @@ const GLIDER = PATTERNS.find((pattern) => pattern.name === 'Glider') as Pattern
 
 function renderBoard(props: Partial<React.ComponentProps<typeof LifeBoard>> = {}) {
   const merged: React.ComponentProps<typeof LifeBoard> = {
-    liveCells: new Set<string>() as LiveCells,
-    onToggleCell: vi.fn(),
-    onPlacePattern: vi.fn(),
+    store: createLiveCellStore(),
     ...props,
   }
   const utils = render(<LifeBoard {...merged} />)
@@ -76,9 +74,10 @@ function previewLabels(): string[] {
 
 describe('single-shot stamping', () => {
   it('places once on the first click, then toggles rather than stamping again on the next', async () => {
-    const onPlacePattern = vi.fn()
-    const onToggleCell = vi.fn()
-    const { container } = renderBoard({ onPlacePattern, onToggleCell })
+    const store = createLiveCellStore()
+    const onPlacePattern = vi.spyOn(store, 'place')
+    const onToggleCell = vi.spyOn(store, 'toggle')
+    const { container } = renderBoard({ store })
     triggerResize(WIDTH, HEIGHT)
     const camera = centeredCamera(WIDTH, HEIGHT)
     const grid = gridContentEl(container)
@@ -108,8 +107,9 @@ describe('single-shot stamping', () => {
 
 describe('Patterns toolbar button while placing', () => {
   it('cancels the armed pattern instead of reopening the library', async () => {
-    const onToggleCell = vi.fn()
-    const { container } = renderBoard({ onToggleCell })
+    const store = createLiveCellStore()
+    const onToggleCell = vi.spyOn(store, 'toggle')
+    const { container } = renderBoard({ store })
     triggerResize(WIDTH, HEIGHT)
     const grid = gridContentEl(container)
 

@@ -2,7 +2,7 @@ import { fireEvent, render, screen, type RenderResult } from '@testing-library/r
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { DEFAULT_CELL_SIZE, screenToWorld, worldToScreen, type Camera } from '../camera'
 import { DRAG_THRESHOLD_PX } from '../dragGesture'
-import { type LiveCells } from '../gameOfLife'
+import { createLiveCellStore } from '../liveCellStore'
 import {
   stubBoundingClientRect,
   stubPointerCapture,
@@ -53,7 +53,7 @@ function renderGrid(
 ): RenderResult & GridProps & { rerenderWith: (overrides: Partial<GridProps>) => void } {
   const merged: GridProps = {
     camera: CAMERA,
-    liveCells: new Set<string>() as LiveCells,
+    store: createLiveCellStore(),
     previewPositions: [],
     isPatternArmed: false,
     onToggleCell: vi.fn(),
