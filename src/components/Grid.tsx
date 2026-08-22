@@ -1,7 +1,7 @@
 import { useRef, type ReactNode } from 'react'
 import { screenToWorld, type Camera, type WheelInput } from '../camera'
 import { computeVisibleRange, type VisibleRange } from '../gridGeometry'
-import { useCellLattice } from '../hooks/useCellLattice'
+import { useCellTiles } from '../hooks/useCellTiles'
 import { useElementSize, type ElementSize } from '../hooks/useElementSize'
 import { useGridPointerGestures } from '../hooks/useGridPointerGestures'
 import { useInitialCentering } from '../hooks/useInitialCentering'
@@ -52,7 +52,7 @@ export default function Grid({
   useInitialCentering(containerSize, onFirstMeasure)
 
   const visibleRange = computeVisibleRange(camera, containerSize.width, containerSize.height)
-  const lattice = useCellLattice(camera, containerSize)
+  const tiles = useCellTiles(camera, containerSize)
 
   // Single-shot stamping (disarming immediately after a placement) belongs to
   // whoever owns the placement state -- usePatternPlacement's
@@ -63,10 +63,10 @@ export default function Grid({
   // function declaration below it, as this used to read) so React Compiler
   // memoizes it against its own dependencies (isPatternArmed, onStampPattern,
   // onToggleCell) -- see the compiled output referenced from Grid.test.tsx's
-  // lattice pan-stability tests. A function declaration referenced from
+  // tile pan-stability tests. A function declaration referenced from
   // inside the onTap closure below it compiled to a fresh function every
   // render, which defeated GridCells' own memoization even though every
-  // lattice-derived prop it receives was unchanged.
+  // tile-derived prop it receives was unchanged.
   const activateCell = (x: number, y: number) => {
     if (isPatternArmed) {
       onStampPattern(x, y)
@@ -140,14 +140,13 @@ export default function Grid({
             LifeBoard. Do not invert this edge too. */}
         <div
           className="absolute inset-0"
-          style={{ transform: `translate(${lattice.offsetXPx}px, ${lattice.offsetYPx}px)`, willChange: 'transform' }}
+          style={{ transform: `translate(${tiles.offsetXPx}px, ${tiles.offsetYPx}px)`, willChange: 'transform' }}
         >
           <GridCells
-            originX={lattice.originX}
-            originY={lattice.originY}
-            cols={lattice.cols}
-            rows={lattice.rows}
-            cellSize={lattice.cellSize}
+            range={tiles.range}
+            anchorX={tiles.anchorX}
+            anchorY={tiles.anchorY}
+            cellSize={tiles.cellSize}
             store={store}
             onActivateCell={activateCell}
           />

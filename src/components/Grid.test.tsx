@@ -1,7 +1,8 @@
 import { fireEvent, render, screen, type RenderResult } from '@testing-library/react'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { DEFAULT_CELL_SIZE, screenToWorld, worldToScreen, type Camera } from '../camera'
-import { computeLattice, latticeCovers, latticeOffsetPx } from '../cellLattice'
+import { anchorOffsetPx, computeAnchor } from '../cellAnchor'
+import { coveringTileRange, nextTileRange, TILE_SPAN_CELLS } from '../cellTiles'
 import { DRAG_THRESHOLD_PX } from '../dragGesture'
 import { createLiveCellStore } from '../liveCellStore'
 import {
@@ -15,25 +16,24 @@ import Grid, { GRID_CONTENT_ID } from './Grid'
 
 // Grid itself composes useElementSize (ResizeObserver), useWheelInput,
 // useGridPointerGestures (both getBoundingClientRect/pointer capture), and
-// useCellLattice -- each of those has its own focused test for the API
-// wiring or math itself. What's left here is the composition: the DOM
-// layering contract (including that #grid-content itself never carries a
-// transform, since useGridPointerGestures/useWheelInput both read its
+// useCellTiles -- each of those has its own focused test for the API wiring
+// or math itself. What's left here is the composition: the DOM layering
+// contract (including that #grid-content itself never carries a transform,
+// since useGridPointerGestures/useWheelInput both read its
 // getBoundingClientRect), the place-vs-toggle dispatch, one thin wiring test
 // per hook proving Grid actually connects its handlers rather than testing
-// the handlers' own logic again, and the "lattice pan-stability" pair
-// proving a pan that stays within the sticky lattice's slack skips cell
-// re-renders while a pan that outgrows the slack still triggers them (the
-// guard isn't vacuous). See src/test-support/domStubs.ts
-// for why each stub is needed. Pointer capture is stubbed (unused beyond
-// that) purely so jsdom doesn't throw when a pointerdown-driven test calls
-// setPointerCapture -- its own release-guard behavior is
-// useGridPointerGestures.test.tsx's job.
+// the handlers' own logic again, and the "tile pan-stability" pair proving a
+// pan that stays within the current tile range skips cell re-renders while a
+// pan that crosses a tile boundary still triggers them (the guard isn't
+// vacuous). See src/test-support/domStubs.ts for why each stub is needed.
+// Pointer capture is stubbed (unused beyond that) purely so jsdom doesn't
+// throw when a pointerdown-driven test calls setPointerCapture -- its own
+// release-guard behavior is useGridPointerGestures.test.tsx's job.
 //
-// underStryker gates one test in the "lattice pan-stability" describe below
-// -- see its own comment for why. globalThis.__stryker__ is set at module
-// load by any instrumented file's own bootstrap, before test collection, so
-// it reliably distinguishes a mutation-testing run from a normal one (see
+// underStryker gates one test in the "tile pan-stability" describe below --
+// see its own comment for why. globalThis.__stryker__ is set at module load
+// by any instrumented file's own bootstrap, before test collection, so it
+// reliably distinguishes a mutation-testing run from a normal one (see
 // useLiveCell.test.ts for the precedent).
 const underStryker = '__stryker__' in globalThis
 
@@ -132,21 +132,30 @@ describe('DOM structure', () => {
     expect(content.style.transform).toBe('')
   })
 
-  it("carries the transform one level in, on the layer div wrapping GridCells, via the lattice's offset", () => {
+  it("carries the transform one level in, on the layer div wrapping GridCells, via the tile anchor's offset", () => {
     // The complement of the test above: the transform useGridPointerGestures/
     // useWheelInput must never see on #grid-content itself has to live
     // somewhere -- this pins it to the layer div one level inside, sourced
-    // from useCellLattice's offsetXPx/offsetYPx, plus the willChange hint.
+    // from useCellTiles' offsetXPx/offsetYPx, plus the willChange hint.
     // Deliberately a single render with no rerender/identity comparison (see
-    // "lattice pan-stability" below for that), so it isn't sensitive to
-    // whether a re-render happens -- only to what the layer div's style
-    // actually is.
+    // "tile pan-stability" below for that), so it isn't sensitive to whether
+    // a re-render happens -- only to what the layer div's style actually is.
     const { container } = renderGrid()
     const layerDiv = gridContentEl(container).firstElementChild as HTMLElement
-    const lattice = computeLattice(CAMERA, WIDTH, HEIGHT)
-    const { xPx, yPx } = latticeOffsetPx(lattice, CAMERA)
+    const anchor = computeAnchor(CAMERA, TILE_SPAN_CELLS)
+    const { xPx, yPx } = anchorOffsetPx(anchor, CAMERA)
     expect(layerDiv.style.transform).toBe(`translate(${xPx}px, ${yPx}px)`)
     expect(layerDiv.style.willChange).toBe('transform')
+
+    // Generalises the assertion above: this virtualized design leans on
+    // getBoundingClientRect() (post-transform) and layout-unit pixel math
+    // (pre-transform) agreeing, which only a `scale` transform can break
+    // (see discussion #248's units-mismatch hazard, cited in this slice's
+    // design doc). This codebase never scales the layer -- a zoom changes
+    // cellSize and re-lays every cell out instead -- so the layer's own
+    // transform must always be a pure translate, never a scale.
+    expect(layerDiv.style.transform).toMatch(/^translate\(-?\d+(\.\d+)?px, -?\d+(\.\d+)?px\)$/)
+    expect(layerDiv.style.transform).not.toContain('scale')
   })
 
   it('renders the pattern preview after the cell buttons in DOM order', () => {
@@ -227,9 +236,12 @@ describe('pointer surface wiring', () => {
 
 describe('measurement wiring', () => {
   it('renders a small cell grid immediately on mount, before any ResizeObserver callback fires', () => {
-    // Exercises the initial containerSize state ({ width: 0, height: 0 }), not just the
-    // post-resize value -- useCellLattice/computeLattice still produce a finite (if
-    // slack-only) lattice from that default, via LATTICE_SLACK_CELLS.
+    // Exercises the initial containerSize state ({ width: 0, height: 0 }), not
+    // just the post-resize value -- useCellTiles/coveringTileRange still
+    // produce a finite covering range from that default (a 0x0 viewport's
+    // covering set collapses to a single tile, the one containing cell (0, 0)
+    // -- see coveringTileRange's own "never inverts for a 0x0 pre-measurement
+    // viewport" test in cellTiles.test.ts).
     renderGrid()
     expect(screen.getByRole('button', { name: 'Cell 0, 0' })).toBeInTheDocument()
   })
@@ -283,28 +295,35 @@ describe('wheel and preview wiring', () => {
   })
 })
 
-// This is the slice's named deliverable: proof that a sub-cell pan re-renders
-// no cell at all (the whole point of the lattice layer -- see
-// useCellLattice.ts/cellLattice.ts), paired with proof that the guard isn't
-// vacuous -- a pan large enough to force a lattice rebase *does* re-render.
-// getCellSnapshot is the right probe: useSyncExternalStore (inside
-// useLiveCell, which every Cell calls) invokes it on every render of every
-// Cell, so its call count is a direct per-cell render counter, cheaper and
-// more direct than counting DOM mutations.
+// This is the slice's named deliverable: proof that a pan that stays within
+// the current tile range re-renders no cell at all (the whole point of the
+// tile-range layer -- see useCellTiles.ts/cellTiles.ts), paired with proof
+// that the guard isn't vacuous -- a pan large enough to cross a tile boundary
+// and force a range rebuild *does* re-render. getCellSnapshot is the right
+// probe: useSyncExternalStore (inside useLiveCell, which every Cell calls)
+// invokes it on every render of every Cell, so its call count is a direct
+// per-cell render counter, cheaper and more direct than counting DOM
+// mutations.
 //
-// IF THE ZERO-CALLS TEST BELOW FAILS AND YOU DID NOT TOUCH THE LATTICE, the
-// first thing to check is the *declaration form* of activateCell in Grid.tsx
-// -- see its comment there. As a hoisted `function` declaration referenced
-// from the onTap closure, React Compiler leaves it unmemoized, GridCells gets
-// a new onActivateCell identity every render, and every cell re-renders on
-// every pan even though every lattice-derived prop is unchanged. That defeats
-// the whole slice while every other test in the suite stays green, and the
-// failure here reads as a call count (~162 in this fixture, ~19k in the real
+// The fixture is deliberately small: WIDTH x HEIGHT (40x40px) at cellSize 20
+// is a 2x2-cell viewport, and TILE_SPAN_CELLS (4) means that viewport sits
+// entirely inside a single tile -- so a pan of a couple of cells can stay
+// within range, and a pan of TILE_SPAN_CELLS cells is guaranteed to cross a
+// tile boundary.
+//
+// IF THE ZERO-CALLS TEST BELOW FAILS AND YOU DID NOT TOUCH TILING, the first
+// thing to check is the *declaration form* of activateCell in Grid.tsx -- see
+// its comment there. As a hoisted `function` declaration referenced from the
+// onTap closure, React Compiler leaves it unmemoized, GridCells gets a new
+// onActivateCell identity every render, and every cell re-renders on every
+// pan even though every tile-derived prop is unchanged. That defeats the
+// whole slice while every other test in the suite stays green, and the
+// failure here reads as a call count (~16 in this fixture, ~34k in the real
 // app) rather than as a cause. An ast-grep rule was considered for this and
 // rejected: "declared as a const arrow before its first use" is not something
 // a structural matcher expresses, and this assertion already discriminates
 // the exact regression in a plain npm test run.
-describe('lattice pan-stability', () => {
+describe('tile pan-stability', () => {
   // The zero-calls half below is skipped under Stryker for the same reason
   // useLiveCell.test.ts skips its resubscription test (see that file's
   // comment on underStryker): Stryker's per-expression instrumentation of
@@ -316,7 +335,7 @@ describe('lattice pan-stability', () => {
   // *do* happen), which holds regardless of whether the memoization survives
   // instrumentation, so it stays unskipped and still exercises this
   // describe's setup under mutation testing.
-  it.skipIf(underStryker)('a multi-cell pan that stays within the lattice slack re-renders zero cells', () => {
+  it.skipIf(underStryker)('a pan that stays within the current tile range re-renders zero cells', () => {
     const store = createLiveCellStore()
     const { container, rerenderWith } = renderGrid({ store })
     const beforeCell = screen.getByRole('button', { name: 'Cell 0, 0' })
@@ -327,18 +346,18 @@ describe('lattice pan-stability', () => {
     const spy = vi.spyOn(store, 'getCellSnapshot')
     spy.mockClear()
 
-    // 0 -> 3.5: crosses several whole-cell boundaries (Math.floor(offsetX)
-    // moves from 0 to 3), but stays within the sticky lattice's slack (see
-    // LATTICE_SLACK_CELLS / latticeCovers), confirmed just below rather
-    // than assumed, so useCellLattice reuses the same anchor and every
-    // Cell slot keeps identical props -- only the fractional pixel offset
-    // the transformed layer div applies changes. This is the larger
-    // tolerance the sticky anchor buys over a bare Math.floor comparison.
-    const withinSlackPan: Camera = { ...CAMERA, offsetX: CAMERA.offsetX + 3.5, offsetY: CAMERA.offsetY + 0.5 }
-    const originalLattice = computeLattice(CAMERA, WIDTH, HEIGHT)
-    expect(latticeCovers(originalLattice, withinSlackPan, WIDTH, HEIGHT)).toBe(true)
+    // 0 -> 1: the viewport shifts from world-x [0, 2] to [1, 3], still
+    // entirely inside tile 0 (world cells [0, 4)), confirmed just below
+    // rather than assumed, so useCellTiles keeps the exact same TileRange
+    // object and every mounted CellTile keeps identical props -- only the
+    // fractional pixel offset the transformed layer div applies changes.
+    const withinRangePan: Camera = { ...CAMERA, offsetX: CAMERA.offsetX + 1 }
+    const originalRange = coveringTileRange(CAMERA, WIDTH, HEIGHT, TILE_SPAN_CELLS)
+    const requiredRange = coveringTileRange(withinRangePan, WIDTH, HEIGHT, TILE_SPAN_CELLS)
+    expect(nextTileRange(originalRange, withinRangePan, WIDTH, HEIGHT)).toBe(originalRange)
+    expect(requiredRange).toEqual(originalRange)
 
-    rerenderWith({ camera: withinSlackPan })
+    rerenderWith({ camera: withinRangePan })
 
     expect(spy).not.toHaveBeenCalled()
     expect(screen.getByRole('button', { name: 'Cell 0, 0' })).toBe(beforeCell)
@@ -346,21 +365,22 @@ describe('lattice pan-stability', () => {
     expect(layerDiv.style.transform).not.toBe(transformBefore)
   })
 
-  it('a pan that outgrows the lattice slack does re-render cells (the guard above is not vacuous)', () => {
+  it('a pan that crosses a tile boundary does re-render cells (the guard above is not vacuous)', () => {
     const store = createLiveCellStore()
     const { rerenderWith } = renderGrid({ store })
 
     const spy = vi.spyOn(store, 'getCellSnapshot')
     spy.mockClear()
 
-    // 0 -> 8: well beyond LATTICE_SLACK_CELLS, confirmed just below rather
-    // than assumed, so the lattice rebases and every slot's world coordinate
-    // shifts.
-    const beyondSlackPan: Camera = { ...CAMERA, offsetX: CAMERA.offsetX + 8 }
-    const originalLattice = computeLattice(CAMERA, WIDTH, HEIGHT)
-    expect(latticeCovers(originalLattice, beyondSlackPan, WIDTH, HEIGHT)).toBe(false)
+    // 0 -> 4: the viewport shifts from world-x [0, 2] to [4, 6], crossing
+    // clean out of tile 0 into tile 1, confirmed just below rather than
+    // assumed, so the range rebuilds and every mounted tile's identity
+    // changes.
+    const crossingPan: Camera = { ...CAMERA, offsetX: CAMERA.offsetX + 4 }
+    const originalRange = coveringTileRange(CAMERA, WIDTH, HEIGHT, TILE_SPAN_CELLS)
+    expect(nextTileRange(originalRange, crossingPan, WIDTH, HEIGHT)).not.toBe(originalRange)
 
-    rerenderWith({ camera: beyondSlackPan })
+    rerenderWith({ camera: crossingPan })
 
     expect(spy).toHaveBeenCalled()
   })

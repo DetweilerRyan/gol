@@ -1,68 +1,83 @@
-import { slotIndex, slotPixelPosition, slotWorldCoordinate } from '../cellLattice'
+import { tileKey, type TileRange } from '../cellTiles'
 import type { LiveCellStore } from '../liveCellStore'
-import Cell from './Cell'
+import CellTile from './CellTile'
 
 interface GridCellsProps {
-  originX: number
-  originY: number
-  cols: number
-  rows: number
+  range: TileRange
+  anchorX: number
+  anchorY: number
   cellSize: number
   store: LiveCellStore
   onActivateCell: (x: number, y: number) => void
 }
 
-// The cell button layer, rendered as a fixed lattice of render "slots" (see
-// cellLattice.ts) rather than from a camera-derived cells array: every prop
-// here is pan-stable -- none of originX/originY/cols/rows/cellSize changes on
-// a sub-cell pan tick, only the transformed layer div Grid wraps this in
-// does (see Grid.tsx) -- which is what lets a pan stop re-rendering cells at
-// all instead of walking every visible cell every frame.
+// The cell layer, rendered as one CellTile per tile in `range` (see
+// cellTiles.ts's TileRange) rather than a camera-derived cells array: every
+// prop here -- range, anchorX, anchorY, cellSize, store, onActivateCell --
+// stays reference-/value-stable across a within-range pan tick (range by
+// nextTileRange's reference-identity contract; anchorX/anchorY only change on
+// a rare re-anchor; cellSize only on zoom), which is what lets that pan stop
+// re-rendering this component at all -- React Compiler's memoization of
+// Grid's <GridCells> element bails before this function body ever runs. Only
+// the transformed layer div Grid wraps this in (see Grid.tsx) moves.
 //
-// The React key is the slot's own linear index (slotIndex -- row-major,
-// matching the nested loop order below), not the world coordinate: a slot's identity is
-// "this position in the lattice," and keying on the world coordinate would
-// force React to remount every cell on every pan tick, since the world
-// coordinate a slot holds changes on every pan -- even a sub-cell one that
-// doesn't rebase the lattice at all. Keying by index instead means a rebase
-// (the lattice's origin moving, cols/rows unchanged) re-renders every Cell
-// with new x/y props -- a new aria-label, a new store subscription key --
-// but reuses the same DOM node rather than tearing it down. Only a zoom
-// (cellSize change, which changes cols/rows) actually remounts everything,
-// because the slot-index keyspace itself changes shape then.
+// The React key is tileKey(tx, ty) -- the tile's own WORLD-ANCHORED
+// IDENTITY -- not a lattice-style linear slot index. THIS INVERTS THE
+// REASONING THIS COMMENT USED TO CARRY, and the inversion is correct, not a
+// regression to "fix" back:
+//
+// Under the old lattice (cellLattice.ts, now replaced), the mounted region
+// was a fixed set of render SLOTS that rebased under a moving camera, so a
+// slot's own world coordinate changed on every pan tick -- even a sub-cell
+// one that didn't force a rebase -- and keying by that coordinate would have
+// forced React to remount every cell on every pan. Keying by the slot's
+// linear index instead let a rebase reuse the same DOM nodes with new
+// x/y props.
+//
+// Under tiling, the mounted region is the opposite shape: a set of
+// world-anchored tiles that stays exactly fixed while the range holds, and
+// only grows or shrinks at the covering set's edge (see cellTiles.ts's
+// nextTileRange). A retained tile's tileX/tileY never change for as long as
+// it stays mounted, so keying by tileKey(tx, ty) is exactly the identity that
+// lets a retained tile survive a strip event untouched: React's reconciler
+// matches the key to the same element it rendered last time, finds every one
+// of that CellTile's props unchanged (see CellTile.tsx's own "no prop may
+// change per pan tick" invariant), and bails without calling CellTile's
+// function body again. Keying by loop-position instead would defeat exactly
+// this: an entering tile on one edge shifts every following tile's
+// loop-position, so every retained tile would be reassigned a different key
+// on every strip event and remount rather than survive it.
 //
 // The placing-mode preview overlay used to live here too; it's now
 // PatternPreview.tsx, rendered by Grid as a following sibling of this
 // component -- see Grid.test.tsx's DOM-order assertion.
 //
-// This component owns slot-to-pixel mapping end to end: it derives each
-// slot's pixel position and hands Cell the finished CSS transform, rather
-// than passing leftPx/topPx numbers for Cell to concatenate. Cell holds no
-// pixel geometry of its own as a result -- see Cell.tsx.
+// Slot-to-pixel mapping (what used to live here as slotPixelPosition calls)
+// now lives one level down, inside CellTile -- see cellOffsetPx in
+// cellAnchor.ts -- since a tile, not this whole layer, is the unit whose
+// geometry can stay untouched by a pan.
 //
 // Aliveness itself is no longer computed here -- each Cell subscribes to its
 // own membership via useLiveCell(store, key), so a generation only re-renders
 // the cells that actually changed. See liveCellStore.ts's module header.
-export default function GridCells({ originX, originY, cols, rows, cellSize, store, onActivateCell }: GridCellsProps) {
-  const slots: React.ReactNode[] = []
-  for (let j = 0; j < rows; j++) {
-    const y = slotWorldCoordinate(originY, j)
-    const topPx = slotPixelPosition(j, cellSize)
-    for (let i = 0; i < cols; i++) {
-      const x = slotWorldCoordinate(originX, i)
-      const leftPx = slotPixelPosition(i, cellSize)
-      slots.push(
-        <Cell
-          key={slotIndex(i, j, cols)}
-          x={x}
-          y={y}
+export default function GridCells({ range, anchorX, anchorY, cellSize, store, onActivateCell }: GridCellsProps) {
+  const tiles: React.ReactNode[] = []
+  for (let ty = range.minTileY; ty <= range.maxTileY; ty++) {
+    for (let tx = range.minTileX; tx <= range.maxTileX; tx++) {
+      tiles.push(
+        <CellTile
+          key={tileKey(tx, ty)}
+          tileX={tx}
+          tileY={ty}
+          spanCells={range.spanCells}
           cellSize={cellSize}
-          transform={`translate(${leftPx}px, ${topPx}px)`}
+          anchorX={anchorX}
+          anchorY={anchorY}
           store={store}
           onActivate={onActivateCell}
         />,
       )
     }
   }
-  return <>{slots}</>
+  return <>{tiles}</>
 }
