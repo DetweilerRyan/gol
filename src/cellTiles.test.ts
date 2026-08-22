@@ -235,6 +235,11 @@ describe('design table: TILE_SPAN_CELLS = 4 mounted/tile/entering counts', () =>
     expect(tileRangeHolds(held, steady, EVICT_LAG_TILES)).toBe(true)
     expect(tileRangeCellCount(held)).toBe(35_712)
     expect(tileRangeCellCount(held)).toBeLessThan(35_856)
+    // Deterministic mutation coverage for EVICT_LAG_TILES itself: a
+    // nextTileRange that used a lag of 0 (or any implementation not actually
+    // wired to the constant) would rebuild `held` down to `steady` here
+    // instead of returning it by reference.
+    expect(nextTileRange(held, camera, 1920, 1080)).toBe(held)
   })
 
   // The design's disclosed (not gated) worst case: every one of the four
@@ -253,5 +258,6 @@ describe('design table: TILE_SPAN_CELLS = 4 mounted/tile/entering counts', () =>
 
     expect(tileRangeHolds(held, steady, EVICT_LAG_TILES)).toBe(true)
     expect(tileRangeCellCount(held)).toBe(37_296)
+    expect(nextTileRange(held, camera, 1920, 1080)).toBe(held)
   })
 })

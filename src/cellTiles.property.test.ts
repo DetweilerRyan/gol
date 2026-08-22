@@ -1,7 +1,7 @@
 import { it } from '@fast-check/vitest'
 import fc from 'fast-check'
 import { describe, expect } from 'vitest'
-import { coveringTileRange, nextTileRange, TILE_SPAN_CELLS } from './cellTiles'
+import { coveringTileRange, EVICT_LAG_TILES, nextTileRange, tileRangeHolds, TILE_SPAN_CELLS } from './cellTiles'
 import { cameraArbitrary as camera } from './test-support/arbitraries'
 
 // Only the two contracts the ratified tile-virtualized-cells design (§4/§5,
@@ -20,20 +20,11 @@ describe('nextTileRange (property)', () => {
     'keeps the previous range by reference exactly when it still holds, and never otherwise',
     (previousCam, cam, width, height) => {
       const previous = coveringTileRange(previousCam, width, height, TILE_SPAN_CELLS)
-      const next = nextTileRange(previous, cam, width, height)
       const required = coveringTileRange(cam, width, height, TILE_SPAN_CELLS)
 
-      if (next === previous) {
-        // Reference identity was returned -- the covering set for `cam` must
-        // actually be held, not merely equal by chance.
-        expect(next.minTileX).toBeLessThanOrEqual(required.minTileX)
-        expect(next.maxTileX).toBeGreaterThanOrEqual(required.maxTileX)
-        expect(next.minTileY).toBeLessThanOrEqual(required.minTileY)
-        expect(next.maxTileY).toBeGreaterThanOrEqual(required.maxTileY)
-      } else {
-        // A rebuild happened -- it must land on exactly the covering set.
-        expect(next).toEqual(required)
-      }
+      expect(nextTileRange(previous, cam, width, height) === previous).toBe(
+        tileRangeHolds(previous, required, EVICT_LAG_TILES),
+      )
     },
   )
 
