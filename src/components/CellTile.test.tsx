@@ -69,6 +69,12 @@ describe('the observable contract', () => {
     for (const child of Array.from(container.children)) {
       expect(child.tagName).toBe('BUTTON')
     }
+    // childNodes (unlike children) also counts text nodes, so this catches a
+    // stray leading array entry that `container.children` alone can't see --
+    // .children only reports Element nodes, and a spurious string pushed
+    // ahead of the Cell elements renders as a Text node sibling rather than
+    // a 17th button.
+    expect(container.childNodes).toHaveLength(SPAN_CELLS * SPAN_CELLS)
   })
 })
 
