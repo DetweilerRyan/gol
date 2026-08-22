@@ -36,8 +36,8 @@ import Grid, { GRID_CONTENT_ID } from './Grid'
 // throw when a pointerdown-driven test calls setPointerCapture -- its own
 // release-guard behavior is useGridPointerGestures.test.tsx's job.
 //
-// underStryker gates one test in the "tile pan-stability" describe below --
-// see its own comment for why. globalThis.__stryker__ is set at module load
+// underStryker gates two tests in the "tile pan-stability" describe below --
+// see each site's own comment for why. globalThis.__stryker__ is set at module load
 // by any instrumented file's own bootstrap, before test collection, so it
 // reliably distinguishes a mutation-testing run from a normal one (see
 // useLiveCell.test.ts for the precedent).
@@ -344,6 +344,17 @@ describe('tile pan-stability', () => {
   it.skipIf(underStryker)('a pan that stays within the current tile range re-renders zero cells', () => {
     const store = createLiveCellStore()
     const { container, rerenderWith } = renderGrid({ store })
+    // The comments and pans below are argued in terms of a WIDTH x HEIGHT
+    // (40x40px, a 2x2-cell) viewport, so measure one before asserting
+    // anything -- otherwise this render stays at the pre-measurement {0, 0}
+    // containerSize (see "measurement wiring" above) and the assertions
+    // below would describe a viewport the component was never actually
+    // given. It's a same-tile result either way here (coveringTileRange
+    // collapses to tile 0 at both sizes, since a 2-cell or a 0-cell window
+    // both fit inside one 4-cell-span tile), which is exactly why this went
+    // unnoticed -- but the fixture should still be the one the assertions
+    // describe.
+    triggerResize(WIDTH, HEIGHT)
     const beforeCell = screen.getByRole('button', { name: 'Cell 0, 0' })
     const layerDiv = gridContentEl(container).firstElementChild as HTMLElement
     const transformBefore = layerDiv.style.transform
@@ -374,6 +385,9 @@ describe('tile pan-stability', () => {
   it('a pan that crosses a tile boundary does re-render cells (the guard above is not vacuous)', () => {
     const store = createLiveCellStore()
     const { rerenderWith } = renderGrid({ store })
+    // See the same-named comment in the test above: measure the WIDTH x
+    // HEIGHT viewport these assertions are argued against before panning.
+    triggerResize(WIDTH, HEIGHT)
 
     const spy = vi.spyOn(store, 'getCellSnapshot')
     spy.mockClear()
