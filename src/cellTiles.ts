@@ -51,8 +51,11 @@ export const TILE_SPAN_CELLS = 4
 //     tolerance for a scroll/pan that outruns the render.
 //   - EVICT_LAG_TILES is EVICTION hysteresis: admit exactly the covering set,
 //     but tolerate up to this many stale tiles on a side before rebuilding.
-//     Transient cost only (see tileRangeHolds), buys freedom from boundary
-//     thrash at a tile edge.
+//     Transient cost only, and one-sided -- it buys freedom from boundary
+//     thrash at the TRAILING edge, not at the leading one. Read
+//     tileRangeHolds' comment before assuming it prevents thrash generally;
+//     it does not, and cellTiles.property.test.ts pins the case where it
+//     doesn't.
 //
 // They are composable but this design adopts hysteresis only -- the strip
 // cost above already fits inside one frame, so there is nothing for an
@@ -140,12 +143,24 @@ function axisHolds(
 // Whether `previous` may stay mounted rather than being rebuilt onto
 // `required`: it must still fully contain `required` (never a hole in the
 // viewport), and it must not exceed `required` by more than `evictLagTiles`
-// tiles on any one of the four sides. A oscillating camera therefore costs at
-// most one rebuild per boundary crossing, since the leading and trailing
-// edges (Math.ceil vs Math.floor above) flip at least one cell apart -- a
-// rebuild always lands on the momentarily-wider covering set, and the
-// required set then moves strictly inside it until it grows past the margin
-// again.
+// tiles on any one of the four sides.
+//
+// NOTE THE ASYMMETRY, because the ratified design got this wrong and the
+// architect review corrected it: this tolerates `previous` being WIDER than
+// required, and can never tolerate it being narrower (a narrower range is a
+// hole -- an invisible, unclickable band at the leading edge). So the
+// hysteresis protects the TRAILING edge only. The design argued the stronger
+// claim that a boundary wobble costs at most one rebuild, on the grounds
+// that the leading and trailing edges (Math.ceil vs Math.floor above) flip
+// at least one cell apart so a rebuild always lands on the momentarily-wider
+// covering set. That is false: at a viewport width just past a whole number
+// of tiles, both edges cross within the same sub-cell step, the covering set
+// SHIFTS instead of widening, neither position's range contains the other's,
+// and every step of the oscillation rebuilds. See the deterministic
+// counterexample in cellTiles.property.test.ts's 'eviction hysteresis'
+// block, which also names the escape hatch (rebuild onto `previous` clamped
+// to within evictLagTiles of `required`, rather than onto `required`
+// exactly) if the perf run ever shows the thrash mattering.
 export function tileRangeHolds(previous: TileRange, required: TileRange, evictLagTiles: number): boolean {
   return (
     axisHolds(previous.minTileX, previous.maxTileX, required.minTileX, required.maxTileX, evictLagTiles) &&
