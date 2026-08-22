@@ -8,6 +8,7 @@ import { useRafCoalescedPan } from './useRafCoalescedPan'
 function stubRaf() {
   let nextId = 1
   const pending = new Map<number, FrameRequestCallback>()
+  let cancelCallCount = 0
 
   vi.stubGlobal(
     'requestAnimationFrame',
@@ -20,12 +21,14 @@ function stubRaf() {
   vi.stubGlobal(
     'cancelAnimationFrame',
     vi.fn((id: number) => {
+      cancelCallCount++
       pending.delete(id)
     }),
   )
 
   return {
     pendingCount: () => pending.size,
+    cancelCallCount: () => cancelCallCount,
     runFrame: () => {
       const callbacks = [...pending.values()]
       pending.clear()
@@ -93,23 +96,30 @@ describe('useRafCoalescedPan', () => {
     expect(onPan).toHaveBeenCalledTimes(1)
   })
 
-  it('flush() with nothing accumulated is a no-op', () => {
+  it('flush() with nothing accumulated is a no-op, and does not cancel a frame that was never scheduled', () => {
     const onPan = vi.fn()
     const { result } = renderHook(() => useRafCoalescedPan(onPan))
 
     result.current.flush()
 
     expect(onPan).not.toHaveBeenCalled()
+    // No push() happened, so there's no pending frame to cancel -- flush()'s
+    // own guard on rafIdRef.current must actually gate the
+    // cancelAnimationFrame call rather than calling it unconditionally.
+    expect(raf.cancelCallCount()).toBe(0)
   })
 
-  it('flushes when only one axis has accumulated a delta (not just when both have)', () => {
+  it.each([
+    { dx: 3, dy: 0, label: 'dx only' },
+    { dx: 0, dy: 3, label: 'dy only' },
+  ])('flushes when only one axis ($label) has accumulated a delta (not just when both have)', ({ dx, dy }) => {
     const onPan = vi.fn()
     const { result } = renderHook(() => useRafCoalescedPan(onPan))
 
-    result.current.push(3, 0)
+    result.current.push(dx, dy)
     result.current.flush()
 
-    expect(onPan).toHaveBeenCalledWith(3, 0)
+    expect(onPan).toHaveBeenCalledWith(dx, dy)
   })
 
   it('a push after flush() starts a new accumulation rather than reusing stale state', () => {

@@ -91,6 +91,42 @@ describe('useCellLattice', () => {
     expect(result.current.offsetYPx).toBe(yPx)
   })
 
+  it('keeps the rebased lattice as the sticky anchor: a later within-slack pan does not re-derive it', () => {
+    // Regression for a mutant that no-ops the setLattice(current) call inside
+    // useCellLattice: the *return value* of the render that rebases is
+    // unaffected by that mutant (current is used directly, never lattice),
+    // so this needs a second render to observe. Without the state update,
+    // useCellLattice's `lattice` state is stuck at the pre-rebase anchor
+    // forever, so every later render re-fails latticeCovers against that
+    // stale anchor and recomputes from scratch -- still numerically correct
+    // for a lone render, but it silently defeats the sticky anchor for every
+    // render after the first rebase, and originX below is the cheapest
+    // observable symptom of that (a fresh computeLattice's floor-based
+    // origin moves with every sub-cell pan; a truly sticky one doesn't).
+    const { result, rerender } = renderHook(({ camera }: { camera: Camera }) => useCellLattice(camera, size), {
+      initialProps: { camera },
+    })
+
+    const beyondSlackPan: Camera = { ...camera, offsetX: camera.offsetX + 50 }
+    rerender({ camera: beyondSlackPan })
+    const rebasedOriginX = result.current.originX
+
+    // +1 from beyondSlackPan: within the *rebased* lattice's slack, so a
+    // correctly-sticky hook reuses it unchanged. Confirmed by latticeCovers
+    // below, and the freshly-computed alternative is confirmed to actually
+    // differ, so this test would fail loudly (not pass vacuously) if
+    // LATTICE_SLACK_CELLS or the floor arithmetic ever changed underneath it.
+    const withinNewSlackPan: Camera = { ...beyondSlackPan, offsetX: beyondSlackPan.offsetX + 1 }
+    const rebasedLattice = computeLattice(beyondSlackPan, size.width, size.height)
+    expect(latticeCovers(rebasedLattice, withinNewSlackPan, size.width, size.height)).toBe(true)
+    const freshLatticeForThirdCamera = computeLattice(withinNewSlackPan, size.width, size.height)
+    expect(freshLatticeForThirdCamera.originX).not.toBe(rebasedOriginX)
+
+    rerender({ camera: withinNewSlackPan })
+
+    expect(result.current.originX).toBe(rebasedOriginX)
+  })
+
   it('forces a rebase on a cellSize change even when the pan itself is zero', () => {
     const { result, rerender } = renderHook(({ camera }: { camera: Camera }) => useCellLattice(camera, size), {
       initialProps: { camera },

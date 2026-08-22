@@ -72,6 +72,12 @@ export function useRafCoalescedPan(onPan: (dxPixels: number, dyPixels: number) =
   // reads accumulatedRef/rafIdRef/onPanRef, all refs, so it always sees the
   // latest state regardless of which render's closure runs it -- no
   // dependency array entry would ever change what this needs to do.
+  //
+  // A Stryker mutant replacing `[]` with a single-element array survives:
+  // React compares deps by per-index Object.is, and a fresh same-valued
+  // literal is Object.is-equal to itself across renders just like `[]` is,
+  // so both schedule identically (mount/unmount only). Hand-verified
+  // equivalent, not a coverage gap.
   useEffect(() => {
     return () => {
       flush()
