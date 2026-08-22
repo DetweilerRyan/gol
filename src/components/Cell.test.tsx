@@ -65,7 +65,7 @@ describe('Cell rendering', () => {
     // mutation that swaps either '' fallback for stray literal text is still caught even though
     // that text isn't one of the specific substrings checked above.
     expect(onNeither.className.split(/\s+/).filter(Boolean)).toEqual(
-      'absolute top-0 left-0 border border-gray-200 transition-colors bg-white hover:bg-gray-100'.split(' '),
+      'absolute top-0 left-0 border border-gray-200 bg-white hover:bg-gray-100'.split(' '),
     )
   })
 

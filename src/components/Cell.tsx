@@ -38,7 +38,11 @@ export default function Cell({ x, y, camera, store, onActivate }: CellProps) {
         transform: `translate(${left}px, ${top}px)`,
         boxSizing: 'border-box',
       }}
-      className={`absolute top-0 left-0 border border-gray-200 transition-colors ${
+      // No transition-colors: a generation step flips thousands of cells at
+      // once, and animating every one of those class changes simultaneously
+      // is real paint cost this project can't afford at the frame budgets
+      // perf/ tests against.
+      className={`absolute top-0 left-0 border border-gray-200 ${
         isAlive ? 'bg-gray-900 hover:bg-gray-700' : 'bg-white hover:bg-gray-100'
       } ${isMajorGridline(x) ? 'border-l-2 border-l-gray-400' : ''} ${isMajorGridline(y) ? 'border-t-2 border-t-gray-400' : ''}`}
     />
