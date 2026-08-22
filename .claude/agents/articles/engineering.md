@@ -35,6 +35,17 @@ These docs describe the codebase as it currently stands, not a contract that fre
 
 **The browser-required layer is additive only.** `vite.config.ts` excludes the `*.browser.test.ts` suffix, and `crap4ts` and `npm run test:mutation` both run through that config, so neither tool can see these files at all. Never substitute a browser-required test for a jsdom one — deleting a jsdom assertion in favor of a browser-mode equivalent silently drops that module's coverage and mutation score while the suite still looks green, and closing a CRAP or mutation gap with a test in this layer doesn't close it, it hides it. Add to this layer; never move into it.
 
+## Writing a property test
+
+Property tests (`@fast-check/vitest`, `*.property.test.ts`) cover every framework-free module, and **`architect` writes them** — `coder` writes focused unit tests and never property tests, which is why its fast path (`npm run test:unit`) skips that layer entirely. `hardener` and `qa` confirm the results but don't author them. Two rules apply whenever `architect` adds or changes one.
+
+- **Pin the degenerate values deterministically; don't leave them to the generator.** A property over a broad arbitrary finds a defect only when the draw happens to produce it. Assert the boundary cases directly, alongside the property: `NaN`, `±0`, Invalid Date, empty `Set`/`Map`/array/object, single-element collections, and size or length comparisons in **both** directions — subset as well as superset, since a one-directional check lets `if (a.size !== b.size)` → `if (false)` survive mutation.
+- **Show a new property is non-vacuous before you trust it.** Temporarily break the code it exists to protect and confirm that property fails; then restore. A property that still passes against a deliberately broken implementation is documentation, not a test. If the break turns out to be undetectable, that _is_ the finding — reweight the arbitrary toward the near-misses rather than accepting the pass.
+
+Both rules were paid for. In `import-utilities`, `datesEqual` compared two Invalid Dates as **unequal**, so an Invalid Date was the one container the shared equality walker reported as unequal to its own `structuredClone`. `coder`, `cleaner` and `architect` all ran the property suite green; it surfaced at `hardener` on roughly a 0.2% `fc.date()` draw. Reflexivity passed through a same-reference short-circuit and symmetry saw `false` in both directions, so exactly one property could catch it, and only sometimes.
+
+**Narrowing an arbitrary to make a finding go away is not a fix.** Filtering Invalid Dates out of the generator would have left the defect in the module and removed the only thing that could find it — the same move as weakening an ast-grep rule to clear a violation. Fix the module.
+
 ## Structural rules (ast-grep)
 
 `rules/*.yml`, wired up by `sgconfig.yml`, encode architectural invariants that were previously prose — the framework-free layering, and repo conventions like "no manual `useMemo`/`useCallback` under an enabled React Compiler". `CLAUDE.md`'s Custom quality tooling section lists what they currently cover; read it there rather than from a list restated here, which would go stale the moment a rule is added.
