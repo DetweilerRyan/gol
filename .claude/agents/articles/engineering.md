@@ -59,6 +59,18 @@ All four conditions must hold:
 
 The abuse shape is the mirror image: skipping a test _because_ it kills a mutant that is awkward to keep alive, or because it fails under Stryker for a reason nobody has explained. That converts a real gap into a green score, invisibly. `architect` rules on new uses of the idiom; anyone else who needs one reports it rather than adding it.
 
+**`// Stryker disable` is not the better alternative here — that was measured, in `render-perf-improvements`, and rejected.** Stryker's instrumenter does support comment directives, so the obvious question is whether disabling mutants on just the affected declarations lets the test run. It does not, and the reason generalises: the React Compiler bailout is triggered by the _file's_ instrumentation, not by the individual mutant switches. Measured against the two landed cases:
+
+| what was tried                                           | mutants measured in that file                        | does the test pass under Stryker |
+| -------------------------------------------------------- | ---------------------------------------------------- | -------------------------------- |
+| `it.skipIf` (what's landed)                              | `Grid.tsx` 23/23 killed, `useLiveCell.ts` 3/3 killed | no — it doesn't run              |
+| `// Stryker disable all` around the specific declaration | unchanged                                            | **no** — dry run still fails     |
+| `// Stryker disable all` at the top of the file          | **0 of 23**, **0 of 3**                              | yes                              |
+
+Only the file-wide form works, and it costs every mutant in the file. Worse, it costs them _silently_: Stryker still creates the mutants, reports them as ignored, and scores the file `n/a` — so the file leaves the denominator without the score dropping. A skipped test kills no mutants but removes none either; a file-wide disable removes them all while looking clean. Prefer the skip.
+
+Neither tool is malfunctioning, so no upstream fix is coming: Stryker's instrumentation is a read of a mutable global during render, which is on React's own documented list of bailout conditions. The interaction has no public report — the nearest analogue is [stryker-js#2704](https://github.com/stryker-mutator/stryker-js/issues/2704), where instrumentation displaces the `@flow` pragma and silently disables that Babel plugin — and it is worth reporting now that React Compiler is stable and default-on in Next.js, since the population hitting it is about to grow.
+
 ## Structural rules (ast-grep)
 
 `rules/*.yml`, wired up by `sgconfig.yml`, encode architectural invariants that were previously prose — the framework-free layering, and repo conventions like "no manual `useMemo`/`useCallback` under an enabled React Compiler". `CLAUDE.md`'s Custom quality tooling section lists what they currently cover; read it there rather than from a list restated here, which would go stale the moment a rule is added.

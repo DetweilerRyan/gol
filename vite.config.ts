@@ -11,6 +11,7 @@ const sharedExclude = [
   '**/*.browser.test.ts?(x)',
   'scripts/**',
   '.claude/worktrees/**',
+  '.stryker-tmp*/**',
 ]
 
 const domTests = ['src/components/**/*.{test,spec}.?(c|m)[jt]s?(x)', 'src/hooks/**/*.{test,spec}.?(c|m)[jt]s?(x)']
@@ -52,8 +53,19 @@ export default defineConfig({
     //
     // Claude Code's native worktrees land in .claude/worktrees/, inside this
     // checkout. configDefaults.exclude covers node_modules/dist/.git but not
-    // .claude, so without that last entry a run from the primary checkout would
+    // .claude, so without that entry a run from the primary checkout would
     // collect and run another slice's src/ and features/ tests as its own.
+    //
+    // .stryker-tmp*/ is the same failure with a different source. Stryker
+    // sandboxes a full copy of the tree there and only removes it on a clean
+    // exit, so any aborted mutation run (a failed dry run aborts before a
+    // single mutant executes) leaves one behind -- and the `unit` and
+    // `property` projects below inherit configDefaults.include, which is
+    // unrooted and matches straight into it. Measured: `npm test` collected
+    // 3,299 tests instead of 861 against a leftover src/ sandbox. The `dom`
+    // project is immune only incidentally, because its include list happens
+    // to be rooted at src/. The glob covers .stryker-tmp-scripts too (see
+    // stryker.scripts.config.json's tempDirName).
     exclude: sharedExclude,
     coverage: {
       provider: 'v8',
