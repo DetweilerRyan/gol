@@ -1,4 +1,4 @@
-import { slotPixelPosition, slotWorldCoordinate } from '../cellLattice'
+import { slotIndex, slotPixelPosition, slotWorldCoordinate } from '../cellLattice'
 import type { LiveCellStore } from '../liveCellStore'
 import Cell from './Cell'
 
@@ -19,8 +19,8 @@ interface GridCellsProps {
 // does (see Grid.tsx) -- which is what lets a pan stop re-rendering cells at
 // all instead of walking every visible cell every frame.
 //
-// The React key is the slot's own linear index (row-major, matching the
-// nested loop order below), not the world coordinate: a slot's identity is
+// The React key is the slot's own linear index (slotIndex -- row-major,
+// matching the nested loop order below), not the world coordinate: a slot's identity is
 // "this position in the lattice," and keying on the world coordinate would
 // force React to remount every cell on every pan tick, since the world
 // coordinate a slot holds changes on every pan -- even a sub-cell one that
@@ -35,6 +35,11 @@ interface GridCellsProps {
 // PatternPreview.tsx, rendered by Grid as a following sibling of this
 // component -- see Grid.test.tsx's DOM-order assertion.
 //
+// This component owns slot-to-pixel mapping end to end: it derives each
+// slot's pixel position and hands Cell the finished CSS transform, rather
+// than passing leftPx/topPx numbers for Cell to concatenate. Cell holds no
+// pixel geometry of its own as a result -- see Cell.tsx.
+//
 // Aliveness itself is no longer computed here -- each Cell subscribes to its
 // own membership via useLiveCell(store, key), so a generation only re-renders
 // the cells that actually changed. See liveCellStore.ts's module header.
@@ -48,12 +53,11 @@ export default function GridCells({ originX, originY, cols, rows, cellSize, stor
       const leftPx = slotPixelPosition(i, cellSize)
       slots.push(
         <Cell
-          key={j * cols + i}
+          key={slotIndex(i, j, cols)}
           x={x}
           y={y}
-          leftPx={leftPx}
-          topPx={topPx}
           cellSize={cellSize}
+          transform={`translate(${leftPx}px, ${topPx}px)`}
           store={store}
           onActivate={onActivateCell}
         />,

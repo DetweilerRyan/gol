@@ -108,3 +108,14 @@ export function slotWorldCoordinate(origin: number, index: number): number {
 export function slotPixelPosition(index: number, cellSize: number): number {
   return index * cellSize
 }
+
+// The linear, row-major index of a lattice slot -- the identity GridCells
+// gives React as a slot's key. Lives here rather than inline at the call site
+// because it is the one piece of the design's keying decision that is pure
+// arithmetic: keying by slot index (not by world coordinate) is what lets a
+// rebase re-render a Cell with new x/y props while reusing its DOM node,
+// instead of remounting every cell on every pan. Row-major to match the
+// nested loop order GridCells renders in, so index order and DOM order agree.
+export function slotIndex(col: number, row: number, cols: number): number {
+  return row * cols + col
+}

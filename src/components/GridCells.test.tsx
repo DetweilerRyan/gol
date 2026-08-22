@@ -1,7 +1,7 @@
 import { fireEvent, render, screen } from '@testing-library/react'
 import type { ReactElement } from 'react'
 import { describe, expect, it, vi } from 'vitest'
-import { slotPixelPosition, slotWorldCoordinate } from '../cellLattice'
+import { slotIndex, slotPixelPosition, slotWorldCoordinate } from '../cellLattice'
 import { createLiveCellStore } from '../liveCellStore'
 import GridCells from './GridCells'
 
@@ -53,7 +53,7 @@ describe('GridCells lattice enumeration', () => {
     expect(screen.getAllByRole('button')).toHaveLength(LATTICE.cols * LATTICE.rows)
   })
 
-  it('positions each slot via slotPixelPosition(index, cellSize), independent of origin', () => {
+  it('hands each slot a transform built from slotPixelPosition(index, cellSize), independent of origin', () => {
     renderCells()
 
     const leftPx = slotPixelPosition(2, LATTICE.cellSize) // column index of world x=1
@@ -80,14 +80,14 @@ describe('GridCells lattice enumeration', () => {
     return captured
   }
 
-  it('returns exactly cols*rows Cell elements, keyed by the slot’s row-major index (j * cols + i), not the world coordinate', () => {
+  it('returns exactly cols*rows Cell elements, keyed by slotIndex(col, row, cols), not the world coordinate', () => {
     const element = captureElement({ ...LATTICE, store: createLiveCellStore(), onActivateCell: vi.fn() })
     const keys = (element.props as { children: ReactElement[] }).children.map((child) => child.key)
 
     const expectedKeys: string[] = []
     for (let j = 0; j < LATTICE.rows; j++) {
       for (let i = 0; i < LATTICE.cols; i++) {
-        expectedKeys.push(String(j * LATTICE.cols + i))
+        expectedKeys.push(String(slotIndex(i, j, LATTICE.cols)))
       }
     }
     expect(keys).toEqual(expectedKeys)

@@ -5,6 +5,7 @@ import {
   LATTICE_SLACK_CELLS,
   latticeCovers,
   latticeOffsetPx,
+  slotIndex,
   slotPixelPosition,
   slotWorldCoordinate,
 } from './cellLattice'
@@ -222,5 +223,21 @@ describe('slotPixelPosition', () => {
 
   it('handles a fractional cellSize', () => {
     expect(slotPixelPosition(5, 12.8)).toBeCloseTo(64)
+  })
+})
+
+describe('slotIndex', () => {
+  // Row-major rather than column-major is the half of this contract a square
+  // lattice can't see: at cols === rows both orderings agree on the corners,
+  // so the two cols: 5 rows below are what pin the direction down.
+  it.each([
+    [0, 0, 3, 0],
+    [2, 0, 3, 2],
+    [0, 1, 3, 3],
+    [2, 2, 3, 8],
+    [0, 1, 5, 5],
+    [1, 0, 5, 1],
+  ])('col %i, row %i of a %i-column lattice is slot %i', (col, row, cols, expected) => {
+    expect(slotIndex(col, row, cols)).toBe(expected)
   })
 })

@@ -6,9 +6,8 @@ import type { LiveCellStore } from '../liveCellStore'
 interface CellProps {
   x: number // world coordinate: aria-label, gridline classes, store key
   y: number
-  leftPx: number
-  topPx: number
   cellSize: number
+  transform: string // finished CSS transform placing this slot -- see GridCells
   store: LiveCellStore
   onActivate: (x: number, y: number) => void
 }
@@ -21,15 +20,20 @@ interface CellProps {
 // here (not passed down from GridCells' map) so getCellSnapshot stays an
 // allocation-free Set.has rather than building a string every render.
 //
-// Takes leftPx/topPx/cellSize as plain scalars rather than a Camera: a
-// Camera's identity changes on every pointermove during a pan, and this
-// component sits at the base of the render tree GridCells maps over, so a
-// Camera-typed prop here would defeat the pan-stable lattice GridCells reads
-// from (see useCellLattice.ts) -- every Cell would still re-render on every
-// pan tick even though its own world position never moved. leftPx/topPx come
-// from the lattice's per-slot pixel math, not from worldToScreen(camera, x, y)
-// -- see GridCells.tsx.
-export default function Cell({ x, y, leftPx, topPx, cellSize, store, onActivate }: CellProps) {
+// Takes plain scalars rather than a Camera: a Camera's identity changes on
+// every pointermove during a pan, and this component sits at the base of the
+// render tree GridCells maps over, so a Camera-typed prop here would defeat
+// the pan-stable lattice GridCells reads from (see useCellLattice.ts) --
+// every Cell would still re-render on every pan tick even though its own
+// world position never moved.
+//
+// Positioning arrives as a finished `transform` string rather than as
+// leftPx/topPx numbers this component would concatenate itself. Slot-to-pixel
+// mapping is GridCells' job end to end (it already owns slotPixelPosition);
+// splitting it -- caller derives the pixels, callee formats them, and both
+// hold cellSize -- put half of one derivation on each side of the boundary.
+// Cell now knows only its world coordinate and how to paint what it is told.
+export default function Cell({ x, y, cellSize, transform, store, onActivate }: CellProps) {
   const key = cellKey(x, y)
   const isAlive = useLiveCell(store, key)
   return (
@@ -44,7 +48,7 @@ export default function Cell({ x, y, leftPx, topPx, cellSize, store, onActivate 
       style={{
         width: cellSize,
         height: cellSize,
-        transform: `translate(${leftPx}px, ${topPx}px)`,
+        transform,
         boxSizing: 'border-box',
       }}
       // No transition-colors: a generation step flips thousands of cells at
