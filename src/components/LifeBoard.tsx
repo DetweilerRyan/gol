@@ -1,7 +1,6 @@
 import { zoomPercentage } from '../camera'
 import { computeMajorGridlines } from '../gridGeometry'
 import { useCamera } from '../hooks/useCamera'
-import { useContentBounds } from '../hooks/useContentBounds'
 import { usePatternPlacement } from '../hooks/usePatternPlacement'
 import type { LiveCellStore } from '../liveCellStore'
 import { armedPattern, isLibraryOpen, previewPositions } from '../patternPlacement'
@@ -27,8 +26,6 @@ export default function LifeBoard({ store }: LifeBoardProps) {
   const { placement, openOrCancelLibrary, closeLibrary, selectPattern, previewAt, stampArmedPattern } =
     usePatternPlacement(store.place)
 
-  const contentBounds = useContentBounds(store)
-
   function renderOverlays({ size, visibleRange }: GridOverlayContext) {
     return (
       <>
@@ -45,7 +42,7 @@ export default function LifeBoard({ store }: LifeBoardProps) {
 
         <GridScrollbars
           camera={camera}
-          contentBounds={contentBounds}
+          store={store}
           size={size}
           contentId={GRID_CONTENT_ID}
           onDrag={panByScrollbarDrag}

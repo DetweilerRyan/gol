@@ -1,8 +1,9 @@
-import { fireEvent, render, screen } from '@testing-library/react'
+import { act, fireEvent, render, screen } from '@testing-library/react'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import type { Camera } from '../camera'
 import { cellKey, computeContentBounds, type LiveCells } from '../gameOfLife'
 import type { ElementSize } from '../hooks/useElementSize'
+import { createLiveCellStore, type LiveCellStore } from '../liveCellStore'
 import { computeScrollbarMetrics, computeThumbGeometry } from '../scrollbars'
 import { stubPointerCapture } from '../test-support/domStubs'
 import GridScrollbars from './GridScrollbars'
@@ -16,12 +17,21 @@ beforeEach(() => {
 
 const camera: Camera = { offsetX: -2, offsetY: -1, cellSize: 20 }
 const size: ElementSize = { width: 400, height: 300 }
+
+// computeContentBounds reports maxX/maxY as the highest live coordinate plus
+// one, so seeding (minX, minY) and (maxX - 1, maxY - 1) yields exactly the
+// requested box -- getting that off by one would silently shift every
+// thumb-geometry assertion below.
+function storeWithBounds(minX: number, minY: number, maxX: number, maxY: number): LiveCellStore {
+  return createLiveCellStore(new Set([cellKey(minX, minY), cellKey(maxX - 1, maxY - 1)]) as LiveCells)
+}
+
 const contentBounds = computeContentBounds(new Set([cellKey(2, 3), cellKey(10, 10)]) as LiveCells)
 
 function renderScrollbars(props: Partial<React.ComponentProps<typeof GridScrollbars>> = {}) {
   const merged: React.ComponentProps<typeof GridScrollbars> = {
     camera,
-    contentBounds,
+    store: storeWithBounds(2, 3, 11, 11),
     size,
     contentId: 'grid-content',
     onDrag: vi.fn(),
@@ -108,5 +118,22 @@ describe('GridScrollbars wiring', () => {
     fireEvent.pointerMove(horizontal, { pointerId: 1, clientX: 25, clientY: 0 })
 
     expect(onDrag).toHaveBeenCalledWith('x', 15, expect.any(Number))
+  })
+})
+
+describe('GridScrollbars store subscription', () => {
+  it('re-renders thumb geometry when a store mutation moves the content bounds', () => {
+    const store = storeWithBounds(2, 3, 11, 11)
+    renderScrollbars({ store })
+
+    act(() => store.toggle(20, 20))
+
+    const movedBounds = computeContentBounds(store.getLiveCells())
+    const metrics = computeScrollbarMetrics(camera, movedBounds, size.width, size.height)
+    const horizontal = screen
+      .getAllByRole('scrollbar')
+      .find((el) => el.getAttribute('aria-orientation') === 'horizontal')
+
+    expect(horizontal).toHaveAttribute('aria-valuenow', String(Math.round(metrics.horizontal.thumbOffsetRatio * 100)))
   })
 })
