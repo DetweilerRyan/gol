@@ -49,20 +49,15 @@ describe('computeLattice', () => {
     },
   )
 
-  it('handles MIN_CELL_SIZE', () => {
-    const camera: Camera = { offsetX: 0, offsetY: 0, cellSize: MIN_CELL_SIZE }
+  it.each([
+    ['MIN_CELL_SIZE', MIN_CELL_SIZE],
+    ['MAX_CELL_SIZE', MAX_CELL_SIZE],
+  ])('handles %s', (_name, cellSize) => {
+    const camera: Camera = { offsetX: 0, offsetY: 0, cellSize }
     const lattice = computeLattice(camera, 1280, 900)
-    expect(lattice.cellSize).toBe(MIN_CELL_SIZE)
-    expect(lattice.cols).toBe(Math.ceil(1280 / MIN_CELL_SIZE) + 1 + 2 * LATTICE_SLACK_CELLS)
-    expect(lattice.rows).toBe(Math.ceil(900 / MIN_CELL_SIZE) + 1 + 2 * LATTICE_SLACK_CELLS)
-  })
-
-  it('handles MAX_CELL_SIZE', () => {
-    const camera: Camera = { offsetX: 0, offsetY: 0, cellSize: MAX_CELL_SIZE }
-    const lattice = computeLattice(camera, 1280, 900)
-    expect(lattice.cellSize).toBe(MAX_CELL_SIZE)
-    expect(lattice.cols).toBe(Math.ceil(1280 / MAX_CELL_SIZE) + 1 + 2 * LATTICE_SLACK_CELLS)
-    expect(lattice.rows).toBe(Math.ceil(900 / MAX_CELL_SIZE) + 1 + 2 * LATTICE_SLACK_CELLS)
+    expect(lattice.cellSize).toBe(cellSize)
+    expect(lattice.cols).toBe(Math.ceil(1280 / cellSize) + 1 + 2 * LATTICE_SLACK_CELLS)
+    expect(lattice.rows).toBe(Math.ceil(900 / cellSize) + 1 + 2 * LATTICE_SLACK_CELLS)
   })
 
   it('stays finite and >= 1 for a 0x0 viewport (useElementSize before its first measurement)', () => {
@@ -128,6 +123,60 @@ describe('latticeCovers', () => {
     // -LATTICE_SLACK_CELLS cells puts the new minX exactly at originX.
     const atEdge: Camera = { ...camera, offsetX: camera.offsetX - LATTICE_SLACK_CELLS }
     expect(latticeCovers(lattice, atEdge, 1280, 900)).toBe(true)
+  })
+
+  // The four checks above (cellSize, minX, maxX, minY, maxY) are combined with
+  // &&, so a "far pan" test alone can't prove each one is pulling its own
+  // weight -- an overshoot on one axis can mask an off-by-one on another. This
+  // fixture (round numbers, origin at 0) isolates each check in turn: every
+  // camera below satisfies every check except the one under test.
+  describe('boundary edges', () => {
+    // computeLattice(0, 0, cellSize: 10, 100x100) -> originX/Y: -4, cols/rows:
+    // 19, so the inclusive upper bound on both axes is originX/Y + cols/rows -
+    // 1 = 14.
+    const edgeCamera: Camera = { offsetX: 0, offsetY: 0, cellSize: 10 }
+    const edgeLattice = computeLattice(edgeCamera, 100, 100)
+
+    it('is false when only cellSize differs, even though the shrunk window (maxX/maxY: 5) would fit easily', () => {
+      const zoomed: Camera = { ...edgeCamera, cellSize: 20 }
+      expect(latticeCovers(edgeLattice, zoomed, 100, 100)).toBe(false)
+    })
+
+    it('is false when only minX falls short of originX', () => {
+      // floor(-4.5) = -5, one before originX (-4); maxX/minY/maxY still pass.
+      const panned: Camera = { ...edgeCamera, offsetX: -4.5 }
+      expect(latticeCovers(edgeLattice, panned, 100, 100)).toBe(false)
+    })
+
+    it('is true when maxX lands exactly on the inclusive upper boundary', () => {
+      // ceil(4 + 100/10) = 14, exactly originX + cols - 1.
+      const edge: Camera = { ...edgeCamera, offsetX: 4 }
+      expect(latticeCovers(edgeLattice, edge, 100, 100)).toBe(true)
+    })
+
+    it('is false when maxX lands one past the inclusive upper boundary', () => {
+      // ceil(5 + 100/10) = 15, one past originX + cols - 1 (14).
+      const pastEdge: Camera = { ...edgeCamera, offsetX: 5 }
+      expect(latticeCovers(edgeLattice, pastEdge, 100, 100)).toBe(false)
+    })
+
+    it('is true when minY lands exactly on the inclusive lower boundary', () => {
+      // floor(-4) = -4, exactly originY.
+      const edge: Camera = { ...edgeCamera, offsetY: -4 }
+      expect(latticeCovers(edgeLattice, edge, 100, 100)).toBe(true)
+    })
+
+    it('is true when maxY lands exactly on the inclusive upper boundary', () => {
+      // ceil(4 + 100/10) = 14, exactly originY + rows - 1.
+      const edge: Camera = { ...edgeCamera, offsetY: 4 }
+      expect(latticeCovers(edgeLattice, edge, 100, 100)).toBe(true)
+    })
+
+    it('is false when only maxY exceeds the inclusive upper boundary', () => {
+      // ceil(4.5 + 100/10) = 15, one past originY + rows - 1 (14); minX/maxX/minY still pass.
+      const panned: Camera = { ...edgeCamera, offsetY: 4.5 }
+      expect(latticeCovers(edgeLattice, panned, 100, 100)).toBe(false)
+    })
   })
 })
 

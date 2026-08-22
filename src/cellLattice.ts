@@ -19,10 +19,13 @@ import { worldToScreen, type Camera } from './camera'
 // cadence): at LATTICE_SLACK_CELLS = 4, the lattice rebases every 8.0 moves
 // at cellSize: 20 (12.5% of moves pay a full re-render) and every 3.2 moves
 // at cellSize: 8 (31%, since more, smaller cells fit in the same slack
-// distance). The tradeoff is rendering slack cells that are never on screen:
-// +12.0% rendered cells at default zoom (cellSize: 20), +5.9% at min zoom
-// (cellSize: 8, where the viewport already holds many more cells so the
-// fixed slack is a smaller relative share). 4 was chosen as the point on
+// distance). The tradeoff is rendering slack cells that are never on screen,
+// measured against gridGeometry.ts's computeVisibleRange -- today's buffered
+// render, the baseline this module replaces -- at the default camera
+// (offsetX: -32, offsetY: -22.5) and a 1280x900 viewport: +12.0% rendered
+// cells at default zoom (cellSize: 20), +5.9% at min zoom (cellSize: 8,
+// where the viewport already holds many more cells so the fixed slack is a
+// smaller relative share). 4 was chosen as the point on
 // that curve where rebase frequency drops sharply without the extra
 // off-screen cells costing much.
 export const LATTICE_SLACK_CELLS = 4
