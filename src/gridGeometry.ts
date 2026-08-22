@@ -9,7 +9,7 @@ import type { Camera } from './camera'
 // ruler needs the exact camera-derived range so its label set matches what's
 // actually on screen), and, historically, to enumerate exactly the cells to
 // render. That second use is gone -- the cell button layer now reads
-// cellLattice.ts's fixed-size Lattice instead (see useCellLattice.ts and
+// cellTiles.ts's world-anchored TileRange instead (see useCellTiles.ts and
 // GridCells.tsx), which is pan-stable in a way a fresh VisibleRange every
 // render never was. This module no longer has a cell-enumeration function;
 // it stays camera-exact because the ruler's correctness depends on that,

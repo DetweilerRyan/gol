@@ -5,18 +5,19 @@ interface PatternPreviewProps {
   positions: ReadonlyArray<readonly [number, number]>
 }
 
-// The placing-mode preview overlay, split out of GridCells so the cell button
-// layer can move into the pan-stable lattice (see useCellLattice.ts) while
-// this stays deliberately camera-exact: worldToScreen(camera, x, y) recomputes
-// every position on every camera change, which is fine here because it's
-// bounded by however many cells the armed pattern covers, not by the whole
-// visible viewport. Grid renders this as a sibling *after* GridCells inside
-// #grid-content, preserving the DOM order the previous single-component
-// version relied on: the preview must paint after the cell buttons or it
-// disappears behind them (both are absolutely positioned with auto z-index,
-// so later-in-DOM wins) -- nothing in e2e/ covers preview stacking, so
-// keeping that ordering as a Grid.test.tsx assertion is what keeps it inside
-// a tested unit rather than untested composition.
+// The placing-mode preview overlay, split out of GridCells so the cell
+// button layer can move into the pan-stable, world-anchored tile range (see
+// useCellTiles.ts) while this stays deliberately camera-exact:
+// worldToScreen(camera, x, y) recomputes every position on every camera
+// change, which is fine here because it's bounded by however many cells the
+// armed pattern covers, not by the whole visible viewport. Grid renders this
+// as a sibling *after* GridCells inside #grid-content, preserving the DOM
+// order the previous single-component version relied on: the preview must
+// paint after the cell buttons or it disappears behind them (both are
+// absolutely positioned with auto z-index, so later-in-DOM wins) -- nothing
+// in e2e/ covers preview stacking, so keeping that ordering as a
+// Grid.test.tsx assertion is what keeps it inside a tested unit rather than
+// untested composition.
 //
 // pointer-events-none so hovering the preview itself doesn't block the
 // underlying pointermove tracking.

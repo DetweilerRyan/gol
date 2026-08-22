@@ -5,7 +5,8 @@ import type { Camera } from './camera'
 // lattice rebased a fixed-size window of render *slots* under a moving
 // camera; a tile range instead mounts world-anchored tiles directly, so a
 // retained tile survives a pan untouched (world coordinates never change for
-// a tile that stays mounted -- see CellTile.tsx's header once it lands).
+// a tile that stays mounted -- see CellTile.tsx's header for the resulting
+// "no prop may change per pan tick" invariant).
 // Precision bounding (the float32 concern the lattice's origin also used to
 // carry) moves to the sibling module cellAnchor.ts (step 2), which is why
 // this module stores no cellSize and does not import worldToScreen.
@@ -88,9 +89,9 @@ export function tileOriginCell(tileIndex: number, spanCells: number): number {
   return tileIndex * spanCells
 }
 
-// The identity a mounted tile is keyed by. World-based, unlike the lattice's
-// slotIndex -- see GridCells.tsx's keying comment once it's rewritten in
-// step 5a for why that inversion is correct here.
+// The identity a mounted tile is keyed by. World-based, unlike the old
+// lattice's slotIndex -- see GridCells.tsx's keying comment for why that
+// inversion is correct here.
 export function tileKey(tileX: number, tileY: number): string {
   return `${tileX},${tileY}`
 }

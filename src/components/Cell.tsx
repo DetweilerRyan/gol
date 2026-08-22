@@ -7,29 +7,29 @@ interface CellProps {
   x: number // world coordinate: aria-label, gridline classes, store key
   y: number
   cellSize: number
-  transform: string // finished CSS transform placing this slot -- see GridCells
+  transform: string // finished CSS transform placing this cell -- see CellTile
   store: LiveCellStore
   onActivate: (x: number, y: number) => void
 }
 
-// One cell button, split out of GridCells so it can own its own aliveness
-// subscription: useLiveCell(store, key) means a generation only re-renders
-// the cells whose membership actually flipped, instead of every visible cell
-// re-rendering because liveCells is a prop-drilled Set with a new identity
-// each tick -- see liveCellStore.ts's module header. The key is computed once
-// here (not passed down from GridCells' map) so getCellSnapshot stays an
+// One cell button, split out so it can own its own aliveness subscription:
+// useLiveCell(store, key) means a generation only re-renders the cells whose
+// membership actually flipped, instead of every visible cell re-rendering
+// because liveCells is a prop-drilled Set with a new identity each tick --
+// see liveCellStore.ts's module header. The key is computed once here (not
+// passed down from CellTile's map) so getCellSnapshot stays an
 // allocation-free Set.has rather than building a string every render.
 //
 // Takes plain scalars rather than a Camera: a Camera's identity changes on
 // every pointermove during a pan, and this component sits at the base of the
-// render tree GridCells maps over, so a Camera-typed prop here would defeat
-// the pan-stable lattice GridCells reads from (see useCellLattice.ts) --
-// every Cell would still re-render on every pan tick even though its own
-// world position never moved.
+// render tree CellTile maps over, so a Camera-typed prop here would defeat
+// the world-anchored tile range CellTile reads from (see cellTiles.ts and
+// cellAnchor.ts) -- every Cell would still re-render on every pan tick even
+// though its own world position never moved.
 //
 // Positioning arrives as a finished `transform` string rather than as
-// leftPx/topPx numbers this component would concatenate itself. Slot-to-pixel
-// mapping is GridCells' job end to end (it already owns slotPixelPosition);
+// leftPx/topPx numbers this component would concatenate itself. Cell-to-pixel
+// mapping is CellTile's job end to end (it owns the cellOffsetPx calls);
 // splitting it -- caller derives the pixels, callee formats them, and both
 // hold cellSize -- put half of one derivation on each side of the boundary.
 // Cell now knows only its world coordinate and how to paint what it is told.
