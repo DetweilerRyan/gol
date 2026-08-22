@@ -1,0 +1,46 @@
+id: no-module-state-in-domain
+snapshots:
+  export let armedPattern = null:
+    labels:
+    - source: let armedPattern = null
+      style: primary
+      start: 7
+      end: 30
+    - source: export let armedPattern = null
+      style: secondary
+      start: 0
+      end: 30
+    - source: export let armedPattern = null
+      style: secondary
+      start: 0
+      end: 30
+  let cells:
+    labels:
+    - source: let cells
+      style: primary
+      start: 0
+      end: 9
+    - source: let cells
+      style: secondary
+      start: 0
+      end: 9
+  let generationCounter = 0:
+    labels:
+    - source: let generationCounter = 0
+      style: primary
+      start: 0
+      end: 25
+    - source: let generationCounter = 0
+      style: secondary
+      start: 0
+      end: 25
+  var listeners:
+    labels:
+    - source: var listeners
+      style: primary
+      start: 0
+      end: 13
+    - source: var listeners
+      style: secondary
+      start: 0
+      end: 13

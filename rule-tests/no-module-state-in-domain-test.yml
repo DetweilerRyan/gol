@@ -1,0 +1,17 @@
+id: no-module-state-in-domain
+valid:
+  - const NEIGHBOR_OFFSETS = [[-1, 0], [1, 0]]
+  - |
+    export function createStore() {
+      let cells = new Set()
+      return { size: () => cells.size }
+    }
+  - |
+    export function countNeighbors(liveCells) {
+      for (let i = 0; i < 8; i++) tally(i)
+    }
+invalid:
+  - let generationCounter = 0
+  - export let armedPattern = null
+  - var listeners
+  - let cells

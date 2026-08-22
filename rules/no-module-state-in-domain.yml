@@ -1,0 +1,50 @@
+id: no-module-state-in-domain
+language: TypeScript
+severity: warning
+message: Framework-free domain module must not hold module-level mutable state.
+note: >-
+  A domain module may own state -- src/liveCellStore.ts does -- but only state a factory creates
+  and hands back, one instance per caller. Module-level mutable state is a different thing: it is
+  shared by every importer, survives between tests in the same file, and cannot be constructed in
+  a known condition, so a test's outcome starts depending on what ran before it while every gate
+  still reports green. Put the binding inside the factory's closure and return the accessors.
+  This rule catches the `let`/`var` form, which is the one that reads as obviously mutable; the
+  `const registry = new Map()` form is mutable module state too and this matcher cannot see it --
+  that one is a review catch, so do not read a clean run here as proof there is none.
+# Domain modules are the framework-free .ts files at src/ root. Matching by glob rather
+# than by name means a NEW domain module is covered automatically -- a hand-listed set
+# would silently skip it, and a rule that matches nothing looks exactly like clean code.
+files:
+  - 'src/*.ts'
+# NB: ast-grep's `*` crosses `/`, so src/*.ts also reaches src/hooks/ etc. -- the
+# subdirectories must be excluded explicitly. A hook legitimately holds module-level
+# state (a jsdom stub handle, a listener registry scoped to the browser API it adapts),
+# and a test file's `let` fixture handle is the ordinary beforeEach idiom.
+ignores:
+  - 'src/hooks/**'
+  - 'src/components/**'
+  - 'src/catalyst/**'
+  - 'src/test-support/**'
+  - 'src/*.test.ts'
+  - 'src/test-setup.ts'
+rule:
+  all:
+    # Both declarator forms of both mutable keywords. `let x` and `let x = 1` are
+    # different nodes -- a pattern matches a whole node, so the initializer-less form
+    # is not a prefix of the initialized one and needs its own alternative. `const` is
+    # deliberately absent: an immutable binding to a frozen-by-convention constant
+    # (NEIGHBOR_OFFSETS in gameOfLife.ts, PATTERNS in patternLibrary.ts) is the shape
+    # this codebase is built on.
+    - any:
+        - pattern: let $NAME = $INIT
+        - pattern: let $NAME
+        - pattern: var $NAME = $INIT
+        - pattern: var $NAME
+    # Module scope only. Without this, every `let` inside a function body and every
+    # `for (let i = ...)` header matches -- measured against ast-grep 0.45.1, which is
+    # also where the export_statement arm comes from: `export let x = 1` nests the
+    # declaration one level deeper, so the bare `inside: program` arm misses it and the
+    # exported (worst) case would be the one that slipped through.
+    - any:
+        - inside: { kind: program }
+        - inside: { kind: export_statement, inside: { kind: program } }
