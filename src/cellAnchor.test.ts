@@ -63,6 +63,13 @@ describe('anchorHolds', () => {
       false,
     )
   })
+
+  it('holds at exactly ANCHOR_DRIFT_CELLS of drift on the y-axis', () => {
+    // Mirrors the x-axis exact-boundary cases above -- without it, the y-axis
+    // comparison's `<=` could regress to `<` (rejecting the boundary itself)
+    // with every other case here still passing.
+    expect(anchorHolds(anchor, { offsetX: anchor.x, offsetY: anchor.y + ANCHOR_DRIFT_CELLS, cellSize: 20 })).toBe(true)
+  })
 })
 
 describe('nextAnchor', () => {
