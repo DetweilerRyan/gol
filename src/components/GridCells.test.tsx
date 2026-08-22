@@ -1,4 +1,5 @@
 import { fireEvent, render, screen } from '@testing-library/react'
+import type { ReactElement } from 'react'
 import { describe, expect, it, vi } from 'vitest'
 import { slotPixelPosition, slotWorldCoordinate } from '../cellLattice'
 import { createLiveCellStore } from '../liveCellStore'
@@ -58,5 +59,37 @@ describe('GridCells lattice enumeration', () => {
     const leftPx = slotPixelPosition(2, LATTICE.cellSize) // column index of world x=1
     const topPx = slotPixelPosition(2, LATTICE.cellSize) // row index of world y=1
     expect(screen.getByRole('button', { name: 'Cell 1, 1' }).style.transform).toBe(`translate(${leftPx}px, ${topPx}px)`)
+  })
+
+  // React's key is never reflected in the DOM, so the two properties above
+  // can't see it -- this reads the element GridCells itself returns instead.
+  // GridCells(props) can't be called as a plain function (React Compiler
+  // injects a useMemoCache() call into every component it compiles, which
+  // needs a live dispatcher), so this calls it from inside a throwaway
+  // wrapper component's own render body -- a legitimate render call site --
+  // and returns null rather than mounting the captured element, since
+  // nothing here needs real DOM nodes.
+  function captureElement(props: React.ComponentProps<typeof GridCells>): ReactElement {
+    let captured: ReactElement | undefined
+    function Probe() {
+      captured = GridCells(props)
+      return null
+    }
+    render(<Probe />)
+    if (!captured) throw new Error('GridCells did not return an element')
+    return captured
+  }
+
+  it('returns exactly cols*rows Cell elements, keyed by the slot’s row-major index (j * cols + i), not the world coordinate', () => {
+    const element = captureElement({ ...LATTICE, store: createLiveCellStore(), onActivateCell: vi.fn() })
+    const keys = (element.props as { children: ReactElement[] }).children.map((child) => child.key)
+
+    const expectedKeys: string[] = []
+    for (let j = 0; j < LATTICE.rows; j++) {
+      for (let i = 0; i < LATTICE.cols; i++) {
+        expectedKeys.push(String(j * LATTICE.cols + i))
+      }
+    }
+    expect(keys).toEqual(expectedKeys)
   })
 })

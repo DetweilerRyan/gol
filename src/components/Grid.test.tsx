@@ -1,6 +1,7 @@
 import { fireEvent, render, screen, type RenderResult } from '@testing-library/react'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { DEFAULT_CELL_SIZE, screenToWorld, worldToScreen, type Camera } from '../camera'
+import { computeLattice, latticeOffsetPx } from '../cellLattice'
 import { DRAG_THRESHOLD_PX } from '../dragGesture'
 import { createLiveCellStore } from '../liveCellStore'
 import {
@@ -12,16 +13,29 @@ import {
 import { gridContentEl } from '../test-support/gridDom'
 import Grid, { GRID_CONTENT_ID } from './Grid'
 
-// Grid itself composes useElementSize (ResizeObserver), useWheelInput and
-// useGridPointerGestures (both getBoundingClientRect/pointer capture) -- each
-// of those has its own focused test for the API wiring itself. What's left
-// here is the composition: the DOM layering contract, the place-vs-toggle
-// dispatch, and one thin wiring test per hook proving Grid actually connects
-// its handlers rather than testing the handlers' own logic again. See
-// src/test-support/domStubs.ts for why each stub is needed. Pointer capture
-// is stubbed (unused beyond that) purely so jsdom doesn't throw when a
-// pointerdown-driven test calls setPointerCapture -- its own release-guard
-// behavior is useGridPointerGestures.test.tsx's job.
+// Grid itself composes useElementSize (ResizeObserver), useWheelInput,
+// useGridPointerGestures (both getBoundingClientRect/pointer capture), and
+// useCellLattice -- each of those has its own focused test for the API
+// wiring or math itself. What's left here is the composition: the DOM
+// layering contract (including that #grid-content itself never carries a
+// transform, since useGridPointerGestures/useWheelInput both read its
+// getBoundingClientRect), the place-vs-toggle dispatch, one thin wiring test
+// per hook proving Grid actually connects its handlers rather than testing
+// the handlers' own logic again, and the "lattice pan-stability" pair
+// proving a sub-cell pan skips cell re-renders while a whole-cell pan still
+// triggers them (the guard isn't vacuous). See src/test-support/domStubs.ts
+// for why each stub is needed. Pointer capture is stubbed (unused beyond
+// that) purely so jsdom doesn't throw when a pointerdown-driven test calls
+// setPointerCapture -- its own release-guard behavior is
+// useGridPointerGestures.test.tsx's job.
+//
+// underStryker gates one test in the "lattice pan-stability" describe below
+// -- see its own comment for why. globalThis.__stryker__ is set at module
+// load by any instrumented file's own bootstrap, before test collection, so
+// it reliably distinguishes a mutation-testing run from a normal one (see
+// useLiveCell.test.ts for the precedent).
+const underStryker = '__stryker__' in globalThis
+
 let resizeObserver: ResizeObserverController
 
 beforeEach(() => {
@@ -115,6 +129,23 @@ describe('DOM structure', () => {
 
     rerenderWith({ camera: { ...CAMERA, offsetX: CAMERA.offsetX + 5, offsetY: CAMERA.offsetY + 5 } })
     expect(content.style.transform).toBe('')
+  })
+
+  it("carries the transform one level in, on the layer div wrapping GridCells, via the lattice's offset", () => {
+    // The complement of the test above: the transform useGridPointerGestures/
+    // useWheelInput must never see on #grid-content itself has to live
+    // somewhere -- this pins it to the layer div one level inside, sourced
+    // from useCellLattice's offsetXPx/offsetYPx, plus the willChange hint.
+    // Deliberately a single render with no rerender/identity comparison (see
+    // "lattice pan-stability" below for that), so it isn't sensitive to
+    // whether a re-render happens -- only to what the layer div's style
+    // actually is.
+    const { container } = renderGrid()
+    const layerDiv = gridContentEl(container).firstElementChild as HTMLElement
+    const lattice = computeLattice(CAMERA, WIDTH, HEIGHT)
+    const { xPx, yPx } = latticeOffsetPx(lattice, CAMERA)
+    expect(layerDiv.style.transform).toBe(`translate(${xPx}px, ${yPx}px)`)
+    expect(layerDiv.style.willChange).toBe('transform')
   })
 
   it('renders the pattern preview after the cell buttons in DOM order', () => {
@@ -260,7 +291,18 @@ describe('wheel and preview wiring', () => {
 // Cell, so its call count is a direct per-cell render counter, cheaper and
 // more direct than counting DOM mutations.
 describe('lattice pan-stability', () => {
-  it('a sub-cell pan (same Math.floor(offsetX/offsetY)) re-renders zero cells', () => {
+  // The zero-calls half below is skipped under Stryker for the same reason
+  // useLiveCell.test.ts skips its resubscription test (see that file's
+  // comment on underStryker): Stryker's per-expression instrumentation of
+  // Grid.tsx defeats React Compiler's memoization of activateCell (see
+  // Grid.tsx's comment on activateCell), so every mutated build of this file
+  // re-renders every cell on every pan and this assertion fails in Stryker's
+  // dry run, before a single mutant executes -- npm run test:mutation never
+  // starts. The non-vacuous half just below asserts the opposite (that calls
+  // *do* happen), which holds regardless of whether the memoization survives
+  // instrumentation, so it stays unskipped and still exercises this
+  // describe's setup under mutation testing.
+  it.skipIf(underStryker)('a sub-cell pan (same Math.floor(offsetX/offsetY)) re-renders zero cells', () => {
     const store = createLiveCellStore()
     const { container, rerenderWith } = renderGrid({ store })
     const beforeCell = screen.getByRole('button', { name: 'Cell 0, 0' })
