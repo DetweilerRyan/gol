@@ -120,11 +120,17 @@ describe('parseArgs', () => {
     expect(parseArgs(['--feature', 'camera-pan-and-zoom'])).toEqual({ feature: 'camera-pan-and-zoom' })
   })
 
-  // Message text is node:util's own, not ours -- assert behaviour (it throws
-  // on this input) rather than pinning Node's exact wording, which would
-  // make the suite brittle against a runtime upgrade for no benefit.
-  it('throws when --feature is the last argument with no value', () => {
-    expect(() => parseArgs(['--feature'])).toThrow(/--feature/)
+  it('captures the value from the --feature=<name> form', () => {
+    expect(parseArgs(['--feature=infinite-grid'])).toEqual({ feature: 'infinite-grid' })
+  })
+
+  // Message text past the offending-argument/--feature pairing is node:util's
+  // own, not ours -- assert that pairing (it's the contract we restored:
+  // name what was wrong *and* what's valid) rather than pinning Node's exact
+  // wording, which would make the suite brittle against a runtime upgrade
+  // for no benefit.
+  it('throws when --feature is the last argument with no value, naming --feature and the accepted form', () => {
+    expect(() => parseArgs(['--feature'])).toThrow(/(?=.*--feature)(?=.*--feature <name>)/)
   })
 
   // The hazard this closes: `npm run acceptance-mutation -- infinite-grid` was
@@ -132,15 +138,17 @@ describe('parseArgs', () => {
   // unscoped suite while printing output indistinguishable from a genuinely
   // scoped run. Throwing here matches filterTargets' existing philosophy of
   // failing loudly rather than doing something other than what was asked.
-  it('throws naming a bare positional argument rather than silently ignoring it', () => {
-    expect(() => parseArgs(['infinite-grid'])).toThrow(/infinite-grid/)
+  it('throws naming a bare positional argument and the accepted form, rather than silently ignoring it', () => {
+    expect(() => parseArgs(['infinite-grid'])).toThrow(/(?=.*infinite-grid)(?=.*--feature <name>)/)
   })
 
-  it('throws naming an unrecognized flag rather than silently ignoring it', () => {
-    expect(() => parseArgs(['--nope'])).toThrow(/--nope/)
+  it('throws naming an unrecognized flag and the accepted form, rather than silently ignoring it', () => {
+    expect(() => parseArgs(['--nope'])).toThrow(/(?=.*--nope)(?=.*--feature <name>)/)
   })
 
-  it('throws naming the first unrecognized argument, not a later one', () => {
-    expect(() => parseArgs(['--other', 'x', '--feature', 'infinite-grid'])).toThrow(/--other/)
+  it('throws naming the first unrecognized argument, not a later one, alongside the accepted form', () => {
+    expect(() => parseArgs(['--other', 'x', '--feature', 'infinite-grid'])).toThrow(
+      /(?=.*--other)(?=.*--feature <name>)/,
+    )
   })
 })

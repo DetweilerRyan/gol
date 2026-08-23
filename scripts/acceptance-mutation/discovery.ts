@@ -85,12 +85,24 @@ export function filterTargets(targets: MutationTarget[], featureArg: string | un
 // since Node 18.3, under `strict: true` (the default) and
 // `allowPositionals: false` (also the default once strict is true). Check
 // the stdlib before writing the loop.
+//
+// Node's own rejection messages (e.g. "Unknown option '--nope'") name the
+// offending argument but not what *is* valid, and an agent invoking this
+// tool has to know both to recover. Catch and re-throw with the accepted
+// form appended, rather than replacing Node's text -- this is a message
+// fix, not a reason to reclaim the parsing logic itself.
 export function parseArgs(argv: string[]): { feature?: string } {
-  const { values } = nodeParseArgs({
-    args: argv,
-    options: { feature: { type: 'string' } },
-    strict: true,
-    allowPositionals: false,
-  })
+  let values: { feature?: string }
+  try {
+    ;({ values } = nodeParseArgs({
+      args: argv,
+      options: { feature: { type: 'string' } },
+      strict: true,
+      allowPositionals: false,
+    }))
+  } catch (error) {
+    const message = error instanceof Error ? error.message : String(error)
+    throw new Error(`${message}. The only accepted argument is --feature <name>.`)
+  }
   return values.feature === undefined ? {} : { feature: values.feature }
 }
