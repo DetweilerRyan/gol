@@ -55,6 +55,18 @@ export default defineConfig({
     {
       name: 'chromium-1920x1080',
       use: { ...devices['Desktop Chrome'], viewport: { width: 1920, height: 1080 } },
+      // The tile-boundary wobble family is a 1280x900 scenario and only a
+      // 1280x900 scenario. Its whole subject is a viewport that is a whisker
+      // wider than a whole number of tiles: 1280px at cellSize 8.192 is
+      // 39.0625 tiles, so the leading and trailing tile edges cross 0.25
+      // cells (2.048px) apart and a 5px wobble spans both. 1920px at the
+      // same cellSize is 58.5938 tiles -- the crossings sit 2.375 cells
+      // (19.5px) apart, further than any hand tremor travels, and no rung of
+      // the zoom ladder brings them closer at this width. Excluded here,
+      // loudly and with the reason, rather than left to fail its own
+      // precondition search at runtime (which would fail the suite) or to
+      // skip itself silently (which would hide why).
+      testIgnore: '**/tile-boundary.perf.spec.ts',
     },
   ],
   // Deliberately the opposite of playwright.config.ts's

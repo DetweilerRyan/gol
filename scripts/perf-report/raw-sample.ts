@@ -19,6 +19,14 @@ export interface RepSample {
   renderedCellCount: number
   metricsDelta: Record<string, number>
   wallClockMs: number
+  // DOM nodes added plus removed under the cell layer during this rep.
+  // OPTIONAL, and undefined rather than 0 when absent: only scenarios that
+  // asked perf/instrumentation.ts for a node-churn MutationObserver
+  // (currently just the tile-boundary wobble family) measure it at all, and
+  // a scenario that never measured churn has not measured zero churn. Every
+  // other scenario deliberately runs without that observer, so its numbers
+  // stay comparable with runs from before this field existed.
+  nodeChurnCount?: number
 }
 
 // buildMode travels per-sample rather than being read from the environment
@@ -86,6 +94,25 @@ function requireField<T>(
   return value
 }
 
+// The optional counterpart to requireField, with the same strictness where
+// it matters: an absent key is legitimate and yields undefined, but a key
+// that is present and malformed still throws rather than being quietly
+// dropped -- a scenario that wrote a NaN churn count has a bug worth hearing
+// about, and silently treating it as "not measured" would hide it.
+function optionalField<T>(
+  record: Record<string, unknown>,
+  key: string,
+  guard: (value: unknown) => value is T,
+  context: string,
+): T | undefined {
+  const value = record[key]
+  if (value === undefined) return undefined
+  if (!guard(value)) {
+    throw new Error(`${context}.${key}: present but invalid (got ${describe(value)})`)
+  }
+  return value
+}
+
 function parseRepSample(value: unknown, context: string): RepSample {
   const rep = asRecord(value, context)
   return {
@@ -96,6 +123,7 @@ function parseRepSample(value: unknown, context: string): RepSample {
     renderedCellCount: requireField(rep, 'renderedCellCount', isFiniteNumber, context),
     metricsDelta: requireField(rep, 'metricsDelta', isNumberRecord, context),
     wallClockMs: requireField(rep, 'wallClockMs', isFiniteNumber, context),
+    nodeChurnCount: optionalField(rep, 'nodeChurnCount', isFiniteNumber, context),
   }
 }
 

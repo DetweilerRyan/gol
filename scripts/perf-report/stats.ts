@@ -112,6 +112,24 @@ function normalizePerRep(reps: RepSample[], denominatorOf: (rep: RepSample) => n
   return result
 }
 
+// Median across reps of that rep's own churn-per-move-event, matching
+// normalizePerRep's per-rep-first shape rather than dividing a summed
+// numerator by a summed denominator.
+//
+// `null`, never 0, when no measured rep carried a nodeChurnCount -- which is
+// every scenario outside the tile-boundary wobble family, since they run
+// without the observer at all (see RepSample.nodeChurnCount). A rep with no
+// move events is skipped rather than dividing by zero, the same policy
+// normalizePerRep applies.
+function nodeChurnPerMoveEvent(reps: RepSample[]): number | null {
+  const ratios: number[] = []
+  for (const rep of reps) {
+    if (rep.nodeChurnCount === undefined || rep.moveEventCount === 0) continue
+    ratios.push(rep.nodeChurnCount / rep.moveEventCount)
+  }
+  return nullableMedian(ratios)
+}
+
 export interface ScenarioStats {
   scenario: string
   project: string
@@ -126,6 +144,7 @@ export interface ScenarioStats {
   wallClockMs: { median: number }
   moveEventCount: { median: number }
   renderedCellCount: { median: number }
+  nodeChurnPerMoveEvent: number | null
   metricsDeltaPerMoveEvent: Record<string, number | null>
   metricsDeltaPer1000Cells: Record<string, number | null>
 }
@@ -151,6 +170,7 @@ export function aggregate(sample: RawScenarioSample): ScenarioStats {
     wallClockMs: { median: median(measuredReps.map((rep) => rep.wallClockMs)) },
     moveEventCount: { median: median(measuredReps.map((rep) => rep.moveEventCount)) },
     renderedCellCount: { median: median(measuredReps.map((rep) => rep.renderedCellCount)) },
+    nodeChurnPerMoveEvent: nodeChurnPerMoveEvent(measuredReps),
     metricsDeltaPerMoveEvent: normalizePerRep(measuredReps, (rep) => rep.moveEventCount),
     metricsDeltaPer1000Cells: normalizePerRep(measuredReps, (rep) => rep.renderedCellCount / 1000),
   }

@@ -157,6 +157,39 @@ describe('parseRawScenarioSample', () => {
     expect(() => parseRawScenarioSample(validSample({ reps: [validRep(), rep] }))).toThrow(pattern)
   })
 
+  // nodeChurnCount is the one optional RepSample field. Absent is a valid
+  // sample (every scenario outside the tile-boundary wobble family), and the
+  // parse must leave it undefined rather than defaulting it to 0 -- a 0
+  // would read downstream as "measured no churn" instead of "did not
+  // measure churn".
+  it('accepts a rep with no nodeChurnCount and leaves it undefined, not 0', () => {
+    const result = parseRawScenarioSample(validSample())
+    expect(result.reps[1].nodeChurnCount).toBeUndefined()
+  })
+
+  it('carries a present nodeChurnCount through verbatim', () => {
+    const rep = { ...validRep(), nodeChurnCount: 35840 }
+    const result = parseRawScenarioSample(validSample({ reps: [validRep(), rep] }))
+    expect(result.reps[1].nodeChurnCount).toBe(35840)
+  })
+
+  it('accepts a nodeChurnCount of 0, distinguishing a measured zero from an absent field', () => {
+    const rep = { ...validRep(), nodeChurnCount: 0 }
+    const result = parseRawScenarioSample(validSample({ reps: [validRep(), rep] }))
+    expect(result.reps[1].nodeChurnCount).toBe(0)
+  })
+
+  it.each([
+    { name: 'a non-numeric nodeChurnCount', value: 'lots', kind: 'string' },
+    { name: 'a non-finite nodeChurnCount', value: Number.NaN, kind: 'number' },
+    { name: 'a null nodeChurnCount', value: null, kind: 'null' },
+  ])('rejects $name rather than treating it as not measured', ({ value, kind }) => {
+    const rep = { ...validRep(), nodeChurnCount: value }
+    expect(() => parseRawScenarioSample(validSample({ reps: [validRep(), rep] }))).toThrow(
+      new RegExp(`^raw scenario sample\\.reps\\[1\\]\\.nodeChurnCount: present but invalid \\(got ${kind}\\)$`),
+    )
+  })
+
   it('rejects a rep with a missing wallClockMs', () => {
     const rep = validRep() as Record<string, unknown>
     delete rep.wallClockMs

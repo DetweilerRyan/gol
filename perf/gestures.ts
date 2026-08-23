@@ -11,6 +11,7 @@
 // existed here, some future scenario would reach for it, and the resulting
 // number would look entirely plausible while measuring the wrong thing.
 import type { Locator, Page } from '@playwright/test'
+import { DRAG_THRESHOLD_PX } from '../src/dragGesture.ts'
 
 export interface Point {
   x: number
@@ -26,6 +27,58 @@ export async function panPaced(page: Page, from: Point, delta: Point, moves: num
   await page.mouse.down()
   for (let i = 1; i <= moves; i++) {
     await page.mouse.move(from.x + (delta.x * i) / moves, from.y + (delta.y * i) / moves)
+    await waitForNextFrame(page)
+  }
+  await page.mouse.up()
+  return moves
+}
+
+// A pointer drag that OSCILLATES between two x positions one animation frame
+// apart, instead of interpolating monotonically the way panPaced does.
+//
+// This exists because panPaced structurally cannot produce the gesture
+// cellTiles.ts's eviction-hysteresis comment describes as its known
+// weakness. panPaced walks from `from` to `from + delta` and never turns
+// around, so along either axis the camera's world offset is monotone for the
+// whole gesture -- and a monotone offset crosses each tile boundary at most
+// once. The failure mode being measured needs the offset to cross the SAME
+// pair of boundaries repeatedly in alternating directions, which no
+// monotone drag can express at any speed or length. Same reasoning as
+// zoomWheelPaced's alternating direction above (a one-directional zoom
+// clamps within ~5 ticks and then measures nothing): the non-monotone
+// driver is not a convenience, it is the only shape that reaches the
+// geometry.
+//
+// Two preconditions, both checked rather than commented, because either one
+// silently produces a plausible number rather than a failure:
+//
+//   - amplitudePx must exceed dragGesture.ts's DRAG_THRESHOLD_PX. The
+//     comparison there is strictly greater-than, and until the gesture
+//     crosses it advanceDrag reports zero pan deltas -- so a wobble at or
+//     under the threshold dispatches every pointermove and pans the camera
+//     not at all, reporting a full set of rAF frame intervals for a camera
+//     that never moved.
+//   - `moves` must be even. The pan delta is incremental (clientX -
+//     lastX), so an even number of alternating moves ends the drag back at
+//     `from` and nets exactly zero camera pan. That is what lets a
+//     scenario run repeated reps against one fixed tile-boundary phase: an
+//     odd count leaves the camera one amplitude away, and every subsequent
+//     rep measures a different phase than the one its precondition was
+//     asserted against.
+export async function panWobblePaced(page: Page, from: Point, amplitudePx: number, moves: number): Promise<number> {
+  if (amplitudePx <= DRAG_THRESHOLD_PX) {
+    throw new Error(
+      `panWobblePaced: amplitudePx must exceed DRAG_THRESHOLD_PX (${DRAG_THRESHOLD_PX}) or the drag never becomes a pan, got ${amplitudePx}`,
+    )
+  }
+  if (moves % 2 !== 0) {
+    throw new Error(`panWobblePaced: moves must be even so the gesture nets zero pan, got ${moves}`)
+  }
+
+  await page.mouse.move(from.x, from.y)
+  await page.mouse.down()
+  for (let i = 1; i <= moves; i++) {
+    await page.mouse.move(from.x + (i % 2 === 1 ? amplitudePx : 0), from.y)
     await waitForNextFrame(page)
   }
   await page.mouse.up()

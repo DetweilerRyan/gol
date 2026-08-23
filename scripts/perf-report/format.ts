@@ -74,6 +74,13 @@ function formatNullableMs(value: number | null): string {
   return value === null ? 'n/a' : formatMs(value)
 }
 
+// One decimal place: this is a count of DOM nodes per pointermove, and the
+// interesting distinction is between ~0 and several hundred, not between
+// 917.6 and 917.7.
+function formatNullableCount(value: number | null): string {
+  return value === null ? 'n/a' : value.toFixed(1)
+}
+
 const SCENARIO_HEADER = [
   'Scenario',
   'Project',
@@ -85,6 +92,9 @@ const SCENARIO_HEADER = [
   'Event dur p95(max)',
   'Long tasks (median)',
   'Wall clock (median)',
+  // "n/a" for every scenario that ran without perf/instrumentation.ts's
+  // node-churn observer -- read it as "not measured", not as "no churn".
+  'Node churn/move',
 ]
 
 function buildScenarioRow(stats: ScenarioStats): string[] {
@@ -99,6 +109,7 @@ function buildScenarioRow(stats: ScenarioStats): string[] {
     formatNullableMs(stats.eventDurationsMs.maxOfP95s),
     String(stats.longTaskCount.median),
     formatMs(stats.wallClockMs.median),
+    formatNullableCount(stats.nodeChurnPerMoveEvent),
   ]
 }
 

@@ -151,12 +151,23 @@ describe('renderLatestMarkdown', () => {
         'metricsDelta keys converted CDP-seconds -> ms: DevToolsCommandDuration, LayoutDuration, ProcessTime, RecalcStyleDuration, ScriptDuration, TaskDuration, TaskOtherDuration, ThreadTime, V8CompileDuration\n' +
         'TaskDuration/wallClock ratio (ms/ms, expect ~1.0): 10.0000\n' +
         '\n' +
-        'Scenario                   Project   CPU throttle  Reps  Frame Δ median  Frame Δ p95(max)  Event dur median  Event dur p95(max)  Long tasks (median)  Wall clock (median)\n' +
-        '-------------------------  --------  ------------  ----  --------------  ----------------  ----------------  ------------------  -------------------  -------------------\n' +
-        'pan-across-populated-grid  1280x900  1             2     17.00ms         17.90ms           n/a               n/a                 0                    1000.00ms          \n' +
+        'Scenario                   Project   CPU throttle  Reps  Frame Δ median  Frame Δ p95(max)  Event dur median  Event dur p95(max)  Long tasks (median)  Wall clock (median)  Node churn/move\n' +
+        '-------------------------  --------  ------------  ----  --------------  ----------------  ----------------  ------------------  -------------------  -------------------  ---------------\n' +
+        'pan-across-populated-grid  1280x900  1             2     17.00ms         17.90ms           n/a               n/a                 0                    1000.00ms            n/a            \n' +
         '\n' +
         'Full metricsDelta breakdown (per-move-event and per-1000-cells, ms for the keys listed above / raw counts+bytes for everything else): reports/perf/latest.json',
     )
+  })
+
+  // The column exists to make the tile-boundary wobble family's headline
+  // number readable without opening latest.json, and to keep "not measured"
+  // visibly different from "measured zero" for every other scenario.
+  it('renders node churn per move-event for a scenario that measured it, and n/a for one that did not', () => {
+    const measured = sample({ scenario: 'wobble', reps: [rep(), rep({ moveEventCount: 40, nodeChurnCount: 35840 })] })
+    const unmeasured = sample({ scenario: 'pan' })
+    const markdown = renderLatestMarkdown(buildLatestReport(ENV, [measured, unmeasured]))
+    expect(markdown).toMatch(/^wobble\s.*\s896\.0\s*$/m)
+    expect(markdown).toMatch(/^pan\s.*\sn\/a\s*$/m)
   })
 })
 

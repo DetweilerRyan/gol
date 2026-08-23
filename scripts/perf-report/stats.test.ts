@@ -157,6 +157,37 @@ describe('aggregate', () => {
     expect(stats[field].TaskDuration).toBe(expected)
   })
 
+  it('reports nodeChurnPerMoveEvent as null when no rep measured churn -- not 0', () => {
+    const stats = aggregate(sample())
+    expect(stats.nodeChurnPerMoveEvent).toBeNull()
+  })
+
+  it('medians nodeChurnCount/moveEventCount per rep, not summed numerator over summed denominator', () => {
+    const warmup = rep()
+    // Per-rep ratios 8 and 4 -> median 6. A summed-over-summed computation
+    // would give (800 + 200) / (100 + 50) = 6.67 instead.
+    const repA = rep({ moveEventCount: 100, nodeChurnCount: 800 })
+    const repB = rep({ moveEventCount: 50, nodeChurnCount: 200 })
+    const stats = aggregate(sample({ reps: [warmup, repA, repB] }))
+    expect(stats.nodeChurnPerMoveEvent).toBe(6)
+  })
+
+  it('reports a genuinely measured zero churn as 0, distinct from the unmeasured null above', () => {
+    const stats = aggregate(sample({ reps: [rep(), rep({ nodeChurnCount: 0 })] }))
+    expect(stats.nodeChurnPerMoveEvent).toBe(0)
+  })
+
+  it('skips a rep with zero move events rather than dividing by zero', () => {
+    const measured = rep({ moveEventCount: 0, nodeChurnCount: 100 })
+    const stats = aggregate(sample({ reps: [rep(), measured] }))
+    expect(stats.nodeChurnPerMoveEvent).toBeNull()
+  })
+
+  it('ignores a nodeChurnCount that only the discarded warm-up rep carried', () => {
+    const stats = aggregate(sample({ reps: [rep({ nodeChurnCount: 999 }), rep()] }))
+    expect(stats.nodeChurnPerMoveEvent).toBeNull()
+  })
+
   it('never reports a key present only in the discarded warm-up rep', () => {
     const warmup = rep({ metricsDelta: { OnlyInWarmup: 1 } })
     const measured = rep({ metricsDelta: {} })

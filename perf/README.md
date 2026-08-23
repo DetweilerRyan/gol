@@ -162,6 +162,111 @@ in `reports/perf/latest.json`) against `pan-default-empty`'s -- don't
 tune the harness (rep count, move count, seed size) to try to force the
 "expected" shape.
 
+## The tile-boundary wobble family (scenarios 6-8)
+
+`perf/tile-boundary.perf.spec.ts` is the one scenario family whose subject is
+a _geometry_, not a population or a zoom level, and it is the only one that
+uses a non-monotone gesture. Read `perf/gestures.ts`'s `panWobblePaced`
+header and `src/cellTiles.ts`'s `tileRangeHolds` comment before touching it.
+
+`cellTiles.ts` mounts a world-anchored tile range and keeps it while it still
+covers the viewport, tolerating up to `EVICT_LAG_TILES` of staleness on a
+side. That hysteresis protects the trailing edge only. Where the viewport is
+a whisker wider than a whole number of tiles, the leading and trailing tile
+edges cross within the same sub-cell step, so a small back-and-forth pan
+_shifts_ the covering set rather than widening it -- neither position's range
+contains the other's, and **every** step rebuilds. That defect shipped
+knowingly; this family is what measures it, before and after the fix.
+
+Nothing in scenarios 1-5 can see it. `panPaced` interpolates monotonically
+from `from` to `from + delta`, so the camera's world offset is monotone for
+the whole gesture, and a monotone offset crosses any given tile boundary at
+most once.
+
+### The geometry, and why 1280x900 only
+
+The two crossings sit `(widthPx / cellSize) mod TILE_SPAN_CELLS` cells apart
+-- so a wobble thrashes only when its travel exceeds that gap _and_ its phase
+straddles both crossings.
+
+| viewport | cellSize | width in cells | in tiles | gap between crossings |
+| -------- | -------- | -------------- | -------- | --------------------- |
+| 1280     | 8.192    | 156.250        | 39.0625  | 0.25 cells (2.048px)  |
+| 1280     | 10.240   | 125.000        | 31.2500  | 1.00 cell (10.24px)   |
+| 1280     | 20.000   | 64.000         | 16.0000  | coincident            |
+| 1920     | 8.192    | 234.375        | 58.5938  | 2.375 cells (19.5px)  |
+
+The wobble is 5px: above `dragGesture.ts`'s `DRAG_THRESHOLD_PX` of 4 (below
+it the drag never becomes a pan at all and the scenario measures a camera
+that never moved), and above 2.048px so it spans both crossings at 1280 /
+8.192. No rung of the zoom ladder brings the crossings within 5px of each
+other at 1920 wide, which is why `playwright.perf.config.ts` carries a
+`testIgnore` for this file on the 1920x1080 project -- excluded loudly, with
+the reason, rather than left to fail its own precondition search.
+
+### Every scenario asserts its own phase before measuring
+
+This is the part that matters. At 1280 / 8.192 the qualifying phase window is
+about 3 whole pixels out of a 32.768px tile pitch -- roughly 6%. Land outside
+it and the wobble is ordinary panning: the numbers come back clean, look like
+a successful measurement, and say nothing at all. Same failure shape as an
+unseeded population (see above), and handled the same way.
+
+`perf/tile-boundary.ts` therefore (a) reads the camera back out of the
+rendered DOM -- `#grid-content`'s own rect plus two cell buttons' rects --
+rather than assuming what the zoom clicks produced, and (b) predicts the
+rebuild count over the planned gesture using the app's _own_ policy function,
+`cellTiles.ts`'s `nextTileRange`. The thrash row asserts at least
+`moves - 2` predicted rebuilds; the two control rows assert at most 1.
+
+The setup nudge that finds the phase is applied **rightward**, and the
+direction is load-bearing rather than arbitrary: panning right decreases
+`offsetX` monotonically, which leaves the retained range's minimum tile
+exactly on the covering minimum. Approach from the other side and the
+retained range can be one tile wider on precisely the side the wobble travels
+toward, in which case it contains both of the wobble's covering sets, holds
+for the whole gesture, and the scenario measures a confident zero while every
+precondition still passes. See `findThrashNudgePx`'s comment.
+
+### The headline number is node churn, not milliseconds
+
+`instrumentation.ts` grows an optional `MutationObserver` (config's
+`nodeChurnSelector`) that counts DOM nodes added plus removed under the cell
+layer per rep, surfaced as `RepSample.nodeChurnCount` and reported as the
+`Node churn/move` column. Milliseconds are machine-specific and noisy; the
+strip mount/unmount count is exact, is what a hysteresis fix has to move, and
+is comparable between runs on different hardware.
+
+That field is **optional** on `RepSample`, and absent rather than `0` for
+every other scenario. Two reasons, both deliberate: a scenario that never
+attached the observer has not measured zero churn, and a `MutationObserver`
+over ~18,000 cell buttons is itself script work that would perturb the very
+`ScriptDuration`/`RecalcStyleDuration` numbers scenarios 1-5 exist to
+produce. The snapshot also carries `nodeChurnObserved`, which each rep
+asserts and which is never persisted -- without it, a mistyped selector
+reports 0 and is indistinguishable from the safe row's genuine 0.
+
+### What a good run looks like
+
+Measured on an Apple M2 Pro, 5 reps x 40 moves, `buildMode: perf`:
+
+| scenario                       | tiles across | churn/rep            | churn/move | wall clock/rep | ScriptDuration/rep |
+| ------------------------------ | ------------ | -------------------- | ---------- | -------------- | ------------------ |
+| `wobble-tile-boundary-thrash`  | 39.0625      | 35,840               | 896        | 3,488ms        | 1,346ms            |
+| `wobble-tile-boundary-safe`    | 31.2500      | 0                    | 0          | 821ms          | 16ms               |
+| `wobble-tile-boundary-aligned` | 16.0000      | 192 on rep 0, then 0 | 0          | 690ms          | 13ms               |
+
+35,840 is 40 moves x 896 nodes, and 896 is one entering strip plus one
+leaving strip: 4 cells x 112 rows x 2. The aligned row's 192 is a single
+one-directional widening (4 x 48 cells, admitted and never evicted) on the
+first rep only -- the rebuild-once-and-settle signature, and a third
+independent confirmation that the observer works, since it sits between the
+other two rows rather than at either extreme.
+
+If the thrash row ever reads 0 while its precondition still passes, suspect a
+pan-sign disagreement between the nudge, `simulateWobbleRebuilds`, and
+`camera.ts`'s `panCamera` before touching the amplitude.
+
 ## No baseline is committed
 
 `reports/` is gitignored, and nothing under it -- raw samples, `latest.md`,
