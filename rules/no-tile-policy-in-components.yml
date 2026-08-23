@@ -1,0 +1,40 @@
+id: no-tile-policy-in-components
+language: Tsx
+severity: warning
+message: A component imported the tile MOUNTING POLICY -- the mounted range arrives as a prop, never recomputed here.
+note: >-
+  coveringTileRange and nextTileRange are cellTiles.ts's mounting POLICY, and the only production
+  caller is useCellTiles.ts. A component must take the mounted TileRange as a prop instead, because
+  the mounted range and the covering set are deliberately DIFFERENT: nextTileRange rebuilds onto the
+  eviction-lag-clamped union of the previous range and the covering set, so the mounted range
+  permanently exceeds the bare cover by up to EVICT_LAG_TILES per side. That gap is the whole
+  hysteresis fix -- it is what stops a sub-cell wobble at a just-over-a-whole-tile viewport width
+  from rebuilding the range on every pointermove. A component that recomputed coveringTileRange for
+  itself would mount the bare cover, silently reintroduce that thrash one layer below the policy
+  module, and still agree with every test that checks a range against coveringTileRange. Reading the
+  range's own fields (tileKey, tileOriginCell, TileRange, minTileX..maxTileY) is fine and is what
+  GridCells.tsx/CellTile.tsx already do; deciding WHICH tiles are mounted is not.
+# Scoped to the component layer rather than to src/**: useCellTiles.ts is the one legitimate caller
+# of both functions, so a repo-wide rule would need a named exception for it and would not have a
+# clean baseline. The hook layer is where mounting policy is allowed to be consumed; the component
+# layer is where it must arrive already decided. `npm run ast-grep:rules` fails if this glob stops
+# resolving, so a directory rename surfaces as a gate failure rather than as silence.
+files:
+  - 'src/components/*.tsx'
+# Grid.test.tsx and GridCells.test.tsx import both functions deliberately -- they assert the
+# component layer against the policy module's own output, which is the one place the two are
+# legitimately compared.
+ignores:
+  - 'src/components/*.test.tsx'
+# Metavariables do not interpolate inside string literals, so the import PATH has to be matched with
+# kind: + regex: rather than with a pattern -- two of this repo's rules were silently inert for
+# exactly that mistake. The two regexes are ANDed against the SAME import_statement node, so an
+# import of a permitted binding from '../cellTiles' and an import of a same-named binding from some
+# other module both stay clean. The identifier regex crosses newlines because it is matched against
+# the whole node's text, which is what catches the multi-line `import {\n  nextTileRange,\n } from`
+# form Prettier produces once the binding list grows.
+rule:
+  all:
+    - kind: import_statement
+    - regex: 'from [''"]\.\./cellTiles[''"]'
+    - regex: '\b(coveringTileRange|nextTileRange)\b'

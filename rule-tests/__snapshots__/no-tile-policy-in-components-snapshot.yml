@@ -1,0 +1,36 @@
+id: no-tile-policy-in-components
+snapshots:
+  ? |
+    import {
+      coveringTileRange,
+      enteringStripCellCount,
+      TILE_SPAN_CELLS,
+    } from '../cellTiles'
+  : labels:
+    - source: |-
+        import {
+          coveringTileRange,
+          enteringStripCellCount,
+          TILE_SPAN_CELLS,
+        } from '../cellTiles'
+      style: primary
+      start: 0
+      end: 96
+  import { coveringTileRange } from '../cellTiles':
+    labels:
+    - source: import { coveringTileRange } from '../cellTiles'
+      style: primary
+      start: 0
+      end: 48
+  import { nextTileRange } from '../cellTiles':
+    labels:
+    - source: import { nextTileRange } from '../cellTiles'
+      style: primary
+      start: 0
+      end: 44
+  import { tileKey, nextTileRange } from '../cellTiles':
+    labels:
+    - source: import { tileKey, nextTileRange } from '../cellTiles'
+      style: primary
+      start: 0
+      end: 53

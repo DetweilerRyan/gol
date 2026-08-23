@@ -1,0 +1,29 @@
+id: no-tile-policy-in-components
+valid:
+  # GridCells.tsx's and CellTile.tsx's actual imports: range FIELDS and helpers,
+  # not policy. These are the reason the rule names two functions rather than
+  # banning the module.
+  - import { tileKey, type TileRange } from '../cellTiles'
+  - import { tileOriginCell } from '../cellTiles'
+  - import { TILE_SPAN_CELLS } from '../cellTiles'
+  # The legitimate route: the decided range arrives through the hook.
+  - import { useCellTiles } from '../hooks/useCellTiles'
+  # Same binding NAME, different module -- the path half of the rule has to
+  # carry its own weight.
+  - import { coveringTileRange } from '../gridGeometry'
+  # A prose mention is not an import. GridCells.tsx's header names
+  # nextTileRange three times.
+  - // only grows or shrinks at the covering set's edge (see cellTiles.ts's nextTileRange)
+invalid:
+  - import { coveringTileRange } from '../cellTiles'
+  - import { nextTileRange } from '../cellTiles'
+  # Mixed with a permitted binding: the policy import still has to fire.
+  - import { tileKey, nextTileRange } from '../cellTiles'
+  # The multi-line form Prettier produces once the list grows -- Grid.test.tsx's
+  # own import shape, and the case a newline-naive regex would miss.
+  - |
+    import {
+      coveringTileRange,
+      enteringStripCellCount,
+      TILE_SPAN_CELLS,
+    } from '../cellTiles'
