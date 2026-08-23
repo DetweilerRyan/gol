@@ -18,8 +18,11 @@ import { cameraArbitrary as camera } from './test-support/arbitraries'
 // The first two properties (reference identity, idempotence) landed with the
 // module in step 1 -- they are the no-infinite-loop guarantee behind
 // useCellTiles' setState-during-render pattern, and were ported forward from
-// cellLattice.property.test.ts's 'nextLattice (property)' block. Everything
-// below them was added at the architect review pass.
+// cellLattice.property.test.ts's 'nextLattice (property)' block. Most of the
+// rest was added at the architect review pass; the 'retention, not
+// admission' and 'bounded wobble' describes near the bottom were specified
+// at that same review but landed with the fix-tile-hysteresis policy change
+// itself (coder, on the architect's explicit written delegation).
 
 const viewportPx = fc.integer({ min: 0, max: 4000 })
 const spanCellsArbitrary = fc.integer({ min: 1, max: 16 })
@@ -127,10 +130,15 @@ describe('nextTileRange coverage and slack (property)', () => {
     },
   )
 
-  // The bound above is tight rather than generous: a pan travelling exactly
-  // one tile span per step rebuilds on (almost) every step, so a mutant that
-  // rebuilt more eagerly has nowhere to hide. Pinned deterministically
-  // because the property's own generator reaches this only by luck.
+  // The bound above is tight, not just generous, on a SINGLE edge's own
+  // cadence (the 1x floor(T/span)+1 the 2x bound is built from -- see that
+  // property's comment): a pan travelling exactly one tile span per step
+  // rebuilds on (almost) every step, so a mutant that rebuilt more eagerly
+  // has nowhere to hide. This axis-aligned pan never desynchronizes the two
+  // edges (the leading edge alone drives every rebuild here, so the 2x
+  // factor never engages), which is why 10-of-10 demonstrates the 1x
+  // cadence rather than the 2x ceiling. Pinned deterministically because the
+  // property's own generator reaches this only by luck.
   it('and that bound is tight: a pan of exactly TILE_SPAN_CELLS per step rebuilds on nearly every step', () => {
     const cam: Camera = { offsetX: 0, offsetY: 0, cellSize: 20 }
     let range = coveringTileRange(cam, 160, 160, TILE_SPAN_CELLS)
@@ -150,8 +158,9 @@ describe('nextTileRange coverage and slack (property)', () => {
 // The two properties specified at the architect's hysteresis-design review,
 // which mechanically distinguish retention (the adopted policy) from
 // admission overscan (the rejected one). Both were confirmed red against a
-// deliberately broken implementation before landing -- see the coder's
-// handoff for what was reverted to get each one to fail.
+// deliberately broken implementation before landing -- see this commit's own
+// message (the "rebuild onto a retained range instead of required exactly"
+// commit) for exactly what was reverted to get each one to fail.
 describe('nextTileRange retention, not admission (property)', () => {
   // Per-axis, not a 2D-set claim: a diagonal rebuild's corner tile really is
   // new (neither axis's own previous/required pair contains it alone), so

@@ -68,22 +68,26 @@ import type { Camera } from './camera'
 export const TILE_SPAN_CELLS = 4
 
 // How many tiles of margin a retained range may carry beyond the covering
-// set, on any one side, before nextTileRange rebuilds it exactly. This is
-// EVICTION HYSTERESIS, not admission overscan, and the two are easy to
-// conflate with prior art (e.g. TanStack Virtual's `overscan`) -- worth
-// stating plainly since the first reader to meet that library will otherwise
-// assume EVICT_LAG_TILES is the same knob and "fix" it:
+// set, on any one side, before nextTileRange rebuilds. This is EVICTION
+// HYSTERESIS, not admission overscan, and the two are easy to conflate with
+// prior art (e.g. TanStack Virtual's `overscan`) -- worth stating plainly
+// since the first reader to meet that library will otherwise assume
+// EVICT_LAG_TILES is the same knob and "fix" it:
 //
 //   - overscan is an ADMISSION margin: always mount N extra tiles beyond the
 //     covering set, symmetrically, on every render. Permanent cost, buys
 //     tolerance for a scroll/pan that outruns the render.
-//   - EVICT_LAG_TILES is EVICTION hysteresis: admit exactly the covering set,
-//     but tolerate up to this many stale tiles on a side before rebuilding.
-//     Transient cost only, and one-sided -- it buys freedom from boundary
-//     thrash at the TRAILING edge, not at the leading one. Read
-//     tileRangeHolds' comment before assuming it prevents thrash generally;
-//     it does not, and cellTiles.property.test.ts pins the case where it
-//     doesn't.
+//   - EVICT_LAG_TILES is EVICTION hysteresis: mount at most this many stale
+//     tiles beyond the covering set on a side, retained from `previous`
+//     rather than admitted fresh, before rebuilding evicts them. Transient
+//     cost only, and one-sided -- it buys freedom from boundary thrash at
+//     the TRAILING edge, not at the leading one; tileRangeHolds' own
+//     containment check cannot bound a same-boundary wobble by itself (see
+//     its comment), only nextTileRange's retention policy below does. The
+//     residual limit that's still true after the fix: an oscillation
+//     spanning two or more tile boundaries still rebuilds once per reversal
+//     -- see nextTileRange's own comment for why that's disclosed rather
+//     than fixed.
 //
 // They are composable but this design adopts hysteresis only, and admission
 // overscan was considered and rejected on measurement, not on the (false)
