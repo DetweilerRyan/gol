@@ -2,18 +2,19 @@ import { defineConfig } from 'crap4ts'
 
 // The scripts/-scoped twin of crap4ts.config.ts. scripts/ holds this repo's
 // own quality tooling -- the Gherkin acceptance mutator, the Gherkin DRY
-// checker, the Halstead reporter, and the ast-grep rule checker -- which sits
-// underneath every other role's quality gate and so gets held to the same bar
-// as src/ rather than being exempt from it.
+// checker, the Halstead reporter, the perf reporter, the ast-grep rule
+// checker, and the agent-doc checker -- which sits underneath every other
+// role's quality gate and so gets held to the same bar as src/ rather than
+// being exempt from it.
 //
 // The run.ts entry points are excluded: they're I/O shells (argv-free CLI mains
 // that read the filesystem, spawn vitest, and console.log a table), exercised
 // end to end by actually running `npm run acceptance-mutation` / `gherkin-dry`
-// / `halstead4ts` / `ast-grep:rules`, not by unit tests -- the same reason
-// App.tsx/main.tsx are excluded from crap4ts.config.ts. Everything they
-// delegate to is a pure module, and every such module is picked up by the glob
-// below without being registered by hand -- see crap4ts.config.ts for why the
-// enumerated version was a liability.
+// / `halstead4ts` / `perf-report` / `ast-grep:rules` / `agent-doc-check`, not
+// by unit tests -- the same reason App.tsx/main.tsx are excluded from
+// crap4ts.config.ts. Everything they delegate to is a pure module, and every
+// such module is picked up by the glob below without being registered by hand
+// -- see crap4ts.config.ts for why the enumerated version was a liability.
 //
 // Threshold 6 is deliberately the same number crap4ts.config.ts uses rather
 // than a looser scripts-specific bar. The parsing/dispatch code here does read
