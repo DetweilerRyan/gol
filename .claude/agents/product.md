@@ -71,7 +71,7 @@ The contract's feedback loop, run in SPECIFY before the implementing roles start
                       right altitude for the Gherkin layer?
 3. coder              optional, and required only if step 4 is wanted.
                       Throwaway-minimal spike implementation. NOT COMMITTED.
-4. you (SPECIFY)      npm run acceptance-mutation -- <feature>   (scoped)
+4. you (SPECIFY)      npm run acceptance-mutation -- --feature <name>  (scoped)
                       refine: kill survivors, drop parameters that kill
                       nothing, tighten step text.
 5. orchestrator       discards the spike implementation.
