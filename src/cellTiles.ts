@@ -85,9 +85,12 @@ export const TILE_SPAN_CELLS = 4
 //     containment check cannot bound a same-boundary wobble by itself (see
 //     its comment), only nextTileRange's retention policy below does. The
 //     residual limit that's still true after the fix: an oscillation
-//     spanning two or more tile boundaries still rebuilds once per reversal
-//     -- see nextTileRange's own comment for why that's disclosed rather
-//     than fixed.
+//     spanning two or more tile boundaries still rebuilds once per
+//     reversal. Read "two or more tile boundaries" as a fact about the
+//     REALIZED tile indices, not about the pan distance a caller asked for
+//     -- float rounding can turn a one-span request into a two-tile shift.
+//     See nextTileRange's own comment for both halves of that, and for why
+//     it is disclosed rather than fixed.
 //
 // They are composable but this design adopts hysteresis only, and admission
 // overscan was considered and rejected on measurement, not on the (false)
@@ -246,13 +249,35 @@ function axisRetained(
 // rebuild (tileRangeHolds' NOTE-THE-ASYMMETRY comment explains why that
 // predicate alone can't): after the first rebuild, the trailing edge in
 // whichever direction the wobble reverses toward carries up to one tile of
-// slack, so the reversal still holds. The residual limit, disclosed rather
-// than fixed: an oscillation spanning two or more tile boundaries still
-// rebuilds once per reversal, because a single tile of lag can't cover a
-// two-tile swing. At cellSize 8.192 that's a 65px sweep each way --
-// deliberate panning, whose churn is proportional to real travel, not a
-// sub-pixel wobble -- so EVICT_LAG_TILES stays 1 rather than widening to
-// absorb it (see cellTiles.property.test.ts's 'eviction hysteresis' block).
+// slack, so the reversal still holds. THAT BOUND IS OVER THE REALS, and the
+// residual below is where the distinction stops being pedantic.
+//
+// THE RESIDUAL LIMIT, disclosed rather than fixed: an oscillation whose
+// REALIZED tile indices swing by two or more tiles still rebuilds on every
+// reversal, because a single tile of lag cannot cover a two-tile swing.
+// A swing gets there two ways, and the second is easy to miss:
+//
+//   1. By real travel. At cellSize 8.192 a two-tile swing is a 65px sweep
+//      each way -- deliberate panning, whose churn is proportional to the
+//      distance actually covered.
+//   2. By float rounding, at an amplitude of exactly one span. `offset +
+//      TILE_SPAN_CELLS` rounds ONTO a tile boundary when `offset` sits
+//      within half an ulp below one, and Math.floor then jumps two tile
+//      indices rather than one: floor(-Number.MIN_VALUE) is -1, but
+//      floor(-Number.MIN_VALUE + 4) is 4. Nothing is wrong with the
+//      guarantee -- the exact amplitude there is 4 + 5e-324, genuinely more
+//      than one span -- but any prose (or test) that states the bound over a
+//      REQUESTED float amplitude is claiming more than this function
+//      delivers. cellTiles.property.test.ts's bounded-wobble block states
+//      its precondition on the realized covering sets for exactly that
+//      reason, after the requested-amplitude form made that block ~13%
+//      flaky; it pins the band on both axes and both signs.
+//
+// Neither case moves EVICT_LAG_TILES off 1. The band in (2) is ulp-wide
+// (~2e-16 cells at the origin) and unreachable through the UI -- qa swept
+// pointer phase 0-32px against amplitudes of 1, 2, 3, 5 and 8px through the
+// real app and found zero sustained churn -- and (1) is real panning. See
+// cellTiles.property.test.ts's 'eviction hysteresis' block.
 //
 // Pure, and deliberately here rather than inline in useCellTiles, for the
 // same reason cellLattice.ts's nextLattice was -- two properties the hook's

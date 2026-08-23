@@ -263,23 +263,112 @@ describe('nextTileRange retention, not admission (property)', () => {
   })
 })
 
+// THE WOBBLE BOUND, AND THE FLOAT BOUNDARY IT IS NOT ALLOWED TO CLAIM. Two
+// separate statements live here, and keeping them apart is the whole
+// correction this block carries (qa blocked the slice on the old version;
+// this is that finding's fix):
+//
+//   THE THEOREM, over the REALS: an offset shift of at most one tile span
+//   moves any single floor/ceil-derived tile boundary by at most one tile,
+//   which is exactly what EVICT_LAG_TILES = 1 retains -- so once the first
+//   rebuild has absorbed that shift, the range contains both positions'
+//   covering sets and every further reversal holds.
+//
+//   WHAT THE CODE ACTUALLY RUNS ON: doubles. This property used to state its
+//   precondition on the REQUESTED float amplitude (|amp| <= TILE_SPAN_CELLS)
+//   while the loop drove nextTileRange with the REALIZED offset
+//   `camA.offsetX + ampX` -- and that addition rounds. At an offset within
+//   half an ulp below a tile boundary the sum lands exactly ON the next
+//   boundary, so Math.floor jumps TWO tile indices rather than one:
+//   floor(-Number.MIN_VALUE) is -1 but floor(-Number.MIN_VALUE + 4) is 4, a
+//   five-cell shift. The theorem is untouched -- the exact amplitude there
+//   is 4 + 5e-324, genuinely MORE than one span, so it lands in the
+//   >= 2-boundary residual cellTiles.ts already discloses. The TEST was the
+//   thing asserting more than the design guarantees, and it failed ~13% of
+//   runs of this file (measured: 9 of 60) because fc.float biases hard
+//   toward both subnormals and range extremes and so hits that conjunction
+//   often. A single green run is what let it through.
+//
+// So the precondition is now stated where it can be checked EXACTLY -- on
+// the realized covering sets, which are integers -- rather than on a float
+// amplitude, and as an EQUIVALENCE rather than an implication. That makes
+// the degenerate band an ASSERTED case of this property rather than one
+// filtered out of it: the arbitraries below are unchanged and still generate
+// it, the reverse direction states what it must do, and the 'float boundary'
+// rows below pin it deterministically on both axes and both signs, per this
+// repo's pin-the-edge-values convention.
 describe('nextTileRange bounded wobble (property)', () => {
-  // Generalises the deterministic sub-cell-wobble counterexample above: ANY
-  // two-position oscillation whose amplitude is at most TILE_SPAN_CELLS
-  // cells on each axis rebuilds at most once, no matter how long it runs.
-  // Provable from the clamp, not just observed: an offset shift of at most
-  // one span moves any single floor/ceil-derived tile boundary by at most
-  // one tile, which is exactly what EVICT_LAG_TILES=1 retains -- so once the
-  // first rebuild (if any) has absorbed that shift, the range contains both
-  // positions' covering sets and every further reversal holds. Killing
-  // mutant: reverting the rebuild target from the retained union back to
-  // `required` (i.e. axisRetained's clamp low/high collapsed to a single
-  // value), which reintroduces the pre-fix defect this whole slice exists to
-  // remove.
+  // The largest per-bound gap between two covering sets, in tiles. Tile
+  // indices are integers, so unlike the float amplitude this replaces, this
+  // quantity is exact -- which is the entire point of restating the
+  // precondition in terms of it.
+  const maxBoundShiftTiles = (a: TileRange, b: TileRange) =>
+    Math.max(
+      Math.abs(b.minTileX - a.minTileX),
+      Math.abs(b.maxTileX - a.maxTileX),
+      Math.abs(b.minTileY - a.minTileY),
+      Math.abs(b.maxTileY - a.maxTileY),
+    )
+
+  // camB FIRST, and that ordering is load-bearing rather than incidental --
+  // see the reverse direction in the property's comment below. Flipping it
+  // to camA-first makes the reverse direction false at steps = 2 and this
+  // property flaky again in a brand new way (measured: 8,158 of 32,632
+  // band cases drop to a single rebuild under camA-first).
+  const oscillationRebuilds = (camA: Camera, camB: Camera, width: number, height: number, steps: number) => {
+    let range = coveringTileRange(camA, width, height, TILE_SPAN_CELLS)
+    let rebuilds = 0
+
+    for (let k = 0; k < steps; k++) {
+      const next = nextTileRange(range, k % 2 === 0 ? camB : camA, width, height)
+      if (next !== range) rebuilds++
+      range = next
+    }
+
+    return rebuilds
+  }
+
+  // FORWARD direction (rebuilds <= 1 when the two covering sets sit within
+  // EVICT_LAG_TILES on every bound) is the design guarantee this whole slice
+  // exists to deliver, and it is where this block's detection lives.
   //
-  // The residual limit this does NOT cover -- an oscillation spanning two or
-  // more tile boundaries still rebuilds once per reversal -- is disclosed,
-  // not fixed; see cellTiles.ts's nextTileRange comment.
+  // REVERSE direction (a bound shifted two or more tiles really does rebuild
+  // at least twice) is what makes this an EQUIVALENCE, and it is why the
+  // degenerate band can stay inside the property instead of being filtered
+  // out of it. It is a theorem of the clamp rather than an observation: the
+  // loop starts from an EXACT cover of camA, so any bound of camB's covering
+  // set sitting >= 2 tiles away either breaks containment or exceeds the
+  // slack tolerance, and step 0 rebuilds; that rebuild retains at most
+  // EVICT_LAG_TILES = 1 tile of the gap, so camA is still out of tolerance
+  // at step 1 and rebuilds again. Checked at over 80,000 genuine >= 2-tile
+  // cases across three sweeps (structured band offsets over tile boundaries
+  // -2000..2000 x cellSize 8..60 x viewports including 0x0 and 4000x4000 x
+  // both axes x both signs, plus an independent randomized one): zero
+  // violations, and every case rebuilt on EVERY step rather than merely
+  // twice.
+  //
+  // WHAT THIS ACTUALLY CATCHES, measured against five hand-built mutants
+  // rather than asserted -- stated here because a property nobody has seen
+  // fail is documentation, and because the sibling monotone-pan bound above
+  // had to make the opposite admission:
+  //
+  //   - Rebuilding onto `required` exactly (the pre-fix policy this slice
+  //     removed): RED here, and red on all six guaranteed-regime rows below.
+  //     The 'eviction hysteresis' block's sub-cell-wobble test also catches
+  //     it; the bounded-slack and no-speculative-admission properties do not.
+  //   - One-sided retention (axisRetained's max clamp collapsed to
+  //     `requiredMax`): RED here, and on the two -span rows below. NOTHING
+  //     ELSE IN THIS FILE CATCHES IT -- this is the property's own unique
+  //     kill, and the reason it earns its place rather than restating the
+  //     bounded-slack property in other words.
+  //   - Dropping axisRetained's clamp floor (retention -> unconditional
+  //     overscan): RED here, and also caught by no-speculative-admission.
+  //   - Never returning `previous` by reference: RED here, and caught by
+  //     four other blocks -- not this property's to claim.
+  //   - Dropping axisHolds' max-side containment check: caught by
+  //     bounded-slack and by the two ceil-edge 'float boundary' rows below;
+  //     the property itself stays green, so the pins are load-bearing here
+  //     and not merely illustrative.
   it.prop([
     camera,
     viewportPx,
@@ -288,27 +377,28 @@ describe('nextTileRange bounded wobble (property)', () => {
     fc.float({ min: Math.fround(-TILE_SPAN_CELLS), max: Math.fround(TILE_SPAN_CELLS), noNaN: true }),
     fc.integer({ min: 2, max: 40 }),
   ])(
-    'a two-position oscillation of amplitude <= TILE_SPAN_CELLS cells rebuilds at most once in total',
+    'a two-position oscillation rebuilds at most once exactly when the two covering sets sit within EVICT_LAG_TILES on every bound',
     (camA, width, height, ampX, ampY, steps) => {
       const camB: Camera = { ...camA, offsetX: camA.offsetX + ampX, offsetY: camA.offsetY + ampY }
-      let range = coveringTileRange(camA, width, height, TILE_SPAN_CELLS)
-      let rebuilds = 0
+      const rebuilds = oscillationRebuilds(camA, camB, width, height, steps)
 
-      for (let k = 0; k < steps; k++) {
-        const cam = k % 2 === 0 ? camB : camA
-        const next = nextTileRange(range, cam, width, height)
-        if (next !== range) rebuilds++
-        range = next
-      }
+      const withinLag =
+        maxBoundShiftTiles(
+          coveringTileRange(camA, width, height, TILE_SPAN_CELLS),
+          coveringTileRange(camB, width, height, TILE_SPAN_CELLS),
+        ) <= EVICT_LAG_TILES
 
-      expect(rebuilds).toBeLessThanOrEqual(1)
+      expect(rebuilds <= 1).toBe(withinLag)
     },
   )
 
-  // Pinned deterministically: the amplitude EXACTLY at the TILE_SPAN_CELLS
-  // boundary, on each axis independently and on both diagonally, and at the
-  // 0x0 pre-measurement viewport -- edges a generator weighted toward the
-  // interior of the range can miss for a long time.
+  // The GUARANTEED regime, pinned deterministically: an amplitude exactly at
+  // the TILE_SPAN_CELLS boundary -- the edge between the guarantee and the
+  // residual -- on each axis independently, on both signs, diagonally, and at
+  // the 0x0 pre-measurement viewport. offsetX/offsetY of -0.1 is chosen
+  // deliberately: a mid-cell phase, far enough from any tile boundary that
+  // adding a span rounds exactly, so these rows exercise the real-arithmetic
+  // theorem rather than the float band the next block pins.
   it.each<[string, number, number, number, number]>([
     ['exactly TILE_SPAN_CELLS on x only', TILE_SPAN_CELLS, 0, 1280, 900],
     ['exactly -TILE_SPAN_CELLS on x only', -TILE_SPAN_CELLS, 0, 1280, 900],
@@ -319,17 +409,99 @@ describe('nextTileRange bounded wobble (property)', () => {
   ])('%s', (_label, ampX, ampY, width, height) => {
     const camA: Camera = { offsetX: -0.1, offsetY: -0.1, cellSize: 20 }
     const camB: Camera = { ...camA, offsetX: camA.offsetX + ampX, offsetY: camA.offsetY + ampY }
-    let range = coveringTileRange(camA, width, height, TILE_SPAN_CELLS)
-    let rebuilds = 0
 
-    for (let k = 0; k < 20; k++) {
-      const cam = k % 2 === 0 ? camB : camA
-      const next = nextTileRange(range, cam, width, height)
-      if (next !== range) rebuilds++
-      range = next
-    }
+    expect(
+      maxBoundShiftTiles(
+        coveringTileRange(camA, width, height, TILE_SPAN_CELLS),
+        coveringTileRange(camB, width, height, TILE_SPAN_CELLS),
+      ),
+    ).toBeLessThanOrEqual(EVICT_LAG_TILES)
+    expect(oscillationRebuilds(camA, camB, width, height, 20)).toBeLessThanOrEqual(1)
+  })
 
-    expect(rebuilds).toBeLessThanOrEqual(1)
+  // THE FLOAT BOUNDARY, pinned deterministically -- the band that made this
+  // block 13% flaky, now asserted on rather than generated by luck. Each row
+  // REQUESTS an amplitude of exactly one tile span and REALIZES a two-tile
+  // shift, because `camA.offset + amp` rounds onto the boundary exactly; in
+  // exact arithmetic the amplitude is a hair over one span, so these are the
+  // >= 2-boundary residual (cellTiles.ts's nextTileRange comment), not a
+  // defect. qa swept phase 0-32px x amplitude {1,2,3,5,8}px through the real
+  // UI and found zero sustained churn, so this is unreachable by a user: an
+  // ulp-wide band cannot be landed on by a pointer.
+  //
+  // Two things each row asserts, deliberately both: that the shift really is
+  // two tiles (the mechanism -- otherwise a future rounding change could
+  // quietly move the row out of the band and leave it passing for the wrong
+  // reason), and that the oscillation therefore rebuilds on EVERY step
+  // rather than merely twice, which is the residual's actual cost.
+  //
+  // Note the two families differ in WHICH edge rounds. The +span rows are
+  // the floor-derived leading edge (Math.floor rounds toward -infinity, so
+  // rounding UP onto a multiple crosses a tile boundary and rounding DOWN
+  // onto one does not -- which is why a positive amplitude from just BELOW a
+  // boundary is degenerate and its mirror image is not). The -span rows are
+  // the ceil-derived trailing edge, so they depend on the viewport as well
+  // as the offset: the x row below is not degenerate at a 0x0 viewport, and
+  // its y twin needs the viewport transposed too.
+  it.each<[string, Camera, number, number, number, number]>([
+    [
+      '+span from the largest double below tile boundary 0, on x',
+      { offsetX: -Number.MIN_VALUE, offsetY: -0.1, cellSize: 20 },
+      TILE_SPAN_CELLS,
+      0,
+      1280,
+      900,
+    ],
+    [
+      '+span from the largest double below tile boundary 0, on y',
+      { offsetX: -0.1, offsetY: -Number.MIN_VALUE, cellSize: 20 },
+      0,
+      TILE_SPAN_CELLS,
+      1280,
+      900,
+    ],
+    [
+      '+span from just below cell 4: the band sits at EVERY tile boundary, not only 0',
+      { offsetX: 3.9999999999999996, offsetY: -0.1, cellSize: 20 },
+      TILE_SPAN_CELLS,
+      0,
+      1280,
+      900,
+    ],
+    [
+      '-span at the ceil-derived trailing edge, on x',
+      { offsetX: -63.99999999999999, offsetY: -0.1, cellSize: 20 },
+      -TILE_SPAN_CELLS,
+      0,
+      1280,
+      900,
+    ],
+    [
+      '-span at the ceil-derived trailing edge, on y (viewport transposed with it)',
+      { offsetX: -0.1, offsetY: -63.99999999999999, cellSize: 20 },
+      0,
+      -TILE_SPAN_CELLS,
+      900,
+      1280,
+    ],
+    [
+      '+span diagonally, at the 0x0 pre-measurement viewport',
+      { offsetX: -Number.MIN_VALUE, offsetY: -Number.MIN_VALUE, cellSize: 20 },
+      TILE_SPAN_CELLS,
+      TILE_SPAN_CELLS,
+      0,
+      0,
+    ],
+  ])('the float boundary: %s', (_label, camA, ampX, ampY, width, height) => {
+    const camB: Camera = { ...camA, offsetX: camA.offsetX + ampX, offsetY: camA.offsetY + ampY }
+
+    expect(
+      maxBoundShiftTiles(
+        coveringTileRange(camA, width, height, TILE_SPAN_CELLS),
+        coveringTileRange(camB, width, height, TILE_SPAN_CELLS),
+      ),
+    ).toBe(2)
+    expect(oscillationRebuilds(camA, camB, width, height, 20)).toBe(20)
   })
 })
 
@@ -448,11 +620,15 @@ describe('tileIndexOf / tileOriginCell (property)', () => {
 // containment argument settles to exactly one rebuild once retention
 // supplies the tile of trailing-edge slack that argument was missing.
 //
-// The residual limit, disclosed rather than fixed: an oscillation spanning
-// two or more tile boundaries still rebuilds once per reversal, because one
-// tile of lag can't cover a two-tile swing. At cellSize 8.192 that's a 65px
-// sweep each way -- deliberate panning, whose churn is proportional to real
-// travel -- so EVICT_LAG_TILES stays 1 rather than widening to absorb it.
+// The residual limit, disclosed rather than fixed: an oscillation whose
+// REALIZED tile indices swing two or more tiles still rebuilds once per
+// reversal, because one tile of lag can't cover a two-tile swing. At
+// cellSize 8.192 that's a 65px sweep each way -- deliberate panning, whose
+// churn is proportional to real travel -- so EVICT_LAG_TILES stays 1 rather
+// than widening to absorb it. "Realized" is load-bearing there: float
+// rounding puts an amplitude of exactly one span into this same residual
+// whenever the offset sits within half an ulp below a tile boundary, which
+// is what the bounded-wobble block's 'float boundary' rows pin.
 describe('eviction hysteresis (deterministic -- the wobble cases the generator will not find)', () => {
   const stepThrough = (start: TileRange, cameras: readonly Camera[], width: number, height: number) => {
     let range = start
