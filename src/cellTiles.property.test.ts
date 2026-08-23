@@ -79,9 +79,13 @@ describe('nextTileRange coverage and slack (property)', () => {
     },
   )
 
-  // The rebuild FREQUENCY the whole cost model rests on. cellTiles.ts's
-  // header prices a pan as "one strip event per TILE_SPAN_CELLS cells of
-  // travel"; nothing pinned that rate until this property.
+  // The rebuild FREQUENCY the whole cost model rests on -- the rate
+  // cellTiles.ts's nextTileRange comment states as "up to twice per
+  // TILE_SPAN_CELLS of travel". Nothing pinned that rate until this
+  // property, and the rate itself was discovered BY this property's own
+  // generator (a 0x7px viewport, cellSize 8, desynchronizes the two edges of
+  // a single axis within 21 steps of ~0.34-cell travel), not modelled first
+  // -- the ratified design had predicted the frequency was unchanged.
   //
   // The bound is 2x a single edge's own cadence, not 1x, because of
   // nextTileRange's retention policy: an exact-replace policy resets BOTH
@@ -89,13 +93,49 @@ describe('nextTileRange coverage and slack (property)', () => {
   // whichever edge triggers a rebuild gives the other a free reset too, and
   // the two edges stay synchronized. Retention only tightens the edge that
   // actually failed (axisRetained leaves the other edge wherever it was, up
-  // to EVICT_LAG_TILES stale) -- see cellTiles.property.test.ts's own
-  // 'eviction hysteresis' block and cellTiles.ts's axisRetained comment. The
-  // two edges can therefore desynchronize and each pay their own
-  // floor(T/spanCells) + 1 cadence independently, which is where the factor
-  // of 2 comes from; found by this property's own generator (a 0x7px
-  // viewport, cellSize 8, is enough to desynchronize the two edges of a
-  // single axis within 21 steps of ~0.34-cell travel), not modelled first.
+  // to EVICT_LAG_TILES stale), so the two desynchronize and each pays its
+  // own cadence -- see this file's 'eviction hysteresis' block and
+  // cellTiles.ts's axisRetained comment.
+  //
+  // WHY EXACTLY 2*floor(T/span) + 1, rather than a round 2x of the
+  // single-edge bound. Counting the two edges separately over a pan of total
+  // travel T, where A = the number of times a covering-set edge advances a
+  // tile = at most floor(T/span) + 1:
+  //
+  //   - LEADING fires only when requiredMax passes previousMax, and each
+  //     fire sets previousMax = requiredMax, so consecutive fires need >= 1
+  //     advance each: at most A fires.
+  //   - TRAILING fires only when requiredMin - previousMin > EVICT_LAG_TILES
+  //     (= 1). The range starts as an exact cover (slack 0), so the FIRST
+  //     fire needs 2 advances; each later fire restores slack to exactly 1
+  //     and so needs 1 more: at most A - 1 fires.
+  //   - A step where both edges fail counts as ONE rebuild, so summing the
+  //     two is still an upper bound.
+  //
+  // Total <= A + (A - 1) = 2*floor(T/span) + 1. That derivation and an
+  // independent search agree exactly: the architect's 400k-trial sweep
+  // (biased toward degenerate viewports and the stepCells ~ span/2 regime
+  // where the edges desynchronize hardest) found 0 violations and reached
+  // the bound with EQUALITY, as did cleaner's ~2M trials plus hill-climbing
+  // to 2000 steps. So this is the achievable maximum rather than a safety
+  // margin, which is why the constant is stated in that exact form.
+  //
+  // BE HONEST ABOUT WHAT THIS CATCHES, so nobody reads the tightness above
+  // as more assurance than it is. This bound is load-bearing at the 1x
+  // level -- it was 1x until retention landed, and the fix genuinely broke
+  // it -- and it still catches any mutant that rebuilds EAGERLY, because
+  // those make rebuilds track `steps` rather than travel. Demonstrated, not
+  // just argued: short-circuiting nextTileRange's `tileRangeHolds` guard so
+  // it always returns a fresh object fails THIS bound in its tightened form
+  // after a single generated case ("expected 2 to be less than or equal to
+  // 1"). It does NOT discriminate the clamp's own bounds: the
+  // architect measured four axisRetained mutants (min floor +1, max ceiling
+  // -1, and a one-sided retention) at 300k trials each, and although each
+  // changes the rebuild count in ~34% of trials, NONE exceeds this bound or
+  // even the looser 2*(floor+1) it replaced -- because retaining less
+  // re-synchronizes the two edges, which LOWERS the count. Those mutants
+  // are caught by the bounded-slack and no-speculative-admission properties
+  // instead. Tightening by one bought exactness, not extra detection.
   //
   // The rebuilds this adds are eviction-only, never admission: when
   // containment holds but the margin check fails, axisRetained's clamp can
@@ -112,7 +152,7 @@ describe('nextTileRange coverage and slack (property)', () => {
     fc.integer({ min: 1, max: 40 }),
     fc.constantFrom<'x' | 'y'>('x', 'y'),
   ])(
-    'a monotone pan rebuilds at most twice per TILE_SPAN_CELLS cells of travel',
+    'a monotone pan rebuilds at most 2*floor(travel/TILE_SPAN_CELLS) + 1 times, the achievable maximum',
     (cam, width, height, stepCells, steps, axis) => {
       let range = coveringTileRange(cam, width, height, TILE_SPAN_CELLS)
       let rebuilds = 0
@@ -126,7 +166,7 @@ describe('nextTileRange coverage and slack (property)', () => {
         range = next
       }
 
-      expect(rebuilds).toBeLessThanOrEqual(2 * (Math.floor(Math.abs(steps * stepCells) / TILE_SPAN_CELLS) + 1))
+      expect(rebuilds).toBeLessThanOrEqual(2 * Math.floor(Math.abs(steps * stepCells) / TILE_SPAN_CELLS) + 1)
     },
   )
 

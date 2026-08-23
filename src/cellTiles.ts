@@ -205,30 +205,8 @@ export function tileRangeHolds(previous: TileRange, required: TileRange, evictLa
   )
 }
 
-// The sticky-range rule: keep the existing tile range while it still holds
-// (tileRangeHolds against the freshly-required covering set), and rebuild
-// onto exactly that covering set otherwise. Pure, and deliberately here
-// rather than inline in useCellTiles (step 3), for the same reason
-// cellLattice.ts's nextLattice is pure and stands alone -- two properties the
-// hook's setState-during-render pattern depends on are properties of this
-// function alone rather than of React (see cellTiles.property.test.ts):
-//
-//   1. It returns `previous` BY REFERENCE when it holds. That reference
-//      identity is what the hook's `current !== range` guard tests, so an
-//      implementation returning a structurally-equal copy would make the
-//      hook call setState on every render forever.
-//   2. Applying it to its own result is a no-op. That is the
-//      no-infinite-loop guarantee: the hook's second render re-runs this
-//      against the range the first render just stored, and gets that same
-//      object back.
-//
-// No cellSize parameter, deliberately: a zoom needs no special case here.
-// Zooming out grows the covering set, so containment fails and this rebuilds;
-// zooming in shrinks it, so the lag test fails once the shrink exceeds
-// EVICT_LAG_TILES and this rebuilds too. The range stores no cellSize at all.
-//
-// One axis's half of the rebuild target below: rather than replacing
-// `previous` with `required` outright, retain as much of `previous` as
+// One axis's half of the rebuild target nextTileRange composes below:
+// rather than replacing `previous` with `required` outright, retain as much of `previous` as
 // `evictLagTiles` allows on each side. axisHolds' private sibling, same
 // reason -- one body for X and Y, so the asymmetric argument order (the
 // leading/min side clamps DOWN toward requiredMin, the trailing/max side
@@ -247,10 +225,11 @@ function axisRetained(
   }
 }
 
-// The sticky-range rule, in full: keep `previous` BY REFERENCE while it
-// holds (see above), and otherwise rebuild onto the EVICT_LAG_TILES-clamped
-// union of `previous` and `required` -- composing axisRetained over X and Y
-// -- rather than onto `required` exactly. Three things follow by
+// The sticky-range rule: keep `previous` BY REFERENCE while it holds
+// (tileRangeHolds against the freshly-required covering set), and otherwise
+// rebuild onto the EVICT_LAG_TILES-clamped union of `previous` and
+// `required` -- composing axisRetained over X and Y -- rather than onto
+// `required` exactly. Three things follow by
 // construction, not by argument: the result always contains `required` (no
 // hole -- axisRetained's min can only move DOWN to requiredMin, never past
 // it, and symmetrically for max); it never exceeds `required` by more than
@@ -274,6 +253,69 @@ function axisRetained(
 // deliberate panning, whose churn is proportional to real travel, not a
 // sub-pixel wobble -- so EVICT_LAG_TILES stays 1 rather than widening to
 // absorb it (see cellTiles.property.test.ts's 'eviction hysteresis' block).
+//
+// Pure, and deliberately here rather than inline in useCellTiles, for the
+// same reason cellLattice.ts's nextLattice was -- two properties the hook's
+// setState-during-render pattern depends on are properties of this function
+// alone rather than of React (see cellTiles.property.test.ts):
+//
+//   1. It returns `previous` BY REFERENCE when it holds. That reference
+//      identity is what the hook's `current !== range` guard tests, so an
+//      implementation returning a structurally-equal copy would make the
+//      hook call setState on every render forever.
+//   2. Applying it to its own result is a no-op. That is the
+//      no-infinite-loop guarantee: the hook's second render re-runs this
+//      against the range the first render just stored, and gets that same
+//      object back. Since the fix it is a theorem of axisRetained's clamp
+//      rather than a coincidence of `required` covering itself.
+//
+// No cellSize parameter, deliberately: a zoom needs no special case here.
+// Zooming out grows the covering set, so containment fails and this
+// rebuilds; zooming in shrinks it, so the lag test fails once the shrink
+// exceeds EVICT_LAG_TILES and this rebuilds too. The range stores no
+// cellSize at all.
+//
+// TWO COSTS RETENTION ADDS, both measured on this slice's perf run and both
+// disclosed here rather than left for the next reader to rediscover. The
+// ratified design predicted neither -- it analysed the pan strip only, and
+// its "(a) leaves rebuild frequency and worst-event admission identical"
+// arithmetic was simply wrong, even though the p95 prediction it supported
+// did hold. Neither moves any mounted-count BOUND: the four-sided worst
+// case is unchanged, because the pre-fix policy already tolerated the same
+// EVICT_LAG_TILES of drift per side before rebuilding. What both move is
+// the TIME-AVERAGED mounted count, by keeping that drift right after a
+// rebuild instead of resetting it to zero.
+//
+//   1. A monotone pan can rebuild up to TWICE per TILE_SPAN_CELLS of
+//      travel, not once. An exact-replace rebuild reset BOTH edges to
+//      `required`, so whichever edge triggered gave the other a free reset
+//      and the two stayed synchronized; axisRetained tightens only the edge
+//      that actually failed, so the leading and trailing edges desynchronize
+//      and each pays its own cadence (cellTiles.property.test.ts's
+//      monotone-pan bound derives the exact 2*floor(T/span)+1 from this).
+//      This is not the regression it looks like: the extra events are
+//      EVICTION-ONLY (containment held, only the margin failed, so the clamp
+//      moves the failing bound toward `required` and admits nothing), so the
+//      per-admitted-cell calibration above is untouched and the same total
+//      admission is merely split into smaller events -- which is the right
+//      direction for a frame-interval p95 gate, and why pan-min-zoom-empty
+//      held unchanged at both viewports across the fix -- 66.7ms -> 66.7ms
+//      at 1280x900, 133.4ms -> 133.3ms at 1920x1080.
+//   2. A zoom-IN rebuild retains a full four-sided ring; a zoom-OUT rebuild
+//      does not. Zooming out grows `required` past `previous` on every side,
+//      so both clamps collapse to `required` and retention is exactly
+//      equivalent to exact-replace. Zooming in shrinks it, so both clamps
+//      bind and the result carries EVICT_LAG_TILES on all four sides. Since
+//      a zoom step re-renders every mounted cell (cellSize is a Cell prop),
+//      that ring is paid on the whole mounted set rather than on a strip.
+//      Simulated over zoom.perf.spec.ts's own 5-in/10-out/10-in sweep it is
+//      +8.1% of mounted-cell-renders at 1280x900 and +7.2% at 1920x1080 --
+//      against a measured zoom-toolbar-clamp p95 move of +17.9% and +8.1%
+//      respectively, so it accounts for essentially all of the 1920x1080
+//      move and about half of the noisier 1280x900 one. Accepted, not fixed:
+//      it buys the wobble row's 58.4ms -> 8.9ms, and the lever that would
+//      remove it is mounted count at min zoom (see this module's header),
+//      not EVICT_LAG_TILES.
 export function nextTileRange(previous: TileRange, camera: Camera, widthPx: number, heightPx: number): TileRange {
   const required = coveringTileRange(camera, widthPx, heightPx, previous.spanCells)
   if (tileRangeHolds(previous, required, EVICT_LAG_TILES)) return previous
