@@ -131,7 +131,7 @@ Note which of these fire on ordinary feature work rather than only on structural
 `ideas/` is a two-lane kanban of slices not yet started — one Markdown file per idea, and the lane is the directory:
 
 - **`ideas/candidates/`** — raw and unjudged, no limit. An idea lands here the moment it's worth not forgetting.
-- **`ideas/todo/`** — examined, and concrete enough to hand to `product`. Keep this to about three, matching the two-or-three concurrent-slice ceiling below; a `todo/` lane longer than the number of slices you can actually run is a candidates lane wearing a different hat.
+- **`ideas/todo/`** — examined, and concrete enough to hand to `product`. The orchestrating session owns this board: no role reads it, and an idea reaches `product` as prompt content rather than as a file path. Keep this to about three, matching the two-or-three concurrent-slice ceiling below; a `todo/` lane longer than the number of slices you can actually run is a candidates lane wearing a different hat.
 
 `ideas/TEMPLATE.md` is the file shape: frontmatter (`name`, `title`, `created`) over Context / Sketch / Touches / Open questions.
 
