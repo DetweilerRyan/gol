@@ -1,0 +1,26 @@
+id: no-test-support-in-product-ts
+snapshots:
+  export { cellLabel } from '../test-support/cellQuery':
+    labels:
+    - source: export { cellLabel } from '../test-support/cellQuery'
+      style: primary
+      start: 0
+      end: 53
+  import type { LiveCellFixture } from '../test-support/lifeReference':
+    labels:
+    - source: import type { LiveCellFixture } from '../test-support/lifeReference'
+      style: primary
+      start: 0
+      end: 68
+  import { CELL_ALIVE_ATTR } from './test-support/cellQuery':
+    labels:
+    - source: import { CELL_ALIVE_ATTR } from './test-support/cellQuery'
+      style: primary
+      start: 0
+      end: 58
+  import { cellLabel } from '../test-support/cellQuery':
+    labels:
+    - source: import { cellLabel } from '../test-support/cellQuery'
+      style: primary
+      start: 0
+      end: 53

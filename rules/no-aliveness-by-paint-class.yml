@@ -21,6 +21,19 @@ note: >-
 # assert the second). A src-wide version of this rule would have a permanently dirty baseline --
 # the fragility no-camera-in-cell-leaf.yml's own comment warns about.
 #
+# THE REGEX COVERS bg-gray-900/bg-white AND NOTHING ELSE, ALSO ON PURPOSE. The known neighbour is
+# features/grid-reference-lines.e2e.spec.ts, which reads `border-l-2 border-l-gray-400` off a cell to
+# answer "is this coordinate a major gridline". That was adjudicated (aria-pressed-cell-state review)
+# as a LEGITIMATE VISUAL CONTRACT, not a missing affordance: every cell's aria-label already carries
+# its exact coordinates, so an assistive-tech user has strictly more information than "is this a major
+# line" -- majorness is purely visual chunking of data that is already accessible, ARIA has no
+# supported state for it on role="button", and the only available "fix" would be a data-* attribute,
+# which is a test hook wearing an affordance's name. That spec asserts the ruler label (the accessible
+# representation) alongside the border class (the visual one), which is the right split -- the same
+# shape as Cell.test.tsx's sanctioned 'Cell paint' block. Do not "complete" this regex with the border
+# classes: it would turn a correct assertion into a permanent finding and give this rule the dirty
+# baseline its scoping note above exists to avoid.
+#
 # No TSX twin: features/ currently holds no .tsx file (the .steps.test.tsx form CLAUDE.md describes
 # is not yet in use), and a rule scoped to a path that does not exist would need an
 # allow-unresolved-files marker for a hypothetical. Whichever slice first adds a features/*.tsx that

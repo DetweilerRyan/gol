@@ -1,0 +1,12 @@
+id: no-test-support-in-product-tsx
+valid:
+  - import { cellKey } from './gameOfLife'
+  - import { useLiveCell } from '../hooks/useLiveCell'
+  # Not an import: a bare string naming the directory is not a finding, which is what the
+  # rule's kind: constraint buys. A regex-only matcher would flag this line.
+  - const TEST_SUPPORT_DIR = 'src/test-support/cellQuery.ts'
+invalid:
+  - import { cellLabel } from '../test-support/cellQuery'
+  - import { CELL_ALIVE_ATTR } from './test-support/cellQuery'
+  - import type { LiveCellFixture } from '../test-support/lifeReference'
+  - export { cellLabel } from '../test-support/cellQuery'

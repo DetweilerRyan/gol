@@ -1,0 +1,36 @@
+id: no-test-support-in-product-ts
+language: TypeScript
+severity: warning
+message: Product code must not import from src/test-support/ -- that directory is outside every gate.
+note: >-
+  src/test-support/ is test infrastructure, and crap4ts.config.ts / stryker.config.json both
+  exclude it. A product module importing from it therefore moves whatever it imported OUT of
+  mutation testing and coverage scoring, silently, and ships test infrastructure in the
+  production bundle. The live temptation is the aria-pressed-cell-state slice's deliberate
+  duplicate: cellQuery.ts's cellLabel() and Cell.tsx's `aria-label={`Cell ${x}, ${y}`}` are two
+  independent copies of one format string, pinned together by Cell.test.tsx querying getByRole
+  with cellLabel(x, y) -- and "DRY that up" by importing cellLabel into Cell.tsx is exactly the
+  change this rule exists to stop. Imports run product -> nothing, test -> test-support; move
+  the shared thing into a real src/ module if product code genuinely needs it.
+# Scoped by glob rather than by name so a NEW test-support module (or a new product module) is
+# covered the day it lands. ast-grep's `*` crosses `/`, so 'src/*.ts' reaches src/hooks/ and
+# src/equality/ too, and the ignores below reach their test files by the same rule.
+files:
+  - 'src/*.ts'
+ignores:
+  - 'src/*.test.ts'
+  - 'src/test-setup.ts'
+  - 'src/test-support/**'
+  - 'src/catalyst/**'
+# Metavariables do not interpolate inside string literals, so an import PATH is matched with
+# kind: + regex: rather than with a pattern -- two of this repo's rules were silently inert for
+# exactly that mistake. The kind: constraint is load-bearing in the other direction too: a bare
+# 'src/test-support/...' string somewhere in product code is not an import and is not a finding
+# (the fixture pins that). export_statement is covered alongside import_statement because a
+# re-export is the same coupling written differently.
+rule:
+  any:
+    - kind: import_statement
+      regex: 'from [''"][^''"]*test-support/'
+    - kind: export_statement
+      regex: 'from [''"][^''"]*test-support/'

@@ -1,0 +1,26 @@
+id: no-test-support-in-product-tsx
+language: Tsx
+severity: warning
+message: Product code must not import from src/test-support/ -- that directory is outside every gate.
+note: >-
+  The TSX half of no-test-support-in-product-ts, and the half that guards the specific import
+  this slice made tempting: Cell.tsx pulling cellLabel() out of src/test-support/cellQuery.ts
+  to remove the deliberate duplicate of its own aria-label format. cellQuery.ts is excluded
+  from crap4ts and Stryker (see crap4ts.config.ts / stryker.config.json), so that import would
+  move the label format out of mutation testing without anything failing, and put test
+  infrastructure in the production bundle. See the -ts twin's note for the full argument.
+# ast-grep parses TypeScript and TSX with different parsers and a rule is bound to one of them,
+# so this matcher is duplicated in -ts/-tsx by necessity -- the same near-duplication
+# no-manual-memo-ts / -tsx carries. src/test-support/ holds no .tsx file today, hence no
+# ignores entry for it here; 'src/*.tsx' crosses '/' and so already covers src/components/.
+files:
+  - 'src/*.tsx'
+ignores:
+  - 'src/*.test.tsx'
+  - 'src/catalyst/**'
+rule:
+  any:
+    - kind: import_statement
+      regex: 'from [''"][^''"]*test-support/'
+    - kind: export_statement
+      regex: 'from [''"][^''"]*test-support/'

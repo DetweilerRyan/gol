@@ -88,6 +88,10 @@ export default function CellTile({
       const leftPx = cellOffsetPx(x, anchorX, cellSize)
       cells.push(
         <Cell
+          // Stryker's `j * spanCells - i` and `j / spanCells + i` mutants here are EQUIVALENT,
+          // adjudicated rather than untested: for any spanCells >= 1 both stay unique across the
+          // tile and stable for the session (spanCells never changes), and a key never reaches
+          // the DOM -- so React reconciles identically and no test layer can observe either.
           key={j * spanCells + i}
           x={x}
           y={y}
