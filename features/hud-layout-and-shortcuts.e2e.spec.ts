@@ -4,6 +4,7 @@ import {
   cellLocator,
   CENTER,
   elementAtPoint,
+  expectCellState,
   patternLibraryModal,
   patternsButton,
   selectPattern,
@@ -48,9 +49,6 @@ import {
 //     next click toggles a single cell rather than stamping -- proving the
 //     armed pattern was genuinely cancelled, not just hidden.
 
-const ALIVE_CLASS = /bg-gray-900/
-const DEAD_CLASS = /bg-white/
-
 test.beforeEach(async ({ page }) => {
   await page.goto('/')
 })
@@ -83,11 +81,11 @@ test('the Next Generation button advances state through the real app wiring', as
   await page.locator('#next-generation-button').click()
 
   await expect(page.getByText(/^Generation: \d+$/)).toHaveText('Generation: 1')
-  await expect(cellLocator(page, 0, -1)).toHaveClass(ALIVE_CLASS)
-  await expect(cellLocator(page, 0, 0)).toHaveClass(ALIVE_CLASS)
-  await expect(cellLocator(page, 0, 1)).toHaveClass(ALIVE_CLASS)
-  await expect(cellLocator(page, -1, 0)).toHaveClass(DEAD_CLASS)
-  await expect(cellLocator(page, 1, 0)).toHaveClass(DEAD_CLASS)
+  await expectCellState(page, 0, -1, 'alive')
+  await expectCellState(page, 0, 0, 'alive')
+  await expectCellState(page, 0, 1, 'alive')
+  await expectCellState(page, -1, 0, 'dead')
+  await expectCellState(page, 1, 0, 'dead')
 })
 
 test('Enter does not advance the generation when nothing is focused', async ({ page }) => {
@@ -116,9 +114,9 @@ test('Enter on a focused grid cell toggles that cell and does not advance the ge
   // generation, so (1,0) alone flips dead, (-1,0)/(0,0) are untouched, and
   // the generation counter stays at 0.
   await expect(page.getByText(/^Generation: \d+$/)).toHaveText('Generation: 0')
-  await expect(cellLocator(page, 1, 0)).toHaveClass(DEAD_CLASS)
-  await expect(cellLocator(page, -1, 0)).toHaveClass(ALIVE_CLASS)
-  await expect(cellLocator(page, 0, 0)).toHaveClass(ALIVE_CLASS)
+  await expectCellState(page, 1, 0, 'dead')
+  await expectCellState(page, -1, 0, 'alive')
+  await expectCellState(page, 0, 0, 'alive')
 })
 
 test('Enter on the focused Next Generation button advances exactly once and does not double-fire', async ({ page }) => {
@@ -143,36 +141,36 @@ test('stamping a pattern from the library brings its cells to life in the real a
   // (0, 0) under the default camera (see e2e-helpers.ts), so this is the one
   // place the real App.tsx Immer stamp wiring is verified to produce live
   // cells end to end -- not just to leave placing mode.
-  await expect(cellLocator(page, 0, 0)).toHaveClass(ALIVE_CLASS)
-  await expect(cellLocator(page, 1, 0)).toHaveClass(ALIVE_CLASS)
-  await expect(cellLocator(page, 0, 1)).toHaveClass(ALIVE_CLASS)
-  await expect(cellLocator(page, 1, 1)).toHaveClass(ALIVE_CLASS)
+  await expectCellState(page, 0, 0, 'alive')
+  await expectCellState(page, 1, 0, 'alive')
+  await expectCellState(page, 0, 1, 'alive')
+  await expectCellState(page, 1, 1, 'alive')
 })
 
 test('stamping a pattern is single-shot -- a second click toggles only that one cell', async ({ page }) => {
   await selectPattern(page, 'Block')
   await page.mouse.click(CENTER.x, CENTER.y)
 
-  await expect(cellLocator(page, 0, 0)).toHaveClass(ALIVE_CLASS)
-  await expect(cellLocator(page, 1, 0)).toHaveClass(ALIVE_CLASS)
-  await expect(cellLocator(page, 0, 1)).toHaveClass(ALIVE_CLASS)
-  await expect(cellLocator(page, 1, 1)).toHaveClass(ALIVE_CLASS)
+  await expectCellState(page, 0, 0, 'alive')
+  await expectCellState(page, 1, 0, 'alive')
+  await expectCellState(page, 0, 1, 'alive')
+  await expectCellState(page, 1, 1, 'alive')
 
   // stampArmedPattern disarms in the same action as committing the pattern
   // (see usePatternPlacement.ts), so this second click at a clearly separate
   // empty cell must be an ordinary single-cell toggle, not a second stamp.
   await cellLocator(page, 5, 5).click()
 
-  await expect(cellLocator(page, 5, 5)).toHaveClass(ALIVE_CLASS)
-  await expect(cellLocator(page, 6, 5)).toHaveClass(DEAD_CLASS)
-  await expect(cellLocator(page, 5, 6)).toHaveClass(DEAD_CLASS)
-  await expect(cellLocator(page, 6, 6)).toHaveClass(DEAD_CLASS)
+  await expectCellState(page, 5, 5, 'alive')
+  await expectCellState(page, 6, 5, 'dead')
+  await expectCellState(page, 5, 6, 'dead')
+  await expectCellState(page, 6, 6, 'dead')
 
   // The first stamp is unaffected by the second click.
-  await expect(cellLocator(page, 0, 0)).toHaveClass(ALIVE_CLASS)
-  await expect(cellLocator(page, 1, 0)).toHaveClass(ALIVE_CLASS)
-  await expect(cellLocator(page, 0, 1)).toHaveClass(ALIVE_CLASS)
-  await expect(cellLocator(page, 1, 1)).toHaveClass(ALIVE_CLASS)
+  await expectCellState(page, 0, 0, 'alive')
+  await expectCellState(page, 1, 0, 'alive')
+  await expectCellState(page, 0, 1, 'alive')
+  await expectCellState(page, 1, 1, 'alive')
 })
 
 test('clicking Patterns again while a pattern is armed cancels placement instead of reopening the library', async ({
@@ -207,8 +205,8 @@ test('clicking Patterns again while a pattern is armed cancels placement instead
 
   await cellLocator(page, -3, -3).click()
 
-  await expect(cellLocator(page, -3, -3)).toHaveClass(ALIVE_CLASS)
-  await expect(cellLocator(page, -2, -3)).toHaveClass(DEAD_CLASS)
-  await expect(cellLocator(page, -3, -2)).toHaveClass(DEAD_CLASS)
-  await expect(cellLocator(page, -2, -2)).toHaveClass(DEAD_CLASS)
+  await expectCellState(page, -3, -3, 'alive')
+  await expectCellState(page, -2, -3, 'dead')
+  await expectCellState(page, -3, -2, 'dead')
+  await expectCellState(page, -2, -2, 'dead')
 })

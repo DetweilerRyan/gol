@@ -1,5 +1,6 @@
 import { test, expect } from '@playwright/test'
 import { CENTER, dragPan, elementAtPoint, resetView, zoomPercent } from './e2e-helpers'
+import { ALIVE_CELL_SELECTOR } from '../src/test-support/cellQuery.ts'
 
 test.beforeEach(async ({ page }) => {
   await page.goto('/')
@@ -45,7 +46,7 @@ test('toolbar buttons never toggle whatever cell happens to be positioned undern
   await page.locator('button[aria-label="Zoom out"]').click()
   await page.locator('button[aria-label="Reset view"]').click()
 
-  await expect(page.locator('button[aria-label^="Cell "].bg-gray-900')).toHaveCount(0)
+  await expect(page.locator(ALIVE_CELL_SELECTOR)).toHaveCount(0)
 })
 
 test('resetting the view returns to the default centered zoom regardless of prior pan/zoom', async ({ page }) => {

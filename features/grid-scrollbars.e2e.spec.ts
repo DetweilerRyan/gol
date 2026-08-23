@@ -8,6 +8,7 @@ import {
   toggleFarCell,
   zoomPercent,
 } from './e2e-helpers'
+import { ALIVE_CELL_SELECTOR } from '../src/test-support/cellQuery.ts'
 
 function horizontalThumb(page: Page) {
   return page.locator('[role="scrollbar"][aria-orientation="horizontal"]')
@@ -90,7 +91,7 @@ test('dragging a scrollbar thumb never toggles whatever cell happens to be posit
   await dragScrollbarThumb(page, 'horizontal', 50)
   await dragScrollbarThumb(page, 'vertical', 50)
 
-  await expect(page.locator('button[aria-label^="Cell "].bg-gray-900')).toHaveCount(0)
+  await expect(page.locator(ALIVE_CELL_SELECTOR)).toHaveCount(0)
 })
 
 test('dragging the vertical scrollbar thumb down pans the camera to reveal further content', async ({ page }) => {

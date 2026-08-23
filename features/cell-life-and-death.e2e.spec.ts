@@ -43,10 +43,8 @@
 // later is a one-file change rather than a two-hundred-assertion one.
 
 import { test, expect } from '@playwright/test'
-import { cellLocator, nextGeneration } from './e2e-helpers'
-
-const ALIVE_CLASS = /bg-gray-900/
-const DEAD_CLASS = /bg-white/
+import { cellLocator, expectCellState, nextGeneration } from './e2e-helpers'
+import { CELL_SELECTOR, ALIVE_CELL_SELECTOR, DEAD_CELL_SELECTOR, cellLabel } from '../src/test-support/cellQuery.ts'
 
 const NEIGHBOR_OFFSETS: ReadonlyArray<readonly [number, number]> = [
   [-1, -1],
@@ -65,14 +63,42 @@ test.beforeEach(async ({ page }) => {
 
 test('toggling a dead cell brings it to life', async ({ page }) => {
   await cellLocator(page, 2, 3).click()
-  await expect(cellLocator(page, 2, 3)).toHaveClass(ALIVE_CLASS)
+  await expectCellState(page, 2, 3, 'alive')
+
+  // Outline point 3, read through the ACCESSIBILITY TREE rather than the
+  // attribute string: getByRole resolves `pressed` as ARIA semantics, so this
+  // is what an assistive technology would perceive, not merely what the DOM
+  // holds. `exact: true` because Playwright's accessible-name match is a
+  // case-insensitive SUBSTRING by default -- 'Cell 2, 3' would otherwise also
+  // match 'Cell 2, 30' and violate strict mode.
+  await expect(page.getByRole('button', { name: cellLabel(2, 3), pressed: true, exact: true })).toBeVisible()
 })
 
 test('toggling a live cell kills it', async ({ page }) => {
   await cellLocator(page, 2, 3).click()
-  await expect(cellLocator(page, 2, 3)).toHaveClass(ALIVE_CLASS)
+  await expectCellState(page, 2, 3, 'alive')
   await cellLocator(page, 2, 3).click()
-  await expect(cellLocator(page, 2, 3)).toHaveClass(DEAD_CLASS)
+  await expectCellState(page, 2, 3, 'dead')
+
+  // The unpressed half of the same accessibility-tree read. A dead cell must
+  // still resolve as a TOGGLE button that is not pressed (outline point 2) --
+  // this query would find nothing at all if aria-pressed were dropped when
+  // false, which is exactly the rendering optimisation the outline forbids.
+  await expect(page.getByRole('button', { name: cellLabel(2, 3), pressed: false, exact: true })).toBeVisible()
+})
+
+test('every mounted cell is announced as a toggle button, alive or dead', async ({ page }) => {
+  await cellLocator(page, 2, 3).click()
+
+  // Outline points 1 and 2 across the whole mounted set, which the jsdom
+  // component test cannot state -- it renders one cell at a time. If
+  // aria-pressed were omitted on dead cells as a rendering optimisation, the
+  // two partial counts would no longer sum to the total.
+  const total = await page.locator(CELL_SELECTOR).count()
+  expect(total).toBeGreaterThan(0)
+
+  await expect(page.locator(ALIVE_CELL_SELECTOR)).toHaveCount(1)
+  await expect(page.locator(DEAD_CELL_SELECTOR)).toHaveCount(total - 1)
 })
 
 const NEIGHBOR_COUNT_ROWS = [
@@ -98,7 +124,7 @@ for (const { state, neighbors, nextState } of NEIGHBOR_COUNT_ROWS) {
     await nextGeneration(page)
 
     await expect(page.getByText(/^Generation: \d+$/)).toHaveText('Generation: 1')
-    await expect(cellLocator(page, 0, 0)).toHaveClass(nextState === 'alive' ? ALIVE_CLASS : DEAD_CLASS)
+    await expectCellState(page, 0, 0, nextState)
   })
 }
 
@@ -109,11 +135,11 @@ test('a horizontal blinker becomes vertical after one generation', async ({ page
 
   await nextGeneration(page)
 
-  await expect(cellLocator(page, 1, 0)).toHaveClass(ALIVE_CLASS)
-  await expect(cellLocator(page, 1, 1)).toHaveClass(ALIVE_CLASS)
-  await expect(cellLocator(page, 1, 2)).toHaveClass(ALIVE_CLASS)
-  await expect(cellLocator(page, 0, 1)).toHaveClass(DEAD_CLASS)
-  await expect(cellLocator(page, 2, 1)).toHaveClass(DEAD_CLASS)
+  await expectCellState(page, 1, 0, 'alive')
+  await expectCellState(page, 1, 1, 'alive')
+  await expectCellState(page, 1, 2, 'alive')
+  await expectCellState(page, 0, 1, 'dead')
+  await expectCellState(page, 2, 1, 'dead')
 })
 
 test('a vertical blinker becomes horizontal after one generation', async ({ page }) => {
@@ -123,11 +149,11 @@ test('a vertical blinker becomes horizontal after one generation', async ({ page
 
   await nextGeneration(page)
 
-  await expect(cellLocator(page, 0, 1)).toHaveClass(ALIVE_CLASS)
-  await expect(cellLocator(page, 1, 1)).toHaveClass(ALIVE_CLASS)
-  await expect(cellLocator(page, 2, 1)).toHaveClass(ALIVE_CLASS)
-  await expect(cellLocator(page, 1, 0)).toHaveClass(DEAD_CLASS)
-  await expect(cellLocator(page, 1, 2)).toHaveClass(DEAD_CLASS)
+  await expectCellState(page, 0, 1, 'alive')
+  await expectCellState(page, 1, 1, 'alive')
+  await expectCellState(page, 2, 1, 'alive')
+  await expectCellState(page, 1, 0, 'dead')
+  await expectCellState(page, 1, 2, 'dead')
 })
 
 test('a 2x2 block never changes', async ({ page }) => {
@@ -138,10 +164,10 @@ test('a 2x2 block never changes', async ({ page }) => {
 
   await nextGeneration(page)
 
-  await expect(cellLocator(page, 0, 0)).toHaveClass(ALIVE_CLASS)
-  await expect(cellLocator(page, 1, 0)).toHaveClass(ALIVE_CLASS)
-  await expect(cellLocator(page, 0, 1)).toHaveClass(ALIVE_CLASS)
-  await expect(cellLocator(page, 1, 1)).toHaveClass(ALIVE_CLASS)
-  await expect(cellLocator(page, -1, 0)).toHaveClass(DEAD_CLASS)
-  await expect(cellLocator(page, 2, 1)).toHaveClass(DEAD_CLASS)
+  await expectCellState(page, 0, 0, 'alive')
+  await expectCellState(page, 1, 0, 'alive')
+  await expectCellState(page, 0, 1, 'alive')
+  await expectCellState(page, 1, 1, 'alive')
+  await expectCellState(page, -1, 0, 'dead')
+  await expectCellState(page, 2, 1, 'dead')
 })

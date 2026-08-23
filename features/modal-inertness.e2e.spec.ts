@@ -1,5 +1,5 @@
 import { test, expect } from '@playwright/test'
-import { CENTER, cellLocator, dragPan, openPatternModal } from './e2e-helpers'
+import { CENTER, cellLocator, dragPan, expectCellState, openPatternModal } from './e2e-helpers'
 
 // No matching .feature file (see CLAUDE.md's black-box e2e section for when a
 // spec is unpaired): there's no pure-logic layer here at all. What's under test
@@ -26,8 +26,6 @@ import { CENTER, cellLocator, dragPan, openPatternModal } from './e2e-helpers'
 // cell behind it doesn't toggle that cell, clicking a toolbar button behind it
 // doesn't act, and dragging across it doesn't pan the grid underneath.
 
-const DEAD_CLASS = /bg-white/
-
 test.beforeEach(async ({ page }) => {
   await page.goto('/')
 })
@@ -38,7 +36,7 @@ test('clicking a grid cell behind the open modal does not toggle it', async ({ p
   await page.mouse.click(CENTER.x + 10, CENTER.y + 10)
   await page.keyboard.press('Escape')
 
-  await expect(cellLocator(page, 0, 0)).toHaveClass(DEAD_CLASS)
+  await expectCellState(page, 0, 0, 'dead')
 })
 
 test('clicking a toolbar button behind the open modal has no effect', async ({ page }) => {

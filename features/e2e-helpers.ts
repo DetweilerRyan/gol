@@ -1,4 +1,5 @@
 import { expect, type Locator, type Page } from '@playwright/test'
+import { CELL_ALIVE_ATTR, CELL_ALIVE_VALUE, CELL_DEAD_VALUE, cellSelector } from '../src/test-support/cellQuery.ts'
 
 // Derived from centeredCamera(1280, 900) in src/camera.ts: default camera
 // is { offsetX: -32, offsetY: -22.5, cellSize: 20 }, so world (0,0) renders
@@ -8,11 +9,26 @@ import { expect, type Locator, type Page } from '@playwright/test'
 export const CENTER = { x: 640, y: 450 }
 
 export function cellLocator(page: Page, x: number, y: number): Locator {
-  return page.locator(`button[aria-label="Cell ${x}, ${y}"]`)
+  return page.locator(cellSelector(x, y))
 }
 
-export async function isAlive(locator: Locator): Promise<boolean> {
-  return ((await locator.getAttribute('class')) ?? '').includes('bg-gray-900')
+// The one way this suite asserts aliveness. It reads aria-pressed -- the
+// accessible state a screen reader announces -- and not the bg-gray-900 /
+// bg-white paint, which is a styling decision a black-box layer has no
+// business knowing (rules/no-aliveness-by-paint-class.yml). The visual half
+// of that contract lives in src/components/Cell.test.tsx's 'Cell paint'
+// block, so nothing is lost by asserting only the accessible half here.
+//
+// Note this is STRICTER than the toHaveClass(/bg-white/) it replaced:
+// toHaveAttribute compares the whole value, where the class regex matched a
+// substring of a long className. Returns the assertion's promise rather than
+// awaiting it, so a caller that forgets to await gets an unhandled rejection
+// rather than a silent pass.
+export function expectCellState(page: Page, x: number, y: number, state: 'alive' | 'dead'): Promise<void> {
+  return expect(cellLocator(page, x, y)).toHaveAttribute(
+    CELL_ALIVE_ATTR,
+    state === 'alive' ? CELL_ALIVE_VALUE : CELL_DEAD_VALUE,
+  )
 }
 
 export async function nextGeneration(page: Page) {
