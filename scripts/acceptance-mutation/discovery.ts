@@ -101,8 +101,15 @@ export function parseArgs(argv: string[]): { feature?: string } {
       allowPositionals: false,
     }))
   } catch (error) {
-    const message = error instanceof Error ? error.message : String(error)
-    throw new Error(`${message}. The only accepted argument is --feature <name>.`)
+    // `as Error` rather than an `error instanceof Error` narrowing: parseArgs
+    // throws only ERR_PARSE_ARGS_* / ERR_INVALID_ARG_TYPE, all Error
+    // subclasses, so the non-Error arm would be unreachable by construction --
+    // and unreachable defensive code is invisible to every gate here (Stryker
+    // has no mutator for `instanceof`, so it generates no mutant on such a
+    // ternary at all, and crap4ts scores line coverage, which a never-taken
+    // branch on an executed line doesn't move). Same idiom as run.ts's own
+    // `(err as Error).message`.
+    throw new Error(`${(error as Error).message}. The only accepted argument is --feature <name>.`)
   }
   return values.feature === undefined ? {} : { feature: values.feature }
 }

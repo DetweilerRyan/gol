@@ -34,7 +34,7 @@ npx playwright install chromium   # one-time browser install after npm install
 npm run test:mutation       # stryker mutation testing, --incremental (scoped to stryker.config.json's `mutate` list -- see the Architecture section)
 npm run test:mutation:full  # same scope, --force: re-runs every mutant and rebuilds the incremental cache
 npm run acceptance-mutation # custom Gherkin-example mutation runner (scripts/acceptance-mutation, tsx scripts/acceptance-mutation/run.ts) -- owned by `product`, not `hardener`
-npm run acceptance-mutation -- --feature <name>   # same runner scoped to one target; <name> takes either `infinite-grid` or `infinite-grid.feature`. `--feature` is the only flag, and it is required to scope -- a bare positional is ignored, not honoured
+npm run acceptance-mutation -- --feature <name>   # same runner scoped to one target; also accepts --feature=<name>. <name> takes either `infinite-grid` or `infinite-grid.feature`. `--feature` is the only flag and the only way to scope -- argv goes through node:util's parseArgs in strict mode, so a bare positional or an unrecognized flag throws rather than being ignored
 npm run gherkin-dry         # checks .feature files for step-text vocabulary duplication (report-only, tsx scripts/gherkin-dry-checker/run.ts)
 npm run gherkin-lint        # structural/style lint for .feature files (indentation, dupe scenario names, keyword order -- gherkin-lint-plus, see .gherkin-lintrc)
 npm run ast-grep            # structural lint for architectural invariants (report-only, rules/*.yml via sgconfig.yml)
