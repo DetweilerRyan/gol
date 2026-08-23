@@ -7,6 +7,7 @@
 // forms during the migration to the latter, and both coexist while it's in
 // progress.
 import { readdirSync } from 'node:fs'
+import { parseArgs as nodeParseArgs } from 'node:util'
 import { listFeatureFiles } from '../feature-files.ts'
 
 export interface MutationTarget {
@@ -71,33 +72,25 @@ export function filterTargets(targets: MutationTarget[], featureArg: string | un
 }
 
 // The only flag run.ts's main() takes: `--feature <name>` scopes the run to
-// one target (see filterTargets above). A pure string function, so it lives
-// here rather than in run.ts -- run.ts is excluded from crap4ts/Stryker's
-// scripts/ scope on the premise that everything it delegates to is a pure,
-// covered module, and this is exactly that.
+// one target (see filterTargets above). A thin wrapper over node:util's
+// parseArgs, kept here rather than inlined at the call site, for the same
+// reason as above -- run.ts is excluded from crap4ts/Stryker's scripts/
+// scope by their `**/run.ts` globs, so the one line of logic (translating
+// parseArgs' `values` shape into `{ feature } | {}`) needs to live somewhere
+// covered.
 //
-// Any argument that isn't `--feature <name>` -- a bare positional or an
-// unrecognized flag -- throws rather than being silently ignored. Before
-// this, `npm run acceptance-mutation -- infinite-grid` ran the entire,
-// unscoped suite while printing output indistinguishable from a genuinely
-// scoped run: the caller believed they'd scoped it and hadn't. This mirrors
-// filterTargets' existing philosophy one level up -- if we can't act on
-// exactly what was asked, we say so rather than doing something else.
+// This used to be hand-rolled, and was re-derived three times over one
+// slice's iterations -- unknown-flag rejection, missing-value rejection,
+// and positional rejection are each things node:util's parseArgs has done
+// since Node 18.3, under `strict: true` (the default) and
+// `allowPositionals: false` (also the default once strict is true). Check
+// the stdlib before writing the loop.
 export function parseArgs(argv: string[]): { feature?: string } {
-  let feature: string | undefined
-  let i = 0
-  while (i < argv.length) {
-    const token = argv[i]
-    if (token === '--feature') {
-      const value = argv[i + 1]
-      if (value === undefined) {
-        throw new Error('--feature requires a value')
-      }
-      feature = value
-      i += 2
-      continue
-    }
-    throw new Error(`Unrecognized argument "${token}" -- the only accepted form is --feature <name>`)
-  }
-  return feature === undefined ? {} : { feature }
+  const { values } = nodeParseArgs({
+    args: argv,
+    options: { feature: { type: 'string' } },
+    strict: true,
+    allowPositionals: false,
+  })
+  return values.feature === undefined ? {} : { feature: values.feature }
 }
