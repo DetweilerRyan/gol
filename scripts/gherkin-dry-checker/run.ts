@@ -10,6 +10,7 @@
 import { mkdirSync, readFileSync, writeFileSync } from 'node:fs'
 import path from 'node:path'
 import { fileURLToPath } from 'node:url'
+import { listFeatureFiles } from '../feature-files.ts'
 import { analyzeSteps, type CorpusStep, type DryReport, type StepLocation } from './analyze.ts'
 import { parseSteps } from './step-parser.ts'
 
@@ -17,19 +18,13 @@ const SCRIPT_DIR = path.dirname(fileURLToPath(import.meta.url))
 const FEATURES_DIR = path.resolve(SCRIPT_DIR, '../../features')
 const REPORT_PATH = path.resolve(SCRIPT_DIR, '../../reports/gherkin-dry/report.json')
 
-const FEATURE_FILES = [
-  'cell-life-and-death.feature',
-  'infinite-grid.feature',
-  'camera-pan-and-zoom.feature',
-  'grid-reference-lines.feature',
-  'mouse-wheel-controls.feature',
-  'grid-scrollbars.feature',
-  'pattern-library.feature',
-]
-
+// Discovered from the directory rather than a hardcoded list -- this list and
+// acceptance-mutation's old TARGETS table used to be two independent copies
+// of the same information, each going stale on its own. See
+// scripts/feature-files.ts.
 function loadAllSteps(): CorpusStep[] {
   const steps: CorpusStep[] = []
-  for (const file of FEATURE_FILES) {
+  for (const file of listFeatureFiles(FEATURES_DIR)) {
     const text = readFileSync(path.join(FEATURES_DIR, file), 'utf8')
     for (const step of parseSteps(text)) {
       steps.push({ feature: file, ...step })

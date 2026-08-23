@@ -7,35 +7,32 @@
 // gherkin-examples.ts for the table locator/rewriter.
 //
 // Each mutant is written to a temp file and the *entire* corresponding
-// .steps.test.ts file is run against it via ACCEPTANCE_MUTATION_FEATURE_FILE
+// .steps.test file is run against it via ACCEPTANCE_MUTATION_FEATURE_FILE
 // (never a filtered subset of steps -- splitting a scenario's Given/When/Then
 // across independent runs breaks the shared-closure state they rely on).
+//
+// Two invariants that used to be missing, both closed by this file's split
+// into discovery.ts / vitest-runner.ts / classify.ts:
+//   1. A mutant's outcome is read from vitest's JSON reporter's
+//      collected/failed test counts, not a regex over console text -- see
+//      classify.ts's module comment for the exact false-"killed" bug that
+//      let a wholly broken steps file report a perfect score.
+//   2. Every target's steps file is run once against its *unmutated* feature
+//      before any mutant is generated, and the whole run aborts loudly if
+//      that baseline isn't green -- see vitest-runner.ts's
+//      assertBaselineGreen. A broken suite has no trustworthy test count to
+//      compare mutants against, so proceeding would misreport every mutant
+//      for that target, not just under-report.
 
-import { spawnSync } from 'node:child_process'
 import { mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import path from 'node:path'
 import { fileURLToPath } from 'node:url'
-import { listMutableCells, applyMutation } from './gherkin-examples.ts'
+import { classifyMutant, type Outcome } from './classify.ts'
+import { discoverTargets, filterTargets, parseArgs, type MutationTarget } from './discovery.ts'
+import { applyMutation, listMutableCells } from './gherkin-examples.ts'
 import { mutateValue } from './mutation-rules.ts'
-
-// A .feature file paired 1:1 with the .steps.test.ts file that implements it.
-interface MutationTarget {
-  feature: string
-  steps: string
-}
-
-// `killed` = the scenario failed, i.e. it noticed the mutated example value.
-// `survived` = it passed anyway. `error` = the run never got as far as
-// executing a test, so it proves nothing either way.
-type Outcome = 'killed' | 'survived' | 'error'
-
-// spawnSync reports a null status when the child was terminated by a signal
-// rather than exiting normally.
-interface SuiteRun {
-  exitCode: number | null
-  output: string
-}
+import { assertBaselineGreen, runScenarioSuite } from './vitest-runner.ts'
 
 interface MutantResult {
   feature: string
@@ -48,65 +45,63 @@ interface MutantResult {
 
 const FEATURES_DIR = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '../../features')
 
-const TARGETS: MutationTarget[] = [
-  { feature: 'cell-life-and-death.feature', steps: 'cell-life-and-death.steps.test.ts' },
-  { feature: 'infinite-grid.feature', steps: 'infinite-grid.steps.test.ts' },
-  { feature: 'camera-pan-and-zoom.feature', steps: 'camera-pan-and-zoom.steps.test.ts' },
-  { feature: 'grid-reference-lines.feature', steps: 'grid-reference-lines.steps.test.ts' },
-  { feature: 'mouse-wheel-controls.feature', steps: 'mouse-wheel-controls.steps.test.ts' },
-  { feature: 'grid-scrollbars.feature', steps: 'grid-scrollbars.steps.test.ts' },
-  { feature: 'pattern-library.feature', steps: 'pattern-library.steps.test.ts' },
-]
-
-function runScenarioSuite(stepsFile: string, featureFilePath: string): SuiteRun {
-  const result = spawnSync('npx', ['vitest', 'run', path.join(FEATURES_DIR, stepsFile)], {
-    encoding: 'utf8',
-    env: { ...process.env, ACCEPTANCE_MUTATION_FEATURE_FILE: featureFilePath },
-  })
-  return { exitCode: result.status, output: `${result.stdout ?? ''}${result.stderr ?? ''}` }
+function resolveTargets(): MutationTarget[] {
+  const { feature } = parseArgs(process.argv.slice(2))
+  return filterTargets(discoverTargets(FEATURES_DIR), feature)
 }
 
-function classify({ exitCode, output }: SuiteRun): Outcome {
-  if (exitCode === 0) return 'survived'
-  // A normal vitest failure prints a "Test Files" summary line even when
-  // some tests failed. Its absence means the run crashed before any test
-  // could execute (e.g. the mutated file failed to parse) -- an
-  // infrastructure error, not a genuine detection of the mutation.
-  return /Test Files\s+\d+/.test(output) ? 'killed' : 'error'
+function runTarget(target: MutationTarget, tmpDir: string, results: MutantResult[]): void {
+  const featurePath = path.join(FEATURES_DIR, target.feature)
+  const stepsPath = path.join(FEATURES_DIR, target.steps)
+  const originalText = readFileSync(featurePath, 'utf8')
+
+  const baselineJsonPath = path.join(tmpDir, `baseline-${target.feature}.json`)
+  const baselineRun = runScenarioSuite(stepsPath, featurePath, baselineJsonPath)
+  const baselineTotalTests = assertBaselineGreen(target, baselineRun)
+
+  for (const cell of listMutableCells(originalText)) {
+    const seedKey = `${target.feature}:${cell.rowIndex}:${cell.columnName}`
+    const mutatedValue = mutateValue(cell.value, seedKey)
+    const mutatedText = applyMutation(originalText, cell, mutatedValue)
+
+    const mutantPath = path.join(tmpDir, target.feature)
+    writeFileSync(mutantPath, mutatedText)
+
+    const jsonOutputPath = path.join(tmpDir, `mutant-${results.length}.json`)
+    const run = runScenarioSuite(stepsPath, mutantPath, jsonOutputPath)
+    const outcome = classifyMutant(baselineTotalTests, run.summary)
+    results.push({
+      feature: target.feature,
+      row: cell.rowIndex + 1,
+      column: cell.columnName,
+      original: cell.value,
+      mutated: mutatedValue,
+      outcome,
+    })
+  }
 }
 
 function main(): void {
+  let targets: MutationTarget[]
+  try {
+    targets = resolveTargets()
+  } catch (err) {
+    console.error((err as Error).message)
+    process.exit(1)
+  }
+
   const tmpDir = mkdtempSync(path.join(tmpdir(), 'gol-acceptance-mutation-'))
   const results: MutantResult[] = []
 
   try {
-    for (const target of TARGETS) {
-      const featurePath = path.join(FEATURES_DIR, target.feature)
-      const originalText = readFileSync(featurePath, 'utf8')
-      const cells = listMutableCells(originalText)
-
-      for (const cell of cells) {
-        const seedKey = `${target.feature}:${cell.rowIndex}:${cell.columnName}`
-        const mutatedValue = mutateValue(cell.value, seedKey)
-        const mutatedText = applyMutation(originalText, cell, mutatedValue)
-
-        const mutantPath = path.join(tmpDir, target.feature)
-        writeFileSync(mutantPath, mutatedText)
-
-        const outcome = classify(runScenarioSuite(target.steps, mutantPath))
-        results.push({
-          feature: target.feature,
-          row: cell.rowIndex + 1,
-          column: cell.columnName,
-          original: cell.value,
-          mutated: mutatedValue,
-          outcome,
-        })
-      }
-    }
-  } finally {
+    for (const target of targets) runTarget(target, tmpDir, results)
+  } catch (err) {
     rmSync(tmpDir, { recursive: true, force: true })
+    console.error((err as Error).message)
+    process.exit(1)
   }
+
+  rmSync(tmpDir, { recursive: true, force: true })
 
   report(results)
 
@@ -143,4 +138,9 @@ function report(results: MutantResult[]): void {
   )
 }
 
-main()
+// Guards against running main() as a side effect of an import -- if run.ts
+// ever grows tests of its own that import resolveTargets/runTarget, none of
+// them should trigger a real process.exit.
+if (process.argv[1] === fileURLToPath(import.meta.url)) {
+  main()
+}

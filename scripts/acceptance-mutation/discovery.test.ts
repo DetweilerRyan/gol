@@ -1,0 +1,113 @@
+import { mkdtempSync, rmSync } from 'node:fs'
+import os from 'node:os'
+import path from 'node:path'
+import { afterEach, describe, expect, it } from 'vitest'
+import { writeFile } from '../test-support.ts'
+import { discoverTargets, filterTargets, pairTargets, parseArgs } from './discovery.ts'
+
+describe('pairTargets', () => {
+  it('pairs each feature with its .steps.test.ts file', () => {
+    const targets = pairTargets(
+      ['alpha.feature', 'beta.feature'],
+      ['alpha.feature', 'alpha.steps.test.ts', 'beta.feature', 'beta.steps.test.ts'],
+    )
+    expect(targets).toEqual([
+      { feature: 'alpha.feature', steps: 'alpha.steps.test.ts' },
+      { feature: 'beta.feature', steps: 'beta.steps.test.ts' },
+    ])
+  })
+
+  it('accepts a .steps.test.tsx pairing, the RTL-migration form', () => {
+    const targets = pairTargets(['alpha.feature'], ['alpha.feature', 'alpha.steps.test.tsx'])
+    expect(targets).toEqual([{ feature: 'alpha.feature', steps: 'alpha.steps.test.tsx' }])
+  })
+
+  it('throws naming the feature when no steps file matches it', () => {
+    expect(() => pairTargets(['alpha.feature'], ['alpha.feature'])).toThrow(/alpha\.feature/)
+  })
+
+  it('throws when a feature matches both a .ts and a .tsx steps file', () => {
+    expect(() =>
+      pairTargets(['alpha.feature'], ['alpha.feature', 'alpha.steps.test.ts', 'alpha.steps.test.tsx']),
+    ).toThrow(/alpha\.feature/)
+  })
+
+  it('throws naming an orphan steps file with no matching feature', () => {
+    expect(() =>
+      pairTargets(['alpha.feature'], ['alpha.feature', 'alpha.steps.test.ts', 'orphan.steps.test.ts']),
+    ).toThrow(/orphan\.steps\.test\.ts/)
+  })
+
+  it('ignores files that are neither a .feature nor a .steps.test file', () => {
+    const targets = pairTargets(['alpha.feature'], ['alpha.feature', 'alpha.steps.test.ts', 'README.md', 'helper.ts'])
+    expect(targets).toEqual([{ feature: 'alpha.feature', steps: 'alpha.steps.test.ts' }])
+  })
+})
+
+describe('discoverTargets', () => {
+  let dir: string | undefined
+
+  afterEach(() => {
+    if (dir) rmSync(dir, { recursive: true, force: true })
+    dir = undefined
+  })
+
+  function tempFeaturesDir(): string {
+    dir = mkdtempSync(path.join(os.tmpdir(), 'acceptance-mutation-discovery-'))
+    return dir
+  }
+
+  it('reads the real directory rather than a hardcoded list', () => {
+    const featuresDir = tempFeaturesDir()
+    writeFile(featuresDir, 'alpha.feature', 'Feature: Alpha\n')
+    writeFile(featuresDir, 'alpha.steps.test.ts', '')
+    expect(discoverTargets(featuresDir)).toEqual([{ feature: 'alpha.feature', steps: 'alpha.steps.test.ts' }])
+  })
+
+  it('fails loudly when the directory has no .feature files at all', () => {
+    const featuresDir = tempFeaturesDir()
+    writeFile(featuresDir, 'notes.txt', 'nothing here')
+    expect(() => discoverTargets(featuresDir)).toThrow(/no \.feature files/i)
+  })
+})
+
+describe('filterTargets', () => {
+  const targets = [
+    { feature: 'alpha.feature', steps: 'alpha.steps.test.ts' },
+    { feature: 'beta.feature', steps: 'beta.steps.test.ts' },
+  ]
+
+  it('returns every target when no filter is given', () => {
+    expect(filterTargets(targets, undefined)).toBe(targets)
+  })
+
+  it('narrows to the one matching feature, accepting the bare name', () => {
+    expect(filterTargets(targets, 'beta')).toEqual([{ feature: 'beta.feature', steps: 'beta.steps.test.ts' }])
+  })
+
+  it('narrows to the one matching feature, accepting the .feature suffix', () => {
+    expect(filterTargets(targets, 'beta.feature')).toEqual([{ feature: 'beta.feature', steps: 'beta.steps.test.ts' }])
+  })
+
+  it('throws loudly on an unknown feature name rather than matching nothing silently', () => {
+    expect(() => filterTargets(targets, 'nonexistent')).toThrow(/nonexistent/)
+  })
+})
+
+describe('parseArgs', () => {
+  it('returns no feature filter when --feature is absent', () => {
+    expect(parseArgs([])).toEqual({})
+  })
+
+  it('captures the value following --feature', () => {
+    expect(parseArgs(['--feature', 'camera-pan-and-zoom'])).toEqual({ feature: 'camera-pan-and-zoom' })
+  })
+
+  it('throws when --feature is the last argument with no value', () => {
+    expect(() => parseArgs(['--feature'])).toThrow(/--feature requires a value/)
+  })
+
+  it('ignores unrelated flags', () => {
+    expect(parseArgs(['--other', 'x', '--feature', 'infinite-grid'])).toEqual({ feature: 'infinite-grid' })
+  })
+})
