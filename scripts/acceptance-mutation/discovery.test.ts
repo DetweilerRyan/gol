@@ -26,20 +26,33 @@ describe('pairTargets', () => {
     expect(() => pairTargets(['alpha.feature'], ['alpha.feature'])).toThrow(/alpha\.feature/)
   })
 
-  it('throws when a feature matches both a .ts and a .tsx steps file', () => {
+  it('throws naming both matches, comma-separated, when a feature matches both a .ts and a .tsx steps file', () => {
     expect(() =>
       pairTargets(['alpha.feature'], ['alpha.feature', 'alpha.steps.test.ts', 'alpha.steps.test.tsx']),
-    ).toThrow(/alpha\.feature/)
+    ).toThrow(/alpha\.steps\.test\.ts, alpha\.steps\.test\.tsx/)
   })
 
-  it('throws naming an orphan steps file with no matching feature', () => {
+  it('throws naming both orphans, comma-separated, when more than one steps file has no matching feature', () => {
     expect(() =>
-      pairTargets(['alpha.feature'], ['alpha.feature', 'alpha.steps.test.ts', 'orphan.steps.test.ts']),
-    ).toThrow(/orphan\.steps\.test\.ts/)
+      pairTargets(
+        ['alpha.feature'],
+        ['alpha.feature', 'alpha.steps.test.ts', 'orphan-one.steps.test.ts', 'orphan-two.steps.test.ts'],
+      ),
+    ).toThrow(/orphan-one\.steps\.test\.ts, orphan-two\.steps\.test\.ts/)
   })
 
   it('ignores files that are neither a .feature nor a .steps.test file', () => {
     const targets = pairTargets(['alpha.feature'], ['alpha.feature', 'alpha.steps.test.ts', 'README.md', 'helper.ts'])
+    expect(targets).toEqual([{ feature: 'alpha.feature', steps: 'alpha.steps.test.ts' }])
+  })
+
+  // Pins the trailing `$` in STEPS_SUFFIX: without it, a file merely
+  // *starting with* `.steps.test.ts` -- not just ending with it -- would
+  // enter stepsFiles, fail the exact-equality pairing check against any
+  // feature, and surface as a spurious orphan even though it should be
+  // ignored exactly like README.md/helper.ts above.
+  it('ignores a file with extra trailing characters after .steps.test.ts, same as any other unrelated file', () => {
+    const targets = pairTargets(['alpha.feature'], ['alpha.feature', 'alpha.steps.test.ts', 'alpha.steps.test.ts.bak'])
     expect(targets).toEqual([{ feature: 'alpha.feature', steps: 'alpha.steps.test.ts' }])
   })
 })

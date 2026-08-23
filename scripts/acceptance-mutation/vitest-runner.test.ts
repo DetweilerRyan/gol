@@ -1,4 +1,4 @@
-import { mkdtempSync, rmSync, writeFileSync } from 'node:fs'
+import { mkdtempSync, readdirSync, rmSync, writeFileSync } from 'node:fs'
 import os from 'node:os'
 import path from 'node:path'
 import { afterEach, describe, expect, it } from 'vitest'
@@ -35,8 +35,20 @@ describe('readSummary', () => {
     expect(readSummary(file)).toBeNull()
   })
 
-  it('is null when the expected numeric fields are missing or the wrong type', () => {
+  it('is null when numTotalTests is the wrong type', () => {
     const file = jsonPath('{"numTotalTests":"25","numFailedTests":1}')
+    expect(readSummary(file)).toBeNull()
+  })
+
+  // Pins the second half of the `||` guard on its own: a valid
+  // numTotalTests alone isn't enough, numFailedTests must be checked too.
+  it('is null when numFailedTests is the wrong type, even though numTotalTests is valid', () => {
+    const file = jsonPath('{"numTotalTests":25,"numFailedTests":"1"}')
+    expect(readSummary(file)).toBeNull()
+  })
+
+  it('is null when numFailedTests is missing entirely, even though numTotalTests is valid', () => {
+    const file = jsonPath('{"numTotalTests":25}')
     expect(readSummary(file)).toBeNull()
   })
 })
@@ -48,20 +60,38 @@ describe('assertBaselineGreen', () => {
     expect(assertBaselineGreen(target, { exitCode: 0, summary: { numTotalTests: 25, numFailedTests: 0 } })).toBe(25)
   })
 
-  it('throws, naming the target, when the baseline exited nonzero', () => {
-    expect(() =>
-      assertBaselineGreen(target, { exitCode: 1, summary: { numTotalTests: 25, numFailedTests: 1 } }),
-    ).toThrow(/alpha\.feature/)
+  // The boundary itself: exactly one collected test is the smallest count
+  // that must still pass -- `< 1`, not `<= 1`.
+  it('returns 1 when the baseline collected exactly one test', () => {
+    expect(assertBaselineGreen(target, { exitCode: 0, summary: { numTotalTests: 1, numFailedTests: 0 } })).toBe(1)
   })
 
-  it('throws when there is no readable summary at all', () => {
-    expect(() => assertBaselineGreen(target, { exitCode: 1, summary: null })).toThrow(/alpha\.feature/)
+  it('throws, naming the target and the exit/test-count detail, when the baseline exited nonzero', () => {
+    expect(() =>
+      assertBaselineGreen(target, { exitCode: 1, summary: { numTotalTests: 25, numFailedTests: 1 } }),
+    ).toThrow(/alpha\.feature.*exitCode=1, numTotalTests=25, numFailedTests=1/s)
+  })
+
+  it('throws naming "no readable test summary" when there is no summary at all', () => {
+    expect(() => assertBaselineGreen(target, { exitCode: 1, summary: null })).toThrow(
+      /alpha\.feature.*no readable test summary/s,
+    )
+  })
+
+  // The null-summary check has to be evaluated even when exitCode is 0 --
+  // without it, "no summary" would fall through to reading
+  // run.summary.numTotalTests off a null summary instead of reporting the
+  // real cause.
+  it('throws naming "no readable test summary" even when exitCode is 0', () => {
+    expect(() => assertBaselineGreen(target, { exitCode: 0, summary: null })).toThrow(
+      /alpha\.feature.*no readable test summary/s,
+    )
   })
 
   it('throws when the baseline collected zero tests, even if it somehow exited 0', () => {
     expect(() =>
       assertBaselineGreen(target, { exitCode: 0, summary: { numTotalTests: 0, numFailedTests: 0 } }),
-    ).toThrow(/alpha\.feature/)
+    ).toThrow(/alpha\.feature.*exitCode=0, numTotalTests=0, numFailedTests=0/s)
   })
 })
 
@@ -72,6 +102,24 @@ describe('assertBaselineGreen', () => {
 // is self-consistent, not that it actually holds against vitest's real exit
 // code and JSON output for a steps file that fails to even parse. See
 // classify.ts's module comment for the bug this closes.
+const FIXTURE_PREFIX = 'tmp-acceptance-mutation-fixture-'
+
+// Self-healing sweep: if a prior run of this test was killed mid-test (the
+// same hazard `.stryker-tmp*` has, per CLAUDE.md), its fixture directory
+// survives at the repo root -- untracked and deliberately not gitignored
+// (see the it() block below), so the *next* run collects it as a spurious
+// extra test file and fails with a baffling parse error. Running this before
+// creating a fresh fixture, rather than relying on afterEach alone, means a
+// crash-orphaned leftover gets cleared by the next run instead of poisoning
+// it indefinitely.
+function sweepOrphanFixtures(repoRoot: string): void {
+  for (const name of readdirSync(repoRoot)) {
+    if (name.startsWith(FIXTURE_PREFIX)) {
+      rmSync(path.join(repoRoot, name), { recursive: true, force: true })
+    }
+  }
+}
+
 describe('runScenarioSuite against a genuinely broken steps file', () => {
   let dir: string | undefined
   let fixtureDir: string | undefined
@@ -97,7 +145,8 @@ describe('runScenarioSuite against a genuinely broken steps file', () => {
     // therefore both a real match for the config the runner actually uses and
     // outside every directory this slice is scoped away from.
     const repoRoot = path.resolve(import.meta.dirname, '../..')
-    fixtureDir = mkdtempSync(path.join(repoRoot, 'tmp-acceptance-mutation-fixture-'))
+    sweepOrphanFixtures(repoRoot)
+    fixtureDir = mkdtempSync(path.join(repoRoot, FIXTURE_PREFIX))
     const brokenStepsPath = path.join(fixtureDir, 'broken.steps.test.ts')
     writeFileSync(brokenStepsPath, 'this is not valid typescript syntax !!!\n')
 

@@ -7,14 +7,17 @@ import { defineConfig } from 'crap4ts'
 // role's quality gate and so gets held to the same bar as src/ rather than
 // being exempt from it.
 //
-// The run.ts entry points are excluded: they're I/O shells (argv-free CLI mains
-// that read the filesystem, spawn vitest, and console.log a table), exercised
-// end to end by actually running `npm run acceptance-mutation` / `gherkin-dry`
-// / `halstead4ts` / `perf-report` / `ast-grep:rules` / `agent-doc-check`, not
-// by unit tests -- the same reason App.tsx/main.tsx are excluded from
-// crap4ts.config.ts. Everything they delegate to is a pure module, and every
-// such module is picked up by the glob below without being registered by hand
-// -- see crap4ts.config.ts for why the enumerated version was a liability.
+// The run.ts entry points are excluded: they're I/O shells (CLI mains that
+// parse argv, read the filesystem, spawn vitest, and console.log a table),
+// exercised end to end by actually running `npm run acceptance-mutation` /
+// `gherkin-dry` / `halstead4ts` / `perf-report` / `ast-grep:rules` /
+// `agent-doc-check`, not by unit tests -- the same reason App.tsx/main.tsx
+// are excluded from crap4ts.config.ts. Everything they delegate to,
+// including argv parsing itself (acceptance-mutation/run.ts's --feature
+// flag is parsed by discovery.ts's parseArgs, not inline), is a pure module,
+// and every such module is picked up by the glob below without being
+// registered by hand -- see crap4ts.config.ts for why the enumerated
+// version was a liability.
 //
 // Threshold 6 is deliberately the same number crap4ts.config.ts uses rather
 // than a looser scripts-specific bar. The parsing/dispatch code here does read
