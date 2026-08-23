@@ -109,7 +109,11 @@ describe('filterTargets', () => {
 
 describe('parseArgs', () => {
   it('returns no feature filter when --feature is absent', () => {
-    expect(parseArgs([])).toEqual({})
+    // toStrictEqual, not toEqual: the ternary in parseArgs returns `{}` in this
+    // branch specifically so the key is absent, not merely `undefined` --
+    // toEqual treats `{ feature: undefined }` and `{}` as equal and would miss
+    // a mutant that collapsed the ternary to always return `{ feature }`.
+    expect(parseArgs([])).toStrictEqual({})
   })
 
   it('captures the value following --feature', () => {
