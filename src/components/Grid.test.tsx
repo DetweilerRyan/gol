@@ -459,14 +459,19 @@ describe('tile pan-stability', () => {
         // 144 cells, the pan really does force a rebuild, and the rebuilt
         // range's entering column really is 48 cells -- see cellTiles.ts's
         // own table-driven test for these same figures pinned against the
-        // design.
+        // design. The REBUILT total is 192, not 144: nextTileRange retains
+        // the evicted tile column for one more crossing (EVICT_LAG_TILES),
+        // so this rebuild is admission-only -- 144 retained + 48 entering,
+        // nothing evicted yet. The entering strip itself is unaffected by
+        // that (still exactly 48), which is the O(entering) claim this test
+        // actually exists to prove.
         const before = coveringTileRange(STRIP_CAMERA, STRIP_WIDTH, STRIP_HEIGHT, TILE_SPAN_CELLS)
         expect(tileRangeCellCount(before)).toBe(144)
 
         const crossingPan: Camera = { ...STRIP_CAMERA, offsetX: STRIP_CAMERA.offsetX + TILE_SPAN_CELLS }
         const after = nextTileRange(before, crossingPan, STRIP_WIDTH, STRIP_HEIGHT)
         expect(after).not.toBe(before)
-        expect(tileRangeCellCount(after)).toBe(144)
+        expect(tileRangeCellCount(after)).toBe(192)
         expect(enteringStripCellCount(after, 'x')).toBe(48)
 
         const spy = vi.spyOn(store, 'getCellSnapshot')
@@ -488,7 +493,22 @@ describe('tile pan-stability', () => {
     // invisible to every rendering assertion in this file, and unbounded.
     // liveCellStore.property.test.ts proves the store releases correctly when
     // it is asked to; this is what proves the tile layer actually asks.
-    it('an evicted tile releases its cells subscriptions rather than leaking them', () => {
+    //
+    // Crosses TWO tile boundaries rather than one, deliberately: the FIRST
+    // crossing (see the test above) retains the old column as an
+    // EVICT_LAG_TILES lag tile rather than evicting it, so 144 -> 192 there
+    // is admission with nothing evicted, and a single-crossing assertion of
+    // "still 192" couldn't tell a correctly-bounded range from a genuine
+    // leak (a leak also reads 192 after one crossing, since nothing has been
+    // evicted yet either way). The SECOND crossing is where the lag tile
+    // from the first finally gets evicted (spent trailing tolerance -- see
+    // useCellTiles.test.ts's "CONTINUING pan" test) while a fresh tile
+    // enters, so it's the first point a leak and a correct implementation
+    // diverge: bounded stays at 192 (48 evicted, 48 entered), a leak grows
+    // to 240 (48 entered, nothing released) and keeps growing every further
+    // tile crossed. Boundedness across repeated crossings, not a single
+    // count, is what actually discriminates a leak here.
+    it('an evicted tile releases its cell subscriptions rather than leaking them, across repeated crossings', () => {
       const store = createLiveCellStore()
       const { rerenderWith } = renderGrid({ store, camera: STRIP_CAMERA })
       triggerResize(STRIP_WIDTH, STRIP_HEIGHT)
@@ -496,12 +516,20 @@ describe('tile pan-stability', () => {
       // One bucket per mounted cell, across the 3x3 tile range.
       expect(store.trackedCellCount()).toBe(144)
 
-      const crossingPan: Camera = { ...STRIP_CAMERA, offsetX: STRIP_CAMERA.offsetX + TILE_SPAN_CELLS }
-      rerenderWith({ camera: crossingPan })
+      const firstCrossing: Camera = { ...STRIP_CAMERA, offsetX: STRIP_CAMERA.offsetX + TILE_SPAN_CELLS }
+      rerenderWith({ camera: firstCrossing })
 
-      // 96 retained + 48 entering, with 48 evicted: still 144. A leak reads
-      // 192 here, and grows by another 48 on every further tile crossed.
-      expect(store.trackedCellCount()).toBe(144)
+      // 144 retained + 48 entering, nothing evicted yet (EVICT_LAG_TILES
+      // retains the old column for one more crossing): 192.
+      expect(store.trackedCellCount()).toBe(192)
+
+      const secondCrossing: Camera = { ...STRIP_CAMERA, offsetX: STRIP_CAMERA.offsetX + 2 * TILE_SPAN_CELLS }
+      rerenderWith({ camera: secondCrossing })
+
+      // 144 retained + 48 entering, with the 48 from the first crossing's
+      // lag tile now evicted: back to 192, not 240. A leak reads 240 here
+      // and keeps growing by 48 on every further tile crossed.
+      expect(store.trackedCellCount()).toBe(192)
     })
 
     // Non-vacuous companion, unskipped: proves this strip scenario really

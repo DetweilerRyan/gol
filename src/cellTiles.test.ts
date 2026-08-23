@@ -98,10 +98,30 @@ describe('tileRangeHolds', () => {
 describe('nextTileRange', () => {
   const camera: Camera = { offsetX: -0.1, offsetY: -0.1, cellSize: 20 }
 
-  it('rebuilds onto exactly the covering set when there is no previous coverage', () => {
+  it('rebuilds onto the required covering set, retaining at most EVICT_LAG_TILES of slack on the side previous lay', () => {
+    // previous is nowhere near required (tile index ~125-140 vs ~-1-16), so
+    // this pins the far-apart case: no assertion of set equality survives
+    // the fix (see axisRetained), only the two bounds nextTileRange
+    // guarantees by construction -- contains required, and never exceeds it
+    // by more than EVICT_LAG_TILES per side.
     const previous = coveringTileRange({ offsetX: 500, offsetY: 500, cellSize: 20 }, 1280, 900, TILE_SPAN_CELLS)
+    const required = coveringTileRange(camera, 1280, 900, TILE_SPAN_CELLS)
     const next = nextTileRange(previous, camera, 1280, 900)
-    expect(next).toEqual(coveringTileRange(camera, 1280, 900, TILE_SPAN_CELLS))
+
+    expect(next.minTileX).toBeLessThanOrEqual(required.minTileX)
+    expect(next.minTileY).toBeLessThanOrEqual(required.minTileY)
+    expect(next.maxTileX).toBeGreaterThanOrEqual(required.maxTileX)
+    expect(next.maxTileY).toBeGreaterThanOrEqual(required.maxTileY)
+
+    expect(required.minTileX - next.minTileX).toBeLessThanOrEqual(EVICT_LAG_TILES)
+    expect(required.minTileY - next.minTileY).toBeLessThanOrEqual(EVICT_LAG_TILES)
+    expect(next.maxTileX - required.maxTileX).toBeLessThanOrEqual(EVICT_LAG_TILES)
+    expect(next.maxTileY - required.maxTileY).toBeLessThanOrEqual(EVICT_LAG_TILES)
+
+    // previous lay on the positive side of both axes (offset 500 vs -0.1),
+    // so retention shows up as exactly one lag tile on the max side of each
+    // axis, and none on the min side, rather than symmetrically.
+    expect(next).toEqual({ minTileX: -1, maxTileX: 16, minTileY: -1, maxTileY: 12, spanCells: 4 })
   })
 
   it('keeps the previous range by reference exactly when it still holds', () => {

@@ -78,10 +78,29 @@ describe('nextTileRange coverage and slack (property)', () => {
 
   // The rebuild FREQUENCY the whole cost model rests on. cellTiles.ts's
   // header prices a pan as "one strip event per TILE_SPAN_CELLS cells of
-  // travel"; nothing pinned that rate until this property. A monotone pan of
-  // T cells rebuilds at most floor(T / spanCells) + 1 times -- the +1 is the
-  // first crossing, which can land arbitrarily soon after the start
-  // depending on where in its tile the camera began.
+  // travel"; nothing pinned that rate until this property.
+  //
+  // The bound is 2x a single edge's own cadence, not 1x, because of
+  // nextTileRange's retention policy: an exact-replace policy resets BOTH
+  // the leading and trailing edge to `required` on every rebuild, so
+  // whichever edge triggers a rebuild gives the other a free reset too, and
+  // the two edges stay synchronized. Retention only tightens the edge that
+  // actually failed (axisRetained leaves the other edge wherever it was, up
+  // to EVICT_LAG_TILES stale) -- see cellTiles.property.test.ts's own
+  // 'eviction hysteresis' block and cellTiles.ts's axisRetained comment. The
+  // two edges can therefore desynchronize and each pay their own
+  // floor(T/spanCells) + 1 cadence independently, which is where the factor
+  // of 2 comes from; found by this property's own generator (a 0x7px
+  // viewport, cellSize 8, is enough to desynchronize the two edges of a
+  // single axis within 21 steps of ~0.34-cell travel), not modelled first.
+  //
+  // The rebuilds this adds are eviction-only, never admission: when
+  // containment holds but the margin check fails, axisRetained's clamp can
+  // only move the failing bound TOWARD `required` (min up, max down), so the
+  // extra range-identity churn this bound permits admits zero additional
+  // tiles over what a single synchronized rebuild would have. The
+  // cost-model's admitted-cell rate is unaffected; only how many times the
+  // (possibly-empty) strip event fires can double.
   it.prop([
     camera,
     viewportPx,
@@ -90,7 +109,7 @@ describe('nextTileRange coverage and slack (property)', () => {
     fc.integer({ min: 1, max: 40 }),
     fc.constantFrom<'x' | 'y'>('x', 'y'),
   ])(
-    'a monotone pan rebuilds at most once per TILE_SPAN_CELLS cells of travel',
+    'a monotone pan rebuilds at most twice per TILE_SPAN_CELLS cells of travel',
     (cam, width, height, stepCells, steps, axis) => {
       let range = coveringTileRange(cam, width, height, TILE_SPAN_CELLS)
       let rebuilds = 0
@@ -104,7 +123,7 @@ describe('nextTileRange coverage and slack (property)', () => {
         range = next
       }
 
-      expect(rebuilds).toBeLessThanOrEqual(Math.floor(Math.abs(steps * stepCells) / TILE_SPAN_CELLS) + 1)
+      expect(rebuilds).toBeLessThanOrEqual(2 * (Math.floor(Math.abs(steps * stepCells) / TILE_SPAN_CELLS) + 1))
     },
   )
 
@@ -125,6 +144,143 @@ describe('nextTileRange coverage and slack (property)', () => {
     }
 
     expect(rebuilds).toBe(10)
+  })
+})
+
+// The two properties specified at the architect's hysteresis-design review,
+// which mechanically distinguish retention (the adopted policy) from
+// admission overscan (the rejected one). Both were confirmed red against a
+// deliberately broken implementation before landing -- see the coder's
+// handoff for what was reverted to get each one to fail.
+describe('nextTileRange retention, not admission (property)', () => {
+  // Per-axis, not a 2D-set claim: a diagonal rebuild's corner tile really is
+  // new (neither axis's own previous/required pair contains it alone), so
+  // stating this over the whole 2D range would be false. Stated per axis,
+  // it is the whole point of the design -- see cellTiles.ts's EVICT_LAG_TILES
+  // and nextTileRange comments. Killing mutant: dropping the clamp's floor
+  // (axisRetained's Math.max), which turns retention into unconditional
+  // overscan.
+  it.prop([camera, camera, viewportPx, viewportPx])(
+    'never admits a bound outside the min/max of previous and required, on either axis',
+    (previousCam, cam, width, height) => {
+      const previous = coveringTileRange(previousCam, width, height, TILE_SPAN_CELLS)
+      const required = coveringTileRange(cam, width, height, TILE_SPAN_CELLS)
+      const result = nextTileRange(previous, cam, width, height)
+
+      expect(result.minTileX).toBeGreaterThanOrEqual(Math.min(previous.minTileX, required.minTileX))
+      expect(result.maxTileX).toBeLessThanOrEqual(Math.max(previous.maxTileX, required.maxTileX))
+      expect(result.minTileY).toBeGreaterThanOrEqual(Math.min(previous.minTileY, required.minTileY))
+      expect(result.maxTileY).toBeLessThanOrEqual(Math.max(previous.maxTileY, required.maxTileY))
+    },
+  )
+
+  // Degenerate/boundary values pinned deterministically rather than left to
+  // the generator, per the pattern already used elsewhere in this file
+  // (tileIndexOf/tileOriginCell's sign trap, coveringTileRange's 0x0
+  // viewport): both axes, both directions.
+  it.each<[string, Camera, Camera]>([
+    // previous and required are FAR apart and non-overlapping on every
+    // axis -- the same fixture cellTiles.test.ts's own retargeted test
+    // uses. Both axes exercised, not just x.
+    [
+      'previous far below required on both axes',
+      { offsetX: 500, offsetY: 500, cellSize: 20 },
+      { offsetX: -0.1, offsetY: -0.1, cellSize: 20 },
+    ],
+    [
+      'previous far above required on both axes',
+      { offsetX: -0.1, offsetY: -0.1, cellSize: 20 },
+      { offsetX: 500, offsetY: 500, cellSize: 20 },
+    ],
+    // previous and required are IDENTICAL: the min/max bounds collapse to a
+    // single point, so this pins the boundary where >= and <= must still
+    // hold as equalities, not just strict inequalities.
+    [
+      'previous equals required exactly',
+      { offsetX: -0.1, offsetY: -0.1, cellSize: 20 },
+      { offsetX: -0.1, offsetY: -0.1, cellSize: 20 },
+    ],
+  ])('%s', (_label, previousCam, cam) => {
+    const width = 1280
+    const height = 900
+    const previous = coveringTileRange(previousCam, width, height, TILE_SPAN_CELLS)
+    const required = coveringTileRange(cam, width, height, TILE_SPAN_CELLS)
+    const result = nextTileRange(previous, cam, width, height)
+
+    expect(result.minTileX).toBeGreaterThanOrEqual(Math.min(previous.minTileX, required.minTileX))
+    expect(result.maxTileX).toBeLessThanOrEqual(Math.max(previous.maxTileX, required.maxTileX))
+    expect(result.minTileY).toBeGreaterThanOrEqual(Math.min(previous.minTileY, required.minTileY))
+    expect(result.maxTileY).toBeLessThanOrEqual(Math.max(previous.maxTileY, required.maxTileY))
+  })
+})
+
+describe('nextTileRange bounded wobble (property)', () => {
+  // Generalises the deterministic sub-cell-wobble counterexample above: ANY
+  // two-position oscillation whose amplitude is at most TILE_SPAN_CELLS
+  // cells on each axis rebuilds at most once, no matter how long it runs.
+  // Provable from the clamp, not just observed: an offset shift of at most
+  // one span moves any single floor/ceil-derived tile boundary by at most
+  // one tile, which is exactly what EVICT_LAG_TILES=1 retains -- so once the
+  // first rebuild (if any) has absorbed that shift, the range contains both
+  // positions' covering sets and every further reversal holds. Killing
+  // mutant: reverting the rebuild target from the retained union back to
+  // `required` (i.e. axisRetained's clamp low/high collapsed to a single
+  // value), which reintroduces the pre-fix defect this whole slice exists to
+  // remove.
+  //
+  // The residual limit this does NOT cover -- an oscillation spanning two or
+  // more tile boundaries still rebuilds once per reversal -- is disclosed,
+  // not fixed; see cellTiles.ts's nextTileRange comment.
+  it.prop([
+    camera,
+    viewportPx,
+    viewportPx,
+    fc.float({ min: Math.fround(-TILE_SPAN_CELLS), max: Math.fround(TILE_SPAN_CELLS), noNaN: true }),
+    fc.float({ min: Math.fround(-TILE_SPAN_CELLS), max: Math.fround(TILE_SPAN_CELLS), noNaN: true }),
+    fc.integer({ min: 2, max: 40 }),
+  ])(
+    'a two-position oscillation of amplitude <= TILE_SPAN_CELLS cells rebuilds at most once in total',
+    (camA, width, height, ampX, ampY, steps) => {
+      const camB: Camera = { ...camA, offsetX: camA.offsetX + ampX, offsetY: camA.offsetY + ampY }
+      let range = coveringTileRange(camA, width, height, TILE_SPAN_CELLS)
+      let rebuilds = 0
+
+      for (let k = 0; k < steps; k++) {
+        const cam = k % 2 === 0 ? camB : camA
+        const next = nextTileRange(range, cam, width, height)
+        if (next !== range) rebuilds++
+        range = next
+      }
+
+      expect(rebuilds).toBeLessThanOrEqual(1)
+    },
+  )
+
+  // Pinned deterministically: the amplitude EXACTLY at the TILE_SPAN_CELLS
+  // boundary, on each axis independently and on both diagonally, and at the
+  // 0x0 pre-measurement viewport -- edges a generator weighted toward the
+  // interior of the range can miss for a long time.
+  it.each<[string, number, number, number, number]>([
+    ['exactly TILE_SPAN_CELLS on x only', TILE_SPAN_CELLS, 0, 1280, 900],
+    ['exactly -TILE_SPAN_CELLS on x only', -TILE_SPAN_CELLS, 0, 1280, 900],
+    ['exactly TILE_SPAN_CELLS on y only', 0, TILE_SPAN_CELLS, 1280, 900],
+    ['exactly -TILE_SPAN_CELLS on y only', 0, -TILE_SPAN_CELLS, 1280, 900],
+    ['exactly TILE_SPAN_CELLS on both axes (diagonal)', TILE_SPAN_CELLS, TILE_SPAN_CELLS, 1280, 900],
+    ['exactly TILE_SPAN_CELLS on both axes, 0x0 pre-measurement viewport', TILE_SPAN_CELLS, TILE_SPAN_CELLS, 0, 0],
+  ])('%s', (_label, ampX, ampY, width, height) => {
+    const camA: Camera = { offsetX: -0.1, offsetY: -0.1, cellSize: 20 }
+    const camB: Camera = { ...camA, offsetX: camA.offsetX + ampX, offsetY: camA.offsetY + ampY }
+    let range = coveringTileRange(camA, width, height, TILE_SPAN_CELLS)
+    let rebuilds = 0
+
+    for (let k = 0; k < 20; k++) {
+      const cam = k % 2 === 0 ? camB : camA
+      const next = nextTileRange(range, cam, width, height)
+      if (next !== range) rebuilds++
+      range = next
+    }
+
+    expect(rebuilds).toBeLessThanOrEqual(1)
   })
 })
 
@@ -226,29 +382,28 @@ describe('tileIndexOf / tileOriginCell (property)', () => {
   })
 })
 
-// EVICTION HYSTERESIS, and the limit of it. The ratified design claimed a
-// boundary wobble costs at most one rebuild, arguing that "the leading edge
-// (ceil) and trailing edge (floor) flip at least one cell apart, so a rebuild
-// always lands on the momentarily-WIDER covering set". THAT ARGUMENT IS
-// WRONG, and the counterexample below is the proof: at a viewport width just
-// over a whole number of tiles, both edges cross a tile boundary within the
-// same sub-cell step, so the covering set SHIFTS instead of widening, and
-// neither position's range contains the other's. What is actually true --
-// and what the properties above pin -- is the one-sided statement:
-// nextTileRange tolerates `previous` being WIDER than required (up to
-// EVICT_LAG_TILES per side), and can never tolerate it being narrower,
-// because a narrower range is a hole. So hysteresis protects the TRAILING
-// edge only.
+// EVICTION HYSTERESIS, and the limit of it. The ratified design originally
+// claimed a boundary wobble costs at most one rebuild on the grounds that
+// "the leading edge (ceil) and trailing edge (floor) flip at least one cell
+// apart, so a rebuild always lands on the momentarily-WIDER covering set".
+// THAT ARGUMENT IS WRONG on its own: at a viewport width just over a whole
+// number of tiles, both edges cross a tile boundary within the same
+// sub-cell step, so the covering set SHIFTS instead of widening, and
+// neither position's range contains the other's -- tileRangeHolds' own
+// containment check cannot bound this wobble by itself.
 //
-// Left as a disclosed limit rather than fixed, deliberately. The cost of the
-// thrash is one strip event per pointermove -- the same order as an ordinary
-// pan's own cost, and still ~60x cheaper than the full-lattice rebase this
-// slice replaced -- and the escape hatch, if the perf run ever shows it, is a
-// three-line change with no new constant: rebuild onto `previous` clamped to
-// within EVICT_LAG_TILES of `required` (i.e. keep the old trailing edge where
-// the tolerance allows) instead of onto `required` exactly. That keeps every
-// bound the properties above assert, at the cost of carrying one tile of lag
-// through an ordinary pan rather than only after a reversal.
+// What DOES bound it is nextTileRange's retention policy (composing
+// `previous` and `required` via axisRetained rather than replacing
+// `previous` outright -- see cellTiles.ts). The counterexample below is the
+// fix's own regression pin: the same shift that broke tileRangeHolds'
+// containment argument settles to exactly one rebuild once retention
+// supplies the tile of trailing-edge slack that argument was missing.
+//
+// The residual limit, disclosed rather than fixed: an oscillation spanning
+// two or more tile boundaries still rebuilds once per reversal, because one
+// tile of lag can't cover a two-tile swing. At cellSize 8.192 that's a 65px
+// sweep each way -- deliberate panning, whose churn is proportional to real
+// travel -- so EVICT_LAG_TILES stays 1 rather than widening to absorb it.
 describe('eviction hysteresis (deterministic -- the wobble cases the generator will not find)', () => {
   const stepThrough = (start: TileRange, cameras: readonly Camera[], width: number, height: number) => {
     let range = start
@@ -281,12 +436,17 @@ describe('eviction hysteresis (deterministic -- the wobble cases the generator w
     expect(stepThrough(start, [nudged, settled, nudged, settled, nudged], 1280, 900)).toBe(1)
   })
 
-  // The counterexample to the design's own claim, above. 12.05 cells of
-  // viewport width (241px at cellSize 20) puts the trailing edge a hair past
-  // three whole tiles, so stepping the camera from 3.9 to 4.0 -- a TENTH of a
-  // cell -- moves the covering range from tiles [0..3] to [1..4]: neither
-  // contains the other, so every step of the oscillation rebuilds.
-  it('a sub-cell wobble CAN rebuild on every step, when both tile edges cross together', () => {
+  // The counterexample to tileRangeHolds' containment check alone, and the
+  // fix's own regression pin. 12.05 cells of viewport width (241px at
+  // cellSize 20) puts the trailing edge a hair past three whole tiles, so
+  // stepping the camera from 3.9 to 4.0 -- a TENTH of a cell -- moves the
+  // covering range from tiles [0..3] to [1..4]: neither contains the other,
+  // so a nextTileRange that replaced `previous` with `required` outright
+  // would rebuild on every step of the oscillation. Retention doesn't: the
+  // first crossing retains tile 0 as a lag tile on the trailing side (result
+  // [0..4]), which then contains both [0..3] and [1..4], so every further
+  // wobble across the SAME boundary holds.
+  it('a sub-cell wobble rebuilds once, not on every step, once both tile edges cross together', () => {
     const low: Camera = { offsetX: 3.9, offsetY: 0, cellSize: 20 }
     const high: Camera = { ...low, offsetX: 4.0 }
     const width = 12.05 * 20
@@ -295,7 +455,7 @@ describe('eviction hysteresis (deterministic -- the wobble cases the generator w
     expect(coveringTileRange(high, width, 80, TILE_SPAN_CELLS)).toMatchObject({ minTileX: 1, maxTileX: 4 })
 
     const start = coveringTileRange(low, width, 80, TILE_SPAN_CELLS)
-    expect(stepThrough(start, [high, low, high, low], width, 80)).toBe(4)
+    expect(stepThrough(start, [high, low, high, low], width, 80)).toBe(1)
   })
 
   // The zoom contract, which nextTileRange deliberately drops from what

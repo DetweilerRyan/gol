@@ -2,7 +2,7 @@ import { renderHook } from '@testing-library/react'
 import { describe, expect, it } from 'vitest'
 import { anchorHolds, anchorOffsetPx, computeAnchor, ANCHOR_DRIFT_CELLS } from '../cellAnchor'
 import type { Camera } from '../camera'
-import { coveringTileRange, tileRangeHolds, TILE_SPAN_CELLS, EVICT_LAG_TILES } from '../cellTiles'
+import { coveringTileRange, nextTileRange, tileRangeHolds, TILE_SPAN_CELLS, EVICT_LAG_TILES } from '../cellTiles'
 import type { ElementSize } from './useElementSize'
 import { useCellTiles } from './useCellTiles'
 
@@ -88,18 +88,31 @@ describe('useCellTiles', () => {
     const initialRange = coveringTileRange(camera, size.width, size.height, TILE_SPAN_CELLS)
     const required = coveringTileRange(crossingPan, size.width, size.height, TILE_SPAN_CELLS)
     expect(tileRangeHolds(initialRange, required, EVICT_LAG_TILES)).toBe(false)
+    // Not exactly `required`: nextTileRange retains up to EVICT_LAG_TILES of
+    // `initialRange` on the trailing side rather than replacing it outright
+    // (see cellTiles.ts's axisRetained), so the hook's job here is to have
+    // actually called nextTileRange -- pin that by comparing against it
+    // directly rather than re-deriving the retained bound by hand.
+    const expectedRange = nextTileRange(initialRange, crossingPan, size.width, size.height)
+    expect(expectedRange).not.toEqual(required)
 
     rerender({ camera: crossingPan })
 
     expect(result.current.range).not.toBe(before.range)
-    expect(result.current.range).toEqual(required)
+    expect(result.current.range).toEqual(expectedRange)
   })
 
-  it('keeps the rebuilt range as the sticky anchor: a later within-hysteresis pan does not rebuild again', () => {
-    // A dedicated camera, verified below: after the crossing pan below
-    // rebuilds the range, the covering set the ceil/floor edges produce
-    // happens to carry natural margin on the x axis, so a further +2 pan
-    // stays inside it -- confirmed via tileRangeHolds, not assumed.
+  // A rebuild's trailing edge retains up to EVICT_LAG_TILES on the side
+  // `previous` lay -- the OPPOSITE side from the direction of travel (see
+  // cellTiles.ts's axisRetained) -- so a pan that CONTINUES in the same
+  // direction sees zero slack on its own (leading) side and rebuilds again
+  // almost immediately, while a pan that REVERSES spends that trailing
+  // slack and holds. This replaces a pre-fix test of the same name that
+  // claimed the opposite -- under the old "replace with `required` exactly"
+  // policy, either direction held the same amount of margin, since both
+  // edges reset to zero margin on every rebuild; retention breaks that
+  // symmetry, so the two directions now need pinning separately.
+  it('after a rebuild, a REVERSING pan within EVICT_LAG_TILES holds the sticky range', () => {
     const stickyCamera: Camera = { offsetX: -32, offsetY: -22.5, cellSize: 20 }
     const { result, rerender } = renderHook(({ camera }: { camera: Camera }) => useCellTiles(camera, size), {
       initialProps: { camera: stickyCamera },
@@ -109,17 +122,40 @@ describe('useCellTiles', () => {
     rerender({ camera: crossingPan })
     const rebuiltRange = result.current.range
 
-    const withinNewHysteresisPan: Camera = { ...crossingPan, offsetX: crossingPan.offsetX + 2 }
-    const required = coveringTileRange(withinNewHysteresisPan, size.width, size.height, TILE_SPAN_CELLS)
+    const reversingPan: Camera = { ...crossingPan, offsetX: crossingPan.offsetX - 2 }
+    const required = coveringTileRange(reversingPan, size.width, size.height, TILE_SPAN_CELLS)
     expect(tileRangeHolds(rebuiltRange, required, EVICT_LAG_TILES)).toBe(true)
     // ...and the fresh covering set genuinely differs, so a hook that lost
     // its sticky anchor and recomputed from scratch every render would be
     // caught rather than passing by coincidence.
     expect(required).not.toEqual(rebuiltRange)
 
-    rerender({ camera: withinNewHysteresisPan })
+    rerender({ camera: reversingPan })
 
     expect(result.current.range).toBe(rebuiltRange)
+  })
+
+  // The companion case: CONTINUING in the same direction after a rebuild
+  // spends the trailing tolerance the reversal above relies on, so it
+  // rebuilds again rather than staying sticky.
+  it('after a rebuild, a CONTINUING pan in the same direction rebuilds again rather than staying sticky', () => {
+    const stickyCamera: Camera = { offsetX: -32, offsetY: -22.5, cellSize: 20 }
+    const { result, rerender } = renderHook(({ camera }: { camera: Camera }) => useCellTiles(camera, size), {
+      initialProps: { camera: stickyCamera },
+    })
+
+    const crossingPan: Camera = { ...stickyCamera, offsetX: stickyCamera.offsetX + 50 }
+    rerender({ camera: crossingPan })
+    const rebuiltRange = result.current.range
+
+    const continuingPan: Camera = { ...crossingPan, offsetX: crossingPan.offsetX + 2 }
+    const required = coveringTileRange(continuingPan, size.width, size.height, TILE_SPAN_CELLS)
+    expect(tileRangeHolds(rebuiltRange, required, EVICT_LAG_TILES)).toBe(false)
+
+    rerender({ camera: continuingPan })
+
+    expect(result.current.range).not.toBe(rebuiltRange)
+    expect(result.current.range).toEqual(nextTileRange(rebuiltRange, continuingPan, size.width, size.height))
   })
 
   it('rebuilds the range on a cellSize change (zoom) even when the pan offset itself is unchanged', () => {

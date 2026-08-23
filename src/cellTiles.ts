@@ -85,16 +85,23 @@ export const TILE_SPAN_CELLS = 4
 //     it does not, and cellTiles.property.test.ts pins the case where it
 //     doesn't.
 //
-// They are composable but this design adopts hysteresis only -- the strip
-// cost above already fits inside one frame, so there is nothing for an
-// admission margin to buy here. It is a one-line change if that ever stops
-// being true: 1 tile of *symmetric* overscan on every side costs 252x148 =
-// 37,296 mounted at min-zoom/1920x1080 (+4.0% over today's 35,856) -- the
-// same figure this module's worst-case four-sided-lag bound reaches (see
-// cellTiles.test.ts). A *directional* margin was considered and rejected:
-// the leading side would have to flip on every drag reversal, paying a full
-// strip admission on the new leading edge plus an eviction on the old one --
-// a double strip event exactly on the gesture users perform most.
+// They are composable but this design adopts hysteresis only, and admission
+// overscan was considered and rejected on measurement, not on the (false)
+// "already fits inside one frame" premise this paragraph used to state --
+// see this slice's own commit history for the corrected numbers. Two
+// independent reasons: symmetric overscan at any useful tolerance raises
+// steady-state mounted count permanently (a *directional* margin fares no
+// better -- the leading side would have to flip on every drag reversal,
+// paying a full strip admission on the new leading edge plus an eviction on
+// the old one, exactly the gesture users perform most), and it batches
+// rebuild work against a frame-interval p95 gate, which is precisely the
+// wrong trade against a per-frame worst case. Retention (nextTileRange's
+// actual policy, below) gets the same reversal-proofing for zero admitted
+// tiles: PER AXIS, it can only ever keep a bound `previous` already held,
+// never mount a genuinely new one (see nextTileRange's own comment for why
+// that's stated per-axis rather than as a 2D-set claim -- a diagonal
+// rebuild's corner tile is genuinely new even though neither axis admitted
+// anything on its own).
 export const EVICT_LAG_TILES = 1
 
 export interface TileRange {
@@ -177,18 +184,16 @@ function axisHolds(
 // architect review corrected it: this tolerates `previous` being WIDER than
 // required, and can never tolerate it being narrower (a narrower range is a
 // hole -- an invisible, unclickable band at the leading edge). So the
-// hysteresis protects the TRAILING edge only. The design argued the stronger
-// claim that a boundary wobble costs at most one rebuild, on the grounds
-// that the leading and trailing edges (Math.ceil vs Math.floor above) flip
-// at least one cell apart so a rebuild always lands on the momentarily-wider
-// covering set. That is false: at a viewport width just past a whole number
-// of tiles, both edges cross within the same sub-cell step, the covering set
-// SHIFTS instead of widening, neither position's range contains the other's,
-// and every step of the oscillation rebuilds. See the deterministic
-// counterexample in cellTiles.property.test.ts's 'eviction hysteresis'
-// block, which also names the escape hatch (rebuild onto `previous` clamped
-// to within evictLagTiles of `required`, rather than onto `required`
-// exactly) if the perf run ever shows the thrash mattering.
+// hysteresis protects the TRAILING edge only, and this predicate alone
+// cannot make a boundary wobble cost at most one rebuild -- the original
+// design argument for that (leading/trailing edges always flip at least one
+// cell apart) is false: at a viewport width just past a whole number of
+// tiles, both edges cross within the same sub-cell step, the covering set
+// SHIFTS instead of widening, and neither position's range contains the
+// other's. What actually bounds a same-boundary wobble to one rebuild is
+// nextTileRange's retention policy below (composing `previous` and
+// `required` via axisRetained rather than replacing `previous` outright),
+// not this containment check by itself.
 export function tileRangeHolds(previous: TileRange, required: TileRange, evictLagTiles: number): boolean {
   return (
     axisHolds(previous.minTileX, previous.maxTileX, required.minTileX, required.maxTileX, evictLagTiles) &&
@@ -217,9 +222,62 @@ export function tileRangeHolds(previous: TileRange, required: TileRange, evictLa
 // Zooming out grows the covering set, so containment fails and this rebuilds;
 // zooming in shrinks it, so the lag test fails once the shrink exceeds
 // EVICT_LAG_TILES and this rebuilds too. The range stores no cellSize at all.
+//
+// One axis's half of the rebuild target below: rather than replacing
+// `previous` with `required` outright, retain as much of `previous` as
+// `evictLagTiles` allows on each side. axisHolds' private sibling, same
+// reason -- one body for X and Y, so the asymmetric argument order (the
+// leading/min side clamps DOWN toward requiredMin, the trailing/max side
+// clamps UP toward requiredMax) lives in exactly one place.
+function axisRetained(
+  previousMin: number,
+  previousMax: number,
+  requiredMin: number,
+  requiredMax: number,
+  evictLagTiles: number,
+): { min: number; max: number } {
+  const clamp = (value: number, low: number, high: number) => Math.min(Math.max(value, low), high)
+  return {
+    min: clamp(previousMin, requiredMin - evictLagTiles, requiredMin),
+    max: clamp(previousMax, requiredMax, requiredMax + evictLagTiles),
+  }
+}
+
+// The sticky-range rule, in full: keep `previous` BY REFERENCE while it
+// holds (see above), and otherwise rebuild onto the EVICT_LAG_TILES-clamped
+// union of `previous` and `required` -- composing axisRetained over X and Y
+// -- rather than onto `required` exactly. Three things follow by
+// construction, not by argument: the result always contains `required` (no
+// hole -- axisRetained's min can only move DOWN to requiredMin, never past
+// it, and symmetrically for max); it never exceeds `required` by more than
+// evictLagTiles per side (so idempotence-by-reference, the no-infinite-loop
+// guarantee below, is now a theorem of the clamp rather than a coincidence
+// of `required` covering itself); and it never mounts a per-axis bound
+// `previous` didn't already hold (each clamp's own bounds are built from
+// `previous` and `required` alone -- there is no third value it could admit
+// from). That last property is what makes this retention, not admission
+// overscan: see EVICT_LAG_TILES' header for why that distinction is the
+// whole point of this design.
+//
+// This is also what actually bounds a same-tile-boundary wobble to one
+// rebuild (tileRangeHolds' NOTE-THE-ASYMMETRY comment explains why that
+// predicate alone can't): after the first rebuild, the trailing edge in
+// whichever direction the wobble reverses toward carries up to one tile of
+// slack, so the reversal still holds. The residual limit, disclosed rather
+// than fixed: an oscillation spanning two or more tile boundaries still
+// rebuilds once per reversal, because a single tile of lag can't cover a
+// two-tile swing. At cellSize 8.192 that's a 65px sweep each way --
+// deliberate panning, whose churn is proportional to real travel, not a
+// sub-pixel wobble -- so EVICT_LAG_TILES stays 1 rather than widening to
+// absorb it (see cellTiles.property.test.ts's 'eviction hysteresis' block).
 export function nextTileRange(previous: TileRange, camera: Camera, widthPx: number, heightPx: number): TileRange {
   const required = coveringTileRange(camera, widthPx, heightPx, previous.spanCells)
-  return tileRangeHolds(previous, required, EVICT_LAG_TILES) ? previous : required
+  if (tileRangeHolds(previous, required, EVICT_LAG_TILES)) return previous
+
+  const x = axisRetained(previous.minTileX, previous.maxTileX, required.minTileX, required.maxTileX, EVICT_LAG_TILES)
+  const y = axisRetained(previous.minTileY, previous.maxTileY, required.minTileY, required.maxTileY, EVICT_LAG_TILES)
+
+  return { minTileX: x.min, maxTileX: x.max, minTileY: y.min, maxTileY: y.max, spanCells: previous.spanCells }
 }
 
 // The total number of cells mounted by every tile in the range -- Guard 1 of
