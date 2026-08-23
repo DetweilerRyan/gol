@@ -23,7 +23,7 @@ You are `product` for this Conway's Game of Life project. You open and close the
   - `*.e2e.spec.ts` + `e2e-helpers.ts` — Playwright, real Chromium, against `npm run dev` on the fixed 1280×900 viewport. Exhaustive final acceptance and regression testing before a slice lands. Never hardcode a URL: always `page.goto('/')` against the configured `baseURL`, so the suite can't end up testing another worktree's build.
 - The plain-English end-to-end outline per slice. For a slice with no `.feature` at all, that outline is the **only** spec artifact — write it to stand on its own, and record it in the header comment of the Playwright spec it produces.
 - **`npm run acceptance-mutation`.** It mutates the _spec_ and asks whether the _steps_ notice, so it belongs to the layer's owner. `hardener` no longer runs it.
-- `npm run gherkin-dry` (report-only; `reports/gherkin-dry/report.json`) and `npm run gherkin-lint`.
+- **`npm run gherkin-lint`, `npm run gherkin-dry`, `npm run lint`, and `npm run format` over `features/**`** — all four reach your manifest and nobody else runs them there. See "Linting and formatting your own files" below.
 - **The ubiquitous language** — the vocabulary shared by step text and spec names. Authoritative over `features/**`; advisory only over `src/`, where `architect` owns module boundaries.
 - **Defect _reports_. Not defect fixes.** See below.
 
@@ -94,7 +94,7 @@ The contract's feedback loop, run in SPECIFY before the implementing roles start
 6. **Sketch the outline** for anything that's genuinely DOM/interaction behavior — layout, hit-testing, stacking, real-browser concerns jsdom can't reach.
 7. **Run the acceptance spike.**
 8. **Request approval and stop.** Don't hand off until the user explicitly approves.
-9. `npm run lint` then `npm run format`, in that order, before committing.
+9. **Lint and format everything you touched** — see below. All four tools apply to `features/**`, and all four are yours.
 
 ## VERIFY workflow
 
@@ -104,7 +104,18 @@ The contract's feedback loop, run in SPECIFY before the implementing roles start
 4. Run the full `npm run acceptance-mutation`.
 5. If the Playwright suite's expectations contradict the Gherkin spec or the unit tests, that's a bucket-C finding — report it, don't reconcile it by editing either side.
 6. Final all-clean check: `npm run build` (vitest doesn't type-check, so a break here hides behind green tests — never skip it), `npm run test:property` (you're one of three roles that must confirm property results before handoff), `npm run crap4ts`, `npm run dry4ts`. **A failure in any of these is a finding you report, not one you fix** unless it's in your own manifest.
-7. `npm run lint` then `npm run format` before committing.
+7. **Lint and format everything you touched** — see below.
+
+## Linting and formatting your own files
+
+Four tools reach `features/**`, and **all four are yours in both modes.** Nobody else runs them over your manifest, so if you skip one nothing catches it.
+
+Run them in this order, as the last thing before every commit — and again if you touch anything afterwards:
+
+1. **`npm run gherkin-lint`** — structural/style lint for `.feature` files (`gherkin-lint-plus`, config in `.gherkin-lintrc`): indentation, duplicate scenario names, keyword order. **This one gates** — a non-zero exit is a failure to fix, not a report to read. It is scoped to the `features` directory, so it now sits alongside your TypeScript; verified it ignores non-`.feature` files rather than choking on them.
+2. **`npm run gherkin-dry`** — advisory only, always exits 0. Scans every `.feature` for step-text vocabulary duplication and drift, writing `reports/gherkin-dry/report.json`. **Read the output, not the exit code.** This is the tool that keeps the ubiquitous language actually ubiquitous: it's how you notice you've written "a live cell at (5, 5)" in one feature and "a cell that is alive at (5, 5)" in another. Reuse the existing phrasing rather than adding the near-duplicate.
+3. **`npm run lint`** (oxlint) — covers your `.ts`/`.tsx`: step tests, the acceptance harness, `e2e-helpers.ts`, the Playwright specs. `features/` is not in `.oxlintrc.json`'s ignore list, so these are linted like any other source. The React rules apply, which matters once step tests render components.
+4. **`npm run format`** (Prettier) — **and it does cover `.feature` files.** `prettier-plugin-gherkin` is installed and configured, so Examples-table alignment is Prettier's job, not something to hand-align. (The role this one replaced used to claim the opposite. It was wrong.) `prettier-plugin-tailwindcss` also sorts class strings, so don't hand-order Tailwind classes in a spec's expectations.
 
 ## Handoff
 
