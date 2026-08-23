@@ -8,7 +8,7 @@ Adapted from unclebob/swarm-forge's `main`-branch constitution (`swarmforge/cons
 
 ## Role boundaries
 
-- Ported from swarm-forge's six-pack branch's own `project.prompt`: don't change another role's `.claude/agents/*.md` file, or take over its workflow/responsibilities, without the user explicitly directing it. Each role's file is the source of truth for its own boundaries — if you think another role's scope should change, say so and ask, don't just start doing that role's job or editing its file yourself.
+- Ported from swarm-forge's six-pack branch's own `project.prompt`: don't change another role's `.claude/agents/*.md` file, or take over its workflow/responsibilities, without the user explicitly directing it. Each role's file is the source of truth for its own boundaries — if you think another role's scope should change, say so and ask, don't just start doing that role's job or editing its file yourself. (The `specifier`+`qa` → `product` merge, and `architect` gaining ADJUDICATE, were directed by the user — see the merge commit.)
 
 ## Commit messages
 
@@ -20,7 +20,8 @@ Adapted from unclebob/swarm-forge's `main`-branch constitution (`swarmforge/cons
   By coder.
   ```
 
-- Both halves are required. `By <role>.` alone no longer identifies a commit: five of the six roles run in every slice, and several slices may be in flight at once, so without the prefix a `git log` on `main` interleaves two slices' role sequences with nothing to tell them apart.
+- Both halves are required. `By <role>.` alone no longer identifies a commit: every role runs in every slice, and several slices may be in flight at once, so without the prefix a `git log` on `main` interleaves two slices' role sequences with nothing to tell them apart.
+- **Acceptance-spike commits carry `[spike]` in the subject** and `By <role> (spike).` in the body — for example `pattern-placement: [spike] draft contract` / `By product (spike).`. The spike's _implementation_ is never committed at all (see `product.md`), so this marker only ever appears on contract drafts. `hardener` and `product` both check that no `[spike]` commit touched `src/` or `scripts/`.
 
 ## Announcements
 
@@ -37,7 +38,7 @@ Adapted from unclebob/swarm-forge's `main`-branch constitution (`swarmforge/cons
 
 ## Worktrees and branches
 
-- **One slice, one git worktree, one branch, one Claude Code session.** The branch is named for the slice — the same stable name the specifier invents, per `handoffs.md`. Every role in a cycle runs in that slice's worktree and commits to that slice's branch.
+- **One slice, one git worktree, one branch, one Claude Code session.** The branch is named for the slice — the same stable name `product` invents, per `handoffs.md`. Every role in a cycle runs in that slice's worktree and commits to that slice's branch.
 - **Never commit to `main`.** `main` is written to only by the merge protocol in `CLAUDE.md`'s "Running slices concurrently" section, which the orchestrating session drives. If you find yourself on `main`, or in a directory that isn't your slice's worktree, stop and report it rather than committing.
 - The worktree may live outside the repo (`../gol-claude-worktrees/<slice>`) or inside it (`.claude/worktrees/<slice>`, where Claude Code's own `EnterWorktree` puts it). Both are supported and both are invisible to git, Prettier, oxlint, and vitest. Each worktree has its own `node_modules` (run `npm ci` once when it's created) and its own dev-server port, derived in `dev-port.ts`.
 - **Never `git checkout`, `rebase`, `merge`, or `push`.** Those are the orchestrating session's, for the same reason: you can only see your own slice.

@@ -22,5 +22,5 @@
     "erasableSyntaxOnly": true,
     "noFallthroughCasesInSwitch": true
   },
-  "include": ["src", "features", "e2e", "perf"]
+  "include": ["src", "features", "perf"]
 }

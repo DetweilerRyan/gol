@@ -32,10 +32,12 @@ export default defineConfig({
   test: {
     environment: 'jsdom',
     setupFiles: ['./src/test-setup.ts'],
-    // Playwright's black-box e2e specs live in their own top-level e2e/
-    // directory (see playwright.config.ts) -- excluded here so vitest doesn't
-    // try to run them as unit tests (wrong runner, no browser/dev-server
-    // available in this process).
+    // Playwright's black-box e2e specs live in features/ alongside the
+    // .feature files and step tests (see playwright.config.ts) -- the whole
+    // directory is `product`'s manifest, and the *suffix* is what separates
+    // the layers, not the directory. Excluded here so vitest doesn't try to
+    // run them as unit tests (wrong runner, no browser/dev-server available
+    // in this process).
     //
     // *.browser.test.ts is the browser-required unit-test layer, run by
     // vitest.browser.config.ts in real Chromium (npm run test:browser). It's

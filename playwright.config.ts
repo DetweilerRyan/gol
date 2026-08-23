@@ -9,7 +9,7 @@ import { devPort } from './dev-port.ts'
 const baseURL = `http://localhost:${devPort()}`
 
 export default defineConfig({
-  testDir: './e2e',
+  testDir: './features',
   testMatch: '**/*.e2e.spec.ts',
   fullyParallel: true,
   forbidOnly: !!process.env.CI,
