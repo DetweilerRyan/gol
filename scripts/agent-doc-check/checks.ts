@@ -8,7 +8,7 @@
 // runs them all -- the surrounding orchestration (reading files off disk,
 // formatting the exit code/output lines) lives in run.ts/decide.ts instead.
 
-import { parseAgentFrontmatter } from './agent-frontmatter.ts'
+import { parseAgentFrontmatter, type AgentFrontmatter } from './agent-frontmatter.ts'
 import { findCycleMentions } from './cycle-string.ts'
 import { extractNpmRunReferences } from './npm-run-refs.ts'
 import { findStaleRoleReferences } from './roles.ts'
@@ -48,55 +48,66 @@ export function checkNpmRunReferencesResolve(docFiles: RawFile[], packageScripts
   return failures
 }
 
+function frontmatterFailure(file: RawFile, message: string): Failure {
+  return { check: 'agent-frontmatter-valid', file: file.path, message }
+}
+
+// One field's contribution to checkOneAgentFrontmatter below, split out
+// per field (name/description/tools/model) rather than one long function
+// with four sequential ifs -- mirrors ast-grep-rule-check's checks.ts,
+// where each field/rule of a check gets its own small function and the
+// check itself is the flatMap/concat over them. Each of these carries its
+// own field's complexity instead of all four compounding into one number.
+function checkFrontmatterName(file: RawFile, parsed: AgentFrontmatter): Failure[] {
+  if (parsed.name === parsed.filenameStem) return []
+  return [
+    frontmatterFailure(
+      file,
+      `frontmatter name \`${parsed.name ?? '(missing)'}\` does not match filename stem \`${parsed.filenameStem}\``,
+    ),
+  ]
+}
+
+function checkFrontmatterDescription(file: RawFile, parsed: AgentFrontmatter): Failure[] {
+  if (parsed.description && parsed.description.trim().length > 0) return []
+  return [frontmatterFailure(file, 'frontmatter has no non-empty `description`')]
+}
+
+function checkFrontmatterTools(file: RawFile, parsed: AgentFrontmatter): Failure[] {
+  if (!parsed.tools || parsed.tools.length === 0) {
+    return [frontmatterFailure(file, 'frontmatter has no `tools` list')]
+  }
+  const unknown = parsed.tools.filter((tool) => !KNOWN_TOOLS.includes(tool))
+  if (unknown.length === 0) return []
+  return [
+    frontmatterFailure(
+      file,
+      `\`tools\` includes unknown tool(s): ${unknown.join(', ')} -- known tools are ${KNOWN_TOOLS.join(', ')}`,
+    ),
+  ]
+}
+
+function checkFrontmatterModel(file: RawFile, parsed: AgentFrontmatter): Failure[] {
+  if (parsed.model && KNOWN_MODELS.includes(parsed.model)) return []
+  return [
+    frontmatterFailure(file, `\`model\` \`${parsed.model ?? '(missing)'}\` is not one of: ${KNOWN_MODELS.join(', ')}`),
+  ]
+}
+
 // One agent file's contribution to check 2, kept separate from the loop in
 // checkAgentFrontmatterValid below -- mirrors ast-grep-rule-check's
 // per-rule-then-flatMap split.
 function checkOneAgentFrontmatter(file: RawFile): Failure[] {
   const parsed = parseAgentFrontmatter(file.path, file.text)
   if (!parsed.hasFrontmatter) {
-    return [
-      {
-        check: 'agent-frontmatter-valid',
-        file: file.path,
-        message: 'no frontmatter block found (expected a leading `---`-delimited block)',
-      },
-    ]
+    return [frontmatterFailure(file, 'no frontmatter block found (expected a leading `---`-delimited block)')]
   }
-  const failures: Failure[] = []
-  if (parsed.name !== parsed.filenameStem) {
-    failures.push({
-      check: 'agent-frontmatter-valid',
-      file: file.path,
-      message: `frontmatter name \`${parsed.name ?? '(missing)'}\` does not match filename stem \`${parsed.filenameStem}\``,
-    })
-  }
-  if (!parsed.description || parsed.description.trim().length === 0) {
-    failures.push({
-      check: 'agent-frontmatter-valid',
-      file: file.path,
-      message: 'frontmatter has no non-empty `description`',
-    })
-  }
-  if (!parsed.tools || parsed.tools.length === 0) {
-    failures.push({ check: 'agent-frontmatter-valid', file: file.path, message: 'frontmatter has no `tools` list' })
-  } else {
-    const unknown = parsed.tools.filter((tool) => !KNOWN_TOOLS.includes(tool))
-    if (unknown.length > 0) {
-      failures.push({
-        check: 'agent-frontmatter-valid',
-        file: file.path,
-        message: `\`tools\` includes unknown tool(s): ${unknown.join(', ')} -- known tools are ${KNOWN_TOOLS.join(', ')}`,
-      })
-    }
-  }
-  if (!parsed.model || !KNOWN_MODELS.includes(parsed.model)) {
-    failures.push({
-      check: 'agent-frontmatter-valid',
-      file: file.path,
-      message: `\`model\` \`${parsed.model ?? '(missing)'}\` is not one of: ${KNOWN_MODELS.join(', ')}`,
-    })
-  }
-  return failures
+  return [
+    ...checkFrontmatterName(file, parsed),
+    ...checkFrontmatterDescription(file, parsed),
+    ...checkFrontmatterTools(file, parsed),
+    ...checkFrontmatterModel(file, parsed),
+  ]
 }
 
 // Check 2: every .claude/agents/*.md file's frontmatter validates -- name

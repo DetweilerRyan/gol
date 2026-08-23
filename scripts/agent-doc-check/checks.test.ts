@@ -5,10 +5,21 @@ import {
   checkNoStaleRoleReferences,
   checkNpmRunReferencesResolve,
   checkRulesNamedInClaudeMd,
+  type Failure,
 } from './checks.ts'
 
 const GOOD_FRONTMATTER = (name: string, tools = 'Read, Write, Edit, Bash, Grep, Glob, LSP', model = 'sonnet') =>
   `---\nname: ${name}\ndescription: Does things.\ntools: ${tools}\nmodel: ${model}\n---\n\nBody.\n`
+
+// The "exactly one failure, shaped like this" assertion recurs across
+// several checks below -- named here rather than repeated inline so two
+// single-failure assertions for unrelated checks don't read as duplicate
+// blocks to dry4ts (or to a reader) just because Failure has few fields.
+function expectSingleFailure(failures: Failure[], expected: { check: string; file: string; messageIncludes: string }) {
+  expect(failures).toHaveLength(1)
+  expect(failures[0]).toMatchObject({ check: expected.check, file: expected.file })
+  expect(failures[0].message).toContain(expected.messageIncludes)
+}
 
 describe('checkNpmRunReferencesResolve', () => {
   it('passes when every reference resolves', () => {
@@ -41,35 +52,60 @@ describe('checkAgentFrontmatterValid', () => {
     expect(checkAgentFrontmatterValid(files)).toEqual([])
   })
 
-  it('fails when there is no frontmatter block at all', () => {
-    const files = [{ path: '.claude/agents/broken.md', text: 'no frontmatter\n' }]
-    const failures = checkAgentFrontmatterValid(files)
-    expect(failures).toHaveLength(1)
-    expect(failures[0].message).toMatch(/no frontmatter/)
-  })
-
-  it('fails when name does not match the filename stem', () => {
-    const files = [{ path: '.claude/agents/coder.md', text: GOOD_FRONTMATTER('cleaner') }]
-    const failures = checkAgentFrontmatterValid(files)
-    expect(failures.some((f) => f.message.includes('does not match filename stem'))).toBe(true)
-  })
-
-  it('fails when description is missing', () => {
-    const text = '---\nname: coder\ntools: Read\nmodel: sonnet\n---\n'
+  // Each row leaves every field but the one under test valid (via
+  // GOOD_FRONTMATTER's defaults), so each produces exactly one failure --
+  // this is one table rather than ten near-identical blocks, each of which
+  // was only "construct a file, call the check, assert the message
+  // contains X." Mirrors ast-grep-rule-check/checks.test.ts's it.each use
+  // for the same reason.
+  it.each([
+    { name: 'no frontmatter block at all', text: 'no frontmatter\n', includes: ['no frontmatter'] },
+    {
+      name: 'name does not match the filename stem',
+      text: GOOD_FRONTMATTER('cleaner'),
+      includes: ['does not match filename stem'],
+    },
+    {
+      name: 'name missing entirely, not just wrong',
+      text: '---\ndescription: Does things.\ntools: Read\nmodel: sonnet\n---\n',
+      includes: ['`(missing)` does not match'],
+    },
+    {
+      name: 'description missing',
+      text: '---\nname: coder\ntools: Read\nmodel: sonnet\n---\n',
+      includes: ['description'],
+    },
+    {
+      name: 'description present but whitespace-only',
+      text: GOOD_FRONTMATTER('coder').replace('Does things.', '   '),
+      includes: ['no non-empty `description`'],
+    },
+    { name: 'tools present but empty', text: GOOD_FRONTMATTER('coder', ''), includes: ['no `tools` list'] },
+    {
+      name: 'tools includes tool(s) outside the known set, comma-separated in the message',
+      text: GOOD_FRONTMATTER('coder', 'Read, Sudo, Eval'),
+      includes: ['Sudo, Eval', 'known tools are Read, Write, Edit, Bash, Grep, Glob, LSP'],
+    },
+    {
+      name: 'model is not one of opus/sonnet/haiku',
+      text: GOOD_FRONTMATTER('coder', 'Read', 'gpt5'),
+      includes: ['gpt5', 'is not one of: opus, sonnet, haiku'],
+    },
+    {
+      name: 'model missing entirely, not just invalid',
+      text: '---\nname: coder\ndescription: Does things.\ntools: Read\n---\n',
+      includes: ['`(missing)` is not one of'],
+    },
+  ])('fails when $name', ({ text, includes }) => {
     const failures = checkAgentFrontmatterValid([{ path: '.claude/agents/coder.md', text }])
-    expect(failures.some((f) => f.message.includes('description'))).toBe(true)
+    expect(failures).toHaveLength(1)
+    expect(failures[0].check).toBe('agent-frontmatter-valid')
+    for (const substring of includes) expect(failures[0].message).toContain(substring)
   })
 
-  it('fails when tools includes a tool outside the known set', () => {
-    const files = [{ path: '.claude/agents/coder.md', text: GOOD_FRONTMATTER('coder', 'Read, Sudo') }]
-    const failures = checkAgentFrontmatterValid(files)
-    expect(failures.some((f) => f.message.includes('Sudo'))).toBe(true)
-  })
-
-  it('fails when model is not one of opus/sonnet/haiku', () => {
-    const files = [{ path: '.claude/agents/coder.md', text: GOOD_FRONTMATTER('coder', 'Read', 'gpt5') }]
-    const failures = checkAgentFrontmatterValid(files)
-    expect(failures.some((f) => f.message.includes('gpt5'))).toBe(true)
+  it.each(['opus', 'sonnet', 'haiku'])('passes model %s as a known model', (model) => {
+    const files = [{ path: '.claude/agents/coder.md', text: GOOD_FRONTMATTER('coder', 'Read', model) }]
+    expect(checkAgentFrontmatterValid(files)).toEqual([])
   })
 })
 
@@ -82,8 +118,7 @@ describe('checkNoStaleRoleReferences', () => {
   it('fails an unqualified retired-role mention, naming the file', () => {
     const docFiles = [{ path: 'x.md', text: 'Invoke `qa` to run the tests.' }]
     const failures = checkNoStaleRoleReferences(docFiles)
-    expect(failures).toHaveLength(1)
-    expect(failures[0]).toMatchObject({ check: 'no-stale-role-references', file: 'x.md' })
+    expectSingleFailure(failures, { check: 'no-stale-role-references', file: 'x.md', messageIncludes: '`qa`' })
   })
 })
 
@@ -111,15 +146,39 @@ describe('checkCycleStringConsistent', () => {
     ]
     const failures = checkCycleStringConsistent(docFiles, roles)
     expect(failures).toHaveLength(1)
+    expect(failures[0].check).toBe('cycle-string-consistent')
     expect(failures[0].file).toBe('c.md')
     expect(failures[0].message).toContain(reordered)
+  })
+
+  it('picks the true majority by count, not whichever form was inserted first', () => {
+    // The minority form is seen before the majority form ever appears, and
+    // the majority form is repeated enough times that only an actual
+    // descending sort by count -- not map insertion order -- picks it as
+    // canonical. This is what pins down the sort in checkCycleStringConsistent
+    // itself, as distinct from findCycleMentions above.
+    const reordered = 'coder → product → cleaner → architect → hardener → product'
+    const docFiles = [
+      { path: 'x.md', text: reordered },
+      { path: 'a.md', text: canonical },
+      { path: 'b.md', text: canonical },
+      { path: 'c.md', text: canonical },
+    ]
+    const failures = checkCycleStringConsistent(docFiles, roles)
+    expect(failures).toHaveLength(1)
+    expect(failures[0].file).toBe('x.md')
+    expect(failures[0].message).toContain(reordered)
+    expect(failures[0].message).toContain(canonical)
   })
 
   it('fails with a single, clearly-flagged failure when no cycle mention is found at all', () => {
     const docFiles = [{ path: 'a.md', text: 'nothing relevant here' }]
     const failures = checkCycleStringConsistent(docFiles, roles)
-    expect(failures).toHaveLength(1)
-    expect(failures[0].check).toBe('cycle-string-consistent')
+    expectSingleFailure(failures, {
+      check: 'cycle-string-consistent',
+      file: '(none)',
+      messageIncludes: 'no cycle-shaped string',
+    })
   })
 })
 
@@ -131,14 +190,20 @@ describe('checkRulesNamedInClaudeMd', () => {
 
   it('fails a real rule id never mentioned in CLAUDE.md', () => {
     const failures = checkRulesNamedInClaudeMd('nothing here', ['no-tile-policy-in-components'])
-    expect(failures).toHaveLength(1)
-    expect(failures[0].message).toContain('no-tile-policy-in-components')
+    expectSingleFailure(failures, {
+      check: 'rules-named-in-claude-md',
+      file: 'CLAUDE.md',
+      messageIncludes: 'no-tile-policy-in-components',
+    })
   })
 
   it('fails a `rules/<id>.yml` path mention that names no real rule file', () => {
     const text = 'see `rules/no-longer-exists.yml`'
     const failures = checkRulesNamedInClaudeMd(text, [])
-    expect(failures).toHaveLength(1)
-    expect(failures[0].message).toContain('no-longer-exists')
+    expectSingleFailure(failures, {
+      check: 'rules-named-in-claude-md',
+      file: 'CLAUDE.md',
+      messageIncludes: 'no-longer-exists',
+    })
   })
 })

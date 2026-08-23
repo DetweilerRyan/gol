@@ -43,4 +43,13 @@ describe('decide', () => {
     expect(result.exitCode).toBe(1)
     expect(result.lines.join('\n')).toContain('no-bar-never-mentioned')
   })
+
+  it('formats the failure header, a blank separator, then one two-line block per failure', () => {
+    const input = baseInput()
+    input.packageScripts = new Set()
+    const result = decide(input)
+    expect(result.lines[0]).toBe('agent-doc-check -- 1 failure(s):')
+    expect(result.lines[1]).toBe('')
+    expect(result.lines[2]).toContain('[npm-run-references-resolve]')
+  })
 })

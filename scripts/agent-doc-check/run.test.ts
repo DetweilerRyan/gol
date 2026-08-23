@@ -1,8 +1,9 @@
-import { mkdirSync, mkdtempSync, rmSync, writeFileSync } from 'node:fs'
+import { mkdirSync, mkdtempSync, rmSync } from 'node:fs'
 import os from 'node:os'
 import path from 'node:path'
 import { afterEach, describe, expect, it } from 'vitest'
 import { listAgentFiles, listDocFiles, listRuleIds, loadPackageScripts, runCheck } from './run.ts'
+import { writeFile } from '../test-support.ts'
 
 let repoRoot: string | undefined
 
@@ -15,12 +16,6 @@ function tempRepo(): string {
   const dir = mkdtempSync(path.join(os.tmpdir(), 'agent-doc-check-'))
   repoRoot = dir
   return dir
-}
-
-function writeFile(root: string, relativePath: string, contents: string): void {
-  const full = path.join(root, relativePath)
-  mkdirSync(path.dirname(full), { recursive: true })
-  writeFileSync(full, contents)
 }
 
 const GOOD_AGENT =

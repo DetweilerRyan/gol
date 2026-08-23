@@ -22,4 +22,12 @@ describe('extractNpmRunReferences', () => {
   it('returns an empty array when there is no reference at all', () => {
     expect(extractNpmRunReferences('nothing to see here')).toEqual([])
   })
+
+  it('does not read an angle-bracketed placeholder as a script name', () => {
+    // The safe way to write a hypothetical example in these docs -- see the
+    // module comment. A bare kebab-case placeholder with no brackets (e.g.
+    // "npm run some-script") does NOT get this pass: it reads exactly like
+    // a real reference and check1 will flag it as unresolved.
+    expect(extractNpmRunReferences('e.g. `npm run <script-name>`')).toEqual([])
+  })
 })

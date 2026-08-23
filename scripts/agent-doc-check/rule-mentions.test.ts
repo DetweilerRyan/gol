@@ -37,6 +37,16 @@ describe('extractMentionedRuleIds', () => {
     expect(mentioned).toContain('no-manual-memo-tsx')
   })
 
+  it('synthesizes the shorthand pairing with no surrounding whitespace at all', () => {
+    const mentioned = extractMentionedRuleIds('`no-manual-memo-ts`/`-tsx`')
+    expect(mentioned).toContain('no-manual-memo-tsx')
+  })
+
+  it('synthesizes nothing when no shorthand pairing is present, not a stray candidate id', () => {
+    const mentioned = extractMentionedRuleIds('the `no-react-in-domain` rule, mentioned plainly')
+    expect(mentioned).toEqual(new Set(['no-react-in-domain']))
+  })
+
   it('does not include a rule id nowhere mentioned', () => {
     expect(extractMentionedRuleIds('nothing relevant here')).not.toContain('no-react-in-domain')
   })

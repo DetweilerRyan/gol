@@ -42,4 +42,9 @@ describe('findStaleRoleReferences', () => {
     const found = findStaleRoleReferences('Invoke `qa` before `specifier` runs.')
     expect(found.map((reference) => reference.role)).toEqual(['qa', 'specifier'])
   })
+
+  it('trims surrounding whitespace off the reported lineText', () => {
+    const found = findStaleRoleReferences('line one\n  Invoke `qa` here.  \nline three\n')
+    expect(found).toEqual([{ role: 'qa', line: 2, lineText: 'Invoke `qa` here.' }])
+  })
 })

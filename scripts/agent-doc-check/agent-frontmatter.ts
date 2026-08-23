@@ -9,6 +9,14 @@
 // frontmatter format is written on exactly one line by this repo's own
 // convention (no multi-line values), so a line-anchored `key: value` regex
 // reads every field exactly as intended without choking on the prose.
+//
+// FRONTMATTER_FIELD's trailing `$` assumes an LF-only line (this repo's own
+// convention, via .gitattributes/Prettier) -- a CRLF line leaves a trailing
+// `\r` that `.` never matches (it's a line terminator, not an ordinary
+// character), so `$` then can't reach the true end of the raw line and the
+// whole field silently fails to parse. Pinned by
+// agent-frontmatter.test.ts's CRLF test rather than "fixed" by stripping
+// `\r`, since no file in this repo is expected to have one.
 
 export interface AgentFrontmatter {
   path: string
