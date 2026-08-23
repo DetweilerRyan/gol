@@ -171,12 +171,18 @@ header and `src/cellTiles.ts`'s `tileRangeHolds` comment before touching it.
 
 `cellTiles.ts` mounts a world-anchored tile range and keeps it while it still
 covers the viewport, tolerating up to `EVICT_LAG_TILES` of staleness on a
-side. That hysteresis protects the trailing edge only. Where the viewport is
-a whisker wider than a whole number of tiles, the leading and trailing tile
-edges cross within the same sub-cell step, so a small back-and-forth pan
-_shifts_ the covering set rather than widening it -- neither position's range
-contains the other's, and **every** step rebuilds. That defect shipped
-knowingly; this family is what measures it, before and after the fix.
+side. Where the viewport is a whisker wider than a whole number of tiles, the
+leading and trailing tile edges cross within the same sub-cell step, so a
+small back-and-forth pan _shifts_ the covering set rather than widening it --
+neither position's range contains the other's. Against `tileRangeHolds`'
+containment check alone that shift rebuilds on **every** step; that defect
+shipped, was measured by this exact family, and has since been fixed --
+`nextTileRange` now retains a lag tile on the trailing side instead of
+rebuilding onto the covering set exactly (see `EVICT_LAG_TILES`' and
+`nextTileRange`'s own comments in `cellTiles.ts`), which converts the same
+shift into a single rebuild that then holds. This family is now the
+regression guard for that fix -- see `tile-boundary.perf.spec.ts`'s own
+header for the measured before numbers (896 churn/move, 58.4ms p95).
 
 Nothing in scenarios 1-5 can see it. `panPaced` interpolates monotonically
 from `from` to `from + delta`, so the camera's world offset is monotone for
@@ -216,8 +222,16 @@ unseeded population (see above), and handled the same way.
 rendered DOM -- `#grid-content`'s own rect plus two cell buttons' rects --
 rather than assuming what the zoom clicks produced, and (b) predicts the
 rebuild count over the planned gesture using the app's _own_ policy function,
-`cellTiles.ts`'s `nextTileRange`. The thrash row asserts at least
-`moves - 2` predicted rebuilds; the two control rows assert at most 1.
+`cellTiles.ts`'s `nextTileRange`. Each row asserts **two** things, not one:
+a GEOMETRY precondition (`wobbleCoveringRangesAreNested` -- non-nested for
+the thrash row, nested for the two control rows) that is fix-invariant, a
+fact about `coveringTileRange` alone that never mentions the retention
+policy; and a POLICY expectation on top of it (`simulateWobbleRebuilds`) that
+is the regression guard -- the thrash row asserts at most 1 predicted
+rebuild, and the two control rows assert at most 1. See
+`tile-boundary.perf.spec.ts`'s own comment above `MAX_THRASH_REBUILDS` for
+why the thrash row's bound used to run the other way (`>= moves - 2`, before
+`fix-tile-hysteresis` fixed the underlying policy).
 
 The setup nudge that finds the phase is applied **rightward**, and the
 direction is load-bearing rather than arbitrary: panning right decreases
@@ -246,9 +260,12 @@ produce. The snapshot also carries `nodeChurnObserved`, which each rep
 asserts and which is never persisted -- without it, a mistyped selector
 reports 0 and is indistinguishable from the safe row's genuine 0.
 
-### What a good run looks like
+### What a good run looked like, pre-fix -- the defect baseline
 
-Measured on an Apple M2 Pro, 5 reps x 40 moves, `buildMode: perf`:
+Measured on an Apple M2 Pro, 5 reps x 40 moves, `buildMode: perf`, on git
+`44d72f9`, **before** `fix-tile-hysteresis` landed. This is the baseline the
+regression guard above now exists to keep the thrash row away from, not a
+result to expect from a current run:
 
 | scenario                       | tiles across | churn/rep            | churn/move | wall clock/rep | ScriptDuration/rep |
 | ------------------------------ | ------------ | -------------------- | ---------- | -------------- | ------------------ |
@@ -263,9 +280,20 @@ first rep only -- the rebuild-once-and-settle signature, and a third
 independent confirmation that the observer works, since it sits between the
 other two rows rather than at either extreme.
 
-If the thrash row ever reads 0 while its precondition still passes, suspect a
-pan-sign disagreement between the nudge, `simulateWobbleRebuilds`, and
-`camera.ts`'s `panCamera` before touching the amplitude.
+Post-fix, the thrash row's signature is expected to resemble the aligned
+row's rather than its own numbers above: one settle-in rebuild absorbed by
+rep 0 (the discarded warm-up -- see `raw-sample.ts`'s `MIN_REPS` comment),
+then exactly 0 on the four measured reps -- stated as the design's
+expectation, not yet re-measured in this file (that run is
+`fix-tile-hysteresis`'s own commit 4). The pre-fix diagnostic below is
+inverted by the fix and read the other way now: before, 0 on the thrash row
+while its precondition still passed was the tell for a broken harness; after,
+0 on the _measured_ reps is the expected, correct reading, and a run that
+keeps churning on every move is what should now raise suspicion of a
+regression in the retention policy, not of a pan-sign disagreement between
+the nudge, `simulateWobbleRebuilds`, and `camera.ts`'s `panCamera` -- though
+that disagreement is still the first thing to rule out if a control row's
+churn ever moves off 0.
 
 ## No baseline is committed
 

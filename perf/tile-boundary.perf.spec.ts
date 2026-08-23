@@ -3,22 +3,30 @@
 // see playwright.perf.config.ts's testIgnore on the 1920x1080 project), three
 // zoom levels chosen purely for the tile geometry they produce:
 //
-//   scenario                        cellSize  viewport in tiles  expectation
-//   ------------------------------  --------  -----------------  -----------
-//   wobble-tile-boundary-thrash        8.192   39.0625  just-over  rebuild every move
+//   scenario                        cellSize  viewport in tiles  expectation (post-fix)
+//   ------------------------------  --------  -----------------  ----------------------
+//   wobble-tile-boundary-thrash        8.192   39.0625  just-over  <=1 rebuild, then settle (was every move, pre-fix)
 //   wobble-tile-boundary-safe         10.240   31.2500  mid-tile   never rebuild
 //   wobble-tile-boundary-aligned      20.000   16.0000  exact      rebuild once, then settle
 //
-// WHY THIS FAMILY EXISTS. cellTiles.ts's tileRangeHolds comment discloses,
-// and cellTiles.property.test.ts pins, a case its eviction hysteresis does
-// not cover: where the viewport is a whisker wider than a whole number of
-// tiles, the leading and trailing tile edges cross within the same sub-cell
-// step, so a small back-and-forth pan SHIFTS the covering set rather than
-// widening it, neither position's range contains the other's, and every step
-// rebuilds. That defect shipped deliberately, to be measured before it is
-// fixed. Nothing in scenarios 1-5 can see it: panPaced interpolates
-// monotonically, and a monotone camera offset crosses any given tile boundary
-// at most once.
+// WHY THIS FAMILY EXISTS. It is now the REGRESSION GUARD for a defect that
+// shipped, was measured here, and has since been fixed. Where the viewport
+// is a whisker wider than a whole number of tiles, the leading and trailing
+// tile edges cross within the same sub-cell step, so a small back-and-forth
+// pan SHIFTS the covering set rather than widening it and neither position's
+// range contains the other's -- cellTiles.ts's tileRangeHolds comment
+// discloses this geometry, and cellTiles.property.test.ts pins it. Before the
+// fix, nextTileRange rebuilt onto that shifted set on every step; measured
+// against this exact family (git 44d72f9), that cost 896 DOM-node churn/move
+// and a 58.4ms p95 frame interval (7.0 quanta, at this box's 8.33ms refresh)
+// on the thrash row alone. cellTiles.ts's nextTileRange now retains a lag
+// tile on the trailing side instead of rebuilding onto the covering set
+// exactly (see EVICT_LAG_TILES' and nextTileRange's own comments), which
+// converts that same shift into a single rebuild that then holds --
+// MAX_THRASH_REBUILDS below is what keeps that fixed. Nothing in scenarios
+// 1-5 could ever see the underlying geometry either way: panPaced
+// interpolates monotonically, and a monotone camera offset crosses any given
+// tile boundary at most once.
 //
 // THE THREE ROWS ARE THE MEASUREMENT. A thrash number on its own says
 // nothing -- it could be the cost of the gesture rather than of the geometry.
@@ -34,8 +42,8 @@
 // The headline number is nodeChurnCount: DOM nodes added plus removed under
 // #grid-content per rep (see instrumentation.ts). Cost in milliseconds is
 // machine-specific and noisy; the strip mount/unmount count is exact, is what
-// the follow-up hysteresis fix has to move, and is directly comparable
-// between runs on different hardware.
+// the hysteresis fix above moved (896 -> 0 on the thrash row's measured
+// reps), and stays directly comparable between runs on different hardware.
 //
 // Records raw samples only -- see raw-sink.ts's header comment. `npm run
 // perf-report` computes the per-move-event normalisation.
@@ -111,7 +119,8 @@ async function zoomOutTimes(page: Page, clicks: number): Promise<void> {
 
 // What prepareCamera confirms about the phase it attained, before anything
 // is measured: a geometry fact (fix-invariant, see below) and a policy fact
-// (pre-fix only, see MIN_THRASH_REBUILDS/MAX_CONTROL_REBUILDS below).
+// (checked against the fixed policy's own guarantee, see
+// MAX_THRASH_REBUILDS/MAX_CONTROL_REBUILDS below).
 interface AttainedPhase {
   rangesNested: boolean
   predictedRebuilds: number
@@ -176,20 +185,26 @@ async function prepareCamera(
 // and never mentions nextTileRange's retention policy, which is what keeps
 // it true whether or not that policy currently has the tile-boundary defect.
 //
-// The POLICY expectation below it is a separate, pre-fix-only claim: that
-// cellTiles.ts's nextTileRange, as it stands today, actually reproduces the
-// known defect at this geometry (thrash rebuilds almost every move; a
-// control row rebuilds at most once). fix-tile-hysteresis commit 3 flips
-// MIN_THRASH_REBUILDS's role from "pre-fix expectation" to "post-fix
-// regression guard" once the policy changes; the geometry precondition above
-// it does not move.
+// The POLICY expectation below it is the REGRESSION GUARD: that
+// cellTiles.ts's nextTileRange, as fixed, confines a thrash-geometry wobble
+// to at most one rebuild rather than reproducing the pre-fix defect (which
+// rebuilt almost every move -- see this file's header for the measured
+// numbers). MAX_THRASH_REBUILDS held the opposite bound before
+// fix-tile-hysteresis commit 3 (>= MOVES_PER_REP - 2, i.e. the defect WAS the
+// expectation); this is that flip. The geometry precondition above it never
+// moved.
 //
 // The controls' bound is 1 rather than 0 because "safe" means the wobble
 // cannot thrash, not that it can never rebuild: when only the leading edge
 // crosses, the range widens once and then holds for the rest of the gesture
 // no matter how long it runs. That is the aligned row's whole signature.
+// MAX_THRASH_REBUILDS stays a separate constant from MAX_CONTROL_REBUILDS
+// even though both are 1 today: they assert different things -- a geometry
+// that provably cannot thrash, versus one that can but is now held to the
+// same bound by the retention policy -- and collapsing them into one name
+// would lose that distinction the day either changes independently.
 const MAX_CONTROL_REBUILDS = 1
-const MIN_THRASH_REBUILDS = MOVES_PER_REP - 2
+const MAX_THRASH_REBUILDS = 1
 
 async function runWobbleScenario(page: Page, testInfo: TestInfo, spec: WobbleScenarioSpec): Promise<void> {
   testInfo.setTimeout(TIMEOUT_MS)
@@ -211,13 +226,11 @@ async function runWobbleScenario(page: Page, testInfo: TestInfo, spec: WobbleSce
     expect(rangesNested, 'the attained camera phase must be non-nested (thrash) geometry').toBe(false)
     expect(
       predictedRebuilds,
-      'pre-fix nextTileRange must still reproduce the defect at a thrash phase',
-    ).toBeGreaterThanOrEqual(MIN_THRASH_REBUILDS)
+      'the retention policy must confine a thrash-phase wobble to at most one rebuild',
+    ).toBeLessThanOrEqual(MAX_THRASH_REBUILDS)
   } else {
     expect(rangesNested, "a control row's geometry must be nested (cannot thrash) at the phase it attained").toBe(true)
-    expect(predictedRebuilds, 'pre-fix nextTileRange must rebuild a control row at most once').toBeLessThanOrEqual(
-      MAX_CONTROL_REBUILDS,
-    )
+    expect(predictedRebuilds, 'a control row must rebuild at most once').toBeLessThanOrEqual(MAX_CONTROL_REBUILDS)
   }
 
   const metrics = await startMetrics(page)
