@@ -11,32 +11,60 @@ import type { Camera } from './camera'
 // carry) moves to the sibling module cellAnchor.ts (step 2), which is why
 // this module stores no cellSize and does not import worldToScreen.
 
-// Cell span per tile side, derived (not guessed) in the ratified
-// tile-virtualized-cells design from four independent min-zoom/1920x1080
-// measurements of reports/perf/latest.md @ 5042ab3 (2026-08-22):
-// c_rerender (retained-cell re-render cost) = 5.35-5.81 us/cell across two
-// viewports and two zoom levels, and c_remount (warm mount+unmount cost, from
-// the zoom-shift-wheel scenarios, which remount every cell today) =
-// 12.7-15.4 us/cell. Modelling a pan's strip-event cost as
-// F(S) = c_cell * enteringCells(S) + c_tile * tileCount(S), with
-// c_cell ~= 14us and c_tile ~= 1us (a memo-hit component call plus one keyed
-// reconciliation slot), gives a minimum near S=3-4 cells per tile side and a
-// budget breach (>16.7ms, the 60fps frame budget) at S=8 and S=16:
+// Cell span per tile side. The design below this comment (ratified
+// tile-virtualized-cells design, derived from reports/perf/latest.md @
+// 5042ab3, 2026-08-22) chose S=4 from an F(S) = c_cell * enteringCells(S) +
+// c_tile * tileCount(S) model built on a *pre-tiling* calibration -- the
+// zoom-shift-wheel scenarios it read c_remount from didn't remount at all
+// under the lattice that predated this module (GridCells.tsx keyed by
+// slotIndex, so a rebase re-rendered slots against a new origin; it never
+// unmounted them). That made every constant in that model's S-table (which
+// stood in this comment until 2026-08-23; see git history) wrong by roughly
+// 7-10x, and it stayed here uncorrected until the full perf run below
+// caught it.
 //
-//   S   tiles   entering(x)   F(S) at min-zoom/1920x1080
-//   3   3,726   414           9.53ms
-//   4   2,135   560           9.98ms   <- chosen
-//   6     984   864          13.08ms
-//   8     558 1,152          16.69ms  (zero margin against the 16.7ms budget)
-//  16     160 2,560          36.00ms  (also breaches the mounted-count guard)
+// CORRECTED (2026-08-23, commit 5060452, full perf run against this landed
+// module): the actual per-admitted-cell cost, measured post-tiling where
+// admission genuinely does mount+unmount DOM, is
 //
-// S=4 is the minimax choice across the one constant that stays a guess
-// (c_tile): it is the only span that stays inside budget across the whole
-// plausible range of c_tile (1-3us), where S=3 fails once tiles are dear and
-// S=6/S=8 fail once cells are dear. A single named constant so retuning is a
-// one-line change -- see cellTiles.test.ts's table-driven test, which pins
-// the exact mounted/tile/entering-strip counts this constant was chosen
-// against, so a future change to it fails loudly rather than drifting.
+//   c_strip ~= 125-145us of task time (~76us of that is script) per admitted
+//   cell at ~19,680 mounted, cross-validated between two unrelated
+//   scenarios -- pan-min-zoom-empty (TaskDuration/move 41.7ms,
+//   ScriptDuration/move 13.1ms, 1280x900) and wobble-tile-boundary-thrash
+//   (TaskDuration/move 76.2ms, ScriptDuration/move 33.3ms, 896 DOM-node
+//   churn/move, 1280x900) -- agreeing to within 4%.
+//
+// That cost is not constant: at 33,184 mounted (1920x1080, same scenario
+// pair) it rises to ~239us/admitted cell. The old F(S) has no term for a
+// mounted-count-dependent unit cost, so treat that rise as DIRECTIONAL only
+// -- it's two points against what would need to be at least a two-parameter
+// law, and the 1920x1080 sample is confounded with 1.8x the paint area of
+// the 1280x900 one. A real re-tuning of S needs more than two points.
+//
+// What tiling actually bought, measured rather than modelled: it did NOT
+// reduce JavaScript. Cells touched per rep fell ~21x (whole viewport
+// -> admitted strip only) while per-cell cost rose ~19x, so
+// ScriptDuration/move at min zoom, 1280x900 is essentially unchanged
+// (14.0ms pre-tiling -> 13.1ms post, reports/perf history). The measured
+// 38% p95 improvement (pan-min-zoom-empty, 1280x900) came from
+// RecalcStyleDuration/move roughly halving (17.4ms -> 8.4ms), because a
+// retained tile no longer restyles on a pan tick.
+//
+// The 16.7ms/frame acceptance criterion (60fps) was MISSED at this setting,
+// not waived: pan-min-zoom-empty p95 measures 66.7ms at 1280x900 -- 8 frame
+// intervals at this harness's actual 120Hz refresh (frameIntervalsMs
+// quantizes to 8.33ms here; state frame-interval gates in quanta, since
+// "16.7ms" silently means "2 quanta" on this box and something else on a
+// 60Hz one). It is also unreachable by ANY S under this design: the best
+// modelled value, at S=2 (~40% cheaper per the entering-cell count, c_tile
+// still unmeasured), is ~40ms -- still 2.3-2.9x over budget. TILE_SPAN_CELLS
+// stays 4 as landed; it is NOT known to be optimal, and the experiment that
+// would settle it (run the wobble-tile-boundary family at S=2 and S=4 and
+// compare) is pending, not run. The lever that actually closes the gap is
+// mounted count, not strip size: an empty grid at min zoom mounts 19,680
+// buttons, but at default zoom only 3,264 mount and every scenario already
+// sits inside budget with zero long tasks. The 16.7ms goal isn't softened --
+// it moves to whichever slice addresses mounted count at min zoom.
 export const TILE_SPAN_CELLS = 4
 
 // How many tiles of margin a retained range may carry beyond the covering

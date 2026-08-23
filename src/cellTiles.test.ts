@@ -155,12 +155,22 @@ describe('tileRangeCellCount / enteringStripCellCount', () => {
 //
 // Measured constants the design chose TILE_SPAN_CELLS = 4 against, not
 // reproducible here as assertions (no exported function of this module
-// computes a cost -- see cellTiles.ts's header for the full F(S) table):
-// c_rerender = 5.35-5.81 us/cell (four independent pan measurements),
-// c_remount = 12.7-15.4 us/cell (six independent zoom measurements), and the
-// validated relation p95 (frame interval) ~= mounted cell count x c_rerender
-// -- predicted 110.3ms / 192.2ms against 108.2ms / 197.0ms observed at
-// 20,618 / 35,856 mounted cells, both within +/-2.4%.
+// computes a cost). These describe the *pre-tiling* lattice (GridCells.tsx
+// keying by slotIndex, no admit/evict) that predated this module, not the
+// tiled design below -- see cellTiles.ts's header for what a full post-
+// tiling perf run measured and why the two regimes aren't comparable term
+// for term: c_rerender = 5.35-5.81us/cell (four independent pan
+// measurements) is a genuine retained-cell re-render cost, and the relation
+// below it holds correctly in that regime -- p95 (frame interval) ~=
+// mounted cell count x c_rerender predicted 110.3ms / 192.2ms against
+// 108.2ms / 197.0ms observed at 20,618 / 35,856 mounted cells, both within
+// +/-2.4% -- but "c_remount = 12.7-15.4us/cell (six independent zoom
+// measurements)" was mislabeled: the pre-tiling lattice never remounted a
+// cell on those scenarios, it re-rendered one with heavy prop churn, so that
+// figure is style-bound rather than script-bound and is not a remount cost
+// at all. Do not extrapolate either constant, or the relation above, across
+// the regime change into the tiled design -- that extrapolation is exactly
+// what the corrected header on cellTiles.ts replaces.
 describe('design table: TILE_SPAN_CELLS = 4 mounted/tile/entering counts', () => {
   const cases: ReadonlyArray<{
     readonly name: string
