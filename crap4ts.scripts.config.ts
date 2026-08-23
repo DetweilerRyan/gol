@@ -23,9 +23,12 @@ import { defineConfig } from 'crap4ts'
 // line classifier) and split cleanly, so no special pleading was needed.
 //
 // **/test-support.ts is excluded for the same reason src/test-support/** is
-// excluded from crap4ts.config.ts: it's shared fixture-builder infrastructure
-// for the test files that import it (currently scripts/perf-report/'s
-// format.test.ts/stats.test.ts/units.test.ts), not product code.
+// excluded from crap4ts.config.ts: it's shared test infrastructure for the
+// test files that import it, not product code -- currently
+// scripts/perf-report/test-support.ts's fixture builders (used by that
+// program's own format.test.ts/stats.test.ts/units.test.ts) and the
+// scripts-root scripts/test-support.ts's writeFile helper (used by
+// agent-doc-check/run.test.ts and ast-grep-rule-check/run.test.ts).
 export default defineConfig({
   threshold: 6,
   coverageMetric: 'line',
