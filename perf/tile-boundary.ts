@@ -166,6 +166,47 @@ export function simulateWobbleRebuilds(
   return rebuilds
 }
 
+// Does `outer` fully cover `inner` on both axes? The building block for
+// wobbleCoveringRangesAreNested below -- neither direction alone decides
+// nestedness, since either range could be the larger one depending on phase.
+function rangeContains(outer: TileRange, inner: TileRange): boolean {
+  return (
+    outer.minTileX <= inner.minTileX &&
+    outer.maxTileX >= inner.maxTileX &&
+    outer.minTileY <= inner.minTileY &&
+    outer.maxTileY >= inner.maxTileY
+  )
+}
+
+// Whether the wobble's two camera positions (base, and base displaced by
+// +amplitudePx) produce covering-tile ranges where one contains the other.
+// True ("nested") is the ordinary case: a boundary crossed by only one edge
+// widens the covering set on one side, and the wider of the two ranges
+// contains the narrower one, however long the wobble runs. False
+// ("non-nested") is the thrash geometry cellTiles.ts's tileRangeHolds comment
+// discloses: a viewport a whisker over a whole number of tiles has its
+// leading and trailing edges cross within the same sub-cell step, so the
+// covering set SHIFTS sideways instead of widening and neither position's
+// range contains the other's.
+//
+// This is deliberately a fact about coveringTileRange alone, not about
+// nextTileRange's retention policy -- contrast simulateWobbleRebuilds, which
+// asks what the app's ACTUAL policy does with these same two positions over
+// a longer gesture. Stating the qualifying condition this way is what keeps
+// it invariant across a change to that policy: it was true of the geometry
+// before EVICT_LAG_TILES existed and stays true after it changes shape.
+export function wobbleCoveringRangesAreNested(
+  base: Camera,
+  widthPx: number,
+  heightPx: number,
+  amplitudePx: number,
+): boolean {
+  const displaced = panCamera(base, amplitudePx, 0)
+  const baseRange = coveringTileRange(base, widthPx, heightPx, TILE_SPAN_CELLS)
+  const displacedRange = coveringTileRange(displaced, widthPx, heightPx, TILE_SPAN_CELLS)
+  return rangeContains(baseRange, displacedRange) || rangeContains(displacedRange, baseRange)
+}
+
 // Every candidate setup nudge starts above DRAG_THRESHOLD_PX so the setup
 // drag actually becomes a pan (see panWobblePaced's own check for the same
 // hazard), and the scan covers one full tile pitch beyond that, since the
@@ -174,39 +215,35 @@ export function simulateWobbleRebuilds(
 const MIN_NUDGE_PX = DRAG_THRESHOLD_PX + 1
 
 // The whole-pixel rightward pointer displacement that puts the camera at a
-// phase where a wobble of `amplitudePx` rebuilds the tile range on
-// essentially every move. Whole pixels only, so the pointer coordinates the
-// driver dispatches stay integers.
+// phase where a wobble of `amplitudePx` makes the two covering tile ranges
+// wobbleCoveringRangesAreNested visits land NON-NESTED -- the thrash
+// geometry. Whole pixels only, so the pointer coordinates the driver
+// dispatches stay integers.
 //
-// THE APPROACH DIRECTION IS LOAD-BEARING, not an implementation detail.
-// Nudging RIGHTWARD means the camera's offsetX decreases monotonically on the
-// way in, so the retained range's minimum tile is rebuilt exactly onto the
-// covering minimum at the moment it last decremented, and is never one tile
-// wider on that side. Reverse the sign and it can be: a range one tile wider
-// on the side the wobble travels toward CONTAINS both of the wobble's
-// covering sets within EVICT_LAG_TILES, holds for the whole gesture, and the
-// scenario measures a confident zero while every precondition here still
-// passes. simulateWobbleRebuilds seeds from the minimal covering set for the
-// same reason -- that is the range the rightward approach actually leaves
-// behind, up to one tile of trailing-edge lag that the caller's +-2 tolerance
-// absorbs.
+// THE APPROACH DIRECTION IS LOAD-BEARING, not an implementation detail, for
+// what happens once a scenario actually starts panning from the nudged
+// position: nudging RIGHTWARD means the camera's offsetX decreases
+// monotonically on the way in, so the range the app's own nextTileRange
+// retains after the setup drag is rebuilt exactly onto the covering minimum
+// at the moment it last decremented, never one tile wider on that side.
+// Reverse the sign and it can be wider: a range one tile wider on the side
+// the wobble travels toward can go on containing both of the wobble's
+// covering sets, and the scenario measures a confident zero while the
+// geometry precondition below still passes. simulateWobbleRebuilds seeds
+// from the minimal covering set for the same reason -- that is the range the
+// rightward approach actually leaves behind, up to the one tile of
+// trailing-edge lag the spec's own policy-expectation tolerance absorbs.
 //
 // Returns the MIDDLE of the widest run of qualifying nudges rather than the
 // first one found: the qualifying window is only a few pixels wide, and its
 // edges are where a sub-pixel discrepancy between this prediction and what
 // the browser actually lays out would flip the answer.
-export function findThrashNudgePx(
-  base: Camera,
-  widthPx: number,
-  heightPx: number,
-  amplitudePx: number,
-  moves: number,
-): number {
-  const qualifying = qualifyingNudges(base, widthPx, heightPx, amplitudePx, moves)
+export function findThrashNudgePx(base: Camera, widthPx: number, heightPx: number, amplitudePx: number): number {
+  const qualifying = qualifyingNudges(base, widthPx, heightPx, amplitudePx)
   const run = widestRun(qualifying)
   if (!run) {
     throw new Error(
-      `findThrashNudgePx: no nudge in [${MIN_NUDGE_PX}, ${MIN_NUDGE_PX + nudgeScanSpanPx(base)}] makes a ${amplitudePx}px wobble rebuild the tile range -- the viewport is ${viewportWidthInTiles(widthPx, base.cellSize)} tiles wide, which is not thrash geometry for this amplitude`,
+      `findThrashNudgePx: no nudge in [${MIN_NUDGE_PX}, ${MIN_NUDGE_PX + nudgeScanSpanPx(base)}] makes a ${amplitudePx}px wobble's two covering tile ranges land non-nested -- the viewport is ${viewportWidthInTiles(widthPx, base.cellSize)} tiles wide, which is not thrash geometry for this amplitude`,
     )
   }
   return run.start + Math.floor((run.length - 1) / 2)
@@ -216,25 +253,14 @@ function nudgeScanSpanPx(base: Camera): number {
   return Math.ceil(TILE_SPAN_CELLS * base.cellSize)
 }
 
-// A nudge qualifies when the wobble rebuilds on all but at most two moves.
-// Two, not zero: the range the wobble inherits from the setup drag can lag
-// the minimal covering set by one tile on the trailing edge, which costs at
-// most one move at the start of the gesture.
-const MAX_NON_REBUILDING_MOVES = 2
-
-function qualifyingNudges(
-  base: Camera,
-  widthPx: number,
-  heightPx: number,
-  amplitudePx: number,
-  moves: number,
-): boolean[] {
+// A nudge qualifies when it puts the wobble's two covering tile ranges in
+// the non-nested (thrash) configuration -- geometry alone, invariant across
+// whatever nextTileRange's retention policy currently does with it.
+function qualifyingNudges(base: Camera, widthPx: number, heightPx: number, amplitudePx: number): boolean[] {
   const qualifying: boolean[] = []
   for (let offset = 0; offset <= nudgeScanSpanPx(base); offset++) {
     const nudged = panCamera(base, MIN_NUDGE_PX + offset, 0)
-    qualifying.push(
-      simulateWobbleRebuilds(nudged, widthPx, heightPx, amplitudePx, moves) >= moves - MAX_NON_REBUILDING_MOVES,
-    )
+    qualifying.push(!wobbleCoveringRangesAreNested(nudged, widthPx, heightPx, amplitudePx))
   }
   return qualifying
 }

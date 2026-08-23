@@ -56,6 +56,7 @@ import {
   readGridGeometry,
   simulateWobbleRebuilds,
   viewportWidthInTiles,
+  wobbleCoveringRangesAreNested,
 } from './tile-boundary'
 import type { RepSample } from '../scripts/perf-report/raw-sample.ts'
 
@@ -108,13 +109,25 @@ async function zoomOutTimes(page: Page, clicks: number): Promise<void> {
   }
 }
 
+// What prepareCamera confirms about the phase it attained, before anything
+// is measured: a geometry fact (fix-invariant, see below) and a policy fact
+// (pre-fix only, see MIN_THRASH_REBUILDS/MAX_CONTROL_REBUILDS below).
+interface AttainedPhase {
+  rangesNested: boolean
+  predictedRebuilds: number
+}
+
 // Everything between page load and the first measured rep. Kept in one
 // function because each step's assertion guards the next step's assumption:
 // the readout pins cellSize, cellSize makes the DOM read solvable for
 // offsetX, offsetX makes the phase search meaningful, and the re-read
 // afterwards checks the search's prediction against the camera the browser
 // actually ended up with rather than the one Node predicted.
-async function prepareCamera(page: Page, spec: WobbleScenarioSpec, from: { x: number; y: number }): Promise<number> {
+async function prepareCamera(
+  page: Page,
+  spec: WobbleScenarioSpec,
+  from: { x: number; y: number },
+): Promise<AttainedPhase> {
   await zoomOutTimes(page, spec.zoomOutClicks)
   await expect(page.getByText(expectedZoomReadout(spec.cellSizePx))).toBeVisible()
 
@@ -131,7 +144,6 @@ async function prepareCamera(page: Page, spec: WobbleScenarioSpec, from: { x: nu
       beforeNudge.widthPx,
       beforeNudge.heightPx,
       WOBBLE_AMPLITUDE_PX,
-      MOVES_PER_REP,
     )
     // One paced move, deliberately: gestures.ts exports no unpaced driver
     // and this doesn't need one. findThrashNudgePx only ever returns a value
@@ -140,18 +152,37 @@ async function prepareCamera(page: Page, spec: WobbleScenarioSpec, from: { x: nu
   }
 
   const measured = await readGridGeometry(page, spec.cellSizePx)
-  return simulateWobbleRebuilds(
-    measured.camera,
-    measured.widthPx,
-    measured.heightPx,
-    WOBBLE_AMPLITUDE_PX,
-    MOVES_PER_REP,
-  )
+  return {
+    rangesNested: wobbleCoveringRangesAreNested(
+      measured.camera,
+      measured.widthPx,
+      measured.heightPx,
+      WOBBLE_AMPLITUDE_PX,
+    ),
+    predictedRebuilds: simulateWobbleRebuilds(
+      measured.camera,
+      measured.widthPx,
+      measured.heightPx,
+      WOBBLE_AMPLITUDE_PX,
+      MOVES_PER_REP,
+    ),
+  }
 }
 
-// The band the scenario asserts its own precondition against, using the app's
-// own nextTileRange. Without this a wrong phase measures ordinary panning and
-// reports a confident, plausible, meaningless number.
+// The GEOMETRY precondition -- fix-invariant, and checked against both the
+// thrash row and the two control rows: whether the wobble's two covering
+// tile ranges (wobbleCoveringRangesAreNested, tile-boundary.ts) nest at the
+// phase prepareCamera attained. This is a fact about coveringTileRange alone
+// and never mentions nextTileRange's retention policy, which is what keeps
+// it true whether or not that policy currently has the tile-boundary defect.
+//
+// The POLICY expectation below it is a separate, pre-fix-only claim: that
+// cellTiles.ts's nextTileRange, as it stands today, actually reproduces the
+// known defect at this geometry (thrash rebuilds almost every move; a
+// control row rebuilds at most once). fix-tile-hysteresis commit 3 flips
+// MIN_THRASH_REBUILDS's role from "pre-fix expectation" to "post-fix
+// regression guard" once the policy changes; the geometry precondition above
+// it does not move.
 //
 // The controls' bound is 1 rather than 0 because "safe" means the wobble
 // cannot thrash, not that it can never rebuild: when only the leading edge
@@ -175,13 +206,16 @@ async function runWobbleScenario(page: Page, testInfo: TestInfo, spec: WobbleSce
   // stay an integer, since the phase search works in whole-pixel nudges.
   const from = { x: Math.round(viewport.width / 2), y: Math.round(viewport.height / 2) }
 
-  const predictedRebuilds = await prepareCamera(page, spec, from)
+  const { rangesNested, predictedRebuilds } = await prepareCamera(page, spec, from)
   if (spec.phaseLockToThrash) {
-    expect(predictedRebuilds, 'the attained camera phase must be thrash geometry').toBeGreaterThanOrEqual(
-      MIN_THRASH_REBUILDS,
-    )
+    expect(rangesNested, 'the attained camera phase must be non-nested (thrash) geometry').toBe(false)
+    expect(
+      predictedRebuilds,
+      'pre-fix nextTileRange must still reproduce the defect at a thrash phase',
+    ).toBeGreaterThanOrEqual(MIN_THRASH_REBUILDS)
   } else {
-    expect(predictedRebuilds, 'a control row must be unable to thrash at the phase it attained').toBeLessThanOrEqual(
+    expect(rangesNested, "a control row's geometry must be nested (cannot thrash) at the phase it attained").toBe(true)
+    expect(predictedRebuilds, 'pre-fix nextTileRange must rebuild a control row at most once').toBeLessThanOrEqual(
       MAX_CONTROL_REBUILDS,
     )
   }
