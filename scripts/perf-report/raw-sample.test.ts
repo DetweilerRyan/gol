@@ -167,16 +167,16 @@ describe('parseRawScenarioSample', () => {
     expect(result.reps[1].nodeChurnCount).toBeUndefined()
   })
 
-  it('carries a present nodeChurnCount through verbatim', () => {
-    const rep = { ...validRep(), nodeChurnCount: 35840 }
+  // The 0 row is the one that matters against the case above: absent must
+  // stay undefined, but a measured zero must survive the parse as 0 rather
+  // than being folded back into "not measured".
+  it.each([
+    { name: 'a present nonzero nodeChurnCount, verbatim', value: 35840 },
+    { name: 'a measured zero, distinct from an absent field', value: 0 },
+  ])('carries $name through the parse', ({ value }) => {
+    const rep = { ...validRep(), nodeChurnCount: value }
     const result = parseRawScenarioSample(validSample({ reps: [validRep(), rep] }))
-    expect(result.reps[1].nodeChurnCount).toBe(35840)
-  })
-
-  it('accepts a nodeChurnCount of 0, distinguishing a measured zero from an absent field', () => {
-    const rep = { ...validRep(), nodeChurnCount: 0 }
-    const result = parseRawScenarioSample(validSample({ reps: [validRep(), rep] }))
-    expect(result.reps[1].nodeChurnCount).toBe(0)
+    expect(result.reps[1].nodeChurnCount).toBe(value)
   })
 
   it.each([
