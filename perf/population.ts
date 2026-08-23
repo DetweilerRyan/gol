@@ -12,12 +12,13 @@
 import { expect, type Page } from '@playwright/test'
 import { centeredCamera } from '../src/camera.ts'
 import { computeVisibleRange } from '../src/gridGeometry.ts'
+import { ALIVE_CELL_SELECTOR } from '../src/test-support/cellQuery.ts'
 
 // In-view scenarios (spread small enough that the default camera's viewport
 // sees most or all of the seeded square) can check directly in the DOM:
-// GridCells.tsx marks a live cell's button with the `bg-gray-900` class (see
-// its own comment), so counting those buttons is a direct census of what's
-// currently rendered alive. Reuses the app's own centeredCamera/
+// Cell.tsx marks a live cell's button aria-pressed="true" (see its own
+// comment), so counting those buttons is a direct census of what's currently
+// rendered alive. Reuses the app's own centeredCamera/
 // computeVisibleRange (src/ root, same TS program as perf/ -- see
 // tsconfig.app.json's `include`) to compute the expected visible fraction,
 // rather than re-deriving the viewport-vs-seed-square intersection by hand,
@@ -42,7 +43,7 @@ export async function assertInViewAlivePopulation(
   const expectedFraction = (visibleXSpan * visibleYSpan) / seededArea
   const expectedCount = requestedCount * expectedFraction
 
-  const aliveCount = await page.locator('#grid-content button.bg-gray-900').count()
+  const aliveCount = await page.locator(`#grid-content ${ALIVE_CELL_SELECTOR}`).count()
 
   expect(
     aliveCount,

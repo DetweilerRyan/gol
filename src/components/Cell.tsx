@@ -40,6 +40,15 @@ export default function Cell({ x, y, cellSize, transform, store, onActivate }: C
     <button
       type="button"
       aria-label={`Cell ${x}, ${y}`}
+      // Not aria-checked: ARIA 1.2 limits aria-checked to checkbox, radio,
+      // switch, option, menuitemcheckbox, menuitemradio and treeitem -- it
+      // is not a supported state of role="button", so on this element it
+      // would be invalid ARIA that assistive tech may simply ignore.
+      // aria-pressed IS the supported toggle-button state. Always rendered
+      // (never omitted for a dead cell, not even as a perf optimisation) --
+      // omitting it means "this is not a toggle button at all", a different
+      // and wrong statement from "pressed=false".
+      aria-pressed={isAlive}
       // Keyboard activation (Enter/Space) never goes through pointer
       // capture (see useGridPointerGestures' pointer-capture comment),
       // so it needs the same place-vs-toggle branch as the pointer

@@ -57,10 +57,15 @@ interface CellTileProps {
 // have clobbered an imperative DOM write every few moves. Under tiling, a
 // mounted cell's world coordinates are fixed for its whole mounted
 // lifetime -- they're derived from tileX/tileY/spanCells here, none of
-// which change while the tile stays mounted -- so its className never
-// changes for reasons internal to this component, and React never rewrites
-// it out from under an imperative write. Noted here so a future slice finds
-// the connection rather than rediscovering it.
+// which change while the tile stays mounted -- so Cell.tsx's className
+// (which THAT component writes, not this one) never changes for reasons
+// internal to this component, and React never rewrites it out from under an
+// imperative write. Since the aria-pressed-cell-state slice, an imperative
+// painter would have to keep two attributes in sync instead of one --
+// className AND aria-pressed both derive from the same isAlive read, so
+// nothing here changes, but a future imperative-painting slice inherits
+// twice the surface. Noted here so a future slice finds the connection
+// rather than rediscovering it.
 export default function CellTile({
   tileX,
   tileY,

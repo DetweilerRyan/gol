@@ -4,6 +4,7 @@ import { cellOffsetPx } from '../cellAnchor'
 import { tileOriginCell } from '../cellTiles'
 import { cellKey } from '../gameOfLife'
 import { createLiveCellStore } from '../liveCellStore'
+import { CELL_ALIVE_ATTR, CELL_ALIVE_VALUE, CELL_DEAD_VALUE, cellLabel } from '../test-support/cellQuery'
 import CellTile from './CellTile'
 
 // Fixture deliberately avoids tileX: 0, tileY: 0 (the "single fixture" trap
@@ -120,11 +121,11 @@ describe('O(changed) rendering', () => {
     const flippedX = originX + 1
     const flippedY = originY + 2
 
-    const cell = screen.getByRole('button', { name: `Cell ${flippedX}, ${flippedY}` })
-    expect(cell.className).not.toContain('bg-gray-900')
+    const cell = screen.getByRole('button', { name: cellLabel(flippedX, flippedY) })
+    expect(cell).toHaveAttribute(CELL_ALIVE_ATTR, CELL_DEAD_VALUE)
 
     act(() => store.toggle(flippedX, flippedY))
 
-    expect(cell.className).toContain('bg-gray-900')
+    expect(cell).toHaveAttribute(CELL_ALIVE_ATTR, CELL_ALIVE_VALUE)
   })
 })
