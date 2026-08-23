@@ -8,7 +8,7 @@
 // runs them all -- the surrounding orchestration (reading files off disk,
 // formatting the exit code/output lines) lives in run.ts/decide.ts instead.
 
-import { parseAgentFrontmatter, type AgentFrontmatter } from './agent-frontmatter.ts'
+import { filenameStemOf, parseAgentFrontmatter, type AgentFrontmatter } from './agent-frontmatter.ts'
 import { findCycleMentions } from './cycle-string.ts'
 import { extractNpmRunReferences } from './npm-run-refs.ts'
 import { findStaleRoleReferences } from './roles.ts'
@@ -202,7 +202,13 @@ export interface CheckInput {
 }
 
 export function checkAll(input: CheckInput): Failure[] {
-  const knownRoles = new Set(input.agentFiles.map((file) => parseAgentFrontmatter(file.path, file.text).filenameStem))
+  // The role vocabulary check4 builds its cycle pattern from is a fact about
+  // which agent files exist, not about what their frontmatter says -- read it
+  // off the filename rather than parsing the file, so a malformed frontmatter
+  // block can't quietly shrink the alternation and make a cycle mention stop
+  // being recognised as one. (checkAgentFrontmatterValid above is what holds
+  // `name` and the filename stem in agreement, so the two never diverge.)
+  const knownRoles = new Set(input.agentFiles.map((file) => filenameStemOf(file.path)))
   return [
     ...checkNpmRunReferencesResolve(input.docFiles, input.packageScripts),
     ...checkAgentFrontmatterValid(input.agentFiles),

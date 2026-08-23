@@ -39,13 +39,31 @@ export function listAgentFiles(repoRoot: string): RawFile[] {
     .map((entry) => readRawFile(repoRoot, `.claude/agents/${entry.name}`))
 }
 
+// Directory names never descended into while collecting doc files.
+// `.claude/worktrees/` is a sanctioned slice-worktree location (see
+// CLAUDE.md's "Setting up a slice"), and a worktree is a full checkout --
+// its own CLAUDE.md, its own `.claude/`, and after `npm ci` its own
+// node_modules full of package READMEs. Scanning one from the primary
+// checkout would walk thousands of foreign files and report another
+// slice's (or some dependency's) `npm run` references as this repo's
+// failures. The predicate tests each path segment rather than the whole
+// string because globSync hands this callback a bare directory name while
+// descending ("worktrees") and a fuller relative path for other entries --
+// a segment test is correct under either form, and stays correct on a
+// runtime that passes only files and prunes nothing.
+const EXCLUDED_DOC_DIRS = new Set(['worktrees'])
+
+function isInsideExcludedDocDir(candidatePath: string): boolean {
+  return candidatePath.split('/').some((segment) => EXCLUDED_DOC_DIRS.has(segment))
+}
+
 // CLAUDE.md plus every .md under .claude/** -- agents and articles alike,
 // since checks 1/3/4 (npm run references, stale role references, the cycle
 // string) all need to see prose in both places. Sorted so file discovery
 // order never changes the order failures are reported in.
 export function listDocFiles(repoRoot: string): RawFile[] {
   const claudeMd = readRawFile(repoRoot, 'CLAUDE.md')
-  const agentDocs = globSync('.claude/**/*.md', { cwd: repoRoot })
+  const agentDocs = globSync('.claude/**/*.md', { cwd: repoRoot, exclude: isInsideExcludedDocDir })
     .sort()
     .map((relativePath) => readRawFile(repoRoot, relativePath))
   return [claudeMd, ...agentDocs]

@@ -42,6 +42,16 @@ describe('listDocFiles', () => {
       .sort()
     expect(found).toEqual(['.claude/agents/articles/engineering.md', '.claude/agents/coder.md', 'CLAUDE.md'])
   })
+
+  it('never descends into .claude/worktrees/ -- a slice worktree is a whole other checkout', () => {
+    const root = tempRepo()
+    writeFile(root, 'CLAUDE.md', '# root doc\n')
+    writeFile(root, '.claude/agents/coder.md', GOOD_AGENT)
+    writeFile(root, '.claude/worktrees/other-slice/CLAUDE.md', '`npm run not-a-real-script`\n')
+    writeFile(root, '.claude/worktrees/other-slice/node_modules/some-dep/README.md', '`npm run also-not-real`\n')
+    const found = listDocFiles(root).map((file) => file.path)
+    expect(found).toEqual(['CLAUDE.md', '.claude/agents/coder.md'])
+  })
 })
 
 describe('listRuleIds', () => {
