@@ -75,12 +75,29 @@ export function filterTargets(targets: MutationTarget[], featureArg: string | un
 // here rather than in run.ts -- run.ts is excluded from crap4ts/Stryker's
 // scripts/ scope on the premise that everything it delegates to is a pure,
 // covered module, and this is exactly that.
+//
+// Any argument that isn't `--feature <name>` -- a bare positional or an
+// unrecognized flag -- throws rather than being silently ignored. Before
+// this, `npm run acceptance-mutation -- infinite-grid` ran the entire,
+// unscoped suite while printing output indistinguishable from a genuinely
+// scoped run: the caller believed they'd scoped it and hadn't. This mirrors
+// filterTargets' existing philosophy one level up -- if we can't act on
+// exactly what was asked, we say so rather than doing something else.
 export function parseArgs(argv: string[]): { feature?: string } {
-  const index = argv.indexOf('--feature')
-  if (index === -1) return {}
-  const value = argv[index + 1]
-  if (value === undefined) {
-    throw new Error('--feature requires a value')
+  let feature: string | undefined
+  let i = 0
+  while (i < argv.length) {
+    const token = argv[i]
+    if (token === '--feature') {
+      const value = argv[i + 1]
+      if (value === undefined) {
+        throw new Error('--feature requires a value')
+      }
+      feature = value
+      i += 2
+      continue
+    }
+    throw new Error(`Unrecognized argument "${token}" -- the only accepted form is --feature <name>`)
   }
-  return { feature: value }
+  return feature === undefined ? {} : { feature }
 }

@@ -120,7 +120,20 @@ describe('parseArgs', () => {
     expect(() => parseArgs(['--feature'])).toThrow(/--feature requires a value/)
   })
 
-  it('ignores unrelated flags', () => {
-    expect(parseArgs(['--other', 'x', '--feature', 'infinite-grid'])).toEqual({ feature: 'infinite-grid' })
+  // The hazard this closes: `npm run acceptance-mutation -- infinite-grid` was
+  // silently ignoring the positional argument and running the full,
+  // unscoped suite while printing output indistinguishable from a genuinely
+  // scoped run. Throwing here matches filterTargets' existing philosophy of
+  // failing loudly rather than doing something other than what was asked.
+  it('throws naming a bare positional argument rather than silently ignoring it', () => {
+    expect(() => parseArgs(['infinite-grid'])).toThrow(/infinite-grid/)
+  })
+
+  it('throws naming an unrecognized flag rather than silently ignoring it', () => {
+    expect(() => parseArgs(['--nope'])).toThrow(/--nope/)
+  })
+
+  it('throws naming the first unrecognized argument, stating the accepted form', () => {
+    expect(() => parseArgs(['--other', 'x', '--feature', 'infinite-grid'])).toThrow(/--other.*--feature <name>/)
   })
 })
