@@ -126,6 +126,28 @@ Note which of these fire on ordinary feature work rather than only on structural
 
 **Every rule ships with a fixture in `rule-tests/` and `npm run ast-grep:test` must pass.** This is not ceremony. A malformed ast-grep rule matches nothing and reports nothing — it looks exactly like a clean codebase — and two of these rules were silently inert when first written (metavariables don't interpolate inside string literals, so an import path needs `kind:` + `regex:`; and a `matches:` util is bound to one language, so it never applied to the `.tsx` files the rule existed to check). A rule with no failing fixture has not been shown to work. Note also that TypeScript and TSX use different parsers, which is why `no-manual-memo-ts` and `-tsx` are near-duplicates by necessity rather than by oversight.
 
+## Idea board
+
+`ideas/` is a two-lane kanban of slices not yet started — one Markdown file per idea, and the lane is the directory:
+
+- **`ideas/candidates/`** — raw and unjudged, no limit. An idea lands here the moment it's worth not forgetting.
+- **`ideas/todo/`** — examined, and concrete enough to hand to `product`. Keep this to about three, matching the two-or-three concurrent-slice ceiling below; a `todo/` lane longer than the number of slices you can actually run is a candidates lane wearing a different hat.
+
+`ideas/TEMPLATE.md` is the file shape: frontmatter (`name`, `title`, `created`) over Context / Sketch / Touches / Open questions.
+
+**There is deliberately no `doing/` or `done/` lane.** `git worktree list` already says what is in flight and `git tag -l 'slice/*'` already lists what is finished — a lane duplicating either is a second source of truth that can disagree with the first.
+
+**`name` is the slice's identity end to end.** It matches the file's own basename, becomes the branch in `git worktree add -b <slice>`, and becomes the `slice/<name>` tag at merge. One slug from idea to tag, so `git log` and the board agree on what a thing is called.
+
+Two rules keep the board honest:
+
+- **Promote with a move-only commit, then edit.** Run `git mv ideas/candidates/<name>.md ideas/todo/<name>.md` and commit _that alone_, before fleshing the file out. Git infers renames from content similarity, and a candidate being expanded into a todo is precisely the case that defeats it: measured here, a move plus a substantial rewrite in one commit is recorded as delete-plus-add rather than a rename, and `git log --follow` then loses everything before the move — even at `-M10%`. Moved by itself the same change scores `R100` and the history survives. (`--follow` is required to read across the move either way; a plain `git log -- ideas/todo/<name>.md` starts at the promotion regardless.)
+- **The slice deletes its own idea file.** `git rm ideas/todo/<name>.md` as part of the slice's work, so the deletion lands on the branch alongside the change it describes and the `slice/<name>` tag in merge-protocol step 6 marks a tree that no longer carries it. The tag is the permanent record and carries its own message; a file left behind becomes a third lane nobody maintains.
+
+The lane-as-directory choice runs against the prevailing convention — [Backlog.md](https://github.com/MrLesk/Backlog.md), [MADR](https://adr.github.io/madr/), and most git-native trackers keep a `status:` field and never move the file, because moves conflict when several people edit one board. That objection doesn't reach this repo: slices land **serially** (see the merge protocol), and the board has a single editor. Since the directory _is_ the status, **don't also put a `status:` field in the frontmatter** — one fact, one home.
+
+Nothing enforces any of this. `ideas/` has no gate, no checker, and no test; Prettier formats the Markdown (its ignore list is exclusion-based, so a new top-level path is covered with no config edit) and that is the extent of the tooling. A board-rendering script would have to live in `scripts/`, which would subject it to CRAP ≤ 6, its own vitest suite, `dry4ts`, and mutation testing — more machinery than the board is worth. `ls ideas/todo/` is the board.
+
 ## Subagent pipeline
 
 `.claude/agents/` defines a five-role pipeline adapted from unclebob/swarm-forge's six-pack branch, scoped to this repo's actual commands (Gherkin features, `crap4ts`, `halstead4ts`, `dry4ts`, Stryker, `acceptance-mutation`, Playwright) rather than swarm-forge's tmux/file-based-handoff orchestration. (Worktrees are used, but per _slice_ rather than per _role_ — see "Running slices concurrently" below.) Each role's full instructions and boundaries live in its own file — read the relevant one before invoking it rather than relying on this summary. Shared house rules ported from swarm-forge's `main`-branch constitution live in `.claude/agents/articles/` (`engineering.md`, `workflow.md`, `handoffs.md`) — every role reads these too.
@@ -204,7 +226,7 @@ If you use the native `EnterWorktree({ name })` or `Agent({ isolation: 'worktree
    git tag -a slice/<slice> -m "<slice>: <one line on what the slice delivered>"
    ```
 
-   After the fast-forward in step 4 the slice's tip _is_ `main`'s tip, so this marks both. Tag after step 5 rather than before it: the tag says the slice is done, and it isn't done until the gate on `main` passes. The `slice/` prefix is load-bearing — a bare tag sharing the slice branch's name makes every `git log <name>` ambiguous until the branch is deleted in step 9 — and it makes `git tag -l 'slice/*'` a list of every completed slice. Annotated rather than lightweight, so the tag carries its own date and message.
+   After the fast-forward in step 4 the slice's tip _is_ `main`'s tip, so this marks both. Tag after step 5 rather than before it: the tag says the slice is done, and it isn't done until the gate on `main` passes. The `slice/` prefix is load-bearing — a bare tag sharing the slice branch's name makes every `git log <name>` ambiguous until the branch is deleted in step 9 — and it makes `git tag -l 'slice/*'` a list of every completed slice. Annotated rather than lightweight, so the tag carries its own date and message. If the slice began as an entry on the idea board, its `ideas/todo/<slice>.md` is already gone by now — the slice deletes its own idea file as part of its work (see "Idea board" above), and this tag is what carries the record forward in its place.
 
 7. **Push `main` and the tag:** `git push --follow-tags` (plain `git push` leaves the tag behind).
 
