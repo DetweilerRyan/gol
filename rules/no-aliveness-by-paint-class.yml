@@ -1,0 +1,43 @@
+id: no-aliveness-by-paint-class
+language: TypeScript
+severity: warning
+message: Read cell aliveness through src/test-support/cellQuery.ts, not through the bg-gray-900/bg-white paint class.
+note: >-
+  A cell's aliveness has an accessible representation -- aria-pressed on the Cell button (see
+  src/components/Cell.tsx). The Tailwind background class is PAINT, and reading it as an aliveness
+  predicate couples a black-box layer to a styling decision it has no business knowing. This is not
+  hypothetical duplication: before the aria-pressed-cell-state slice, features/ held three separate
+  copies of `const ALIVE_CLASS = /bg-gray-900/`, three of DEAD_CLASS, four un-hoisted inline
+  /bg-white/ literals, and perf/population.ts counted `button.bg-gray-900` -- fourteen sites that
+  accreted with nothing to stop them, because features/ and perf/ are outside dry4ts (`dry4ts src`),
+  outside crap4ts, and outside Stryker. This rule is the only thing that watches them.
+  Import cellLabel / CELL_SELECTOR / ALIVE_CELL_SELECTOR from src/test-support/cellQuery.ts instead,
+  so that re-roling the cell element (the queued collapse-dead-cell-layer slice) is a one-file change.
+# SCOPED TO THE TWO BLACK-BOX LAYERS ON PURPOSE, and deliberately NOT to src/**/*.test.tsx.
+# In features/ and perf/ these two class names have exactly one possible meaning, so the baseline is
+# clean and every match is a real finding. Inside src/ the same string is legitimate paint in four
+# components, and Cell.test.tsx deliberately keeps one alive/dead class pair as the VISUAL contract
+# (aria-pressed says what a cell is; the class says what it looks like, and something must still
+# assert the second). A src-wide version of this rule would have a permanently dirty baseline --
+# the fragility no-camera-in-cell-leaf.yml's own comment warns about.
+#
+# No TSX twin: features/ currently holds no .tsx file (the .steps.test.tsx form CLAUDE.md describes
+# is not yet in use), and a rule scoped to a path that does not exist would need an
+# allow-unresolved-files marker for a hypothetical. Whichever slice first adds a features/*.tsx that
+# queries aliveness -- black-box-acceptance-pilot is the likely one -- adds the twin, the same
+# necessary near-duplication no-manual-memo-ts / -tsx carries.
+files:
+  - 'features/*.ts'
+  - 'perf/*.ts'
+rule:
+  any:
+    # Both literal forms these sites actually take. A regex literal is its own node kind and is NOT
+    # reached by `kind: string` -- measured against ast-grep 0.45.1 on this repo's own tree, where a
+    # string-only matcher found 4 of the 14 sites and missed every `const ALIVE_CLASS = /bg-gray-900/`.
+    # Matched with regex: on the node text rather than with a pattern, because the class name is a
+    # substring inside a longer literal ('button[aria-label^="Cell "].bg-gray-900') and metavariables
+    # do not interpolate inside string literals -- see CLAUDE.md.
+    - kind: string
+      regex: 'bg-gray-900|bg-white'
+    - kind: regex
+      regex: 'bg-gray-900|bg-white'

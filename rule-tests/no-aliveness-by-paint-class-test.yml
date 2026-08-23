@@ -1,0 +1,14 @@
+id: no-aliveness-by-paint-class
+valid:
+  - import { ALIVE_CELL_SELECTOR, cellLabel } from '../src/test-support/cellQuery'
+  - await expect(page.locator(ALIVE_CELL_SELECTOR)).toHaveCount(0)
+  - await expect(cellLocator(page, 2, 3)).toHaveAttribute(CELL_ALIVE_ATTR, 'true')
+  - const thumb = page.locator('[role="scrollbar"][aria-orientation="horizontal"]')
+  - const NOT_A_CELL_CLASS = /bg-gray-800/
+invalid:
+  - const ALIVE_CLASS = /bg-gray-900/
+  - const DEAD_CLASS = /bg-white/
+  - await expect(page.locator('button[aria-label^="Cell "].bg-gray-900')).toHaveCount(0)
+  - const aliveCount = await page.locator('#grid-content button.bg-gray-900').count()
+  - return ((await locator.getAttribute('class')) ?? '').includes('bg-gray-900')
+  - await expect(cellLocator(page, x - 1, y)).toHaveClass(/bg-white/)

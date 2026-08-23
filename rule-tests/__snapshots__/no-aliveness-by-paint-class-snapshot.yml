@@ -1,0 +1,38 @@
+id: no-aliveness-by-paint-class
+snapshots:
+  await expect(cellLocator(page, x - 1, y)).toHaveClass(/bg-white/):
+    labels:
+    - source: /bg-white/
+      style: primary
+      start: 54
+      end: 64
+  await expect(page.locator('button[aria-label^="Cell "].bg-gray-900')).toHaveCount(0):
+    labels:
+    - source: '''button[aria-label^="Cell "].bg-gray-900'''
+      style: primary
+      start: 26
+      end: 67
+  const ALIVE_CLASS = /bg-gray-900/:
+    labels:
+    - source: /bg-gray-900/
+      style: primary
+      start: 20
+      end: 33
+  const DEAD_CLASS = /bg-white/:
+    labels:
+    - source: /bg-white/
+      style: primary
+      start: 19
+      end: 29
+  const aliveCount = await page.locator('#grid-content button.bg-gray-900').count():
+    labels:
+    - source: '''#grid-content button.bg-gray-900'''
+      style: primary
+      start: 38
+      end: 72
+  return ((await locator.getAttribute('class')) ?? '').includes('bg-gray-900'):
+    labels:
+    - source: '''bg-gray-900'''
+      style: primary
+      start: 62
+      end: 75
