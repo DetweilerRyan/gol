@@ -17,6 +17,7 @@
     "!src/test-support/**",
     "!src/catalyst/**"
   ],
+  "ignorePatterns": ["/features"],
   "thresholds": {
     "high": 90,
     "low": 80,
