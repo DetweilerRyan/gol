@@ -1,17 +1,18 @@
 id: no-domain-imports-in-black-box-steps
 language: Tsx
 severity: warning
-message: A black-box steps file may import only ./acceptance-harness, @amiceli/vitest-cucumber and vitest.
+message: A black-box steps file may import only ./harness/<feature>, @amiceli/vitest-cucumber and vitest.
 note: >-
   features/*.steps.test.tsx is the BLACK-BOX form of a Gherkin steps file: every step drives the
-  real application through ARIA, and features/acceptance-harness.tsx is the one module allowed to
-  reach the app. A steps file that imports src/ directly turns this layer back into the white-box
-  .steps.test.ts form it replaced WITHOUT CHANGING A SINGLE FILENAME -- and since the file
-  extension is the only discriminator vite.config.ts's `acceptance` project has, nothing else in
-  the repo would notice. That is the exact regression this rule exists to make visible.
+  real application through ARIA, and the harness modules under features/harness/ are the only ones
+  allowed to reach the app. A steps file that imports src/ directly turns this layer back into the
+  white-box .steps.test.ts form it replaced WITHOUT CHANGING A SINGLE FILENAME -- and since the
+  file extension is the only discriminator vite.config.ts's `acceptance` project has, nothing else
+  in the repo would notice. That is the exact regression this rule exists to make visible.
   Even `import { cellLabel } from '../src/test-support/cellQuery'` is a violation here: the label
   format is the harness's business, not a step's. If a step needs something it cannot reach
-  through the harness, the fix is to widen the harness's Board interface, not to import around it.
+  through the harness, the fix is to widen its feature harness (or the shared core it sits on),
+  not to import around it.
 # AN ALLOWLIST, NOT A BLOCKLIST ON 'src/', and the difference is load-bearing. A blocklist would
 # pass `import { render, screen } from '@testing-library/react'` -- a steps file querying the DOM
 # itself, bypassing every guarantee the harness exists to provide (the CELL_NOT_MOUNTED sentinel
@@ -25,9 +26,25 @@ note: >-
 # with kind: + regex: rather than with a pattern because metavariables do not interpolate inside
 # string literals -- see CLAUDE.md.
 #
-# Scoped to the .steps.test.tsx suffix so it does NOT reach features/acceptance-harness.tsx, which
-# is precisely the module licensed to import src/. ast-grep's `*` crosses '/', so this also covers
-# any future features/<subdir>/*.steps.test.tsx.
+# WHY THE PATH IS A CHARACTER CLASS AND NOT A LITERAL. The harness is one core plus one module per
+# feature (features/harness/board.tsx + features/harness/<feature>.tsx), so the allowlisted
+# specifier has to be open-ended in the filename -- but only there. `[a-z][a-z0-9-]*` is a single
+# kebab-case path segment, which is what stops the two ways an open-ended path would fail open:
+# './harness/../../src/gameOfLife' (traversal, dots excluded) and './harness/sub/board' (nesting,
+# slashes excluded). Both are pinned as invalid: cases in the fixture. The flat harness directory
+# is therefore enforced mechanically rather than by convention. './harness/board' -- the shared
+# core itself -- is deliberately allowed: it is still harness, Rust regex cannot cheaply exclude
+# one name from a class, and a step reaching the core is not the regression this rule watches for.
+#
+# Scoped to the .steps.test.tsx suffix so it does NOT reach the harness modules, which are
+# precisely the ones licensed to import src/. Measured against ast-grep 0.45.1 with a throwaway
+# probe: features/harness/probe-board.tsx importing '../../src/gameOfLife' AND
+# '@testing-library/react' produced no finding from this rule, while the same imports in a
+# features/harness/probe.steps.test.tsx did produce two -- ast-grep's `*` crosses '/', so the glob
+# below already reaches any future features/<subdir>/*.steps.test.tsx, and the *suffix* is what
+# exempts the harness. The same probe confirmed rules/no-aliveness-by-paint-class-tsx.yml's
+# 'features/*.tsx' glob DOES reach features/harness/, so the new subdirectory keeps that rule's
+# cover for free.
 files:
   - 'features/*.steps.test.tsx'
 rule:
@@ -36,4 +53,4 @@ rule:
         - kind: import_statement
         - kind: export_statement
     - not:
-        regex: 'from [''"](\./acceptance-harness|@amiceli/vitest-cucumber|vitest)[''"]'
+        regex: 'from [''"](\./harness/[a-z][a-z0-9-]*|@amiceli/vitest-cucumber|vitest)[''"]'

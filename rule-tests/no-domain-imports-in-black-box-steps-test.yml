@@ -1,7 +1,9 @@
 id: no-domain-imports-in-black-box-steps
 valid:
-  - import { mountBoard } from './acceptance-harness'
-  - import { mountBoard, type Board } from './acceptance-harness'
+  - import { mountBoard } from './harness/cell-life-and-death'
+  - import { mountBoard, type Board } from './harness/cell-life-and-death'
+  # The shared harness core, deliberately allowed -- see the rule's own comment.
+  - import { CELL_NOT_MOUNTED } from './harness/board'
   - import { describeFeature, loadFeature } from '@amiceli/vitest-cucumber'
   - import { expect } from 'vitest'
   # Not an import statement at all: a bare string naming a domain module is not a finding, which is
@@ -15,3 +17,10 @@ invalid:
   - import { render, screen } from '@testing-library/react'
   - import type { LiveCellStore } from '../src/liveCellStore'
   - export { cellLabel } from '../src/test-support/cellQuery'
+  # The retired monolith. Once the harness is a directory, the old single-file path must not stay
+  # allowlisted: a dead allowlist entry is exactly how this rule would fail open.
+  - import { mountBoard } from './acceptance-harness'
+  # The two ways an open-ended harness path would fail open, both stopped by the single-kebab-
+  # segment character class rather than by convention.
+  - import { toggleCell } from './harness/../../src/gameOfLife'
+  - import { mountBoard } from './harness/sub/board'

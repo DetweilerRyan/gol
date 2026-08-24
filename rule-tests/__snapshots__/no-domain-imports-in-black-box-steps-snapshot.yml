@@ -18,6 +18,18 @@ snapshots:
       style: primary
       start: 0
       end: 57
+  import { mountBoard } from './acceptance-harness':
+    labels:
+    - source: import { mountBoard } from './acceptance-harness'
+      style: primary
+      start: 0
+      end: 49
+  import { mountBoard } from './harness/sub/board':
+    labels:
+    - source: import { mountBoard } from './harness/sub/board'
+      style: primary
+      start: 0
+      end: 48
   import { render, screen } from '@testing-library/react':
     labels:
     - source: import { render, screen } from '@testing-library/react'
@@ -30,3 +42,9 @@ snapshots:
       style: primary
       start: 0
       end: 46
+  import { toggleCell } from './harness/../../src/gameOfLife':
+    labels:
+    - source: import { toggleCell } from './harness/../../src/gameOfLife'
+      style: primary
+      start: 0
+      end: 59
