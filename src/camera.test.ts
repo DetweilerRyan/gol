@@ -157,6 +157,11 @@ describe('applyWheelInput', () => {
     const next = applyWheelInput(camera, { pixelX: 0, pixelY: 0, deltaX: 50, deltaY: -100, shiftKey: true })
     expect(next.cellSize).toBe(DEFAULT_CELL_SIZE * ZOOM_FACTOR)
   })
+
+  it('zooms out (not in) at the zoomDelta === 0 boundary, pinning the `< 0` guard exactly', () => {
+    const next = applyWheelInput(camera, { pixelX: 0, pixelY: 0, deltaX: 0, deltaY: 0, shiftKey: true })
+    expect(next.cellSize).toBe(DEFAULT_CELL_SIZE / ZOOM_FACTOR)
+  })
 })
 
 describe('zoomPercentage', () => {

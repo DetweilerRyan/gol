@@ -43,6 +43,28 @@ describe('computeScrollbarMetrics', () => {
     const metrics = computeScrollbarMetrics(camera, bounds, 800, 600)
     expect(metrics.horizontal.thumbOffsetRatio).toBe(0)
   })
+
+  it('computes an exact thumbRatio and thumbOffsetRatio for a panned camera at a non-default cellSize, with content off both edges', () => {
+    // Chosen so every intermediate value is exact in binary floating point:
+    // contentPxLeft = (-10 - 5) * 10 = -150, contentPxRight = (30 - 5) * 10 = 250,
+    // extentPxWidth = 250 - (-150) = 400, thumbRatio = 100 / 400 = 0.25,
+    // thumbOffsetRatio = 150 / (400 - 100) = 0.5. A loose `toBeLessThan`/`toBeCloseTo`
+    // assertion can't see the * <-> / mutants on these lines; only the exact
+    // values differ enough (0.25 vs 1, 0.5 vs 1) to catch them.
+    const panned: Camera = { offsetX: 5, offsetY: 0, cellSize: 10 }
+    const bounds: ContentBounds = { minX: -10, maxX: 30, minY: 0, maxY: 1 }
+    const metrics = computeScrollbarMetrics(panned, bounds, 100, 600)
+    expect(metrics.horizontal).toEqual({ thumbRatio: 0.25, thumbOffsetRatio: 0.5 })
+  })
+
+  it('pins thumbRatio to exactly 1 at the extentPxWidth === 0 boundary (zero-size viewport, no content)', () => {
+    // extentPxWidth can only be 0 when viewportSizePx is also 0 (extentPxWidth
+    // is always >= viewportSizePx), so this exercises the exact `> 0`
+    // boundary the guard is written against, rather than an inequality that
+    // stays true under an off-by-one mutation of the same condition.
+    const metrics = computeScrollbarMetrics(camera, null, 0, 600)
+    expect(metrics.horizontal).toEqual({ thumbRatio: 1, thumbOffsetRatio: 0 })
+  })
 })
 
 describe('computeThumbGeometry', () => {
