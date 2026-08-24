@@ -6,6 +6,10 @@ created: 2026-08-24
 
 ## Context
 
+**Depends on `nested-spec-discovery`.** That slice makes `scripts/` discovery
+recursive; until it lands, the capability directories below would break
+`acceptance-mutation` and `gherkin-dry` outright.
+
 The repo's spec and idea folders are bespoke. Adopting a published layout makes
 the structure recognizable rather than something every reader has to learn.
 
@@ -29,8 +33,7 @@ hand-authored source. They are executed 1:1 and hardened by
 
 ## Sketch
 
-Target layout (specs stay **flat** here; capability directories are the
-follow-on slice, `spec-capability-dirs`):
+Target layout:
 
 ```
 adr/
@@ -45,7 +48,9 @@ openspec/
       adr.md                 # NEW -- review manifest: in-force ADRs consulted
       tasks.md               # NEW -- dispatch plan
     archive/YYYY-MM-DD-<slice>/
-  specs/                     # was features/, flat
+  specs/                     # was features/
+    <capability>/            # .feature + .steps.test.ts(x) + .e2e.spec.ts
+    _shared/                 # acceptance-harness.tsx, e2e-helpers.ts
 ```
 
 Decisions already taken:
@@ -56,6 +61,7 @@ Decisions already taken:
 | Archiving        | **Adopt.** Completed changes move to `changes/archive/YYYY-MM-DD-<slice>/`. This **reverses the delete-on-tag rule** from `f8ad280`, so that CLAUDE.md section and merge-protocol step 6 get rewritten, not extended.                                                                                                                                                                |
 | Backlog          | **Separate lane.** A change folder is created only on promotion. In neither framework.                                                                                                                                                                                                                                                                                               |
 | ADR path         | **Top-level `adr/`** — canonical for both ADR-bearing schemas.                                                                                                                                                                                                                                                                                                                       |
+| Spec layout      | **Capability directories**, one per spec, matching `intent-driven`. Possible only because `nested-spec-discovery` lands first.                                                                                                                                                                                                                                                       |
 | `spec-as-source` | **Rejected.** Extraction exists to bridge Markdown specs to runnable Gherkin — a gap this repo doesn't have. It would make `.feature` a build artifact and break three tools at once: `acceptance-mutation` would mutate generated output, `gherkin-lint` would report findings nobody can fix, `prettier-plugin-gherkin` would format generated files. Opt-in in intent-driven too. |
 | ADR template     | **MADR** — Status / Context / Options considered / Decision / Consequences. Accepted ADRs are immutable: supersede, never edit.                                                                                                                                                                                                                                                      |
 
@@ -86,6 +92,14 @@ Ordered steps, each its own commit:
    `tsconfig.app.json`'s include, the two `FEATURES_DIR` constants (**path
    string only** — discovery logic is untouched in this slice), and three
    `rules/*.yml` `files:` globs.
+   **The glob lockstep is the trap here.** `vite.config.ts` records that
+   `acceptanceTests` does **not** cross `/`, but "the _same-looking_ glob string in
+   a `rules/*.yml` `files:` key DOES cross `/`, because ast-grep's `*` is a
+   different matcher." Worse, if the acceptance glob goes dead, `unit`'s exclude
+   list still subtracts unconditionally, so the file "runs in NO project" --
+   green, and testing nothing. Change the acceptance glob and the `unit` exclude
+   in the **same commit**, and rewrite that comment block for the nested shape.
+
 3. **`adr/` scaffolding** — `TEMPLATE.md` plus `0001`, whose Options-considered
    section is the rejections in the table above. Self-demonstrating: the
    restructure's own decision becomes the first record.
@@ -119,6 +133,21 @@ glob: `assertBaselineGreen` throws on zero tests before scoring a mutant.
 
 ## Open questions
 
+- **Is nesting worth it at all?** Colocation already works by filename prefix.
+  Making it structural matches `intent-driven` and groups a capability's three
+  files, but buys no behavior -- the honest case is legibility, not capability.
+- **Where does `_shared/` belong** -- inside `specs/`, or beside it? Inside means
+  `**/*.steps.test.tsx` must not accidentally match helpers; beside keeps the
+  capability directories uniform.
+- **Do the three ast-grep rules stay correct?** `no-aliveness-by-paint-class.yml`,
+  its `-tsx` twin, and `no-domain-imports-in-black-box-steps.yml` carry comments
+  recording deliberate reasoning about single-path-segment scoping, one of which
+  explicitly anticipates a subdirectory. Each needs re-reading, not a mechanical
+  glob edit.
+- **Does `pairTargets` get simpler or harder?** One capability per directory may
+  make pairing _within_ a directory simpler than matching paths globally -- a
+  smaller change than it first appears. `nested-spec-discovery` decides this
+  first, and this slice inherits the answer.
 - **Two additions are in neither framework**: the `backlog/` lane and the
   dispatch-plan `tasks.md`. Both earn their place on this repo's own terms, but
   they are the parts a reader who knows intent-driven will not recognize — which
