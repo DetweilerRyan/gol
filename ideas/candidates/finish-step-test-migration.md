@@ -70,13 +70,26 @@ rows that bear on this slice:
   conversion spends from this budget**, so measure `test:mutation` wall time per
   conversion rather than once at the end. If it goes over, the answer is the
   Stryker-exclusion slice, not silently accepting a slower gate.
-- **P4a puts a number on what the layer adds to the mutation gate: exactly one
-  mutant.** Full tree 99.08% / 12 survivors; without the acceptance project
-  99.00% / 13. The single extra survivor is in `liveCellStore.ts`. That is the
-  quantitative complement to P6, not a contradiction of it — P6's defect (`App.tsx`
-  wiring) sits outside Stryker's `mutate` list entirely, so it _cannot_ appear in
-  this number. Read together: within Stryker's scope the layer is worth ~1 mutant;
-  its real contribution is coverage of code Stryker never sees.
+- **P4a's number is zero, not one — and the correction is the more useful fact.**
+  The raw measurement was: full tree 99.08% / 12 survivors, without the acceptance
+  project 99.00% / 13, the extra survivor in `liveCellStore.ts`. That looked like
+  "the layer is worth one mutant." It isn't. `prune-gherkin-to-domain-language`
+  later established that **Stryker's `killedBy` against a vitest-cucumber step
+  test is unreliable**: vitest-cucumber compiles each Gherkin step into its own
+  `test`, and Stryker's `perTest` run executes only the covering subset, so
+  prerequisite `Given`/`And` steps are skipped, the `When` throws on broken
+  closure state, and Stryker scores it a kill. Measured on the converted `.tsx`
+  form too, not just `.ts`. That `liveCellStore.ts` mutant is separately ratified
+  **equivalent**. So the acceptance layer kills **no** mutant the unit layer
+  doesn't.
+- **Which does not weaken P6, and the difference is worth holding onto.** P6 was
+  measured by injecting a defect and running whole projects — `App.tsx`'s
+  `onAdvance` stubbed out: 845 unit+property+dom tests pass, the acceptance
+  project fails 7 of 48. Real test runs at full scope, not tool attribution. The
+  layer's value was never the mutation score; it is coverage of composition-root
+  code that is excluded from Stryker's `mutate` list entirely. **Do not justify
+  further conversions on mutation-score grounds** — that number is zero and now
+  known to be zero.
 - **P1 was 118.2s scoped** for 28 mutants, decomposed as environment tax +68%
   (node → jsdom) and black-box tax +213% (13 real `<App />` mounts at 400
   buttons). `pattern-library` will be worse — it mounts more.
