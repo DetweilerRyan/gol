@@ -262,6 +262,24 @@ If you use the native `EnterWorktree({ name })` or `Agent({ isolation: 'worktree
 
    then invoke `hardener` on `main` with the whole tree as its scope. Deleting the caches is the honest expression of intent: they aren't stale, they're describing a tree that no longer exists — the situation the mutation-testing note in Commands already names.
 
+   **Mutation-invariant merges — the one exemption, and it is stage 4 only.** Steps 3 and 5 both mandate `npm run test:mutation:full`, and for some diffs that is two full runs measuring a quantity that provably did not move. `stryker.config.json`'s `mutate` list covers only `src/**`, and its `ignorePatterns` keeps `features/` out of the sandbox entirely, so for a diff confined to the paths below neither a mutant nor a test that could kill one is reachable. Left unaddressed this is not merely a cost — it is a standing incentive to bundle unrelated features into one slice to pay the bill once, which is the opposite of what the serial-landing rule is for.
+
+   **The predicate is an allowlist of paths that cannot move the score, not a list of the paths that can.** That direction is the whole design: a blocklist fails **open** — a path nobody thought to list silently skips the mutation gate, and a skipped run reads exactly like a passing one — which is the same dangerous direction as the `ignorePatterns` glob that matches nothing, already described in the Commands section. An allowlist fails safe: an unanticipated path simply runs the gate. Stage 4 may be skipped when **every** path in
+
+   ```bash
+   git diff --name-only main...HEAD    # in the slice's worktree, after step 1's rebase
+   ```
+
+   matches one of `features/**`, `ideas/**`, `.claude/**`, `CLAUDE.md`, `README.md`. **Do not extend that set without measuring the addition**, and the measurement is one command: `npx vitest list` collects test files from `src/` and from `features/` and from nowhere else, so no other listed path can contribute a test to the run, and `features/`'s own tests are excluded from the sandbox on top of that. `stryker.config.json` is deliberately **absent** from the allowlist, as are `vite.config.ts`, `vitest.*.config.ts`, `package.json`/`package-lock.json`, `tsconfig*.json` and `patches/**` — touching any of them re-arms the full run, which is the point of leaving them out rather than an oversight.
+
+   **Every other stage still runs, and `crap4ts` in particular genuinely moves on a `features/`-only diff**: `npm run test:coverage` runs all four vitest projects, the `acceptance` project mounts `<App />`, and its coverage lands on `src/` like any other project's. So this exempts one stage from one run; it is not a fast path through the gate.
+
+   **Compute the predicate once, in step 3's worktree after the rebase, and carry the answer to step 5.** Step 4 is a fast-forward, so the tree step 5 gates is byte-identical to the one step 3 gated — there is no second diff worth taking, and reconstructing one from `main`'s reflog is a worse way to ask the same question.
+
+   **When stage 4 is skipped, step 5 does not delete the incremental caches.** The `rm -f` above exists because the caches describe a tree that no longer exists; under this predicate the tree _Stryker sees_ is byte-identical to the one they were built from. Deleting them would tax the next merge with a full cold run in exchange for nothing. That answers step 5's own “different cache” justification on its own terms rather than waiving it.
+
+   **`hardener` never applies this to itself.** The predicate is evaluated by the orchestrating session and handed to `hardener` in the invoking prompt, naming the diff it was computed over; absent that instruction `hardener` runs stage 4. A role that can excuse itself from its own gate is not a gate. See `.claude/agents/hardener.md`'s stage 4.
+
 6. **Tag the slice's final commit**, annotated, as `slice/<slice-name>`:
 
    ```bash
