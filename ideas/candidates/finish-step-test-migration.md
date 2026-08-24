@@ -105,7 +105,8 @@ Three corrections the pilot paid for, which every conversion here inherits:
 2. **The mounted window is a tile-range artifact, not a camera derivation.** At
    200×200 it is cells −8..11 (400 buttons), because the first render happens at
    camera (0,0) before `useInitialCentering` fires and `nextTileRange` rebuilds
-   onto the union. `mountBoard()` asserts `REQUIRED_WINDOW ⊆ mounted` rather than
+   onto the union. The core's `mountBoardRequiring(requiredWindow)` asserts
+   `requiredWindow ⊆ mounted` rather than
    equality. Each converted feature must check its own coordinates — **including
    every seeded mutant of them** — land inside.
 3. **A steps file may import only the harness, `@amiceli/vitest-cucumber` and
