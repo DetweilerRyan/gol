@@ -240,7 +240,7 @@ If you use the native `EnterWorktree({ name })` or `Agent({ isolation: 'worktree
 
    This repo sets `push.followTags = true` locally, so a plain `git push` already carries the tag — but the flag stays written out here because `.git/config` isn't tracked, so a fresh clone or a CI checkout won't have the setting. Note the setting only follows **annotated** tags reachable from what you're pushing; a lightweight tag is silently left behind, which is one more reason step 6 specifies `git tag -a`.
 
-8. **Re-record the acceptance-mutation baseline** in `.claude/agents/articles/engineering.md` if it moved — the figure now comes from `product`'s VERIFY handoff, not `hardener`'s.
+8. **Carry the acceptance-mutation figure forward** from `product`'s VERIFY handoff — it comes from there now rather than from `hardener`'s. This is a read, not an edit: `engineering.md` deliberately records **no literal**, and says why in the same breath ("a literal in this file is wrong the moment the second one lands"), so there is nothing in that file to re-record. What the step is actually for is noticing when the figure moved and whether the slice explains it — a slice that touched no `.feature` and no `*.steps.test.*` leaves the Examples-table mutant surface byte-identical and **must** report the same number, so a change there is a finding rather than a new baseline.
 9. **Retire the worktree:**
 
    ```bash
