@@ -178,6 +178,24 @@ export default defineConfig({
       // (assertBaselineGreen) throws on numTotalTests < 1 before scoring a
       // single mutant, so the very next routine run of `product`'s own
       // command aborts by name instead of quietly reporting nothing.
+      //
+      // A THIRD PLACE HARDCODES features/, and it is the quiet one:
+      // stryker.config.json's `ignorePatterns: ["/features"]` keeps the whole
+      // Gherkin layer out of the Stryker sandbox. Note the scope -- that is
+      // not just this project's one .tsx file but all 7 step files, since the
+      // six direct-call .steps.test.ts files run in `unit`, not here. (180
+      // tests as vitest counts them, 151 as Stryker does; CLAUDE.md's sandbox
+      // paragraph explains why those differ.) The failure modes rank in the
+      // opposite order to everything above: a dead `dom` glob is silent-green
+      // but caught by the next quality gate, a dead `acceptanceTests` glob is
+      // caught loudly by acceptance-mutation, but a dead `ignorePatterns`
+      // entry is caught by NOTHING. Measured: an ignore pattern matching no
+      // file produces no warning and changes no test count, the excluded
+      // layer simply returns to the run, and the mutation score moves UP --
+      // so no threshold fires and the regression reads as an improvement. Renaming features/ means updating that entry too,
+      // alongside playwright.config.ts's testDir and package.json's
+      // gherkin-lint script. See CLAUDE.md's sandbox paragraph for why the
+      // layer is excluded in the first place.
       {
         plugins: [react(), babel({ presets: [reactCompilerPreset()] }), tailwindcss()],
         test: {
