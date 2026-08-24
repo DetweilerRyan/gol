@@ -112,6 +112,16 @@ Inside a worktree, the whole-repo gates (`crap4ts`, `dry4ts`, `test:mutation`, `
 - A finding on a file outside it is pre-existing on `main`, or was inherited from a rebase. Report it; don't fix it. See `workflow.md`'s failure conditions.
 - Anywhere a role's instructions say "the files the previous role touched" — `cleaner`'s scoped mutation scan, `coder`'s per-file test-duration budget — the file list comes from that manifest, never from `git status` or `git diff HEAD~1`.
 
+## The scope of a claim is the scope of the command that produced it
+
+A measured number licenses a conclusion exactly as wide as the command that produced it, and no wider. Writing the conclusion down at a wider scope than the run is the same defect as trusting a scoped gate — `--mutate` on one file, `acceptance-mutation --feature <name>`, `vitest run <path>`, one `.e2e.spec.ts` — as if it had covered everything.
+
+- **Before writing a conclusion down, re-read the command.** If it names a path, a `--feature`, a `--project`, or a single spec file, the conclusion may name that path too and nothing above it. "This spec doesn't catch X" and "the e2e layer can't catch X" are different claims, and only the first is bought by `npx playwright test features/<one>.e2e.spec.ts`.
+- **Watch the pre-registered column.** Fixing the command up front is good experimental practice and is exactly what makes this easy to miss later: the scope was chosen while the question was narrow, and stays narrow after the question widens. Re-run at full scope before generalizing — running the whole layer is usually seconds, and is the difference between a fact and a plausible inference.
+- **An experiment whose conclusions get committed must commit its table**, at minimum in the commit body. `black-box-acceptance-pilot`'s defect duel published one row's conclusion into `CLAUDE.md` and recorded the table nowhere; when that row turned out to be wrong, the other rows could not be re-checked because nothing said what they were. The only reason the error was catchable at all is that `product` independently re-derived that one row.
+
+This is the same family as the `--mutate`-is-last-wins and stale-`coverage/` traps in `CLAUDE.md`: a real measurement, correctly run, describing less than the reader will assume it describes.
+
 ## Verification before handoff
 
 Ported from swarm-forge's six-pack branch's own `local-engineering.prompt`, which adds two rules on top of the generic constitution above:
