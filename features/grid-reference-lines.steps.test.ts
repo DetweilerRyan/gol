@@ -7,77 +7,68 @@ import { computeMajorGridlines, isMajorGridline, type MajorGridlines, type Visib
 // scripts/acceptance-mutation/) without ever touching the real one.
 const feature = await loadFeature(process.env.ACCEPTANCE_MUTATION_FEATURE_FILE ?? './grid-reference-lines.feature')
 
-describeFeature(feature, ({ ScenarioOutline }) => {
-  ScenarioOutline('A coordinate is a major gridline exactly every 10 cells', ({ Given, Then }, variables) => {
+describeFeature(feature, ({ Scenario, ScenarioOutline }) => {
+  // The only Examples table left in this feature, and deliberately multiples of
+  // 10 only. The mutator's integer jitter is capped at magnitude 9
+  // (nonzeroDelta(rand, 9)), so any mutation of an exact multiple breaks
+  // divisibility and is killed, whereas a mid-decade coordinate stays
+  // mid-decade for most of its mutations -- a mutated row that remains a *true*
+  // statement about real behavior. The non-multiple case is stated as a plain
+  // scenario below for exactly that reason: it costs no mutant it could not
+  // kill.
+  ScenarioOutline('A coordinate every 10 cells carries a major gridline', ({ Given, Then }, variables) => {
     let coordinate: number
 
     Given('a coordinate of <coordinate>', () => {
       coordinate = Number(variables.coordinate)
     })
-    Then('it should <be_or_not> a major gridline', () => {
-      // Compare the observed outcome to the expected string directly (rather
-      // than reducing "expected" to a boolean via `=== 'be'`) so a mutated
-      // <be_or_not> value is always detected, not just mutations that happen
-      // to land on the string "be". Same fix as cell-life-and-death's
-      // <next state> assertion.
-      //
-      // Acceptance mutation still leaves the three "not be" rows alive, and
-      // that is expected: gridlines are spaced every 10 while the mutator's
-      // integer jitter is capped at magnitude 9 (nonzeroDelta(rand, 9)), so a
-      // mid-decade coordinate stays mid-decade for 16 of its 18 possible
-      // mutations -- the mutated row remains a *true* statement about real
-      // behavior, i.e. a genuinely equivalent mutant, not a weak assertion.
-      // (The five exact-multiple-of-10 rows are the opposite: any jitter of
-      // magnitude <= 9 breaks divisibility, so they are killed 100% of the
-      // time.) Closing the gap would mean either deriving the expectation from
-      // the same mutated coordinate -- the anti-pattern hardener removed
-      // elsewhere -- or reimplementing `% 10` in this file, which would test
-      // the implementation detail instead of gridline behavior. Left as
-      // documented equivalents, in the style of 41573c5's Stryker equivalent.
-      const actual = isMajorGridline(coordinate) ? 'be' : 'not be'
-      expect(actual).toBe(variables.be_or_not)
+    Then('it should be a major gridline', () => {
+      expect(isMajorGridline(coordinate)).toBe(true)
     })
   })
 
-  ScenarioOutline(
-    'The major gridlines within a viewport are the multiples of 10 in range',
-    ({ Given, When, Then, And }, variables) => {
-      let range: VisibleRange
-      let gridlines: MajorGridlines
+  Scenario('A coordinate between the tens carries no major gridline', ({ Given, Then }) => {
+    let coordinate: number
 
-      Given('a visible range from x <minX> to <maxX> and y <minY> to <maxY>', () => {
-        range = {
-          minX: Number(variables.minX),
-          maxX: Number(variables.maxX),
-          minY: Number(variables.minY),
-          maxY: Number(variables.maxY),
-        }
-      })
-      // Same jitter-ceiling-vs-interval mismatch as the scenario above: a
-      // mutated range bound only changes the answer when it crosses a decade
-      // boundary, and jitter capped at 9 cannot be guaranteed to cross one.
-      // Even a bound sitting exactly on a multiple of 10 is only killed in one
-      // direction -- for a min bound, `Math.ceil(min / 10)` is unchanged across
-      // the whole decade below it, and symmetrically for a max bound -- so no
-      // choice of Examples value exceeds ~50% here, and which half survives is
-      // purely a function of the mutator's seed. The surviving range-bound
-      // mutants are therefore equivalent (the mutated range genuinely does
-      // produce the listed gridlines); the values are left as the specifier
-      // wrote them rather than reshuffled to chase the seed.
-      When('the major gridlines are computed', () => {
-        gridlines = computeMajorGridlines(range)
-      })
-      Then('the major x gridlines should be <x gridlines>', () => {
-        expect(gridlines.x).toEqual(parseNumberList(variables['x gridlines']))
-      })
-      And('the major y gridlines should be <y gridlines>', () => {
-        expect(gridlines.y).toEqual(parseNumberList(variables['y gridlines']))
-      })
-    },
-  )
+    Given('a coordinate of 5', () => {
+      coordinate = 5
+    })
+    Then('it should not be a major gridline', () => {
+      expect(isMajorGridline(coordinate)).toBe(false)
+    })
+  })
+
+  Scenario('The major gridlines in view are the multiples of 10 it spans', ({ Given, When, Then, And }) => {
+    let range: VisibleRange
+    let gridlines: MajorGridlines
+
+    Given('a view spanning x from -23 to 17 and y from -5 to 26', () => {
+      range = { minX: -23, maxX: 17, minY: -5, maxY: 26 }
+    })
+    When('the major gridlines are computed', () => {
+      gridlines = computeMajorGridlines(range)
+    })
+    Then('the major x gridlines should be -20, -10, 0, 10', () => {
+      expect(gridlines.x).toEqual([-20, -10, 0, 10])
+    })
+    And('the major y gridlines should be 0, 10, 20', () => {
+      expect(gridlines.y).toEqual([0, 10, 20])
+    })
+  })
+
+  Scenario('A view narrower than the gridline spacing shows no major gridlines', ({ Given, When, Then }) => {
+    let range: VisibleRange
+    let gridlines: MajorGridlines
+
+    Given('a view spanning x from 1 to 9 and y from 1 to 9', () => {
+      range = { minX: 1, maxX: 9, minY: 1, maxY: 9 }
+    })
+    When('the major gridlines are computed', () => {
+      gridlines = computeMajorGridlines(range)
+    })
+    Then('there should be no major gridlines at all', () => {
+      expect(gridlines.x).toEqual([])
+      expect(gridlines.y).toEqual([])
+    })
+  })
 })
-
-function parseNumberList(commaSeparated: string): number[] {
-  const trimmed = commaSeparated.trim()
-  return trimmed === '' ? [] : trimmed.split(',').map((value) => Number(value.trim()))
-}
