@@ -276,7 +276,7 @@ If you use the native `EnterWorktree({ name })` or `Agent({ isolation: 'worktree
 
    **Compute the predicate once, in step 3's worktree after the rebase, and carry the answer to step 5.** Step 4 is a fast-forward, so the tree step 5 gates is byte-identical to the one step 3 gated — there is no second diff worth taking, and reconstructing one from `main`'s reflog is a worse way to ask the same question.
 
-   **When stage 4 is skipped, step 5 does not delete the incremental caches.** The `rm -f` above exists because the caches describe a tree that no longer exists; under this predicate the tree _Stryker sees_ is byte-identical to the one they were built from. Deleting them would tax the next merge with a full cold run in exchange for nothing. That answers step 5's own “different cache” justification on its own terms rather than waiving it.
+   **When stage 4 is skipped, step 5 does not delete the incremental caches.** The `rm -f` above exists because the caches describe a tree that no longer exists; under this predicate the tree _Stryker sees_ is byte-identical to the one they were built from. Deleting them would tax the next merge with a full cold run in exchange for nothing. That answers step 5's own "different cache" justification on its own terms rather than waiving it.
 
    **`hardener` never applies this to itself.** The predicate is evaluated by the orchestrating session and handed to `hardener` in the invoking prompt, naming the diff it was computed over; absent that instruction `hardener` runs stage 4. A role that can excuse itself from its own gate is not a gate. See `.claude/agents/hardener.md`'s stage 4.
 
