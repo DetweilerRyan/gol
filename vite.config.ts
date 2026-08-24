@@ -192,10 +192,13 @@ export default defineConfig({
       // entry is caught by NOTHING. Measured: an ignore pattern matching no
       // file produces no warning and changes no test count, the excluded
       // layer simply returns to the run, and the mutation score moves UP --
-      // so no threshold fires and the regression reads as an improvement. Renaming features/ means updating that entry too,
-      // alongside playwright.config.ts's testDir and package.json's
-      // gherkin-lint script. See CLAUDE.md's sandbox paragraph for why the
-      // layer is excluded in the first place.
+      // so no threshold fires and the regression reads as an improvement.
+      // Renaming features/ means updating that entry too, alongside
+      // playwright.config.ts's testDir and package.json's gherkin-lint
+      // script. Excluded from Stryker is NOT unmutated: this layer keeps its
+      // own mutation signal via npm run acceptance-mutation, which spawns a
+      // plain `vitest run` with no --config and so never involves a sandbox.
+      // See CLAUDE.md's sandbox paragraph for both halves of that argument.
       {
         plugins: [react(), babel({ presets: [reactCompilerPreset()] }), tailwindcss()],
         test: {
