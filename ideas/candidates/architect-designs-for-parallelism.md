@@ -1,6 +1,6 @@
 ---
 name: architect-designs-for-parallelism
-title: Make architect optimise for concurrent coder work, and keep an experiment log of whether it worked
+title: Make architect optimise for concurrent coder work, decide who executes the partition, and log whether it worked
 created: 2026-08-23
 ---
 
@@ -89,11 +89,45 @@ line.
 slices**, both readable from git at merge time. (Alternates if those prove too
 coarse: whether `--ff-only` succeeded first try, or re-verification wall time.)
 
+**5. Per-unit briefs.** A partition nobody can hand to a `coder` is not
+actionable, so design mode emits one brief per parallel unit: its files, its
+interface, and its correctness obligations. This is required under either answer
+to the ownership question below, which is why it sits here rather than there.
+
+**6. Defendable correctness, using an obligation that already exists.**
+`architect` already checks that "any property added this slice was shown to fail
+against a deliberately broken implementation. A property nobody has seen fail is
+documentation." Nothing applies that standard to `coder`'s TDD unit tests.
+Extending it — the reviewer confirms the failing test genuinely preceded the
+implementation — makes per-unit correctness auditable rather than asserted, and
+needs no change of ownership at all.
+
+**7. Cross-unit duplication, and the fan-in it implies.** `cleaner` is scoped to
+"the files named in the coder's handoff manifest" and runs on its own branch, so
+with N concurrent units no cleaner can see its siblings: two units can
+independently grow the same helper and both passes stay green. The proposed fix
+is that **architect runs `npm run dry4ts`**.
+
+Two things follow, and they are what make the fix real:
+
+- **It requires a convergence point.** `dry4ts` cannot see cross-unit
+  duplication until the units are in one tree. So the shape is fan-out to N
+  `coder`→`cleaner` pairs, **fan back in** to the slice branch, then a single
+  architect pass over the union. That also partly answers the reading-(i)-vs-(ii)
+  question below.
+- **No new tooling.** `npm run dry4ts` is already whole-`src/` (`dry4ts src`),
+  not manifest-scoped. What changes is who runs it and when, not what it does.
+
 ## Touches
 
-`.claude/agents/architect.md` (design mode's deliverable, plus ownership of the
-log), `CLAUDE.md`'s "The optional architect design pass" and merge-protocol
-step 1, and a new directory for the records.
+`.claude/agents/architect.md` — design mode's deliverable, ownership of the log,
+the "shown to fail" obligation in item 6, and the gate prohibition in the last
+open question. `CLAUDE.md`'s "The optional architect design pass" and
+merge-protocol step 1. A new directory for the records.
+
+If the ownership question resolves toward ownership, add `.claude/agents/coder.md`
+and `cleaner.md` and an `Agent` tool grant; if it resolves toward briefs only,
+neither is touched. That difference in blast radius is itself worth weighing.
 
 No `src/` change. The refactors this would motivate are separate slices — this
 one only changes how they get chosen.
@@ -115,6 +149,43 @@ one only changes how they get chosen.
   invocations running at once inside one slice's worktree, on one branch —
   needs machinery that doesn't exist (sub-branches, or a merge step inside the
   slice) and isn't designed here.
+- **Should `architect` own `coder` and `cleaner`, or only brief them?** Someone
+  has to turn a partition into running work, and the two answers are genuinely
+  different designs. Neither is recommended here.
+
+  _For ownership_: the role that computed the partition knows what each unit
+  needs, and routing that through a general-purpose orchestrator loses fidelity;
+  someone must fan out N coders and architect is closest to the plan; a single
+  owner for both goals stops parallelism and correctness being traded against
+  each other invisibly.
+
+  _Against ownership_: architect reviews `coder`'s output at step 4, so
+  directing that output turns the review into self-review — the repo already
+  makes this argument twice, splitting `hardener` out so "architectural review
+  and mutation hardening don't compete for the same pass", and justifying
+  adjudicate mode with "You were not in the room when the contract was written.
+  That is the point, not a gap." Nested subagents also remove the orchestrator's
+  visibility and sequencing, `workflow.md` forbids taking over another role's
+  workflow without user direction, and it needs an `Agent` tool grant that **no
+  role currently has** — all five allowlists are identical.
+
+  _A middle position, named but not endorsed_: architect owns the brief, the
+  orchestrator owns the invocation.
+
+- **Architect running `dry4ts` reverses a written rule, and the rule's stated
+  reason is the thing to argue with.** `architect.md` lists the full gate and
+  says it "is `hardener`'s job, not yours; don't run those here even to 'check
+  your own work,' **since hardener runs them next regardless**." That reason
+  still holds under fan-in — `hardener` runs after architect on the same merged
+  tree, so it _would_ catch cross-unit duplication before the slice reaches
+  `main`. So this is not about catching it. It is about **who learns from it**:
+  `hardener` would dedupe locally and move on, whereas the same finding at
+  architect is evidence that the partition was wrong, which is exactly what the
+  experiment log in item 2 exists to record. Against: it reintroduces the
+  competition-for-one-pass that split `hardener` out in the first place. Either
+  way `hardener` still runs `dry4ts` afterwards — this would be an additional
+  earlier run, not a transfer.
+
 - **These are not decision records.** They record whether an experiment came
   out, which is a lab notebook. Calling them ADRs invites the wrong template and
   the wrong lifecycle. Naming and location are open: `adr/`, `experiments/`, or
