@@ -162,8 +162,8 @@ export default defineConfig({
       // production and could pass here while failing in the app.
       //
       // `acceptanceTests` (features/*.steps.test.tsx) does NOT cross `/` --
-      // vitest/picomatch glob semantics, confirmed against this file's own
-      // `unit` exclude above. The *same-looking* glob string in a rules/*.yml
+      // vitest/picomatch glob semantics (architect verified this with a
+      // throwaway probe). The *same-looking* glob string in a rules/*.yml
       // `files:` key DOES cross `/`, because ast-grep's `*` is a different
       // matcher (see CLAUDE.md's Architecture section, which documents that
       // as a measured fact). Don't port one glob into the other assuming
