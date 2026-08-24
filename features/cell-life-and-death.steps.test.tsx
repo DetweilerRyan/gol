@@ -3,14 +3,15 @@
 // reading aliveness off aria-pressed -- rather than calling gameOfLife.ts
 // directly the way this file did before the black-box-acceptance-pilot slice.
 //
-// The ONLY route to the app is features/acceptance-harness.tsx. This file
-// imports the harness, @amiceli/vitest-cucumber and vitest, and nothing else:
+// The ONLY route to the app is this feature's own harness module under
+// features/harness/ (which sits on the shared core, features/harness/board.tsx).
+// This file imports that harness, @amiceli/vitest-cucumber and vitest, and nothing else:
 // no src/ import belongs here, not even cellLabel, because a steps file that
 // quietly reaches back into src/ when the DOM route is awkward turns this
 // layer back into the white-box one it replaced without changing a filename.
 import { describeFeature, loadFeature } from '@amiceli/vitest-cucumber'
 import { expect } from 'vitest'
-import { mountBoard, type Board } from './acceptance-harness'
+import { mountBoard, type Board } from './harness/board'
 
 // ACCEPTANCE_MUTATION_FEATURE_FILE lets the acceptance-mutation runner point
 // this suite at a mutated copy of the feature file (see

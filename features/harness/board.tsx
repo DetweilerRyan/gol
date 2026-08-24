@@ -30,7 +30,7 @@
 // first, so at most one is ever in document.body.
 import { act, fireEvent, screen } from '@testing-library/react'
 import { createRoot, type Root } from 'react-dom/client'
-import App from '../src/App'
+import App from '../../src/App'
 import {
   ALIVE_CELL_SELECTOR,
   CELL_ALIVE_ATTR,
@@ -38,8 +38,8 @@ import {
   CELL_DEAD_VALUE,
   cellLabel,
   cellSelector,
-} from '../src/test-support/cellQuery'
-import { stubBoundingClientRect, stubPointerCapture, stubResizeObserver } from '../src/test-support/domStubs'
+} from '../../src/test-support/cellQuery'
+import { stubBoundingClientRect, stubPointerCapture, stubResizeObserver } from '../../src/test-support/domStubs'
 
 // 200x200 CSS pixels, and the size is derived rather than picked. At
 // DEFAULT_CELL_SIZE 20 this mounts world cells -8..11 on both axes (400 cell
