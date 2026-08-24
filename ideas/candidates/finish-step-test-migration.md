@@ -114,6 +114,41 @@ Three corrections the pilot paid for, which every conversion here inherits:
    `import { render, screen } from '@testing-library/react'`, which reaches the
    DOM directly and bypasses the harness's sentinel.
 
+## Superseded by the CONTRACT rulings
+
+`slice/acceptance-contract-rulings` ruled on thirteen findings and changed three
+things this file states.
+
+**The completion condition is superseded (ruling L).** "`ls features/*.steps.test.ts`
+returns 0" is a file-extension count standing in for the real invariant. It is now:
+
+> every scenario in `features/**` is either black-box-observable through an
+> accessible affordance, or its promise is **re-homed** to the paired
+> `features/*.e2e.spec.ts` and recorded in that spec's header outline.
+
+Re-homing, not exemption — and the reasoning is worth keeping, because the
+intuitive answer is the wrong one. **An exemption records that a promise is
+unobservable, which is false**: thumb length and cursor invariance are observed in
+a real browser right now, in `features/**`, by tests that already exist. An
+exemption would be a less true statement than a re-home. Exemptions remain correct
+for a promise observed _nowhere_ — none of the thirteen findings is one.
+
+**`grid-scrollbars` is not "the risky one" — it splits three ways**: 2 scenarios
+delete (ruling J, no rendered counterpart), 5 convert once the scrollbar extent
+affordance lands, and 2 re-home (jsdom-unobservable _even after_ that affordance —
+on an empty grid `thumbRatio` is 1, so `thumbOffsetRatio` is pinned at 0 whatever
+the camera does, and a 50px pan is 2.5 cells, moving no ruler label).
+
+**`grid-reference-lines`' figure moves.** Rulings G and H delete two of its four
+scenarios — one is reading-ambiguous by exactly `VISIBLE_BUFFER_CELLS`, a constant
+no stakeholder can know, and the other needs a viewport the application cannot
+reach at any zoom (zero gridlines on an axis requires `cellSize >= 256` against
+`MAX_CELL_SIZE` 60). Its 3-mutant Examples table survives intact.
+
+**Conversions no longer need affordance work in this slice.** Rulings A and B
+split it out: `scrollbar-thumb-length-affordance.md` and
+`ruler-label-axis-affordance.md` are their own slices.
+
 ## Open questions
 
 - **`grid-scrollbars` is the risky one.** `Scrollbar`'s `aria-valuenow` is thumb

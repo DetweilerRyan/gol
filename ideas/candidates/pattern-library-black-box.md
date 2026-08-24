@@ -46,6 +46,26 @@ feature that was pulling its weight.
 not move, so the mutant set stays comparable), its steps file renamed to `.tsx`,
 and the acceptance harness from the pilot slice. No `src/` change expected.
 
+## What the CONTRACT rulings settled
+
+**The premise holds.** `PatternPreview.tsx` exposes
+`aria-label="Pattern preview cell x, y"` — text, which is the only thing the jsdom
+harness can observe (it stubs `getBoundingClientRect` to a constant and jsdom does
+no layout, so no pixel geometry is reachable from that layer, ever).
+
+**Ruling C closes the grouping question**: `PatternLibraryModal`'s unnamed
+`<section>` per category is **not** an accessibility gap. Heading structure already
+carries it — an AT user navigating linearly hears the heading, then the buttons —
+so the black-box assertion is **reading order**, which is the affordance
+heading-navigation provides. Do not add `aria-labelledby` for query convenience;
+that is the shape `architect` rejected once already as "a test hook wearing an
+affordance's name".
+
+**Still open and still wants measuring:** whether a preview label survives being
+off-screen. `PatternPreview` maps positions with no range check and no clipping
+filter, which suggests yes — but that is a read of the source, not a measurement,
+and Pulsar is 13x13 against a mounted window of -8..11.
+
 ## Open questions
 
 - **Does the preview label survive being off-screen?** The claim above is that it
