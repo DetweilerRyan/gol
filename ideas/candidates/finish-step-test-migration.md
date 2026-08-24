@@ -70,6 +70,13 @@ rows that bear on this slice:
   conversion spends from this budget**, so measure `test:mutation` wall time per
   conversion rather than once at the end. If it goes over, the answer is the
   Stryker-exclusion slice, not silently accepting a slower gate.
+- **P4a puts a number on what the layer adds to the mutation gate: exactly one
+  mutant.** Full tree 99.08% / 12 survivors; without the acceptance project
+  99.00% / 13. The single extra survivor is in `liveCellStore.ts`. That is the
+  quantitative complement to P6, not a contradiction of it — P6's defect (`App.tsx`
+  wiring) sits outside Stryker's `mutate` list entirely, so it _cannot_ appear in
+  this number. Read together: within Stryker's scope the layer is worth ~1 mutant;
+  its real contribution is coverage of code Stryker never sees.
 - **P1 was 118.2s scoped** for 28 mutants, decomposed as environment tax +68%
   (node → jsdom) and black-box tax +213% (13 real `<App />` mounts at 400
   buttons). `pattern-library` will be worse — it mounts more.
