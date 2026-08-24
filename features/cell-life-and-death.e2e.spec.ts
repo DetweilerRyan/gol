@@ -57,6 +57,19 @@ const NEIGHBOR_OFFSETS: ReadonlyArray<readonly [number, number]> = [
   [1, 1],
 ]
 
+// WHICH ACTIVATION ROUTE THIS SPEC EXERCISES (recorded in the
+// black-box-acceptance-pilot slice's VERIFY pass, because it is easy to
+// assume the wrong thing here). Every cell activation below is a Playwright
+// .click(), which is the POINTER route: pointer capture on #grid-content
+// retargets the native click to the container, so Cell's own onClick never
+// runs and Grid's onTap resolves the cell from pointerup pixels instead.
+// This spec therefore covers hit-testing, and nothing here would notice a
+// bug confined to Cell.onClick -- measured: swapping Cell's onActivate(x, y)
+// to (y, x) leaves every test in this file green. The keyboard route
+// (Enter on a focused cell button, which IS Cell.onClick) is covered by
+// hud-layout-and-shortcuts.e2e.spec.ts:102, where that same swap fails. Both
+// routes are covered by the e2e layer; keep it that way rather than adding a
+// duplicate keyboard test here.
 test.beforeEach(async ({ page }) => {
   await page.goto('/')
 })

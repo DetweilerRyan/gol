@@ -228,6 +228,26 @@ function readCellState(x: number, y: number): CellState {
 
 function makeBoard(container: HTMLDivElement): Board {
   return {
+    // WHICH ACTIVATION ROUTE THIS IS, because it is not the one a mouse user
+    // takes. useGridPointerGestures takes pointer capture on #grid-content,
+    // which retargets the subsequent native click to the container, so
+    // Cell's own onClick never fires for pointer-driven interaction -- Grid's
+    // onTap resolves the cell from pointerup pixels through screenToWorld
+    // instead. Cell.onClick is the KEYBOARD activation route (Enter/Space),
+    // and a bare fireEvent.click with no pointer sequence is exactly that
+    // route. So this layer drives keyboard activation, and hit-testing --
+    // pointer pixels to world cell -- is invisible from here.
+    //
+    // What that does NOT mean, measured in this slice's VERIFY pass: it does
+    // not make the two black-box layers cover disjoint routes. Playwright
+    // drives BOTH -- .click() for the pointer route, and
+    // hud-layout-and-shortcuts.e2e.spec.ts:102 (focus a cell, press Enter)
+    // for this one. Swapping Cell's onActivate(x, y) to (y, x) fails that
+    // e2e test on aria-pressed, while the paired cell-life-and-death e2e
+    // spec, whose every activation is .click(), passes it. Read the
+    // relationship as "this layer sees a strict subset of the routes the
+    // browser layer sees, and cannot see hit-testing at all" -- not as
+    // "each layer covers something the other cannot".
     toggle(x, y) {
       assertActive(container)
       fireEvent.click(cellButton(x, y))
