@@ -1,0 +1,32 @@
+id: no-domain-imports-in-black-box-steps
+snapshots:
+  export { cellLabel } from '../src/test-support/cellQuery':
+    labels:
+    - source: export { cellLabel } from '../src/test-support/cellQuery'
+      style: primary
+      start: 0
+      end: 57
+  import type { LiveCellStore } from '../src/liveCellStore':
+    labels:
+    - source: import type { LiveCellStore } from '../src/liveCellStore'
+      style: primary
+      start: 0
+      end: 57
+  import { cellLabel } from '../src/test-support/cellQuery':
+    labels:
+    - source: import { cellLabel } from '../src/test-support/cellQuery'
+      style: primary
+      start: 0
+      end: 57
+  import { render, screen } from '@testing-library/react':
+    labels:
+    - source: import { render, screen } from '@testing-library/react'
+      style: primary
+      start: 0
+      end: 55
+  import { toggleCell } from '../src/gameOfLife':
+    labels:
+    - source: import { toggleCell } from '../src/gameOfLife'
+      style: primary
+      start: 0
+      end: 46

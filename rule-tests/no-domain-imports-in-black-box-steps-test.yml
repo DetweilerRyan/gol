@@ -1,0 +1,17 @@
+id: no-domain-imports-in-black-box-steps
+valid:
+  - import { mountBoard } from './acceptance-harness'
+  - import { mountBoard, type Board } from './acceptance-harness'
+  - import { describeFeature, loadFeature } from '@amiceli/vitest-cucumber'
+  - import { expect } from 'vitest'
+  # Not an import statement at all: a bare string naming a domain module is not a finding, which is
+  # what the kind: constraint buys over a regex-only matcher.
+  - const NOT_AN_IMPORT = '../src/gameOfLife'
+invalid:
+  # The two forms the orchestrating design named explicitly.
+  - import { toggleCell } from '../src/gameOfLife'
+  - import { cellLabel } from '../src/test-support/cellQuery'
+  # The form a src/-blocklist would have missed -- see the rule's own comment.
+  - import { render, screen } from '@testing-library/react'
+  - import type { LiveCellStore } from '../src/liveCellStore'
+  - export { cellLabel } from '../src/test-support/cellQuery'

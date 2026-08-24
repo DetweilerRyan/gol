@@ -1,0 +1,39 @@
+id: no-domain-imports-in-black-box-steps
+language: Tsx
+severity: warning
+message: A black-box steps file may import only ./acceptance-harness, @amiceli/vitest-cucumber and vitest.
+note: >-
+  features/*.steps.test.tsx is the BLACK-BOX form of a Gherkin steps file: every step drives the
+  real application through ARIA, and features/acceptance-harness.tsx is the one module allowed to
+  reach the app. A steps file that imports src/ directly turns this layer back into the white-box
+  .steps.test.ts form it replaced WITHOUT CHANGING A SINGLE FILENAME -- and since the file
+  extension is the only discriminator vite.config.ts's `acceptance` project has, nothing else in
+  the repo would notice. That is the exact regression this rule exists to make visible.
+  Even `import { cellLabel } from '../src/test-support/cellQuery'` is a violation here: the label
+  format is the harness's business, not a step's. If a step needs something it cannot reach
+  through the harness, the fix is to widen the harness's Board interface, not to import around it.
+# AN ALLOWLIST, NOT A BLOCKLIST ON 'src/', and the difference is load-bearing. A blocklist would
+# pass `import { render, screen } from '@testing-library/react'` -- a steps file querying the DOM
+# itself, bypassing every guarantee the harness exists to provide (the CELL_NOT_MOUNTED sentinel
+# that makes an out-of-viewport coordinate greppable, and the ambiguity check that catches a leaked
+# second board). That reaches the app without naming src/ once, so a src/-blocklist is blind to it.
+# The allowlist was measured to catch all three forms -- ../src/, ../src/test-support/ and
+# @testing-library/react -- against ast-grep 0.45.1 on this repo's own tree.
+#
+# Rust regex has no lookarounds, so the negation cannot live inside the regex. It doesn't need to:
+# ast-grep's structural `not:` combinator supplies it, wrapping an ordinary positive regex. Matched
+# with kind: + regex: rather than with a pattern because metavariables do not interpolate inside
+# string literals -- see CLAUDE.md.
+#
+# Scoped to the .steps.test.tsx suffix so it does NOT reach features/acceptance-harness.tsx, which
+# is precisely the module licensed to import src/. ast-grep's `*` crosses '/', so this also covers
+# any future features/<subdir>/*.steps.test.tsx.
+files:
+  - 'features/*.steps.test.tsx'
+rule:
+  all:
+    - any:
+        - kind: import_statement
+        - kind: export_statement
+    - not:
+        regex: 'from [''"](\./acceptance-harness|@amiceli/vitest-cucumber|vitest)[''"]'
