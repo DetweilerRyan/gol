@@ -3,65 +3,58 @@ Feature: Grid scrollbars
   I want scrollbars that reflect how much of the pattern is currently visible and let me drag them to pan
   So that I can navigate without relying on the mouse wheel alone
 
-  Scenario: An empty grid has no content bounds
+  Scenario: An empty grid has no live pattern to scroll to
     Given a grid with no live cells
-    Then the content bounds should be absent
+    Then there should be no live pattern to scroll to
 
-  Scenario: A live cell's content bounds span its full cell footprint
+  Scenario: A live cell covers its own full square of the grid
     Given a grid with a single live cell at (5, 5)
-    Then the content bounds should span from (5, 5) to (6, 6)
+    Then the live pattern should extend from (5, 5) to (6, 6)
 
   Scenario: An empty grid's scrollbar thumbs fill the entire track
     Given a grid with no live cells
     And a camera centered on the origin at the default zoom
-    When I compute the scrollbar metrics for an 800 by 600 pixel viewport
-    Then the horizontal thumb ratio should be 1
-    And the horizontal thumb offset ratio should be 0
-    And the vertical thumb ratio should be 1
-    And the vertical thumb offset ratio should be 0
+    When the scrollbars are drawn for an 800 by 600 pixel viewport
+    Then the horizontal thumb should fill its track
+    And the horizontal thumb should sit at the start of its track
+    And the vertical thumb should fill its track
+    And the vertical thumb should sit at the start of its track
 
   Scenario: Content smaller than the viewport still fills the scrollbar track
     Given a grid with a single live cell at (5, 5)
     And a camera centered on the origin at the default zoom
-    When I compute the scrollbar metrics for an 800 by 600 pixel viewport
-    Then the horizontal thumb ratio should be 1
-    And the vertical thumb ratio should be 1
+    When the scrollbars are drawn for an 800 by 600 pixel viewport
+    Then the horizontal thumb should fill its track
+    And the vertical thumb should fill its track
 
   Scenario: Content wider than the viewport shrinks only the horizontal thumb
-    Given a grid with live cells spanning x from 0 to 199 and y from 0 to 1
+    Given a grid with live cells spanning 200 cells across and 2 cells down
     And a camera centered on the origin at the default zoom
-    When I compute the scrollbar metrics for an 800 by 600 pixel viewport
-    Then the horizontal thumb ratio should be less than 1
-    And the vertical thumb ratio should be 1
+    When the scrollbars are drawn for an 800 by 600 pixel viewport
+    Then the horizontal thumb should be shorter than its track
+    And the vertical thumb should fill its track
 
   Scenario: Content taller than the viewport shrinks only the vertical thumb
-    Given a grid with live cells spanning x from 0 to 1 and y from 0 to 199
+    Given a grid with live cells spanning 2 cells across and 200 cells down
     And a camera centered on the origin at the default zoom
-    When I compute the scrollbar metrics for an 800 by 600 pixel viewport
-    Then the vertical thumb ratio should be less than 1
-    And the horizontal thumb ratio should be 1
+    When the scrollbars are drawn for an 800 by 600 pixel viewport
+    Then the vertical thumb should be shorter than its track
+    And the horizontal thumb should fill its track
 
-  Scenario: Panning far away from all content still produces a valid, maxed-out scrollbar offset
+  Scenario: Panning far past all content still leaves the thumb inside its track
     Given a grid with a single live cell at (0, 0)
-    And a camera at world position (500, 0) at the default zoom
-    When I compute the scrollbar metrics for an 800 by 600 pixel viewport
-    Then the horizontal thumb offset ratio should be 1
-    And the horizontal thumb ratio should be less than 1
+    And a camera panned 500 cells right of the origin at the default zoom
+    When the scrollbars are drawn for an 800 by 600 pixel viewport
+    Then the horizontal thumb should sit at the end of its track
+    And the horizontal thumb should be shorter than its track
 
-  Scenario: Dragging the vertical scrollbar thumb down pans the camera to reveal further content
+  Scenario: Dragging the vertical scrollbar thumb down reveals content further down
     Given a camera centered on the origin at the default zoom
-    When I drag the vertical scrollbar thumb by 50 pixels with a thumb ratio of 1
-    Then the camera's offsetY should increase
-    And the cell size should be unchanged
+    When I drag the vertical scrollbar thumb down by 50 pixels while it fills its track
+    Then the camera should have moved 50 pixels down the grid
+    And the zoom level should be unchanged
 
-  Scenario Outline: The drag distance scales inversely with thumb ratio, down to a zero-ratio no-op
+  Scenario: Dragging a thumb covering a quarter of its track pans four times as far
     Given a camera centered on the origin at the default zoom
-    When I drag the horizontal scrollbar thumb by 50 pixels with a thumb ratio of <thumb ratio>
-    Then the camera's offsetX should be <expected offset>
-
-    Examples:
-      | thumb ratio | expected offset |
-      | 1           | 2.5             |
-      | 0.5         | 5               |
-      | 0.25        | 10              |
-      | 0           | 0               |
+    When I drag the horizontal scrollbar thumb right by 50 pixels while it covers a quarter of its track
+    Then the camera should have moved 200 pixels right across the grid
