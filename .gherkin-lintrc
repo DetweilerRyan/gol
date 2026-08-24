@@ -20,7 +20,40 @@
   ],
   "no-trailing-spaces": "on",
   "new-line-at-eof": ["on", "yes"],
+  "no-multiple-empty-lines": "on",
+  "file-name": ["on", { "style": "kebab-case" }],
+  "no-empty-file": "on",
+  "no-files-without-scenarios": "on",
+  "no-unnamed-features": "on",
+  "no-unnamed-scenarios": "on",
+  "no-dupe-feature-names": "on",
   "no-dupe-scenario-names": "on",
+  "no-empty-background": "on",
+  "no-background-only-scenario": "on",
+  "no-examples-in-scenarios": "on",
+  "no-scenario-outlines-without-examples": "on",
+  "no-unused-variables": "on",
   "keywords-in-logical-order": "on",
-  "no-unused-variables": "on"
+  "use-and": "on",
+  "only-one-when": "on",
+  "scenario-size": "on",
+  "max-scenarios-per-file": ["on", { "maxScenarios": 10, "countOutlineExamples": false }],
+  "name-length": ["on", { "Feature": 70, "Rule": 70, "Scenario": 100, "Step": 110 }],
+  "no-restricted-patterns": [
+    "on",
+    {
+      "Global": [
+        "\\boffset ?[xy]\\b",
+        "\\bcell ?size\\b",
+        "\\bthumb ?(offset ?)?ratio\\b",
+        "\\bmetrics\\b",
+        "\\bcontent bounds\\b",
+        "\\bvisible range\\b",
+        "\\b(min|max) ?[xy]\\b",
+        "\\bworld (coordinate|position|point)",
+        "\\bshould return\\b",
+        "\\bcell ?key\\b"
+      ]
+    }
+  ]
 }
