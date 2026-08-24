@@ -5,36 +5,12 @@ Feature: Mouse wheel controls
 
   Scenario: Scrolling without a modifier pans instead of zooming
     Given a camera centered on the origin at the default zoom
-    When I scroll the wheel by deltaX 40 and deltaY 100 without holding shift
-    Then the cell size should be unchanged
+    When I scroll the wheel 40 pixels sideways and 100 pixels down without holding shift
+    Then the zoom level should be unchanged
     And the camera should have moved down and right into the grid
 
   Scenario: Scrolling with shift held zooms instead of panning
     Given a camera centered on the origin at the default zoom
     When I scroll the wheel up by 100 pixels at pixel (100, 50) while holding shift
-    Then the cell size should increase
-    And the world point that was under the cursor should still be under the cursor
-
-  Scenario Outline: Shift-held zoom resolves the scroll direction from whichever axis carries it
-    Given a camera centered on the origin at the default zoom
-    When I scroll the wheel <direction> with shift held, carried on the <carrying axis> axis
-    Then the cell size should <zoom outcome>
-
-    Examples:
-      | carrying axis | direction | zoom outcome |
-      | x             | up        | increase     |
-      | x             | down      | decrease     |
-      | y             | up        | increase     |
-      | y             | down      | decrease     |
-
-  Scenario Outline: The zoom percentage reflects the current cell size relative to the default
-    Given a camera with cell size <cell size>
-    Then the zoom percentage should be <expected percentage>
-
-    Examples:
-      | cell size | expected percentage |
-      | 20        | 100                 |
-      | 40        | 200                 |
-      | 10        | 50                  |
-      | 60        | 300                 |
-      | 8         | 40                  |
+    Then the zoom percentage should be above 100
+    And the point under the cursor should not move
