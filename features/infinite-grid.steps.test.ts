@@ -14,21 +14,29 @@ import {
 // scripts/acceptance-mutation/) without ever touching the real one.
 const feature = await loadFeature(process.env.ACCEPTANCE_MUTATION_FEATURE_FILE ?? './infinite-grid.feature')
 
-function makeLiveCells(coords: readonly (readonly [number, number])[]): LiveCells {
-  return new Set(coords.map(([x, y]) => cellKey(x, y)))
+function addHorizontalBlinker(cells: LiveCells, centerX: number, centerY: number): void {
+  cells.add(cellKey(centerX - 1, centerY))
+  cells.add(cellKey(centerX, centerY))
+  cells.add(cellKey(centerX + 1, centerY))
 }
 
-describeFeature(feature, ({ Scenario, ScenarioOutline }) => {
-  Scenario('Cells can be placed far from the origin in any direction', ({ Given, When, And, Then }) => {
+function expectVerticalBlinker(cells: LiveCells, centerX: number, centerY: number): void {
+  expect(isCellAlive(cells, centerX, centerY - 1)).toBe(true)
+  expect(isCellAlive(cells, centerX, centerY)).toBe(true)
+  expect(isCellAlive(cells, centerX, centerY + 1)).toBe(true)
+  expect(isCellAlive(cells, centerX - 1, centerY)).toBe(false)
+  expect(isCellAlive(cells, centerX + 1, centerY)).toBe(false)
+}
+
+describeFeature(feature, ({ Scenario }) => {
+  Scenario('Cells can be placed far from the origin in any direction', ({ Given, When, Then, And }) => {
     let cells: LiveCells
 
     Given('an empty grid', () => {
       cells = createEmptyLiveCells()
     })
-    When('I toggle the cell at (-500, -500)', () => {
+    When('I toggle the cells at (-500, -500) and (1000000, -1000000)', () => {
       toggleCell(cells, -500, -500)
-    })
-    And('I toggle the cell at (1000000, -1000000)', () => {
       toggleCell(cells, 1000000, -1000000)
     })
     Then('the cell at (-500, -500) should be alive', () => {
@@ -39,44 +47,28 @@ describeFeature(feature, ({ Scenario, ScenarioOutline }) => {
     })
   })
 
-  ScenarioOutline(
-    'A pattern evolves identically no matter where it sits on the grid',
-    ({ Given, When, Then, And }, variables) => {
-      let cells: LiveCells
-      let centerX: number
-      let centerY: number
+  // Both blinkers share one grid rather than one grid each: they are far
+  // enough apart that neither can influence the other, and a single
+  // generation over both is what makes "evolves exactly as one at the origin"
+  // a statement about the same computation rather than two separate ones.
+  Scenario('A pattern far from the origin evolves exactly as one at the origin', ({ Given, And, When, Then }) => {
+    let cells: LiveCells
 
-      Given('a horizontal blinker centered at (<x>, <y>)', () => {
-        centerX = Number(variables.x)
-        centerY = Number(variables.y)
-        cells = makeLiveCells([
-          [centerX - 1, centerY],
-          [centerX, centerY],
-          [centerX + 1, centerY],
-        ])
-      })
-      When('the next generation is computed', () => {
-        cells = getNextGeneration(cells)
-      })
-      Then('the blinker should be vertical', () => {
-        expect(isCellAlive(cells, centerX, centerY - 1)).toBe(true)
-        expect(isCellAlive(cells, centerX, centerY)).toBe(true)
-        expect(isCellAlive(cells, centerX, centerY + 1)).toBe(true)
-        expect(isCellAlive(cells, centerX - 1, centerY)).toBe(false)
-        expect(isCellAlive(cells, centerX + 1, centerY)).toBe(false)
-      })
-      And('the blinker should be centered at the literal coordinate (<expected center x>, <expected center y>)', () => {
-        // Unlike the relative assertions above (derived from centerX/centerY,
-        // which move in lockstep with a mutated <x>/<y>), this reads
-        // independent literal columns pinned in the Examples table -- so it
-        // still catches a mutated <x> or <y> even though the shape assertion
-        // above can't.
-        const expectedCenterX = Number(variables['expected center x'])
-        const expectedCenterY = Number(variables['expected center y'])
-        expect(isCellAlive(cells, expectedCenterX, expectedCenterY - 1)).toBe(true)
-        expect(isCellAlive(cells, expectedCenterX, expectedCenterY)).toBe(true)
-        expect(isCellAlive(cells, expectedCenterX, expectedCenterY + 1)).toBe(true)
-      })
-    },
-  )
+    Given('a horizontal blinker centered at (0, 0)', () => {
+      cells = createEmptyLiveCells()
+      addHorizontalBlinker(cells, 0, 0)
+    })
+    And('a horizontal blinker centered at (250000, -250000)', () => {
+      addHorizontalBlinker(cells, 250000, -250000)
+    })
+    When('the next generation is computed', () => {
+      cells = getNextGeneration(cells)
+    })
+    Then('the blinker at (0, 0) should be vertical', () => {
+      expectVerticalBlinker(cells, 0, 0)
+    })
+    And('the blinker at (250000, -250000) should be vertical', () => {
+      expectVerticalBlinker(cells, 250000, -250000)
+    })
+  })
 })
