@@ -11,7 +11,7 @@
 // layer back into the white-box one it replaced without changing a filename.
 import { describeFeature, loadFeature } from '@amiceli/vitest-cucumber'
 import { expect } from 'vitest'
-import { mountBoard, type Board } from './harness/board'
+import { mountBoard, type Board } from './harness/cell-life-and-death'
 
 // ACCEPTANCE_MUTATION_FEATURE_FILE lets the acceptance-mutation runner point
 // this suite at a mutated copy of the feature file (see

@@ -1,11 +1,24 @@
-// The black-box acceptance harness: the ONE place a .steps.test.tsx file is
-// allowed to reach the application from. A converted steps file imports this
-// module, @amiceli/vitest-cucumber and vitest -- nothing else. Reaching into
-// src/ from a steps file turns the black-box layer back into the white-box
-// one it replaced without changing a single filename, which is the failure
-// mode this boundary exists to make visible; `architect` is landing
-// rules/no-domain-imports-in-black-box-steps.yml to check it mechanically.
-// Even cellLabel() is a violation there -- the label format belongs here.
+// The SHARED CORE of the black-box acceptance harness. features/harness/ is
+// the ONE place a .steps.test.tsx file is allowed to reach the application
+// from, and it is one core plus one module per feature: a steps file imports
+// its own features/harness/<feature>.tsx, @amiceli/vitest-cucumber and vitest
+// -- nothing else. Reaching into src/ from a steps file turns the black-box
+// layer back into the white-box one it replaced without changing a single
+// filename, which is the failure mode this boundary exists to make visible;
+// rules/no-domain-imports-in-black-box-steps.yml checks it mechanically, and
+// its allowlist is a single kebab-case segment under ./harness/ so the
+// traversal and nesting escapes are excluded with it. Even cellLabel() is a
+// violation in a steps file -- the label format belongs here.
+//
+// WHAT LIVES HERE AND WHAT DOES NOT. This module owns everything independent
+// of which feature is being specified: the viewport, the mount lifecycle, the
+// single active board, and the cell/generation queries. A per-feature module
+// owns the world window its scenarios need plus any capability only that
+// feature drives, and composes those onto the Board this module returns. A
+// per-feature module NEVER mounts -- if one calls createRoot, the split has
+// failed and the single-active-board guarantee goes with it. Adding a
+// feature's capabilities must not modify this file: that Open-Closed property
+// is the whole reason the harness is two kinds of file rather than one.
 //
 // WHY IT MOUNTS <App />, NOT <LifeBoard />. App.tsx and
 // src/components/LifeBoard.tsx are excluded from BOTH stryker.config.json
@@ -26,8 +39,8 @@
 // its When -- verified with a throwaway probe, which failed on exactly that.
 // Rendering into a container this module owns keeps cleanup() a no-op for the
 // board, so a scenario's steps see one continuous app the way a user would.
-// The cost is that teardown is ours: mountBoard() unmounts the previous board
-// first, so at most one is ever in document.body.
+// The cost is that teardown is ours: mountBoardRequiring() unmounts the
+// previous board first, so at most one is ever in document.body.
 import { act, fireEvent, screen } from '@testing-library/react'
 import { createRoot, type Root } from 'react-dom/client'
 import App from '../../src/App'
@@ -59,30 +72,6 @@ import { stubBoundingClientRect, stubPointerCapture, stubResizeObserver } from '
 // made past that point inherits a number that was only ever derived for
 // cell-life-and-death.
 export const VIEWPORT = { width: 200, height: 200 } as const
-
-// The world rectangle every scenario in cell-life-and-death.feature, and
-// every mutant of it, needs to be able to observe. mountBoardRequiring()
-// asserts the mounted window CONTAINS this -- see assertWindowMounted() for
-// why containment rather than equality. Every coordinate the feature touches
-// -- INCLUDING every seeded mutant of it that acceptance-mutation generates
-// -- lands inside it:
-//
-//   x -> -5              puts a blinker arm at -6
-//   y -> 5               puts the post-generation blinker at y 4..6
-//   expected center x -> 8
-//   expected center y -> -3   reads cells at y -4..-2
-//
-// A 160x160 viewport mounts only -4..7 and would miss two of those, which is
-// what fixes VIEWPORT's lower bound above.
-//
-// ONE RESIDUAL, recorded rather than guarded against: mutation-rules.ts's
-// mutateInteger draws a nonzero delta in +/-9, so a mutated <x> could in
-// principle be -8 and put a blinker arm at -9 -- one cell outside even the
-// mounted window. That does not happen at the current seeds (all four
-// coordinate mutants are listed above), and if a future seed change reaches
-// it, the CELL_NOT_MOUNTED sentinel below is what makes the miss greppable
-// instead of silent.
-export const REQUIRED_WINDOW = { minX: -6, maxX: 8, minY: -4, maxY: 6 } as const
 
 // Thrown when a step asks about a cell the grid never mounted. Its own
 // marker string, so a step that died because a coordinate fell out of the
@@ -238,7 +227,7 @@ export function cellButton(x: number, y: number): HTMLElement {
 
 function assertActive(container: HTMLDivElement): void {
   if (active?.container !== container) {
-    throw new Error('This board has been unmounted -- a later mountBoard() replaced it. Use the current board.')
+    throw new Error('This board has been unmounted -- mounting a later board replaced it. Use the current board.')
   }
 }
 
@@ -368,13 +357,4 @@ export function mountBoardRequiring(requiredWindow: WorldWindow): MountedBoard {
   assertWindowMounted(requiredWindow)
 
   return { board: makeBoard(container), assertActive: () => assertActive(container) }
-}
-
-// TRANSIENT, and deleted by this slice's next commit, which moves
-// REQUIRED_WINDOW into features/harness/cell-life-and-death.tsx and gives that
-// module this name. It exists only so the parameterization above is a pure
-// internal refactor that changes no other file -- the 48 acceptance tests
-// verify it against an unchanged caller.
-export function mountBoard(): Board {
-  return mountBoardRequiring(REQUIRED_WINDOW).board
 }
