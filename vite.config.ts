@@ -16,6 +16,7 @@ const sharedExclude = [
 
 const domTests = ['src/components/**/*.{test,spec}.?(c|m)[jt]s?(x)', 'src/hooks/**/*.{test,spec}.?(c|m)[jt]s?(x)']
 const propertyTests = ['**/*.property.test.ts']
+const acceptanceTests = ['features/*.steps.test.tsx']
 
 // https://vite.dev/config/
 export default defineConfig({
@@ -73,17 +74,20 @@ export default defineConfig({
       provider: 'v8',
       reporter: ['text', 'json'],
     },
-    // SPLIT INTO THREE PROJECTS ON PURPOSE. jsdom construction measured at
+    // SPLIT INTO FOUR PROJECTS ON PURPOSE. jsdom construction measured at
     // ~78% of CPU on a run where fewer than half the collected files touch
     // the DOM -- most of the suite (framework-free modules under src/,
     // property tests, Gherkin steps) never needs a document. Splitting lets
     // only the files that actually render pay for jsdom.
     //
-    // `unit` SUBTRACTS domTests+propertyTests rather than declaring its own
-    // `include`, on purpose: it inherits configDefaults.include and narrows
-    // from there, so a newly added test file lands in `unit` by default and
-    // fails loudly with "document is not defined" if it actually needed
-    // jsdom. A file can never fall between all three projects and run nowhere.
+    // `unit` SUBTRACTS domTests+propertyTests+acceptanceTests rather than
+    // declaring its own `include`, on purpose: it inherits
+    // configDefaults.include and narrows from there, so a newly added test
+    // file lands in `unit` by default and fails loudly with "document is not
+    // defined" if it actually needed jsdom. A file can never fall between all
+    // four projects and run nowhere -- with one deliberate exception, see the
+    // `acceptance` project's own comment below on what happens if its glob
+    // goes dead.
     //
     // THE ONE THING THAT CAN GO SILENTLY DEAD: `dom`'s include list names the
     // directories src/components/ and src/hooks/ by path. A vitest project
@@ -118,7 +122,7 @@ export default defineConfig({
           name: 'unit',
           environment: 'node',
           setupFiles: [],
-          exclude: [...sharedExclude, ...domTests, ...propertyTests],
+          exclude: [...sharedExclude, ...domTests, ...propertyTests, ...acceptanceTests],
         },
       },
       {
@@ -137,6 +141,50 @@ export default defineConfig({
           environment: 'jsdom',
           setupFiles: ['./src/test-setup.ts'],
           include: domTests,
+          exclude: sharedExclude,
+        },
+      },
+      // `acceptance` is a fourth, distinct project rather than a widened `dom`
+      // include, because the file *extension* is the discriminator and it's
+      // load-bearing: `.steps.test.ts` step files import framework-free
+      // modules and call them directly (node, no DOM), while `.steps.test.tsx`
+      // drives real components through Testing Library/ARIA in jsdom. Only the
+      // extension differs -- the two forms can describe the same feature --
+      // so a project `include` glob is the only lever that can split them,
+      // since it can't split one extension by file content. A feature
+      // converts from the direct-call form to the black-box form by being
+      // renamed .steps.test.ts -> .steps.test.tsx, nothing else.
+      //
+      // The react-compiler preset here is not optional the way it might look:
+      // Cell/CellTile's pan-stability (bailing out of re-render on an
+      // unchanged tile) depends on compiler memoization, so an acceptance
+      // layer that skipped the preset would compile differently than
+      // production and could pass here while failing in the app.
+      //
+      // `acceptanceTests` (features/*.steps.test.tsx) does NOT cross `/` --
+      // vitest/picomatch glob semantics, confirmed against this file's own
+      // `unit` exclude above. The *same-looking* glob string in a rules/*.yml
+      // `files:` key DOES cross `/`, because ast-grep's `*` is a different
+      // matcher (see CLAUDE.md's Architecture section, which documents that
+      // as a measured fact). Don't port one glob into the other assuming
+      // they mean the same thing -- here it only ever matches a file directly
+      // under features/, never features/**/*.steps.test.tsx.
+      //
+      // What fails if this glob goes dead is louder than `dom`'s silent-green
+      // failure above: `unit`'s exclude list still subtracts
+      // features/*.steps.test.tsx unconditionally, so a file that stops
+      // matching here doesn't fall back into `unit` -- it runs in NO project.
+      // `npm run acceptance-mutation` is what notices: its baseline check
+      // (assertBaselineGreen) throws on numTotalTests < 1 before scoring a
+      // single mutant, so the very next routine run of `product`'s own
+      // command aborts by name instead of quietly reporting nothing.
+      {
+        plugins: [react(), babel({ presets: [reactCompilerPreset()] }), tailwindcss()],
+        test: {
+          name: 'acceptance',
+          environment: 'jsdom',
+          setupFiles: ['./src/test-setup.ts'],
+          include: acceptanceTests,
           exclude: sharedExclude,
         },
       },
