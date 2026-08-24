@@ -59,14 +59,45 @@ All seven `features/*.feature` files, `.gherkin-lintrc`, and whatever replacemen
 unit tests the coverage check turns out to require. The acceptance-mutation
 baseline in `.claude/agents/articles/engineering.md` moves and must be re-recorded.
 
+## Gate P results — measured, and the hinge is open
+
+`black-box-acceptance-pilot` ran Gate P. **P3 and P4 both pass, so this slice is
+no longer gated.**
+
+- **P3 (crap4ts).** The per-function tables with and without the acceptance
+  project `diff` to **empty** — and so do the tables with and without **all** of
+  `features/**`. crap4ts is not load-bearing on the Gherkin layer at any level.
+- **P4b (Stryker without all of `features/**`).** **98.31%**, against `break: 85`
+  and a full-tree 99.08%. Thirteen points of headroom. P4a is entailed: its test
+  set is a superset of P4b's, and removing tests can only reduce kills.
+
+**But "free" is about the threshold, not about the score, and the difference
+names this slice's real work.** Removing the whole layer moves survivors 12 → 22,
+and those ten are concentrated rather than scattered:
+
+| module             | extra survivors without `features/**` |
+| ------------------ | ------------------------------------: |
+| `scrollbars.ts`    |                                     6 |
+| `gameOfLife.ts`    |                                     2 |
+| `camera.ts`        |                                     1 |
+| `liveCellStore.ts` |                                     1 |
+
+So for ten specific mutants the Gherkin layer is the **sole killer**. That is not
+a reason to stop — the gate holds either way — but it is exactly where the
+"verify replacement coverage exists → prune → re-run gates" order earns itself,
+and it says to start by reading `scrollbars.ts`. Six of the ten sitting there
+fits `grid-scrollbars.feature`'s thumb-ratio scenarios, which this slice plans to
+delete.
+
+Measured on `main` at `1302cb0` with throwaway configs that were deleted after —
+reproduce by filtering `vite.config.ts`'s `test.projects` and pointing Stryker at
+it via `vitest.configFile`, since the vitest runner has **no** project-filter
+option and the CLI does not forward `--project`.
+
 ## Open questions
 
-- **Hard-gated on the pilot's P3/P4.** `stryker.config.json` has no test filter, so
-  the steps files feed `break: 85` on `src/` and crap4ts line coverage today.
-  Deleting scenarios can break gates that have nothing to do with Gherkin. If
-  P3/P4 fail, the failing files name exactly which scenarios need replacement unit
-  tests _before_ their table is pruned — that re-sequences this slice, it doesn't
-  cancel it.
+- **No longer gated on P3/P4** — both passed. What remains is the ten-mutant
+  replacement question above, which is per-module work rather than a go/no-go.
 - Row deletions renumber every downstream acceptance-mutation seed key
   (`${feature}:${rowIndex}:${columnName}`), reshuffling the whole mutant set. That
   is the strongest argument for `gherkin-ast-mutation`, and worth deciding

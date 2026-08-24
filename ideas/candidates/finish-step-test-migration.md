@@ -55,6 +55,45 @@ Four `features/*.steps.test.ts` → `.tsx`, the acceptance harness, and
 `vite.config.ts` (removing the `unit`-project exclusion and the dual-extension
 note). `.gherkin-lintrc` may need a pass if step text changes altitude.
 
+## What the pilot established
+
+`black-box-acceptance-pilot` converted `cell-life-and-death` and ran Gate P. The
+rows that bear on this slice:
+
+- **P6 passed**, which is the row that decides whether the layer is worth
+  migrating at all. `App.tsx`'s `onAdvance` stubbed out is missed by all 845
+  unit+property+dom tests and caught by the acceptance layer — the first fast
+  layer to mount `<App />`, whose composition-root wiring is excluded from both
+  Stryker and crap4ts.
+- **P5 landed at the threshold**: 693 / 684 / 682s against a 687.5s cap (+25%
+  over a 550s baseline). Median under, cap inside the spread. **Each further
+  conversion spends from this budget**, so measure `test:mutation` wall time per
+  conversion rather than once at the end. If it goes over, the answer is the
+  Stryker-exclusion slice, not silently accepting a slower gate.
+- **P1 was 118.2s scoped** for 28 mutants, decomposed as environment tax +68%
+  (node → jsdom) and black-box tax +213% (13 real `<App />` mounts at 400
+  buttons). `pattern-library` will be worse — it mounts more.
+
+Three corrections the pilot paid for, which every conversion here inherits:
+
+1. **`@amiceli/vitest-cucumber` compiles one vitest test per Gherkin _step_, not
+   per scenario** — `cell-life-and-death.feature` collects 48 tests, not 13. So
+   the global `afterEach(cleanup)` fires _between_ a scenario's `Given` and its
+   `When`, and an RTL-`render`ed board cannot survive a scenario. The harness
+   owns its own `createRoot` container for this reason. Do not "simplify" it back
+   to `render()`.
+2. **The mounted window is a tile-range artifact, not a camera derivation.** At
+   200×200 it is cells −8..11 (400 buttons), because the first render happens at
+   camera (0,0) before `useInitialCentering` fires and `nextTileRange` rebuilds
+   onto the union. `mountBoard()` asserts `REQUIRED_WINDOW ⊆ mounted` rather than
+   equality. Each converted feature must check its own coordinates — **including
+   every seeded mutant of them** — land inside.
+3. **A steps file may import only the harness, `@amiceli/vitest-cucumber` and
+   `vitest`.** `rules/no-domain-imports-in-black-box-steps.yml` enforces this as
+   an **allowlist**, not a `src/` blocklist — a blocklist passes
+   `import { render, screen } from '@testing-library/react'`, which reaches the
+   DOM directly and bypasses the harness's sentinel.
+
 ## Open questions
 
 - **`grid-scrollbars` is the risky one.** `Scrollbar`'s `aria-valuenow` is thumb
