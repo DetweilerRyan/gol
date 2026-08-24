@@ -50,7 +50,7 @@ openspec/
     archive/YYYY-MM-DD-<slice>/
   specs/                     # was features/
     <capability>/            # .feature + .steps.test.ts(x) + .e2e.spec.ts
-    _shared/                 # acceptance-harness.tsx, e2e-helpers.ts
+    _shared/                 # harness/ (board.tsx + one per feature), e2e-helpers.ts
 ```
 
 Decisions already taken:
