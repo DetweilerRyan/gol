@@ -43,33 +43,45 @@ import { stubBoundingClientRect, stubPointerCapture, stubResizeObserver } from '
 
 // 200x200 CSS pixels, and the size is derived rather than picked. At
 // DEFAULT_CELL_SIZE 20 this mounts world cells -8..11 on both axes (400 cell
-// buttons); see mountedWindow() below for why the window is wider on the
-// positive side than centeredCamera alone would suggest. Every coordinate
-// cell-life-and-death.feature touches -- INCLUDING every seeded mutant of it
-// that acceptance-mutation generates -- lands inside that window:
+// buttons); see assertWindowMounted() below for why the window is wider on
+// the positive side than centeredCamera alone would suggest. 180 and 240
+// mount the identical 400 cells, so 200 is the smallest round viewport that
+// covers that range.
+//
+// ONE VIEWPORT, SHARED BY EVERY FEATURE HARNESS: mountBoardRequiring()
+// renders at this size for all of them, and a feature whose required window
+// this viewport cannot mount fails assertWindowMounted() by name rather than
+// quietly observing the wrong cells. THE FALSIFIER, recorded here on
+// purpose: if two post-ruling conversions independently need a viewport
+// other than 200x200, stop and parameterize VIEWPORT before converting any
+// more features. One such feature is a special case; two is evidence the
+// size belongs on the seam next to the required window, and every conversion
+// made past that point inherits a number that was only ever derived for
+// cell-life-and-death.
+export const VIEWPORT = { width: 200, height: 200 } as const
+
+// The world rectangle every scenario in cell-life-and-death.feature, and
+// every mutant of it, needs to be able to observe. mountBoardRequiring()
+// asserts the mounted window CONTAINS this -- see assertWindowMounted() for
+// why containment rather than equality. Every coordinate the feature touches
+// -- INCLUDING every seeded mutant of it that acceptance-mutation generates
+// -- lands inside it:
 //
 //   x -> -5              puts a blinker arm at -6
 //   y -> 5               puts the post-generation blinker at y 4..6
 //   expected center x -> 8
 //   expected center y -> -3   reads cells at y -4..-2
 //
-// 160x160 mounts only -4..7 and would miss two of those; 180 and 240 mount
-// the identical 400 cells. So 200 is the smallest round viewport that
-// contains the mutant reach.
+// A 160x160 viewport mounts only -4..7 and would miss two of those, which is
+// what fixes VIEWPORT's lower bound above.
 //
 // ONE RESIDUAL, recorded rather than guarded against: mutation-rules.ts's
 // mutateInteger draws a nonzero delta in +/-9, so a mutated <x> could in
-// principle be -8 and put a blinker arm at -9 -- one cell outside even this
-// window. That does not happen at the current seeds (all four coordinate
-// mutants are listed above), and if a future seed change reaches it, the
-// CELL_NOT_MOUNTED sentinel below is what makes the miss greppable instead
-// of silent.
-export const VIEWPORT = { width: 200, height: 200 } as const
-
-// The world rectangle every scenario in cell-life-and-death.feature, and
-// every mutant of it, needs to be able to observe. mountBoard() asserts the
-// mounted window CONTAINS this -- see mountedWindow() for why containment
-// rather than equality.
+// principle be -8 and put a blinker arm at -9 -- one cell outside even the
+// mounted window. That does not happen at the current seeds (all four
+// coordinate mutants are listed above), and if a future seed change reaches
+// it, the CELL_NOT_MOUNTED sentinel below is what makes the miss greppable
+// instead of silent.
 export const REQUIRED_WINDOW = { minX: -6, maxX: 8, minY: -4, maxY: 6 } as const
 
 // Thrown when a step asks about a cell the grid never mounted. Its own
@@ -86,6 +98,20 @@ export const CELL_NOT_MOUNTED = 'CELL_NOT_MOUNTED'
 // is load-bearing for the mutation score.
 export type CellState = 'alive' | 'dead'
 
+// What mountBoardRequiring() hands a per-feature harness: the black-box board,
+// plus the liveness guard the board's own methods already apply internally. A
+// feature harness that composes an EXTRA capability onto the board -- a wheel
+// gesture, a modal query -- must make the same "is this still the current
+// board?" check, and `active` is deliberately NOT exported for it to read:
+// cellButton()'s ambiguity check ("a board leaked") is a sound diagnosis only
+// while mounting is globally unique, which is a property of this module owning
+// that state alone. assertActive() carries the guard across the seam without
+// moving the state across it.
+export interface MountedBoard {
+  board: Board
+  assertActive(): void
+}
+
 export interface Board {
   toggle(x: number, y: number): void
   advance(): void
@@ -94,7 +120,12 @@ export interface Board {
   generation(): number
 }
 
-interface MountedWindow {
+// WorldWindow, not Window: these files compile under lib: DOM, where `Window`
+// is a global interface a local declaration would shadow rather than replace.
+// One type serves both directions -- the rectangle a feature harness REQUIRES,
+// and the rectangle the grid actually mounted -- because assertWindowMounted()
+// compares exactly those two and nothing else distinguishes them.
+export interface WorldWindow {
   minX: number
   maxX: number
   minY: number
@@ -132,7 +163,7 @@ function extentFrom(stepX: number, stepY: number): number {
   return n
 }
 
-function mountedWindow(): MountedWindow {
+function mountedWindow(): WorldWindow {
   if (!document.querySelector(cellSelector(0, 0))) {
     throw new Error('The grid did not mount cell (0, 0) -- the mounted window cannot be measured from the origin')
   }
@@ -144,7 +175,7 @@ function mountedWindow(): MountedWindow {
   }
 }
 
-function describeWindow(w: MountedWindow): string {
+function describeWindow(w: WorldWindow): string {
   return `x ${w.minX}..${w.maxX}, y ${w.minY}..${w.maxY}`
 }
 
@@ -162,17 +193,17 @@ function describeWindow(w: MountedWindow): string {
 // must not fail here; one that shrinks it past what the feature needs must.
 // The message names both ranges so the second case reads as a real diagnosis
 // rather than as a mystery missing element.
-function assertRequiredWindowMounted(): void {
+function assertWindowMounted(required: WorldWindow): void {
   const mounted = mountedWindow()
   const contains =
-    mounted.minX <= REQUIRED_WINDOW.minX &&
-    mounted.maxX >= REQUIRED_WINDOW.maxX &&
-    mounted.minY <= REQUIRED_WINDOW.minY &&
-    mounted.maxY >= REQUIRED_WINDOW.maxY
+    mounted.minX <= required.minX &&
+    mounted.maxX >= required.maxX &&
+    mounted.minY <= required.minY &&
+    mounted.maxY >= required.maxY
   if (!contains) {
     throw new Error(
       `The mounted window (${describeWindow(mounted)}) does not contain the window this feature requires ` +
-        `(${describeWindow(REQUIRED_WINDOW)}). Every cell coordinate a scenario -- or a mutant of one -- ` +
+        `(${describeWindow(required)}). Every cell coordinate a scenario -- or a mutant of one -- ` +
         `touches must be observable, or a mutant would be killed by a missing element instead of by an assertion.`,
     )
   }
@@ -188,7 +219,13 @@ function assertRequiredWindowMounted(): void {
 // stay distinguishable: get() throws for both, and folding the second into
 // CELL_NOT_MOUNTED would hide a leaked second board behind a message saying
 // the opposite.
-function cellButton(x: number, y: number): HTMLElement {
+//
+// EXPORTED although this module's own Board never hands it out: a per-feature
+// harness composing an extra capability (hovering a cell, dragging from one to
+// another) needs the same single-cell lookup with the same two diagnoses, and
+// the alternative is that the first feature to need one edits this file --
+// exactly the coupling the harness split exists to remove.
+export function cellButton(x: number, y: number): HTMLElement {
   const matches = screen.queryAllByLabelText(cellLabel(x, y))
   if (matches.length === 0) {
     throw new Error(`${CELL_NOT_MOUNTED}: (${x}, ${y}) is outside the mounted window`)
@@ -287,7 +324,15 @@ function makeBoard(container: HTMLDivElement): Board {
 // board, deliberately -- see the module header); cleanup between SCENARIOS
 // is the unmountActiveBoard() call below, so a steps file adds no
 // beforeEach/afterEach of its own.
-export function mountBoard(): Board {
+//
+// requiredWindow is a REQUIRED POSITIONAL, not an optional or an option-bag
+// field, and that is the ruling this whole split turns on. An optional needs a
+// default, and a default is a window asserted on behalf of some feature that
+// did not state one -- so the second feature to mount would silently inherit
+// cell-life-and-death's rectangle and pass an assertion about the wrong cells.
+// Making it unsupplied-able is what forces each feature harness to say, in its
+// own file, which part of the world its scenarios can observe.
+export function mountBoardRequiring(requiredWindow: WorldWindow): MountedBoard {
   unmountActiveBoard()
 
   // jsdom implements none of these three usefully: ResizeObserver not at all
@@ -295,6 +340,16 @@ export function mountBoard(): Board {
   // getBoundingClientRect as an all-zero constant, pointer capture not at
   // all. Shared with the src/ component tests rather than re-rolled here --
   // three hand-written copies of a stub drift.
+  //
+  // READ THIS BEFORE ADDING A PIXEL-DRIVEN CAPABILITY TO A FEATURE HARNESS:
+  // stubBoundingClientRect installs ONE constant rect on Element.prototype, so
+  // every element in the tree reports the same box and no element's real
+  // screen position is readable from here at all. A gesture that needs to
+  // start at a particular cell, thumb, or ruler tick therefore has to compute
+  // its client pixels from camera math (the default camera this viewport
+  // produces) rather than measure them -- and a capability that measured them
+  // instead would read the viewport's own rect for every target and drive
+  // every gesture from the same point while still passing.
   const resizeObserver = stubResizeObserver()
   stubBoundingClientRect({ left: 0, top: 0, width: VIEWPORT.width, height: VIEWPORT.height })
   stubPointerCapture()
@@ -310,7 +365,16 @@ export function mountBoard(): Board {
   // size and centers the camera.
   resizeObserver.resize(VIEWPORT.width, VIEWPORT.height)
 
-  assertRequiredWindowMounted()
+  assertWindowMounted(requiredWindow)
 
-  return makeBoard(container)
+  return { board: makeBoard(container), assertActive: () => assertActive(container) }
+}
+
+// TRANSIENT, and deleted by this slice's next commit, which moves
+// REQUIRED_WINDOW into features/harness/cell-life-and-death.tsx and gives that
+// module this name. It exists only so the parameterization above is a pure
+// internal refactor that changes no other file -- the 48 acceptance tests
+// verify it against an unchanged caller.
+export function mountBoard(): Board {
+  return mountBoardRequiring(REQUIRED_WINDOW).board
 }
