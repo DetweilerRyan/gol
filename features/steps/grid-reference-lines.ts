@@ -9,7 +9,8 @@
 // "It should be a major gridline" is read off the column ruler, and a ruler
 // label is a bare number that would be indistinguishable from a row label
 // without the role="group" GridRuler wraps each axis in. Resolving that group
-// lives in features/e2e-helpers.ts (rulerGroup); this module reads the
+// lives in features/screenplay/elements.ts (rulerGroup), reached through
+// ../e2e-helpers; this module reads the
 // coordinate numbers through axisLabelValues and names no selector at all.
 // It carried no selector under the class-based locator that preceded it
 // either, which is why the affordance landing changed nothing here.

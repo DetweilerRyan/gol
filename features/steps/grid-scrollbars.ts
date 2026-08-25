@@ -24,7 +24,8 @@
 //     the track's own box. REACH-AROUND: there is no accessible expression of
 //     how much of the content is visible -- aria-valuemin/max are fixed 0 and
 //     100 and say only where the thumb sits, never how long it is. See
-//     thumbTrackFraction in e2e-helpers.ts.
+//     thumbTrackFraction in features/screenplay/questions.ts, reached through
+//     ../e2e-helpers.
 import { createBdd } from 'playwright-bdd'
 import { expect, type Page } from '@playwright/test'
 import {
