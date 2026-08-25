@@ -51,7 +51,6 @@
     "tailwindcss": "^4.3.3"
   },
   "devDependencies": {
-    "@amiceli/vitest-cucumber": "^7.0.0",
     "@ast-grep/cli": "0.45.1",
     "@babel/core": "^8.0.1",
     "@fast-check/vitest": "^0.4.1",

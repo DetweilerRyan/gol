@@ -64,10 +64,9 @@ async function zoomUntilSettled(page: Page, direction: 'in' | 'out') {
 // On each axis, every coordinate label on show has its own negation on show
 // too -- the ruler-visible form of "the origin is in the middle of the view".
 // Reported per axis and never merged: a merged multiset passes for a camera
-// far enough off-centre that the origin is nowhere on screen at all (measured
-// in camera-pan-and-zoom.steps.test.ts, which states the same clause against
-// the pure module). An empty axis is FALSE rather than trivially balanced,
-// which is what stops the clause passing for an axis showing no coordinates.
+// far enough off-centre that the origin is nowhere on screen at all. An empty
+// axis is FALSE rather than trivially balanced, which is what stops the
+// clause passing for an axis showing no coordinates.
 function isBalancedAroundOrigin(labels: readonly number[]): boolean {
   if (labels.length === 0) return false
   const ascending = (values: readonly number[]) => [...values].sort((a, b) => a - b).join(',')
