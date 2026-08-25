@@ -11,10 +11,6 @@ note: >-
   intent, and the retry window would be whatever the inner expect defaulted to rather than what the
   scenario asked for. Put the assertion in features/screenplay/expectations.ts and keep the read
   here.
-# ast-grep-rule-check: allow-unresolved-files authored in the screenplay-e2e-decomposition design
-# pass, before features/screenplay/questions.ts exists -- architect deletes this marker in the
-# review pass, once the file has landed and the glob resolves.
-#
 # SCOPED TO questions.ts ALONE, AND THAT IS THE WHOLE RULING. The tempting generalisation --
 # "only expectations.ts may call expect" -- is wrong here, because in Playwright the retrying
 # assertion IS the sanctioned synchronization primitive. features/screenplay/interactions.ts's

@@ -4,9 +4,12 @@ severity: warning
 message: A features/screenplay/ module must not import ../e2e-helpers -- the barrel is a sink, never a source.
 note: >-
   features/e2e-helpers.ts is a re-exporting barrel over features/screenplay/*, and the layering
-  underneath it is a DAG with a total order: viewport and notepad import nothing, elements imports
-  those, questions and interactions import elements, tasks imports interactions plus questions, and
-  expectations imports tasks plus questions. The barrel sits above all of them and is imported by
+  underneath it is a DAG with a total order. As landed: viewport and notepad import no sibling;
+  elements imports no sibling either; questions and interactions import elements; tasks imports
+  elements, interactions and viewport; expectations imports elements and tasks. Every edge the
+  layering LICENSES is not necessarily present -- an unused import is unbuildable under
+  noUnusedLocals -- so read the order as the ceiling and the list above as the landed subset of it.
+  The barrel sits above all of them and is imported by
   the step modules and the hand-written specs. A screenplay module reaching back through the barrel
   closes that into a cycle -- and ESM tolerates a cycle silently right up to the moment an
   evaluation order puts a const in its temporal dead zone, at which point the failure surfaces as
@@ -16,10 +19,6 @@ note: >-
   This also protects the incremental extraction the split was executed as: each module was lifted
   out in dependency order and never needed to reach back, which is what let every intermediate
   commit leave the suite green.
-# ast-grep-rule-check: allow-unresolved-files authored in the screenplay-e2e-decomposition design
-# pass, before features/screenplay/ exists -- architect deletes this marker in the review pass, once
-# the directory has landed and the glob resolves.
-#
 # MATCHED ON THE `source` FIELD, not by a regex over the statement's own text, for the reason
 # rules/no-playwright-config-import-in-mutation-config.yml measured: `export default ...` is itself
 # an export_statement and a statement-text regex reads the comments inside it. A field-scoped match

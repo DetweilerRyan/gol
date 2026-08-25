@@ -95,8 +95,8 @@ async function runPanScenario(page: Page, testInfo: TestInfo, spec: PanScenarioS
   await page.goto(spec.seedQuery ? `/${spec.seedQuery}` : '/')
   // The grid centers itself on the first ResizeObserver measurement
   // (useInitialCentering); waiting for the zoom readout is the same
-  // "app has settled" signal e2e/e2e-helpers.ts's zoomPercent() polls for,
-  // reimplemented locally here rather than importing e2e/ -- see
+  // "app has settled" signal features/screenplay/questions.ts's zoomPercent()
+  // polls for, reimplemented locally here rather than importing features/ -- see
   // gestures.ts's header comment on perf/ staying self-contained.
   await expect(page.getByText(/^\d+%$/)).toBeVisible()
 

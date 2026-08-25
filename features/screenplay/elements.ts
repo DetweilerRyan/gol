@@ -1,13 +1,46 @@
 // SCREENPLAY: the PageElements -- how each thing this suite talks to is
-// REACHED, and nothing about what it currently says. Every locator in
-// features/ is built here, so a change to how the app announces something is
-// one edit in one file rather than a grep across fifteen specs and step
-// modules.
+// REACHED, and nothing about what it currently says.
 //
-// Questions read these, Interactions drive them, and neither builds a locator
-// of its own. That is what keeps `interactions -> questions` off the
-// dependency graph: an interaction that needed a thumb's box measures the
-// element directly rather than asking a Question for it.
+// WHAT MUST LIVE HERE, and it is a floor rather than a fence. A selector
+// string or an accessible name belongs in this file if it is reached from more
+// than one module, if the barrel publishes it, or if it would otherwise be
+// built from a raw constant imported out of src/test-support. aliveCells is
+// that last case and is why it exists: questions.ts's aliveCellCount built its
+// own Locator from ALIVE_CELL_SELECTOR, which put a selector constant in a
+// module whose job is reading. Anything meeting one of those is one edit in
+// one file when the app changes how it announces something, rather than a grep
+// across the directory.
+//
+// WHAT MAY STAY WITH ITS CALLER, and does. A `page.*` query used by exactly one
+// function in the module that owns the act it belongs to (interactions.ts's
+// four toolbar buttons; questions.ts's zoom badge and generation counter), and
+// any sub-query chained off a locator this file handed over
+// (patternCategoryInLibrary's `h3, button`, axisLabelValues' label pattern,
+// thumbTrackFraction's `..`). Those are reading mechanics inseparable from the
+// algorithm around them -- hoisting them here would split a query from the only
+// logic that gives it meaning, and this file would start holding fragments
+// nobody can name.
+//
+// SCOPE OF THAT CLAIM, MEASURED RATHER THAN ASSERTED. No module under
+// features/steps/ builds a locator at all -- it cannot, its import allowlist
+// forbids it -- so for the generated step layer this file really is the only
+// place a selector is named. The eight hand-written *.e2e.spec.ts files still
+// build their own, grep-counted at 35 `page.locator`/`page.getBy` sites, and
+// were deliberately left untouched by the decomposition. They are not in scope
+// here, and a header claiming "every locator in features/" would be false.
+//
+// NOT HERE: CELL_ALIVE_ATTR / CELL_ALIVE_VALUE / CELL_DEAD_VALUE. Those say how
+// to READ what a cell announces, not how to reach it, so questions.ts and
+// expectations.ts import them from src/test-support/cellQuery.ts directly
+// rather than through this file. Ruled in the screenplay-e2e-decomposition
+// review rather than left as drift: routing them through would make this
+// module a general test-support pass-through and have it re-export values it
+// never uses.
+//
+// Questions read these and Interactions drive them, and neither asks the other.
+// That is what keeps `interactions -> questions` off the dependency graph: an
+// interaction that needed a thumb's box measures the element directly rather
+// than asking a Question for it.
 import { type Locator, type Page } from '@playwright/test'
 import { ALIVE_CELL_SELECTOR, cellSelector } from '../../src/test-support/cellQuery.ts'
 import { rulerGroupLabel } from '../../src/test-support/rulerQuery.ts'

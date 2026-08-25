@@ -9,7 +9,16 @@
 // module to it by banning the `expect` import outright, which is why an
 // assertion over one of these belongs in expectations.ts.
 //
-// Questions build no locators of their own -- they ask elements.ts.
+// Questions ask elements.ts for the identities it owns, and build only the
+// queries elements.ts's header licenses: a `page.getByText` read by exactly one
+// function here (the zoom badge, the generation counter), and sub-queries
+// chained off a locator elements.ts handed over. That header states the line;
+// it is not "no locators at all", which this file would not satisfy.
+//
+// CELL_ALIVE_ATTR and its two values come from src/test-support/cellQuery.ts
+// directly rather than through elements.ts. They say how to READ what a cell
+// announces, not how to reach it, so they fall outside that module's charter --
+// ruled in the screenplay-e2e-decomposition review, so not drift to tidy back.
 import { type Page } from '@playwright/test'
 import { CELL_ALIVE_ATTR, CELL_ALIVE_VALUE, CELL_DEAD_VALUE } from '../../src/test-support/cellQuery.ts'
 import {
