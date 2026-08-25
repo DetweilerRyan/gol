@@ -23,8 +23,10 @@ const sharedExclude = [
   // inside Stryker's sandbox while the path check still answers "invariant."
   // `.claude/worktrees/**`, the narrower entry this replaces, is subsumed
   // by `.claude/**` -- a worktree is a whole other checkout with its own
-  // node_modules and tests, and collecting it was a real measured incident
-  // (3,299 tests instead of 861).
+  // node_modules and tests, so collecting one would run another slice's
+  // suite as this one's. That has never been measured here; the 3,299-vs-861
+  // figure below belongs to the .stryker-tmp sandbox incident, which is the
+  // same class of failure from a different source, not to this entry.
   //
   // Trade-off: nothing under .claude/ is a test today, and scripts/ already
   // has its own separate pipeline -- but .claude/ is where agent
