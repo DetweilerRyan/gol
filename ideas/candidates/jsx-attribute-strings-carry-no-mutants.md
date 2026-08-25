@@ -39,26 +39,76 @@ measured nothing about them. `coder`'s hand-verification — swapping the two la
 the membership test fail while the name-only test passed — was the only real check, and it was
 an instinct rather than a gate.
 
+## Research findings — the open questions are answered
+
+Investigated 2026-08-25, against the installed `@stryker-mutator/instrumenter@10.0.0` and
+upstream `master`. Every claim below is either quoted source or a measurement.
+
+**1 · It is excluded by design, explicitly — not a gap.** `string-literal-mutator.js`'s
+`isValidParent()` lists `types.isJSXAttribute(parent)` alongside import/export declarations,
+`require()` calls and object-property keys. Confirmed identical on upstream `master`. **The
+rationale is undocumented**: no commit in that file's visible history mentions JSX, so the
+exclusion arrived with the initial mutator set (2020-06-19) unexplained. The company it keeps
+suggests the intent was "strings that are structural rather than behavioural" — plausible for
+`className` and `data-testid`, wrong for an accessible name, which is the one string in a JSX
+attribute that _is_ the contract.
+
+**2 · The exclusion keys on the DIRECT parent, and that is the whole opening.** Wrapping the
+same string in braces makes its parent a `JSXExpressionContainer`, not a `JSXAttribute`, and it
+mutates. Measured with a five-form probe:
+
+| form                            | mutant?                                                                                     |
+| ------------------------------- | ------------------------------------------------------------------------------------------- |
+| `aria-label="Column ruler"`     | **no**                                                                                      |
+| `aria-label={'Column ruler'}`   | **yes**                                                                                     |
+| ``aria-label={`Column ruler`}`` | **yes** (the template-literal branch runs _before_ `isValidParent` and is unguarded at all) |
+| `aria-label={MODULE_CONST}`     | at the const's declaration, not at the JSX site                                             |
+| `aria-label={rulerName('x')}`   | at the function's `return`, not at the JSX site                                             |
+
+**3 · Verified on the real component, and it costs nothing.** Wrapping `GridRuler.tsx`'s two
+`aria-label` values took it from **5 mutants to 7**, and both new `StringLiteral` mutants were
+**killed by the tests that already exist** — no new test needed, because `GridRuler.test.tsx`'s
+membership and exact-name tests already assert those strings. Prettier accepts the form and
+oxlint does not enable `react/jsx-curly-brace-presence`, so nothing objects.
+
+**4 · There is no supported opt-in.** StrykerJS has four plugin kinds — TestRunner, Reporter,
+Checker, **Ignore** — and no `Mutator` kind; a user cannot add a mutator or override a built-in
+one. (Older docs referencing a custom `Mutator` plugin predate the instrumenter rewrite.) Note
+Ignore plugins only ever _subtract_ mutants, so they are the wrong direction entirely.
+
 ## Sketch
 
-Establish the boundary first, because the fix depends on which it is. Stryker's mutator set is
-per-node-type; the question is whether JSX attribute values are **excluded by design**, or
-whether the `StringLiteral` mutator simply does not descend into `JSXAttribute` in the current
-version. Read `@stryker-mutator/instrumenter`'s mutator list before proposing anything.
+**Recommended: the braces form, scoped to accessible names only.** `aria-label={'Column ruler'}`
+for the strings that carry contract, left as plain attributes everywhere else. Two characters,
+measured to produce killed mutants, no new tests, no tooling objection.
 
-Three routes, roughly in order of cost:
+Scope it deliberately rather than applying it everywhere. `className` strings are the _visual_
+contract this repo has repeatedly ruled out of mutation scope (`Cell.test.tsx`'s paint block,
+`RulerLabel.tsx`'s `edgeClass`), and mutating them would manufacture survivors nobody wants to
+chase. The candidates are `aria-label`, `aria-valuetext`, `role`, and `title` — the strings an
+AT user actually receives.
 
-1. **Accept and record.** Document in CLAUDE.md that accessible names are outside stage 4, so no
-   future reader mistakes the score for coverage of them, and make the compensating discipline
-   explicit: an affordance slice must hand-verify a swap/rename, the way `coder` did here.
-   Cheapest, and it is the honest minimum whatever else happens.
-2. **Move the names out of JSX.** They already half are: `rulerQuery.ts` holds the canonical pair
-   and `GridRuler.tsx` a deliberate duplicate. A module-level `const COLUMN_RULER_LABEL = '…'`
-   in the component file **would** be an ordinary `StringLiteral` and would mutate. Check that
-   claim before relying on it — it is the crux, and it is cheap to test with a throwaway
-   `--mutate` run. Note this cuts against the deliberate-duplicate pattern the repo uses for
-   `Cell.tsx` ↔ `cellQuery.ts`, so it is a real design trade, not a tidy-up.
-3. **A custom mutator or a checker.** Most expensive; only worth it if 1 and 2 both fail.
+**Name the risk plainly: this relies on undocumented internal behaviour.** Stryker excludes
+`JSXAttribute` but not `JSXExpressionContainer`, and nothing says that is deliberate — the
+unguarded template-literal branch suggests the boundary is incidental rather than designed. A
+future release could close it, silently, and the mutants would just stop appearing. That fails
+**safe** (the score drops or the count falls, it never falsely rises), but it argues for a
+**test that pins the affordance directly** rather than leaning on the mutation score to notice.
+That test already exists for `GridRuler`; the audit below is what says whether it exists
+elsewhere.
+
+**Rejected: patching the instrumenter.** The repo has precedent (`patches/crap4ts+1.0.1.patch`),
+but that patch fixes a genuine upstream defect with an open PR behind it. This would be
+overriding a deliberate upstream decision in a hot path, re-derived on every release, to buy
+what two characters already buy.
+
+**Do first, regardless of which route: the audit.** The real risk register is _which existing
+affordances have a hand-written test that would catch a rename_, and nothing currently produces
+it. `product`'s VERIFY on `ruler-label-axis-affordance` found the browser layer's guard on a
+ruler swap was **incidental** — carried by tests whose stated purpose was gridline multiples —
+and that the generated `bdd` layer was blind to it entirely. Expect more of that. Candidates:
+`Cell.tsx`'s `aria-label`/`aria-pressed`, `PatternPreview.tsx`'s preview-cell labels,
+`Scrollbar.tsx`'s `Horizontal scroll`/`Vertical scroll`, `GridToolbar.tsx`'s nine attributes.
 
 ## Touches
 
