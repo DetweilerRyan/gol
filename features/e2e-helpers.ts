@@ -1,18 +1,11 @@
 import { expect, type Page } from '@playwright/test'
-import {
-  ALIVE_CELL_SELECTOR,
-  CELL_ALIVE_ATTR,
-  CELL_ALIVE_VALUE,
-  CELL_DEAD_VALUE,
-} from '../src/test-support/cellQuery.ts'
+import { CELL_ALIVE_ATTR, CELL_ALIVE_VALUE, CELL_DEAD_VALUE } from '../src/test-support/cellQuery.ts'
 
 import { CENTER, DEFAULT_CELL_SIZE_PX, DEFAULT_OFFSET_X, DEFAULT_OFFSET_Y } from './screenplay/viewport.ts'
 import {
   cellLocator,
   patternLibraryModal,
   patternsButton,
-  previewCells,
-  rulerGroup,
   scrollbarThumb,
   type ScrollbarOrientation,
 } from './screenplay/elements.ts'
@@ -20,6 +13,19 @@ import {
 export { CENTER, DEFAULT_CELL_SIZE_PX } from './screenplay/viewport.ts'
 export { cellLocator, patternsButton, patternLibraryModal, previewCells, rulerGroup } from './screenplay/elements.ts'
 export type { ScrollbarOrientation } from './screenplay/elements.ts'
+export {
+  zoomPercent,
+  elementAtPoint,
+  patternCategoryInLibrary,
+  previewCellPositions,
+  cellScreenPosition,
+  cellState,
+  aliveCellCount,
+  generationCount,
+  axisLabelValues,
+  thumbTrackFraction,
+  thumbPositionPercent,
+} from './screenplay/questions.ts'
 
 // The one way this suite asserts aliveness. It reads aria-pressed -- the
 // accessible state a screen reader announces -- and not the bg-gray-900 /
@@ -44,26 +50,8 @@ export async function nextGeneration(page: Page) {
   await page.locator('#next-generation-button').click()
 }
 
-// Module-private: generationCount below is the only reader. The raw text is
-// this file's business, the number is what a step or a spec asks for.
-async function generationText(page: Page) {
-  return page.getByText(/^Generation: \d+$/).textContent()
-}
-
-export async function zoomPercent(page: Page): Promise<number> {
-  const text = await page.getByText(/^\d+%$/).textContent()
-  return Number(text!.replace('%', ''))
-}
-
 export async function resetView(page: Page) {
   await page.locator('button[aria-label="Reset view"]').click()
-}
-
-export async function elementAtPoint(page: Page, x: number, y: number): Promise<string | null> {
-  return page.evaluate(([px, py]) => document.elementFromPoint(px, py)?.getAttribute('aria-label') ?? null, [
-    x,
-    y,
-  ] as const)
 }
 
 // useGridPointerGestures reports panByPixels per pointermove with the
@@ -111,56 +99,6 @@ export async function choosePatternFromLibrary(page: Page, name: string) {
 export async function selectPattern(page: Page, name: string) {
   await openPatternModal(page)
   await choosePatternFromLibrary(page, name)
-}
-
-// WHICH CATEGORY THE LIBRARY LISTS A PATTERN UNDER, established by reading
-// order and nothing else.
-//
-// The modal renders one section per category: a heading, then that category's
-// pattern buttons (PatternLibraryModal.tsx). Membership is expressed exactly
-// the way a sighted reader takes it -- the heading a name appears beneath --
-// and there is no attribute, id or aria-labelledby tying the two together.
-// That absence is deliberate and was ruled on: an affordance added so a test
-// could read it more conveniently would be a test hook wearing an
-// affordance's name, and it would also stop this function checking the thing
-// a user actually relies on. So the reading order IS the contract, and this
-// is the one place features/ encodes it.
-//
-// h3 rather than getByRole('heading'): the two node kinds have to be
-// collected in a SINGLE document-ordered query for the interleaving to mean
-// anything, and no by-role locator spans two roles. The dialog's own title is
-// an h2, so it cannot be mistaken for a category, and the only buttons inside
-// the dialog are the pattern buttons themselves.
-export async function patternCategoryInLibrary(page: Page, patternName: string): Promise<string> {
-  const entries = await patternLibraryModal(page)
-    .locator('h3, button')
-    .evaluateAll((nodes) => nodes.map((node) => ({ heading: node.tagName === 'H3', text: node.textContent?.trim() })))
-
-  let heading: string | undefined
-  for (const entry of entries) {
-    if (entry.heading) heading = entry.text
-    else if (entry.text === patternName) {
-      if (heading === undefined) throw new Error(`"${patternName}" is listed before any category heading`)
-      return heading
-    }
-  }
-  throw new Error(
-    `The pattern library lists no "${patternName}". It lists: ${entries.map((entry) => entry.text).join(', ')}`,
-  )
-}
-
-const PREVIEW_CELL_LABEL = /^Pattern preview cell (-?\d+), (-?\d+)$/
-
-// The world coordinates the preview is currently showing. Pairs with
-// previewCells above: that one is for counting and waiting, this one for
-// reading the shape out.
-export async function previewCellPositions(page: Page): Promise<Array<[number, number]>> {
-  const labels = await previewCells(page).evaluateAll((nodes) => nodes.map((node) => node.getAttribute('aria-label')))
-  return labels.map((label) => {
-    const match = PREVIEW_CELL_LABEL.exec(label ?? '')
-    if (!match) throw new Error(`A preview cell announces "${label}", which names no coordinate`)
-    return [Number(match[1]), Number(match[2])]
-  })
 }
 
 // Puts the pointer over a world cell, which is what arms the preview: Grid's
@@ -270,88 +208,12 @@ export async function openGrid(page: Page) {
   await page.goto('/')
 }
 
-// Where a world cell's top-left corner currently sits on screen -- i.e. the
-// pixel worldToScreen puts it at. Comparing this against CENTER (where the
-// origin sits under the default camera) is how a step states which way the
-// camera moved without ever naming a camera field.
-export async function cellScreenPosition(page: Page, x: number, y: number): Promise<{ x: number; y: number }> {
-  const box = await cellLocator(page, x, y).boundingBox()
-  if (!box) throw new Error(`Cell ${x}, ${y} is not mounted, so it has no screen position`)
-  return { x: box.x, y: box.y }
-}
-
-// Aliveness as the domain word rather than as the attribute value, so a step
-// can compare an observed outcome against a Gherkin Examples cell directly.
-export async function cellState(page: Page, x: number, y: number): Promise<'alive' | 'dead'> {
-  const value = await cellLocator(page, x, y).getAttribute(CELL_ALIVE_ATTR)
-  if (value === CELL_ALIVE_VALUE) return 'alive'
-  if (value === CELL_DEAD_VALUE) return 'dead'
-  throw new Error(`Cell ${x}, ${y} announces ${CELL_ALIVE_ATTR}="${value}", which is neither alive nor dead`)
-}
-
-// Counts only MOUNTED live cells -- the grid is infinite, so there is no such
-// thing as counting all of them. Sound wherever every cell that could change
-// is inside the mounted window.
-export function aliveCellCount(page: Page): Promise<number> {
-  return page.locator(ALIVE_CELL_SELECTOR).count()
-}
-
-export async function generationCount(page: Page): Promise<number> {
-  const text = await generationText(page)
-  return Number(text!.replace('Generation: ', ''))
-}
-
 export async function zoomIn(page: Page) {
   await page.locator('button[aria-label="Zoom in"]').click()
 }
 
 export async function zoomOut(page: Page) {
   await page.locator('button[aria-label="Zoom out"]').click()
-}
-
-// The coordinate numbers currently on show along one edge of the viewport --
-// what a player reads off the ruler. Read per label rather than by splitting
-// the group's own text: an empty ruler (pan far enough and no major gridline
-// is in view) yields an empty list here, where ''.split('\n').map(Number)
-// would yield [NaN]. No other on-screen text inside a ruler group could match
-// the pattern -- the zoom badge and generation counter are outside it.
-export async function axisLabelValues(page: Page, axis: 'x' | 'y'): Promise<number[]> {
-  const texts = await rulerGroup(page, axis)
-    .getByText(/^-?\d+$/)
-    .allTextContents()
-  return texts.map(Number)
-}
-
-// How much of its track the thumb covers, as a fraction: 1 means the whole of
-// the content fits in the viewport. The track is the thumb's own parent (it
-// is inset from the viewport edge by the corner gap, so the viewport size is
-// NOT the track length), reached by DOM position rather than by class.
-//
-// REACH-AROUND: this is geometry, because nothing announces it. The thumb
-// carries aria-valuenow/valuemin/valuemax, which express only the thumb's
-// POSITION -- there is no accessible expression of how much of the content is
-// visible, so "fills its track" cannot be read out of the accessibility tree.
-// That is a missing affordance rather than a test-side shortcut: proportion is
-// the most useful thing a scrollbar tells a sighted user and this app tells a
-// screen reader nothing about it. Adjudicated as an observability gap, not as
-// a defect in this slice. DELETION TRIGGER: the
-// `scrollbar-visible-proportion-affordance` slice. When the scrollbar
-// announces its proportion, this function is what that announcement replaces
-// -- one edit, in this file. rulerGroup above is the worked example of that
-// promise being kept: it replaced a pair of Tailwind-class locators when the
-// ruler's axis affordance landed, and nothing else under features/ moved.
-export async function thumbTrackFraction(page: Page, orientation: ScrollbarOrientation): Promise<number> {
-  const thumb = scrollbarThumb(page, orientation)
-  const thumbBox = (await thumb.boundingBox())!
-  const trackBox = (await thumb.locator('..').boundingBox())!
-  return orientation === 'horizontal' ? thumbBox.width / trackBox.width : thumbBox.height / trackBox.height
-}
-
-// Where along its track the thumb sits, 0 (start) to 100 (end), read from the
-// accessible value the scrollbar announces rather than measured in pixels.
-export async function thumbPositionPercent(page: Page, orientation: ScrollbarOrientation): Promise<number> {
-  const value = await scrollbarThumb(page, orientation).getAttribute('aria-valuenow')
-  return Number(value)
 }
 
 // The five cells that describe a blinker's shape, wherever it is centered:
