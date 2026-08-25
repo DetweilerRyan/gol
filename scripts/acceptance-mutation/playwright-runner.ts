@@ -23,6 +23,16 @@ import path from 'node:path'
 
 const CONFIG_PATH = 'playwright.acceptance-mutation.config.ts'
 
+// A label-prefixed reason string, or null when the spawn is unremarkable --
+// this is checked after bddgen only. The playwright-test spawn's own exit
+// code must never gate on this: a killed mutant makes `playwright test` exit
+// nonzero by design, so that signal has to come from the JSON report
+// (runLevelAbortReason below), never from SpawnSyncReturns.status.
+export function genSpawnFailureReason(label: string, result: SpawnSyncReturns<string>): string | null {
+  if (result.status === 0) return null
+  return `${label} exited ${result.status}: ${(result.stderr || result.stdout || '').trim()}`
+}
+
 export interface GenSpawn {
   command: string
   args: string[]
@@ -55,6 +65,7 @@ export function runGenSpawn(spawn: GenSpawn): SpawnSyncReturns<string> {
 export interface SpecSummary {
   numTotalTests: number
   numFailedTests: number
+  numSkippedTests: number
 }
 
 // bySpecFile is keyed by the generated spec file's basename (e.g.
@@ -69,9 +80,30 @@ export interface SpecSummary {
 // outside this module re-ran a test (a stray --retries flag, a custom
 // reporter), which is a signal worth surfacing rather than silently folding
 // into "failed" or "passed".
+//
+// errors is the run-level `errors[]` array's length -- a config problem or a
+// webServer failure Playwright can't attach to any one spec. Defaults to 0
+// when the field is absent or malformed rather than invalidating the whole
+// summary the way a missing `stats.flaky` does: unlike flaky, this repo has
+// no contract that the field is always present, only that a nonzero count
+// (when it is) means something outside normal mutant scoring went wrong.
 export interface PlaywrightRunSummary {
   bySpecFile: Record<string, SpecSummary>
   flaky: number
+  errors: number
+}
+
+// Signals a mutant classification must never explain, so the whole phase
+// aborts instead of trying to attribute one of these to a mutant: a run-level
+// error unattached to any spec (a config problem, a webServer failure), or a
+// nonzero `flaky` count, which retries:0 in
+// playwright.acceptance-mutation.config.ts makes impossible except by
+// something outside this module re-running a test.
+export function runLevelAbortReason(summary: PlaywrightRunSummary | null): string | null {
+  if (summary === null) return 'no readable Playwright JSON summary'
+  if (summary.errors > 0) return `Playwright reported ${summary.errors} run-level error(s)`
+  if (summary.flaky > 0) return `Playwright reported ${summary.flaky} flaky test(s) under retries:0`
+  return null
 }
 
 // The JSON reporter's own shape (Playwright 1.62.1, measured directly by
@@ -94,6 +126,7 @@ interface RawSuite {
 interface RawReport {
   suites: unknown
   stats: unknown
+  errors: unknown
 }
 
 function isRawSuite(value: unknown): value is RawSuite {
@@ -130,6 +163,12 @@ function summarize(statuses: string[]): SpecSummary {
     // when it wasn't expected to (measured: a scenario broken by a mutated
     // Examples cell reports status "unexpected", a passing one "expected").
     numFailedTests: statuses.filter((status) => status === 'unexpected').length,
+    // Read from `status`, never `ok`: `spec.ok` is `true` for a skipped spec
+    // (Playwright's own ok() returns true for expected | flaky | skipped --
+    // measured against 1.62.1), so a reader keyed on `ok` would silently
+    // fold a skipped scenario into "passed" instead of surfacing it as the
+    // infrastructure error it is (see classify.ts's classifyMutant).
+    numSkippedTests: statuses.filter((status) => status === 'skipped').length,
   }
 }
 
@@ -158,5 +197,6 @@ export function readPlaywrightSummary(jsonOutputPath: string): PlaywrightRunSumm
     bySpecFile[path.basename(rawSuite.file)] = summarize(statuses)
   }
 
-  return { bySpecFile, flaky: (stats as { flaky: number }).flaky }
+  const errors = Array.isArray(parsed.errors) ? parsed.errors.length : 0
+  return { bySpecFile, flaky: (stats as { flaky: number }).flaky, errors }
 }

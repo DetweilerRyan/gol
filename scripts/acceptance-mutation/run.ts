@@ -6,33 +6,50 @@
 // scripts/acceptance-mutation/mutation-rules.ts for the value rules and
 // gherkin-examples.ts for the table locator/rewriter.
 //
-// Each mutant is written to a temp file and the *entire* corresponding
-// .steps.test file is run against it via ACCEPTANCE_MUTATION_FEATURE_FILE
-// (never a filtered subset of steps -- splitting a scenario's Given/When/Then
-// across independent runs breaks the shared-closure state they rely on).
+// Batched Playwright design (architect-ratified, superseding the old
+// one-vitest-spawn-per-mutant form): every mutant and every baseline is
+// written as its own `.feature` file into a shared temp `features/`
+// directory, and one `bddgen` + one `playwright test` invocation runs every
+// generated spec in that directory at once (see mutant-tree.ts and
+// playwright-runner.ts). This is *two* phases, not one combined batch:
 //
-// Two invariants that used to be missing, both closed by this file's split
-// into discovery.ts / vitest-runner.ts / classify.ts:
-//   1. A mutant's outcome is read from vitest's JSON reporter's
-//      collected/failed test counts, not a regex over console text -- see
-//      classify.ts's module comment for the exact false-"killed" bug that
-//      let a wholly broken steps file report a perfect score.
-//   2. Every target's steps file is run once against its *unmutated* feature
-//      before any mutant is generated, and the whole run aborts loudly if
-//      that baseline isn't green -- see vitest-runner.ts's
-//      assertBaselineGreen. A broken suite has no trustworthy test count to
-//      compare mutants against, so proceeding would misreport every mutant
-//      for that target, not just under-report.
+//   Phase 1 writes only the unmutated baseline copy of each target that has
+//   at least one mutable Examples cell, generates and runs it, and records
+//   each target's baseline spec count. Aborts before any mutant is written
+//   if a baseline isn't green (assertBaselineSpecGreen in classify.ts) --
+//   there is then no trustworthy count to compare that target's mutants
+//   against, so proceeding would misreport every one of them rather than
+//   merely under-report.
+//
+//   Phase 2 writes every mutant across every active target, generates and
+//   runs the whole batch, and classifies each mutant against its target's
+//   phase-1 baseline count.
+//
+// Combining both into one batch would lose the "abort before any mutation"
+// guarantee: a broken baseline and a broken mutant would be indistinguishable
+// once everything runs together.
+//
+// The temp tree lives under .features-gen/acceptance-mutation/ (inside the
+// repo, not the OS tmpdir) -- playwright-bdd's module resolution fails
+// out-of-tree, and .features-gen/ is already covered by .gitignore,
+// .prettierignore, .oxlintrc.json, and vite.config.ts's sharedExclude.
 
-import { mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs'
-import { tmpdir } from 'node:os'
+import { mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs'
 import path from 'node:path'
 import { fileURLToPath } from 'node:url'
-import { classifyMutant, type Outcome } from './classify.ts'
+import { assertBaselineSpecGreen, classifyMutant, summarizeResults, type Outcome } from './classify.ts'
 import { discoverTargets, filterTargets, parseArgs, type MutationTarget } from './discovery.ts'
-import { applyMutation, listMutableCells } from './gherkin-examples.ts'
+import { applyMutation, listMutableCells, type MutableCell } from './gherkin-examples.ts'
+import { baselineFeatureFileName, mutantFeatureFileName, specFileName } from './mutant-tree.ts'
 import { mutateValue } from './mutation-rules.ts'
-import { assertBaselineGreen, runScenarioSuite } from './vitest-runner.ts'
+import {
+  bddgenSpawn,
+  genSpawnFailureReason,
+  playwrightTestSpawn,
+  readPlaywrightSummary,
+  runGenSpawn,
+  runLevelAbortReason,
+} from './playwright-runner.ts'
 
 interface MutantResult {
   feature: string
@@ -43,41 +60,129 @@ interface MutantResult {
   outcome: Outcome
 }
 
-const FEATURES_DIR = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '../../features')
+const REPO_ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '../..')
+const FEATURES_DIR = path.join(REPO_ROOT, 'features')
+const GEN_BASE_DIR = path.join(REPO_ROOT, '.features-gen/acceptance-mutation')
 
 function resolveTargets(): MutationTarget[] {
   const { feature } = parseArgs(process.argv.slice(2))
   return filterTargets(discoverTargets(FEATURES_DIR), feature)
 }
 
-function runTarget(target: MutationTarget, tmpDir: string, results: MutantResult[]): void {
-  const featurePath = path.join(FEATURES_DIR, target.feature)
-  const stepsPath = path.join(FEATURES_DIR, target.steps)
-  const originalText = readFileSync(featurePath, 'utf8')
+interface TargetPlan {
+  target: MutationTarget
+  featureText: string
+  cells: MutableCell[]
+}
 
-  const baselineJsonPath = path.join(tmpDir, `baseline-${target.feature}.json`)
-  const baselineRun = runScenarioSuite(stepsPath, featurePath, baselineJsonPath)
-  const baselineTotalTests = assertBaselineGreen(target, baselineRun)
+function loadTargetPlans(targets: MutationTarget[]): TargetPlan[] {
+  return targets.map((target) => {
+    const featureText = readFileSync(path.join(FEATURES_DIR, target.feature), 'utf8')
+    return { target, featureText, cells: listMutableCells(featureText) }
+  })
+}
 
-  for (const cell of listMutableCells(originalText)) {
-    const seedKey = `${target.feature}:${cell.rowIndex}:${cell.columnName}`
-    const mutatedValue = mutateValue(cell.value, seedKey)
-    const mutatedText = applyMutation(originalText, cell, mutatedValue)
+// Phase 1: write one unmutated copy per active target, run the batch once,
+// and return each target's feature filename mapped to its baseline spec
+// count. Throws (aborting before any mutant is written) if bddgen fails, the
+// Playwright run itself reports a run-level problem, or any one target's
+// baseline isn't green.
+function runBaselinePhase(activePlans: TargetPlan[]): Map<string, number> {
+  const dir = mkdtempSync(path.join(GEN_BASE_DIR, 'baseline-'))
+  try {
+    const featuresDir = path.join(dir, 'features')
+    mkdirSync(featuresDir, { recursive: true })
+    for (const plan of activePlans) {
+      writeFileSync(path.join(featuresDir, baselineFeatureFileName(plan.target.feature)), plan.featureText)
+    }
 
-    const mutantPath = path.join(tmpDir, target.feature)
-    writeFileSync(mutantPath, mutatedText)
+    const genFailure = genSpawnFailureReason('bddgen (baseline phase)', runGenSpawn(bddgenSpawn(dir)))
+    if (genFailure) throw new Error(genFailure)
 
-    const jsonOutputPath = path.join(tmpDir, `mutant-${results.length}.json`)
-    const run = runScenarioSuite(stepsPath, mutantPath, jsonOutputPath)
-    const outcome = classifyMutant(baselineTotalTests, run.summary)
-    results.push({
-      feature: target.feature,
-      row: cell.rowIndex + 1,
-      column: cell.columnName,
-      original: cell.value,
-      mutated: mutatedValue,
-      outcome,
+    const jsonOutputPath = path.join(dir, 'baseline-results.json')
+    runGenSpawn(playwrightTestSpawn(dir, jsonOutputPath))
+    const summary = readPlaywrightSummary(jsonOutputPath)
+    const abortReason = runLevelAbortReason(summary)
+    if (abortReason) throw new Error(`Baseline phase aborted: ${abortReason}`)
+
+    const baselineCounts = new Map<string, number>()
+    for (const plan of activePlans) {
+      const spec = specFileName(baselineFeatureFileName(plan.target.feature))
+      const count = assertBaselineSpecGreen(plan.target.feature, spec, summary!.bySpecFile[spec])
+      baselineCounts.set(plan.target.feature, count)
+    }
+    return baselineCounts
+  } finally {
+    rmSync(dir, { recursive: true, force: true })
+  }
+}
+
+interface MutantRecord {
+  target: MutationTarget
+  cell: MutableCell
+  mutatedValue: string
+  fileName: string
+  text: string
+}
+
+function buildMutantRecords(activePlans: TargetPlan[]): MutantRecord[] {
+  const records: MutantRecord[] = []
+  for (const plan of activePlans) {
+    plan.cells.forEach((cell, ordinal) => {
+      const seedKey = `${plan.target.feature}:${cell.rowIndex}:${cell.columnName}`
+      const mutatedValue = mutateValue(cell.value, seedKey)
+      records.push({
+        target: plan.target,
+        cell,
+        mutatedValue,
+        fileName: mutantFeatureFileName(plan.target.feature, ordinal),
+        text: applyMutation(plan.featureText, cell, mutatedValue),
+      })
     })
+  }
+  return records
+}
+
+// Phase 2: write every mutant across every active target, run the batch
+// once, and classify each mutant against its target's phase-1 baseline
+// count. Throws (surfacing the whole run as an error) on the same run-level
+// conditions phase 1 checks -- neither is attributable to any one mutant, so
+// neither can be scored as a per-mutant outcome.
+function runMutantPhase(activePlans: TargetPlan[], baselineCounts: Map<string, number>): MutantResult[] {
+  const records = buildMutantRecords(activePlans)
+
+  const dir = mkdtempSync(path.join(GEN_BASE_DIR, 'mutants-'))
+  try {
+    const featuresDir = path.join(dir, 'features')
+    mkdirSync(featuresDir, { recursive: true })
+    for (const record of records) {
+      writeFileSync(path.join(featuresDir, record.fileName), record.text)
+    }
+
+    const genFailure = genSpawnFailureReason('bddgen (mutant phase)', runGenSpawn(bddgenSpawn(dir)))
+    if (genFailure) throw new Error(genFailure)
+
+    const jsonOutputPath = path.join(dir, 'mutant-results.json')
+    runGenSpawn(playwrightTestSpawn(dir, jsonOutputPath))
+    const summary = readPlaywrightSummary(jsonOutputPath)
+    const abortReason = runLevelAbortReason(summary)
+    if (abortReason) throw new Error(`Mutant phase aborted: ${abortReason}`)
+
+    return records.map((record) => {
+      const spec = specFileName(record.fileName)
+      const baselineTotalTests = baselineCounts.get(record.target.feature)!
+      const outcome = classifyMutant(baselineTotalTests, summary!.bySpecFile[spec])
+      return {
+        feature: record.target.feature,
+        row: record.cell.rowIndex + 1,
+        column: record.cell.columnName,
+        original: record.cell.value,
+        mutated: record.mutatedValue,
+        outcome,
+      }
+    })
+  } finally {
+    rmSync(dir, { recursive: true, force: true })
   }
 }
 
@@ -90,57 +195,69 @@ function main(): void {
     process.exit(1)
   }
 
-  const tmpDir = mkdtempSync(path.join(tmpdir(), 'gol-acceptance-mutation-'))
-  const results: MutantResult[] = []
+  const plans = loadTargetPlans(targets)
+  // A target whose .feature carries no Examples table (or was filtered out
+  // entirely) contributes zero mutants -- it is reported, never silently
+  // dropped, but nothing is written or spawned on its behalf (see
+  // summarizeResults in classify.ts for the NaN%-at-zero-mutants defect this
+  // separation exists to close).
+  const activePlans = plans.filter((p) => p.cells.length > 0)
+  const zeroMutantFeatures = plans.filter((p) => p.cells.length === 0).map((p) => p.target.feature)
 
-  try {
-    for (const target of targets) runTarget(target, tmpDir, results)
-  } catch (err) {
-    rmSync(tmpDir, { recursive: true, force: true })
-    console.error((err as Error).message)
-    process.exit(1)
+  let results: MutantResult[] = []
+  if (activePlans.length > 0) {
+    mkdirSync(GEN_BASE_DIR, { recursive: true })
+    try {
+      const baselineCounts = runBaselinePhase(activePlans)
+      results = runMutantPhase(activePlans, baselineCounts)
+    } catch (err) {
+      console.error((err as Error).message)
+      process.exit(1)
+    }
   }
 
-  rmSync(tmpDir, { recursive: true, force: true })
-
-  report(results)
+  report(results, zeroMutantFeatures)
 
   const survivedOrErrored = results.filter((r) => r.outcome !== 'killed')
   process.exit(survivedOrErrored.length > 0 ? 1 : 0)
 }
 
-function report(results: MutantResult[]): void {
-  const widths = {
-    feature: Math.max(7, ...results.map((r) => r.feature.length)),
-    row: 3,
-    column: Math.max(6, ...results.map((r) => r.column.length)),
-    original: Math.max(8, ...results.map((r) => r.original.length)),
-    mutated: Math.max(7, ...results.map((r) => r.mutated.length)),
-    outcome: 8,
-  }
-  const pad = (s: string | number, w: number) => String(s).padEnd(w)
-  const header = `${pad('Feature', widths.feature)}  ${pad('Row', widths.row)}  ${pad('Column', widths.column)}  ${pad('Original', widths.original)}  ${pad('Mutated', widths.mutated)}  Outcome`
-  console.log(header)
-  console.log('-'.repeat(header.length))
-  for (const r of results) {
-    const marker = r.outcome === 'killed' ? '✓' : r.outcome === 'survived' ? '✗' : '!'
-    console.log(
-      `${pad(r.feature, widths.feature)}  ${pad(r.row, widths.row)}  ${pad(r.column, widths.column)}  ${pad(r.original, widths.original)}  ${pad(r.mutated, widths.mutated)}  ${marker} ${r.outcome}`,
-    )
+function report(results: MutantResult[], zeroMutantFeatures: string[]): void {
+  if (results.length > 0) {
+    const widths = {
+      feature: Math.max(7, ...results.map((r) => r.feature.length)),
+      row: 3,
+      column: Math.max(6, ...results.map((r) => r.column.length)),
+      original: Math.max(8, ...results.map((r) => r.original.length)),
+      mutated: Math.max(7, ...results.map((r) => r.mutated.length)),
+      outcome: 8,
+    }
+    const pad = (s: string | number, w: number) => String(s).padEnd(w)
+    const header = `${pad('Feature', widths.feature)}  ${pad('Row', widths.row)}  ${pad('Column', widths.column)}  ${pad('Original', widths.original)}  ${pad('Mutated', widths.mutated)}  Outcome`
+    console.log(header)
+    console.log('-'.repeat(header.length))
+    for (const r of results) {
+      const marker = r.outcome === 'killed' ? '✓' : r.outcome === 'survived' ? '✗' : '!'
+      console.log(
+        `${pad(r.feature, widths.feature)}  ${pad(r.row, widths.row)}  ${pad(r.column, widths.column)}  ${pad(r.original, widths.original)}  ${pad(r.mutated, widths.mutated)}  ${marker} ${r.outcome}`,
+      )
+    }
+    console.log('-'.repeat(header.length))
   }
 
-  const killed = results.filter((r) => r.outcome === 'killed').length
-  const survived = results.filter((r) => r.outcome === 'survived').length
-  const errored = results.filter((r) => r.outcome === 'error').length
-  console.log('-'.repeat(header.length))
+  if (zeroMutantFeatures.length > 0) {
+    console.log(`0 mutants (no Examples table, or filtered out): ${zeroMutantFeatures.join(', ')}`)
+  }
+
+  const { total, killed, survived, errored, scorePercent } = summarizeResults(results)
   console.log(
-    `${results.length} mutants | ${killed} killed | ${survived} survived | ${errored} errored | mutation score: ${((killed / results.length) * 100).toFixed(1)}%`,
+    `${total} mutants | ${killed} killed | ${survived} survived | ${errored} errored | mutation score: ${scorePercent}%`,
   )
 }
 
 // Guards against running main() as a side effect of an import -- if run.ts
-// ever grows tests of its own that import resolveTargets/runTarget, none of
-// them should trigger a real process.exit.
+// ever grows tests of its own that import resolveTargets/runBaselinePhase/
+// runMutantPhase, none of them should trigger a real process.exit.
 if (process.argv[1] === fileURLToPath(import.meta.url)) {
   main()
 }

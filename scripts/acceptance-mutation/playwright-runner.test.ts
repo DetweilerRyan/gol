@@ -5,9 +5,11 @@ import path from 'node:path'
 import { afterEach, describe, expect, it, vi } from 'vitest'
 import {
   bddgenSpawn,
+  genSpawnFailureReason,
   playwrightTestSpawn,
   readPlaywrightSummary,
   runGenSpawn,
+  runLevelAbortReason,
   type PlaywrightRunSummary,
 } from './playwright-runner.ts'
 
@@ -140,16 +142,37 @@ describe('readPlaywrightSummary', () => {
     expect(summary.bySpecFile['infinite-grid.baseline.feature.spec.js']).toEqual({
       numTotalTests: 2,
       numFailedTests: 0,
+      numSkippedTests: 0,
     })
     expect(summary.bySpecFile['infinite-grid.mutant-0.feature.spec.js']).toEqual({
       numTotalTests: 2,
       numFailedTests: 1,
+      numSkippedTests: 0,
     })
   })
 
   it('counts only "unexpected" tests as failures, not "expected"', () => {
     const summary = readPlaywrightSummary(jsonPath(twoFileReport())) as PlaywrightRunSummary
     expect(summary.bySpecFile['infinite-grid.baseline.feature.spec.js'].numFailedTests).toBe(0)
+  })
+
+  // The pin the invocation flagged: spec.ok is true for a skipped spec
+  // (Playwright's own ok() returns true for expected | flaky | skipped), so
+  // a reader keyed on `ok` instead of `status` would silently count this as
+  // passed. status must be the only thing this module reads.
+  it('counts a spec with ok: true but status "skipped" as skipped, never as passed', () => {
+    const withSkip = JSON.parse(twoFileReport())
+    withSkip.suites[0].suites[0].specs.push({
+      title: 'c',
+      ok: true,
+      tests: [{ status: 'skipped', results: [] }],
+    })
+    const summary = readPlaywrightSummary(jsonPath(JSON.stringify(withSkip))) as PlaywrightRunSummary
+    expect(summary.bySpecFile['infinite-grid.baseline.feature.spec.js']).toEqual({
+      numTotalTests: 3,
+      numFailedTests: 0,
+      numSkippedTests: 1,
+    })
   })
 
   it('reads the run-level flaky count', () => {
@@ -162,6 +185,25 @@ describe('readPlaywrightSummary', () => {
     withFlaky.stats.flaky = 2
     const summary = readPlaywrightSummary(jsonPath(JSON.stringify(withFlaky))) as PlaywrightRunSummary
     expect(summary.flaky).toBe(2)
+  })
+
+  it('reads the run-level errors[] length', () => {
+    const summary = readPlaywrightSummary(jsonPath(twoFileReport())) as PlaywrightRunSummary
+    expect(summary.errors).toBe(0)
+  })
+
+  it('reports a nonzero errors count when present', () => {
+    const withErrors = JSON.parse(twoFileReport())
+    withErrors.errors = [{ message: 'config problem' }, { message: 'webServer failure' }]
+    const summary = readPlaywrightSummary(jsonPath(JSON.stringify(withErrors))) as PlaywrightRunSummary
+    expect(summary.errors).toBe(2)
+  })
+
+  it('defaults errors to 0 when the field is absent, rather than invalidating the whole summary', () => {
+    const noErrorsField = JSON.parse(twoFileReport())
+    delete noErrorsField.errors
+    const summary = readPlaywrightSummary(jsonPath(JSON.stringify(noErrorsField))) as PlaywrightRunSummary
+    expect(summary.errors).toBe(0)
   })
 
   it('is null when the file was never written -- a hard crash before the reporter could write one', () => {
@@ -203,6 +245,78 @@ describe('readPlaywrightSummary', () => {
       stats: { flaky: 0 },
     })
     const summary = readPlaywrightSummary(jsonPath(empty)) as PlaywrightRunSummary
-    expect(summary.bySpecFile['empty.feature.spec.js']).toEqual({ numTotalTests: 0, numFailedTests: 0 })
+    expect(summary.bySpecFile['empty.feature.spec.js']).toEqual({
+      numTotalTests: 0,
+      numFailedTests: 0,
+      numSkippedTests: 0,
+    })
+  })
+})
+
+describe('genSpawnFailureReason', () => {
+  it('is null when the spawn exited 0', () => {
+    expect(
+      genSpawnFailureReason('bddgen', {
+        status: 0,
+        signal: null,
+        output: [],
+        pid: 0,
+        stdout: '',
+        stderr: '',
+      }),
+    ).toBeNull()
+  })
+
+  it('names the label and exit code, plus stderr, when the spawn exited nonzero', () => {
+    const reason = genSpawnFailureReason('bddgen (baseline phase)', {
+      status: 1,
+      signal: null,
+      output: [],
+      pid: 0,
+      stdout: '',
+      stderr: 'missing step definition',
+    })
+    expect(reason).toMatch(/bddgen \(baseline phase\)/)
+    expect(reason).toMatch(/exited 1/)
+    expect(reason).toMatch(/missing step definition/)
+  })
+
+  it('falls back to stdout when stderr is empty', () => {
+    const reason = genSpawnFailureReason('bddgen', {
+      status: 1,
+      signal: null,
+      output: [],
+      pid: 0,
+      stdout: 'stdout detail',
+      stderr: '',
+    })
+    expect(reason).toMatch(/stdout detail/)
+  })
+})
+
+describe('runLevelAbortReason', () => {
+  const clean: PlaywrightRunSummary = { bySpecFile: {}, flaky: 0, errors: 0 }
+
+  it('is null for a clean summary', () => {
+    expect(runLevelAbortReason(clean)).toBeNull()
+  })
+
+  it('names "no readable Playwright JSON summary" when the summary is null', () => {
+    expect(runLevelAbortReason(null)).toMatch(/no readable Playwright JSON summary/)
+  })
+
+  it('names the errors count when errors[] is nonempty', () => {
+    expect(runLevelAbortReason({ ...clean, errors: 3 })).toMatch(/3 run-level error/)
+  })
+
+  // Never the playwright-test spawn's own exit code -- a killed mutant makes
+  // that exit nonzero by design, so only the JSON-derived flaky/errors
+  // signals may abort a phase.
+  it('names the flaky count when nonzero, the tamper signal retries:0 exists to make meaningful', () => {
+    expect(runLevelAbortReason({ ...clean, flaky: 1 })).toMatch(/1 flaky test/)
+  })
+
+  it('checks errors before flaky when both are nonzero', () => {
+    expect(runLevelAbortReason({ ...clean, errors: 1, flaky: 1 })).toMatch(/run-level error/)
   })
 })

@@ -113,24 +113,38 @@ describe('applyMutation', () => {
 })
 
 describe('against the real feature files', () => {
-  it('finds the expected Examples tables in each feature with an outline', () => {
+  // Exactly three of the seven .feature files carry an Examples table today
+  // -- cell-life-and-death (two outlines), grid-reference-lines, and
+  // pattern-library. infinite-grid and camera-pan-and-zoom both had one at
+  // some point and lost it: prune-gherkin-to-domain-language removed
+  // infinite-grid's, and camera-pan-and-zoom's two outlines (zoom
+  // factor/resulting cell size, factor/expected size) were since converted
+  // to plain Scenarios. This test used to pin the stale shape of both and
+  // went undetected for several slices because scripts/** sits outside
+  // `npm test` (see hardener.md's stage 3) -- asserting the absence
+  // explicitly is the point, not an afterthought, since a target with zero
+  // mutable cells is exactly the case run.ts's zero-mutant reporting path
+  // exists to handle instead of silently losing.
+  it('finds the expected Examples tables in each feature with an outline, and none in the two that lost theirs', () => {
     const cellLifeAndDeath = readFileSync(`${FEATURES_DIR}/cell-life-and-death.feature`, 'utf8')
+    const gridReferenceLines = readFileSync(`${FEATURES_DIR}/grid-reference-lines.feature`, 'utf8')
+    const patternLibrary = readFileSync(`${FEATURES_DIR}/pattern-library.feature`, 'utf8')
     const infiniteGrid = readFileSync(`${FEATURES_DIR}/infinite-grid.feature`, 'utf8')
     const cameraPanAndZoom = readFileSync(`${FEATURES_DIR}/camera-pan-and-zoom.feature`, 'utf8')
 
     expect(findExamplesTables(cellLifeAndDeath)[0].header).toEqual(['state', 'neighbors', 'next state'])
     expect(findExamplesTables(cellLifeAndDeath)[0].rows).toHaveLength(8)
+    expect(findExamplesTables(cellLifeAndDeath)[1].header).toEqual(['x', 'y', 'expected center x', 'expected center y'])
+    expect(findExamplesTables(cellLifeAndDeath)[1].rows).toHaveLength(1)
 
-    expect(findExamplesTables(infiniteGrid)[0].header).toEqual(['x', 'y', 'expected center x', 'expected center y'])
-    expect(findExamplesTables(infiniteGrid)[0].rows).toHaveLength(3)
+    expect(findExamplesTables(gridReferenceLines)[0].header).toEqual(['coordinate'])
+    expect(findExamplesTables(gridReferenceLines)[0].rows).toHaveLength(3)
 
-    // camera-pan-and-zoom.feature carries two outlines, so it also covers the
-    // multi-table case against a real file rather than the SAMPLE fixture.
-    expect(findExamplesTables(cameraPanAndZoom)).toHaveLength(2)
-    expect(findExamplesTables(cameraPanAndZoom)[0].header).toEqual(['zoom factor', 'resulting cell size'])
-    expect(findExamplesTables(cameraPanAndZoom)[0].rows).toHaveLength(2)
-    expect(findExamplesTables(cameraPanAndZoom)[1].header).toEqual(['factor', 'expected size'])
-    expect(findExamplesTables(cameraPanAndZoom)[1].rows).toHaveLength(2)
+    expect(findExamplesTables(patternLibrary)[0].header).toEqual(['pattern', 'category', 'cells'])
+    expect(findExamplesTables(patternLibrary)[0].rows).toHaveLength(8)
+
+    expect(findExamplesTables(infiniteGrid)).toEqual([])
+    expect(findExamplesTables(cameraPanAndZoom)).toEqual([])
   })
 
   it('round-trips a mutation on the real cell-life-and-death.feature without corrupting the rest of the file', () => {
