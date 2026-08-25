@@ -6,6 +6,7 @@ import {
   CELL_DEAD_VALUE,
   cellSelector,
 } from '../src/test-support/cellQuery.ts'
+import { rulerGroupLabel } from '../src/test-support/rulerQuery.ts'
 
 // The application's own boot camera -- centeredCamera(1280, 900) in
 // src/camera.ts -- under playwright.config.ts's fixed 1280x900 viewport.
@@ -316,34 +317,27 @@ export async function zoomOut(page: Page) {
   await page.locator('button[aria-label="Zoom out"]').click()
 }
 
-// THE ONE ARIA REACH-AROUND IN THIS FILE, and it is confined here on purpose.
-//
-// Ruler labels are <span> elements whose text is just the coordinate number
-// (RulerLabel, rendered per major gridline by GridRuler.tsx, supplied through
-// Grid's overlay slot), bucketed by axis via the class it's pinned to
-// (top-0.5 for the x-axis strip, left-0.5 for the y-axis strip). No other
-// on-screen text matches a bare "-?\d+" pattern (the zoom badge has a "%"
-// suffix, the generation counter has a "Generation: " prefix).
-//
-// There is no accessible affordance that says which axis a label belongs to,
-// which is why these two select on a Tailwind class. Moved here out of
-// grid-reference-lines.e2e.spec.ts so the class name appears exactly once in
-// features/ and the step module under features/steps/ carries no selector of
-// its own. DELETION TRIGGER: the `ruler-label-axis-affordance` slice. When a
-// real axis affordance lands, these two functions are what it replaces -- one
-// edit, in this file, and nothing else in features/ has to move.
-export function xAxisLabels(page: Page): Locator {
-  return page.locator('span[class*="top-0.5"]')
-}
-
-export function yAxisLabels(page: Page): Locator {
-  return page.locator('span[class*="left-0.5"]')
+// One axis's ruler, reached through the accessible tree: GridRuler wraps each
+// axis's labels in a role="group" named by rulerGroupLabel(axis), so a column
+// number and a row number -- which render as the same bare digit -- are told
+// apart by the name an AT would announce, not by the Tailwind class each label
+// is pinned to. That class selector is what used to live here; the
+// `ruler-label-axis-affordance` slice replaced it, and the promise recorded
+// next to it held -- this was the only edit features/ needed.
+export function rulerGroup(page: Page, axis: 'x' | 'y'): Locator {
+  return page.getByRole('group', { name: rulerGroupLabel(axis) })
 }
 
 // The coordinate numbers currently on show along one edge of the viewport --
-// what a player reads off the ruler.
+// what a player reads off the ruler. Read per label rather than by splitting
+// the group's own text: an empty ruler (pan far enough and no major gridline
+// is in view) yields an empty list here, where ''.split('\n').map(Number)
+// would yield [NaN]. No other on-screen text inside a ruler group could match
+// the pattern -- the zoom badge and generation counter are outside it.
 export async function axisLabelValues(page: Page, axis: 'x' | 'y'): Promise<number[]> {
-  const texts = await (axis === 'x' ? xAxisLabels(page) : yAxisLabels(page)).allTextContents()
+  const texts = await rulerGroup(page, axis)
+    .getByText(/^-?\d+$/)
+    .allTextContents()
   return texts.map(Number)
 }
 
@@ -370,7 +364,9 @@ function scrollbarThumb(page: Page, orientation: ScrollbarOrientation): Locator 
 // a defect in this slice. DELETION TRIGGER: the
 // `scrollbar-visible-proportion-affordance` slice. When the scrollbar
 // announces its proportion, this function is what that announcement replaces
-// -- one edit, in this file, exactly like the ruler pair above.
+// -- one edit, in this file. rulerGroup above is the worked example of that
+// promise being kept: it replaced a pair of Tailwind-class locators when the
+// ruler's axis affordance landed, and nothing else under features/ moved.
 export async function thumbTrackFraction(page: Page, orientation: ScrollbarOrientation): Promise<number> {
   const thumb = scrollbarThumb(page, orientation)
   const thumbBox = (await thumb.boundingBox())!

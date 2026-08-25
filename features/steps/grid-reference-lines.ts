@@ -5,15 +5,14 @@
 // Nothing from src/, and -- read this before adding an assertion here -- NO
 // CSS SELECTOR OF ITS OWN.
 //
-// THE REACH-AROUND, AND WHY IT IS NOT IN THIS FILE. "It should be a major
-// gridline" has no accessible affordance at all: a ruler label is a <span>
-// whose only axis attribution is the Tailwind class pinning it to the top or
-// left strip. The only way to observe this feature through the browser is to
-// select on that class. That selector lives in features/e2e-helpers.ts
-// (xAxisLabels/yAxisLabels, with the deletion trigger recorded next to it) so
-// it appears exactly once in features/ and the `ruler-label-axis-affordance`
-// slice can replace it with a single edit. This module reads the coordinate
-// numbers through axisLabelValues and never names a class.
+// HOW A LABEL'S AXIS IS OBSERVED, AND WHY THAT IS NOT THIS FILE'S BUSINESS.
+// "It should be a major gridline" is read off the column ruler, and a ruler
+// label is a bare number that would be indistinguishable from a row label
+// without the role="group" GridRuler wraps each axis in. Resolving that group
+// lives in features/e2e-helpers.ts (rulerGroup); this module reads the
+// coordinate numbers through axisLabelValues and names no selector at all.
+// It carried no selector under the class-based locator that preceded it
+// either, which is why the affordance landing changed nothing here.
 //
 // WHAT "A MAJOR GRIDLINE" MEANS TO A PLAYER: the coordinate is one of the
 // numbers written along the edge of the viewport. The pure-module layer

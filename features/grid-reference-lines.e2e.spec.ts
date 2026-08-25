@@ -1,11 +1,12 @@
 import { test, expect, type Page } from '@playwright/test'
-import { axisLabelValues, CENTER, cellLocator, dragPan, xAxisLabels } from './e2e-helpers'
+import { axisLabelValues, CENTER, cellLocator, dragPan, rulerGroup } from './e2e-helpers'
 
-// xAxisLabels moved to ./e2e-helpers by the adopt-playwright-bdd slice:
-// features/steps/grid-reference-lines.ts needs the same locator, and the
-// Tailwind class it selects on (there is no accessible affordance saying
-// which axis a ruler label belongs to) must appear in exactly one place. See
-// its comment there, including the deletion trigger.
+// rulerGroup lives in ./e2e-helpers because features/steps/grid-reference-lines.ts
+// reads the same ruler, and how a ruler is reached belongs in one place. It
+// resolves the axis through the accessible tree -- role="group" plus the name
+// GridRuler gives it -- so an assertion below says the label is on the COLUMN
+// ruler, not merely that some element carrying the top strip's Tailwind class
+// has that text.
 async function labelSet(page: Page, axis: 'x' | 'y'): Promise<Set<number>> {
   return new Set(await axisLabelValues(page, axis))
 }
@@ -25,7 +26,7 @@ const GRIDLINE_ROWS = [
 
 for (const { coordinate, isMajor } of GRIDLINE_ROWS) {
   test(`coordinate ${coordinate} ${isMajor ? 'is' : 'is not'} a major gridline`, async ({ page }) => {
-    const label = xAxisLabels(page).filter({ hasText: new RegExp(`^${coordinate}$`) })
+    const label = rulerGroup(page, 'x').getByText(new RegExp(`^${coordinate}$`))
     await expect(label).toHaveCount(isMajor ? 1 : 0)
 
     const cellClass = await cellLocator(page, coordinate, 0).getAttribute('class')
