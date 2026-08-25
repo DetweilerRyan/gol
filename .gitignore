@@ -27,7 +27,7 @@ stryker.log
 /test-results/
 /blob-report/
 
-# playwright-bdd generated specs (features/*.feature -> .features-gen/features/*.feature.spec.js)
+# playwright-bdd generated specs (features/*.feature -> .features-gen/bdd/features/*.feature.spec.js)
 /.features-gen/
 
 # Vitest Browser Mode (npm run test:browser) failure artifacts

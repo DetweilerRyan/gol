@@ -19,24 +19,18 @@
 // wherever the viewport happens to be. Every assertion below at (100, -100)
 // is made after the cell has been scrolled away from and back.
 import { createBdd } from 'playwright-bdd'
-import { cellLocator, expectCellState, withCellInView } from '../e2e-helpers'
+import { clickCell, expectBlinker } from '../e2e-helpers'
 
 const { When, Then } = createBdd()
 
 When(
   'I toggle the cells at \\({int}, {int}\\) and \\({int}, {int}\\)',
   async ({ page }, firstX, firstY, secondX, secondY) => {
-    await withCellInView(page, firstX, firstY, () => cellLocator(page, firstX, firstY).click())
-    await withCellInView(page, secondX, secondY, () => cellLocator(page, secondX, secondY).click())
+    await clickCell(page, firstX, firstY)
+    await clickCell(page, secondX, secondY)
   },
 )
 
 Then('the blinker at \\({int}, {int}\\) should be vertical', async ({ page }, x, y) => {
-  await withCellInView(page, x, y, async () => {
-    await expectCellState(page, x, y - 1, 'alive')
-    await expectCellState(page, x, y, 'alive')
-    await expectCellState(page, x, y + 1, 'alive')
-    await expectCellState(page, x - 1, y, 'dead')
-    await expectCellState(page, x + 1, y, 'dead')
-  })
+  await expectBlinker(page, x, y, 'vertical')
 })

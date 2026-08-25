@@ -27,6 +27,7 @@ import {
   aliveCellCount,
   cellLocator,
   cellState,
+  expectBlinker,
   expectCellState,
   generationCount,
   nextGeneration,
@@ -170,27 +171,11 @@ Then('the cell should end up {word}', async ({ page }, expected: string) => {
 })
 
 Then('the blinker should be vertical', async ({ page }) => {
-  const x = recall(page, 'blinkerX')
-  const y = recall(page, 'blinkerY')
-  await expectCells(page, [
-    [x, y - 1, 'alive'],
-    [x, y, 'alive'],
-    [x, y + 1, 'alive'],
-    [x - 1, y, 'dead'],
-    [x + 1, y, 'dead'],
-  ])
+  await expectBlinker(page, recall(page, 'blinkerX'), recall(page, 'blinkerY'), 'vertical')
 })
 
 Then('the blinker should be horizontal', async ({ page }) => {
-  const x = recall(page, 'blinkerX')
-  const y = recall(page, 'blinkerY')
-  await expectCells(page, [
-    [x - 1, y, 'alive'],
-    [x, y, 'alive'],
-    [x + 1, y, 'alive'],
-    [x, y - 1, 'dead'],
-    [x, y + 1, 'dead'],
-  ])
+  await expectBlinker(page, recall(page, 'blinkerX'), recall(page, 'blinkerY'), 'horizontal')
 })
 
 // Unlike the shape assertion above -- derived from the remembered center,

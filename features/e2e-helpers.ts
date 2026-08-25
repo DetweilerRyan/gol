@@ -7,12 +7,17 @@ import {
   cellSelector,
 } from '../src/test-support/cellQuery.ts'
 
-// Derived from centeredCamera(1280, 900) in src/camera.ts: default camera
-// is { offsetX: -32, offsetY: -22.5, cellSize: 20 }, so world (0,0) renders
-// at screen (640, 450) -- the exact viewport center under playwright.config.ts's
-// fixed 1280x900 viewport. Every pixel-math assertion in this suite is
-// derived from this.
-export const CENTER = { x: 640, y: 450 }
+// The application's own boot camera -- centeredCamera(1280, 900) in
+// src/camera.ts -- under playwright.config.ts's fixed 1280x900 viewport.
+// CENTER and every pixel-math assertion in this suite is derived from these
+// three numbers, so they are declared once here rather than re-literaled at
+// each call site.
+export const DEFAULT_CELL_SIZE_PX = 20
+const DEFAULT_OFFSET_X = -32
+const DEFAULT_OFFSET_Y = -22.5
+
+// World (0,0) renders at screen (640, 450) -- the exact viewport center.
+export const CENTER = { x: -DEFAULT_OFFSET_X * DEFAULT_CELL_SIZE_PX, y: -DEFAULT_OFFSET_Y * DEFAULT_CELL_SIZE_PX }
 
 export function cellLocator(page: Page, x: number, y: number): Locator {
   return page.locator(cellSelector(x, y))
@@ -129,13 +134,10 @@ export async function dragScrollbarThumb(page: Page, orientation: ScrollbarOrien
 // default view -- toggleFarCell and withCellInView below both do.
 export async function panCellIntoView(page: Page, worldX: number, worldY: number) {
   const SPOT = { x: 200, y: 200 }
-  const CELL_SIZE = 20
-  const DEFAULT_OFFSET_X = -32
-  const DEFAULT_OFFSET_Y = -22.5
-  const desiredOffsetX = worldX - SPOT.x / CELL_SIZE
-  const desiredOffsetY = worldY - SPOT.y / CELL_SIZE
-  const dx = -(desiredOffsetX - DEFAULT_OFFSET_X) * CELL_SIZE
-  const dy = -(desiredOffsetY - DEFAULT_OFFSET_Y) * CELL_SIZE
+  const desiredOffsetX = worldX - SPOT.x / DEFAULT_CELL_SIZE_PX
+  const desiredOffsetY = worldY - SPOT.y / DEFAULT_CELL_SIZE_PX
+  const dx = -(desiredOffsetX - DEFAULT_OFFSET_X) * DEFAULT_CELL_SIZE_PX
+  const dy = -(desiredOffsetY - DEFAULT_OFFSET_Y) * DEFAULT_CELL_SIZE_PX
   await dragPan(page, CENTER.x, CENTER.y, dx, dy, 20)
 }
 
@@ -166,6 +168,12 @@ export async function withCellInView<T>(page: Page, worldX: number, worldY: numb
   } finally {
     await resetView(page)
   }
+}
+
+// Clicks a single, possibly off-screen, cell -- the withCellInView + click
+// pair every step that toggles one cell (rather than a batch) needs.
+export async function clickCell(page: Page, x: number, y: number) {
+  await withCellInView(page, x, y, () => cellLocator(page, x, y).click())
 }
 
 // ---------------------------------------------------------------------------
@@ -286,6 +294,29 @@ export async function thumbTrackFraction(page: Page, orientation: ScrollbarOrien
 export async function thumbPositionPercent(page: Page, orientation: ScrollbarOrientation): Promise<number> {
   const value = await scrollbarThumb(page, orientation).getAttribute('aria-valuenow')
   return Number(value)
+}
+
+// The five cells that describe a blinker's shape, wherever it is centered:
+// its three live cells along the blinker's own axis, and the two neighbors
+// along the OTHER axis that prove it hasn't smeared sideways. Shared by
+// cell-life-and-death.ts (a remembered center) and infinite-grid.ts (a
+// literal one) -- the step registry is global, so this is the one place the
+// shape itself is stated rather than restated per caller.
+export async function expectBlinker(
+  page: Page,
+  centerX: number,
+  centerY: number,
+  orientation: 'horizontal' | 'vertical',
+): Promise<void> {
+  const [ax, ay] = orientation === 'horizontal' ? ([1, 0] as const) : ([0, 1] as const)
+  const [dx, dy] = orientation === 'horizontal' ? ([0, 1] as const) : ([1, 0] as const)
+  await withCellInView(page, centerX, centerY, async () => {
+    await expectCellState(page, centerX - ax, centerY - ay, 'alive')
+    await expectCellState(page, centerX, centerY, 'alive')
+    await expectCellState(page, centerX + ax, centerY + ay, 'alive')
+    await expectCellState(page, centerX - dx, centerY - dy, 'dead')
+    await expectCellState(page, centerX + dx, centerY + dy, 'dead')
+  })
 }
 
 // Scenario-scoped scratch state for the generated step modules.

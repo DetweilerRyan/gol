@@ -1,14 +1,13 @@
 import { test, expect, type Page } from '@playwright/test'
-import { CENTER, cellLocator, dragPan, xAxisLabels, yAxisLabels } from './e2e-helpers'
+import { axisLabelValues, CENTER, cellLocator, dragPan, xAxisLabels } from './e2e-helpers'
 
-// xAxisLabels/yAxisLabels moved to ./e2e-helpers by the adopt-playwright-bdd
-// slice: features/steps/grid-reference-lines.ts needs the same two locators,
-// and the Tailwind class they select on (there is no accessible affordance
-// saying which axis a ruler label belongs to) must appear in exactly one
-// place. See their comment there, including the deletion trigger.
+// xAxisLabels moved to ./e2e-helpers by the adopt-playwright-bdd slice:
+// features/steps/grid-reference-lines.ts needs the same locator, and the
+// Tailwind class it selects on (there is no accessible affordance saying
+// which axis a ruler label belongs to) must appear in exactly one place. See
+// its comment there, including the deletion trigger.
 async function labelSet(page: Page, axis: 'x' | 'y'): Promise<Set<number>> {
-  const texts = await (axis === 'x' ? xAxisLabels(page) : yAxisLabels(page)).allTextContents()
-  return new Set(texts.map(Number))
+  return new Set(await axisLabelValues(page, axis))
 }
 
 test.beforeEach(async ({ page }) => {

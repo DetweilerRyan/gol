@@ -30,20 +30,18 @@ import { expect, type Page } from '@playwright/test'
 import {
   aliveCellCount,
   CENTER,
-  cellLocator,
   cellScreenPosition,
+  clickCell,
+  DEFAULT_CELL_SIZE_PX,
   dragPan,
   dragScrollbarThumb,
   openGrid,
   thumbPositionPercent,
   thumbTrackFraction,
-  withCellInView,
   type ScrollbarOrientation,
 } from '../e2e-helpers'
 
 const { Given, When, Then } = createBdd()
-
-const CELL_SIZE_PX = 20
 
 // A thumb covering this much of its track is reported as filling it. The
 // exact value is 1 -- computeThumbGeometry clamps the length to the track --
@@ -51,10 +49,6 @@ const CELL_SIZE_PX = 20
 // shrunken thumb: the shortest thumb any scenario here produces covers 0.25
 // of its track, and the longest genuinely-short one 0.17.
 const FILLS_TRACK = 0.99
-
-async function clickCell(page: Page, x: number, y: number) {
-  await withCellInView(page, x, y, () => cellLocator(page, x, y).click())
-}
 
 async function expectThumbFillsTrack(page: Page, orientation: ScrollbarOrientation, fills: boolean) {
   const assertion = expect.poll(() => thumbTrackFraction(page, orientation))
@@ -84,7 +78,7 @@ Given('a grid with live cells spanning {int} cells across and {int} cells down',
 })
 
 Given('a camera panned {int} cells right of the origin at the default zoom', async ({ page }, cells) => {
-  await dragPan(page, CENTER.x, CENTER.y, -cells * CELL_SIZE_PX, 0, 50)
+  await dragPan(page, CENTER.x, CENTER.y, -cells * DEFAULT_CELL_SIZE_PX, 0, 50)
 })
 
 When('the scrollbars are drawn for an {int} by {int} pixel viewport', async ({ page }, width, height) => {
@@ -114,33 +108,28 @@ When(
   },
 )
 
-Then('the horizontal thumb should fill its track', async ({ page }) => {
-  await expectThumbFillsTrack(page, 'horizontal', true)
-})
+// The four "fill / be shorter than" Thens differ only by orientation and
+// polarity -- collapsed into one regex-pattern step rather than four
+// cucumber-expression ones, since StepPattern accepts a RegExp (playwright-bdd
+// is built on @cucumber/cucumber-expressions, same as cucumber-js). This
+// changes no .feature text: each of the four sentences the Examples tables
+// use still matches, and bddgen's all-or-nothing "every step resolves" check
+// (playwright.config.ts) is what proves it.
+Then(
+  /^the (horizontal|vertical) thumb should (fill|be shorter than) its track$/,
+  async ({ page }, orientation, verb) => {
+    await expectThumbFillsTrack(page, orientation as ScrollbarOrientation, verb === 'fill')
+  },
+)
 
-Then('the vertical thumb should fill its track', async ({ page }) => {
-  await expectThumbFillsTrack(page, 'vertical', true)
-})
-
-Then('the horizontal thumb should be shorter than its track', async ({ page }) => {
-  await expectThumbFillsTrack(page, 'horizontal', false)
-})
-
-Then('the vertical thumb should be shorter than its track', async ({ page }) => {
-  await expectThumbFillsTrack(page, 'vertical', false)
-})
-
-Then('the horizontal thumb should sit at the start of its track', async ({ page }) => {
-  await expect.poll(() => thumbPositionPercent(page, 'horizontal')).toBe(0)
-})
-
-Then('the vertical thumb should sit at the start of its track', async ({ page }) => {
-  await expect.poll(() => thumbPositionPercent(page, 'vertical')).toBe(0)
-})
-
-Then('the horizontal thumb should sit at the end of its track', async ({ page }) => {
-  await expect.poll(() => thumbPositionPercent(page, 'horizontal')).toBe(100)
-})
+Then(
+  /^the (horizontal|vertical) thumb should sit at the (start|end) of its track$/,
+  async ({ page }, orientation, position) => {
+    await expect
+      .poll(() => thumbPositionPercent(page, orientation as ScrollbarOrientation))
+      .toBe(position === 'start' ? 0 : 100)
+  },
+)
 
 // Dragging the thumb down pans the camera DOWN the grid, which on screen is
 // the content -- and so the origin -- moving up by the same distance.
