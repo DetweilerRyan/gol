@@ -41,6 +41,23 @@ forms while both exist — so this is **cheaper after the step-test layer is del
 generated bdd specs are the only partner. Sequencing this after that deletion is the main call
 to make.
 
+**The vocabulary is already chosen, and this is its only surviving home.** The
+`ruler-label-axis-affordance` slice landed the affordance clause 1 needs, and its idea file --
+deleted with that slice, per the board rule -- recorded the intended phrasing for this one:
+
+> `Then the column ruler shows 10` / `Then the row ruler shows -10`
+
+The _names_ `Column ruler` / `Row ruler` survive in CLAUDE.md's Conventions, along with the
+mapping (top strip = `Column ruler` = the first coordinate of `Cell x, y`) and the warning that
+the top strip is a _horizontal_ run carrying _column_ numbers -- the inversion that passes every
+test. The **phrasing intent** above survives only here. `architect` flagged it on the way out
+precisely because it would otherwise be lost.
+
+Note the constraint that shapes it: the affordance is a named `role="group"` per axis, so the
+observable is _a ruler names an axis and shows a set of coordinates_. Scenarios may use
+group-scoped vocabulary; they must **not** coin a per-label named object ("the label Column 10"),
+because no such thing exists in the accessible tree.
+
 Related: [[ruler-label-axis-affordance]] — clause 1 is only expressible through a paint-class
 reach-around today, so an honest rewrite may need that affordance first.
 
