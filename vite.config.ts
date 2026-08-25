@@ -10,7 +10,29 @@ const sharedExclude = [
   '**/*.perf.spec.ts',
   '**/*.browser.test.ts?(x)',
   'scripts/**',
-  '.claude/worktrees/**',
+  // Both entries below exist because vitest's `unit` project inherits the
+  // unrooted default include (**/*.{test,spec}.?(c|m)[jt]s?(x)) and nothing
+  // above subtracts it -- any directory in the repo is reachable unless
+  // something in this array excludes it by name. Measured with throwaway
+  // probes: `.claude/__probe.test.ts` and `ideas/__probe.test.ts` were both
+  // collected into `unit` before these entries existed, and the ideas/ probe
+  // imported src/gameOfLife -- so it would have run inside Stryker's sandbox
+  // too. These two entries are what make CLAUDE.md's merge-protocol
+  // mutation-invariant clause's path-allowlist predicate sound for ideas/
+  // and .claude/: without them, a stray test file in either directory runs
+  // inside Stryker's sandbox while the path check still answers "invariant."
+  // `.claude/worktrees/**`, the narrower entry this replaces, is subsumed
+  // by `.claude/**` -- a worktree is a whole other checkout with its own
+  // node_modules and tests, and collecting it was a real measured incident
+  // (3,299 tests instead of 861).
+  //
+  // Trade-off: nothing under .claude/ is a test today, and scripts/ already
+  // has its own separate pipeline -- but .claude/ is where agent
+  // definitions live, so a future colocated checker test placed there would
+  // be silently excluded by this entry rather than picked up. Worth knowing
+  // before adding one.
+  'ideas/**',
+  '.claude/**',
   '.stryker-tmp*/**',
   // playwright-bdd generates .features-gen/<project>/features/<name>.feature.spec.js
   // (the project name is `bdd`, from defineBddProject in playwright.config.ts).
@@ -68,8 +90,10 @@ export default defineConfig({
     //
     // Claude Code's native worktrees land in .claude/worktrees/, inside this
     // checkout. configDefaults.exclude covers node_modules/dist/.git but not
-    // .claude, so without that entry a run from the primary checkout would
-    // collect and run another slice's src/ and features/ tests as its own.
+    // .claude, so without sharedExclude's '.claude/**' entry a run from the
+    // primary checkout would collect and run another slice's src/ and
+    // features/ tests as its own -- see that entry's own comment for why it
+    // covers the whole directory rather than just worktrees/.
     //
     // .stryker-tmp*/ is the same failure with a different source. Stryker
     // sandboxes a full copy of the tree there and only removes it on a clean
