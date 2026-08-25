@@ -1,20 +1,25 @@
-import { expect, type Locator, type Page } from '@playwright/test'
+import { expect, type Page } from '@playwright/test'
 import {
   ALIVE_CELL_SELECTOR,
   CELL_ALIVE_ATTR,
   CELL_ALIVE_VALUE,
   CELL_DEAD_VALUE,
-  cellSelector,
 } from '../src/test-support/cellQuery.ts'
-import { rulerGroupLabel } from '../src/test-support/rulerQuery.ts'
 
 import { CENTER, DEFAULT_CELL_SIZE_PX, DEFAULT_OFFSET_X, DEFAULT_OFFSET_Y } from './screenplay/viewport.ts'
+import {
+  cellLocator,
+  patternLibraryModal,
+  patternsButton,
+  previewCells,
+  rulerGroup,
+  scrollbarThumb,
+  type ScrollbarOrientation,
+} from './screenplay/elements.ts'
 
 export { CENTER, DEFAULT_CELL_SIZE_PX } from './screenplay/viewport.ts'
-
-export function cellLocator(page: Page, x: number, y: number): Locator {
-  return page.locator(cellSelector(x, y))
-}
+export { cellLocator, patternsButton, patternLibraryModal, previewCells, rulerGroup } from './screenplay/elements.ts'
+export type { ScrollbarOrientation } from './screenplay/elements.ts'
 
 // The one way this suite asserts aliveness. It reads aria-pressed -- the
 // accessible state a screen reader announces -- and not the bg-gray-900 /
@@ -69,25 +74,6 @@ export async function dragPan(page: Page, fromX: number, fromY: number, dx: numb
   await page.mouse.down()
   await page.mouse.move(fromX + dx, fromY + dy, { steps })
   await page.mouse.up()
-}
-
-export function patternsButton(page: Page): Locator {
-  return page.locator('button[aria-label="Open pattern library"]')
-}
-
-// The library dialog, by the name it actually announces. That name comes from
-// PatternLibraryModal's <DialogTitle>, which Headless UI registers as the
-// dialog's aria-labelledby -- there is no aria-label to read, and the one that
-// used to sit on the Dialog was superseded by the title and never named
-// anything (deleted in the `mutate-accessible-names` slice).
-//
-// exact: true is deliberate. getByRole's default name matching is
-// case-insensitive AND substring, which is exactly what let this locator carry
-// 'Pattern library' -- wrong case, and written against the deleted attribute --
-// while still passing. The accessible name is this repo's black-box contract,
-// so it is matched as the whole string a screen reader would announce.
-export function patternLibraryModal(page: Page): Locator {
-  return page.getByRole('dialog', { name: 'Pattern Library', exact: true })
 }
 
 // Opens the library AND waits for it to be there. The wait is the load-bearing
@@ -161,14 +147,6 @@ export async function patternCategoryInLibrary(page: Page, patternName: string):
   throw new Error(
     `The pattern library lists no "${patternName}". It lists: ${entries.map((entry) => entry.text).join(', ')}`,
   )
-}
-
-// The armed pattern's preview cells. PatternPreview.tsx renders one per cell
-// the pattern WOULD occupy if stamped at the cell under the pointer, each
-// labelled with its own world coordinate, and it applies no clipping -- so
-// this is every cell of the armed pattern, not just the on-screen ones.
-export function previewCells(page: Page): Locator {
-  return page.locator('[aria-label^="Pattern preview cell"]')
 }
 
 const PREVIEW_CELL_LABEL = /^Pattern preview cell (-?\d+), (-?\d+)$/
@@ -331,17 +309,6 @@ export async function zoomOut(page: Page) {
   await page.locator('button[aria-label="Zoom out"]').click()
 }
 
-// One axis's ruler, reached through the accessible tree: GridRuler wraps each
-// axis's labels in a role="group" named by rulerGroupLabel(axis), so a column
-// number and a row number -- which render as the same bare digit -- are told
-// apart by the name an AT would announce, not by the Tailwind class each label
-// is pinned to. That class selector is what used to live here; the
-// `ruler-label-axis-affordance` slice replaced it, and the promise recorded
-// next to it held -- this was the only edit features/ needed.
-export function rulerGroup(page: Page, axis: 'x' | 'y'): Locator {
-  return page.getByRole('group', { name: rulerGroupLabel(axis) })
-}
-
 // The coordinate numbers currently on show along one edge of the viewport --
 // what a player reads off the ruler. Read per label rather than by splitting
 // the group's own text: an empty ruler (pan far enough and no major gridline
@@ -353,14 +320,6 @@ export async function axisLabelValues(page: Page, axis: 'x' | 'y'): Promise<numb
     .getByText(/^-?\d+$/)
     .allTextContents()
   return texts.map(Number)
-}
-
-export type ScrollbarOrientation = 'horizontal' | 'vertical'
-
-// Module-private: the three functions below are what a caller wants -- the
-// locator itself only ever exists to be measured or dragged.
-function scrollbarThumb(page: Page, orientation: ScrollbarOrientation): Locator {
-  return page.locator(`[role="scrollbar"][aria-orientation="${orientation}"]`)
 }
 
 // How much of its track the thumb covers, as a fraction: 1 means the whole of
