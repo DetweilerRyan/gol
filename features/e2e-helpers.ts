@@ -90,8 +90,13 @@ export async function openPatternModal(page: Page) {
   await patternsButton(page).click()
 }
 
-export async function selectPattern(page: Page, name: string) {
-  await openPatternModal(page)
+// Arms a pattern from an ALREADY-OPEN library. Split out of selectPattern
+// below because pattern-library.feature reads the library's contents before
+// it arms anything: its category step needs the modal open, and its shape
+// step then arms from that same open modal. Re-opening in between is not
+// available -- the modal makes the rest of the page inert, so the Patterns
+// button cannot be reached while it is up.
+export async function choosePatternFromLibrary(page: Page, name: string) {
   await page.getByRole('button', { name, exact: true }).click()
 
   // Headless UI's Dialog stays mounted through its ~100ms leave transition,
@@ -100,6 +105,76 @@ export async function selectPattern(page: Page, name: string) {
   // mouse.move/click in every caller from landing on the closing dialog
   // instead of the grid underneath.
   await expect(patternLibraryModal(page)).toHaveCount(0)
+}
+
+export async function selectPattern(page: Page, name: string) {
+  await openPatternModal(page)
+  await choosePatternFromLibrary(page, name)
+}
+
+// WHICH CATEGORY THE LIBRARY LISTS A PATTERN UNDER, established by reading
+// order and nothing else.
+//
+// The modal renders one section per category: a heading, then that category's
+// pattern buttons (PatternLibraryModal.tsx). Membership is expressed exactly
+// the way a sighted reader takes it -- the heading a name appears beneath --
+// and there is no attribute, id or aria-labelledby tying the two together.
+// That absence is deliberate and was ruled on: an affordance added so a test
+// could read it more conveniently would be a test hook wearing an
+// affordance's name, and it would also stop this function checking the thing
+// a user actually relies on. So the reading order IS the contract, and this
+// is the one place features/ encodes it.
+//
+// h3 rather than getByRole('heading'): the two node kinds have to be
+// collected in a SINGLE document-ordered query for the interleaving to mean
+// anything, and no by-role locator spans two roles. The dialog's own title is
+// an h2, so it cannot be mistaken for a category, and the only buttons inside
+// the dialog are the pattern buttons themselves.
+export async function patternCategoryInLibrary(page: Page, patternName: string): Promise<string> {
+  const entries = await patternLibraryModal(page)
+    .locator('h3, button')
+    .evaluateAll((nodes) => nodes.map((node) => ({ heading: node.tagName === 'H3', text: node.textContent?.trim() })))
+
+  let heading: string | undefined
+  for (const entry of entries) {
+    if (entry.heading) heading = entry.text
+    else if (entry.text === patternName) {
+      if (heading === undefined) throw new Error(`"${patternName}" is listed before any category heading`)
+      return heading
+    }
+  }
+  throw new Error(
+    `The pattern library lists no "${patternName}". It lists: ${entries.map((entry) => entry.text).join(', ')}`,
+  )
+}
+
+// The armed pattern's preview cells. PatternPreview.tsx renders one per cell
+// the pattern WOULD occupy if stamped at the cell under the pointer, each
+// labelled with its own world coordinate, and it applies no clipping -- so
+// this is every cell of the armed pattern, not just the on-screen ones.
+export function previewCells(page: Page): Locator {
+  return page.locator('[aria-label^="Pattern preview cell"]')
+}
+
+const PREVIEW_CELL_LABEL = /^Pattern preview cell (-?\d+), (-?\d+)$/
+
+// The world coordinates the preview is currently showing. Pairs with
+// previewCells above: that one is for counting and waiting, this one for
+// reading the shape out.
+export async function previewCellPositions(page: Page): Promise<Array<[number, number]>> {
+  const labels = await previewCells(page).evaluateAll((nodes) => nodes.map((node) => node.getAttribute('aria-label')))
+  return labels.map((label) => {
+    const match = PREVIEW_CELL_LABEL.exec(label ?? '')
+    if (!match) throw new Error(`A preview cell announces "${label}", which names no coordinate`)
+    return [Number(match[1]), Number(match[2])]
+  })
+}
+
+// Puts the pointer over a world cell, which is what arms the preview: Grid's
+// trackHover reports the cell under the pointer, and nothing is previewed
+// until it has.
+export async function hoverCell(page: Page, x: number, y: number) {
+  await cellLocator(page, x, y).hover()
 }
 
 // Playwright keeps keyboard focus on the button that was last clicked.
@@ -354,6 +429,30 @@ export function remember(page: Page, key: string, value: number): void {
 
 export function recall(page: Page, key: string): number {
   const value = scenarioNumbers.get(page)?.get(key)
+  if (value === undefined) throw new Error(`No step in this scenario has established "${key}"`)
+  return value
+}
+
+// The same scratch store for a value that is a NAME rather than a coordinate
+// -- pattern-library.feature's outline names its pattern in the Given and
+// then says "it" in both Thens, so the name has to be carried the same way a
+// remembered center is.
+//
+// Kept as a second, separately-typed store rather than by widening the one
+// above to `number | string`, so the note on that one still holds literally:
+// what a step may carry is a coordinate, a count, or a name out of an
+// Examples table -- never a piece of application state. A caller cannot read
+// a number out as a string or the reverse.
+const scenarioTexts = new WeakMap<Page, Map<string, string>>()
+
+export function rememberText(page: Page, key: string, value: string): void {
+  const store = scenarioTexts.get(page) ?? new Map<string, string>()
+  store.set(key, value)
+  scenarioTexts.set(page, store)
+}
+
+export function recallText(page: Page, key: string): string {
+  const value = scenarioTexts.get(page)?.get(key)
   if (value === undefined) throw new Error(`No step in this scenario has established "${key}"`)
   return value
 }

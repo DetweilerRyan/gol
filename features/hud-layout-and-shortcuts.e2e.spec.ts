@@ -7,6 +7,7 @@ import {
   expectCellState,
   patternLibraryModal,
   patternsButton,
+  previewCells,
   selectPattern,
 } from './e2e-helpers'
 
@@ -181,7 +182,7 @@ test('clicking Patterns again while a pattern is armed cancels placement instead
   // Move the pointer over the grid so a preview follows it (Grid's
   // trackHover guard only computes/calls onHover once a pattern is armed).
   await page.mouse.move(CENTER.x + 60, CENTER.y + 60)
-  const preview = page.locator('[aria-label^="Pattern preview cell"]')
+  const preview = previewCells(page)
   await expect(preview.first()).toBeVisible()
   await expect(preview).toHaveCount(5) // Glider has 5 live cells
   const boxAtFirstPosition = (await preview.first().boundingBox())!
