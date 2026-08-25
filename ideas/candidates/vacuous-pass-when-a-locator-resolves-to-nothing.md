@@ -51,6 +51,34 @@ widespread, the helper earns its place.
 a helper lands, `features/steps/*.ts` if the audit finds the shape there, and CLAUDE.md's
 testing-structure notes for the convention.
 
+## The audit, done — and it shrinks this idea rather than growing it
+
+`product` answered the first open question during `mutate-accessible-names`' VERIFY. **Six
+`toHaveCount(0)` sites exist under `features/`**, and they are not all the same:
+
+| sites                                                     | verdict                                                                                                                          |
+| --------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------- |
+| `camera-pan-and-zoom:69`, `grid-scrollbars:94`            | page-wide `ALIVE_CELL_SELECTOR` — **fail-safe**, per this file's own sharpening: a page-wide negative fails when the page breaks |
+| `hud-layout:200`, `:205`                                  | already positively asserted at `:186-187` in the same test — **guarded**                                                         |
+| the two modal sites (`hud-layout:199`, `e2e-helpers:108`) | **fixed in that slice**                                                                                                          |
+| the three `grid-reference-lines` ruler rows               | **still open** — the original finding                                                                                            |
+
+**The modal fix is the worked example of the cheap form**, and worth copying: rather than guarding
+each negative, `openPatternModal` now ends with `await expect(patternLibraryModal(page)).toHaveCount(1)`.
+One positive assertion upstream covers **both** negative sites, because every path to either opens
+the modal through that helper. It also closed a latent race the helper's own comment implied but
+did not guard.
+
+**That argues against the `scopedAbsence` helper this file sketched.** With three sites left and
+an upstream-assertion pattern that generalises better, inlining is the cheaper answer. Revisit
+only if the count grows.
+
+**One measurement worth keeping**, from `product`'s name-break probe in the same pass: when a
+vacuous assertion is _also_ doing duty as a wait barrier, breaking the locator makes it return
+**instantly**, and downstream steps then fail on timing rather than on the thing that broke. Three
+tests failed that way and looked like coverage. So a vacuous negative is not merely useless — it
+can manufacture misleading failures elsewhere.
+
 ## Open questions
 
 - How many sites actually have the shape? The audit decides helper-vs-inline.
