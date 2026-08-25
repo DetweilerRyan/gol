@@ -106,6 +106,17 @@ export function runLevelAbortReason(summary: PlaywrightRunSummary | null): strin
   return null
 }
 
+// Unlike flaky/errors (run-level, checked by runLevelAbortReason above), a
+// skipped spec is enforced one spec at a time, by classifyMutant/
+// assertBaselineSpecGreen in classify.ts -- so there is no single run-level
+// count to read off `summary` directly, and this module is the one that
+// owns `bySpecFile`'s shape well enough to sum across it. run.ts's own
+// per-phase report calls this to make that per-spec enforcement auditable
+// in its printed output rather than only implicit in a clean exit.
+export function sumSkipped(summary: PlaywrightRunSummary): number {
+  return Object.values(summary.bySpecFile).reduce((total, spec) => total + spec.numSkippedTests, 0)
+}
+
 // The JSON reporter's own shape (Playwright 1.62.1, measured directly by
 // running playwright.acceptance-mutation.config.ts against a planted
 // feature). Only the fields this module actually reads are declared --

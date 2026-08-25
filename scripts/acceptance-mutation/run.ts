@@ -49,6 +49,7 @@ import {
   readPlaywrightSummary,
   runGenSpawn,
   runLevelAbortReason,
+  sumSkipped,
 } from './playwright-runner.ts'
 
 interface MutantResult {
@@ -83,22 +84,19 @@ function loadTargetPlans(targets: MutationTarget[]): TargetPlan[] {
 }
 
 // The two run-level stop conditions runLevelAbortReason enforces, plus the
-// per-spec skipped count that -- unlike flaky/errors -- is enforced one
-// level down, inside classifyMutant/assertBaselineSpecGreen (a skipped spec
-// scores `error`, never silently folds into a kill or a survive). All three
-// are carried back out of a phase that *didn't* abort. `errored: 0` plus a
-// clean exit is real evidence every one of them was zero (see
-// runLevelAbortReason and classify.ts's own comments) -- printing this in
-// report() is what makes that evidence visible to a reader instead of only
-// to the code that checked it.
+// per-spec skipped count sumSkipped (playwright-runner.ts) totals up --
+// unlike flaky/errors, that one is enforced one level down, inside
+// classifyMutant/assertBaselineSpecGreen (a skipped spec scores `error`,
+// never silently folds into a kill or a survive). All three are carried
+// back out of a phase that *didn't* abort. `errored: 0` plus a clean exit
+// is real evidence every one of them was zero (see runLevelAbortReason and
+// classify.ts's own comments) -- printing this in report() is what makes
+// that evidence visible to a reader instead of only to the code that
+// checked it.
 interface PhaseStats {
   flaky: number
   errors: number
   skipped: number
-}
-
-function sumSkipped(summary: { bySpecFile: Record<string, { numSkippedTests: number }> }): number {
-  return Object.values(summary.bySpecFile).reduce((total, spec) => total + spec.numSkippedTests, 0)
 }
 
 // Phase 1: write one unmutated copy per active target, run the batch once,

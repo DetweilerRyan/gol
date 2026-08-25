@@ -10,6 +10,7 @@ import {
   readPlaywrightSummary,
   runGenSpawn,
   runLevelAbortReason,
+  sumSkipped,
   type PlaywrightRunSummary,
 } from './playwright-runner.ts'
 
@@ -460,5 +461,28 @@ describe('runLevelAbortReason', () => {
 
   it('checks errors before flaky when both are nonzero', () => {
     expect(runLevelAbortReason({ ...clean, errors: 1, flaky: 1 })).toMatch(/run-level error/)
+  })
+})
+
+describe('sumSkipped', () => {
+  const spec = (numSkippedTests: number): PlaywrightRunSummary['bySpecFile'][string] => ({
+    numTotalTests: 1,
+    numFailedTests: 0,
+    numSkippedTests,
+  })
+
+  it('is 0 when no spec file has a skipped test', () => {
+    expect(sumSkipped({ bySpecFile: { a: spec(0), b: spec(0) }, flaky: 0, errors: 0 })).toBe(0)
+  })
+
+  // Two spec files with distinct, nonzero counts -- distinguishes a `reduce`
+  // that actually sums from one that returns the first/last value, an
+  // initial value other than 0, or a `+` mutated to `-`.
+  it('sums skipped counts across every spec file, not just one', () => {
+    expect(sumSkipped({ bySpecFile: { a: spec(1), b: spec(2) }, flaky: 0, errors: 0 })).toBe(3)
+  })
+
+  it('is 0 for an empty bySpecFile', () => {
+    expect(sumSkipped({ bySpecFile: {}, flaky: 0, errors: 0 })).toBe(0)
   })
 })
