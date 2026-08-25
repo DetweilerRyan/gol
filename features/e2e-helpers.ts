@@ -46,7 +46,9 @@ export async function nextGeneration(page: Page) {
   await page.locator('#next-generation-button').click()
 }
 
-export async function generationText(page: Page) {
+// Module-private: generationCount below is the only reader. The raw text is
+// this file's business, the number is what a step or a spec asks for.
+async function generationText(page: Page) {
   return page.getByText(/^Generation: \d+$/).textContent()
 }
 
@@ -132,7 +134,10 @@ export async function dragScrollbarThumb(page: Page, orientation: ScrollbarOrien
 // Pans an off-screen world cell to a spot clear of the toolbar/scrollbars/HUD,
 // leaving the camera there. Callers are responsible for getting back to the
 // default view -- toggleFarCell and withCellInView below both do.
-export async function panCellIntoView(page: Page, worldX: number, worldY: number) {
+// Module-private: it leaves the camera moved, which is a trap for a caller
+// that does not put it back. toggleFarCell and withCellInView below are the
+// two supported ways to use it, and both restore the default camera.
+async function panCellIntoView(page: Page, worldX: number, worldY: number) {
   const SPOT = { x: 200, y: 200 }
   const desiredOffsetX = worldX - SPOT.x / DEFAULT_CELL_SIZE_PX
   const desiredOffsetY = worldY - SPOT.y / DEFAULT_CELL_SIZE_PX
@@ -269,7 +274,9 @@ export async function axisLabelValues(page: Page, axis: 'x' | 'y'): Promise<numb
 
 export type ScrollbarOrientation = 'horizontal' | 'vertical'
 
-export function scrollbarThumb(page: Page, orientation: ScrollbarOrientation): Locator {
+// Module-private: the three functions below are what a caller wants -- the
+// locator itself only ever exists to be measured or dragged.
+function scrollbarThumb(page: Page, orientation: ScrollbarOrientation): Locator {
   return page.locator(`[role="scrollbar"][aria-orientation="${orientation}"]`)
 }
 
@@ -282,6 +289,13 @@ export function scrollbarThumb(page: Page, orientation: ScrollbarOrientation): L
 // carries aria-valuenow/valuemin/valuemax, which express only the thumb's
 // POSITION -- there is no accessible expression of how much of the content is
 // visible, so "fills its track" cannot be read out of the accessibility tree.
+// That is a missing affordance rather than a test-side shortcut: proportion is
+// the most useful thing a scrollbar tells a sighted user and this app tells a
+// screen reader nothing about it. Adjudicated as an observability gap, not as
+// a defect in this slice. DELETION TRIGGER: the
+// `scrollbar-visible-proportion-affordance` slice. When the scrollbar
+// announces its proportion, this function is what that announcement replaces
+// -- one edit, in this file, exactly like the ruler pair above.
 export async function thumbTrackFraction(page: Page, orientation: ScrollbarOrientation): Promise<number> {
   const thumb = scrollbarThumb(page, orientation)
   const thumbBox = (await thumb.boundingBox())!

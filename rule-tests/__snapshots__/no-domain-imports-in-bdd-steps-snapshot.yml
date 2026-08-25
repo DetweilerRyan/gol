@@ -1,0 +1,92 @@
+id: no-domain-imports-in-bdd-steps
+snapshots:
+  export { cellLabel } from '../../src/test-support/cellQuery':
+    labels:
+    - source: export { cellLabel } from '../../src/test-support/cellQuery'
+      style: primary
+      start: 0
+      end: 60
+    - source: '''../../src/test-support/cellQuery'''
+      style: secondary
+      start: 26
+      end: 60
+  import '../../src/liveCellSeed':
+    labels:
+    - source: import '../../src/liveCellSeed'
+      style: primary
+      start: 0
+      end: 31
+    - source: '''../../src/liveCellSeed'''
+      style: secondary
+      start: 7
+      end: 31
+  import type { Camera } from '../../src/camera':
+    labels:
+    - source: import type { Camera } from '../../src/camera'
+      style: primary
+      start: 0
+      end: 46
+    - source: '''../../src/camera'''
+      style: secondary
+      start: 28
+      end: 46
+  import { cellLabel } from '../../src/test-support/cellQuery':
+    labels:
+    - source: import { cellLabel } from '../../src/test-support/cellQuery'
+      style: primary
+      start: 0
+      end: 60
+    - source: '''../../src/test-support/cellQuery'''
+      style: secondary
+      start: 26
+      end: 60
+  import { mountBoard } from '../harness/board':
+    labels:
+    - source: import { mountBoard } from '../harness/board'
+      style: primary
+      start: 0
+      end: 45
+    - source: '''../harness/board'''
+      style: secondary
+      start: 27
+      end: 45
+  import { readFileSync } from 'node:fs':
+    labels:
+    - source: import { readFileSync } from 'node:fs'
+      style: primary
+      start: 0
+      end: 38
+    - source: '''node:fs'''
+      style: secondary
+      start: 29
+      end: 38
+  import { toggleCell } from '../../src/gameOfLife':
+    labels:
+    - source: import { toggleCell } from '../../src/gameOfLife'
+      style: primary
+      start: 0
+      end: 49
+    - source: '''../../src/gameOfLife'''
+      style: secondary
+      start: 27
+      end: 49
+  import { toggleCell } from '../e2e-helpers/../src/gameOfLife':
+    labels:
+    - source: import { toggleCell } from '../e2e-helpers/../src/gameOfLife'
+      style: primary
+      start: 0
+      end: 61
+    - source: '''../e2e-helpers/../src/gameOfLife'''
+      style: secondary
+      start: 27
+      end: 61
+  import { zoomIn } from './camera-pan-and-zoom':
+    labels:
+    - source: import { zoomIn } from './camera-pan-and-zoom'
+      style: primary
+      start: 0
+      end: 46
+    - source: '''./camera-pan-and-zoom'''
+      style: secondary
+      start: 23
+      end: 46

@@ -1,0 +1,56 @@
+id: no-domain-imports-in-bdd-steps
+language: TypeScript
+severity: warning
+message: A Playwright-BDD step module may import only playwright-bdd, @playwright/test and ../e2e-helpers.
+note: >-
+  features/steps/*.ts are the step definitions playwright-bdd compiles .feature files against, and
+  they drive the real application in a real browser through the `page` fixture and nothing else.
+  A step module that imports src/ turns the layer it belongs to back into the white-box
+  features/*.steps.test.ts form this slice exists to replace -- and since the .feature text is
+  unchanged either way, nothing else in the repo would notice. The same goes for a step module
+  reaching into features/harness/, which is the JSDOM acceptance layer's infrastructure and a
+  different runner entirely, and for a step module importing another step module: the step
+  registry is global across this directory, so the sharing is already in effect and an import
+  would dress a registry fact up as a module dependency (see the ownership convention in
+  CLAUDE.md's testing-structure section).
+# AN ALLOWLIST, NOT A BLOCKLIST ON 'src/', for the reason its sibling
+# rules/no-domain-imports-in-black-box-steps.yml already carries: a blocklist only ever knows the
+# routes someone thought of. Here the allowlist is also what makes features/e2e-helpers.ts the
+# single mandated entry point rather than merely the conventional one -- anything a step needs
+# that it cannot reach through that module has to be ADDED there, where it is written once and
+# shared, instead of being imported around per step module.
+#
+# LANGUAGE IS TypeScript, NOT Tsx. The sibling rule above is Tsx because .steps.test.tsx renders
+# React; these modules are plain .ts and the two parsers are different, so a rule declared for the
+# wrong one matches nothing and reports nothing -- indistinguishable from a clean tree, which is
+# how two of this repo's rules were silently inert when first written.
+#
+# WHY `has: { field: source }` RATHER THAN A BARE regex ON THE STATEMENT. Requiring a source field
+# is what keeps `export const FILLS_TRACK = 0.99` and `export function helper() {}` -- ordinary
+# module-local exports with no import path at all -- from reading as violations, which a
+# `kind: export_statement` + not-regex pair on its own would do. Measured against ast-grep 0.45.1
+# with a throwaway probe module carrying all nineteen forms: the four allowlisted imports
+# (including the multi-line brace form every step module actually uses, and the explicit
+# '../e2e-helpers.ts' extension) produce no finding, while nine violations do -- src/, a type-only
+# src/ import, src/test-support/, ../harness/board, a step->step import, the
+# '../e2e-helpers/../src/gameOfLife' traversal, a bare side-effect `import '../../src/...'`,
+# node:fs, and `export ... from '../../src/...'`. The regex is anchored ^...$ against the source
+# node's own text (quotes included), which is what stops '@playwright/test-extra' passing on a
+# prefix and what makes the traversal form a finding.
+#
+# IF features/e2e-helpers.ts IS EVER SPLIT into a directory, this is a one-line widening: add
+# `(/[a-z][a-z0-9-]*)?` before the optional extension, borrowing the sibling rule's single-kebab-
+# segment class so the traversal guard survives the split. It is deliberately not written that way
+# now -- allowlisting a shape that does not exist is how an allowlist quietly becomes a blocklist.
+files:
+  - 'features/steps/*.ts'
+rule:
+  all:
+    - any:
+        - kind: import_statement
+        - kind: export_statement
+    - has:
+        field: source
+        kind: string
+        not:
+          regex: '^[''"](playwright-bdd|@playwright/test|\.\./e2e-helpers(\.ts)?)[''"]$'

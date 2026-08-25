@@ -1,4 +1,4 @@
-import { existsSync } from 'node:fs'
+import { existsSync, readdirSync, statSync } from 'node:fs'
 import path from 'node:path'
 import { defineConfig, devices } from '@playwright/test'
 import { defineBddProject } from 'playwright-bdd'
@@ -35,6 +35,91 @@ if (existsSync(path.join(import.meta.dirname, 'features/steps/pattern-library.ts
   throw new Error(
     'features/steps/pattern-library.ts exists -- remove the pattern-library exclusion from `features` above and delete this guard.',
   )
+}
+
+// ---------------------------------------------------------------------------
+// THE GENERATED-OUTPUT GUARD.
+//
+// bddgen writes .features-gen/bdd/features/<name>.feature.spec.js, and the
+// `bdd` project's testDir IS that directory. When the output is absent
+// Playwright does not complain -- it reports the `e2e` project's tests and
+// nothing else, EXIT 0, no warning. Measured on this tree: `rm -rf
+// .features-gen && npx playwright test --list` printed `Total: 59 tests in 8
+// files` where a generated tree prints 94 in 14. A whole layer contributing
+// zero, indistinguishable from a green run. Only `npm run test:e2e` was
+// protected, by its own `bddgen &&` prefix; every other entry point (a bare
+// `npx playwright test`, an IDE runner, a CI step, a per-mutant spawn) read
+// green against half the suite.
+//
+// Two guarantees ride on bddgen having run, not one. The second is the step
+// registry: it is global across features/steps/, so a step text defined twice
+// is an ambiguous-step error and a step text moved out from under a borrowing
+// feature is a missing-definition error -- BOTH decided by bddgen and by
+// nothing else in the repo (measured: a duplicate 'a grid with no live cells'
+// exits 1 naming both files; renaming the shared camera Given exits 1 naming
+// the feature that borrowed it). No compiler and no import expresses that
+// dependency, so skipping bddgen loses the cross-module check as well as the
+// tests.
+//
+// PLAYWRIGHT_BDD_GEN is set to '1' by bddgen itself before it loads this
+// config (playwright-bdd 9.2.0, setBddGenPhase() in dist/cli/commands/test.js)
+// -- read as a bare env var rather than through that module, which is public
+// in its own source but is not exported from the package index. Without this
+// branch the guard would refuse to load the config bddgen needs in order to
+// clear the guard.
+//
+// Staleness is checked, not just absence: playwright-bdd has no staleness
+// detection of its own, so an edited .feature otherwise runs against last
+// week's generated spec, just as silently. bddgen rewrites every output file
+// unconditionally (measured: two consecutive runs on an unchanged tree
+// advance every mtime), so the check self-heals -- a spurious fire costs one
+// bddgen. pattern-library.feature is deliberately among the inputs even
+// though it generates nothing today: over-firing is the safe direction, and
+// it means T4 has one less thing to remember.
+//
+// The one thing mtimes cannot see is a DELETION: removing a .feature advances
+// no input mtime, so its generated spec keeps running until the next bddgen.
+// Left as a recorded limitation rather than fixed, because it fails in the
+// safe direction -- the stale specs regenerate away on the next
+// `npm run test:e2e`, and a deleted STEP MODULE fails loudly at runtime rather
+// than quietly. A set-comparison against features/*.feature would close it,
+// and would have to grow the pattern-library exclusion a second home.
+const GENERATED_SPEC_DIR = path.join(import.meta.dirname, '.features-gen/bdd/features')
+const FEATURES_DIR = path.join(import.meta.dirname, 'features')
+
+const mtimesIn = (dir: string, suffix: string) =>
+  readdirSync(dir)
+    .filter((name) => name.endsWith(suffix))
+    .map((name) => statSync(path.join(dir, name)).mtimeMs)
+
+// The two problems have different consequences and say so: a missing output
+// runs the `bdd` project's tests not at all, a stale one runs the previous
+// generation's -- silently green in both cases, but only the first is a
+// count anyone could notice.
+const NOT_GENERATED =
+  'has not been generated, so the `bdd` project would contribute zero tests and this run would report green ' +
+  'against the `e2e` project alone'
+const STALE =
+  'is older than a .feature file or a step module, so the `bdd` project would run the previous generation of ' +
+  'specs -- a scenario or step changed since would not be checked at all'
+
+function generatedOutputProblem(): string | null {
+  if (!existsSync(GENERATED_SPEC_DIR)) return NOT_GENERATED
+  const generated = mtimesIn(GENERATED_SPEC_DIR, '.spec.js')
+  if (generated.length === 0) return NOT_GENERATED
+  const inputs = [...mtimesIn(FEATURES_DIR, '.feature'), ...mtimesIn(path.join(FEATURES_DIR, 'steps'), '.ts')]
+  return Math.max(...inputs) > Math.min(...generated) ? STALE : null
+}
+
+if (!process.env.PLAYWRIGHT_BDD_GEN) {
+  const problem = generatedOutputProblem()
+  if (problem) {
+    throw new Error(
+      `.features-gen/ ${problem}. Run \`npm run test:e2e\` (which regenerates first) rather than ` +
+        '`npx playwright test` -- to scope a run to one file, pass it through: ' +
+        '`npm run test:e2e -- features/grid-scrollbars.e2e.spec.ts`.',
+    )
+  }
 }
 
 export default defineConfig({

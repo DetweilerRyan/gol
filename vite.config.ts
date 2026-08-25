@@ -12,7 +12,8 @@ const sharedExclude = [
   'scripts/**',
   '.claude/worktrees/**',
   '.stryker-tmp*/**',
-  // playwright-bdd generates .features-gen/features/<name>.feature.spec.js.
+  // playwright-bdd generates .features-gen/<project>/features/<name>.feature.spec.js
+  // (the project name is `bdd`, from defineBddProject in playwright.config.ts).
   // vitest's `unit` project inherits the unrooted default include
   // (**/*.{test,spec}.?(c|m)[jt]s?(x)) and nothing else subtracts it, so
   // without this entry those generated specs are collected into `unit` --
