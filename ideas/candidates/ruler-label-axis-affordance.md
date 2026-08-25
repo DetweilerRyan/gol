@@ -58,7 +58,7 @@ edge class once the affordance exists, the same way the e2e layer stopped
 grepping `bg-gray-900`.
 
 A `coder` slice with `product` SPECIFY for the wording. Sibling to
-`scrollbar-thumb-length-affordance.md`.
+`scrollbar-visible-proportion-affordance.md`.
 
 ## Open questions
 

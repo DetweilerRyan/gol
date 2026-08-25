@@ -149,7 +149,7 @@ reach at any zoom (zero gridlines on an axis requires `cellSize >= 256` against
 `MAX_CELL_SIZE` 60). Its 3-mutant Examples table survives intact.
 
 **Conversions no longer need affordance work in this slice.** Rulings A and B
-split it out: `scrollbar-thumb-length-affordance.md` and
+split it out: `scrollbar-visible-proportion-affordance.md` and
 `ruler-label-axis-affordance.md` are their own slices.
 
 ## Open questions
