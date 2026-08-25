@@ -1,0 +1,20 @@
+id: no-barrel-import-in-screenplay
+valid:
+  # The four import shapes a screenplay module legitimately carries: Playwright, the two
+  # src/test-support encodings elements.ts is licensed to read, and its own siblings.
+  - import { expect, type Locator, type Page } from '@playwright/test'
+  - import { cellSelector, CELL_ALIVE_ATTR } from '../../src/test-support/cellQuery.ts'
+  - import { rulerGroupLabel } from '../../src/test-support/rulerQuery.ts'
+  - import { CENTER, DEFAULT_CELL_SIZE_PX } from './viewport.ts'
+  - import { cellLocator, scrollbarThumb } from './elements.ts'
+  - export { cellLocator } from './elements.ts'
+  # The near-miss that must not fire: a sibling whose own name contains 'helpers' but is not
+  # the barrel.
+  - import { helpersForNothing } from './scrollbar-helpers.ts'
+invalid:
+  - import { CENTER } from '../e2e-helpers'
+  - import { CENTER } from '../e2e-helpers.ts'
+  - import '../e2e-helpers'
+  - export { CENTER } from '../e2e-helpers'
+  # The traversal spelling of the same cycle.
+  - import { CENTER } from '../../features/e2e-helpers.ts'

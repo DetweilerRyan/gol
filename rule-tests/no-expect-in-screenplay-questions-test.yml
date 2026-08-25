@@ -1,0 +1,21 @@
+id: no-expect-in-screenplay-questions
+valid:
+  # The type-only Playwright import every question module actually needs.
+  - import type { Page } from '@playwright/test'
+  - import { type Locator, type Page } from '@playwright/test'
+  # The word-boundary near-miss: expectations.ts's own export names begin with 'expect'.
+  - import { expectCellState, expectBlinker } from './expectations.ts'
+  - import { cellLocator, scrollbarThumb } from './elements.ts'
+  # expect from somewhere that is not the Playwright assertion library is not this rule's concern;
+  # the source clause is what makes that so.
+  - import { expect } from 'node:assert'
+invalid:
+  - import { expect } from '@playwright/test'
+  - import { expect, type Page } from '@playwright/test'
+  - import { type Locator, expect } from '@playwright/test'
+  - |
+    import {
+      expect,
+      type Locator,
+      type Page,
+    } from '@playwright/test'

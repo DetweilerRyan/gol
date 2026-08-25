@@ -1,0 +1,45 @@
+id: no-barrel-import-in-screenplay
+language: TypeScript
+severity: warning
+message: A features/screenplay/ module must not import ../e2e-helpers -- the barrel is a sink, never a source.
+note: >-
+  features/e2e-helpers.ts is a re-exporting barrel over features/screenplay/*, and the layering
+  underneath it is a DAG with a total order: viewport and notepad import nothing, elements imports
+  those, questions and interactions import elements, tasks imports interactions plus questions, and
+  expectations imports tasks plus questions. The barrel sits above all of them and is imported by
+  the step modules and the hand-written specs. A screenplay module reaching back through the barrel
+  closes that into a cycle -- and ESM tolerates a cycle silently right up to the moment an
+  evaluation order puts a const in its temporal dead zone, at which point the failure surfaces as
+  `Cannot access 'CENTER' before initialization` from a module that never mentions CENTER. Import
+  the sibling module directly instead; every name the barrel publishes is exported by exactly one
+  of them.
+  This also protects the incremental extraction the split was executed as: each module was lifted
+  out in dependency order and never needed to reach back, which is what let every intermediate
+  commit leave the suite green.
+# ast-grep-rule-check: allow-unresolved-files authored in the screenplay-e2e-decomposition design
+# pass, before features/screenplay/ exists -- architect deletes this marker in the review pass, once
+# the directory has landed and the glob resolves.
+#
+# MATCHED ON THE `source` FIELD, not by a regex over the statement's own text, for the reason
+# rules/no-playwright-config-import-in-mutation-config.yml measured: `export default ...` is itself
+# an export_statement and a statement-text regex reads the comments inside it. A field-scoped match
+# cannot see a comment at all. Metavariables do not interpolate inside string literals (see
+# CLAUDE.md), so the specifier is matched by regex rather than by a pattern.
+#
+# THE REGEX IS DELIBERATELY UNANCHORED AT THE FRONT. '../e2e-helpers', '../e2e-helpers.ts' and the
+# '../../features/e2e-helpers.ts' traversal spelling are all the same cycle, and a rule that only
+# knew the tidy form would be defeated by the untidy one. A bare side-effect `import
+# '../e2e-helpers'` carries a `source` field too, so it is caught on the same clause.
+files:
+  - 'features/screenplay/*.ts'
+rule:
+  all:
+    # Both statement kinds: a re-export links the module at load time exactly as an import does,
+    # so `export { CENTER } from '../e2e-helpers'` closes the same cycle.
+    - any:
+        - kind: import_statement
+        - kind: export_statement
+    - has:
+        field: source
+        kind: string
+        regex: '[''"][^''"]*e2e-helpers'

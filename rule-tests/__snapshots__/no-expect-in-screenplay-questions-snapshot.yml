@@ -1,0 +1,52 @@
+id: no-expect-in-screenplay-questions
+snapshots:
+  ? |
+    import {
+      expect,
+      type Locator,
+      type Page,
+    } from '@playwright/test'
+  : labels:
+    - source: |-
+        import {
+          expect,
+          type Locator,
+          type Page,
+        } from '@playwright/test'
+      style: primary
+      start: 0
+      end: 73
+    - source: '''@playwright/test'''
+      style: secondary
+      start: 55
+      end: 73
+  import { expect } from '@playwright/test':
+    labels:
+    - source: import { expect } from '@playwright/test'
+      style: primary
+      start: 0
+      end: 41
+    - source: '''@playwright/test'''
+      style: secondary
+      start: 23
+      end: 41
+  import { expect, type Page } from '@playwright/test':
+    labels:
+    - source: import { expect, type Page } from '@playwright/test'
+      style: primary
+      start: 0
+      end: 52
+    - source: '''@playwright/test'''
+      style: secondary
+      start: 34
+      end: 52
+  import { type Locator, expect } from '@playwright/test':
+    labels:
+    - source: import { type Locator, expect } from '@playwright/test'
+      style: primary
+      start: 0
+      end: 55
+    - source: '''@playwright/test'''
+      style: secondary
+      start: 37
+      end: 55

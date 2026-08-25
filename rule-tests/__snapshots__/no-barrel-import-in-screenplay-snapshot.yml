@@ -1,0 +1,52 @@
+id: no-barrel-import-in-screenplay
+snapshots:
+  export { CENTER } from '../e2e-helpers':
+    labels:
+    - source: export { CENTER } from '../e2e-helpers'
+      style: primary
+      start: 0
+      end: 39
+    - source: '''../e2e-helpers'''
+      style: secondary
+      start: 23
+      end: 39
+  import '../e2e-helpers':
+    labels:
+    - source: import '../e2e-helpers'
+      style: primary
+      start: 0
+      end: 23
+    - source: '''../e2e-helpers'''
+      style: secondary
+      start: 7
+      end: 23
+  import { CENTER } from '../../features/e2e-helpers.ts':
+    labels:
+    - source: import { CENTER } from '../../features/e2e-helpers.ts'
+      style: primary
+      start: 0
+      end: 54
+    - source: '''../../features/e2e-helpers.ts'''
+      style: secondary
+      start: 23
+      end: 54
+  import { CENTER } from '../e2e-helpers':
+    labels:
+    - source: import { CENTER } from '../e2e-helpers'
+      style: primary
+      start: 0
+      end: 39
+    - source: '''../e2e-helpers'''
+      style: secondary
+      start: 23
+      end: 39
+  import { CENTER } from '../e2e-helpers.ts':
+    labels:
+    - source: import { CENTER } from '../e2e-helpers.ts'
+      style: primary
+      start: 0
+      end: 42
+    - source: '''../e2e-helpers.ts'''
+      style: secondary
+      start: 23
+      end: 42

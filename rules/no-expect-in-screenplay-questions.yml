@@ -1,0 +1,48 @@
+id: no-expect-in-screenplay-questions
+language: TypeScript
+severity: warning
+message: features/screenplay/questions.ts must not import expect -- a Question reads, it never asserts.
+note: >-
+  A Question returns what the app currently shows and states nothing about whether that is right,
+  which is exactly what makes it composable: features/grid-reference-lines.e2e.spec.ts and
+  features/camera-pan-and-zoom.e2e.spec.ts both wrap one in `expect.poll(...)`, and the caller is
+  what decides the matcher and owns the timeout. A Question that asserted internally would take
+  that decision away -- the poll would report the inner assertion's message instead of the outer
+  intent, and the retry window would be whatever the inner expect defaulted to rather than what the
+  scenario asked for. Put the assertion in features/screenplay/expectations.ts and keep the read
+  here.
+# ast-grep-rule-check: allow-unresolved-files authored in the screenplay-e2e-decomposition design
+# pass, before features/screenplay/questions.ts exists -- architect deletes this marker in the
+# review pass, once the file has landed and the glob resolves.
+#
+# SCOPED TO questions.ts ALONE, AND THAT IS THE WHOLE RULING. The tempting generalisation --
+# "only expectations.ts may call expect" -- is wrong here, because in Playwright the retrying
+# assertion IS the sanctioned synchronization primitive. features/screenplay/interactions.ts's
+# openPatternModal and choosePatternFromLibrary both await one as a WAIT (the modal has mounted;
+# Headless UI's ~100ms leave transition has finished and no longer covers the click point), not as
+# a statement of accepted behavior. A rule spanning the directory would report those two as
+# violations and the honest fix would be to replace them with page.waitForSelector, which is worse
+# on Playwright's own advice. So the ban is scoped to the one module whose contract is
+# non-assertion.
+#
+# BANNING THE IMPORT RATHER THAN THE CALL. `expect` is not a global under Playwright -- it reaches
+# a module only through this import -- so the import is the choke point, and matching it catches
+# `expect.poll(...)` and `expect(x).toBe(y)` alike without needing a pattern per call shape.
+#
+# `\bexpect\b` RATHER THAN A BARE SUBSTRING: expectations.ts's own exports are named
+# expectCellState / expectBlinker, and a module re-exporting or referencing one of those in an
+# import statement must not read as a violation. There is no word boundary after 'expect' in
+# 'expectCellState', so the trailing \b is what discriminates them -- see the valid fixture.
+files:
+  - 'features/screenplay/questions.ts'
+rule:
+  all:
+    - kind: import_statement
+    # The statement's own text. An import statement cannot contain the free-form comment prose that
+    # made a statement-text regex wrong for no-playwright-config-import-in-mutation-config, so the
+    # hazard that rule records does not reach this one.
+    - regex: '\bexpect\b'
+    - has:
+        field: source
+        kind: string
+        regex: '^[''"]@playwright/test[''"]$'
