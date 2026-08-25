@@ -1,0 +1,56 @@
+id: no-domain-imports-in-e2e-specs
+valid:
+  - import { test, expect } from '@playwright/test'
+  # The type-carrying form two specs use; still the same specifier, so still allowed.
+  - import { test, expect, type Page } from '@playwright/test'
+  - import { CENTER, dragPan, elementAtPoint, resetView, zoomPercent } from './e2e-helpers'
+  # The explicit-extension spelling. Both are live in this repo -- the specs import the barrel
+  # without an extension and cellQuery WITH one -- so allowing only one would be a rule about
+  # house style rather than about the boundary.
+  - import { CENTER } from './e2e-helpers.ts'
+  # The multi-line brace form grid-scrollbars and hud-layout-and-shortcuts actually use -- the one
+  # a statement-level regex would be most likely to get wrong.
+  - |
+    import {
+      axisLabelValues,
+      CENTER,
+      cellLocator,
+      dragPan,
+      rulerGroup,
+    } from './e2e-helpers'
+  # The one sanctioned reach into src/: the single encoding of how aliveness is expressed in the
+  # DOM. Three specs import it today, and no-aliveness-by-paint-class.yml exists to push them here
+  # rather than to the bg-gray-900/bg-white paint class.
+  - import { ALIVE_CELL_SELECTOR } from '../src/test-support/cellQuery.ts'
+  - import { cellLabel } from '../src/test-support/cellQuery'
+  # Ordinary module-local exports: no import path at all, so not this rule's business. These are
+  # what the `has: { field: source }` constraint exists for -- a bare kind: export_statement match
+  # would report both.
+  - export const FILLS_TRACK = 0.99
+  - |
+    export function helper() {
+      return true
+    }
+invalid:
+  # The direct route, and its type-only twin -- a type import leaks the domain vocabulary just as
+  # surely, and costs nothing to write.
+  - import { toggleCell } from '../src/gameOfLife'
+  - import type { Camera } from '../src/camera'
+  - export { CENTER } from '../src/camera'
+  # Side-effect import: no bindings, so a matcher keyed on the import clause would miss it.
+  - import '../src/main'
+  # Traversal through the allowlisted prefix -- stopped by the anchored regex, not by convention.
+  - import { CENTER } from './e2e-helpers/../src/gameOfLife'
+  # The Playwright-BDD step modules: right runner, wrong direction. The step registry is bddgen's
+  # to assemble, and a spec borrowing from it would couple the two layers the .feature separates.
+  - import { openLibrary } from './steps/pattern-library'
+  # features/screenplay/ is real and adjacent, and is exactly what the queued repoint slice will
+  # allowlist -- until then a spec reaching past the barrel is a finding, which is the point of
+  # allowlisting only the edges that exist.
+  - import { cellLocator } from './screenplay/elements'
+  # The JSDOM testing-library route: reaches the app without naming src/ once, which is what a
+  # src/-blocklist would pass and an allowlist catches.
+  - import { render } from '@testing-library/react'
+  - import { readFileSync } from 'node:fs'
+  # Prefix match on an allowlisted specifier -- what the ^...$ anchoring is for.
+  - import { x } from '@playwright/test-extra'

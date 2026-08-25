@@ -1,0 +1,102 @@
+id: no-domain-imports-in-e2e-specs
+snapshots:
+  export { CENTER } from '../src/camera':
+    labels:
+    - source: export { CENTER } from '../src/camera'
+      style: primary
+      start: 0
+      end: 38
+    - source: '''../src/camera'''
+      style: secondary
+      start: 23
+      end: 38
+  import '../src/main':
+    labels:
+    - source: import '../src/main'
+      style: primary
+      start: 0
+      end: 20
+    - source: '''../src/main'''
+      style: secondary
+      start: 7
+      end: 20
+  import type { Camera } from '../src/camera':
+    labels:
+    - source: import type { Camera } from '../src/camera'
+      style: primary
+      start: 0
+      end: 43
+    - source: '''../src/camera'''
+      style: secondary
+      start: 28
+      end: 43
+  import { CENTER } from './e2e-helpers/../src/gameOfLife':
+    labels:
+    - source: import { CENTER } from './e2e-helpers/../src/gameOfLife'
+      style: primary
+      start: 0
+      end: 56
+    - source: '''./e2e-helpers/../src/gameOfLife'''
+      style: secondary
+      start: 23
+      end: 56
+  import { cellLocator } from './screenplay/elements':
+    labels:
+    - source: import { cellLocator } from './screenplay/elements'
+      style: primary
+      start: 0
+      end: 51
+    - source: '''./screenplay/elements'''
+      style: secondary
+      start: 28
+      end: 51
+  import { openLibrary } from './steps/pattern-library':
+    labels:
+    - source: import { openLibrary } from './steps/pattern-library'
+      style: primary
+      start: 0
+      end: 53
+    - source: '''./steps/pattern-library'''
+      style: secondary
+      start: 28
+      end: 53
+  import { readFileSync } from 'node:fs':
+    labels:
+    - source: import { readFileSync } from 'node:fs'
+      style: primary
+      start: 0
+      end: 38
+    - source: '''node:fs'''
+      style: secondary
+      start: 29
+      end: 38
+  import { render } from '@testing-library/react':
+    labels:
+    - source: import { render } from '@testing-library/react'
+      style: primary
+      start: 0
+      end: 47
+    - source: '''@testing-library/react'''
+      style: secondary
+      start: 23
+      end: 47
+  import { toggleCell } from '../src/gameOfLife':
+    labels:
+    - source: import { toggleCell } from '../src/gameOfLife'
+      style: primary
+      start: 0
+      end: 46
+    - source: '''../src/gameOfLife'''
+      style: secondary
+      start: 27
+      end: 46
+  import { x } from '@playwright/test-extra':
+    labels:
+    - source: import { x } from '@playwright/test-extra'
+      style: primary
+      start: 0
+      end: 42
+    - source: '''@playwright/test-extra'''
+      style: secondary
+      start: 18
+      end: 42

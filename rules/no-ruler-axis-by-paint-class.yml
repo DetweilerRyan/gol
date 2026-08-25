@@ -31,11 +31,16 @@ note: >-
 # legitimate visual-contract assertions. Do not "complete" this regex speculatively: the sibling
 # rule's note records the same warning, for the same reason.
 #
-# THE TSX TWIN IS rules/no-ruler-axis-by-paint-class-tsx.yml. 'features/*.ts' does not match a
-# '.tsx' path, and a feature enters the black-box step form by being RENAMED .steps.test.ts ->
-# .steps.test.tsx, so without the twin a converted feature would leave this rule's coverage at the
-# moment of the rename with nothing failing. Keep the two matchers in step; ast-grep binds a rule
-# to one parser, so the duplication is necessary, exactly as for no-aliveness-by-paint-class.
+# THE TSX TWIN IS RETIRED, AND THE FIRST SLICE TO REOPEN THE HOLE RE-ADDS IT. 'features/*.ts' does
+# not match a '.tsx' path, which is why rules/no-ruler-axis-by-paint-class-tsx.yml existed; it was
+# authored alongside this rule against a conversion that never happened, and deleted by
+# delete-step-test-layer along with the .tsx layer itself. Measured on that slice's tree: nothing
+# .tsx remains anywhere under features/ or perf/, so the twin's files: glob resolved to nothing --
+# which npm run ast-grep:rules fails on -- and there was no path left to repoint it at.
+# SO: WHICHEVER SLICE FIRST ADDS A .tsx UNDER features/ OR perf/ RE-ADDS THE TWIN, in the same
+# commit, exactly as no-aliveness-by-paint-class records for its own. ast-grep binds a rule to one
+# parser, so the twin duplicates the matcher below by necessity; git show the deleted file rather
+# than rewriting it, since its \\* escaping is the subtle part and is explained just below.
 files:
   - 'features/*.ts'
   - 'perf/*.ts'

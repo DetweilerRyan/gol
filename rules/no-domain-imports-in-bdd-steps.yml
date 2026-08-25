@@ -13,9 +13,11 @@ note: >-
   registry is global across this directory, so the sharing is already in effect and an import
   would dress a registry fact up as a module dependency (see the ownership convention in
   CLAUDE.md's testing-structure section).
-# AN ALLOWLIST, NOT A BLOCKLIST ON 'src/', for the reason its sibling
-# rules/no-domain-imports-in-black-box-steps.yml already carries: a blocklist only ever knows the
-# routes someone thought of. Here the allowlist is also what makes features/e2e-helpers.ts the
+# AN ALLOWLIST, NOT A BLOCKLIST ON 'src/', for the reason the now-retired
+# rules/no-domain-imports-in-black-box-steps.yml carried (deleted by delete-step-test-layer with
+# the .steps.test.tsx layer it scoped; git show it for the full argument, and see the live sibling
+# rules/no-domain-imports-in-e2e-specs.yml, which inherits the same shape): a blocklist only ever
+# knows the routes someone thought of. Here the allowlist is also what makes features/e2e-helpers.ts the
 # single mandated entry point rather than merely the conventional one -- anything a step needs
 # that it cannot reach through that module has to be ADDED there, where it is written once and
 # shared, instead of being imported around per step module.

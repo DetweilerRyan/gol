@@ -85,7 +85,7 @@ note: >-
 # the outcome we want; the finding would then be "why is an accessible name in the composition
 # root", which is a better question than the one this rule asks.
 #
-# NO -ts TWIN, and this is the exact inverse of the argument no-ruler-axis-by-paint-class-tsx makes
+# NO -ts TWIN, and this is the exact inverse of the argument the retired no-ruler-axis-by-paint-class-tsx made
 # for having one. That pair needs both halves because its subject matter (a class name in a string)
 # occurs in .ts and .tsx alike, and a feature crosses between them by being renamed. Here the
 # subject matter is a JSX attribute, which is a parse error in a .ts file -- so a TypeScript-language

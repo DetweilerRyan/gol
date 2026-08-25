@@ -34,13 +34,19 @@ note: >-
 # classes: it would turn a correct assertion into a permanent finding and give this rule the dirty
 # baseline its scoping note above exists to avoid.
 #
-# THE TSX TWIN NOW EXISTS: rules/no-aliveness-by-paint-class-tsx.yml, added by the
-# black-box-acceptance-pilot slice, which is what first put .tsx files in features/. Note the glob
-# below does NOT cover them -- 'features/*.ts' must match the whole path and '.tsx' does not end in
-# '.ts' -- and a feature converts to the black-box form by being RENAMED .steps.test.ts ->
-# .steps.test.tsx, so a converted feature leaves this rule's coverage at the moment of the rename
-# with nothing failing. Keep the two matchers in step; ast-grep binds a rule to one parser, so the
-# duplication is necessary, the same as no-manual-memo-ts / -tsx.
+# THE TSX TWIN IS RETIRED, AND THE FIRST SLICE TO REOPEN THE HOLE RE-ADDS IT. Note the glob below
+# does NOT cover a .tsx path -- 'features/*.ts' must match the whole path and '.tsx' does not end
+# in '.ts' -- which is why rules/no-aliveness-by-paint-class-tsx.yml existed at all. It was added
+# by black-box-acceptance-pilot, which first put .tsx files in features/, and deleted by
+# delete-step-test-layer, which deleted the last of them: measured on that slice's tree, nothing
+# .tsx remains anywhere under features/ or perf/, so the twin's files: glob resolved to nothing and
+# npm run ast-grep:rules fails on exactly that. Repointing it had no target and an
+# allow-unresolved-files marker would have been permanent, which is worse than the retirement.
+# SO: WHICHEVER SLICE FIRST ADDS A .tsx UNDER features/ OR perf/ RE-ADDS THE TWIN, in the same
+# commit. That pre-commitment is not decoration -- this rule carried the identical one before the
+# twin first existed, and the pilot slice honoured it. ast-grep binds a rule to one parser, so the
+# twin is a near-verbatim duplicate of the matcher below by necessity, the same as
+# no-manual-memo-ts / -tsx; git show the deleted file rather than rewriting it from scratch.
 files:
   - 'features/*.ts'
   - 'perf/*.ts'

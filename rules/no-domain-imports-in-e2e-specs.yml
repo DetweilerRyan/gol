@@ -1,0 +1,70 @@
+id: no-domain-imports-in-e2e-specs
+language: TypeScript
+severity: warning
+message: A hand-written e2e spec may import only @playwright/test, ../src/test-support/cellQuery and ./e2e-helpers.
+note: >-
+  features/*.e2e.spec.ts drives the real application in a real browser through the `page` fixture
+  and nothing else. A spec that imports a framework-free module reaches past the browser to compute
+  its own expected answer from the same code under test, which is how a black-box layer quietly
+  becomes a white-box one -- and since the .feature text and the spec filename are unchanged either
+  way, nothing else in the repo would notice. Anything a spec needs beyond the three specifiers
+  below has to be ADDED to features/e2e-helpers.ts, where it is written once and shared, rather
+  than imported around per spec.
+  ../src/test-support/cellQuery is allowlisted deliberately and is not an exception to the above:
+  it is the single encoding of how a cell's aliveness is expressed in the DOM, and
+  rules/no-aliveness-by-paint-class.yml exists precisely to push this layer through it rather than
+  through the bg-gray-900/bg-white paint class.
+# WHY THIS RULE, AND WHAT IT IS NOT. It is NOT the successor to the retired
+# no-domain-imports-in-black-box-steps.yml -- that rule guarded features/*.steps.test.tsx, and the
+# successor to the layer it watched is rules/no-domain-imports-in-bdd-steps.yml over
+# features/steps/*.ts, which landed a slice earlier. This is NEW coverage over a file set that has
+# never been guarded at all: the eight hand-written Playwright specs. Once the jsdom step layer is
+# gone they are the only hand-written black-box files left in the repo, which is what makes the gap
+# worth closing now rather than the deletion of some other rule.
+#
+# AN ALLOWLIST, NOT A BLOCKLIST ON 'src/', for the reason its two siblings already carry: a
+# blocklist only ever knows the routes someone thought of. Cloned from
+# rules/no-domain-imports-in-bdd-steps.yml rather than invented -- same statement kinds, same
+# has: { field: source } shape, same anchoring.
+#
+# WHY `has: { field: source }` RATHER THAN A BARE regex ON THE STATEMENT. Requiring a source field
+# is what keeps an ordinary module-local `export const FILLS_TRACK = 0.99` or
+# `export function helper() {}` from reading as a violation. It is also what stops the mistake this
+# repo has now made twice: `export default ...` is itself an export_statement, so a statement-text
+# regex reads the COMMENTS inside it (see rules/no-playwright-config-import-in-mutation-config.yml,
+# where the first form of that rule reported a whole 23-line default export). A field-scoped match
+# cannot see a comment at all. Metavariables do not interpolate inside string literals, so the
+# specifier is matched by regex rather than by a pattern -- see CLAUDE.md.
+#
+# THE ^...$ ANCHORING IS LOAD-BEARING: without it '@playwright/test-extra' passes on a prefix, and
+# the './e2e-helpers/../src/gameOfLife' traversal spelling passes as well. Both are pinned as
+# invalid: cases in the fixture.
+#
+# MEASURED, NOT ASSUMED, against ast-grep 0.45.1 on this tree during the delete-step-test-layer
+# DESIGN pass: the fixture's 9 valid cases produce no finding (including the multi-line brace form
+# two specs actually use, and both extension spellings) while all 10 invalid cases fire; a scan of
+# the real tree is clean; and a planted `import { toggleCell } from '../src/gameOfLife'` in
+# features/infinite-grid.e2e.spec.ts produced exactly one finding. The fixture proves the matcher,
+# the live probe proves the files: glob -- the standing bargain in CLAUDE.md for a new rule.
+#
+# WHEN THE SPECS ARE REPOINTED AT features/screenplay/ (the queued slice after this one), this is a
+# ONE-LINE WIDENING: add `\./screenplay/[a-z][a-z0-9-]*|` to the alternation, borrowing the
+# single-kebab-segment class from the retired no-domain-imports-in-black-box-steps.yml (git show it),
+# and drop './e2e-helpers' once the barrel has no importers left. It is deliberately NOT written
+# that way now: features/screenplay/ exists, but no spec imports it, and allowlisting a shape
+# nobody imports yet is how an allowlist quietly becomes a blocklist -- the same warning
+# no-domain-imports-in-bdd-steps.yml records about its own future widening. That slice owns any
+# further rewrite of this allowlist.
+files:
+  - 'features/*.e2e.spec.ts'
+rule:
+  all:
+    # Both statement kinds: a re-export links the module at load time exactly as an import does.
+    - any:
+        - kind: import_statement
+        - kind: export_statement
+    - has:
+        field: source
+        kind: string
+        not:
+          regex: '^[''"](@playwright/test|\./e2e-helpers(\.ts)?|\.\./src/test-support/cellQuery(\.ts)?)[''"]$'
