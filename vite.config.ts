@@ -121,7 +121,8 @@ export default defineConfig({
     // `include`, on purpose: it inherits configDefaults.include and narrows
     // from there, so a newly added test file lands in `unit` by default and
     // fails loudly with "document is not defined" if it actually needed
-    // jsdom. A file can never fall between both projects and run nowhere.
+    // jsdom. A file can never fall between all three projects and run
+    // nowhere.
     //
     // THE ONE THING THAT CAN GO SILENTLY DEAD: `dom`'s include list names the
     // directories src/components/ and src/hooks/ by path. A vitest project
