@@ -1,0 +1,56 @@
+id: no-ruler-axis-by-paint-class-tsx
+snapshots:
+  const LOOSE = /span\[class\*="top-0.5"\]/:
+    labels:
+    - source: /span\[class\*="top-0.5"\]/
+      style: primary
+      start: 14
+      end: 41
+  const X_AXIS_CLASS = /top-0\.5/:
+    labels:
+    - source: /top-0\.5/
+      style: primary
+      start: 21
+      end: 31
+  const X_AXIS_RE = new RegExp('top-0\\.5'):
+    labels:
+    - source: '''top-0\\.5'''
+      style: primary
+      start: 29
+      end: 40
+  const Y_AXIS_CLASS = /left-0\.5/:
+    labels:
+    - source: /left-0\.5/
+      style: primary
+      start: 21
+      end: 32
+  const Y_AXIS_RE = new RegExp('left-0\\.5'):
+    labels:
+    - source: '''left-0\\.5'''
+      style: primary
+      start: 29
+      end: 41
+  expect(label.className).toContain('top-0.5'):
+    labels:
+    - source: '''top-0.5'''
+      style: primary
+      start: 34
+      end: 43
+  return ((await locator.getAttribute('class')) ?? '').includes('left-0.5'):
+    labels:
+    - source: '''left-0.5'''
+      style: primary
+      start: 62
+      end: 72
+  return page.locator('span[class*="left-0.5"]'):
+    labels:
+    - source: '''span[class*="left-0.5"]'''
+      style: primary
+      start: 20
+      end: 45
+  return page.locator('span[class*="top-0.5"]'):
+    labels:
+    - source: '''span[class*="top-0.5"]'''
+      style: primary
+      start: 20
+      end: 44

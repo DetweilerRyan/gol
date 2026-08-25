@@ -1,0 +1,61 @@
+id: no-ruler-axis-by-paint-class
+language: TypeScript
+severity: warning
+message: Resolve a ruler label's axis through the named role="group" (src/test-support/rulerQuery.ts), not through the top-0.5/left-0.5 edge class.
+note: >-
+  Which axis a ruler label belongs to now has an accessible representation: GridRuler.tsx wraps each
+  axis's labels in a role="group" named by rulerGroupLabel(axis) -- 'Column ruler' for the top strip,
+  'Row ruler' for the left one. The Tailwind edge class RulerLabel.tsx pins each span with is PAINT,
+  and reading it as an axis predicate couples a black-box layer to a styling decision it has no
+  business knowing. Use features/e2e-helpers.ts's rulerGroup(page, axis) -- page.getByRole('group',
+  { name: rulerGroupLabel(axis) }) -- or, in a jsdom layer, screen.getByRole('group', { name:
+  rulerGroupLabel(axis) }) plus within(). This is the same finding as no-aliveness-by-paint-class one
+  affordance later: before the ruler-label-axis-affordance slice, features/e2e-helpers.ts bucketed
+  labels with page.locator('span[class*="top-0.5"]') and its left-0.5 twin, and both rulers show a
+  bare '0' at the default camera, so the class was the ONLY thing telling a column number from a row
+  number -- for a test and for an assistive-technology user alike.
+# SCOPED TO THE BLACK-BOX LAYERS ON PURPOSE, AND DELIBERATELY NOT TO src/**.
+# src/components/RulerLabel.tsx is where `edgeClass = axis === 'x' ? 'top-0.5' : 'left-0.5'` is
+# DEFINED, and RulerLabel.test.tsx and GridRuler.test.tsx each assert it -- that is the VISUAL
+# contract (the group name says which axis a label is FOR; the class says which edge it is pinned
+# TO, and something must still assert the second), the same sanctioned split as Cell.test.tsx's
+# alive/dead paint pair under no-aliveness-by-paint-class. A src-wide version of this rule would
+# have a permanently dirty baseline on its first day. In features/ and perf/ these two class names
+# can only mean "which ruler is this", the baseline is clean (verified by grep at authoring time),
+# and no other checker looks there at all -- dry4ts runs over src alone.
+#
+# THE REGEX COVERS top-0.5 AND left-0.5 AND NOTHING ELSE, ALSO ON PURPOSE. The near neighbour is
+# `text-[10px]`, which identifies a span as a ruler label without saying which axis; it has no site
+# in features/ or perf/ today, and grid-reference-lines.e2e.spec.ts's sanctioned reading of
+# `border-l-2 border-l-gray-400` off a cell is the standing reminder that features/ does carry
+# legitimate visual-contract assertions. Do not "complete" this regex speculatively: the sibling
+# rule's note records the same warning, for the same reason.
+#
+# THE TSX TWIN IS rules/no-ruler-axis-by-paint-class-tsx.yml. 'features/*.ts' does not match a
+# '.tsx' path, and a feature enters the black-box step form by being RENAMED .steps.test.ts ->
+# .steps.test.tsx, so without the twin a converted feature would leave this rule's coverage at the
+# moment of the rename with nothing failing. Keep the two matchers in step; ast-grep binds a rule
+# to one parser, so the duplication is necessary, exactly as for no-aliveness-by-paint-class.
+files:
+  - 'features/*.ts'
+  - 'perf/*.ts'
+rule:
+  any:
+    # Both literal forms these sites take. A regex literal is its own node kind and is NOT reached
+    # by `kind: string` -- measured for the sibling rule against ast-grep 0.45.1 on this repo's own
+    # tree, where a string-only matcher found 4 of 14 sites. Matched with regex: on the node text
+    # rather than with a pattern, because the class name is a substring inside a longer literal
+    # ('span[class*="top-0.5"]') and metavariables do not interpolate inside string literals.
+    #
+    # THE `\\*` IS LOAD-BEARING AND IS NOT AN ESCAPE OF THE `\.`; it is why this pair is not a
+    # verbatim copy of no-aliveness-by-paint-class's matcher. That rule's class names carry no dot,
+    # so the same string served both node kinds. These do, and a dot is escaped IN THE SOURCE TEXT
+    # the matcher reads: `/top-0\.5/` is a regex node whose text contains a literal backslash, and
+    # `new RegExp('top-0\\.5')` a string node whose text contains two. A plain `top-0\.5` matches
+    # neither -- measured: with it, the fixture's two regex-literal cases reported [Missing] while
+    # every plain-string case passed, which is the dangerous direction (the rule looks live because
+    # most of it fires). `\\*` is zero-or-more literal backslashes, so all three spellings match.
+    - kind: string
+      regex: 'top-0\\*\.5|left-0\\*\.5'
+    - kind: regex
+      regex: 'top-0\\*\.5|left-0\\*\.5'

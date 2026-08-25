@@ -1,0 +1,47 @@
+id: no-ruler-axis-by-paint-class-tsx
+language: Tsx
+severity: warning
+message: Resolve a ruler label's axis through the named role="group" (src/test-support/rulerQuery.ts), not through the top-0.5/left-0.5 edge class.
+note: >-
+  The TSX half of no-ruler-axis-by-paint-class. See the -ts twin's note for the full argument: which
+  axis a ruler label belongs to has an accessible representation -- the role="group" GridRuler.tsx
+  wraps each axis in, named 'Column ruler'/'Row ruler' by rulerGroupLabel(axis) -- and the Tailwind
+  edge class RulerLabel.tsx pins each span with is PAINT, so reading it as an axis predicate couples
+  a black-box layer to a styling decision it has no business knowing.
+# WHY THIS TWIN EXISTS, WRITTEN AT THE SAME TIME AS THE RULE RATHER THAN AFTER THE FIRST HOLE.
+# 'features/*.ts' does NOT match a '.tsx' path (the glob must match the whole path, and '.tsx' does
+# not end in '.ts'), and a feature enters the black-box step form by being RENAMED .steps.test.ts ->
+# .steps.test.tsx -- so every future conversion would drop out of the -ts twin's coverage at the
+# moment of the rename, with nothing failing. no-aliveness-by-paint-class learned that the
+# expensive way: it was written before features/ held any .tsx at all and had to pre-commit the
+# first slice that added one to supply its twin. grid-reference-lines is one of the six unmigrated
+# features queued behind that pilot, and it is precisely the feature this rule polices.
+#
+# THE GLOB REACHES features/harness/, MEASURED RATHER THAN ASSUMED: ast-grep's `*` crosses '/', so
+# 'features/*.tsx' matches features/harness/board.tsx and features/harness/<feature>.tsx as well as
+# a file at features/ root -- confirmed against ast-grep 0.45.1 with a throwaway probe during
+# split-acceptance-harness's design pass and recorded in no-aliveness-by-paint-class-tsx.yml. A
+# per-feature harness module is therefore covered by this rule the day it lands, which matters here
+# because a harness is exactly where a converted grid-reference-lines would put its ruler queries.
+#
+# NO perf/*.tsx ENTRY, deliberately, even though the -ts twin covers perf/*.ts: perf/ holds no .tsx
+# file, and npm run ast-grep:rules fails on a files: glob that resolves to nothing. Whichever slice
+# first adds one adds the entry.
+#
+# ast-grep parses TypeScript and TSX with different parsers and a rule is bound to one of them, so
+# the matcher below is duplicated from the -ts twin by necessity -- the same near-duplication
+# no-aliveness-by-paint-class / -tsx (the -ts half of that pair carries no suffix) and
+# no-manual-memo-ts / -tsx already carry.
+files:
+  - 'features/*.tsx'
+rule:
+  any:
+    # Both literal forms these sites take. A regex literal is its own node kind and is NOT reached
+    # by `kind: string` -- see the -ts twin, where that was measured against this repo's own tree,
+    # along with why the `\\*` is there: these class names contain a dot, which is escaped in the
+    # source text of every regex-literal and RegExp-string spelling, so a plain `\.` matches only
+    # the unescaped one.
+    - kind: string
+      regex: 'top-0\\*\.5|left-0\\*\.5'
+    - kind: regex
+      regex: 'top-0\\*\.5|left-0\\*\.5'
