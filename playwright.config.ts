@@ -1,4 +1,7 @@
+import { existsSync } from 'node:fs'
+import path from 'node:path'
 import { defineConfig, devices } from '@playwright/test'
+import { defineBddProject } from 'playwright-bdd'
 import { devPort } from './dev-port.ts'
 
 // One-time setup after `npm install`: run `npx playwright install chromium`
@@ -13,6 +16,26 @@ const baseURL = `http://localhost:${devPort()}`
 // here so every pixel-math formula in this suite (and in the generated bdd
 // project added alongside this one) can rely on exactly 1280x900.
 const chromium1280x900 = { ...devices['Desktop Chrome'], viewport: { width: 1280, height: 900 } }
+
+// pattern-library.feature has no step module yet -- it is T4's (pattern-
+// library-steps) entire subject. bddgen is all-or-nothing: one feature with
+// a missing step definition and it exits 1 having generated nothing at all,
+// so the feature is excluded here rather than left to fail the whole run.
+const bdd = defineBddProject({
+  name: 'bdd',
+  features: ['features/*.feature', '!features/pattern-library.feature'],
+  steps: 'features/steps/*.ts',
+})
+
+// T4 (pattern-library-steps) deletes this guard and the '!' entry above,
+// together. The guard is what makes that deletion mandatory rather than
+// remembered: the moment pattern-library's steps exist, the exclusion is
+// stale and this config refuses to load.
+if (existsSync(path.join(import.meta.dirname, 'features/steps/pattern-library.ts'))) {
+  throw new Error(
+    'features/steps/pattern-library.ts exists -- remove the pattern-library exclusion from `features` above and delete this guard.',
+  )
+}
 
 export default defineConfig({
   fullyParallel: true,
@@ -34,7 +57,10 @@ export default defineConfig({
   // would otherwise inherit a root-level testMatch built for hand-written
   // *.e2e.spec.ts files, match nothing under its own generated output, and
   // silently contribute zero tests while the suite still reports green.
-  projects: [{ name: 'e2e', testDir: './features', testMatch: '**/*.e2e.spec.ts', use: chromium1280x900 }],
+  projects: [
+    { name: 'e2e', testDir: './features', testMatch: '**/*.e2e.spec.ts', use: chromium1280x900 },
+    { ...bdd, use: chromium1280x900 },
+  ],
   // reuseExistingServer is safe only because the port is per-worktree and
   // vite.config.ts sets strictPort: anything answering on this URL is this
   // worktree's own dev server, or nothing at all. On a shared 5173 it would

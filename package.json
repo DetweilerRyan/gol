@@ -33,7 +33,7 @@
     "test:mutation": "stryker run --incremental",
     "test:mutation:full": "stryker run --incremental --force",
     "test:mutation:scripts": "stryker run stryker.scripts.config.json",
-    "test:e2e": "playwright test",
+    "test:e2e": "bddgen && playwright test",
     "test:perf": "playwright test --config playwright.perf.config.ts",
     "build:perf": "vite build --mode perf --outDir dist-perf",
     "preview:perf": "vite preview --outDir dist-perf --strictPort",
