@@ -17,6 +17,24 @@
 // existing contract: a summary is read from the JSON reporter's own output,
 // or it's null and callers treat that as an infrastructure error rather than
 // guessing from exit code and stdout chrome.
+// NOT SPLIT, deliberately -- read this before reaching for the seam again.
+// This file carries ~165 mutants, over `cleaner`'s 100+ "consider a split"
+// guide, and the arithmetic doesn't rescue the obvious seam: the spawn half is
+// ~30 of them, leaving ~135 in the report-reading half, still over. The density
+// is intrinsic to defensive parsing of a foreign JSON shape -- three type
+// guards, three status-string literals, and a fallback per nesting level --
+// not two concerns sharing a file. Splitting the report half out would have to
+// export RawSuite/RawSpec/RawTest across a file boundary, which trades a
+// private representation (the same convention cache.ts states explicitly) for
+// no reduction in coupling. Corroborating: CRAP <= 6 at 100% line coverage,
+// and a scoped mutation scan at 98.27% whose five survivors are argued
+// equivalent at their own sites.
+//
+// The falsifier, so this is a decision rather than a standing excuse: if a
+// second consumer ever wants only the spawn half -- another batched runner, a
+// scripts/-root shared spawner -- split along that seam then, and the spawn
+// half keeps this filename (CLAUDE.md names it as the thing that spawns
+// bddgen/playwright).
 import { spawnSync, type SpawnSyncReturns } from 'node:child_process'
 import { readFileSync } from 'node:fs'
 import path from 'node:path'

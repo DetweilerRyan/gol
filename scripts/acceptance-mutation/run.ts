@@ -10,8 +10,8 @@
 // one-vitest-spawn-per-mutant form): every mutant and every baseline is
 // written as its own `.feature` file into a shared temp `features/`
 // directory, and one `bddgen` + one `playwright test` invocation runs every
-// generated spec in that directory at once (see mutant-tree.ts and
-// playwright-runner.ts). This is *two* phases, not one combined batch:
+// generated spec in that directory at once (see mutant-plan.ts,
+// mutant-tree.ts and playwright-runner.ts). This is *two* phases, not one combined batch:
 //
 //   Phase 1 writes only the unmutated baseline copy of each target that has
 //   at least one mutable Examples cell, generates and runs it, and records
@@ -39,9 +39,9 @@ import path from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { assertBaselineSpecGreen, classifyMutant, summarizeResults, type Outcome } from './classify.ts'
 import { discoverTargets, filterTargets, parseArgs, type MutationTarget } from './discovery.ts'
-import { applyMutation, listMutableCells, type MutableCell } from './gherkin-examples.ts'
-import { baselineFeatureFileName, mutantFeatureFileName, specFileName } from './mutant-tree.ts'
-import { mutateValue } from './mutation-rules.ts'
+import { listMutableCells } from './gherkin-examples.ts'
+import { buildMutantRecords, type TargetPlan } from './mutant-plan.ts'
+import { baselineFeatureFileName, specFileName } from './mutant-tree.ts'
 import {
   bddgenSpawn,
   genSpawnFailureReason,
@@ -70,12 +70,10 @@ function resolveTargets(): MutationTarget[] {
   return filterTargets(discoverTargets(FEATURES_DIR), feature)
 }
 
-interface TargetPlan {
-  target: MutationTarget
-  featureText: string
-  cells: MutableCell[]
-}
-
+// The I/O half of planning: reading each target's feature text off disk. What
+// the mutants derived from it then are is mutant-plan.ts's, which is pure and
+// therefore inside crap4ts/Stryker's scripts/ scope -- this file is not, by
+// the `**/run.ts` exclusion both configs carry.
 function loadTargetPlans(targets: MutationTarget[]): TargetPlan[] {
   return targets.map((target) => {
     const featureText = readFileSync(path.join(FEATURES_DIR, target.feature), 'utf8')
@@ -132,32 +130,6 @@ function runBaselinePhase(activePlans: TargetPlan[]): { baselineCounts: Map<stri
   } finally {
     rmSync(dir, { recursive: true, force: true })
   }
-}
-
-interface MutantRecord {
-  target: MutationTarget
-  cell: MutableCell
-  mutatedValue: string
-  fileName: string
-  text: string
-}
-
-function buildMutantRecords(activePlans: TargetPlan[]): MutantRecord[] {
-  const records: MutantRecord[] = []
-  for (const plan of activePlans) {
-    plan.cells.forEach((cell, ordinal) => {
-      const seedKey = `${plan.target.feature}:${cell.rowIndex}:${cell.columnName}`
-      const mutatedValue = mutateValue(cell.value, seedKey)
-      records.push({
-        target: plan.target,
-        cell,
-        mutatedValue,
-        fileName: mutantFeatureFileName(plan.target.feature, ordinal),
-        text: applyMutation(plan.featureText, cell, mutatedValue),
-      })
-    })
-  }
-  return records
 }
 
 // Phase 2: write every mutant across every active target, run the batch

@@ -1,0 +1,18 @@
+id: no-playwright-config-import-in-mutation-config
+valid:
+  # The four imports playwright.acceptance-mutation.config.ts actually carries.
+  - import { defineConfig } from '@playwright/test'
+  - import { defineBddProject } from 'playwright-bdd'
+  - import { baseURL, chromium1280x900 } from './playwright-shared.ts'
+  - import { devPort } from './dev-port.ts'
+  # playwright-shared.ts's own name is the near-miss this rule must not fire on.
+  - import shared from './playwright-shared'
+  # The perf config carries no load-time guard, so it is not this rule's concern.
+  - import perf from './playwright.perf.config.ts'
+invalid:
+  - import base from './playwright.config'
+  - import base from './playwright.config.ts'
+  - import { baseURL } from './playwright.config.ts'
+  - import './playwright.config.ts'
+  - import base from '../playwright.config.ts'
+  - export { baseURL } from './playwright.config.ts'

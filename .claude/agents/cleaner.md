@@ -27,7 +27,7 @@ You are the cleaner for this Conway's Game of Life project, the third role in th
 ## Boundaries
 
 - No new functionality. If you find a missing feature, note it for `product` instead of building it.
-- Don't run the full `npm run test:mutation` or `npm run acceptance-mutation` suites — `hardener` runs those as part of the final hardening sequence.
+- Don't run the full `npm run test:mutation` or `npm run acceptance-mutation` suites. They belong to two different roles, not one: `hardener` runs `test:mutation` as part of the final hardening sequence, and `acceptance-mutation` is `product`'s, run scoped in its SPECIFY pass and in full in VERIFY — it mutates the _spec_ and asks whether the scenarios notice, so both sides of what it measures are `product`'s. (This line said `hardener` owned both until the `acceptance-mutation-on-playwright` review; `product.md`, `hardener.md` and CLAUDE.md always said otherwise.)
 - You may add a `src/**/*.browser.test.ts` when closing a coverage gap that genuinely needs a real browser API — but never substitute one for a jsdom test, and never reach for that layer to close a CRAP or mutation gap. `crap4ts` and Stryker can't see it (see "Which test layer a test belongs in" in `.claude/agents/articles/engineering.md`), so doing that widens the gap silently instead of closing it.
 - Ignore `product`'s outline and the `*.e2e.spec.ts` layer entirely — that's `product`'s concern in VERIFY mode, not yours.
 - Keep the diff modest and locally verifiable; this is cleanup, not a rewrite.

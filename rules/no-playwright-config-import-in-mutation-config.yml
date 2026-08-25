@@ -1,0 +1,46 @@
+id: no-playwright-config-import-in-mutation-config
+language: TypeScript
+severity: warning
+message: playwright.acceptance-mutation.config.ts must not import playwright.config.ts -- share values through playwright-shared.ts instead.
+note: >-
+  The two Playwright configs share values (baseURL, the 1280x900 Chromium device) and the DRY
+  temptation is to have the mutation config import the e2e one and spread it. It must not:
+  playwright.config.ts carries a top-level generated-output guard that THROWS when
+  .features-gen/bdd/features is missing or stale, and that guard runs at module load, before any
+  export is read. Importing it would make the acceptance-mutation runner die on a fresh clone or
+  after a .feature edit, for a reason that has nothing to do with the run -- and it fails in the
+  worst direction, working on a warm tree and breaking on a cold one, so a green local run proves
+  nothing. playwright-shared.ts exists precisely so this ban costs nothing: put anything both
+  configs need there. See playwright.acceptance-mutation.config.ts's own header comment.
+files:
+  - 'playwright.acceptance-mutation.config.ts'
+rule:
+  all:
+    # Both statement kinds, so a re-export (`export { x } from './playwright.config'`)
+    # is caught as well as an import -- either one links the module at load time and
+    # therefore runs the guard. Dynamic `import('./playwright.config')` is deliberately
+    # out of scope: it is a call_expression, and matching it by kind would double-report
+    # every enclosing call. It fails identically at runtime and is not the shape a
+    # DRY-motivated edit reaches for.
+    - any:
+        - kind: import_statement
+        - kind: export_statement
+    # Matched on the `source` field -- the module specifier node itself -- rather than
+    # by a regex over the whole statement's text, which is what no-domain-imports-in-bdd-steps
+    # does and for a reason measured here: `export default defineConfig({ ... })` IS an
+    # export_statement, and a statement-text regex reads the COMMENTS inside that object
+    # literal. This config's own body mentions `playwright.config.ts` in a comment, so the
+    # first form of this rule reported the whole 23-line default export as a violation.
+    # A field-scoped match cannot see a comment at all.
+    #
+    # Metavariables do not interpolate inside string literals (see CLAUDE.md), so the
+    # specifier is matched by regex rather than by a pattern. `playwright\.config` with the
+    # dot escaped reaches './playwright.config', './playwright.config.ts' and
+    # '../playwright.config', while matching neither './playwright-shared.ts' (no such
+    # substring) nor this file's own name (`playwright.acceptance-mutation.config`). A
+    # bare side-effect import (`import './playwright.config'`, no `from` at all) carries a
+    # `source` field too, so it is caught on the same clause.
+    - has:
+        field: source
+        kind: string
+        regex: '[''"][^''"]*playwright\.config'

@@ -1,0 +1,62 @@
+id: no-playwright-config-import-in-mutation-config
+snapshots:
+  export { baseURL } from './playwright.config.ts':
+    labels:
+    - source: export { baseURL } from './playwright.config.ts'
+      style: primary
+      start: 0
+      end: 48
+    - source: '''./playwright.config.ts'''
+      style: secondary
+      start: 24
+      end: 48
+  import './playwright.config.ts':
+    labels:
+    - source: import './playwright.config.ts'
+      style: primary
+      start: 0
+      end: 31
+    - source: '''./playwright.config.ts'''
+      style: secondary
+      start: 7
+      end: 31
+  import base from '../playwright.config.ts':
+    labels:
+    - source: import base from '../playwright.config.ts'
+      style: primary
+      start: 0
+      end: 42
+    - source: '''../playwright.config.ts'''
+      style: secondary
+      start: 17
+      end: 42
+  import base from './playwright.config':
+    labels:
+    - source: import base from './playwright.config'
+      style: primary
+      start: 0
+      end: 38
+    - source: '''./playwright.config'''
+      style: secondary
+      start: 17
+      end: 38
+  import base from './playwright.config.ts':
+    labels:
+    - source: import base from './playwright.config.ts'
+      style: primary
+      start: 0
+      end: 41
+    - source: '''./playwright.config.ts'''
+      style: secondary
+      start: 17
+      end: 41
+  import { baseURL } from './playwright.config.ts':
+    labels:
+    - source: import { baseURL } from './playwright.config.ts'
+      style: primary
+      start: 0
+      end: 48
+    - source: '''./playwright.config.ts'''
+      style: secondary
+      start: 24
+      end: 48
