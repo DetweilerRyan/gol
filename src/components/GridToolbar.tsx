@@ -13,7 +13,7 @@ export default function GridToolbar({ onZoomIn, onZoomOut, onReset, onPatterns }
       <Button
         plain
         type="button"
-        aria-label="Zoom in"
+        aria-label={'Zoom in'}
         onClick={onZoomIn}
         className="h-8! w-8! justify-center rounded! !bg-gray-900 font-medium! !text-white transition-colors hover:!bg-gray-700"
       >
@@ -22,7 +22,7 @@ export default function GridToolbar({ onZoomIn, onZoomOut, onReset, onPatterns }
       <Button
         plain
         type="button"
-        aria-label="Zoom out"
+        aria-label={'Zoom out'}
         onClick={onZoomOut}
         className="h-8! w-8! justify-center rounded! !bg-gray-900 font-medium! !text-white transition-colors hover:!bg-gray-700"
       >
@@ -31,7 +31,7 @@ export default function GridToolbar({ onZoomIn, onZoomOut, onReset, onPatterns }
       <Button
         plain
         type="button"
-        aria-label="Reset view"
+        aria-label={'Reset view'}
         onClick={onReset}
         className="h-8! justify-center rounded! !bg-gray-900 px-2! text-sm! font-medium! !text-white transition-colors hover:!bg-gray-700"
       >
@@ -40,7 +40,7 @@ export default function GridToolbar({ onZoomIn, onZoomOut, onReset, onPatterns }
       <Button
         plain
         type="button"
-        aria-label="Open pattern library"
+        aria-label={'Open pattern library'}
         onClick={onPatterns}
         className="h-8! justify-center rounded! !bg-gray-900 px-2! text-sm! font-medium! !text-white transition-colors hover:!bg-gray-700"
       >

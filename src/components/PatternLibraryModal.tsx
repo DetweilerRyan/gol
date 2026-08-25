@@ -16,7 +16,7 @@ interface PatternLibraryModalProps {
 // (Headless's default), so the toHaveCount(0) test assertions still hold.
 export default function PatternLibraryModal({ open, onSelectPattern, onClose }: PatternLibraryModalProps) {
   return (
-    <Dialog open={open} onClose={onClose} aria-label="Pattern library" size="sm">
+    <Dialog open={open} onClose={onClose} aria-label={'Pattern library'} size="sm">
       <DialogTitle>Pattern Library</DialogTitle>
       <DialogBody>
         {PATTERN_CATEGORIES.map((category) => (

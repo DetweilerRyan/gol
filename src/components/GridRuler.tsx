@@ -45,13 +45,13 @@ export default function GridRuler({ gridlines, camera }: GridRulerProps) {
   return (
     <>
       {/* eslint-disable-next-line jsx-a11y/prefer-tag-over-role */}
-      <div role="group" aria-label="Column ruler">
+      <div role={'group'} aria-label={'Column ruler'}>
         {gridlines.x.map((x) => (
           <RulerLabel key={`x-${x}`} axis="x" coordinate={x} camera={camera} />
         ))}
       </div>
       {/* eslint-disable-next-line jsx-a11y/prefer-tag-over-role */}
-      <div role="group" aria-label="Row ruler">
+      <div role={'group'} aria-label={'Row ruler'}>
         {gridlines.y.map((y) => (
           <RulerLabel key={`y-${y}`} axis="y" coordinate={y} camera={camera} />
         ))}

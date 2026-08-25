@@ -57,7 +57,7 @@ export default function Scrollbar({ axis, metrics, trackLengthPx, onDrag, conten
   return (
     <div className={`${trackClass} rounded bg-gray-200/60`}>
       <div
-        role="scrollbar"
+        role={'scrollbar'}
         aria-orientation={axis === 'x' ? 'horizontal' : 'vertical'}
         aria-controls={contentId}
         aria-label={axis === 'x' ? 'Horizontal scroll' : 'Vertical scroll'}
