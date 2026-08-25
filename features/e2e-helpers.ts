@@ -1,5 +1,11 @@
 import { expect, type Locator, type Page } from '@playwright/test'
-import { CELL_ALIVE_ATTR, CELL_ALIVE_VALUE, CELL_DEAD_VALUE, cellSelector } from '../src/test-support/cellQuery.ts'
+import {
+  ALIVE_CELL_SELECTOR,
+  CELL_ALIVE_ATTR,
+  CELL_ALIVE_VALUE,
+  CELL_DEAD_VALUE,
+  cellSelector,
+} from '../src/test-support/cellQuery.ts'
 
 // Derived from centeredCamera(1280, 900) in src/camera.ts: default camera
 // is { offsetX: -32, offsetY: -22.5, cellSize: 20 }, so world (0,0) renders
@@ -104,9 +110,8 @@ export async function shiftWheel(page: Page, atX: number, atY: number, deltaX: n
   await page.keyboard.up('Shift')
 }
 
-export async function dragScrollbarThumb(page: Page, orientation: 'horizontal' | 'vertical', deltaPx: number) {
-  const thumb = page.locator(`[role="scrollbar"][aria-orientation="${orientation}"]`)
-  const box = (await thumb.boundingBox())!
+export async function dragScrollbarThumb(page: Page, orientation: ScrollbarOrientation, deltaPx: number) {
+  const box = (await scrollbarThumb(page, orientation).boundingBox())!
   const x = box.x + box.width / 2
   const y = box.y + box.height / 2
   await page.mouse.move(x, y)
@@ -119,11 +124,10 @@ export async function dragScrollbarThumb(page: Page, orientation: 'horizontal' |
   await page.mouse.up()
 }
 
-// Brings an off-screen world cell into view at a spot clear of the
-// toolbar/scrollbars/HUD, toggles it, then resets back to the default
-// camera so later pixel-math assertions can keep using the default
-// (offsetX=-32, offsetY=-22.5) formulas.
-export async function toggleFarCell(page: Page, worldX: number, worldY: number) {
+// Pans an off-screen world cell to a spot clear of the toolbar/scrollbars/HUD,
+// leaving the camera there. Callers are responsible for getting back to the
+// default view -- toggleFarCell and withCellInView below both do.
+export async function panCellIntoView(page: Page, worldX: number, worldY: number) {
   const SPOT = { x: 200, y: 200 }
   const CELL_SIZE = 20
   const DEFAULT_OFFSET_X = -32
@@ -133,6 +137,178 @@ export async function toggleFarCell(page: Page, worldX: number, worldY: number) 
   const dx = -(desiredOffsetX - DEFAULT_OFFSET_X) * CELL_SIZE
   const dy = -(desiredOffsetY - DEFAULT_OFFSET_Y) * CELL_SIZE
   await dragPan(page, CENTER.x, CENTER.y, dx, dy, 20)
+}
+
+// Brings an off-screen world cell into view at a spot clear of the
+// toolbar/scrollbars/HUD, toggles it, then resets back to the default
+// camera so later pixel-math assertions can keep using the default
+// (offsetX=-32, offsetY=-22.5) formulas.
+export async function toggleFarCell(page: Page, worldX: number, worldY: number) {
+  await panCellIntoView(page, worldX, worldY)
   await cellLocator(page, worldX, worldY).click()
   await resetView(page)
+}
+
+// Runs `body` with the given world cell guaranteed to have a DOM node.
+//
+// Only a bounded window of the infinite grid is mounted at a time, so a cell
+// far from the camera has no element at all -- a click or an aria-pressed read
+// on it fails with "no such element" rather than with anything about the
+// game. A cell that is ALREADY mounted is left exactly where it is, so the
+// default-camera pixel formulas above stay valid for the common case; only an
+// off-screen one costs a pan, and the camera is put back afterwards even if
+// `body` throws.
+export async function withCellInView<T>(page: Page, worldX: number, worldY: number, body: () => Promise<T>) {
+  if ((await cellLocator(page, worldX, worldY).count()) > 0) return body()
+  await panCellIntoView(page, worldX, worldY)
+  try {
+    return await body()
+  } finally {
+    await resetView(page)
+  }
+}
+
+// ---------------------------------------------------------------------------
+// Below this line: helpers added for the generated Playwright-BDD step modules
+// under features/steps/. They are shared with the hand-written specs above --
+// same layer, same rules -- but a step module's import allowlist is only
+// playwright-bdd, @playwright/test and this file, so anything a step needs
+// that it cannot reach through here has to be ADDED here rather than imported
+// around.
+// ---------------------------------------------------------------------------
+
+// Every scenario starts on a freshly loaded grid, but the step that opens it
+// is a scenario's FIRST step in one feature and a LATER one in another:
+// "a camera centered on the origin at the default zoom" opens every
+// camera-pan-and-zoom scenario and follows a live-cell step in
+// grid-scrollbars'. Navigating unconditionally would wipe the cells the
+// earlier step just placed, so this navigates only from the blank page
+// Playwright hands each test.
+export async function openGrid(page: Page) {
+  if (page.url().startsWith('http')) return
+  await page.goto('/')
+}
+
+// Where a world cell's top-left corner currently sits on screen -- i.e. the
+// pixel worldToScreen puts it at. Comparing this against CENTER (where the
+// origin sits under the default camera) is how a step states which way the
+// camera moved without ever naming a camera field.
+export async function cellScreenPosition(page: Page, x: number, y: number): Promise<{ x: number; y: number }> {
+  const box = await cellLocator(page, x, y).boundingBox()
+  if (!box) throw new Error(`Cell ${x}, ${y} is not mounted, so it has no screen position`)
+  return { x: box.x, y: box.y }
+}
+
+// Aliveness as the domain word rather than as the attribute value, so a step
+// can compare an observed outcome against a Gherkin Examples cell directly.
+export async function cellState(page: Page, x: number, y: number): Promise<'alive' | 'dead'> {
+  const value = await cellLocator(page, x, y).getAttribute(CELL_ALIVE_ATTR)
+  if (value === CELL_ALIVE_VALUE) return 'alive'
+  if (value === CELL_DEAD_VALUE) return 'dead'
+  throw new Error(`Cell ${x}, ${y} announces ${CELL_ALIVE_ATTR}="${value}", which is neither alive nor dead`)
+}
+
+// Counts only MOUNTED live cells -- the grid is infinite, so there is no such
+// thing as counting all of them. Sound wherever every cell that could change
+// is inside the mounted window.
+export function aliveCellCount(page: Page): Promise<number> {
+  return page.locator(ALIVE_CELL_SELECTOR).count()
+}
+
+export async function generationCount(page: Page): Promise<number> {
+  const text = await generationText(page)
+  return Number(text!.replace('Generation: ', ''))
+}
+
+export async function zoomIn(page: Page) {
+  await page.locator('button[aria-label="Zoom in"]').click()
+}
+
+export async function zoomOut(page: Page) {
+  await page.locator('button[aria-label="Zoom out"]').click()
+}
+
+// THE ONE ARIA REACH-AROUND IN THIS FILE, and it is confined here on purpose.
+//
+// Ruler labels are <span> elements whose text is just the coordinate number
+// (RulerLabel, rendered per major gridline by GridRuler.tsx, supplied through
+// Grid's overlay slot), bucketed by axis via the class it's pinned to
+// (top-0.5 for the x-axis strip, left-0.5 for the y-axis strip). No other
+// on-screen text matches a bare "-?\d+" pattern (the zoom badge has a "%"
+// suffix, the generation counter has a "Generation: " prefix).
+//
+// There is no accessible affordance that says which axis a label belongs to,
+// which is why these two select on a Tailwind class. Moved here out of
+// grid-reference-lines.e2e.spec.ts so the class name appears exactly once in
+// features/ and the step module under features/steps/ carries no selector of
+// its own. DELETION TRIGGER: the `ruler-label-axis-affordance` slice. When a
+// real axis affordance lands, these two functions are what it replaces -- one
+// edit, in this file, and nothing else in features/ has to move.
+export function xAxisLabels(page: Page): Locator {
+  return page.locator('span[class*="top-0.5"]')
+}
+
+export function yAxisLabels(page: Page): Locator {
+  return page.locator('span[class*="left-0.5"]')
+}
+
+// The coordinate numbers currently on show along one edge of the viewport --
+// what a player reads off the ruler.
+export async function axisLabelValues(page: Page, axis: 'x' | 'y'): Promise<number[]> {
+  const texts = await (axis === 'x' ? xAxisLabels(page) : yAxisLabels(page)).allTextContents()
+  return texts.map(Number)
+}
+
+export type ScrollbarOrientation = 'horizontal' | 'vertical'
+
+export function scrollbarThumb(page: Page, orientation: ScrollbarOrientation): Locator {
+  return page.locator(`[role="scrollbar"][aria-orientation="${orientation}"]`)
+}
+
+// How much of its track the thumb covers, as a fraction: 1 means the whole of
+// the content fits in the viewport. The track is the thumb's own parent (it
+// is inset from the viewport edge by the corner gap, so the viewport size is
+// NOT the track length), reached by DOM position rather than by class.
+//
+// REACH-AROUND: this is geometry, because nothing announces it. The thumb
+// carries aria-valuenow/valuemin/valuemax, which express only the thumb's
+// POSITION -- there is no accessible expression of how much of the content is
+// visible, so "fills its track" cannot be read out of the accessibility tree.
+export async function thumbTrackFraction(page: Page, orientation: ScrollbarOrientation): Promise<number> {
+  const thumb = scrollbarThumb(page, orientation)
+  const thumbBox = (await thumb.boundingBox())!
+  const trackBox = (await thumb.locator('..').boundingBox())!
+  return orientation === 'horizontal' ? thumbBox.width / trackBox.width : thumbBox.height / trackBox.height
+}
+
+// Where along its track the thumb sits, 0 (start) to 100 (end), read from the
+// accessible value the scrollbar announces rather than measured in pixels.
+export async function thumbPositionPercent(page: Page, orientation: ScrollbarOrientation): Promise<number> {
+  const value = await scrollbarThumb(page, orientation).getAttribute('aria-valuenow')
+  return Number(value)
+}
+
+// Scenario-scoped scratch state for the generated step modules.
+//
+// A Gherkin step's arguments are only its own placeholders, so a Then that
+// speaks of something an earlier Given named ("the blinker should be
+// vertical") needs somewhere to keep it. playwright-bdd's own answer is a
+// custom fixture, which would have to live in a module the step modules'
+// three-import allowlist forbids -- so the store is keyed by the `page`
+// fixture instead, which Playwright creates fresh for every test and never
+// shares between them. Every value a step needs to carry is a coordinate or a
+// count, so `number` is the whole type: nothing here is a smuggling route for
+// application state.
+const scenarioNumbers = new WeakMap<Page, Map<string, number>>()
+
+export function remember(page: Page, key: string, value: number): void {
+  const store = scenarioNumbers.get(page) ?? new Map<string, number>()
+  store.set(key, value)
+  scenarioNumbers.set(page, store)
+}
+
+export function recall(page: Page, key: string): number {
+  const value = scenarioNumbers.get(page)?.get(key)
+  if (value === undefined) throw new Error(`No step in this scenario has established "${key}"`)
+  return value
 }
