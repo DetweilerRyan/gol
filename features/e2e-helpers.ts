@@ -2,13 +2,8 @@ import { expect, type Page } from '@playwright/test'
 import { CELL_ALIVE_ATTR, CELL_ALIVE_VALUE, CELL_DEAD_VALUE } from '../src/test-support/cellQuery.ts'
 
 import { CENTER, DEFAULT_CELL_SIZE_PX, DEFAULT_OFFSET_X, DEFAULT_OFFSET_Y } from './screenplay/viewport.ts'
-import {
-  cellLocator,
-  patternLibraryModal,
-  patternsButton,
-  scrollbarThumb,
-  type ScrollbarOrientation,
-} from './screenplay/elements.ts'
+import { cellLocator } from './screenplay/elements.ts'
+import { choosePatternFromLibrary, dragPan, openPatternModal, resetView } from './screenplay/interactions.ts'
 
 export { CENTER, DEFAULT_CELL_SIZE_PX } from './screenplay/viewport.ts'
 export { cellLocator, patternsButton, patternLibraryModal, previewCells, rulerGroup } from './screenplay/elements.ts'
@@ -26,6 +21,20 @@ export {
   thumbTrackFraction,
   thumbPositionPercent,
 } from './screenplay/questions.ts'
+export {
+  nextGeneration,
+  resetView,
+  dragPan,
+  hoverCell,
+  blurFocus,
+  shiftWheel,
+  zoomIn,
+  zoomOut,
+  dragScrollbarThumb,
+  openGrid,
+  openPatternModal,
+  choosePatternFromLibrary,
+} from './screenplay/interactions.ts'
 
 // The one way this suite asserts aliveness. It reads aria-pressed -- the
 // accessible state a screen reader announces -- and not the bg-gray-900 /
@@ -46,95 +55,9 @@ export function expectCellState(page: Page, x: number, y: number, state: 'alive'
   )
 }
 
-export async function nextGeneration(page: Page) {
-  await page.locator('#next-generation-button').click()
-}
-
-export async function resetView(page: Page) {
-  await page.locator('button[aria-label="Reset view"]').click()
-}
-
-// useGridPointerGestures reports panByPixels per pointermove with the
-// incremental delta (drag.lastX/lastY), so the net camera shift always equals
-// the requested (dx, dy) regardless of step count.
-export async function dragPan(page: Page, fromX: number, fromY: number, dx: number, dy: number, steps = 10) {
-  await page.mouse.move(fromX, fromY)
-  await page.mouse.down()
-  await page.mouse.move(fromX + dx, fromY + dy, { steps })
-  await page.mouse.up()
-}
-
-// Opens the library AND waits for it to be there. The wait is the load-bearing
-// half: every toHaveCount(0) this file asserts about the modal is satisfied
-// vacuously by a locator that resolves to nothing, so "the library closed" only
-// means anything once "the library was open" has been asserted through the same
-// locator. Positively asserting it here covers both negative sites, since every
-// path to either one opens the modal through this function first.
-//
-// It also removes a latent race: patternCategoryInLibrary's evaluateAll does
-// not auto-wait, so it would read an empty list off a dialog React had not
-// mounted yet.
-export async function openPatternModal(page: Page) {
-  await patternsButton(page).click()
-  await expect(patternLibraryModal(page)).toHaveCount(1)
-}
-
-// Arms a pattern from an ALREADY-OPEN library. Split out of selectPattern
-// below because pattern-library.feature reads the library's contents before
-// it arms anything: its category step needs the modal open, and its shape
-// step then arms from that same open modal. Re-opening in between is not
-// available -- the modal makes the rest of the page inert, so the Patterns
-// button cannot be reached while it is up.
-export async function choosePatternFromLibrary(page: Page, name: string) {
-  await page.getByRole('button', { name, exact: true }).click()
-
-  // Headless UI's Dialog stays mounted through its ~100ms leave transition,
-  // still covering the click point during that window -- waiting for it to
-  // fully unmount here (rather than at each call site) keeps the subsequent
-  // mouse.move/click in every caller from landing on the closing dialog
-  // instead of the grid underneath.
-  await expect(patternLibraryModal(page)).toHaveCount(0)
-}
-
 export async function selectPattern(page: Page, name: string) {
   await openPatternModal(page)
   await choosePatternFromLibrary(page, name)
-}
-
-// Puts the pointer over a world cell, which is what arms the preview: Grid's
-// trackHover reports the cell under the pointer, and nothing is previewed
-// until it has.
-export async function hoverCell(page: Page, x: number, y: number) {
-  await cellLocator(page, x, y).hover()
-}
-
-// Playwright keeps keyboard focus on the button that was last clicked.
-// "Enter with nothing focused" scenarios need an explicit blur first --
-// otherwise Enter would trigger that button's own native click instead of
-// exercising the no-op case they're meant to check.
-export async function blurFocus(page: Page) {
-  await page.evaluate(() => (document.activeElement as HTMLElement | null)?.blur())
-}
-
-export async function shiftWheel(page: Page, atX: number, atY: number, deltaX: number, deltaY: number) {
-  await page.mouse.move(atX, atY)
-  await page.keyboard.down('Shift')
-  await page.mouse.wheel(deltaX, deltaY)
-  await page.keyboard.up('Shift')
-}
-
-export async function dragScrollbarThumb(page: Page, orientation: ScrollbarOrientation, deltaPx: number) {
-  const box = (await scrollbarThumb(page, orientation).boundingBox())!
-  const x = box.x + box.width / 2
-  const y = box.y + box.height / 2
-  await page.mouse.move(x, y)
-  await page.mouse.down()
-  if (orientation === 'horizontal') {
-    await page.mouse.move(x + deltaPx, y, { steps: 10 })
-  } else {
-    await page.mouse.move(x, y + deltaPx, { steps: 10 })
-  }
-  await page.mouse.up()
 }
 
 // Pans an off-screen world cell to a spot clear of the toolbar/scrollbars/HUD,
@@ -195,26 +118,6 @@ export async function clickCell(page: Page, x: number, y: number) {
 // that it cannot reach through here has to be ADDED here rather than imported
 // around.
 // ---------------------------------------------------------------------------
-
-// Every scenario starts on a freshly loaded grid, but the step that opens it
-// is a scenario's FIRST step in one feature and a LATER one in another:
-// "a camera centered on the origin at the default zoom" opens every
-// camera-pan-and-zoom scenario and follows a live-cell step in
-// grid-scrollbars'. Navigating unconditionally would wipe the cells the
-// earlier step just placed, so this navigates only from the blank page
-// Playwright hands each test.
-export async function openGrid(page: Page) {
-  if (page.url().startsWith('http')) return
-  await page.goto('/')
-}
-
-export async function zoomIn(page: Page) {
-  await page.locator('button[aria-label="Zoom in"]').click()
-}
-
-export async function zoomOut(page: Page) {
-  await page.locator('button[aria-label="Zoom out"]').click()
-}
 
 // The five cells that describe a blinker's shape, wherever it is centered:
 // its three live cells along the blinker's own axis, and the two neighbors
