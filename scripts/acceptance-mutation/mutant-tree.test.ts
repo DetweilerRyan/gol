@@ -18,10 +18,6 @@ describe('mutantFeatureFileName', () => {
       mutantFeatureFileName('camera-pan-and-zoom.feature', 0),
     )
   })
-
-  it('throws naming the offending filename when it does not end in .feature', () => {
-    expect(() => mutantFeatureFileName('infinite-grid.steps.test.ts', 0)).toThrow(/infinite-grid\.steps\.test\.ts/)
-  })
 })
 
 describe('baselineFeatureFileName', () => {
@@ -38,9 +34,19 @@ describe('baselineFeatureFileName', () => {
   it('stays distinct from any mutant filename for the same target', () => {
     expect(baselineFeatureFileName('infinite-grid.feature')).not.toBe(mutantFeatureFileName('infinite-grid.feature', 0))
   })
+})
 
-  it('throws naming the offending filename when it does not end in .feature', () => {
-    expect(() => baselineFeatureFileName('infinite-grid')).toThrow(/infinite-grid/)
+// Both mutantFeatureFileName and baselineFeatureFileName funnel through the
+// same private baseName() validation in mutant-tree.ts, so their
+// non-.feature rejection is one behavior tested twice rather than two --
+// covered here once, per function, instead of as a near-identical `it` in
+// each describe block above.
+describe('rejects a filename that does not end in .feature', () => {
+  it.each([
+    { name: 'mutantFeatureFileName', derive: (f: string) => mutantFeatureFileName(f, 0) },
+    { name: 'baselineFeatureFileName', derive: baselineFeatureFileName },
+  ])('$name throws naming the offending filename', ({ derive }) => {
+    expect(() => derive('infinite-grid.steps.test.ts')).toThrow(/infinite-grid\.steps\.test\.ts/)
   })
 })
 

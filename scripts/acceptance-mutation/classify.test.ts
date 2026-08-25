@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { assertBaselineSpecGreen, classifyMutant, summarizeResults } from './classify.ts'
+import { assertBaselineSpecGreen, classifyMutant, summarizeResults, type Outcome } from './classify.ts'
 
 const green = (numTotalTests: number) => ({ numTotalTests, numFailedTests: 0, numSkippedTests: 0 })
 
@@ -97,14 +97,24 @@ describe('assertBaselineSpecGreen', () => {
 })
 
 describe('summarizeResults', () => {
-  it('tallies each outcome and computes a percentage score', () => {
-    const results = [{ outcome: 'killed' as const }, { outcome: 'killed' as const }, { outcome: 'survived' as const }]
-    expect(summarizeResults(results)).toEqual({ total: 3, killed: 2, survived: 1, errored: 0, scorePercent: '66.7' })
-  })
-
-  it('counts errored separately from survived', () => {
-    const results = [{ outcome: 'killed' as const }, { outcome: 'error' as const }]
-    expect(summarizeResults(results)).toEqual({ total: 2, killed: 1, survived: 0, errored: 1, scorePercent: '50.0' })
+  it.each<{ name: string; outcomes: Outcome[]; expected: ReturnType<typeof summarizeResults> }>([
+    {
+      name: 'tallies each outcome and computes a percentage score',
+      outcomes: ['killed', 'killed', 'survived'],
+      expected: { total: 3, killed: 2, survived: 1, errored: 0, scorePercent: '66.7' },
+    },
+    {
+      name: 'counts errored separately from survived',
+      outcomes: ['killed', 'error'],
+      expected: { total: 2, killed: 1, survived: 0, errored: 1, scorePercent: '50.0' },
+    },
+    {
+      name: 'is 0.0%, not NaN%, when every mutant survived',
+      outcomes: ['survived', 'survived'],
+      expected: { total: 2, killed: 0, survived: 2, errored: 0, scorePercent: '0.0' },
+    },
+  ])('$name', ({ outcomes, expected }) => {
+    expect(summarizeResults(outcomes.map((outcome) => ({ outcome })))).toEqual(expected)
   })
 
   it('is 100.0% killed of 100.0%, not NaN%, when there are zero mutants at all', () => {
@@ -114,10 +124,5 @@ describe('summarizeResults', () => {
     // `killed / results.length` divides by zero when a target's Examples
     // table (or the whole selection) contributes no mutants at all.
     expect(summarizeResults([])).toEqual({ total: 0, killed: 0, survived: 0, errored: 0, scorePercent: '100.0' })
-  })
-
-  it('is 0.0%, not NaN%, when every mutant survived', () => {
-    const results = [{ outcome: 'survived' as const }, { outcome: 'survived' as const }]
-    expect(summarizeResults(results)).toEqual({ total: 2, killed: 0, survived: 2, errored: 0, scorePercent: '0.0' })
   })
 })

@@ -83,8 +83,8 @@ Neither tool is malfunctioning, so no upstream fix is coming: Stryker's instrume
 
 ## Acceptance pipeline
 
-- This repo has already built its own local adaptation of unclebob/Acceptance-Pipeline-Specification's concept — `scripts/acceptance-mutation/` and `.feature`/`.steps.test.ts(x)` pairs via `@amiceli/vitest-cucumber` — rather than installing APS's own `gherkin-parser`/`gherkin-mutator` binaries. Use those existing scripts and conventions; don't introduce a separate acceptance-pipeline toolchain.
-- Gherkin acceptance mutation in this repo means `npm run acceptance-mutation`, which mutates `.feature` Examples-table values (never source code) and reruns the corresponding `.steps.test.ts(x)` file — both extensions are discovered, since the extension is what separates the direct-call step form from the black-box one.
+- This repo has already built its own local adaptation of unclebob/Acceptance-Pipeline-Specification's concept — `scripts/acceptance-mutation/` — rather than installing APS's own `gherkin-parser`/`gherkin-mutator` binaries. Use this existing script and its conventions; don't introduce a separate acceptance-pipeline toolchain.
+- Gherkin acceptance mutation in this repo means `npm run acceptance-mutation`, which mutates `.feature` Examples-table values (never source code) and reruns the target's generated Playwright spec (via `bddgen` against `features/steps/*.ts`, batched across every target — see CLAUDE.md's `scripts/acceptance-mutation/` entry) to check whether the scenario notices. Targets are every `.feature` file present in `features/`; the runner no longer pairs one against a `*.steps.test.ts(x)` file.
 
 ## Working inside scripts/
 

@@ -82,12 +82,31 @@ function loadTargetPlans(targets: MutationTarget[]): TargetPlan[] {
   })
 }
 
+// The two run-level stop conditions runLevelAbortReason enforces, plus the
+// per-spec skipped count that -- unlike flaky/errors -- is enforced one
+// level down, inside classifyMutant/assertBaselineSpecGreen (a skipped spec
+// scores `error`, never silently folds into a kill or a survive). All three
+// are carried back out of a phase that *didn't* abort. `errored: 0` plus a
+// clean exit is real evidence every one of them was zero (see
+// runLevelAbortReason and classify.ts's own comments) -- printing this in
+// report() is what makes that evidence visible to a reader instead of only
+// to the code that checked it.
+interface PhaseStats {
+  flaky: number
+  errors: number
+  skipped: number
+}
+
+function sumSkipped(summary: { bySpecFile: Record<string, { numSkippedTests: number }> }): number {
+  return Object.values(summary.bySpecFile).reduce((total, spec) => total + spec.numSkippedTests, 0)
+}
+
 // Phase 1: write one unmutated copy per active target, run the batch once,
 // and return each target's feature filename mapped to its baseline spec
-// count. Throws (aborting before any mutant is written) if bddgen fails, the
-// Playwright run itself reports a run-level problem, or any one target's
-// baseline isn't green.
-function runBaselinePhase(activePlans: TargetPlan[]): Map<string, number> {
+// count, alongside the phase's own run-level stats. Throws (aborting before
+// any mutant is written) if bddgen fails, the Playwright run itself reports
+// a run-level problem, or any one target's baseline isn't green.
+function runBaselinePhase(activePlans: TargetPlan[]): { baselineCounts: Map<string, number>; stats: PhaseStats } {
   const dir = mkdtempSync(path.join(GEN_BASE_DIR, 'baseline-'))
   try {
     const featuresDir = path.join(dir, 'features')
@@ -111,7 +130,7 @@ function runBaselinePhase(activePlans: TargetPlan[]): Map<string, number> {
       const count = assertBaselineSpecGreen(plan.target.feature, spec, summary!.bySpecFile[spec])
       baselineCounts.set(plan.target.feature, count)
     }
-    return baselineCounts
+    return { baselineCounts, stats: { flaky: summary!.flaky, errors: summary!.errors, skipped: sumSkipped(summary!) } }
   } finally {
     rmSync(dir, { recursive: true, force: true })
   }
@@ -145,10 +164,14 @@ function buildMutantRecords(activePlans: TargetPlan[]): MutantRecord[] {
 
 // Phase 2: write every mutant across every active target, run the batch
 // once, and classify each mutant against its target's phase-1 baseline
-// count. Throws (surfacing the whole run as an error) on the same run-level
-// conditions phase 1 checks -- neither is attributable to any one mutant, so
-// neither can be scored as a per-mutant outcome.
-function runMutantPhase(activePlans: TargetPlan[], baselineCounts: Map<string, number>): MutantResult[] {
+// count, alongside the phase's own run-level stats. Throws (surfacing the
+// whole run as an error) on the same run-level conditions phase 1 checks --
+// neither is attributable to any one mutant, so neither can be scored as a
+// per-mutant outcome.
+function runMutantPhase(
+  activePlans: TargetPlan[],
+  baselineCounts: Map<string, number>,
+): { results: MutantResult[]; stats: PhaseStats } {
   const records = buildMutantRecords(activePlans)
 
   const dir = mkdtempSync(path.join(GEN_BASE_DIR, 'mutants-'))
@@ -168,7 +191,7 @@ function runMutantPhase(activePlans: TargetPlan[], baselineCounts: Map<string, n
     const abortReason = runLevelAbortReason(summary)
     if (abortReason) throw new Error(`Mutant phase aborted: ${abortReason}`)
 
-    return records.map((record) => {
+    const results = records.map((record) => {
       const spec = specFileName(record.fileName)
       const baselineTotalTests = baselineCounts.get(record.target.feature)!
       const outcome = classifyMutant(baselineTotalTests, summary!.bySpecFile[spec])
@@ -181,6 +204,7 @@ function runMutantPhase(activePlans: TargetPlan[], baselineCounts: Map<string, n
         outcome,
       }
     })
+    return { results, stats: { flaky: summary!.flaky, errors: summary!.errors, skipped: sumSkipped(summary!) } }
   } finally {
     rmSync(dir, { recursive: true, force: true })
   }
@@ -205,24 +229,35 @@ function main(): void {
   const zeroMutantFeatures = plans.filter((p) => p.cells.length === 0).map((p) => p.target.feature)
 
   let results: MutantResult[] = []
+  // Named by phase so a printed 0 is legible as "checked, and clean" for
+  // that specific phase, rather than a single run-wide total that can't
+  // distinguish "baseline was clean, mutant phase wasn't" from the reverse.
+  const phaseStats: { phase: string; stats: PhaseStats }[] = []
   if (activePlans.length > 0) {
     mkdirSync(GEN_BASE_DIR, { recursive: true })
     try {
-      const baselineCounts = runBaselinePhase(activePlans)
-      results = runMutantPhase(activePlans, baselineCounts)
+      const baseline = runBaselinePhase(activePlans)
+      phaseStats.push({ phase: 'baseline', stats: baseline.stats })
+      const mutants = runMutantPhase(activePlans, baseline.baselineCounts)
+      phaseStats.push({ phase: 'mutant', stats: mutants.stats })
+      results = mutants.results
     } catch (err) {
       console.error((err as Error).message)
       process.exit(1)
     }
   }
 
-  report(results, zeroMutantFeatures)
+  report(results, zeroMutantFeatures, phaseStats)
 
   const survivedOrErrored = results.filter((r) => r.outcome !== 'killed')
   process.exit(survivedOrErrored.length > 0 ? 1 : 0)
 }
 
-function report(results: MutantResult[], zeroMutantFeatures: string[]): void {
+function report(
+  results: MutantResult[],
+  zeroMutantFeatures: string[],
+  phaseStats: { phase: string; stats: PhaseStats }[],
+): void {
   if (results.length > 0) {
     const widths = {
       feature: Math.max(7, ...results.map((r) => r.feature.length)),
@@ -247,6 +282,18 @@ function report(results: MutantResult[], zeroMutantFeatures: string[]): void {
 
   if (zeroMutantFeatures.length > 0) {
     console.log(`0 mutants (no Examples table, or filtered out): ${zeroMutantFeatures.join(', ')}`)
+  }
+
+  // flaky/errors are enforced by runLevelAbortReason (a nonzero either one
+  // throws before this point is ever reached); skipped is enforced one
+  // level down, per spec, by classifyMutant/assertBaselineSpecGreen (see
+  // PhaseStats' own comment). All three are printed here so that
+  // enforcement is auditable rather than only implicit in a clean exit.
+  // retries:0 in playwright.acceptance-mutation.config.ts is what makes a
+  // nonzero flaky count here mean "something outside this run re-ran a
+  // test" rather than an ordinary retry succeeding.
+  for (const { phase, stats } of phaseStats) {
+    console.log(`${phase} phase: ${stats.flaky} flaky, ${stats.errors} run-level error(s), ${stats.skipped} skipped`)
   }
 
   const { total, killed, survived, errored, scorePercent } = summarizeResults(results)

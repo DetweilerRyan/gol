@@ -84,6 +84,23 @@ describe('readPlaywrightSummary', () => {
     return file
   }
 
+  // One top-level suite, with `fields` overriding the zero-tests defaults
+  // (title/suites/specs) -- shared by the malformed-shape tests below, all
+  // of which check the same outcome (an empty SpecSummary for that file)
+  // from a different way of getting there. An explicit `specs: undefined`
+  // (or `suites: undefined`) in `fields` drops the key from the JSON
+  // entirely, JSON.stringify's own treatment of `undefined` properties,
+  // which is what lets one helper cover both "field present but empty" and
+  // "field missing" cases.
+  function summaryForSuite(fields: Record<string, unknown>): PlaywrightRunSummary {
+    const suite = { title: 'x', suites: [], specs: [], ...fields }
+    const report = JSON.stringify({ suites: [suite], stats: { flaky: 0 } })
+    return readPlaywrightSummary(jsonPath(report)) as PlaywrightRunSummary
+  }
+
+  const zeroTests = { numTotalTests: 0, numFailedTests: 0, numSkippedTests: 0 }
+  const oneFailedTest = { numTotalTests: 1, numFailedTests: 1, numSkippedTests: 0 }
+
   // Shape pinned against a real Playwright 1.62.1 JSON-reporter run of
   // playwright.acceptance-mutation.config.ts (see playwright-runner.ts's
   // module comment) -- trimmed to the fields this module actually reads,
@@ -240,16 +257,117 @@ describe('readPlaywrightSummary', () => {
   })
 
   it('reports zero tests for a suite with no specs at all, rather than throwing', () => {
-    const empty = JSON.stringify({
-      suites: [{ title: 'x', file: 'out/empty.feature.spec.js', suites: [], specs: [] }],
+    const summary = summaryForSuite({ file: 'out/empty.feature.spec.js' })
+    expect(summary.bySpecFile['empty.feature.spec.js']).toEqual(zeroTests)
+  })
+
+  // The false-branch twin of the case above: `specs` absent entirely
+  // (rather than present-and-empty) takes the same zero-tests path, through
+  // collectStatusesFromSpecs's own Array.isArray guard rather than an empty
+  // array literal.
+  it('reports zero tests for a suite whose specs field is missing entirely', () => {
+    const summary = summaryForSuite({ file: 'out/no-specs.feature.spec.js', specs: undefined })
+    expect(summary.bySpecFile['no-specs.feature.spec.js']).toEqual(zeroTests)
+  })
+
+  it('skips a spec entry with no tests property rather than crashing', () => {
+    const summary = summaryForSuite({ file: 'out/no-tests-key.feature.spec.js', specs: [{ title: 'a' }] })
+    expect(summary.bySpecFile['no-tests-key.feature.spec.js']).toEqual(zeroTests)
+  })
+
+  it('ignores a spec whose tests field is present but not an array', () => {
+    const summary = summaryForSuite({
+      file: 'out/non-array-tests.feature.spec.js',
+      specs: [{ title: 'a', tests: {} }],
+    })
+    expect(summary.bySpecFile['non-array-tests.feature.spec.js']).toEqual(zeroTests)
+  })
+
+  it('ignores a test entry with no status property, and one whose status is not a string', () => {
+    const summary = summaryForSuite({
+      file: 'out/bad-tests.feature.spec.js',
+      specs: [{ title: 'a', tests: [{ noStatus: true }, { status: 1 }] }],
+    })
+    expect(summary.bySpecFile['bad-tests.feature.spec.js']).toEqual(zeroTests)
+  })
+
+  // The nested-suite twin of "skips a top-level suite entry with no file
+  // property" above: a *child* suite failing isRawSuite must stop the
+  // recursion there rather than throwing or silently reading through it.
+  it('stops recursing into a nested suite entry with no file property', () => {
+    const summary = summaryForSuite({ file: 'out/nested.feature.spec.js', suites: [{ title: 'not a suite' }] })
+    expect(summary.bySpecFile['nested.feature.spec.js']).toEqual(zeroTests)
+  })
+
+  // The case the test above can't tell apart from a correctly-working
+  // recursion: a nested suite that fails isRawSuite (no `file` key) but
+  // carries real, well-formed test data of its own. isRawSuite rejecting it
+  // is only observable when there is something for a wrongly-permitted
+  // recursion to leak into the parent's count -- an empty malformed child,
+  // as above, looks identical whether or not the recursion happens at all.
+  it('does not count tests from a nested suite entry with no file property', () => {
+    const summary = summaryForSuite({
+      file: 'out/nested-with-data.feature.spec.js',
+      suites: [{ specs: [{ title: 'a', tests: [{ status: 'unexpected' }] }] }],
+    })
+    expect(summary.bySpecFile['nested-with-data.feature.spec.js']).toEqual(zeroTests)
+  })
+
+  // isRawSuite/isRawSpec/isRawTest are each `typeof value === 'object' &&
+  // value !== null && '<key>' in value`. `null` is the one value where
+  // `typeof` alone can't distinguish it from a real object (typeof null ===
+  // 'object'), so it's the case most likely to slip past a narrowed guard
+  // undetected; a bare string exercises the ordinary typeof-fails path.
+  // Both belong in the same array as a well-formed sibling, rather than as
+  // the array's sole content, so a wrongly-permitted entry has real
+  // downstream state (a property access on `null`, or `'key' in` a
+  // primitive) to fail on instead of silently contributing nothing.
+  it.each([
+    {
+      name: 'skips null and non-object entries in specs rather than crashing',
+      file: 'out/malformed-specs.feature.spec.js',
+      fields: { specs: [null, 'not an object', 42, { title: 'a', tests: [{ status: 'unexpected' }] }] },
+    },
+    {
+      name: 'ignores null and non-object entries in a spec tests array rather than crashing',
+      file: 'out/malformed-tests.feature.spec.js',
+      fields: { specs: [{ title: 'a', tests: [null, 'not an object', 42, { status: 'unexpected' }] }] },
+    },
+  ])('$name', ({ file, fields }) => {
+    const summary = summaryForSuite({ file, ...fields })
+    expect(summary.bySpecFile[path.basename(file)]).toEqual(oneFailedTest)
+  })
+
+  it('stops recursing into null and non-object nested suite entries rather than crashing', () => {
+    const summary = summaryForSuite({
+      file: 'out/malformed-suites.feature.spec.js',
+      suites: [null, 'not an object', 42],
+    })
+    expect(summary.bySpecFile['malformed-suites.feature.spec.js']).toEqual(zeroTests)
+  })
+
+  it('is null when stats is missing entirely, not just when stats.flaky is', () => {
+    expect(readPlaywrightSummary(jsonPath(JSON.stringify({ suites: [] })))).toBeNull()
+  })
+
+  // typeof null === 'object', so `stats === null` is the one check that
+  // actually distinguishes "no usable stats" here -- `typeof stats !==
+  // 'object'` alone is false for null and would let it through.
+  it('is null when stats is null, not just when it is absent', () => {
+    expect(readPlaywrightSummary(jsonPath(JSON.stringify({ suites: [], stats: null })))).toBeNull()
+  })
+
+  // isRawSuite only requires a `file` *key*, not a string value -- the
+  // `typeof rawSuite.file !== 'string'` half of the guard is what actually
+  // rejects this entry, and does so before path.basename(rawSuite.file)
+  // would throw on a non-string.
+  it('skips a top-level suite entry whose file property is not a string', () => {
+    const malformed = JSON.stringify({
+      suites: [{ title: 'x', file: 123, suites: [], specs: [] }],
       stats: { flaky: 0 },
     })
-    const summary = readPlaywrightSummary(jsonPath(empty)) as PlaywrightRunSummary
-    expect(summary.bySpecFile['empty.feature.spec.js']).toEqual({
-      numTotalTests: 0,
-      numFailedTests: 0,
-      numSkippedTests: 0,
-    })
+    const summary = readPlaywrightSummary(jsonPath(malformed)) as PlaywrightRunSummary
+    expect(summary.bySpecFile).toEqual({})
   })
 })
 
@@ -291,6 +409,30 @@ describe('genSpawnFailureReason', () => {
       stderr: '',
     })
     expect(reason).toMatch(/stdout detail/)
+  })
+
+  it('ends with a bare colon, not "undefined", when both stderr and stdout are empty', () => {
+    const reason = genSpawnFailureReason('bddgen', {
+      status: 1,
+      signal: null,
+      output: [],
+      pid: 0,
+      stdout: '',
+      stderr: '',
+    })
+    expect(reason).toBe('bddgen exited 1: ')
+  })
+
+  it('trims surrounding whitespace off the detail it reports', () => {
+    const reason = genSpawnFailureReason('bddgen', {
+      status: 1,
+      signal: null,
+      output: [],
+      pid: 0,
+      stdout: '',
+      stderr: '  missing step definition  \n',
+    })
+    expect(reason).toBe('bddgen exited 1: missing step definition')
   })
 })
 
