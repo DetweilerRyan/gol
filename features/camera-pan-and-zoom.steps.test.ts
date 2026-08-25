@@ -1,14 +1,6 @@
 import { describeFeature, loadFeature } from '@amiceli/vitest-cucumber'
 import { expect } from 'vitest'
-import {
-  centeredCamera,
-  DEFAULT_CELL_SIZE,
-  panCamera,
-  zoomCameraAtPoint,
-  ZOOM_FACTOR,
-  zoomPercentage,
-  type Camera,
-} from '../src/camera'
+import { centeredCamera, panCamera, zoomCameraAtPoint, ZOOM_FACTOR, zoomPercentage, type Camera } from '../src/camera'
 import { computeMajorGridlines, computeVisibleRange } from '../src/gridGeometry'
 
 // ACCEPTANCE_MUTATION_FEATURE_FILE lets the acceptance-mutation runner point
@@ -16,7 +8,22 @@ import { computeMajorGridlines, computeVisibleRange } from '../src/gridGeometry'
 // scripts/acceptance-mutation/) without ever touching the real one.
 const feature = await loadFeature(process.env.ACCEPTANCE_MUTATION_FEATURE_FILE ?? './camera-pan-and-zoom.feature')
 
-const DEFAULT_CAMERA: Camera = { offsetX: 0, offsetY: 0, cellSize: DEFAULT_CELL_SIZE }
+// The viewport these scenarios are told about. Only the reset scenario's prose
+// names it, but every scenario depends on it: "centered on the origin" is
+// centering *for* a viewport, and reset returns the view to the one it started
+// in, so the two must be the same viewport rather than coincidentally equal
+// literals.
+const VIEWPORT_WIDTH_PX = 800
+const VIEWPORT_HEIGHT_PX = 600
+
+// "A camera centered on the origin at the default zoom" is the application's
+// own boot state: useInitialCentering hands centeredCamera the first non-zero
+// viewport measurement it sees. A camera whose offset is merely zero is a
+// different thing -- worldToScreen puts the origin in the top-left CORNER, not
+// the middle of the view -- and the only vocabulary that could honestly
+// describe that state is the offset wording .gherkin-lintrc bans from the
+// contract outright. So the contract cannot mean it, and this is what it means.
+const DEFAULT_CAMERA: Camera = centeredCamera(VIEWPORT_WIDTH_PX, VIEWPORT_HEIGHT_PX)
 
 // One zoom step, in both directions, is ZOOM_FACTOR -- the only step size the
 // application has. The zoom-in and zoom-out toolbar buttons hardcode it and no
@@ -56,20 +63,26 @@ function ascending(labels: readonly number[]): number[] {
 
 describeFeature(feature, ({ Scenario }) => {
   Scenario('Panning moves the viewport without changing the zoom level', ({ Given, When, Then, And }) => {
+    let before: Camera
     let camera: Camera
 
     Given('a camera centered on the origin at the default zoom', () => {
-      camera = DEFAULT_CAMERA
+      before = DEFAULT_CAMERA
+      camera = before
     })
     When('I pan the camera by 40 pixels right and 20 pixels down', () => {
       camera = panCamera(camera, 40, 20)
     })
+    // Stated against where the camera started rather than against zero. The
+    // absolute form these two assertions used to take was only ever meaningful
+    // while the Given sat at offset zero: from a genuinely centered camera it
+    // passes for a pan that never happened.
     Then('the camera should have moved left and up over the grid', () => {
-      expect(camera.offsetX).toBeLessThan(0)
-      expect(camera.offsetY).toBeLessThan(0)
+      expect(camera.offsetX).toBeLessThan(before.offsetX)
+      expect(camera.offsetY).toBeLessThan(before.offsetY)
     })
     And('the zoom level should be unchanged', () => {
-      expect(camera.cellSize).toBe(DEFAULT_CELL_SIZE)
+      expect(camera.cellSize).toBe(before.cellSize)
     })
   })
 
@@ -139,7 +152,7 @@ describeFeature(feature, ({ Scenario }) => {
       camera = zoomUntilSettled(panCamera(camera, 500, 500), 'in')
     })
     When('I reset the view for an 800 by 600 pixel viewport', () => {
-      camera = centeredCamera(800, 600)
+      camera = centeredCamera(VIEWPORT_WIDTH_PX, VIEWPORT_HEIGHT_PX)
     })
     // Read off the ruler rather than compared against a second call of
     // centeredCamera, which would restate the implementation the When just
@@ -147,7 +160,7 @@ describeFeature(feature, ({ Scenario }) => {
     // this promise lives in camera-pan-and-zoom.e2e.spec.ts, where a real
     // browser can measure it.
     Then('the coordinate labels in view should be balanced around the origin', () => {
-      const labels = coordinateLabelsInView(camera, 800, 600)
+      const labels = coordinateLabelsInView(camera, VIEWPORT_WIDTH_PX, VIEWPORT_HEIGHT_PX)
       // Non-empty first: an empty label set is trivially balanced, so without
       // this the clause would also pass for a view showing no coordinates.
       expect(labels.length).toBeGreaterThan(0)

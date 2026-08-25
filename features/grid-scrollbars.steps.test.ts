@@ -1,7 +1,7 @@
 import { describeFeature, loadFeature } from '@amiceli/vitest-cucumber'
 import { expect } from 'vitest'
 import { cellKey, computeContentBounds, createEmptyLiveCells, type LiveCells } from '../src/gameOfLife'
-import { DEFAULT_CELL_SIZE, type Camera } from '../src/camera'
+import { centeredCamera, DEFAULT_CELL_SIZE, type Camera } from '../src/camera'
 import { computeScrollbarMetrics, panCameraByScrollbarDrag } from '../src/scrollbars'
 
 // ACCEPTANCE_MUTATION_FEATURE_FILE lets the acceptance-mutation runner point
@@ -9,7 +9,15 @@ import { computeScrollbarMetrics, panCameraByScrollbarDrag } from '../src/scroll
 // scripts/acceptance-mutation/) without ever touching the real one.
 const feature = await loadFeature(process.env.ACCEPTANCE_MUTATION_FEATURE_FILE ?? './grid-scrollbars.feature')
 
-const DEFAULT_CAMERA: Camera = { offsetX: 0, offsetY: 0, cellSize: DEFAULT_CELL_SIZE }
+// "A camera centered on the origin at the default zoom" is the application's
+// own boot state: useInitialCentering hands centeredCamera the first non-zero
+// viewport measurement it sees. A camera whose offset is merely zero is a
+// different thing -- it puts the origin in the top-left CORNER of the view --
+// and the only vocabulary that could honestly describe that state is the
+// offset wording .gherkin-lintrc bans from the contract outright. The size
+// here is the same 800 by 600 viewport these scenarios draw their scrollbars
+// for, and no clause below depends on it beyond the centering it expresses.
+const DEFAULT_CAMERA: Camera = centeredCamera(800, 600)
 
 type ScrollbarMetrics = ReturnType<typeof computeScrollbarMetrics>
 
