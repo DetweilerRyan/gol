@@ -33,8 +33,10 @@ Convert in ascending order of difficulty:
 1. `infinite-grid` — 2 table-less scenarios.
 2. `mouse-wheel-controls` — real `fireEvent.wheel` through the non-passive listener.
 3. `grid-scrollbars` — needs `aria-valuenow` and a real drag.
-4. `grid-reference-lines` — keeps a 12-mutant table, so it is the only one that
-   moves the acceptance-mutation number.
+4. `grid-reference-lines` — keeps a **3**-mutant table. It was described here as
+   12; that was always wrong (the outline is 3 rows × 1 column), and the two
+   scenarios `feature-prose-honesty` deleted under rulings G and H were
+   table-less, so the figure did not move when they went.
 
 ### Completion condition, so the half-migrated state can't become permanent
 
