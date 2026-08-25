@@ -1,0 +1,119 @@
+id: no-unbraced-accessible-name
+language: Tsx
+severity: warning
+message: This accessible-name attribute is a bare string, so Stryker's string-literal mutator skips it and the name is outside the mutation gate.
+note: >-
+  Two honest resolutions, and no third. BRACE IT -- aria-label={'Zoom in'} rather than
+  aria-label="Zoom in" -- which is what nine sites in this directory do and what makes the string a
+  mutant the existing tests already kill. OR DELETE IT, if it turns out to carry nothing: a name
+  worth no test is a name worth no attribute. There is deliberately no ignores: escape here, because
+  an escape is how the next inert attribute stays.
+# WHY THIS RULE EXISTS, AND WHY IT IS A WORKAROUND RATHER THAN A PRINCIPLE.
+#
+# Nothing about accessibility requires braces. This rule encodes a workaround for a specific
+# exclusion in a specific version of someone else's tool, and it should be read that way: the
+# invariant it protects is "every accessible name in src/components/ is inside the mutation gate",
+# and bracing is merely the two-character move that currently buys it.
+#
+# THE EXCLUSION, MEASURED AGAINST @stryker-mutator/instrumenter@10.0.0 (and confirmed identical on
+# upstream master). string-literal-mutator.js's isValidParent() lists types.isJSXAttribute(parent)
+# alongside import/export declarations, require() calls and object-property keys -- so a string
+# whose DIRECT parent is a JSX attribute is never mutated. No commit in that file's visible history
+# explains why; the exclusion arrived with the initial mutator set. The company it keeps suggests
+# the intent was "strings that are structural rather than behavioural", which is fair for className
+# and data-testid and wrong for an accessible name, the one string in a JSX attribute that IS the
+# contract.
+#
+# THE DIRECT-PARENT KEYING IS THE WHOLE OPENING. Braces interpose a JSXExpressionContainer, the
+# parent is no longer a JSXAttribute, and the string mutates. Measured before this rule was written:
+# bracing nine sites took GridToolbar.tsx from 1 mutant to 5, GridRuler.tsx from 5 to 9, and
+# Scrollbar.tsx from 52 to 53, and every one of the nine new mutants was killed by a test that
+# already existed.
+#
+# THE MATCHER BELOW TESTS THAT SAME EDGE FROM THE OTHER SIDE, which is why it is two has: clauses
+# and not a pattern. ast-grep's has: defaults to stopBy: neighbor, so `kind: string` matches only a
+# DIRECT child of the jsx_attribute -- exactly the relation isValidParent() keys on. The braced
+# form's direct child is a jsx_expression, so it does not match, and neither does the ternary at
+# Scrollbar.tsx nor the template literal at Cell.tsx.
+#
+# THE BOUNDARY LOOKS INCIDENTAL RATHER THAN DESIGNED, so do not read it as a supported seam: the
+# template-literal branch of the same mutator runs BEFORE isValidParent() and is unguarded, so
+# aria-label={`Cell ${x}, ${y}`} has always mutated while aria-label="Cell 3, 5" never has. There is
+# also no supported opt-in to fix this properly -- StrykerJS has four plugin kinds (TestRunner,
+# Reporter, Checker, Ignore) and no Mutator kind, and an Ignore plugin only ever subtracts mutants.
+# Patching the instrumenter was considered and rejected: patches/crap4ts+1.0.1.patch has an open
+# upstream PR behind it, whereas this would be overriding a deliberate upstream decision in a hot
+# path, re-derived on every release, to buy what two characters already buy.
+#
+# IF A RELEASE CLOSES THE OPENING, IT FAILS SAFE, AND THE RESPONSE IS TO RETIRE THE RULE AND KEEP
+# THE TESTS. Closing it makes the braced form stop producing mutants: the count falls, the score
+# does not falsely rise, and no reported number is ever wrong because of it. At that point this rule
+# is asking for a form that buys nothing, so delete it -- but the tests that kill these mutants are
+# the real guard on the names and outlive it.
+#
+# THE LIVE DECAY HAZARD, BY NAME: oxlint's react/jsx-curly-brace-presence has an AUTOFIXER that
+# strips exactly this form. It is off today -- .oxlintrc.json enables it nowhere and it is not in a
+# default-on category -- and if it were turned on, `oxlint --fix` would silently delete all nine
+# mutants and no threshold anywhere would notice, since a mutation score is a ratio over the mutants
+# that exist. Measured: with the rule enabled, oxlint reports all nine braced sites ("Curly braces
+# are unnecessary here") and --fix rewrites every one back to a bare string, leaving the ternary
+# alone. THAT is this rule's actual job -- catching the revert, not the original omission.
+#
+# THE WORKED EXAMPLE FOR "OR DELETE IT" IS PatternLibraryModal.tsx, which is why the count is nine
+# braced sites and not ten. It carried aria-label="Pattern library" on a Headless UI Dialog that
+# also renders a DialogTitle, and CDP's accessibility tree reports that aria-label with
+# superseded: true -- the title-derived name wins, so the attribute contributed nothing to any
+# user's experience and bracing it would have manufactured a mutant guarding a string nobody
+# receives. It was deleted, and the full 105-spec Playwright layer stayed green. Note the careful
+# phrasing: the DIALOG'S NAME IS GUARDED -- features/e2e-helpers.ts's patternCategoryInLibrary
+# throws when its locator matches nothing, and all 8 pattern-library Examples rows reach it -- what
+# was unguarded is nothing, because the deleted attribute was superseded rather than unobserved.
+# "Nothing guards this name" is the wrong test for deletion and was, on this slice, the wrong claim.
+#
+# SCOPE. The four attribute names are the strings an assistive-technology user actually receives:
+# aria-label, aria-valuetext, role, title. className is deliberately absent -- this repo has
+# repeatedly ruled paint classes a VISUAL contract (Cell.test.tsx's alive/dead pair,
+# RulerLabel.tsx's edgeClass), and mutating them would manufacture survivors nobody wants to chase.
+# The name match is anchored, so aria-labelledby and aria-describedby are not in scope: they carry
+# an ID reference, not a name, and a mutated ID is caught by the name resolving to empty rather than
+# by the string itself.
+#
+# src/components/*.tsx minus *.test.tsx, because a test file's JSX is a fixture rather than a
+# shipped affordance. LifeBoard.tsx is inside that glob and outside stryker.config.json's mutate
+# list, so a braced string there would produce no mutant -- it is deliberately not carved out,
+# because it carries no accessible attribute today and a rule that fires on the day one appears is
+# the outcome we want; the finding would then be "why is an accessible name in the composition
+# root", which is a better question than the one this rule asks.
+#
+# NO -ts TWIN, and this is the exact inverse of the argument no-ruler-axis-by-paint-class-tsx makes
+# for having one. That pair needs both halves because its subject matter (a class name in a string)
+# occurs in .ts and .tsx alike, and a feature crosses between them by being renamed. Here the
+# subject matter is a JSX attribute, which is a parse error in a .ts file -- so a TypeScript-language
+# twin could not match anything by construction, and npm run ast-grep:rules would be the only thing
+# it ever affected. Written down at authoring time rather than discovered later, for the same reason
+# that twin's rationale was.
+#
+# THE RESIDUAL THIS RULE DOES NOT CLOSE. Stryker's string-literal mutator replaces a string with ""
+# (or with filler for an empty one). It never SWAPS two strings, so a clean mutation run over these
+# nine sites is not evidence that swapping 'Column ruler' with 'Row ruler', or 'Horizontal scroll'
+# with 'Vertical scroll', would be caught. That check remains a hand-written membership test, and
+# GridRuler.test.tsx is where it lives. Do not read a green score as covering it.
+#
+# PROMOTION TRIGGER: if an unbraced accessible name ever reaches hardener -- i.e. this rule is
+# reported and the slice landed anyway -- change severity to error, which makes it move the exit
+# code.
+files:
+  - 'src/components/*.tsx'
+ignores:
+  - 'src/components/*.test.tsx'
+rule:
+  kind: jsx_attribute
+  all:
+    # An accessible-name attribute...
+    - has:
+        kind: property_identifier
+        regex: '^(aria-label|aria-valuetext|role|title)$'
+    # ...whose value is a bare string rather than a braced expression. stopBy defaults to neighbor,
+    # so this is the DIRECT child -- the same relation the instrumenter's isValidParent() reads.
+    - has:
+        kind: string

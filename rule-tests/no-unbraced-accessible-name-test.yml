@@ -1,0 +1,30 @@
+id: no-unbraced-accessible-name
+valid:
+  # The braced form the nine converted sites in src/components/ actually use.
+  - <button aria-label={'Zoom in'} />
+  - <div role={'group'} aria-label={'Column ruler'} />
+  # Double-quoted because a plain YAML scalar containing ": " parses as a mapping -- measured, an
+  # unquoted ternary aborts `ast-grep test` with `invalid type: map, expected a string`.
+  - "<div role={'scrollbar'} aria-label={axis === 'x' ? 'Horizontal scroll' : 'Vertical scroll'} />"
+  # A template literal already mutates without braces being anyone's decision -- that branch of the
+  # instrumenter runs before isValidParent() -- and is not this rule's business either way.
+  - <button aria-label={`Cell ${x}, ${y}`} />
+  # A bare string in an attribute this rule deliberately does not name. className is the visual
+  # contract, and axis/size/level are ordinary props.
+  - <div className="bg-white" />
+  - <RulerLabel axis="x" coordinate={3} />
+  - <Dialog size="sm" />
+  # The name match is anchored, so these two stay out of scope. Pins ^...$ against a future
+  # unanchored widening, which would otherwise swallow every aria-* attribute that starts the same.
+  - <div aria-labelledby="pattern-library-title" />
+  - <span aria-describedby="zoom-hint" />
+invalid:
+  # The four attribute names in scope, each in the bare-string form Stryker refuses to mutate.
+  - <div role="group" />
+  - <button aria-label="Zoom in" />
+  - <div aria-valuetext="42 percent" />
+  - <abbr title="Game of Life" />
+  # The exact form PatternLibraryModal.tsx carried before this slice deleted it, and the form
+  # GridRuler.tsx carried before it was braced -- both attributes on one element.
+  - <Dialog aria-label="Pattern library" />
+  - <div role="group" aria-label="Row ruler" />

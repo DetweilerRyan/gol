@@ -1,0 +1,86 @@
+id: no-unbraced-accessible-name
+snapshots:
+  <Dialog aria-label="Pattern library" />:
+    labels:
+    - source: aria-label="Pattern library"
+      style: primary
+      start: 8
+      end: 36
+    - source: aria-label
+      style: secondary
+      start: 8
+      end: 18
+    - source: '"Pattern library"'
+      style: secondary
+      start: 19
+      end: 36
+  <abbr title="Game of Life" />:
+    labels:
+    - source: title="Game of Life"
+      style: primary
+      start: 6
+      end: 26
+    - source: title
+      style: secondary
+      start: 6
+      end: 11
+    - source: '"Game of Life"'
+      style: secondary
+      start: 12
+      end: 26
+  <button aria-label="Zoom in" />:
+    labels:
+    - source: aria-label="Zoom in"
+      style: primary
+      start: 8
+      end: 28
+    - source: aria-label
+      style: secondary
+      start: 8
+      end: 18
+    - source: '"Zoom in"'
+      style: secondary
+      start: 19
+      end: 28
+  <div aria-valuetext="42 percent" />:
+    labels:
+    - source: aria-valuetext="42 percent"
+      style: primary
+      start: 5
+      end: 32
+    - source: aria-valuetext
+      style: secondary
+      start: 5
+      end: 19
+    - source: '"42 percent"'
+      style: secondary
+      start: 20
+      end: 32
+  <div role="group" />:
+    labels:
+    - source: role="group"
+      style: primary
+      start: 5
+      end: 17
+    - source: role
+      style: secondary
+      start: 5
+      end: 9
+    - source: '"group"'
+      style: secondary
+      start: 10
+      end: 17
+  <div role="group" aria-label="Row ruler" />:
+    labels:
+    - source: role="group"
+      style: primary
+      start: 5
+      end: 17
+    - source: role
+      style: secondary
+      start: 5
+      end: 9
+    - source: '"group"'
+      style: secondary
+      start: 10
+      end: 17
