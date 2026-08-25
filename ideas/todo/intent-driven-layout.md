@@ -24,8 +24,11 @@ The concrete gap this closes: `architect.md` says design mode's "deliverable is 
 plan, not a diff", and nothing writes that plan down — it lives in a handoff
 message that dies with the session. The REVIEW pass is then meant to "verify the
 executed structure actually matches what you approved" against an artifact that
-no longer exists. `ideas/candidates/scrollbar-thumb-length-affordance.md` records
-the cost verbatim: **"Raised twice now."**
+no longer exists. `ideas/candidates/scrollbar-visible-proportion-affordance.md` records
+the cost verbatim, and the figure has since grown: **"Raised four times now, by
+three roles, for two different consumers."** Two of those four were `architect`
+DESIGN rulings that reached the same conclusion independently, because the first
+one's reasoning was never written anywhere a later pass could read it.
 
 `.feature` files and their colocated `.steps.test.ts(x)` / `.e2e.spec.ts` stay
 hand-authored source. They are executed 1:1 and hardened by
