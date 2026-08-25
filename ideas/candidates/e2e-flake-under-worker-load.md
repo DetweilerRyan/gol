@@ -60,6 +60,33 @@ with contention and never reproduces once the baseline read is made to poll.
 Deciding between them is still the slice. Note the two `.feature` clauses this spec's generated
 counterpart covers assert _direction_ only, so a per-pixel race would show up here first.
 
+## Frequency evidence, and the signature to look for
+
+`product` measured this at T4's VERIFY: **13 full-suite runs, 1,365 test executions, 0 failures,
+0 flaky** — 7 at the configured 5 workers, 3 oversubscribed at `--workers=16`, 2 at 5 workers
+against 10 concurrent CPU hogs, 1 final gate run. The machine has 10 CPUs, so the default 5
+workers matches the conditions of the original sighting.
+
+**The discriminator was tested and did not reproduce.** A throwaway spec did 12 independent
+`page.goto('/')` + one-shot `elementAtPoint(page, 700, 300)` reads on fresh pages at
+`--workers=16` under 12 CPU hogs: **12/12 returned the settled, centred value**. Two reasons the
+window is narrower than it looks — `page.goto('/')` waits for `load` by default, and
+`useInitialCentering` fires from a `useLayoutEffect` on the first non-zero measurement. That does
+not refute the mechanism (12 samples is 12 samples), but there is now no evidence for it either.
+
+**The signature that would confirm it, recorded so the next sighting is decisive.** Pre-centering
+the camera sits at offset (0, 0), putting `Cell 35, 15` at screen (700, 300); an unmounted grid
+gives `null`. The settled value is `Cell 3, -8` (default camera `offsetX -32, offsetY -22.5,
+cellSize 20` → world origin at screen (640, 450)). So a genuine pre-centering capture fails as
+`Expected: "Cell 35, 15"` or `Expected: null` against `Received: "Cell 3, -8"`. **Anything else —
+notably two plausible centred cells one apart — points at the other mechanism**, a real
+zoom-at-point pixel race, which would be a `src/` defect rather than a harness bug. Read the
+retained trace for that distinction before acting.
+
+Given 0 in 1,365, the stop condition for `acceptance-mutation-on-playwright` can reasonably be
+treated as **cleared at the current 105-test suite size**, superseding the stale 59-test
+baseline this file was opened against. One unexplained sighting remains unexplained.
+
 ## Touches
 
 `features/mouse-wheel-controls.e2e.spec.ts`, `features/steps/mouse-wheel-controls.ts`,
