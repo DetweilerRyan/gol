@@ -8,17 +8,9 @@ import {
 } from '../src/test-support/cellQuery.ts'
 import { rulerGroupLabel } from '../src/test-support/rulerQuery.ts'
 
-// The application's own boot camera -- centeredCamera(1280, 900) in
-// src/camera.ts -- under playwright.config.ts's fixed 1280x900 viewport.
-// CENTER and every pixel-math assertion in this suite is derived from these
-// three numbers, so they are declared once here rather than re-literaled at
-// each call site.
-export const DEFAULT_CELL_SIZE_PX = 20
-const DEFAULT_OFFSET_X = -32
-const DEFAULT_OFFSET_Y = -22.5
+import { CENTER, DEFAULT_CELL_SIZE_PX, DEFAULT_OFFSET_X, DEFAULT_OFFSET_Y } from './screenplay/viewport.ts'
 
-// World (0,0) renders at screen (640, 450) -- the exact viewport center.
-export const CENTER = { x: -DEFAULT_OFFSET_X * DEFAULT_CELL_SIZE_PX, y: -DEFAULT_OFFSET_Y * DEFAULT_CELL_SIZE_PX }
+export { CENTER, DEFAULT_CELL_SIZE_PX } from './screenplay/viewport.ts'
 
 export function cellLocator(page: Page, x: number, y: number): Locator {
   return page.locator(cellSelector(x, y))
