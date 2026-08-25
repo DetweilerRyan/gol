@@ -63,6 +63,54 @@ fail, and the natural reading would be _"the implementation is wrong"_ when the
 **contract** was wrong. That misdiagnosis is the whole cost of getting this rule
 loose, and it is worth stating in the role file rather than assumed.
 
+## Prior art, and the objection it raises
+
+**The closest established analogue argues the other way, and that should be answered
+rather than skipped.** Freeman & Pryce's **walking skeleton** (GOOS ch. 4) is "the
+thinnest possible slice of real functionality that we can automatically build,
+deploy, and test **end-to-end**", with functionality kept "so simple that it's
+obvious and uninteresting, leaving focus on infrastructure". The point is that it
+_must_ run end-to-end, to give feedback about the system's real external interfaces.
+
+A mock harness fakes precisely that layer. `mountBoard()`'s whole job **is** the
+infrastructure — mount real `<App />`, query through ARIA. A mock core does not fake
+the domain behind the harness; it replaces the harness.
+
+**The objection does not land here, for a reason specific to this repo: the walking
+skeleton already exists.** The Playwright layer runs against a real built app in a
+real browser, 59 specs, and is the final gate before a slice lands. `architect`
+established the two layers are **nested** — acceptance sees a strict subset of the
+routes e2e sees, plus no hit-testing. The acceptance layer was never the end-to-end
+proof, so faking it does not cost what GOOS warns about. Write that down; it is the
+first question a reviewer who knows the literature will ask.
+
+## The mechanism that closes the "stays mocked forever" hole
+
+**Verified fakes.** The standard answer to fake-drift is to write the tests against
+the interface's public contract and run **that same suite against both the fake and
+the real implementation** — that is what makes a fake _verified_ rather than merely
+convenient. Google's SWE book treats it as the price of using fakes at all: _"a fake
+without tests might initially provide realistic behavior, but without tests, this
+behavior can diverge over time as the real implementation evolves."_
+
+This maps directly onto the seam `split-acceptance-harness` landed. **`Board` is the
+contract.** Write the contract suite once; run it against the mock core and the real
+core. **Phase 2 is done when the real core passes the identical suite** — which
+answers this file's own open question about what proves the rewire happened, and
+answers it with a passing suite rather than a residue check.
+
+It also makes the fake-data-never-affordances discipline **mechanical**: if the
+contract suite says "zooming in once reaches 125%", a mock offering factor 2 fails
+it. The rule stops depending on whoever writes the mock remembering the rule.
+
+## Name it a fake, not a mock
+
+The literature separates **fakes** (working in-memory implementations) from **mocks**
+(behaviour verification), and the prevailing advice is _"fake, don't mock"_. This
+proposal is a fake. Calling it a mock in the role files would invite the wrong
+implementation — a harness asserting on interactions rather than one that simply
+works.
+
 ## What it changes
 
 - **The spike loses its discard machinery** — no `git checkout -- src/`, no
