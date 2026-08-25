@@ -11,13 +11,9 @@
 //
 // Questions build no locators of their own -- they ask elements.ts.
 import { type Page } from '@playwright/test'
+import { CELL_ALIVE_ATTR, CELL_ALIVE_VALUE, CELL_DEAD_VALUE } from '../../src/test-support/cellQuery.ts'
 import {
-  ALIVE_CELL_SELECTOR,
-  CELL_ALIVE_ATTR,
-  CELL_ALIVE_VALUE,
-  CELL_DEAD_VALUE,
-} from '../../src/test-support/cellQuery.ts'
-import {
+  aliveCells,
   cellLocator,
   patternLibraryModal,
   previewCells,
@@ -117,7 +113,7 @@ export async function cellState(page: Page, x: number, y: number): Promise<'aliv
 // thing as counting all of them. Sound wherever every cell that could change
 // is inside the mounted window.
 export function aliveCellCount(page: Page): Promise<number> {
-  return page.locator(ALIVE_CELL_SELECTOR).count()
+  return aliveCells(page).count()
 }
 
 export async function generationCount(page: Page): Promise<number> {

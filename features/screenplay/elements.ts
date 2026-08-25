@@ -9,11 +9,18 @@
 // dependency graph: an interaction that needed a thumb's box measures the
 // element directly rather than asking a Question for it.
 import { type Locator, type Page } from '@playwright/test'
-import { cellSelector } from '../../src/test-support/cellQuery.ts'
+import { ALIVE_CELL_SELECTOR, cellSelector } from '../../src/test-support/cellQuery.ts'
 import { rulerGroupLabel } from '../../src/test-support/rulerQuery.ts'
 
 export function cellLocator(page: Page, x: number, y: number): Locator {
   return page.locator(cellSelector(x, y))
+}
+
+// Every MOUNTED live cell, regardless of which one. questions.ts's
+// aliveCellCount is the only reader -- it only ever counts these, never
+// reaches inside one, so there is no reason for it to hold a Locator itself.
+export function aliveCells(page: Page): Locator {
+  return page.locator(ALIVE_CELL_SELECTOR)
 }
 
 export function patternsButton(page: Page): Locator {

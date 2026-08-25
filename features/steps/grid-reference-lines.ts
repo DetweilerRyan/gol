@@ -10,8 +10,8 @@
 // label is a bare number that would be indistinguishable from a row label
 // without the role="group" GridRuler wraps each axis in. Resolving that group
 // lives in features/screenplay/elements.ts (rulerGroup), reached through
-// ../e2e-helpers; this module reads the
-// coordinate numbers through axisLabelValues and names no selector at all.
+// ../e2e-helpers; this module reads the coordinate numbers through
+// axisLabelValues and names no selector at all.
 // It carried no selector under the class-based locator that preceded it
 // either, which is why the affordance landing changed nothing here.
 //

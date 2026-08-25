@@ -140,9 +140,9 @@ test('stamping a pattern from the library brings its cells to life in the real a
 
   // Block's own cells are (0,0),(1,0),(0,1),(1,1) and CENTER is world cell
   // (0, 0) under the default camera (CENTER, derived in
-  // features/screenplay/viewport.ts), so this is the one
-  // place the real App.tsx Immer stamp wiring is verified to produce live
-  // cells end to end -- not just to leave placing mode.
+  // features/screenplay/viewport.ts), so this is the one place the real
+  // App.tsx Immer stamp wiring is verified to produce live cells end to end
+  // -- not just to leave placing mode.
   await expectCellState(page, 0, 0, 'alive')
   await expectCellState(page, 1, 0, 'alive')
   await expectCellState(page, 0, 1, 'alive')

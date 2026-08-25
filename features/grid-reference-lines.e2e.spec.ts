@@ -4,11 +4,10 @@ import { axisLabelValues, CENTER, cellLocator, dragPan, rulerGroup } from './e2e
 // rulerGroup lives in features/screenplay/elements.ts -- reached from here
 // through ./e2e-helpers, the Screenplay layer's single entry point -- because
 // features/steps/grid-reference-lines.ts reads the same ruler, and how a ruler
-// is reached belongs in one place. It
-// resolves the axis through the accessible tree -- role="group" plus the name
-// GridRuler gives it -- so an assertion below says the label is on the COLUMN
-// ruler, not merely that some element carrying the top strip's Tailwind class
-// has that text.
+// is reached belongs in one place. It resolves the axis through the
+// accessible tree -- role="group" plus the name GridRuler gives it -- so an
+// assertion below says the label is on the COLUMN ruler, not merely that some
+// element carrying the top strip's Tailwind class has that text.
 async function labelSet(page: Page, axis: 'x' | 'y'): Promise<Set<number>> {
   return new Set(await axisLabelValues(page, axis))
 }
