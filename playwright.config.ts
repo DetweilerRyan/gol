@@ -31,7 +31,7 @@ const bdd = defineBddProject({
 // Playwright does not complain -- it reports the `e2e` project's tests and
 // nothing else, EXIT 0, no warning. Measured on this tree: `rm -rf
 // .features-gen && npx playwright test --list` printed `Total: 59 tests in 8
-// files` where a generated tree prints 94 in 14. A whole layer contributing
+// files` where a generated tree prints 105 in 15. A whole layer contributing
 // zero, indistinguishable from a green run. Only `npm run test:e2e` was
 // protected, by its own `bddgen &&` prefix; every other entry point (a bare
 // `npx playwright test`, an IDE runner, a CI step, a per-mutant spawn) read
