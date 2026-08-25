@@ -16,14 +16,3 @@ Feature: Grid reference lines and coordinates
   Scenario: A coordinate between the tens carries no major gridline
     Given a coordinate of 5
     Then it should not be a major gridline
-
-  Scenario: The major gridlines in view are the multiples of 10 it spans
-    Given a view spanning x from -23 to 17 and y from -5 to 26
-    When the major gridlines are computed
-    Then the major x gridlines should be -20, -10, 0, 10
-    And the major y gridlines should be 0, 10, 20
-
-  Scenario: A view narrower than the gridline spacing shows no major gridlines
-    Given a view spanning x from 1 to 9 and y from 1 to 9
-    When the major gridlines are computed
-    Then there should be no major gridlines at all

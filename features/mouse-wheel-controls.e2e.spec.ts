@@ -1,6 +1,17 @@
 import { test, expect } from '@playwright/test'
 import { CENTER, elementAtPoint, shiftWheel, zoomPercent } from './e2e-helpers'
 
+// Re-homed from mouse-wheel-controls.feature by the feature-prose-honesty
+// slice, under the acceptance-contract-rulings ruling that a geometric promise
+// moved to the paired spec survives in features/** only if this header records
+// it: a shift-held wheel zoom keeps the point under the cursor fixed. The
+// Gherkin clause saying so was unstateable without pixel vocabulary and
+// unobservable from jsdom; the feature now states only that scrolling up zooms
+// in and scrolling down zooms out. The invariance itself is asserted in a real
+// browser by the second test below, which re-reads the element under the very
+// pixel the wheel was rolled over. It may not be deleted here without being
+// restated in features/**.
+
 test.beforeEach(async ({ page }) => {
   await page.goto('/')
 })

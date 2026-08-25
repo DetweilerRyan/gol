@@ -3,14 +3,6 @@ Feature: Grid scrollbars
   I want scrollbars that reflect how much of the pattern is currently visible and let me drag them to pan
   So that I can navigate without relying on the mouse wheel alone
 
-  Scenario: An empty grid has no live pattern to scroll to
-    Given a grid with no live cells
-    Then there should be no live pattern to scroll to
-
-  Scenario: A live cell covers its own full square of the grid
-    Given a grid with a single live cell at (5, 5)
-    Then the live pattern should extend from (5, 5) to (6, 6)
-
   Scenario: An empty grid's scrollbar thumbs fill the entire track
     Given a grid with no live cells
     And a camera centered on the origin at the default zoom

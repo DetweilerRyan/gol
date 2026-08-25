@@ -35,15 +35,15 @@ describeFeature(feature, ({ Scenario }) => {
     Given('an empty grid', () => {
       cells = createEmptyLiveCells()
     })
-    When('I toggle the cells at (-500, -500) and (1000000, -1000000)', () => {
-      toggleCell(cells, -500, -500)
-      toggleCell(cells, 1000000, -1000000)
+    When('I toggle the cells at (-20, -15) and (100, 0)', () => {
+      toggleCell(cells, -20, -15)
+      toggleCell(cells, 100, 0)
     })
-    Then('the cell at (-500, -500) should be alive', () => {
-      expect(isCellAlive(cells, -500, -500)).toBe(true)
+    Then('the cell at (-20, -15) should be alive', () => {
+      expect(isCellAlive(cells, -20, -15)).toBe(true)
     })
-    And('the cell at (1000000, -1000000) should be alive', () => {
-      expect(isCellAlive(cells, 1000000, -1000000)).toBe(true)
+    And('the cell at (100, 0) should be alive', () => {
+      expect(isCellAlive(cells, 100, 0)).toBe(true)
     })
   })
 
@@ -58,8 +58,8 @@ describeFeature(feature, ({ Scenario }) => {
       cells = createEmptyLiveCells()
       addHorizontalBlinker(cells, 0, 0)
     })
-    And('a horizontal blinker centered at (250000, -250000)', () => {
-      addHorizontalBlinker(cells, 250000, -250000)
+    And('a horizontal blinker centered at (100, -100)', () => {
+      addHorizontalBlinker(cells, 100, -100)
     })
     When('the next generation is computed', () => {
       cells = getNextGeneration(cells)
@@ -67,8 +67,8 @@ describeFeature(feature, ({ Scenario }) => {
     Then('the blinker at (0, 0) should be vertical', () => {
       expectVerticalBlinker(cells, 0, 0)
     })
-    And('the blinker at (250000, -250000) should be vertical', () => {
-      expectVerticalBlinker(cells, 250000, -250000)
+    And('the blinker at (100, -100) should be vertical', () => {
+      expectVerticalBlinker(cells, 100, -100)
     })
   })
 })

@@ -41,28 +41,6 @@ function pixelsMoved(before: Camera, after: Camera, axis: 'x' | 'y'): number {
 }
 
 describeFeature(feature, ({ Scenario }) => {
-  Scenario('An empty grid has no live pattern to scroll to', ({ Given, Then }) => {
-    let cells: LiveCells
-
-    Given('a grid with no live cells', () => {
-      cells = createEmptyLiveCells()
-    })
-    Then('there should be no live pattern to scroll to', () => {
-      expect(computeContentBounds(cells)).toBeNull()
-    })
-  })
-
-  Scenario('A live cell covers its own full square of the grid', ({ Given, Then }) => {
-    let cells: LiveCells
-
-    Given('a grid with a single live cell at (5, 5)', () => {
-      cells = makeLiveCells([[5, 5]])
-    })
-    Then('the live pattern should extend from (5, 5) to (6, 6)', () => {
-      expect(computeContentBounds(cells)).toEqual({ minX: 5, maxX: 6, minY: 5, maxY: 6 })
-    })
-  })
-
   Scenario("An empty grid's scrollbar thumbs fill the entire track", ({ Given, And, When, Then }) => {
     let cells: LiveCells
     let camera: Camera

@@ -2,6 +2,26 @@ import { test, expect } from '@playwright/test'
 import { CENTER, dragPan, elementAtPoint, resetView, zoomPercent } from './e2e-helpers'
 import { ALIVE_CELL_SELECTOR } from '../src/test-support/cellQuery.ts'
 
+// Re-homed from camera-pan-and-zoom.feature by the feature-prose-honesty slice,
+// under the acceptance-contract-rulings ruling that a geometric promise moved to
+// the paired spec survives in features/** only if this header records it. Two
+// promises live here and nowhere else in the contract:
+//
+//   1. Zooming in keeps the point it is anchored on fixed. The Gherkin clause
+//      said "the point under the cursor should not move", which cannot be
+//      stated without pixel vocabulary and cannot be observed at all from
+//      jsdom. The toolbar's own anchor is the viewport center, so the spec
+//      below asserts the world origin still renders at CENTER after a
+//      zoom-in click.
+//   2. Resetting the view puts the origin back at the exact center of the
+//      viewport. The feature now states reset through the ruler instead --
+//      the coordinate labels come back balanced around the origin -- which is
+//      true but only to the ruler's 10-cell resolution. The pixel-exact form
+//      is the last test in this file.
+//
+// Both are asserted below through the real UI. Neither may be deleted here
+// without restating it in features/**.
+
 test.beforeEach(async ({ page }) => {
   await page.goto('/')
 })

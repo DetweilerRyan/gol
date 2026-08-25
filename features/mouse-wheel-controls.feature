@@ -9,8 +9,12 @@ Feature: Mouse wheel controls
     Then the zoom level should be unchanged
     And the camera should have moved down and right into the grid
 
-  Scenario: Scrolling with shift held zooms instead of panning
+  Scenario: Scrolling up with shift held zooms in
     Given a camera centered on the origin at the default zoom
-    When I scroll the wheel up by 100 pixels at pixel (100, 50) while holding shift
+    When I scroll the wheel up while holding shift
     Then the zoom percentage should be above 100
-    And the point under the cursor should not move
+
+  Scenario: Scrolling down with shift held zooms out
+    Given a camera centered on the origin at the default zoom
+    When I scroll the wheel down while holding shift
+    Then the zoom percentage should be below 100
