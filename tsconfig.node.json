@@ -27,6 +27,8 @@
     "crap4ts.config.ts",
     "crap4ts.scripts.config.ts",
     "playwright.config.ts",
-    "playwright.perf.config.ts"
+    "playwright.perf.config.ts",
+    "playwright-shared.ts",
+    "playwright.acceptance-mutation.config.ts"
   ]
 }

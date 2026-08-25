@@ -1,21 +1,16 @@
 import { existsSync, readdirSync, statSync } from 'node:fs'
 import path from 'node:path'
-import { defineConfig, devices } from '@playwright/test'
+import { defineConfig } from '@playwright/test'
 import { defineBddProject } from 'playwright-bdd'
-import { devPort } from './dev-port.ts'
+import { baseURL, chromium1280x900 } from './playwright-shared.ts'
 
 // One-time setup after `npm install`: run `npx playwright install chromium`
 // to fetch the browser binary this config drives. The binary lives in a
 // machine-global cache, so a new worktree needs `npm ci` but not this.
 //
-// The port is this worktree's own (see dev-port.ts), not a fixed 5173.
-const baseURL = `http://localhost:${devPort()}`
-
-// devices['Desktop Chrome'] carries its own viewport (1280x720), which
-// would otherwise win over a 900-height override -- reasserted explicitly
-// here so every pixel-math formula in this suite (and in the generated bdd
-// project added alongside this one) can rely on exactly 1280x900.
-const chromium1280x900 = { ...devices['Desktop Chrome'], viewport: { width: 1280, height: 900 } }
+// baseURL and chromium1280x900 are shared with
+// playwright.acceptance-mutation.config.ts -- see playwright-shared.ts for
+// why that sharing is load-bearing rather than DRY-for-its-own-sake.
 
 const bdd = defineBddProject({
   name: 'bdd',
