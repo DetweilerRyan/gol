@@ -27,6 +27,12 @@ describe('PatternLibraryModal', () => {
     expect(onSelectPattern).toHaveBeenCalledWith(glider)
   })
 
+  it('exposes the dialog title as its accessible name', () => {
+    render(<PatternLibraryModal open onSelectPattern={vi.fn()} onClose={vi.fn()} />)
+
+    expect(screen.getByRole('dialog', { name: 'Pattern Library' })).toBeInTheDocument()
+  })
+
   it('does not render dialog content when closed (Headless UI unmounts on close)', () => {
     render(<PatternLibraryModal open={false} onSelectPattern={vi.fn()} onClose={vi.fn()} />)
 
