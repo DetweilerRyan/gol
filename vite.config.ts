@@ -128,7 +128,8 @@ export default defineConfig({
     // directories src/components/ and src/hooks/ by path. A vitest project
     // whose glob matches nothing exits 0 with no warning -- measured on
     // 4.1.10. Rename either directory and `dom` silently stops running its
-    // 15 test files while `npm test` stays green. It stays green only at that
+    // 23 test files while `npm test` stays green (measured on this tree: `dom`
+    // collects 23 files, 175 tests). It stays green only at that
     // granularity, though: the next quality gate fails loudly, because the
     // hook/component coverage those 15 files provide is exactly what keeps
     // crap4ts under its threshold and Stryker above its break score. Renaming

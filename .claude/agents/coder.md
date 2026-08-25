@@ -16,7 +16,7 @@ You are the coder for this Conway's Game of Life project, the second role in the
 ## Workflow
 
 1. Read the approved `features/*.feature` scenario(s) you're implementing.
-2. Write the matching `features/*.steps.test.ts` step definitions (if the feature file lacks them) or extend the existing ones — these should fail against current code.
+2. Read the `features/steps/*.ts` step modules the scenario compiles against, to see what the contract actually asserts through the UI. **You do not write or edit them** — since `delete-step-test-layer` removed the jsdom step layer, every step definition in this repo is a Playwright-BDD module under `features/steps/`, and the whole of `features/**` is `product`'s (see Boundaries below, which this step used to contradict).
 3. Where the behavior is expressible as pure logic, write focused unit tests against the relevant framework-free module first, before writing the implementation.
 4. Implement the smallest change that makes the new tests pass, following this repo's conventions (see `CLAUDE.md`'s Conventions section).
 5. Run `npm run test:unit` until everything is green (fast path — skips property tests, which only `architect`/`hardener`/`product` need; see `.claude/agents/articles/engineering.md`). Run `npm run test:browser` as well if you added or changed a `*.browser.test.ts` or the module one covers — `test:unit` can't see that layer. Run `npm run build` to confirm no type errors.

@@ -34,8 +34,13 @@ invalid:
   - export { cellLabel } from '../../src/test-support/cellQuery'
   # Side-effect import: no bindings, so a matcher keyed on the import clause would miss it.
   - import '../../src/liveCellSeed'
-  # The JSDOM acceptance layer's harness -- right repo, wrong runner.
-  - import { mountBoard } from '../harness/board'
+  # Reaching past the barrel into the screenplay modules it re-exports. This case used to name
+  # features/harness/board -- the JSDOM acceptance layer's infrastructure, "right repo, wrong
+  # runner" -- and was repointed by delete-step-test-layer when that directory ceased to exist.
+  # The replacement is the live temptation rather than a dead path: features/screenplay/ is real,
+  # and e2e-helpers.ts is a pure re-export of it, so importing a sibling module directly looks
+  # harmless and is exactly what the mandated-single-entry-point allowlist exists to stop.
+  - import { cellLocator } from '../screenplay/elements'
   # Step module importing step module: the registry is global, so this dresses a registry fact up
   # as a module dependency. bddgen is what checks the sharing; an import does not.
   - import { zoomIn } from './camera-pan-and-zoom'

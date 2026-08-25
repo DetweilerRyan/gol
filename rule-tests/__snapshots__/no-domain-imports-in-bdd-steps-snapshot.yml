@@ -40,6 +40,16 @@ snapshots:
       style: secondary
       start: 26
       end: 60
+  import { cellLocator } from '../screenplay/elements':
+    labels:
+    - source: import { cellLocator } from '../screenplay/elements'
+      style: primary
+      start: 0
+      end: 52
+    - source: '''../screenplay/elements'''
+      style: secondary
+      start: 28
+      end: 52
   import { mountBoard } from '../harness/board':
     labels:
     - source: import { mountBoard } from '../harness/board'

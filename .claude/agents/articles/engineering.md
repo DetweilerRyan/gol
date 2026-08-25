@@ -27,7 +27,7 @@ These docs describe the codebase as it currently stands, not a contract that fre
 
 ## Which test layer a test belongs in
 
-`CLAUDE.md`'s Testing structure section describes four layers; two of them run in a real browser, and they are not interchangeable. Place a test by what it verifies, not by what it needs to run:
+`CLAUDE.md`'s Testing structure section describes three test layers (plus the Gherkin contract they answer to); two of them run in a real browser, and they are not interchangeable. Place a test by what it verifies, not by what it needs to run:
 
 - **Browser-required unit test** (`src/**/*.browser.test.ts`, `npm run test:browser`) — only when the test verifies **one module's own contract against a native browser API jsdom can't faithfully simulate**, importing that module directly with no running app. This is a unit test that happens to need a browser, and it belongs to `coder`/`cleaner`/`architect` like any other unit test.
 - **Black-box e2e spec** (`features/*.e2e.spec.ts`, `npm run test:e2e`) — when the test boots the app and asserts user-visible behavior through the UI. This layer belongs to `product` alone, and only `product` writes it, in VERIFY mode. It **reports** `src/` defects it finds rather than fixing them; see `handoffs.md`'s "Defect adjudication". Needing a real browser is not what makes a test an e2e spec; being about a user-facing feature rather than an implementation's contract is.
