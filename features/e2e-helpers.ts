@@ -83,12 +83,34 @@ export function patternsButton(page: Page): Locator {
   return page.locator('button[aria-label="Open pattern library"]')
 }
 
+// The library dialog, by the name it actually announces. That name comes from
+// PatternLibraryModal's <DialogTitle>, which Headless UI registers as the
+// dialog's aria-labelledby -- there is no aria-label to read, and the one that
+// used to sit on the Dialog was superseded by the title and never named
+// anything (deleted in the `mutate-accessible-names` slice).
+//
+// exact: true is deliberate. getByRole's default name matching is
+// case-insensitive AND substring, which is exactly what let this locator carry
+// 'Pattern library' -- wrong case, and written against the deleted attribute --
+// while still passing. The accessible name is this repo's black-box contract,
+// so it is matched as the whole string a screen reader would announce.
 export function patternLibraryModal(page: Page): Locator {
-  return page.getByRole('dialog', { name: 'Pattern library' })
+  return page.getByRole('dialog', { name: 'Pattern Library', exact: true })
 }
 
+// Opens the library AND waits for it to be there. The wait is the load-bearing
+// half: every toHaveCount(0) this file asserts about the modal is satisfied
+// vacuously by a locator that resolves to nothing, so "the library closed" only
+// means anything once "the library was open" has been asserted through the same
+// locator. Positively asserting it here covers both negative sites, since every
+// path to either one opens the modal through this function first.
+//
+// It also removes a latent race: patternCategoryInLibrary's evaluateAll does
+// not auto-wait, so it would read an empty list off a dialog React had not
+// mounted yet.
 export async function openPatternModal(page: Page) {
   await patternsButton(page).click()
+  await expect(patternLibraryModal(page)).toHaveCount(1)
 }
 
 // Arms a pattern from an ALREADY-OPEN library. Split out of selectPattern
