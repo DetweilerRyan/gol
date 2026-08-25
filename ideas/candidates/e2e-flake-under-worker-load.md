@@ -44,7 +44,20 @@ Two candidate mechanisms worth separating, since they have different fixes:
 - **A harness timing assumption** — the step or spec reads a position before the rAF-coalesced
   update has settled. `flush()` exists on `useRafCoalescedPan` for exactly this class of problem.
 
-Deciding between them is the slice. Note the two `.feature` clauses this spec's generated
+`architect` found a grounded discriminator while reviewing T4, and it points hard at the
+**second** mechanism. That test is the **only** one in its file whose first statement is a
+one-shot, unretried read — `const before = await elementAtPoint(page, 700, 300)` — taken
+immediately after a bare `page.goto('/')` with no settle. Every other test in the file starts
+with an _action_ and then polls. `useInitialCentering` latches on the first non-zero
+`ResizeObserver` measurement, so under worker contention that read can land **pre-centering**;
+the later `expect.poll(...).toBe(before)` then compares against a stale baseline and can never
+converge, failing as "the cursor point moved".
+
+If that is right the fix is **settling the pre-read**, not `flush()` — and it is a harness bug,
+not an app race. Confirm it before acting on it: the prediction is that the failure correlates
+with contention and never reproduces once the baseline read is made to poll.
+
+Deciding between them is still the slice. Note the two `.feature` clauses this spec's generated
 counterpart covers assert _direction_ only, so a per-pixel race would show up here first.
 
 ## Touches
