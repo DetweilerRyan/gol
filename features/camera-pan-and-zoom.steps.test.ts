@@ -1,7 +1,7 @@
 import { describeFeature, loadFeature } from '@amiceli/vitest-cucumber'
 import { expect } from 'vitest'
 import { centeredCamera, panCamera, zoomCameraAtPoint, ZOOM_FACTOR, zoomPercentage, type Camera } from '../src/camera'
-import { computeMajorGridlines, computeVisibleRange } from '../src/gridGeometry'
+import { computeMajorGridlines, computeVisibleRange, type MajorGridlines } from '../src/gridGeometry'
 
 // ACCEPTANCE_MUTATION_FEATURE_FILE lets the acceptance-mutation runner point
 // this suite at a mutated copy of the feature file (see
@@ -48,17 +48,44 @@ function zoomUntilSettled(camera: Camera, direction: 'in' | 'out'): Camera {
   return camera
 }
 
-// The ruler's labels for a viewport, as one multiset across both axes: what a
-// player reads off the edges of the screen, with no axis attribution. The
-// origin sitting at the middle of the view is then stateable without a single
-// pixel -- every label's negation is also on show.
-function coordinateLabelsInView(camera: Camera, viewportWidthPx: number, viewportHeightPx: number): number[] {
-  const gridlines = computeMajorGridlines(computeVisibleRange(camera, viewportWidthPx, viewportHeightPx))
-  return [...gridlines.x, ...gridlines.y]
+// The ruler's labels for a viewport, per axis: what a player reads off the top
+// and left edges of the screen. The origin sitting at the middle of the view is
+// then stateable without a single pixel -- on each axis, every label on show has
+// its own negation on show too.
+function coordinateLabelsInView(camera: Camera, viewportWidthPx: number, viewportHeightPx: number): MajorGridlines {
+  return computeMajorGridlines(computeVisibleRange(camera, viewportWidthPx, viewportHeightPx))
 }
 
 function ascending(labels: readonly number[]): number[] {
   return [...labels].sort((a, b) => a - b)
+}
+
+// Asserted per axis, and that is the load-bearing part. This instrument first
+// merged both axes into one multiset -- deliberately, on the reasoning that the
+// prose needs no axis attribution -- but the prose not naming an axis does not
+// license the assertion to discard it, and the merged form is far weaker than
+// the sentence it claims to check. Measured by sweeping the offsets an 800x600
+// viewport can hold at the default zoom: merged passes for a camera up to 57
+// cells (1140px) off-centre, wider than the viewport itself and with the origin
+// nowhere on screen (x labels all negative, y labels all positive, and each the
+// other's negation), and merged passes a centeredCamera that transposes its two
+// viewport arguments. Per axis, both of those go red, and a passing camera is
+// pinned to within 2.95 cells (59px) on x and 2 cells (40px) on y.
+//
+// That residual band is the honest limit of any label-based instrument, and it
+// is the trade being accepted here rather than one being overlooked: gridlines
+// fall every MAJOR_GRIDLINE_INTERVAL cells, widened by VISIBLE_BUFFER_CELLS, so
+// nothing finer than a gridline is observable from the ruler at all. The
+// pixel-exact form of this promise is re-homed to camera-pan-and-zoom.e2e.spec.ts,
+// where a real browser can measure it -- see that file's header.
+function expectBalancedAroundOrigin(labels: readonly number[]): void {
+  // Non-empty first: an empty label set is trivially balanced, so without this
+  // the clause would also pass for an axis showing no coordinates at all.
+  expect(labels.length).toBeGreaterThan(0)
+  // `|| 0` normalizes the -0 that negating the origin's own label produces,
+  // which toEqual otherwise reports as a mismatch against a plain 0 -- the same
+  // normalization gridlinesInRange applies for the same reason.
+  expect(ascending(labels)).toEqual(ascending(labels.map((label) => -label || 0)))
 }
 
 describeFeature(feature, ({ Scenario }) => {
@@ -161,13 +188,8 @@ describeFeature(feature, ({ Scenario }) => {
     // browser can measure it.
     Then('the coordinate labels in view should be balanced around the origin', () => {
       const labels = coordinateLabelsInView(camera, VIEWPORT_WIDTH_PX, VIEWPORT_HEIGHT_PX)
-      // Non-empty first: an empty label set is trivially balanced, so without
-      // this the clause would also pass for a view showing no coordinates.
-      expect(labels.length).toBeGreaterThan(0)
-      // `|| 0` normalizes the -0 that negating the origin's own label produces,
-      // which toEqual otherwise reports as a mismatch against a plain 0 -- the
-      // same normalization gridlinesInRange applies for the same reason.
-      expect(ascending(labels)).toEqual(ascending(labels.map((label) => -label || 0)))
+      expectBalancedAroundOrigin(labels.x)
+      expectBalancedAroundOrigin(labels.y)
     })
     And('the zoom percentage should be 100', () => {
       expect(zoomPercentage(camera)).toBe(100)
