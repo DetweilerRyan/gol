@@ -1,5 +1,5 @@
 ---
-name: jsx-attribute-strings-carry-no-mutants
+name: mutate-accessible-names
 title: Every accessible name in this repo is outside the mutation gate
 created: 2026-08-25
 ---
