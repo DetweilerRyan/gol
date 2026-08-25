@@ -412,47 +412,39 @@ export async function expectBlinker(
 //
 // A Gherkin step's arguments are only its own placeholders, so a Then that
 // speaks of something an earlier Given named ("the blinker should be
-// vertical") needs somewhere to keep it. playwright-bdd's own answer is a
-// custom fixture, which would have to live in a module the step modules'
-// three-import allowlist forbids -- so the store is keyed by the `page`
-// fixture instead, which Playwright creates fresh for every test and never
-// shares between them. Every value a step needs to carry is a coordinate or a
-// count, so `number` is the whole type: nothing here is a smuggling route for
-// application state.
-const scenarioNumbers = new WeakMap<Page, Map<string, number>>()
-
-export function remember(page: Page, key: string, value: number): void {
-  const store = scenarioNumbers.get(page) ?? new Map<string, number>()
-  store.set(key, value)
-  scenarioNumbers.set(page, store)
-}
-
-export function recall(page: Page, key: string): number {
-  const value = scenarioNumbers.get(page)?.get(key)
-  if (value === undefined) throw new Error(`No step in this scenario has established "${key}"`)
-  return value
-}
-
-// The same scratch store for a value that is a NAME rather than a coordinate
-// -- pattern-library.feature's outline names its pattern in the Given and
-// then says "it" in both Thens, so the name has to be carried the same way a
-// remembered center is.
+// vertical", or pattern-library's "it should be listed under ...") needs
+// somewhere to keep it. playwright-bdd's own answer is a custom fixture, which
+// would have to live in a module the step modules' three-import allowlist
+// forbids -- so the store is keyed by the `page` fixture instead, which
+// Playwright creates fresh for every test and never shares between them.
 //
-// Kept as a second, separately-typed store rather than by widening the one
-// above to `number | string`, so the note on that one still holds literally:
-// what a step may carry is a coordinate, a count, or a name out of an
-// Examples table -- never a piece of application state. A caller cannot read
-// a number out as a string or the reverse.
-const scenarioTexts = new WeakMap<Page, Map<string, string>>()
+// ONE MECHANISM, TWO TYPED INSTANCES. What a step may carry is a coordinate, a
+// count, or a name out of an Examples table -- never a piece of application
+// state. The two stores stay separate so a caller cannot read a number out as
+// a string or the reverse; they come from one factory so the carrying itself
+// -- the per-page map, the has-any-step-established-this error -- is written
+// once rather than per value type.
+function createScenarioStore<T>() {
+  const byPage = new WeakMap<Page, Map<string, T>>()
 
-export function rememberText(page: Page, key: string, value: string): void {
-  const store = scenarioTexts.get(page) ?? new Map<string, string>()
-  store.set(key, value)
-  scenarioTexts.set(page, store)
+  return {
+    remember(page: Page, key: string, value: T): void {
+      const store = byPage.get(page) ?? new Map<string, T>()
+      store.set(key, value)
+      byPage.set(page, store)
+    },
+    recall(page: Page, key: string): T {
+      const value = byPage.get(page)?.get(key)
+      if (value === undefined) throw new Error(`No step in this scenario has established "${key}"`)
+      return value
+    },
+  }
 }
 
-export function recallText(page: Page, key: string): string {
-  const value = scenarioTexts.get(page)?.get(key)
-  if (value === undefined) throw new Error(`No step in this scenario has established "${key}"`)
-  return value
-}
+const scenarioNumbers = createScenarioStore<number>()
+const scenarioTexts = createScenarioStore<string>()
+
+export const remember = scenarioNumbers.remember
+export const recall = scenarioNumbers.recall
+export const rememberText = scenarioTexts.remember
+export const recallText = scenarioTexts.recall
