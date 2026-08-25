@@ -190,11 +190,13 @@ function main(): void {
   }
 
   const plans = loadTargetPlans(targets)
-  // A target whose .feature carries no Examples table (or was filtered out
-  // entirely) contributes zero mutants -- it is reported, never silently
-  // dropped, but nothing is written or spawned on its behalf (see
-  // summarizeResults in classify.ts for the NaN%-at-zero-mutants defect this
-  // separation exists to close).
+  // A target whose .feature carries no Examples table contributes zero
+  // mutants -- it is reported, never silently dropped, but nothing is written
+  // or spawned on its behalf (see summarizeResults in classify.ts for the
+  // NaN%-at-zero-mutants defect this separation exists to close). Note this
+  // cannot report a target `--feature` excluded: filterTargets runs before
+  // loadTargetPlans, so an unselected target never becomes a plan at all. The
+  // printed label says so, rather than claiming a coverage it doesn't have.
   const activePlans = plans.filter((p) => p.cells.length > 0)
   const zeroMutantFeatures = plans.filter((p) => p.cells.length === 0).map((p) => p.target.feature)
 
@@ -251,7 +253,7 @@ function report(
   }
 
   if (zeroMutantFeatures.length > 0) {
-    console.log(`0 mutants (no Examples table, or filtered out): ${zeroMutantFeatures.join(', ')}`)
+    console.log(`0 mutants (no Examples table): ${zeroMutantFeatures.join(', ')}`)
   }
 
   // flaky/errors are enforced by runLevelAbortReason (a nonzero either one
