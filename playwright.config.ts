@@ -17,25 +17,11 @@ const baseURL = `http://localhost:${devPort()}`
 // project added alongside this one) can rely on exactly 1280x900.
 const chromium1280x900 = { ...devices['Desktop Chrome'], viewport: { width: 1280, height: 900 } }
 
-// pattern-library.feature has no step module yet -- it is T4's (pattern-
-// library-steps) entire subject. bddgen is all-or-nothing: one feature with
-// a missing step definition and it exits 1 having generated nothing at all,
-// so the feature is excluded here rather than left to fail the whole run.
 const bdd = defineBddProject({
   name: 'bdd',
-  features: ['features/*.feature', '!features/pattern-library.feature'],
+  features: ['features/*.feature'],
   steps: 'features/steps/*.ts',
 })
-
-// T4 (pattern-library-steps) deletes this guard and the '!' entry above,
-// together. The guard is what makes that deletion mandatory rather than
-// remembered: the moment pattern-library's steps exist, the exclusion is
-// stale and this config refuses to load.
-if (existsSync(path.join(import.meta.dirname, 'features/steps/pattern-library.ts'))) {
-  throw new Error(
-    'features/steps/pattern-library.ts exists -- remove the pattern-library exclusion from `features` above and delete this guard.',
-  )
-}
 
 // ---------------------------------------------------------------------------
 // THE GENERATED-OUTPUT GUARD.
@@ -73,17 +59,14 @@ if (existsSync(path.join(import.meta.dirname, 'features/steps/pattern-library.ts
 // week's generated spec, just as silently. bddgen rewrites every output file
 // unconditionally (measured: two consecutive runs on an unchanged tree
 // advance every mtime), so the check self-heals -- a spurious fire costs one
-// bddgen. pattern-library.feature is deliberately among the inputs even
-// though it generates nothing today: over-firing is the safe direction, and
-// it means T4 has one less thing to remember.
+// bddgen.
 //
 // The one thing mtimes cannot see is a DELETION: removing a .feature advances
 // no input mtime, so its generated spec keeps running until the next bddgen.
 // Left as a recorded limitation rather than fixed, because it fails in the
 // safe direction -- the stale specs regenerate away on the next
 // `npm run test:e2e`, and a deleted STEP MODULE fails loudly at runtime rather
-// than quietly. A set-comparison against features/*.feature would close it,
-// and would have to grow the pattern-library exclusion a second home.
+// than quietly. A set-comparison against features/*.feature would close it.
 const GENERATED_SPEC_DIR = path.join(import.meta.dirname, '.features-gen/bdd/features')
 const FEATURES_DIR = path.join(import.meta.dirname, 'features')
 
