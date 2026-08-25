@@ -10,6 +10,9 @@ reports
 .vitest-attachments
 package-lock.json
 
+# playwright-bdd generated specs
+.features-gen
+
 # Per-slice git worktrees: another slice's checkout, not this one's source
 .claude/worktrees
 

@@ -12,6 +12,17 @@ const sharedExclude = [
   'scripts/**',
   '.claude/worktrees/**',
   '.stryker-tmp*/**',
+  // playwright-bdd generates .features-gen/features/<name>.feature.spec.js.
+  // vitest's `unit` project inherits the unrooted default include
+  // (**/*.{test,spec}.?(c|m)[jt]s?(x)) and nothing else subtracts it, so
+  // without this entry those generated specs are collected into `unit` --
+  // measured: 63 files instead of 61. The leading dot on the directory name
+  // protects nothing (a non-dot directory was collected identically in the
+  // same probe); this is the same hazard CLAUDE.md documents for
+  // ideas/__probe.test.ts. Belongs in sharedExclude, not `unit`'s own list,
+  // for the same reason .stryker-tmp*/** is here rather than scoped to one
+  // project.
+  '.features-gen/**',
 ]
 
 const domTests = ['src/components/**/*.{test,spec}.?(c|m)[jt]s?(x)', 'src/hooks/**/*.{test,spec}.?(c|m)[jt]s?(x)']
