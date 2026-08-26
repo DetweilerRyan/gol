@@ -1,11 +1,12 @@
-// ACCEPTED OUTLINE -- slice `aria-pressed-cell-state` (product, SPECIFY).
+// ACCEPTED OUTLINE -- slice `aria-pressed-cell-state` (product, SPECIFY),
+// narrowed by `triage-paired-specs` to the three tests that survive it.
 //
 // This spec is the browser-level counterpart of cell-life-and-death.feature.
 // The .feature states WHAT is true of a cell (alive / dead); this outline
 // states HOW a user -- including a user who cannot see the grid -- perceives
-// it. There is no new .feature scenario for this slice: the domain fact is
-// already contracted ("Then the cell at (2, 3) should be alive"), and the
-// change here is the observation channel, not the fact.
+// it. The domain fact is already contracted there ("Then the cell at (2, 3)
+// should be alive"), so what is left here is the observation channel, not the
+// fact.
 //
 // Before: a cell button carried `aria-label="Cell x, y"` and nothing else.
 // Assistive technology was told a cell exists and where it is, and was never
@@ -13,7 +14,7 @@
 // Aliveness existed only as paint (`bg-gray-900` / `bg-white`), which a
 // screen reader does not report.
 //
-// After, the accepted user-facing behaviour:
+// The accepted behaviour this file checks:
 //
 //   1. Every cell is announced as a toggle button. Its pressed state IS its
 //      aliveness: a live cell is pressed, a dead cell is not pressed.
@@ -25,38 +26,28 @@
 //   3. Clicking a cell flips what is announced, in the same action and with
 //      no extra step: a screen-reader user hears the state change they just
 //      caused.
-//   4. Advancing a generation flips what is announced for exactly the cells
-//      whose aliveness changed. Births, deaths and survivals are all audible
-//      through the same channel a sighted user reads off the paint.
-//   5. Stamping a pattern announces the pattern's own cells as pressed and
-//      leaves the cells around it announced as unpressed.
-//   6. The cell's visible paint is unchanged. This slice adds a channel; it
-//      removes none. A live cell still renders dark and a dead cell light.
 //
-// How this is checked here: at least one assertion reads the ACCESSIBILITY
-// TREE rather than an attribute string --
-// `getByRole('button', { name: cellLabel(x, y), pressed: true })` -- so the
-// claim "assistive technology can perceive this" is verified as ARIA
-// semantics and not merely as the presence of a DOM attribute. The remaining
-// assertions in this suite go through src/test-support/cellQuery.ts, the one
-// place that says how aliveness is encoded, so re-roling the cell element
-// later is a one-file change rather than a two-hundred-assertion one.
-
-import { test, expect } from '@playwright/test'
-import { cellLocator, expectCellState, nextGeneration } from './e2e-helpers'
-import { CELL_SELECTOR, ALIVE_CELL_SELECTOR, DEAD_CELL_SELECTOR, cellLabel } from '../src/test-support/cellQuery.ts'
-
-const NEIGHBOR_OFFSETS: ReadonlyArray<readonly [number, number]> = [
-  [-1, -1],
-  [-1, 0],
-  [-1, 1],
-  [0, -1],
-  [0, 1],
-  [1, -1],
-  [1, 0],
-  [1, 1],
-]
-
+// The rest of that outline is accepted behaviour still, and is checked
+// elsewhere rather than dropped: the original point 4 (a generation tick
+// flips what is announced for exactly the cells that changed) is
+// cell-life-and-death.feature's own generation scenarios, point 5 (stamping
+// announces the pattern's cells as pressed) is pattern-library.feature, and
+// point 6 (the visible paint is unchanged) is src/components/Cell.test.tsx's
+// alive/dead pair -- which is where it has to live, since
+// rules/no-aliveness-by-paint-class forbids reading paint from features/ at
+// all.
+//
+// WHY THESE THREE AND NOT THE ELEVEN THAT WERE HERE. Everything deleted
+// asserted a domain fact -- a neighbour-count outcome, a blinker, a block --
+// that cell-life-and-death.feature now states and its generated Playwright
+// spec now drives through the same browser. Measured before deleting: each of
+// the eight neighbour-count rows has exactly one Examples row that reddens
+// when that row's own rule is inverted, and the three pattern tests all
+// redden when the birth rule is changed from 3 to 2. What is left is the part
+// the generated layer cannot reach -- it reads aria-pressed as an ATTRIBUTE
+// through a CSS selector, and the two toggle tests below read it as
+// ACCESSIBILITY-TREE state through getByRole.
+//
 // WHICH ACTIVATION ROUTE THIS SPEC EXERCISES (recorded in the
 // black-box-acceptance-pilot slice's VERIFY pass, because it is easy to
 // assume the wrong thing here). Every cell activation below is a Playwright
@@ -67,14 +58,19 @@ const NEIGHBOR_OFFSETS: ReadonlyArray<readonly [number, number]> = [
 // bug confined to Cell.onClick -- measured: swapping Cell's onActivate(x, y)
 // to (y, x) leaves every test in this file green. The keyboard route
 // (Enter on a focused cell button, which IS Cell.onClick) is covered by
-// hud-layout-and-shortcuts.e2e.spec.ts:102, where that same swap fails. Both
+// hud-layout-and-shortcuts.e2e.spec.ts, where that same swap fails. Both
 // routes are covered by the e2e layer; keep it that way rather than adding a
 // duplicate keyboard test here.
+
+import { test, expect } from '@playwright/test'
+import { cellLocator, expectCellState } from './e2e-helpers'
+import { CELL_SELECTOR, ALIVE_CELL_SELECTOR, DEAD_CELL_SELECTOR, cellLabel } from '../src/test-support/cellQuery.ts'
+
 test.beforeEach(async ({ page }) => {
   await page.goto('/')
 })
 
-test('toggling a dead cell brings it to life', async ({ page }) => {
+test('a cell brought to life is announced as a pressed toggle button', async ({ page }) => {
   await cellLocator(page, 2, 3).click()
   await expectCellState(page, 2, 3, 'alive')
 
@@ -87,7 +83,7 @@ test('toggling a dead cell brings it to life', async ({ page }) => {
   await expect(page.getByRole('button', { name: cellLabel(2, 3), pressed: true, exact: true })).toBeVisible()
 })
 
-test('toggling a live cell kills it', async ({ page }) => {
+test('a cell that is killed is announced as an unpressed toggle button, not a plain button', async ({ page }) => {
   await cellLocator(page, 2, 3).click()
   await expectCellState(page, 2, 3, 'alive')
   await cellLocator(page, 2, 3).click()
@@ -112,75 +108,4 @@ test('every mounted cell is announced as a toggle button, alive or dead', async 
 
   await expect(page.locator(ALIVE_CELL_SELECTOR)).toHaveCount(1)
   await expect(page.locator(DEAD_CELL_SELECTOR)).toHaveCount(total - 1)
-})
-
-const NEIGHBOR_COUNT_ROWS = [
-  { state: 'alive', neighbors: 0, nextState: 'dead' },
-  { state: 'alive', neighbors: 1, nextState: 'dead' },
-  { state: 'alive', neighbors: 2, nextState: 'alive' },
-  { state: 'alive', neighbors: 3, nextState: 'alive' },
-  { state: 'alive', neighbors: 4, nextState: 'dead' },
-  { state: 'dead', neighbors: 2, nextState: 'dead' },
-  { state: 'dead', neighbors: 3, nextState: 'alive' },
-  { state: 'dead', neighbors: 4, nextState: 'dead' },
-] as const
-
-for (const { state, neighbors, nextState } of NEIGHBOR_COUNT_ROWS) {
-  test(`a cell that is ${state} with ${neighbors} live neighbors ends up ${nextState}`, async ({ page }) => {
-    if (state === 'alive') {
-      await cellLocator(page, 0, 0).click()
-    }
-    for (const [dx, dy] of NEIGHBOR_OFFSETS.slice(0, neighbors)) {
-      await cellLocator(page, dx, dy).click()
-    }
-
-    await nextGeneration(page)
-
-    await expect(page.getByText(/^Generation: \d+$/)).toHaveText('Generation: 1')
-    await expectCellState(page, 0, 0, nextState)
-  })
-}
-
-test('a horizontal blinker becomes vertical after one generation', async ({ page }) => {
-  await cellLocator(page, 0, 1).click()
-  await cellLocator(page, 1, 1).click()
-  await cellLocator(page, 2, 1).click()
-
-  await nextGeneration(page)
-
-  await expectCellState(page, 1, 0, 'alive')
-  await expectCellState(page, 1, 1, 'alive')
-  await expectCellState(page, 1, 2, 'alive')
-  await expectCellState(page, 0, 1, 'dead')
-  await expectCellState(page, 2, 1, 'dead')
-})
-
-test('a vertical blinker becomes horizontal after one generation', async ({ page }) => {
-  await cellLocator(page, 1, 0).click()
-  await cellLocator(page, 1, 1).click()
-  await cellLocator(page, 1, 2).click()
-
-  await nextGeneration(page)
-
-  await expectCellState(page, 0, 1, 'alive')
-  await expectCellState(page, 1, 1, 'alive')
-  await expectCellState(page, 2, 1, 'alive')
-  await expectCellState(page, 1, 0, 'dead')
-  await expectCellState(page, 1, 2, 'dead')
-})
-
-test('a 2x2 block never changes', async ({ page }) => {
-  await cellLocator(page, 0, 0).click()
-  await cellLocator(page, 1, 0).click()
-  await cellLocator(page, 0, 1).click()
-  await cellLocator(page, 1, 1).click()
-
-  await nextGeneration(page)
-
-  await expectCellState(page, 0, 0, 'alive')
-  await expectCellState(page, 1, 0, 'alive')
-  await expectCellState(page, 0, 1, 'alive')
-  await expectCellState(page, 1, 1, 'alive')
-  await expectCellState(page, -1, 0, 'dead')
-  await expectCellState(page, 2, 1, 'dead')
 })
