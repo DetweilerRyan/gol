@@ -25,10 +25,19 @@
 // SCOPE OF THAT CLAIM, MEASURED RATHER THAN ASSERTED. No module under
 // features/steps/ builds a locator at all -- it cannot, its import allowlist
 // forbids it -- so for the generated step layer this file really is the only
-// place a selector is named. The eight hand-written *.e2e.spec.ts files still
-// build their own, grep-counted at 35 `page.locator`/`page.getBy` sites, and
-// were deliberately left untouched by the decomposition. They are not in scope
-// here, and a header claiming "every locator in features/" would be false.
+// place a selector is named. The seven hand-written *.e2e.spec.ts files still
+// build their own, grep-counted at 28 `page.locator`/`page.getBy` sites. They
+// are not in scope here, and a header claiming "every locator in features/"
+// would be false.
+//
+// Both figures moved in `triage-paired-specs` and neither moved because a
+// locator was hoisted: that triage deleted 35 duplicated tests and one whole
+// spec file (infinite-grid, whose claims its .feature now makes), taking their
+// locators with them. Recount with
+// `grep -c "page\.locator\|page\.getBy" features/*.e2e.spec.ts` rather than
+// adjusting these by subtraction -- the per-file drop is not uniform, and two
+// of the seven (grid-reference-lines, mouse-wheel-controls) now build no
+// locator of their own at all and reach everything through the barrel.
 //
 // NOT HERE: CELL_ALIVE_ATTR / CELL_ALIVE_VALUE / CELL_DEAD_VALUE. Those say how
 // to READ what a cell announces, not how to reach it, so questions.ts and
