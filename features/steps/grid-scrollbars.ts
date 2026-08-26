@@ -27,6 +27,16 @@
 //     EXACTLY -- 100, under 100, 25 -- where the thumb-versus-track pixel
 //     measurement it replaced needed a tolerance at both ends to absorb
 //     sub-pixel layout rounding.
+//
+// WHAT THIS CHANNEL CANNOT FALSIFY IS PIXEL CONTAINMENT: both aria-valuenow
+// and the announced proportion derive from computeScrollbarMetrics, which
+// never sees trackLengthPx, so no clause defined here can see a thumb painted
+// past the end of its track -- measured rather than inferred, since all 73
+// e2e tests passed both before and after a change that moved every rendered
+// thumb by 10px. The test that does falsify it is
+// features/grid-scrollbars.e2e.spec.ts's "the rendered thumb stays inside its
+// own track on both axes, at rest and panned far past all content", whose own
+// THE SOLE CHANNEL comment points back at this layer.
 import { createBdd } from 'playwright-bdd'
 import { expect, type Page } from '@playwright/test'
 import {
