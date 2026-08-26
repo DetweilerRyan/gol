@@ -131,8 +131,23 @@ description against `zoomPercent`, one locator further out.
 
 Every string the app renders: `Conway's Game of Life` · `Next Generation` · `Generation: N` ·
 `+` · `−` · `Reset` · `Patterns` · `NN%` (zoom badge) · ruler labels `-?\d+` · `Pattern Library` ·
-`Still Life`/`Oscillators`/`Spaceships` · the 8 pattern names. The words `percent`, `in view`,
-`of the grid` and `showing` appear in none of them, in `src/` or in `features/`.
+`Still Life`/`Oscillators`/`Spaceships` · the 8 pattern names. **None of them contains `percent`,
+`in view`, `of the grid` or `showing`** — measured with
+`grep -rniE "percent|in view|showing|of the grid" src features perf`, whose only hits are
+identifiers, comments and Gherkin step text, never a string the app renders. A locator can only
+collide with rendered text, so none of those hits reaches this decision. Two are worth naming
+anyway, both in step text:
+
+- **`the coordinate labels in view should be balanced around the origin`**
+  (`camera-pan-and-zoom.feature:36`) — "in view" is _already_ this repo's established player
+  vocabulary for what is on screen. That corroborates the phrasing rather than conflicting with
+  it: reusing an existing word is what `gherkin-dry` exists to encourage.
+- **`the zoom percentage should be {int}`** (`camera-pan-and-zoom.feature`,
+  `mouse-wheel-controls.feature`) — the contract says "percentage" where this description says
+  "percent". Deliberate, and not drift to reconcile: those are step text, read by a person
+  reasoning about the domain, while this is a string _spoken to a user_, where "percent" is what
+  a screen reader utters. Different registers, different artifacts. This slice adds no step text,
+  so `gherkin-dry` sees no new vocabulary at all.
 
 - `page.getByText(/^\d+%$/)` (`questions.ts`'s `zoomPercent`, `modal-inertness.e2e.spec.ts:48`) — anchored, and the phrase carries no `%` at all. Two independent reasons it can't match.
 - `page.getByText(/^Generation: \d+$/)` — anchored.
