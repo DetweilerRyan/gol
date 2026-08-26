@@ -13,7 +13,7 @@
 
 export { CENTER, DEFAULT_CELL_SIZE_PX } from './screenplay/viewport.ts'
 export { remember, recall, rememberText, recallText } from './screenplay/notepad.ts'
-export { cellLocator, patternsButton, patternLibraryModal, previewCells, rulerGroup } from './screenplay/elements.ts'
+export { cellLocator, patternsButton, patternLibraryModal, previewCells } from './screenplay/elements.ts'
 export type { ScrollbarOrientation } from './screenplay/elements.ts'
 export {
   zoomPercent,

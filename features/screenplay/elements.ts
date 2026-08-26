@@ -100,6 +100,13 @@ export function previewCells(page: Page): Locator {
 // is pinned to. That class selector is what used to live here; the
 // `ruler-label-axis-affordance` slice replaced it, and the promise recorded
 // next to it held -- this was the only edit features/ needed.
+// Not a barrel export, for scrollbarThumb's reason below: axisLabelValues is
+// what a caller wants -- the numbers written along an axis -- and the locator
+// only ever exists to be read off. It WAS barrel-exported, for
+// grid-reference-lines.e2e.spec.ts's per-coordinate rows, and
+// `triage-paired-specs` deleted those; the one reader left is a sibling
+// module, which is exactly the condition that keeps scrollbarThumb off the
+// barrel too.
 export function rulerGroup(page: Page, axis: 'x' | 'y'): Locator {
   return page.getByRole('group', { name: rulerGroupLabel(axis) })
 }
