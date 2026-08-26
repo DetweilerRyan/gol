@@ -52,6 +52,25 @@ export default function Scrollbar({ axis, metrics, trackLengthPx, onDrag, conten
       ? { width: thumbLengthPx, height: '100%', transform: `translateX(${thumbPositionPx}px)` }
       : { height: thumbLengthPx, width: '100%', transform: `translateY(${thumbPositionPx}px)` }
 
+  // aria-valuenow announces POSITION only; thumbRatio (what fraction of the
+  // content is visible, which is what drives the thumb's rendered LENGTH via
+  // computeThumbGeometry above) was never announced at all. Exposed via
+  // aria-describedby -> a visually-hidden span rather than aria-valuetext,
+  // which supersedes aria-valuenow per spec and which CDP reports empty for
+  // scrollbar/slider/spinbutton/progressbar alike -- see
+  // src/test-support/scrollbarQuery.ts's header. aria-label stays untouched
+  // ('Horizontal scroll' / 'Vertical scroll'): it's identity, not state, and
+  // churning it per pan would break the stable-name contract.
+  //
+  // The id and the wording below are a deliberate duplicate of
+  // src/test-support/scrollbarQuery.ts's visibleProportionText() --
+  // rules/no-test-support-in-product-tsx.yml forbids importing that
+  // directory here, the same reason GridRuler.tsx duplicates
+  // rulerGroupLabel() and Cell.tsx duplicates cellLabel(). Scrollbar.test.tsx
+  // pins both copies so they can't drift.
+  const descriptionId = `${axis}-scrollbar-visible-proportion`
+  const visibleProportionPercent = Math.round(metrics.thumbRatio * 100)
+
   // No click-to-jump on the empty track area, by design -- only the thumb
   // below has pointer handlers.
   return (
@@ -64,13 +83,18 @@ export default function Scrollbar({ axis, metrics, trackLengthPx, onDrag, conten
         aria-valuemin={0}
         aria-valuemax={100}
         aria-valuenow={Math.round(metrics.thumbOffsetRatio * 100)}
+        aria-describedby={descriptionId}
         onPointerDown={handlePointerDown}
         onPointerMove={handlePointerMove}
         onPointerUp={handlePointerUp}
         onPointerCancel={handlePointerUp}
         className="absolute top-0 left-0 touch-none rounded bg-gray-900/70 transition-colors hover:bg-gray-900"
         style={thumbStyle}
-      />
+      >
+        <span id={descriptionId} className="sr-only">
+          {`${visibleProportionPercent} percent of the grid is in view`}
+        </span>
+      </div>
     </div>
   )
 }

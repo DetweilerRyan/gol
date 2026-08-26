@@ -1,6 +1,7 @@
 import { fireEvent, render, screen } from '@testing-library/react'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { stubPointerCapture, type PointerCaptureStubs } from '../test-support/domStubs'
+import { visibleProportionText } from '../test-support/scrollbarQuery'
 import { computeThumbGeometry, type ScrollbarMetrics } from '../scrollbars'
 import Scrollbar from './Scrollbar'
 
@@ -49,6 +50,19 @@ describe('Scrollbar', () => {
       <Scrollbar axis="x" metrics={otherMetrics} trackLengthPx={trackLengthPx} onDrag={vi.fn()} contentId="grid" />,
     )
     expect(screen.getByRole('scrollbar')).toHaveAttribute('aria-valuenow', '90')
+  })
+
+  it('describes the visible proportion (not the name) from thumbRatio, at the module default 40%', () => {
+    render(<Scrollbar axis="x" metrics={metrics} trackLengthPx={trackLengthPx} onDrag={vi.fn()} contentId="grid" />)
+    const thumb = screen.getByRole('scrollbar')
+    expect(thumb).toHaveAccessibleDescription(visibleProportionText(40))
+    expect(thumb).toHaveAccessibleName('Horizontal scroll')
+  })
+
+  it('rounds thumbRatio = 1 to "100 percent" -- distinguishes * 100 from / 100', () => {
+    const fullMetrics: ScrollbarMetrics = { thumbRatio: 1, thumbOffsetRatio: 0 }
+    render(<Scrollbar axis="y" metrics={fullMetrics} trackLengthPx={trackLengthPx} onDrag={vi.fn()} contentId="grid" />)
+    expect(screen.getByRole('scrollbar')).toHaveAccessibleDescription(visibleProportionText(100))
   })
 
   it.each([
