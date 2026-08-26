@@ -48,6 +48,33 @@ export async function zoomPercent(page: Page): Promise<number> {
   return Number(text!.replace('%', ''))
 }
 
+// WHICH ELEMENT THE BROWSER'S HIT-TEST RETURNS AT A PIXEL -- a STACKING
+// question, and NOT how this app resolves a click.
+//
+// Reach for this only to ask "what is on top here". A real click never goes
+// through document.elementFromPoint: useGridPointerGestures takes pointer
+// capture on #grid-content, so the click retargets to the container and
+// Grid's onTap resolves the cell arithmetically through screenToWorld. The
+// two disagree, and by a measured amount -- elementFromPoint is loose by
+// ~0.9px, favouring the later-in-DOM sibling, at every zoom level and every
+// device pixel ratio, while a real click is exact (click != rect was 0 of 41
+// in every configuration measured). A hit-test defect filed against this app
+// was traced to exactly that looseness in this function and retired as a
+// harness artifact.
+//
+// So this is sound for a stacking or occlusion question -- is the thumb on
+// top of the cell here (grid-scrollbars.e2e.spec.ts) -- and for a
+// boundary-insensitive one: "some cell is here" rather than which
+// (hud-layout-and-shortcuts.e2e.spec.ts), or a before/after comparison of
+// this function against itself (mouse-wheel-controls.e2e.spec.ts).
+//
+// It is the WRONG instrument for "where does a cell render", and asking it
+// that way is worse than the ~0.9px suggests: the answer is cell-granular, so
+// a sample point taken at a cell's own corner -- which CENTER is -- passes
+// from ~0.9px before that corner to a full cell past it. Use
+// cellScreenPosition below, which reads the box origin and compares exactly.
+// camera-pan-and-zoom.e2e.spec.ts's header records that swap and the
+// measurement behind it.
 export async function elementAtPoint(page: Page, x: number, y: number): Promise<string | null> {
   return page.evaluate(([px, py]) => document.elementFromPoint(px, py)?.getAttribute('aria-label') ?? null, [
     x,
