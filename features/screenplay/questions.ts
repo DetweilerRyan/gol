@@ -11,16 +11,22 @@
 //
 // Questions ask elements.ts for the identities it owns, and build only the
 // queries elements.ts's header licenses: a `page.getByText` read by exactly one
-// function here (the zoom badge, the generation counter), and sub-queries
-// chained off a locator elements.ts handed over. That header states the line;
-// it is not "no locators at all", which this file would not satisfy.
+// function here (the zoom badge, the generation counter), sub-queries chained
+// off a locator elements.ts handed over, and the by-id lookup of an element
+// another element's aria-describedby names (visibleProportionPercent), where
+// the id is read off the page rather than written down anywhere. That header
+// states the line; it is not "no locators at all", which this file would not
+// satisfy.
 //
 // CELL_ALIVE_ATTR and its two values come from src/test-support/cellQuery.ts
-// directly rather than through elements.ts. They say how to READ what a cell
-// announces, not how to reach it, so they fall outside that module's charter --
-// ruled in the screenplay-e2e-decomposition review, so not drift to tidy back.
+// directly rather than through elements.ts, and parseVisibleProportionText
+// comes from src/test-support/scrollbarQuery.ts under the same licence. They
+// say how to READ what a control announces, not how to reach it, so they fall
+// outside that module's charter -- ruled in the screenplay-e2e-decomposition
+// review, so not drift to tidy back.
 import { type Page } from '@playwright/test'
 import { CELL_ALIVE_ATTR, CELL_ALIVE_VALUE, CELL_DEAD_VALUE } from '../../src/test-support/cellQuery.ts'
+import { parseVisibleProportionText } from '../../src/test-support/scrollbarQuery.ts'
 import {
   aliveCells,
   cellLocator,
@@ -143,30 +149,40 @@ export async function axisLabelValues(page: Page, axis: 'x' | 'y'): Promise<numb
   return texts.map(Number)
 }
 
-// How much of its track the thumb covers, as a fraction: 1 means the whole of
-// the content fits in the viewport. The track is the thumb's own parent (it
-// is inset from the viewport edge by the corner gap, so the viewport size is
-// NOT the track length), reached by DOM position rather than by class.
+// How much of the grid the scrollbar says is currently IN VIEW along one
+// axis, as the integer percentage it announces: 100 means all of the content
+// fits. Read from the accessible description the thumb points at with
+// aria-describedby -- what a screen-reader user is actually told -- rather
+// than from the thumb's rendered length, which is paint and is separately
+// clamped to a minimum, so the two legitimately disagree at extreme spans.
 //
-// REACH-AROUND: this is geometry, because nothing announces it. The thumb
-// carries aria-valuenow/valuemin/valuemax, which express only the thumb's
-// POSITION -- there is no accessible expression of how much of the content is
-// visible, so "fills its track" cannot be read out of the accessibility tree.
-// That is a missing affordance rather than a test-side shortcut: proportion is
-// the most useful thing a scrollbar tells a sighted user and this app tells a
-// screen reader nothing about it. Adjudicated as an observability gap, not as
-// a defect in this slice. DELETION TRIGGER: the
-// `scrollbar-visible-proportion-affordance` slice. When the scrollbar
-// announces its proportion, this function is what that announcement replaces
-// -- one edit, in `features/screenplay/questions.ts`. elements.ts's rulerGroup
-// is the worked example of that promise being kept: it replaced a pair of
-// Tailwind-class locators when the ruler's axis affordance landed, and nothing
-// else under features/ moved.
-export async function thumbTrackFraction(page: Page, orientation: ScrollbarOrientation): Promise<number> {
-  const thumb = scrollbarThumb(page, orientation)
-  const thumbBox = (await thumb.boundingBox())!
-  const trackBox = (await thumb.locator('..').boundingBox())!
-  return orientation === 'horizontal' ? thumbBox.width / trackBox.width : thumbBox.height / trackBox.height
+// This replaced thumbTrackFraction, which measured the thumb's box against
+// its parent track's because the app announced its proportion nowhere. That
+// was features/'s last ARIA reach-around, and the
+// scrollbar-visible-proportion-affordance slice paid it off: an announced
+// integer also serves "fills its track" (100) and "covers a quarter" (25)
+// exactly, so the tolerances the pixel read needed are gone with it.
+//
+// Resolving aria-describedby by hand rather than with
+// toHaveAccessibleDescription is forced rather than a workaround: that
+// matcher is an assertion, and this module may not import expect
+// (rules/no-expect-in-screenplay-questions.yml). Both throws mirror
+// cellState's -- a description that cannot be resolved fails by name instead
+// of returning a silent NaN, which a caller would compare against 100 and
+// read a pass or a failure out of for the wrong reason. A single id matching
+// several elements is caught for free by Playwright's strict mode.
+export async function visibleProportionPercent(page: Page, orientation: ScrollbarOrientation): Promise<number> {
+  const describedBy = (await scrollbarThumb(page, orientation).getAttribute('aria-describedby')) ?? ''
+  const ids = describedBy.split(/\s+/).filter(Boolean)
+  if (ids.length !== 1)
+    throw new Error(
+      `The ${orientation} scrollbar's aria-describedby names ${ids.length} ids ("${describedBy}"), not one, so it describes no single visible proportion`,
+    )
+  const text = (await page.locator(`[id="${ids[0]}"]`).textContent()) ?? ''
+  const percent = parseVisibleProportionText(text)
+  if (percent === null)
+    throw new Error(`The ${orientation} scrollbar describes itself as "${text}", which names no visible proportion`)
+  return percent
 }
 
 // Where along its track the thumb sits, 0 (start) to 100 (end), read from the

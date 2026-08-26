@@ -16,7 +16,8 @@
 // four toolbar buttons; questions.ts's zoom badge and generation counter), and
 // any sub-query chained off a locator this file handed over
 // (patternCategoryInLibrary's `h3, button`, axisLabelValues' label pattern,
-// thumbTrackFraction's `..`). Those are reading mechanics inseparable from the
+// visibleProportionPercent's by-id lookup of the description an
+// aria-describedby names). Those are reading mechanics inseparable from the
 // algorithm around them -- hoisting them here would split a query from the only
 // logic that gives it meaning, and this file would start holding fragments
 // nobody can name.
@@ -96,9 +97,9 @@ export function rulerGroup(page: Page, axis: 'x' | 'y'): Locator {
 
 export type ScrollbarOrientation = 'horizontal' | 'vertical'
 
-// Not a barrel export, deliberately: questions.ts's thumbTrackFraction and
-// thumbPositionPercent and interactions.ts's dragScrollbarThumb are what a
-// caller wants -- the locator itself only ever exists to be measured or
+// Not a barrel export, deliberately: questions.ts's visibleProportionPercent
+// and thumbPositionPercent and interactions.ts's dragScrollbarThumb are what a
+// caller wants -- the locator itself only ever exists to be read off or
 // dragged. It was file-private before the split and is module-exported only
 // because those three readers now live in two sibling modules.
 export function scrollbarThumb(page: Page, orientation: ScrollbarOrientation): Locator {

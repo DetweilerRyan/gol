@@ -25,7 +25,7 @@ export {
   aliveCellCount,
   generationCount,
   axisLabelValues,
-  thumbTrackFraction,
+  visibleProportionPercent,
   thumbPositionPercent,
 } from './screenplay/questions.ts'
 export {

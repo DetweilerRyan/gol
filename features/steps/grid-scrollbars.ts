@@ -17,15 +17,16 @@
 // clause in this feature discriminates the two -- checked per scenario -- but
 // it is the one place this layer and the pure-module layer set up differently.
 //
-// HOW EACH THUMB CLAUSE IS OBSERVED:
+// HOW EACH THUMB CLAUSE IS OBSERVED, and every one of them is now read off
+// something the app announces:
 //   "sits at the start / end of its track" -> aria-valuenow, the accessible
 //     value the scrollbar announces (0 at the start, 100 at the end).
-//   "fills its track" / "is shorter than its track" -> thumb geometry against
-//     the track's own box. REACH-AROUND: there is no accessible expression of
-//     how much of the content is visible -- aria-valuemin/max are fixed 0 and
-//     100 and say only where the thumb sits, never how long it is. See
-//     thumbTrackFraction in features/screenplay/questions.ts, reached through
-//     ../e2e-helpers.
+//   "fills its track" / "is shorter than its track" / "covers a quarter of its
+//     track" -> the integer percentage the thumb's accessible description
+//     announces, via visibleProportionPercent. That serves all three clauses
+//     EXACTLY -- 100, under 100, 25 -- where the thumb-versus-track pixel
+//     measurement it replaced needed a tolerance at both ends to absorb
+//     sub-pixel layout rounding.
 import { createBdd } from 'playwright-bdd'
 import { expect, type Page } from '@playwright/test'
 import {
@@ -38,23 +39,22 @@ import {
   dragScrollbarThumb,
   openGrid,
   thumbPositionPercent,
-  thumbTrackFraction,
+  visibleProportionPercent,
   type ScrollbarOrientation,
 } from '../e2e-helpers'
 
 const { Given, When, Then } = createBdd()
 
-// A thumb covering this much of its track is reported as filling it. The
-// exact value is 1 -- computeThumbGeometry clamps the length to the track --
-// so the tolerance absorbs sub-pixel layout rounding only, not a genuinely
-// shrunken thumb: the shortest thumb any scenario here produces covers 0.25
-// of its track, and the longest genuinely-short one 0.17.
-const FILLS_TRACK = 0.99
+// A thumb fills its track exactly when the scrollbar announces that all of the
+// grid is in view, so this is an exact 100 rather than a threshold: thumbRatio
+// is clamped to 1, and the closest any genuinely-short thumb in this feature
+// comes to it is the quarter-track one, at 25.
+const ALL_IN_VIEW_PERCENT = 100
 
 async function expectThumbFillsTrack(page: Page, orientation: ScrollbarOrientation, fills: boolean) {
-  const assertion = expect.poll(() => thumbTrackFraction(page, orientation))
-  if (fills) await assertion.toBeGreaterThan(FILLS_TRACK)
-  else await assertion.toBeLessThan(FILLS_TRACK)
+  const assertion = expect.poll(() => visibleProportionPercent(page, orientation))
+  if (fills) await assertion.toBe(ALL_IN_VIEW_PERCENT)
+  else await assertion.toBeLessThan(ALL_IN_VIEW_PERCENT)
 }
 
 Given('a grid with no live cells', async ({ page }) => {
@@ -97,14 +97,14 @@ When(
 // The quarter-track thumb is engineered here, in the When, because the
 // scenario's Given never establishes any content -- and a thumb only shrinks
 // when there is content wider than the view. Content bounds of -224..1 cells
-// against a 1280px viewport give a thumb ratio of exactly 0.25, which the
-// step then asserts before dragging rather than assuming.
+// against a 1280px viewport put exactly a quarter of the grid in view, which
+// the step then asserts before dragging rather than assuming.
 When(
   'I drag the horizontal scrollbar thumb right by {int} pixels while it covers a quarter of its track',
   async ({ page }, pixels: number) => {
     await clickCell(page, -224, 0)
     await clickCell(page, 0, 0)
-    await expect.poll(() => thumbTrackFraction(page, 'horizontal')).toBeCloseTo(0.25, 2)
+    await expect.poll(() => visibleProportionPercent(page, 'horizontal')).toBe(25)
     await dragScrollbarThumb(page, 'horizontal', pixels)
   },
 )
