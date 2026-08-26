@@ -63,8 +63,13 @@ So the mechanism is recorded here rather than kept alive in code nobody is using
 
 That is this slice's **opening failing test** — the ordinary red-then-fix-then-green entry, and
 strictly better than inheriting a function kept alive to host an assertion nobody could write
-green. Note `locator('..')` was the last parent-axis traversal in `features/`; reintroducing it
-here is deliberate and scoped to this one check.
+green. Note `locator('..')` was the last parent-axis traversal in the **screenplay layer**, not in
+`features/` as this file first said: `features/hud-layout-and-shortcuts.e2e.spec.ts:72` still
+carries one, reading the HUD panel's box off its heading's parent. That one owes no affordance and
+stays — it asserts container geometry in an outline-specified layout spec, where geometry is the
+subject rather than a stand-in for a withheld perception (ruled at `architect`'s review of
+`scrollbar-visible-proportion-affordance`, correcting that pass's own earlier claim). Reintroducing
+the traversal here is deliberate and scoped to this one check.
 
 **A containment assertion cannot be written green before the fix.** Any tolerance wide enough to
 admit 1.0079 is exactly the un-falsifiable shape this file exists to document — so do not start by

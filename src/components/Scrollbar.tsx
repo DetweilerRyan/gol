@@ -68,6 +68,12 @@ export default function Scrollbar({ axis, metrics, trackLengthPx, onDrag, conten
   // directory here, the same reason GridRuler.tsx duplicates
   // rulerGroupLabel() and Cell.tsx duplicates cellLabel(). Scrollbar.test.tsx
   // pins both copies so they can't drift.
+  //
+  // Deliberately UNCLAMPED at the bottom: a span wide enough to round to zero
+  // (~12,800 cells at the default 20px) announces '0 percent'. Clamping to 1
+  // would make this disagree with the arithmetic everywhere else in
+  // scrollbars.ts for one degenerate case, and would pass every existing test
+  // here silently -- no unit test reaches a ratio that small.
   const descriptionId = `${axis}-scrollbar-visible-proportion`
   const visibleProportionPercent = Math.round(metrics.thumbRatio * 100)
 
