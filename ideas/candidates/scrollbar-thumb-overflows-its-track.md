@@ -47,6 +47,29 @@ Whichever lands, note the `MIN_THUMB_PX` (24) floor and the `Math.min(trackLengt
 Several `grid-scrollbars` pixel assertions are windowed (`330..380`, `165..200`) and may need
 re-deriving — check rather than assume they absorb it.
 
+## The opening failing test, written down because the instrument is being deleted
+
+`scrollbar-visible-proportion-affordance` retires `thumbTrackFraction`, which is the only thing in
+`features/` that computes thumb-box-against-track-box. **That is not a loss of observation** —
+`architect` ruled it, and the numbers are why: the function returns **1.0079** and is asserted
+`> 0.99`, so the overflow passes it _more_ easily than a correct thumb would. The nearest
+hand-written equivalent, `hBox.x + hBox.width > 1275`, has the same shape — a thumb overflowing to
+1280 satisfies it harder than one ending at 1270. Both are latent capability, not live checks.
+
+So the mechanism is recorded here rather than kept alive in code nobody is using it in:
+
+> Take the thumb's `boundingBox()` and its track's via `thumb.locator('..')`, and assert
+> `thumb.x + thumb.width <= track.x + track.width`. It **fails today at 1280 vs 1270**.
+
+That is this slice's **opening failing test** — the ordinary red-then-fix-then-green entry, and
+strictly better than inheriting a function kept alive to host an assertion nobody could write
+green. Note `locator('..')` was the last parent-axis traversal in `features/`; reintroducing it
+here is deliberate and scoped to this one check.
+
+**A containment assertion cannot be written green before the fix.** Any tolerance wide enough to
+admit 1.0079 is exactly the un-falsifiable shape this file exists to document — so do not start by
+making it pass.
+
 ## The sequencing that matters
 
 **Decide this before T8 touches `grid-scrollbars`' fifth hand-written test.** `architect` ruled that
