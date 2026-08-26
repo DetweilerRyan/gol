@@ -4,7 +4,7 @@ import { computeThumbGeometry, type ScrollbarAxis, type ScrollbarMetrics } from 
 interface ScrollbarProps {
   axis: ScrollbarAxis
   metrics: ScrollbarMetrics
-  trackLengthPx: number
+  viewportLengthPx: number
   onDrag: (axis: ScrollbarAxis, deltaTrackPx: number, thumbRatio: number) => void
   contentId: string
 }
@@ -14,9 +14,21 @@ interface ScrollbarDragState {
   thumbRatio: number
 }
 
-export default function Scrollbar({ axis, metrics, trackLengthPx, onDrag, contentId }: ScrollbarProps) {
+// The bar's own thickness -- simultaneously this element's h-2.5/w-2.5 below
+// AND the inset that clears the perpendicular bar (each track is inset by
+// exactly the other axis's bar thickness, so the two track boxes tile the
+// viewport edge with no overlap). One constant covers both facts because
+// they're the same fact.
+const SCROLLBAR_THICKNESS_PX = 10
+
+export default function Scrollbar({ axis, metrics, viewportLengthPx, onDrag, contentId }: ScrollbarProps) {
   const dragStateRef = useRef<ScrollbarDragState | null>(null)
 
+  // Clamped here, at the subtraction site, rather than inside
+  // computeThumbGeometry -- that function must not learn about CSS, and a
+  // viewport narrower than the thickness would otherwise mint a negative
+  // track length.
+  const trackLengthPx = Math.max(0, viewportLengthPx - SCROLLBAR_THICKNESS_PX)
   const { lengthPx: thumbLengthPx, offsetPx: thumbPositionPx } = computeThumbGeometry(metrics, trackLengthPx)
 
   // thumbRatio is frozen at pointer-down and reused for the whole gesture --

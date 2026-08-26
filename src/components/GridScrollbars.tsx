@@ -33,14 +33,14 @@ export default function GridScrollbars({ camera, store, size, contentId, onDrag 
       <Scrollbar
         axis="x"
         metrics={metrics.horizontal}
-        trackLengthPx={size.width}
+        viewportLengthPx={size.width}
         onDrag={onDrag}
         contentId={contentId}
       />
       <Scrollbar
         axis="y"
         metrics={metrics.vertical}
-        trackLengthPx={size.height}
+        viewportLengthPx={size.height}
         onDrag={onDrag}
         contentId={contentId}
       />

@@ -16,7 +16,7 @@ beforeEach(() => {
 })
 
 const metrics: ScrollbarMetrics = { thumbRatio: 0.4, thumbOffsetRatio: 0.25 }
-const trackLengthPx = 200
+const viewportLengthPx = 200
 
 describe('Scrollbar', () => {
   it.each([
@@ -29,7 +29,7 @@ describe('Scrollbar', () => {
         <Scrollbar
           axis={axis}
           metrics={metrics}
-          trackLengthPx={trackLengthPx}
+          viewportLengthPx={viewportLengthPx}
           onDrag={vi.fn()}
           contentId={contentId}
         />,
@@ -47,13 +47,21 @@ describe('Scrollbar', () => {
   it('reflects a different thumbOffsetRatio in aria-valuenow', () => {
     const otherMetrics: ScrollbarMetrics = { thumbRatio: 0.5, thumbOffsetRatio: 0.9 }
     render(
-      <Scrollbar axis="x" metrics={otherMetrics} trackLengthPx={trackLengthPx} onDrag={vi.fn()} contentId="grid" />,
+      <Scrollbar
+        axis="x"
+        metrics={otherMetrics}
+        viewportLengthPx={viewportLengthPx}
+        onDrag={vi.fn()}
+        contentId="grid"
+      />,
     )
     expect(screen.getByRole('scrollbar')).toHaveAttribute('aria-valuenow', '90')
   })
 
   it('describes the visible proportion (not the name) from thumbRatio, at the module default 40%', () => {
-    render(<Scrollbar axis="x" metrics={metrics} trackLengthPx={trackLengthPx} onDrag={vi.fn()} contentId="grid" />)
+    render(
+      <Scrollbar axis="x" metrics={metrics} viewportLengthPx={viewportLengthPx} onDrag={vi.fn()} contentId="grid" />,
+    )
     const thumb = screen.getByRole('scrollbar')
     expect(thumb).toHaveAccessibleDescription(visibleProportionText(40))
     expect(thumb).toHaveAccessibleName('Horizontal scroll')
@@ -61,7 +69,15 @@ describe('Scrollbar', () => {
 
   it('rounds thumbRatio = 1 to "100 percent" -- distinguishes * 100 from / 100', () => {
     const fullMetrics: ScrollbarMetrics = { thumbRatio: 1, thumbOffsetRatio: 0 }
-    render(<Scrollbar axis="y" metrics={fullMetrics} trackLengthPx={trackLengthPx} onDrag={vi.fn()} contentId="grid" />)
+    render(
+      <Scrollbar
+        axis="y"
+        metrics={fullMetrics}
+        viewportLengthPx={viewportLengthPx}
+        onDrag={vi.fn()}
+        contentId="grid"
+      />,
+    )
     expect(screen.getByRole('scrollbar')).toHaveAccessibleDescription(visibleProportionText(100))
   })
 
@@ -69,8 +85,15 @@ describe('Scrollbar', () => {
     ['x', ['absolute', 'inset-x-0', 'right-2.5', 'bottom-0', 'h-2.5']],
     ['y', ['absolute', 'inset-y-0', 'bottom-2.5', 'right-0', 'w-2.5']],
   ] as const)('positions/sizes the track and thumb per computeThumbGeometry for the %s axis', (axis, trackClasses) => {
-    render(<Scrollbar axis={axis} metrics={metrics} trackLengthPx={trackLengthPx} onDrag={vi.fn()} contentId="grid" />)
-    const { lengthPx, offsetPx } = computeThumbGeometry(metrics, trackLengthPx)
+    render(
+      <Scrollbar axis={axis} metrics={metrics} viewportLengthPx={viewportLengthPx} onDrag={vi.fn()} contentId="grid" />,
+    )
+    // Track length is the viewport minus the scrollbar's own 10px thickness
+    // (inset to clear the perpendicular bar) -- restated as a literal here,
+    // not imported from Scrollbar.tsx's SCROLLBAR_THICKNESS_PX, so this test
+    // still kills a mutant on that subtraction rather than trivially
+    // agreeing with whatever the source does.
+    const { lengthPx, offsetPx } = computeThumbGeometry(metrics, 200 - 10)
     const thumb = screen.getByRole('scrollbar')
     const track = thumb.parentElement
     expect(track).toHaveClass(...trackClasses)
@@ -81,9 +104,20 @@ describe('Scrollbar', () => {
     }
   })
 
+  it('clamps the track length to 0 when the viewport is narrower than the scrollbar thickness', () => {
+    render(<Scrollbar axis="x" metrics={metrics} viewportLengthPx={4} onDrag={vi.fn()} contentId="grid" />)
+    const thumb = screen.getByRole('scrollbar')
+    // 4 - 10 would be negative; the clamp at the subtraction site keeps the
+    // track (and therefore the thumb, per computeThumbGeometry's own
+    // Math.min(trackLengthPx, ...)) from ever going negative.
+    expect(thumb).toHaveStyle({ width: '0px' })
+  })
+
   it('a pointerdown -> pointermove -> pointerup drag sequence calls onDrag with (axis, deltaTrackPx, thumbRatio)', () => {
     const onDrag = vi.fn()
-    render(<Scrollbar axis="x" metrics={metrics} trackLengthPx={trackLengthPx} onDrag={onDrag} contentId="grid" />)
+    render(
+      <Scrollbar axis="x" metrics={metrics} viewportLengthPx={viewportLengthPx} onDrag={onDrag} contentId="grid" />,
+    )
     const thumb = screen.getByRole('scrollbar')
 
     fireEvent.pointerDown(thumb, { pointerId: 1, clientX: 50, clientY: 0 })
@@ -107,7 +141,9 @@ describe('Scrollbar', () => {
 
   it('a y-axis drag sequence uses clientY and calls onDrag with axis "y"', () => {
     const onDrag = vi.fn()
-    render(<Scrollbar axis="y" metrics={metrics} trackLengthPx={trackLengthPx} onDrag={onDrag} contentId="grid" />)
+    render(
+      <Scrollbar axis="y" metrics={metrics} viewportLengthPx={viewportLengthPx} onDrag={onDrag} contentId="grid" />,
+    )
     const thumb = screen.getByRole('scrollbar')
 
     fireEvent.pointerDown(thumb, { pointerId: 2, clientX: 0, clientY: 20 })
@@ -116,7 +152,9 @@ describe('Scrollbar', () => {
   })
 
   it('calls setPointerCapture on pointerdown and releasePointerCapture on pointerup when capture is still held', () => {
-    render(<Scrollbar axis="x" metrics={metrics} trackLengthPx={trackLengthPx} onDrag={vi.fn()} contentId="grid" />)
+    render(
+      <Scrollbar axis="x" metrics={metrics} viewportLengthPx={viewportLengthPx} onDrag={vi.fn()} contentId="grid" />,
+    )
     const thumb = screen.getByRole('scrollbar')
 
     fireEvent.pointerDown(thumb, { pointerId: 3, clientX: 10, clientY: 0 })
@@ -130,7 +168,9 @@ describe('Scrollbar', () => {
 
   it('does not call releasePointerCapture on pointerup once the pointer no longer has capture', () => {
     pointerCapture.hasPointerCapture.mockReturnValue(false)
-    render(<Scrollbar axis="x" metrics={metrics} trackLengthPx={trackLengthPx} onDrag={vi.fn()} contentId="grid" />)
+    render(
+      <Scrollbar axis="x" metrics={metrics} viewportLengthPx={viewportLengthPx} onDrag={vi.fn()} contentId="grid" />,
+    )
     const thumb = screen.getByRole('scrollbar')
 
     fireEvent.pointerDown(thumb, { pointerId: 4, clientX: 10, clientY: 0 })

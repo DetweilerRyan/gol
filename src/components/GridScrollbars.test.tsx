@@ -74,8 +74,12 @@ describe('GridScrollbars metrics/geometry', () => {
     expect(horizontal).toHaveAttribute('aria-valuenow', String(Math.round(metrics.horizontal.thumbOffsetRatio * 100)))
     expect(vertical).toHaveAttribute('aria-valuenow', String(Math.round(metrics.vertical.thumbOffsetRatio * 100)))
 
-    const { lengthPx: hLength } = computeThumbGeometry(metrics.horizontal, size.width)
-    const { lengthPx: vLength } = computeThumbGeometry(metrics.vertical, size.height)
+    // Track length is the viewport minus the scrollbar's own 10px thickness
+    // -- restated as a literal subtraction here (not imported from
+    // Scrollbar.tsx's SCROLLBAR_THICKNESS_PX), so this still kills a mutant
+    // on that subtraction rather than trivially agreeing with the source.
+    const { lengthPx: hLength } = computeThumbGeometry(metrics.horizontal, size.width - 10)
+    const { lengthPx: vLength } = computeThumbGeometry(metrics.vertical, size.height - 10)
     // Asserting on the inline style directly (not toHaveStyle's getComputedStyle-based
     // comparison) -- jsdom's cssstyle rounds getComputedStyle's serialized px values to 3
     // decimal places, which a non-terminating thumbLengthPx would fail on even though the
@@ -84,12 +88,12 @@ describe('GridScrollbars metrics/geometry', () => {
     expect(vertical?.style.height).toBe(`${vLength}px`)
   })
 
-  it('passes trackLengthPx from size.width/size.height, reflected in a different size', () => {
+  it('passes viewportLengthPx from size.width/size.height, track derived by subtracting scrollbar thickness, reflected in a different size', () => {
     const bigSize: ElementSize = { width: 800, height: 600 }
     renderScrollbars({ size: bigSize })
 
     const metrics = computeScrollbarMetrics(camera, contentBounds, bigSize.width, bigSize.height)
-    const { lengthPx: hLength } = computeThumbGeometry(metrics.horizontal, bigSize.width)
+    const { lengthPx: hLength } = computeThumbGeometry(metrics.horizontal, bigSize.width - 10)
     const horizontal = screen
       .getAllByRole('scrollbar')
       .find((el) => el.getAttribute('aria-orientation') === 'horizontal')

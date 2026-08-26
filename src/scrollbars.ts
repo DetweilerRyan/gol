@@ -80,16 +80,25 @@ export function computeThumbGeometry(metrics: ScrollbarMetrics, trackLengthPx: n
 
 export type ScrollbarAxis = 'x' | 'y'
 
-// Thumb-drag pixels are 1:1 with on-screen track pixels (the track spans the
-// full viewport edge), and a deltaTrackPx thumb movement corresponds to
-// deltaTrackPx / thumbRatio px of content motion -- the inverse of
-// thumbRatio being how much the track is compressed relative to the content
-// it represents. Follows the "document scroll" sign convention (thumb
-// right/down reveals further content, offset increases), matching
-// camera.ts's applyWheelInput -- the opposite sign from panCamera's
-// drag-to-pan convention. thumbRatio must be the value from when the drag
-// started, not recomputed mid-drag, since panning changes the content's own
-// pixel position and would otherwise feed back on itself.
+// Thumb-drag pixels are treated as 1:1 with on-screen track pixels, and a
+// deltaTrackPx thumb movement corresponds to deltaTrackPx / thumbRatio px of
+// content motion -- the inverse of thumbRatio being how much the track is
+// compressed relative to the content it represents. That 1:1 relation is the
+// ACCEPTED CONTRACT ("dragging a thumb covering a quarter of its track pans
+// four times as far", asserted exactly), not a consequence of the track
+// spanning the full viewport edge -- Scrollbar.tsx's track is inset by
+// SCROLLBAR_THICKNESS_PX (10px) on each axis, so track pixels and viewport
+// pixels differ slightly, and this deliberately does NOT correct for that:
+// doing so would make dragging to the track's end pan ~0.78% short of what
+// the accepted scenario pins. The residual is self-healing -- thumb position
+// is derived from the camera on every render, not accumulated from drag
+// deltas -- so leave this arithmetic alone even though the parenthetical
+// justification above no longer holds literally. Follows the "document
+// scroll" sign convention (thumb right/down reveals further content, offset
+// increases), matching camera.ts's applyWheelInput -- the opposite sign from
+// panCamera's drag-to-pan convention. thumbRatio must be the value from when
+// the drag started, not recomputed mid-drag, since panning changes the
+// content's own pixel position and would otherwise feed back on itself.
 // prettier-ignore
 export function panCameraByScrollbarDrag(camera: Camera, axis: ScrollbarAxis, deltaTrackPx: number, thumbRatio: number): Camera {
   if (thumbRatio <= 0) return camera
