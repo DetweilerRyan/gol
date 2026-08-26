@@ -1,0 +1,47 @@
+id: no-unbraced-name-from-contents
+valid:
+  # The three braced forms this slice landed. The child is a jsx_expression, not a jsx_text.
+  - <h1 className="text-xl font-semibold">{"Conway's Game of Life"}</h1>
+  - <button type="button">{'Next Generation'}</button>
+  - <DialogTitle>{'Pattern Library'}</DialogTitle>
+  # An interpolated name already mutates -- the template-literal branch of the instrumenter runs
+  # before isValidParent() -- and is not this rule's business either way.
+  - <button>{`Cell ${x}, ${y}`}</button>
+  # The not: clause. An aria-label supersedes the text, so the text is not the accessible name and
+  # bracing it would buy a mutant guarding nothing. This is GridToolbar.tsx's live shape.
+  - <button aria-label={'Reset view'}>Reset</button>
+  - <button aria-label="Open pattern library">Patterns</button>
+  # Catalyst's capitalised <Button> is outside the enumeration by decision, not by accident --
+  # see the rule's own note, and ideas/candidates/toolbar-button-text-is-unasserted.md.
+  - <Button plain>Patterns</Button>
+  # Non-enumerated elements. Double-quoted because a plain YAML scalar containing ": " parses as a
+  # mapping -- measured on the sibling fixture, an unquoted one aborts `ast-grep test`.
+  - '<span className="font-medium">Generation: {generation}</span>'
+  - <Subheading level={3}>{category}</Subheading>
+  - <div>Some prose</div>
+  # Whitespace-only jsx_text between child elements. Not a text-named button, and the `\S` guard
+  # is what keeps it out.
+  - |-
+    <button aria-hidden>
+      <Icon />
+    </button>
+  # An enumerated element whose text is a DESCENDANT's rather than its own. inside: stops at the
+  # neighbor, so the h2 does not answer for the span's text.
+  - <h2><span>Nested</span></h2>
+invalid:
+  # The three sites this slice braced, in the form they carried before it.
+  - <h1 className="text-xl font-semibold">Conway's Game of Life</h1>
+  - <button type="button">Next Generation</button>
+  - <DialogTitle>Pattern Library</DialogTitle>
+  # The heading range, so a future narrowing of h[1-6] to h1 alone fails here rather than silently.
+  - <h2>Section</h2>
+  - <h6>Deepest</h6>
+  # A multi-line element: the jsx_text node carries the surrounding newlines and indentation, and
+  # the `\S` guard still admits it. Block scalar rather than quoting.
+  - |-
+    <h3>
+      Multi-line heading
+    </h3>
+  # aria-labelledby is deliberately NOT in the not: clause, so this fires even though the name is
+  # in fact superseded. A finding here is the question the rule's note wants asked.
+  - <h1 aria-labelledby="other">Conway's Game of Life</h1>

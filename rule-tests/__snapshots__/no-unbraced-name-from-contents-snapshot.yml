@@ -1,0 +1,136 @@
+id: no-unbraced-name-from-contents
+snapshots:
+  <DialogTitle>Pattern Library</DialogTitle>:
+    labels:
+    - source: Pattern Library
+      style: primary
+      start: 13
+      end: 28
+    - source: DialogTitle
+      style: secondary
+      start: 1
+      end: 12
+    - source: DialogTitle
+      style: secondary
+      start: 1
+      end: 12
+    - source: <DialogTitle>Pattern Library</DialogTitle>
+      style: secondary
+      start: 0
+      end: 42
+  <button type="button">Next Generation</button>:
+    labels:
+    - source: Next Generation
+      style: primary
+      start: 22
+      end: 37
+    - source: button
+      style: secondary
+      start: 1
+      end: 7
+    - source: button
+      style: secondary
+      start: 1
+      end: 7
+    - source: <button type="button">Next Generation</button>
+      style: secondary
+      start: 0
+      end: 46
+  <h1 aria-labelledby="other">Conway's Game of Life</h1>:
+    labels:
+    - source: Conway's Game of Life
+      style: primary
+      start: 28
+      end: 49
+    - source: h1
+      style: secondary
+      start: 1
+      end: 3
+    - source: h1
+      style: secondary
+      start: 1
+      end: 3
+    - source: <h1 aria-labelledby="other">Conway's Game of Life</h1>
+      style: secondary
+      start: 0
+      end: 54
+  <h1 className="text-xl font-semibold">Conway's Game of Life</h1>:
+    labels:
+    - source: Conway's Game of Life
+      style: primary
+      start: 38
+      end: 59
+    - source: h1
+      style: secondary
+      start: 1
+      end: 3
+    - source: h1
+      style: secondary
+      start: 1
+      end: 3
+    - source: <h1 className="text-xl font-semibold">Conway's Game of Life</h1>
+      style: secondary
+      start: 0
+      end: 64
+  <h2>Section</h2>:
+    labels:
+    - source: Section
+      style: primary
+      start: 4
+      end: 11
+    - source: h2
+      style: secondary
+      start: 1
+      end: 3
+    - source: h2
+      style: secondary
+      start: 1
+      end: 3
+    - source: <h2>Section</h2>
+      style: secondary
+      start: 0
+      end: 16
+  ? |-
+    <h3>
+      Multi-line heading
+    </h3>
+  : labels:
+    - source: |2
+
+          Multi-line heading
+      style: primary
+      start: 4
+      end: 26
+    - source: h3
+      style: secondary
+      start: 1
+      end: 3
+    - source: h3
+      style: secondary
+      start: 1
+      end: 3
+    - source: |-
+        <h3>
+          Multi-line heading
+        </h3>
+      style: secondary
+      start: 0
+      end: 31
+  <h6>Deepest</h6>:
+    labels:
+    - source: Deepest
+      style: primary
+      start: 4
+      end: 11
+    - source: h6
+      style: secondary
+      start: 1
+      end: 3
+    - source: h6
+      style: secondary
+      start: 1
+      end: 3
+    - source: <h6>Deepest</h6>
+      style: secondary
+      start: 0
+      end: 16

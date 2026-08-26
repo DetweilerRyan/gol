@@ -1,0 +1,133 @@
+id: no-unbraced-name-from-contents
+language: Tsx
+severity: warning
+message: This element's accessible name comes from its text child, which is a JSXText node -- Stryker mutates no such node, so the name is outside the mutation gate.
+note: >-
+  Two honest resolutions, and no third -- the same pair its sibling rule offers, because the
+  underlying bargain is the same. BRACE IT -- <h1>{"Conway's Game of Life"}</h1> rather than
+  <h1>Conway's Game of Life</h1>, which is exactly what GenerationHud.tsx now carries; note the
+  DOUBLE quotes, since the apostrophe would terminate a single-quoted string -- which makes the
+  string an ordinary StringLiteral inside a
+  JSXExpressionContainer and therefore a mutant. OR GIVE THE ELEMENT AN aria-label, if the visible
+  text is decoration rather than the name; the label then supersedes the text and this rule stops
+  asking, which is what GridToolbar.tsx's four buttons already do. There is deliberately no
+  ignores: escape, because an escape is how the next unmutated name stays.
+# WHY THIS RULE EXISTS, AND WHY IT IS A COMPANION RATHER THAN A WIDENING.
+#
+# rules/no-unbraced-accessible-name.yml covers the same invariant -- "every accessible name in
+# src/components/ is inside the mutation gate" -- for names carried by an ATTRIBUTE. This rule
+# covers names carried by an element's own TEXT, the other half of the accessible-name computation
+# (name from contents). The two were deliberately not merged into one rule, for two reasons.
+#
+# FIRST, THEY ARE DIFFERENT RELATIONS. The sibling matches a jsx_attribute whose direct child is a
+# string, mirroring the instrumenter's own direct-parent test. This one matches a jsx_text node
+# whose direct parent is an enumerated element. One matcher cannot state both without becoming a
+# disjunction that reads as neither.
+#
+# SECOND, AND MORE IMPORTANTLY, THEY ARE DIFFERENT MECHANISMS UPSTREAM, so they will retire
+# independently. Measured by reading @stryker-mutator/instrumenter@10.0.0's
+# dist/src/mutators/string-literal-mutator.js: the sibling's opening is the isValidParent()
+# EXCLUSION LIST, which names types.isJSXAttribute(parent) alongside import declarations and
+# require() calls -- a string IS visited and then rejected. This rule's opening is one level
+# earlier and is not an exclusion at all: the mutator's guard is `path.isStringLiteral() &&
+# isValidParent(path)`, and a JSX text child parses to a Babel JSXText node, which is not a
+# StringLiteral -- so isValidParent() is never even consulted. Nothing in that directory mentions
+# JSXText: grepped across the whole of dist/src/, zero hits, and allMutators registers 17 of them. Bare JSX text is not
+# mutated by any mutator, by any mechanism, on this version. If a release ever starts mutating
+# JSXText, THIS rule becomes ceremony while the sibling stays live, and vice versa -- so do not
+# retire them together on one observation about one of them.
+#
+# BOTH FAIL SAFE IF UPSTREAM CLOSES THEM. Making the braced form stop producing a distinct mutant
+# lowers the count; it never falsely raises the score. So a closed opening is a rule to delete, not
+# a number to distrust -- and the tests that kill these mutants are the real guard on the names and
+# outlive the rule.
+#
+# THE LIVE DECAY HAZARD, BY NAME, AND IT IS THE SAME ONE. oxlint's react/jsx-curly-brace-presence
+# has an autofixer that strips exactly this form. Its `children` option DEFAULTS TO 'never'
+# (node_modules/oxlint/configuration_schema.json, oxlint 1.78.0), so merely enabling the rule with
+# no options is enough. It is off today -- .oxlintrc.json enables it nowhere and it is not in a
+# default-on category. MEASURED, at the scope of the command actually run: with the rule enabled at
+# its defaults over throwaway copies of GenerationHud.tsx, PatternLibraryModal.tsx and
+# GridToolbar.tsx, oxlint reported all seven braced sites and `oxlint --fix` rewrote every one back
+# to a bare form -- 7 of 7, being this rule's three text children AND the sibling rule's four
+# attributes in GridToolbar.tsx. One config line plus one --fix would revert both slices at once,
+# deleting the mutants with no threshold anywhere noticing, since a mutation score is a ratio over
+# the mutants that exist. THAT is what these two rules are actually for: catching the revert, not
+# the original omission.
+#
+# THE ENUMERATION IS A DECISION, NOT A SHAPE. "Accessible name comes from contents" is an ARIA
+# property of a role, not something the syntax can tell you, so the element list is enumerated by
+# hand and extends on use: h1-h6 (heading), button, and DialogTitle (Headless UI's, which
+# auto-registers itself as the dialog's aria-labelledby -- that supersession is exactly why
+# PatternLibraryModal.tsx's own aria-label was deleted by the mutate-accessible-names slice, and
+# why its title is the dialog's real name).
+#
+# CATALYST'S <Button> IS DELIBERATELY OUT OF SCOPE, and this is a ruling rather than an oversight.
+# GridToolbar.tsx's four <Button>s each carry an aria-label that SUPERSEDES their visible text, so
+# their text is not a name and bracing it would buy a mutant guarding nothing this rule cares
+# about. Adding the capitalised name to the enumeration would report all four. That leaves the
+# visible strings 'Reset' and 'Patterns' asserted by nothing anywhere, which is a real gap and a
+# DIFFERENT one -- it is filed as ideas/candidates/toolbar-button-text-is-unasserted.md, and the
+# fix there is a test, not a brace. Subheading is the nearest current non-member for the other
+# reason: it renders a heading but PatternLibraryModal.tsx uses it for a category label inside a
+# dialog already named by its title.
+#
+# aria-labelledby IS DELIBERATELY ABSENT FROM THE not: CLAUSE BELOW, though it supersedes text
+# exactly as aria-label does. No element in src/components/ carries one today, so including it
+# would be widening the matcher for a shape nobody writes -- and if one appears, a finding here is
+# a better question than a silent pass ("this element is named by another node's text; is THAT
+# node's text mutated?"). Same reasoning as the sibling rule's LifeBoard.tsx paragraph: prefer the
+# rule that asks on the day the shape lands.
+#
+# THE MATCHER. `kind: jsx_text` with `regex: '\S'` skips the whitespace-only jsx_text nodes that
+# sit between child elements -- <button><Icon /></button> has one and is not a text-named button.
+# `inside:` defaults to stopBy: neighbor, so the jsx_element is the DIRECT parent, which is what
+# makes this "the element's own text" rather than any descendant's. Matching the text node rather
+# than the element is deliberate: the finding points at the string a reader has to brace.
+# Everything is matched on a field or a kind, never on statement text -- this repo has twice been
+# bitten by a regex over a statement reading the comments inside it
+# (no-playwright-config-import-in-mutation-config's first form did exactly that).
+#
+# src/components/*.tsx minus *.test.tsx, matching the sibling: a test file's JSX is a fixture
+# rather than a shipped affordance.
+#
+# NO -ts TWIN, for the sibling's reason verbatim: JSX is a parse error in a .ts file, so a
+# TypeScript-language twin could match nothing by construction.
+#
+# THE RESIDUAL THIS RULE DOES NOT CLOSE, and it is the sibling's residual unchanged. Stryker's
+# string-literal mutator replaces a string with "" (or with filler for an empty one). It never
+# SWAPS two strings -- so a clean mutation run over these three sites is not evidence that
+# exchanging two names would be caught. Do not read a green score as covering it. That check
+# remains a hand-written membership test, of the kind GridRuler.test.tsx carries for the two ruler
+# groups. This is an argument against MORE mechanism, not for it: the answer on this slice was one
+# small companion rule plus one hand-written assertion, and the residual is why it stopped there.
+#
+# PROMOTION TRIGGER: if an unbraced name-from-contents element ever reaches hardener -- i.e. this
+# rule is reported and the slice landed anyway -- change severity to error, which makes it move the
+# exit code.
+files:
+  - 'src/components/*.tsx'
+ignores:
+  - 'src/components/*.test.tsx'
+rule:
+  # A text child with at least one non-whitespace character...
+  kind: jsx_text
+  regex: '\S'
+  # ...whose DIRECT parent (inside: defaults to stopBy: neighbor) is an element that takes its
+  # accessible name from its contents, and does not have that name superseded by an aria-label.
+  inside:
+    kind: jsx_element
+    all:
+      - has:
+          field: open_tag
+          has:
+            field: name
+            regex: '^(h[1-6]|button|DialogTitle)$'
+      - not:
+          has:
+            field: open_tag
+            has:
+              kind: jsx_attribute
+              has:
+                kind: property_identifier
+                regex: '^aria-label$'
