@@ -85,3 +85,117 @@ deletion-trigger comment), `features/steps/grid-scrollbars.ts`,
   user-perceivable information, which unlike gridline majorness it clearly is.
 - Are the dependent scenarios at the right altitude in the first place? See
   [[prune-gherkin-implementation-altitude]], which covers the sibling clauses in the same file.
+
+## Wording decision
+
+Settled by `product` in SPECIFY, downstream of `architect`'s CONTRACT ruling that the affordance
+is `aria-describedby` → a visually-hidden span on the thumb (the node carrying
+`role="scrollbar"`), additive to `aria-valuenow`. Only the **text** was open; this section closes
+it. No `.feature` changes, and `aria-label` stays `Horizontal scroll` / `Vertical scroll`.
+
+### The text
+
+```
+<N> percent of the grid is in view
+```
+
+`28 percent of the grid is in view` · `100 percent of the grid is in view` (34 chars, the longest
+form). Identical on both axes at the same proportion — orientation already disambiguates.
+
+`<N>` is `Math.round(metrics.thumbRatio * 100)`, the same rounding convention `aria-valuenow`
+already applies to `thumbOffsetRatio`. **No clamp**: a span wide enough to round to zero (~12,800
+cells at the default 20px cell) announces `0 percent of the grid is in view`. That is decided, not
+overlooked — clamping to 1 would make the announcement disagree with the arithmetic everywhere
+else in `scrollbars.ts` for one degenerate case a player has to work to reach.
+
+### Why "percent" and not `%`
+
+The one forced divergence from `architect`'s illustrative `28% of the grid is in view`, and the
+collision check is what forces it. Playwright's `getByText(string)` is **substring and
+case-insensitive by default** — `exact?: boolean`, "Default to false"
+(`node_modules/playwright-core/types/types.d.ts:2985`). Three specs match the zoom badge with a
+bare percent **string**:
+
+- `perf/zoom.perf.spec.ts:157` — `page.getByText('100%')`
+- `perf/pan.perf.spec.ts:60` — `page.getByText('40%')`
+- `perf/tile-boundary.perf.spec.ts:141` — `page.getByText(expectedZoomReadout(spec.cellSizePx))`, which returns a bare `` `${n}%` `` (`perf/tile-boundary.ts:128`)
+
+Any description containing a literal `NN%` token resolves those locators to three elements (the
+badge plus both sr-only descriptions) and throws a strict-mode violation — in `perf/`, which is
+outside `product`'s write boundary and outside every quality gate. Spelling the word costs
+nothing: the span is visually hidden, its only consumer is speech, and a screen reader verbalises
+`%` as "percent" regardless. Same class of failure `architect` measured for a bare-`100%`
+description against `zoomPercent`, one locator further out.
+
+### What it must not collide with, and doesn't
+
+Every string the app renders: `Conway's Game of Life` · `Next Generation` · `Generation: N` ·
+`+` · `−` · `Reset` · `Patterns` · `NN%` (zoom badge) · ruler labels `-?\d+` · `Pattern Library` ·
+`Still Life`/`Oscillators`/`Spaceships` · the 8 pattern names. The words `percent`, `in view`,
+`of the grid` and `showing` appear in none of them, in `src/` or in `features/`.
+
+- `page.getByText(/^\d+%$/)` (`questions.ts`'s `zoomPercent`, `modal-inertness.e2e.spec.ts:48`) — anchored, and the phrase carries no `%` at all. Two independent reasons it can't match.
+- `page.getByText(/^Generation: \d+$/)` — anchored.
+- `rulerGroup(page, axis).getByText(/^-?\d+$/)` — anchored **and** scoped inside the ruler group; the span is inside the scrollbar track.
+- The three `perf/` substring sites above — no `%` glyph, so no match.
+- RTL `screen.getByText` in `src/components/*.test.tsx` — whole-string by default, and `Scrollbar.test.tsx` renders `Scrollbar` alone.
+
+### The parser regex
+
+`/(\d+) percent of the grid is in view/`, deliberately **un**anchored and **right**-anchored by
+the literal that follows the digits. That is what makes it survive the string being spoken after
+name + role + value: in `Horizontal scroll, scroll bar, 28, 28 percent of the grid is in view`
+the only `(\d+)` followed by ` percent of the grid` is the right one. A left-anchored form would
+have been ambiguous against the preceding `valuenow`.
+
+### Encoding — `src/test-support/scrollbarQuery.ts`
+
+New module on the `rulerQuery.ts` precedent: imports nothing, plain functions, and
+`Scrollbar.tsx` keeps a **deliberate duplicate** of the literal because
+`rules/no-test-support-in-product-tsx.yml` forbids the import. `rulerQuery.ts`'s lesson is that
+an export with no caller gets deleted at review, so both exports are named with theirs:
+
+| export  | shape                                              | caller                                                                             |
+| ------- | -------------------------------------------------- | ---------------------------------------------------------------------------------- |
+| builder | `visibleProportionText(percent: number): string`   | `src/components/Scrollbar.test.tsx`, asserting the rendered description            |
+| parser  | `parseVisibleProportionText(text: string): number` | `features/screenplay/questions.ts`, in the function replacing `thumbTrackFraction` |
+
+`questions.ts` already imports `src/test-support/cellQuery.ts` under the same licence — reading
+_what a control announces_ rather than _how to reach it_.
+
+### Two consequences for whoever verifies this
+
+- **The announcement is truer than the pixels.** `computeThumbGeometry` clamps the rendered thumb
+  to `MIN_THUMB_PX` (24), so at extreme spans the drawn length overstates the proportion; the
+  description reports `thumbRatio` unclamped. The two legitimately disagree there. Not a defect.
+- **It serves both dependent `.feature` clauses exactly, with no tolerance.** "fills its track" is
+  `100`; "covers a quarter of its track" is `25`. Today those are geometry reads needing
+  `FILLS_TRACK = 0.99` and `toBeCloseTo(0.25, 2)` to absorb sub-pixel layout rounding
+  (`features/steps/grid-scrollbars.ts:48-58,107`). An integer percent read off the accessibility
+  tree needs neither.
+
+### Rejected
+
+- **`28% of the grid is in view`** — `architect`'s illustrative example, glyph intact. Rejected on
+  the measured `perf/` substring collision above; otherwise identical and acceptable.
+- **`Showing 28 percent of the grid`** — a cleaner participial fragment, and it puts an anchor
+  word _before_ the number. Rejected because no constraint discriminates it: the right-anchored
+  parser already makes the number unambiguous, and constraint 5's "fragment" is satisfied by the
+  constraint author's own example, which contains the same copula. Divergence with no gain.
+- **`Grid in view: 28 percent`** — echoes `Generation: N`'s label form, which reads as a second
+  HUD readout rather than as a description, and invites a `/^Grid in view: \d+ percent$/`
+  full-match locator of exactly the kind constraint 3 exists to prevent.
+- **A bare `28%` or `28 percent`** — constraint 3 outright; the glyph form is the case `architect`
+  measured taking `zoomPercent` from 1 match to 3.
+- **Restating position** ("28 percent in view, 40 percent down") — constraint 4. `aria-valuenow`
+  already carries position and keeps carrying it.
+- **Naming columns, rows or coordinates** ("28 percent of the columns are in view") — constraint 2.
+  That is the `Column ruler`/`Row ruler` register, and it would also make the two axes read
+  differently at 100%, which is wrong: at rest both scrollbars are saying the same true thing.
+
+### Vocabulary check
+
+Nothing here needs to reach step text — the existing clauses ("fill its track", "be shorter than
+its track") stand unchanged. If any of it ever does, it clears `.gherkin-lintrc`'s
+`no-restricted-patterns`: no `thumb ?(offset ?)?ratio`, no `metrics`, no `content bounds`.
+"the grid" and "in view" are player vocabulary, not module vocabulary.
