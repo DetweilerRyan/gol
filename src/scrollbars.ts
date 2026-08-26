@@ -85,17 +85,19 @@ export type ScrollbarAxis = 'x' | 'y'
 // content motion -- the inverse of thumbRatio being how much the track is
 // compressed relative to the content it represents. That 1:1 relation is the
 // ACCEPTED CONTRACT ("dragging a thumb covering a quarter of its track pans
-// four times as far", asserted exactly), not a consequence of the track
-// spanning the full viewport edge -- Scrollbar.tsx's track is inset by
-// SCROLLBAR_THICKNESS_PX (10px) on each axis, so track pixels and viewport
-// pixels differ slightly, and this deliberately does NOT correct for that:
-// doing so would make dragging to the track's end pan ~0.78% short of what
-// the accepted scenario pins. The residual is self-healing -- thumb position
-// is derived from the camera on every render, not accumulated from drag
-// deltas -- so leave this arithmetic alone even though the parenthetical
-// justification above no longer holds literally. Follows the "document
-// scroll" sign convention (thumb right/down reveals further content, offset
-// increases), matching camera.ts's applyWheelInput -- the opposite sign from
+// four times as far", asserted exactly with toEqual), not a consequence of
+// the track spanning the full viewport edge -- Scrollbar.tsx's track is
+// inset by SCROLLBAR_THICKNESS_PX (10px) on each axis, so track pixels and
+// viewport pixels now differ slightly. Left uncorrected (as below), dragging
+// the thumb all the way to the track's end leaves the camera ~0.78% short of
+// the full content extent -- a residual that's self-healing, since thumb
+// position is derived from the camera on every render rather than
+// accumulated from drag deltas, so it never compounds. Do NOT "fix" this by
+// scaling deltaTrackPx by viewport/track (e.g. x1280/1270): that turns the
+// pinned 50px drag -> 200px pan scenario into ~201.57px and reddens the
+// accepted bdd layer. Follows the "document scroll" sign convention (thumb
+// right/down reveals further content, offset increases), matching
+// camera.ts's applyWheelInput -- the opposite sign from
 // panCamera's drag-to-pan convention. thumbRatio must be the value from when
 // the drag started, not recomputed mid-drag, since panning changes the
 // content's own pixel position and would otherwise feed back on itself.
