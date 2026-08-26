@@ -21,17 +21,17 @@ import { ALIVE_CELL_SELECTOR } from '../src/test-support/cellQuery.ts'
 //
 // Both are asserted below through the real UI. Neither may be deleted here
 // without restating it in features/**.
+//
+// `triage-paired-specs` cut this file from six tests to three. The plain
+// pan test and the two zoom-clamp tests went: the feature states all three
+// claims, and its generated spec drives them through the same browser. What
+// is left is the two promises above -- both pixel-exact, both unstateable in
+// the Gherkin layer's vocabulary -- plus the toolbar hit-testing regression
+// below, which is about stacking order and so has no domain counterpart at
+// all.
 
 test.beforeEach(async ({ page }) => {
   await page.goto('/')
-})
-
-test('panning moves the viewport without changing the zoom level', async ({ page }) => {
-  await dragPan(page, CENTER.x, CENTER.y, 40, 20)
-
-  await expect.poll(() => zoomPercent(page)).toBe(100)
-  // offsetX'=-34, offsetY'=-23.5 -> world (0,0) now renders at (680, 470).
-  await expect.poll(() => elementAtPoint(page, 680, 470)).toBe('Cell 0, 0')
 })
 
 test('zooming in via the toolbar keeps the world origin fixed at the viewport center', async ({ page }) => {
@@ -39,22 +39,6 @@ test('zooming in via the toolbar keeps the world origin fixed at the viewport ce
 
   await expect.poll(() => zoomPercent(page)).toBe(125)
   await expect.poll(() => elementAtPoint(page, CENTER.x, CENTER.y)).toBe('Cell 0, 0')
-})
-
-test('zoom clamps to the maximum after enough zoom-in clicks', async ({ page }) => {
-  const zoomIn = page.locator('button[aria-label="Zoom in"]')
-  for (let i = 0; i < 10; i++) {
-    await zoomIn.click()
-  }
-  await expect.poll(() => zoomPercent(page)).toBe(300)
-})
-
-test('zoom clamps to the minimum after enough zoom-out clicks', async ({ page }) => {
-  const zoomOut = page.locator('button[aria-label="Zoom out"]')
-  for (let i = 0; i < 10; i++) {
-    await zoomOut.click()
-  }
-  await expect.poll(() => zoomPercent(page)).toBe(40)
 })
 
 test('toolbar buttons never toggle whatever cell happens to be positioned underneath them', async ({ page }) => {
