@@ -10,6 +10,11 @@ describe('GenerationHud', () => {
     expect(screen.getByText('Generation: 0')).toBeInTheDocument()
   })
 
+  it('renders the page heading', () => {
+    render(<GenerationHud onAdvance={vi.fn()} />)
+    expect(screen.getByRole('heading', { name: "Conway's Game of Life" })).toBeInTheDocument()
+  })
+
   it('renders the panel positioned top-left', () => {
     const { container } = render(<GenerationHud onAdvance={vi.fn()} />)
     expect(container.firstElementChild).toHaveClass('absolute', 'top-4', 'left-4')

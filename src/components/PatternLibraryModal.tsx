@@ -17,7 +17,7 @@ interface PatternLibraryModalProps {
 export default function PatternLibraryModal({ open, onSelectPattern, onClose }: PatternLibraryModalProps) {
   return (
     <Dialog open={open} onClose={onClose} size="sm">
-      <DialogTitle>Pattern Library</DialogTitle>
+      <DialogTitle>{'Pattern Library'}</DialogTitle>
       <DialogBody>
         {PATTERN_CATEGORIES.map((category) => (
           <section key={category} className="mb-4 last:mb-0">
