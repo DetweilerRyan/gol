@@ -1,40 +1,38 @@
 import { test, expect, type Page } from '@playwright/test'
-import { axisLabelValues, CENTER, cellLocator, dragPan, rulerGroup } from './e2e-helpers'
+import { axisLabelValues, CENTER, dragPan } from './e2e-helpers'
 
-// rulerGroup lives in features/screenplay/elements.ts -- reached from here
-// through ./e2e-helpers, the Screenplay layer's single entry point -- because
-// features/steps/grid-reference-lines.ts reads the same ruler, and how a ruler
-// is reached belongs in one place. It resolves the axis through the
-// accessible tree -- role="group" plus the name GridRuler gives it -- so an
-// assertion below says the label is on the COLUMN ruler, not merely that some
-// element carrying the top strip's Tailwind class has that text.
-async function labelSet(page: Page, axis: 'x' | 'y'): Promise<Set<number>> {
-  return new Set(await axisLabelValues(page, axis))
+// The browser-level counterpart of grid-reference-lines.feature, cut to two
+// tests by `triage-paired-specs`. The feature asks whether ONE coordinate
+// carries a major gridline; these two ask what the WHOLE set of them is for a
+// given camera, which no per-coordinate scenario can state and which is where
+// an off-by-one in the range walk would show.
+function labelSet(page: Page, axis: 'x' | 'y'): Promise<Set<number>> {
+  return axisLabelValues(page, axis).then((values) => new Set(values))
 }
 
 test.beforeEach(async ({ page }) => {
   await page.goto('/')
 })
 
-const GRIDLINE_ROWS = [
-  { coordinate: 0, isMajor: true },
-  { coordinate: 10, isMajor: true },
-  { coordinate: -10, isMajor: true },
-  { coordinate: 5, isMajor: false },
-  { coordinate: 11, isMajor: false },
-  { coordinate: -3, isMajor: false },
-] as const
-
-for (const { coordinate, isMajor } of GRIDLINE_ROWS) {
-  test(`coordinate ${coordinate} ${isMajor ? 'is' : 'is not'} a major gridline`, async ({ page }) => {
-    const label = rulerGroup(page, 'x').getByText(new RegExp(`^${coordinate}$`))
-    await expect(label).toHaveCount(isMajor ? 1 : 0)
-
-    const cellClass = await cellLocator(page, coordinate, 0).getAttribute('class')
-    expect(cellClass?.includes('border-l-2 border-l-gray-400')).toBe(isMajor)
-  })
-}
-
+// KEEP EVIDENCE FOR BOTH TESTS BELOW, and the reason neither may be deleted
+// as "arithmetic the unit tests already cover" -- which is exactly the
+// mistake `ruler-label-axis-affordance` was written to document.
+//
+// These two are the sole axis-swap guard anywhere, measured 2026-08-26:
+// 46/46 bdd green under a `Column ruler`/`Row ruler` swap, 60/62 e2e green,
+// these two the only failures. (62 was the e2e project's size before this
+// triage cut it to 27; the two failures are these.)
+//
+// Each asserts an exact SET per axis, and the two axes' sets differ -- x
+// spans seven multiples of 10, y spans five, because the viewport is 1280 by
+// 900. That difference is the whole guard: swap which axis a label is
+// announced under and the x assertion sees y's five and the y assertion sees
+// x's seven. A per-coordinate check cannot see it, because a bare `10` reads
+// the same on either ruler; src/gridGeometry.test.ts cannot see it either,
+// because it never renders one. The axis is resolved through the accessible
+// tree -- axisLabelValues goes through the role="group" GridRuler names each
+// ruler with -- so what is pinned here is what an assistive technology would
+// announce, not a Tailwind class on the top strip.
 test('the default camera shows major gridlines exactly at the multiples of 10 in its visible range', async ({
   page,
 }) => {
