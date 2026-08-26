@@ -54,6 +54,14 @@ test('content wider than the viewport shrinks only the horizontal thumb', async 
   expect(vBox.height).toBeGreaterThan(900 * 0.95)
 })
 
+// NO .feature CAN HOLD THIS CLAIM, which is why it survived the
+// `triage-paired-specs` cut alongside the thumb-length measurement above
+// rather than being handed to the generated layer. It quantifies over whatever cell
+// happens to lie under the thumb at a given pixel -- a stacking and
+// hit-testing coincidence with no domain name at all, unstateable without the
+// pixel vocabulary .gherkin-lintrc's no-restricted-patterns keeps out of the
+// contract. Its sibling in camera-pan-and-zoom.e2e.spec.ts (the toolbar's own
+// propagation regression) says the same of itself, in that file's header.
 test('dragging a scrollbar thumb never toggles whatever cell happens to be positioned underneath it', async ({
   page,
 }) => {

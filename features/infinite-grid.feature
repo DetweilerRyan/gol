@@ -3,9 +3,10 @@ Feature: Infinite grid
   I want the grid to have no boundaries
   So that I can place and evolve cells at any coordinate, including negative ones
 
-  Scenario: Cells can be placed far from the origin in any direction
+  Scenario: Cells placed far from the origin in any direction survive panning away and back
     Given an empty grid
-    When I toggle the cells at (-20, -15) and (100, 0)
+    And I toggle the cells at (-20, -15) and (100, 0)
+    When I pan far away from both cells and back
     Then the cell at (-20, -15) should be alive
     And the cell at (100, 0) should be alive
 
