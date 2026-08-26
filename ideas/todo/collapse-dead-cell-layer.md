@@ -53,6 +53,42 @@ unit assertions, and **13 `elementAtPoint` sites** — those resolve a pixel to 
 element name, which is exactly what this removes, and they are the genuinely
 hard part. Depends on `aria-pressed-cell-state` for the shared query helper.
 
+## An acceptance criterion this slice inherits, with the measurement behind it
+
+`architect` investigated `renderer-crash-and-hit-test-drift` and retired it — the filed hit-test
+defect turned out to be a harness artifact. But the investigation surfaced **one real,
+user-facing residue that this slice closes for free**, and it should be an explicit criterion
+rather than a side effect:
+
+> **The hover indicator and the click must resolve to the same cell at every point.**
+
+Today they do not. CSS `:hover` goes through the browser's hit-test path, which `architect`
+measured as loose by a fixed **~0.9px** favouring the later-in-DOM sibling — at every zoom, every
+DPR, and at integer `cellSize` as well as fractional. The _click_ does not go through that path:
+pointer capture retargets it, so `Grid`'s `onTap` resolves the cell arithmetically through
+`screenToWorld`, which is exact.
+
+| zoom | cell boundary | `:hover` flips at | **click flips at** |
+| ---- | ------------- | ----------------- | ------------------ |
+| 41%  | 623.616       | 622.72            | **623.62**         |
+| 100% | 660.000       | 659.10            | **660.00**         |
+
+So in a ~0.9px band left of and above every boundary, **the user sees cell N highlighted and
+clicking toggles cell N−1.** Tiny, real, and invisible to every current test.
+
+**This slice dissolves it rather than patching it**: removing per-cell hit boxes and replacing
+`hover:bg-gray-100` with a single cursor-following indicator makes hover `screenToWorld`-driven —
+the same resolver as the click. One resolver, no band. Verify it post-implementation the way
+`architect` measured it: step 0.1px across a boundary and confirm the highlighted cell and the
+toggled cell agree at every sample.
+
+**Two cautions carried from that investigation.** Whatever replaces the 13 `elementAtPoint` call
+sites **must not reintroduce a hit-test proxy** — `document.elementFromPoint` is what produced the
+retired defect's false positive, and it is not how this app resolves anything. And a fix that
+snaps paint or rounds `screenToWorld` was explicitly ruled out: it would import browser knowledge
+into a framework-free module, trip `no-dom-in-domain`, and break the exact-inverse identity
+`cellAnchor.property.test.ts` pins by name.
+
 ## Open questions
 
 Two product decisions are **already taken**: a **real** `role="grid"` with arrow
