@@ -66,6 +66,36 @@ describe('listMutationSites duplicate seedKey detection', () => {
     )
   })
 
+  // A single duplicated key can't tell "collect every duplicate and throw
+  // once" apart from "throw on the first duplicate found" -- one colliding
+  // pair is indistinguishable between the two, and the join between
+  // duplicate-key groups in the message is exercised by none of it (a
+  // one-element array joins to itself). Two tables sharing *two* column
+  // names forces two distinct duplicate-key groups into one thrown error,
+  // which is what actually pins "collect all, throw once" and the '; '
+  // separator between groups.
+  const TWO_TABLES_TWO_SHARED_COLUMNS = `Feature: Two duplicated columns
+  Scenario Outline: First
+    Given a value of <a> and <b>
+
+    Examples:
+      | a | b |
+      | 1 | 2 |
+
+  Scenario Outline: Second
+    Given a value of <a> and <b>
+
+    Examples:
+      | a | b |
+      | 3 | 4 |
+`
+
+  it('collects every duplicated key into one thrown error rather than stopping at the first', () => {
+    expect(() => listMutationSites(TWO_TABLES_TWO_SHARED_COLUMNS, 'two.feature')).toThrow(
+      /two\.feature:0:a" at lines 7, 14; .*two\.feature:0:b" at lines 7, 14/,
+    )
+  })
+
   it('does not throw when two tables use distinct column names', () => {
     const distinctColumns = `Feature: Distinct columns
   Scenario Outline: First
