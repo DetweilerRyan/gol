@@ -8,6 +8,10 @@ import { isTupleList, mutateTupleList } from './tuple-list.ts'
 // one.
 import { mutateValue } from './mutation-rules.ts'
 
+// Byte-identical mirror of features/steps/pattern-library.ts:58's own
+// parseCellList regex, not tuple-list.ts's own parser -- see
+// tuple-list.property.test.ts's identical constant for why the oracle has to
+// stay independent of the thing under test. Keep this in sync by hand.
 const PAIR = /\((-?\d+),\s*(-?\d+)\)/g
 
 function pairsOf(value: string): string[] {
@@ -16,10 +20,11 @@ function pairsOf(value: string): string[] {
 
 // mutateTupleList draws from `rand` exactly twice, in either branch: a class
 // draw, then either a swap-candidate-index draw or a component-index draw.
-// The recursive call into mutation-rules.ts's mutateValue re-seeds its own
-// generator from `${derivedSeedKey}::${componentText}` and never touches the
-// `rand` passed in here -- see mutation-rules.ts's own header on that
-// contract. So a two-element draw queue is exactly enough for any call.
+// The component-change branch's call into seeded-random.ts's mutateInteger
+// re-seeds its own generator from `${derivedSeedKey}::${componentText}` (via
+// a fresh seededRandom call) and never touches the `rand` passed in here --
+// see tuple-list.ts's mutateComponent for that contract. So a two-element
+// draw queue is exactly enough for any call.
 function queuedRand(draws: number[]): () => number {
   let i = 0
   return () => draws[i++]

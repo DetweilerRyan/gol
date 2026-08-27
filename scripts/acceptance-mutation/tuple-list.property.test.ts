@@ -65,6 +65,16 @@ import { fc, test } from '@fast-check/vitest'
 import { describe, expect, it } from 'vitest'
 import { mutateValue } from './mutation-rules.ts'
 
+// Byte-identical mirror of features/steps/pattern-library.ts:58's own
+// parseCellList regex -- deliberately, not tuple-list.ts's own parser. The
+// oracle for these properties has to be independent of the thing under test,
+// and it has to be independent in the direction that matters: the step is
+// what the acceptance suite actually reads a pattern's shape against, so
+// mirroring IT (rather than reaching into tuple-list.ts's own
+// TUPLE_LIST_SHAPE/parseTupleList) is what keeps this file honest if the two
+// ever drift. Keep this in sync with the step file by hand; a test that
+// imported the step's regex would couple features/steps/*.ts (product's) to
+// scripts/ (coder's).
 const PAIR = /\((-?\d+),\s*(-?\d+)\)/g
 
 function pairsOf(value: string): string[] {
