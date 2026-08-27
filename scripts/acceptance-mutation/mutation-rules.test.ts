@@ -256,12 +256,21 @@ describe('mutateValue', () => {
 })
 
 // The exact output of this module is load-bearing, not an implementation
-// detail: `npm run acceptance-mutation` has a published baseline (142 mutants
-// | 128 killed | 14 survived | 90.1%) that every role checks its work against,
-// and that baseline only means anything because a given (value, seedKey) pair
-// always produces the same mutant. Any change to the hash, the mulberry32
-// draws, the draw *order*, or which rule claims a value silently invalidates
-// it. These two tables pin that down.
+// detail: `npm run acceptance-mutation` reports a mutant/killed/survived split
+// that every role checks its work against, and that figure only means anything
+// because a given (value, seedKey) pair always produces the same mutant. Any
+// change to the hash, the mulberry32 draws, the draw *order*, or which rule
+// claims a value silently invalidates it. These two tables pin that down.
+//
+// The figure itself is deliberately NOT written down here. This comment used
+// to carry `142 mutants | 128 killed | 14 survived | 90.1%` and had gone stale
+// by a wide margin -- not drifted, but left behind by the runner's move onto
+// playwright-bdd and by the pruning of the Examples tables it counts. A
+// literal here is wrong the moment the next slice lands, and reads as
+// authoritative while being wrong, which is the worse of the two failure
+// modes. Take the current figure from `product`'s most recent VERIFY handoff
+// on main, which is where .claude/agents/articles/engineering.md points for it
+// and for the same stated reason.
 //
 // The near-miss rows are the point of the value table, not padding: "2026-5-13"
 // and "3." and "PT" are there so a rule's pattern can't quietly widen to

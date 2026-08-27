@@ -185,6 +185,22 @@ function mutateInteger(value: string, rand: RandomFn): string {
 
 function mutateDecimal(value: string, rand: RandomFn): string {
   const decimals = value.split('.')[1].length
+  // KNOWN DEFECT, left as-is deliberately: this is always exactly 1. The
+  // decimal rule's pattern requires at least one digit after the dot, so
+  // decimals >= 1, so 1e-(decimals-1) <= 1 and Math.max clamps every case to
+  // the constant. The delta is therefore precision-independent where the
+  // expression plainly intends it to scale with the number of decimals.
+  // Dropping the clamp and using Math.min are the *same* fix, not two --
+  // min(1, x) = x for all x <= 1 -- so the real question is whether a decimal
+  // mutant should be a constant-magnitude or a precision-scaled perturbation,
+  // which is a contract question about what acceptance-mutation measures
+  // rather than a tidy-up: answering it re-pins every decimal row in
+  // mutation-rules.test.ts's PINNED table. No .feature carries a decimal
+  // column today, so nothing observable moves either way. Filed as
+  // ideas/candidates/decimal-mutant-magnitude-is-precision-independent.md.
+  // The three mutants on this line are equivalent *as written* and are
+  // expected to survive the mutation gate; that survival is the defect's
+  // only remaining signal, so don't collapse this to a literal 1.
   const magnitude = Math.max(1, Number(`1e-${decimals - 1}`))
   // A nonzero delta can still round back to the original string via toFixed
   // (e.g. 1.5 + 0.001 -> "1.5"), so retry against the actual formatted
@@ -239,12 +255,32 @@ const VALUE_RULES: ValueRule[] = [
   { matches: (v) => v.includes(',') && mutableCommaIndexes(v).length > 0, mutate: mutateCommaList },
   { matches: (v) => /^true$/i.test(v), mutate: (v) => matchCase(v, 'false') },
   { matches: (v) => /^false$/i.test(v), mutate: (v) => matchCase(v, 'true') },
+  // Inert today, deliberately kept: `mutate` is the same `mutateString` the
+  // no-rule-matched fallback in mutateValue calls, and `rand` is seeded
+  // *before* rule dispatch, so whether this predicate fires is unobservable
+  // -- same function, same stream, same output. It stays because VALUE_RULES
+  // transcribes mutator-spec.md's rule list, and an entry omitted for
+  // coinciding with the fallback makes that transcription unreadable against
+  // the spec. Two things would re-arm it, and either one makes this comment
+  // wrong: a fallback that is no longer mutateString, or a null-like mutator
+  // that reads the `seedKey` third argument mutateString ignores. The
+  // mutants on this line are equivalent by construction and are expected to
+  // survive the mutation gate -- see the mutateDecimal note below for the
+  // one dead expression here that is *not* in that category.
   { matches: (v) => /^(null|nil|none)$/i.test(v), mutate: mutateString },
   { matches: (v) => /^-?\d+$/.test(v), mutate: mutateInteger },
   { matches: (v) => /^-?\d+\.\d+$/.test(v), mutate: mutateDecimal },
   { matches: (v) => ISO_DATE.test(v), mutate: mutateIsoDate },
   { matches: (v) => ISO_DATETIME.test(v), mutate: mutateIsoDateTime },
-  { matches: (v) => ISO_DURATION.test(v) && v !== 'P' && /\d+/.test(v), mutate: mutateIsoDuration },
+  // The `/\d+/` conjunct is load-bearing and reads as though it isn't: "PT"
+  // matches ISO_DURATION (the `(?=\d|T)` lookahead is satisfied by the T, and
+  // every component group is optional) while carrying no digit at all, so
+  // without it mutateIsoDuration's `value.match(/\d+/)!` dereferences null.
+  // A `v !== 'P'` conjunct used to sit alongside it and was dead: the same
+  // lookahead already makes ISO_DURATION.test('P') false, so the && never
+  // reached it. Narrowing `\d+` to `\d` here is an equivalent mutant -- both
+  // are existence checks -- and is expected to survive the mutation gate.
+  { matches: (v) => ISO_DURATION.test(v) && /\d+/.test(v), mutate: mutateIsoDuration },
 ]
 
 export function mutateValue(originalValue: string, seedKey: string): string {
