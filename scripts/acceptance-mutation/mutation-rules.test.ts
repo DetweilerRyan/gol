@@ -137,6 +137,18 @@ describe('mutateValue', () => {
         expect(mutateValue('aaaa', `repeat-${i}`)).not.toBe('aaaa')
       }
     })
+
+    it('lowercases an already-uppercase letter under the case strategy, not just uppercases it', () => {
+      // Every other free-text fixture above is all-lowercase, so
+      // `ch === ch.toUpperCase()` is always false for them and the case
+      // strategy's true branch (lowercase an uppercase char) never actually
+      // runs -- both the real ternary and a mutant collapsing it to "always
+      // uppercase" produce identical output. 'hunt-13' is a seed hunted
+      // against the *unmutated* code to land on the case strategy for a
+      // single uppercase letter, so this exercises the branch a mutant
+      // there could otherwise flip unnoticed.
+      expect(mutateValue('A', 'hunt-13')).toBe('a')
+    })
   })
 
   describe('comma-delimited lists', () => {
@@ -177,20 +189,36 @@ describe('mutateValue', () => {
         }
       })
 
-      it('preserves the surrounding parens exactly, never (7) or bare 7', () => {
+      it('preserves the surrounding parens exactly, never a duplicated affix like ((7', () => {
         for (let i = 0; i < 30; i++) {
           const mutated = mutateValue(CELLS, `coords-${i}`)
-          // Every comma-list part, trimmed, still starts with '(' and ends
-          // with ')' -- the affix strip restores what it stripped rather
-          // than dropping or duplicating it.
           for (const part of mutated.split(',').map((p) => p.trim())) {
-            expect(part.startsWith('(') || part.endsWith(')')).toBe(true)
+            // Every comma-list part, trimmed, has at most one leading '(' and
+            // at most one trailing ')' -- the affix strip restores what it
+            // stripped exactly once, rather than dropping it or duplicating
+            // it (e.g. "((7"). An OR of startsWith/endsWith alone can't tell
+            // a duplicated affix from a correctly-restored one; the two
+            // exact-count checks below can.
+            expect(part.match(/^\(*/)?.[0].length).toBeLessThanOrEqual(1)
+            expect(part.match(/\)*$/)?.[0].length).toBeLessThanOrEqual(1)
           }
         }
       })
 
       it('is deterministic for the same seedKey and value', () => {
         expect(mutateValue(CELLS, 'k')).toBe(mutateValue(CELLS, 'k'))
+      })
+
+      it('mutates the digits inside a multi-digit closing fragment, not just single-digit ones', () => {
+        // Every fixture above uses single-digit coordinates, where
+        // core.slice(0, -1) (strip the trailing ')') and the mutation scan's
+        // core.slice(0, +1) (keep only the first char) coincide by
+        // construction: a 1-character core sliced either way keeps nothing
+        // extra. 'paren-1' is a seed hunted against the *unmutated* code to
+        // target the closing fragment (" 23)") of a multi-digit pair, where
+        // the two slice directions diverge -- see
+        // comma-list-mutants-are-all-syntax-breaking.
+        expect(mutateValue('(1, 23)', 'paren-1')).toBe('(1, 29)')
       })
     })
   })
@@ -269,6 +297,13 @@ describe('pinned mutants', () => {
     ['truex', 'trex'],
     ['ffalse', 'Ffalse'],
     ['tru', 'rtu'],
+    // anchor near-misses: a prefix/suffix around the literal must not let the
+    // boolean rule fire (comma-list-mutants-are-all-syntax-breaking mutation
+    // scan: dropping `^` from /^true$/i, or `$` from /^false$/i, lets these
+    // match and mutate the whole value with matchCase instead of falling
+    // through to the free-text rule)
+    ['xtrue', 'xtruE'],
+    ['falsey', 'falsez'],
     // null-likes, then near-misses
     ['null', 'nlul'],
     ['nil', 'nIl'],
@@ -284,12 +319,22 @@ describe('pinned mutants', () => {
     ['2026-5-13', '2026-5-1i'],
     ['2026-05-13x', '2w26-05-13x'],
     ['26-05-13', '2-605-13'],
+    // an anchor near-miss, not a shape near-miss: 'x2026-05-13' has a real
+    // ISO_DATE substring but a prefix breaks the exact match, so this must
+    // fall through to the free-text rule (mutation scan: dropping `^` from
+    // ISO_DATE lets a prefixed date match, and mutateIsoDate then throws on
+    // an Invalid Date built from a non-date string)
+    ['x2026-05-13', 'x202z6-05-13'],
     // ISO datetimes (with and without seconds/offset), then near-misses
     ['2026-05-13T10:00:00.000Z', '2026-05-13T09:58:00.000Z'],
     ['2026-05-13T10:00', '2026-05-13T14:13:00.000Z'],
     ['2026-05-13T10:00:00+02:00', '2026-05-13T07:39:00.000Z'],
     ['2026-05-13T10', '0226-05-13T10'],
     ['2026-05-13 10:00', '2026-05-13 10:0u0'],
+    // same anchor-near-miss shape as the ISO_DATE row above, one for each end
+    // (mutation scan: dropping `^` or `$` from ISO_DATETIME)
+    ['x2026-05-13T10:00', 'x2026-0-13T10:00'],
+    ['2026-05-13T10:00x', '2026-0513T10:00x'],
     // ISO durations, then near-misses (including the digitless "P"/"PT")
     ['P3D', 'P1D'],
     ['P1D', 'P2D'],
@@ -301,6 +346,20 @@ describe('pinned mutants', () => {
     ['p3d', 'p3x'],
     ['3D', 'mD'],
     ['XP3D', 'P3D'],
+    // multi-digit components, one per duration field (mutation scan: the
+    // pinned rows above only ever exercise single-digit years/months/days/
+    // hours/seconds, so a mutant narrowing ISO_DURATION's `\d+` to `\d` for
+    // any one field, or mutateIsoDuration's own `/\d+/` match, went
+    // unnoticed). 'PT12H' also covers the T-group's minutes becoming
+    // mandatory, since it has an hours component and no minutes.
+    ['P12D', 'P10D'],
+    ['P10Y', 'P7Y'],
+    ['P11M', 'P13M'],
+    ['PT12H', 'PT11H'],
+    ['PT30S', 'PT27S'],
+    // a suffix after an otherwise-valid duration must not match (mutation
+    // scan: dropping the trailing `$` from ISO_DURATION)
+    ['P3Dx', 'p3Dx'],
     // comma lists, then all-blank lists that fall through to the string rule
     ['alive,dead,alive', 'aliVe,dead,alive'],
     ['1,2', '6,2'],
