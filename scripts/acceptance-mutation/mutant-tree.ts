@@ -11,11 +11,31 @@
 
 const FEATURE_SUFFIX = '.feature'
 
+// Once a target's own filename can be a relative path ('cell-life/cell-life.feature'),
+// its derived mutant/baseline names have to land as flat files in the one
+// shared temp `features/` directory run.ts writes into (mkdirSync is called
+// for that directory only, never per target) -- so every '/' is flattened to
+// '__' here, at the one place both derived-name functions funnel through.
+//
+// '__' alone is not an injective flattening: 'a/_b.feature' and
+// 'a_/b.feature' both flatten to 'a___b.feature' without either containing a
+// literal '__'. Rather than prove a cleverer encoding is collision-free,
+// reject the case that makes '/' -> '__' unsafe: a target path may not
+// itself contain '_'. Every current .feature file is kebab-case with no
+// underscores, so this rejects nothing on the real tree; it exists to fail
+// loudly if a future nested target ever would collide, rather than let two
+// different targets silently overwrite the same temp file.
 function baseName(targetFeatureFileName: string): string {
   if (!targetFeatureFileName.endsWith(FEATURE_SUFFIX)) {
     throw new Error(`Expected a .feature filename, got "${targetFeatureFileName}"`)
   }
-  return targetFeatureFileName.slice(0, -FEATURE_SUFFIX.length)
+  const withoutSuffix = targetFeatureFileName.slice(0, -FEATURE_SUFFIX.length)
+  if (withoutSuffix.includes('_')) {
+    throw new Error(
+      `Feature path "${targetFeatureFileName}" contains "_", which is reserved for flattening nested paths into temp filenames`,
+    )
+  }
+  return withoutSuffix.replaceAll('/', '__')
 }
 
 // One shared `features/` directory holds every target's mutants and

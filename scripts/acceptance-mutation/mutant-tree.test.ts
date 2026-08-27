@@ -18,6 +18,21 @@ describe('mutantFeatureFileName', () => {
       mutantFeatureFileName('camera-pan-and-zoom.feature', 0),
     )
   })
+
+  // A nested target's path is flattened into a single flat filename -- '/'
+  // becomes '__' -- so it can be written straight into the one shared temp
+  // `features/` directory, which has no subdirectories of its own.
+  it('flattens a nested target path into a flat filename', () => {
+    expect(mutantFeatureFileName('cell-life/cell-life.feature', 0)).toBe('cell-life__cell-life.mutant-0.feature')
+  })
+
+  it('leaves a flat (non-nested) target path unchanged, other than appending the ordinal', () => {
+    expect(mutantFeatureFileName('infinite-grid.feature', 3)).toBe('infinite-grid.mutant-3.feature')
+  })
+
+  it('throws naming the path when a nested target path contains an underscore', () => {
+    expect(() => mutantFeatureFileName('cell_life/cell-life.feature', 0)).toThrow(/cell_life\/cell-life\.feature/)
+  })
 })
 
 describe('baselineFeatureFileName', () => {
@@ -33,6 +48,14 @@ describe('baselineFeatureFileName', () => {
 
   it('stays distinct from any mutant filename for the same target', () => {
     expect(baselineFeatureFileName('infinite-grid.feature')).not.toBe(mutantFeatureFileName('infinite-grid.feature', 0))
+  })
+
+  it('flattens a nested target path into a flat filename', () => {
+    expect(baselineFeatureFileName('cell-life/cell-life.feature')).toBe('cell-life__cell-life.baseline.feature')
+  })
+
+  it('throws naming the path when a nested target path contains an underscore', () => {
+    expect(() => baselineFeatureFileName('cell_life/cell-life.feature')).toThrow(/cell_life\/cell-life\.feature/)
   })
 })
 

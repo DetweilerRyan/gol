@@ -38,6 +38,18 @@ describe('listFeatureFiles', () => {
     writeFile(featuresDir, 'README.md', '')
     expect(() => listFeatureFiles(featuresDir)).toThrow(/no \.feature files/i)
   })
+
+  it('finds .feature files nested in subdirectories, not just the top level', () => {
+    const featuresDir = tempDir()
+    writeFile(featuresDir, 'zebra/zebra.feature', '')
+    writeFile(featuresDir, 'alpha.feature', '')
+    expect(listFeatureFiles(featuresDir)).toEqual(['alpha.feature', 'zebra/zebra.feature'])
+  })
+
+  it('throws naming the path when the features directory itself does not exist, rather than reporting it as empty', () => {
+    const missing = path.join(os.tmpdir(), 'feature-files-does-not-exist')
+    expect(() => listFeatureFiles(missing)).toThrow(missing)
+  })
 })
 
 describe('selectFeatureFiles', () => {
@@ -50,5 +62,16 @@ describe('selectFeatureFiles', () => {
       'alpha.feature',
       'zebra.feature',
     ])
+  })
+
+  // Once listFeatureFiles glob-prefilters to '**/*.feature', nothing calling
+  // through it exercises the '.endsWith(.feature)' predicate any more --
+  // glob's own pattern already excludes everything else. Call
+  // selectFeatureFiles directly with a mixed, nested, unsorted input so the
+  // filter and the sort are both still pinned on their own.
+  it('filters non-.feature entries and sorts the rest, including nested relative paths', () => {
+    expect(
+      selectFeatureFiles(['zebra/zebra.feature', 'notes.txt', 'alpha.feature', 'zebra.steps.test.ts'], '/irrelevant'),
+    ).toEqual(['alpha.feature', 'zebra/zebra.feature'])
   })
 })

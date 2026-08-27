@@ -38,6 +38,16 @@ describe('discoverTargets', () => {
     writeFile(featuresDir, 'notes.txt', 'nothing here')
     expect(() => discoverTargets(featuresDir)).toThrow(/no \.feature files/i)
   })
+
+  // The whole reason this slice exists: a target nested one directory deep
+  // is discovered, and its `feature` carries the path relative to
+  // featuresDir -- not just the basename -- so downstream readers (run.ts's
+  // loadTargetPlans) can path.join it straight back onto featuresDir.
+  it('derives a target from a nested .feature file, carrying the relative path', () => {
+    const featuresDir = tempFeaturesDir()
+    writeFile(featuresDir, 'cell-life/cell-life.feature', 'Feature: Cell life\n')
+    expect(discoverTargets(featuresDir)).toEqual([{ feature: 'cell-life/cell-life.feature' }])
+  })
 })
 
 describe('filterTargets', () => {
@@ -57,6 +67,26 @@ describe('filterTargets', () => {
 
   it('throws loudly on an unknown feature name rather than matching nothing silently', () => {
     expect(() => filterTargets(targets, 'nonexistent')).toThrow(/nonexistent/)
+  })
+
+  // Measured broken before this slice: a nested target's `feature` is a
+  // relative path ('cell-life/cell-life.feature'), but --feature is given
+  // as the bare slice name -- normalizing that to 'cell-life.feature' never
+  // equalled the full path, so a nested target could not be selected by
+  // name at all.
+  it('narrows to a nested target by its bare basename', () => {
+    const nested = [{ feature: 'cell-life/cell-life.feature' }, { feature: 'beta.feature' }]
+    expect(filterTargets(nested, 'cell-life')).toEqual([{ feature: 'cell-life/cell-life.feature' }])
+  })
+
+  it('narrows to a nested target by its full relative path', () => {
+    const nested = [{ feature: 'cell-life/cell-life.feature' }, { feature: 'beta.feature' }]
+    expect(filterTargets(nested, 'cell-life/cell-life.feature')).toEqual([{ feature: 'cell-life/cell-life.feature' }])
+  })
+
+  it('throws naming every candidate when a basename is ambiguous across two nested targets', () => {
+    const ambiguous = [{ feature: 'a/dup.feature' }, { feature: 'b/dup.feature' }]
+    expect(() => filterTargets(ambiguous, 'dup')).toThrow(/(?=.*a\/dup\.feature)(?=.*b\/dup\.feature)/)
   })
 })
 
