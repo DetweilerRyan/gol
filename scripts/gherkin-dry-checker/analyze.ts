@@ -115,12 +115,15 @@ function scenarioKey(step: CorpusStep): string {
 // pair of pairs rather than about four witnesses. Nothing else imports it and
 // it is not part of the analysis surface; analyzeSteps is.
 export function pairKey(a: string, b: string): string {
-  // `.sort()` canonicalizes the pair so the key does not depend on the order
-  // the caller happens to hold the two texts in. Mutation-equivalent today
-  // (findPlaceholderVariants' double loop registers both orders, so a lookup
-  // built in either order still hits) -- kept because that is the caller's
-  // loop shape, not this function's contract. Measured post-fix against the
-  // whole scripts/ suite.
+  // `.sort()` canonicalizes the pair, so the key does not depend on the order
+  // the caller happens to hold the two texts in. That IS this function's
+  // contract and its removal is a killed mutant, not an equivalent one --
+  // analyze.property.test.ts's order-independence property is what kills it
+  // (measured: dropping the sort reds 1 of 649 in `npm run test:scripts`).
+  // Removing it would not change today's report, since
+  // findPlaceholderVariants registers both orders and a lookup built in
+  // either order still hits -- but that is the caller's loop shape, which
+  // this function does not get to depend on.
   return JSON.stringify([a, b].sort())
 }
 
@@ -190,9 +193,10 @@ function findPlaceholderVariants(byText: StepsByText, dedupePairs: Set<string>):
       for (const b of texts) {
         // Mutation-equivalent to `true` now that pairKey is injective: a
         // self-pair key can only ever equal another self-pair's, and every
-        // lookup key is built from two distinct byText keys. It is a real
-        // guard against a non-injective key, though -- see pairKey's comment
-        // and the collision cases in analyze.test.ts.
+        // lookup key is built from two distinct byText keys. Measured --
+        // forcing the branch leaves all 649 of `npm run test:scripts` green.
+        // It is a real guard against a non-injective key, though: see
+        // pairKey's comment and the collision cases in analyze.test.ts.
         if (a !== b) dedupePairs.add(pairKey(a, b))
       }
     }
