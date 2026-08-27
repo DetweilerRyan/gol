@@ -18,18 +18,31 @@
 // Measured against three deliberately broken implementations of pairKey,
 // running just this file with `npx vitest run --config
 // vitest.scripts.config.ts scripts/gherkin-dry-checker/analyze.property.test.ts`.
-// Counts are of THIS FILE's 8 tests; the property rows were run five times
-// each, since a generator that only sometimes finds a counterexample is a
-// generator that will one day not find one:
+// Counts are of THIS FILE's tests as of that measurement (8, before the
+// deterministic twin below was added); the property rows were repeated rather
+// than run once, since a generator that only SOMETIMES finds a counterexample
+// is a generator that will one day not find one. They turned out not to be
+// sometimes: every figure below held on every repeat, and the sort-dropped
+// row was independently re-measured at 30 runs out of 30. So read these as
+// deterministic for these arbitraries, not as sample rates:
 //   * `[a, b].sort().join(' ')` -- the encoding this file was written to
 //     retire, and the one that really was shipping. 3 of 8 red, 5 runs out of
 //     5: the injectivity property plus its two space-collision pinned rows.
 //     Order-independence stays green, correctly -- that form is canonical.
 //   * `[a, b].sort().join('')` -- 5 of 8 red: injectivity plus four pinned
 //     rows, since a separator-free key collides far more densely.
-//   * `JSON.stringify([a, b])`, the sort dropped -- 1 of 8 red, 3 runs of 3:
-//     ONLY order-independence. That form is still injective, just not
-//     canonical, which is why both properties are here rather than one.
+//   * `JSON.stringify([a, b])`, the sort dropped -- 1 of 8 red, 3 runs of 3
+//     here and 30 of 30 when re-measured: ONLY order-independence. That form
+//     is still injective, just not canonical, which is why both properties
+//     are here rather than one.
+//
+// NONE OF THAT REACHES THE MUTATION GATE, and the twin at the bottom of this
+// file is why it is there. A `test.prop` body never executes against a
+// mutant: its title carries fast-check's per-run seed and Stryker filters
+// each mutant run by the dry run's test names, so the title never matches.
+// Every figure above is a fact about `npm run test:scripts` alone. See
+// CLAUDE.md's `@fast-check/vitest` paragraph -- and do not read a green
+// mutation score as evidence about anything in this file.
 //
 // One negative result worth keeping, because it is the trap this file nearly
 // fell into. The first draft stated injectivity over four independently drawn

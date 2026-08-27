@@ -43,6 +43,13 @@ export interface RawScenarioSample {
 }
 
 function isFiniteNumber(value: unknown): value is number {
+  // The `typeof` half is mutation-equivalent to `true`: `Number.isFinite`
+  // does NOT coerce (unlike the global `isFinite`), so it already answers
+  // false for every non-number. Measured -- forcing that operand true leaves
+  // all 654 of `npm run test:scripts` green. Kept because it is what makes
+  // the `value is number` predicate readable at a glance, and because the
+  // `&&` -> `||` mutant at the same site is a real kill (5 red), so the
+  // operator here is load-bearing even though the operand is not.
   return typeof value === 'number' && Number.isFinite(value)
 }
 
