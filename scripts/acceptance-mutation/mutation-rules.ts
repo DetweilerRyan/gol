@@ -133,12 +133,49 @@ function mutableCommaIndexes(value: string): number[] {
   return parts.map((_, i) => i).filter((i) => parts[i].trim().length > 0)
 }
 
+// A naive split on ',' turns a value like "(0, 0), (1, 0)" into *unbalanced*
+// fragments -- "(0" and " 0)" -- never balanced ones, since the comma inside
+// each pair is exactly what the split breaks on. Left alone, neither
+// fragment's trimmed form matches the integer rule (`^-?\d+$`), so every
+// such part falls through to the free-text string mutator and every mutant
+// of a coordinate-pair list is syntax-breaking -- see the
+// comma-list-mutants-are-all-syntax-breaking idea this stripping exists to
+// close. Stripping a single leading '(' / trailing ')' before recursing
+// exposes the digits underneath as the integer they are, so the coordinate
+// itself gets mutated instead of the punctuation around it. Only one
+// paren is ever stripped per side: these fragments are never
+// doubly-parenthesised in this repo's data, and a value that legitimately
+// starts or ends with '(' outside a coordinate pair is left with an empty
+// prefix/suffix and mutates exactly as it did before this function existed.
+function stripParenAffixes(trimmed: string): { prefix: string; core: string; suffix: string } {
+  let core = trimmed
+  let prefix = ''
+  let suffix = ''
+  if (core.startsWith('(')) {
+    prefix = '('
+    core = core.slice(1)
+  }
+  if (core.endsWith(')')) {
+    suffix = ')'
+    core = core.slice(0, -1)
+  }
+  return { prefix, core, suffix }
+}
+
 function mutateCommaList(value: string, rand: RandomFn, seedKey: string): string {
   const parts = value.split(',')
   const mutableIndexes = mutableCommaIndexes(value)
   const target = mutableIndexes[Math.floor(rand() * mutableIndexes.length)]
   const trimmed = parts[target].trim()
-  parts[target] = parts[target].replace(trimmed, mutateValue(trimmed, `${seedKey}[${target}]`))
+  const { prefix, core, suffix } = stripParenAffixes(trimmed)
+  const mutated = prefix + mutateValue(core, `${seedKey}[${target}]`) + suffix
+  // Splice by index rather than String#replace(trimmed, mutated): replace's
+  // *string*-pattern overload still interprets $&, $`, $' and $-prefixed
+  // digit sequences in the replacement text. Today's alphabet (lowercase
+  // letters, digits, parens) can never produce one, but this makes that true
+  // by construction instead of by the current alphabet staying that way.
+  const start = parts[target].indexOf(trimmed)
+  parts[target] = parts[target].slice(0, start) + mutated + parts[target].slice(start + trimmed.length)
   return parts.join(',')
 }
 

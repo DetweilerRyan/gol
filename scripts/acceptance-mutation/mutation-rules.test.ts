@@ -148,6 +148,51 @@ describe('mutateValue', () => {
       const changedCount = parts.filter((p, i) => p !== original[i]).length
       expect(changedCount).toBe(1)
     })
+
+    // A naive split on ',' turns "(0, 0), (1, 0)" into unbalanced fragments
+    // ("(0", " 0)"), neither of which matches the integer rule on its own --
+    // see comma-list-mutants-are-all-syntax-breaking. Without the
+    // strip-and-restore in mutateCommaList, every mutant of a coordinate-pair
+    // list corrupts punctuation instead of a coordinate, and the resulting
+    // value is never parseable as the same shape.
+    describe('parenthesised coordinate pairs', () => {
+      const CELLS = '(0, 0), (1, 0), (0, 1), (1, 1)'
+      const PAIR = /\((-?\d+),\s*(-?\d+)\)/g
+
+      it('stays parseable as the same number of coordinate pairs', () => {
+        for (let i = 0; i < 30; i++) {
+          const mutated = mutateValue(CELLS, `coords-${i}`)
+          expect([...mutated.matchAll(PAIR)]).toHaveLength(4)
+        }
+      })
+
+      it('changes exactly one coordinate value, numerically, and preserves the rest', () => {
+        const originalPairs = [...CELLS.matchAll(PAIR)].map((m) => `${m[1]},${m[2]}`)
+        for (let i = 0; i < 30; i++) {
+          const mutated = mutateValue(CELLS, `coords-${i}`)
+          const mutatedPairs = [...mutated.matchAll(PAIR)].map((m) => `${m[1]},${m[2]}`)
+          expect(mutatedPairs).toHaveLength(originalPairs.length)
+          const changed = mutatedPairs.filter((p, idx) => p !== originalPairs[idx])
+          expect(changed).toHaveLength(1)
+        }
+      })
+
+      it('preserves the surrounding parens exactly, never (7) or bare 7', () => {
+        for (let i = 0; i < 30; i++) {
+          const mutated = mutateValue(CELLS, `coords-${i}`)
+          // Every comma-list part, trimmed, still starts with '(' and ends
+          // with ')' -- the affix strip restores what it stripped rather
+          // than dropping or duplicating it.
+          for (const part of mutated.split(',').map((p) => p.trim())) {
+            expect(part.startsWith('(') || part.endsWith(')')).toBe(true)
+          }
+        }
+      })
+
+      it('is deterministic for the same seedKey and value', () => {
+        expect(mutateValue(CELLS, 'k')).toBe(mutateValue(CELLS, 'k'))
+      })
+    })
   })
 
   describe('ISO-8601 dates', () => {
@@ -262,6 +307,12 @@ describe('pinned mutants', () => {
     ['a,', 'ga,'],
     [',b', ',B'],
     ['2026-05-13,P3D', '2026-05-13,P4D'],
+    // parenthesised coordinate pairs (comma-list-mutants-are-all-syntax-breaking):
+    // the affix strip exposes the digits inside "(0" / " 0)" as the integer
+    // rule's input, so these mutate a coordinate value rather than corrupting
+    // punctuation into an unparseable fragment.
+    ['(0, 0), (1, 0), (0, 1), (1, 1)', '(0, 0), (1, 0), (3, 1), (1, 1)'],
+    ['(2026-05-13, P3D), (1, 2)', '(2026-05-13, P3D), (1, -1)'],
     [',', ''],
     [',,', ','],
     [' , ', ' x, '],
