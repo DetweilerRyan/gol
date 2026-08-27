@@ -122,6 +122,11 @@ function findExactDuplicatesAcrossScenarios(byText: StepsByText): Finding[] {
   const findings: Finding[] = []
   for (const [text, members] of byText) {
     const distinctScenarios = new Set(members.map(scenarioKey))
+    // `members.length < 2` is mutation-equivalent to `false` here: a Set
+    // built from `members` can never exceed `members.length`, so whenever
+    // the first disjunct is true the second is too. Left in as an early,
+    // cheaper check ahead of building the Set, not because a reachable input
+    // distinguishes the two.
     if (members.length < 2 || distinctScenarios.size < 2) continue
     findings.push({
       kind: 'exact-duplicate',
@@ -191,6 +196,14 @@ function findTokenSimilarities(byText: StepsByText, dedupePairs: Set<string>): F
   const uniqueTexts = [...byText.keys()]
   const tokensByText = new Map(uniqueTexts.map((text) => [text, tokenize(text)]))
 
+  // Both loop bounds (`i < ...` / `j < ...`) are mutation-equivalent to
+  // `<=`: a mutated outer bound adds one extra `i` with `j` starting at
+  // `i + 1`, whose own (unmutated) bound then rejects it immediately, so the
+  // inner loop body never runs; a mutated inner bound adds one extra `j`
+  // whose `uniqueTexts[j]` is `undefined`, so `tokensByText.get(textB)` is
+  // undefined too and `jaccardSimilarity` treats it as an empty set --
+  // `score` is always 0, which always fails the threshold check below and
+  // is always skipped. Neither extra iteration can be observed either way.
   for (let i = 0; i < uniqueTexts.length; i++) {
     for (let j = i + 1; j < uniqueTexts.length; j++) {
       const textA = uniqueTexts[i]
