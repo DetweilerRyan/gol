@@ -74,10 +74,18 @@ blocked by the AST: a `cells` value is an opaque domain-shaped string to Gherkin
 only `mutation-rules.ts` can know its shape, and no parse tree makes an integer-aware comma-list
 mutator more natural.
 
-What that slice does leave behind for this one is a **tool**: the mutant-parity jig it builds in
-its step 1 pins all 55 mutants as a readable `(feature, cell address, mutatedValue)` list. Run it
-before and after the `mutateCommaList` change and the diff _is_ the explanation step 8 wants —
-which mutants changed shape, and that no cell's address moved.
+What that slice leaves behind for this one is a **method, not an artifact.** Its step 1 builds a
+mutant-parity jig — all 55 mutants pinned as a readable `(feature, cell address, mutatedValue)`
+list — but that jig is deliberately **transient**, deleted in the same slice's final step and
+replaced by fixture-based golden tests over checked-in sample features. It has to be: pinned
+against the real `features/`, it makes `npm run test:scripts` fail whenever `product` edits an
+Examples table, in a directory `scripts/` does not own.
+
+So rebuild the same ~20-line list here rather than reaching for a jig that no longer exists: dump
+`(cell address, mutatedValue)` for all 55 before and after the `mutateCommaList` change, and the
+diff _is_ the explanation merge-protocol step 8 wants — which mutants changed shape, and that no
+cell's address moved. That list is padding-immune, so the `gherkin-ast-mutation` splice cannot
+perturb it.
 
 ## Open questions
 
