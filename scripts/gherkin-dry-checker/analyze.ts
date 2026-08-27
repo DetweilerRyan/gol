@@ -118,12 +118,16 @@ export function pairKey(a: string, b: string): string {
   // `.sort()` canonicalizes the pair, so the key does not depend on the order
   // the caller happens to hold the two texts in. That IS this function's
   // contract and its removal is a killed mutant, not an equivalent one.
-  // Killed twice over in analyze.property.test.ts, and the distinction
-  // matters: the order-independence PROPERTY kills it in `npm run
-  // test:scripts` but cannot kill it in `npm run test:mutation:scripts` (a
-  // property's title carries fast-check's per-run seed and Stryker filters
-  // mutant runs by dry-run test name, so it never runs there -- measured);
-  // the deterministic `it.each` twin beside it is what the gate sees.
+  // Killed twice over in analyze.property.test.ts, and BOTH kills are load
+  // bearing. The order-independence PROPERTY used to kill this only in `npm
+  // run test:scripts` and never in `npm run test:mutation:scripts` -- a
+  // property's title carried fast-check's per-run seed, Stryker filters mutant
+  // runs by dry-run test name, and the two never matched. Since
+  // fast-check-stryker-seed.ts pins that seed under Stryker the property does
+  // run there, and measured on this exact mutant it is now what `killedBy`
+  // names. That does NOT retire the deterministic `it.each` twin beside it:
+  // `killedBy` is first-kill-wins, so the property merely won the race, and
+  // the unpinned control shows the twin killing this mutant on its own.
   // Removing it would not change today's report, since
   // findPlaceholderVariants registers both orders and a lookup built in
   // either order still hits -- but that is the caller's loop shape, which
