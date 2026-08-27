@@ -65,6 +65,20 @@ same CRAP threshold (6) as `src/`.
 exactly the kind of movement merge-protocol step 8 exists to notice. Record the new total and
 why it moved.
 
+## Sequencing against `gherkin-ast-mutation`
+
+Ruled in that slice's DESIGN pass: **these stay separate slices, and this one lands after it.**
+Both move the acceptance-mutation figure, and merge-protocol step 8 asks for a moved figure to be
+_explained_ — bundled, neither move would be attributable to its own cause. This one is also not
+blocked by the AST: a `cells` value is an opaque domain-shaped string to Gherkin either way, so
+only `mutation-rules.ts` can know its shape, and no parse tree makes an integer-aware comma-list
+mutator more natural.
+
+What that slice does leave behind for this one is a **tool**: the mutant-parity jig it builds in
+its step 1 pins all 55 mutants as a readable `(feature, cell address, mutatedValue)` list. Run it
+before and after the `mutateCommaList` change and the diff _is_ the explanation step 8 wants —
+which mutants changed shape, and that no cell's address moved.
+
 ## Open questions
 
 - Does arming the inclusion checks surface any _surviving_ mutant? If it does, that is a real

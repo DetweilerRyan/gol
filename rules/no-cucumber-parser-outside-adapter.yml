@@ -1,0 +1,47 @@
+id: no-cucumber-parser-outside-adapter
+language: TypeScript
+severity: warning
+message: Only scripts/acceptance-mutation/gherkin-document.ts may import @cucumber/* -- reach the AST through that adapter.
+note: >-
+  gherkin-ast-mutation's whole design rests on one module owning the parser. gherkin-document.ts
+  is the single place that turns feature TEXT into an AST and the single place that knows
+  @cucumber/gherkin's shape (the Rule-nesting walk, the tableHeader-may-be-undefined case, the
+  CompositeParserException it throws on malformed input); every other module in the program deals
+  in MutationSite and TextSpan and never in a GherkinDocument. A second importer breaks that in a
+  way nothing else would catch: the parser's node types leak into modules that would then have to
+  be rewritten when @cucumber/gherkin's major moves, and the version coupling stops being
+  reviewable in one file. That coupling is real rather than theoretical -- the parser this program
+  locates spans with and the parser playwright-bdd executes the mutants with are the same deduped
+  copy, so a duplicate importer is also a second place a version skew could hide.
+  Both @cucumber/gherkin and @cucumber/messages are banned, not just the parser: IdGenerator is
+  constructor plumbing for AstBuilder and belongs beside it. A consumer that needs an AST type
+  imports it from the adapter's own re-exports, which is what keeps the adapter's interface
+  honest -- it must expose enough (scenarios WITH their steps and locations) that the next
+  mutator never needs the parser directly. If a consumer cannot express itself through the
+  adapter, widen the adapter rather than reaching around it.
+# Scoped to the one program, by glob rather than by name, so a NEW module in it is covered the
+# day it lands -- which is the case that matters, since the next mutator (step text, step data
+# tables) arrives as a new file. The adapter itself is the only exemption; its own test file is
+# deliberately NOT exempt, because a test that reaches past the adapter is testing the parser
+# rather than the adapter.
+files:
+  - 'scripts/acceptance-mutation/*.ts'
+ignores:
+  - 'scripts/acceptance-mutation/gherkin-document.ts'
+# Matched on the `source` field -- the module specifier node itself -- rather than by a regex
+# over the whole statement's text, following no-playwright-config-import-in-mutation-config's
+# measured finding: a statement-text regex reads the COMMENTS inside an export_statement's body,
+# and this program's modules discuss @cucumber/gherkin in prose. A field-scoped match cannot see
+# a comment at all. Metavariables do not interpolate inside string literals (see CLAUDE.md), so
+# the specifier is matched by regex rather than by a pattern. export_statement is covered
+# alongside import_statement because a re-export is the same coupling written differently, and
+# `import type` needs no separate clause -- it is an import_statement carrying the same source.
+rule:
+  all:
+    - any:
+        - kind: import_statement
+        - kind: export_statement
+    - has:
+        field: source
+        kind: string
+        regex: '^[''"]@cucumber/'

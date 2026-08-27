@@ -1,0 +1,72 @@
+id: no-cucumber-parser-outside-adapter
+snapshots:
+  export type { TableCell } from '@cucumber/messages':
+    labels:
+    - source: export type { TableCell } from '@cucumber/messages'
+      style: primary
+      start: 0
+      end: 51
+    - source: '''@cucumber/messages'''
+      style: secondary
+      start: 31
+      end: 51
+  export { Parser } from '@cucumber/gherkin':
+    labels:
+    - source: export { Parser } from '@cucumber/gherkin'
+      style: primary
+      start: 0
+      end: 42
+    - source: '''@cucumber/gherkin'''
+      style: secondary
+      start: 23
+      end: 42
+  import '@cucumber/gherkin':
+    labels:
+    - source: import '@cucumber/gherkin'
+      style: primary
+      start: 0
+      end: 26
+    - source: '''@cucumber/gherkin'''
+      style: secondary
+      start: 7
+      end: 26
+  import type { GherkinDocument } from '@cucumber/messages':
+    labels:
+    - source: import type { GherkinDocument } from '@cucumber/messages'
+      style: primary
+      start: 0
+      end: 57
+    - source: '''@cucumber/messages'''
+      style: secondary
+      start: 37
+      end: 57
+  import { AstBuilder, GherkinClassicTokenMatcher, Parser } from '@cucumber/gherkin':
+    labels:
+    - source: import { AstBuilder, GherkinClassicTokenMatcher, Parser } from '@cucumber/gherkin'
+      style: primary
+      start: 0
+      end: 82
+    - source: '''@cucumber/gherkin'''
+      style: secondary
+      start: 63
+      end: 82
+  import { IdGenerator } from '@cucumber/messages':
+    labels:
+    - source: import { IdGenerator } from '@cucumber/messages'
+      style: primary
+      start: 0
+      end: 48
+    - source: '''@cucumber/messages'''
+      style: secondary
+      start: 28
+      end: 48
+  import { Parser } from '@cucumber/gherkin':
+    labels:
+    - source: import { Parser } from '@cucumber/gherkin'
+      style: primary
+      start: 0
+      end: 42
+    - source: '''@cucumber/gherkin'''
+      style: secondary
+      start: 23
+      end: 42

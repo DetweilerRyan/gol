@@ -1,0 +1,23 @@
+id: no-cucumber-parser-outside-adapter
+valid:
+  # The adapter's re-exported types and functions are how every consumer reaches the AST.
+  - import { parseFeature, type ExamplesTableNode } from './gherkin-document.ts'
+  - import type { FeatureDocument } from './gherkin-document.ts'
+  # The program's other modules, unaffected by this rule.
+  - import { spliceSpan, type TextSpan } from './text-span.ts'
+  - import { mutateValue } from './mutation-rules.ts'
+  - import { listFeatureFiles } from '../feature-files.ts'
+  - import { readFileSync } from 'node:fs'
+  # A near miss: a package whose name merely contains the word, not the @cucumber scope.
+  - import { thing } from 'cucumber-helpers'
+  # Not an import: naming the package in a string is not a finding, which is what the
+  # kind: + field: source constraint buys.
+  - const PARSER_PACKAGE = '@cucumber/gherkin'
+invalid:
+  - import { Parser } from '@cucumber/gherkin'
+  - import { AstBuilder, GherkinClassicTokenMatcher, Parser } from '@cucumber/gherkin'
+  - import { IdGenerator } from '@cucumber/messages'
+  - import type { GherkinDocument } from '@cucumber/messages'
+  - import '@cucumber/gherkin'
+  - export { Parser } from '@cucumber/gherkin'
+  - export type { TableCell } from '@cucumber/messages'
