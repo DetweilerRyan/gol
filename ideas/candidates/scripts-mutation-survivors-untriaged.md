@@ -17,7 +17,7 @@ those 50 were closed inside that slice; the other **48 are pre-existing and conc
 - **5 in `playwright-runner.ts`**
 - the remainder scattered
 
-The reason this is worth a slice rather than a shrug is *why* nobody has looked: **`test:scripts`
+The reason this is worth a slice rather than a shrug is _why_ nobody has looked: **`test:scripts`
 had been red on `main` for several consecutive slices** because no role's gate ran it, and
 `test:mutation:scripts` was separately unrunnable — it aborted at Stryker's dry run. Both were
 fixed only recently, and `.claude/agents/hardener.md` was amended in `gherkin-ast-mutation` to run
@@ -31,7 +31,7 @@ just became examinable.
 ## Sketch
 
 Read `reports/mutation/scripts.html` and sort the 48 into the usual three buckets: genuinely
-equivalent (record the argument so nobody re-derives it), worth a test, and worth a *design*
+equivalent (record the argument so nobody re-derives it), worth a test, and worth a _design_
 change because the mutant reveals a branch that should not exist.
 
 **Expect the buckets to be uneven by file, and let that steer the slice.** 26 in one module is a
@@ -49,7 +49,7 @@ that file closely.
 three survivors equivalent; `hardener` overturned one by measurement. The mutant removed a loop's
 only termination condition for a malformed table row — every fixture line ended in a pipe, so the
 length bound was never exercised. Closing it flipped Survived → **Timeout**, which in that case is
-a *deterministic* infinite loop and a real kill, not the flaky wall-clock artifact CLAUDE.md
+a _deterministic_ infinite loop and a real kill, not the flaky wall-clock artifact CLAUDE.md
 cautions about. An equivalence argument that sounds good is not evidence; running the mutant is.
 
 ## Touches
@@ -65,7 +65,7 @@ Report at `reports/mutation/scripts.html` (gitignored — regenerate with
 
 - Is 97.38% with 50 argued survivors the right resting state for `scripts/`, or should the config
   carry a `break` threshold the way the `src/` one does (85)? Setting one is the decision that
-  turns this from a one-off triage into a standing gate — and it should be set *after* the triage,
+  turns this from a one-off triage into a standing gate — and it should be set _after_ the triage,
   from what the tree actually supports, not guessed beforehand.
 - Do any of the 17 **timeouts** deserve the same scrutiny? CLAUDE.md warns a `Timeout` kill can be
   a wall-clock artifact rather than real coverage, and this slice produced one that was genuinely a

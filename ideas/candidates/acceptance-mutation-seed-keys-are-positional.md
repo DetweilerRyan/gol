@@ -45,7 +45,7 @@ plan time closes the collision half with no key change and no figure movement. I
 half is judged not worth it, that assertion is still worth landing.
 
 **This moves every mutant, so the 55/55/0 figure will move** — merge-protocol step 8 wants that
-explained. The explanation here is unusually easy to make rigorous, because the *count* should not
+explained. The explanation here is unusually easy to make rigorous, because the _count_ should not
 move at all: same sites, same cells, different mutated values. A moved count would be a bug.
 
 ## Touches
@@ -65,7 +65,7 @@ shared convention, which is a smaller slice than it would have been before that 
   invariant and the obvious home once a second `SiteKind` exists; per-finder is less code today.
   This is the only real design decision here.
 - Is stability actually wanted? A stable key means a pruned table's surviving mutants are directly
-  comparable across runs — but nothing currently *does* that comparison. If no consumer wants it,
+  comparable across runs — but nothing currently _does_ that comparison. If no consumer wants it,
   land the uniqueness assertion alone and close this.
 - Does a row-content hash belong in the printed report at all? `report-format.ts` trims the feature
   prefix for display; a hash would need its own display treatment or the table becomes unreadable.
@@ -77,7 +77,7 @@ every other line, and the untouched portion of the mutated line itself -- byte-i
 by `product` against CRLF input, **every** line changes: the function splits on `/\r?\n/` and
 rejoins on `'\n'`, normalizing the whole file.
 
-The *behaviour* is pre-existing and deliberately preserved — `main`'s old
+The _behaviour_ is pre-existing and deliberately preserved — `main`'s old
 `gherkin-examples.ts:applyMutation` did the identical split/join — so this is a comment-accuracy
 nit, not a regression, and it is harmless today because Prettier holds `features/` to LF. It earns a
 line only because the one-line-diff property is `gherkin-ast-mutation`'s stated design point and
