@@ -134,6 +134,21 @@ export function mutateTupleList(value: string, rand: RandomFn, seedKey: string):
   const tuples = parseTupleList(value)
   if (!tuples) throw new Error(`mutateTupleList called on a value that is not a tuple-list: ${JSON.stringify(value)}`)
 
+  // KNOWN, ACCEPTED SURVIVOR: `< 0.5` mutated to `<= 0.5` here is a boundary
+  // mutant that only differs when rand() returns EXACTLY 0.5. mulberry32's
+  // output is numerator / 2**32 for a 32-bit numerator, so hitting exactly
+  // 0.5 requires numerator === 2**31 -- one specific value out of 2**32
+  // possible outputs. Finding a seed that lands on it is a plain geometric
+  // expectation (not a birthday-collision bound -- there's no pair to
+  // collide, just one exact target), so the expected number of draws is on
+  // the order of 2**32 (measured: 20,000,000 sequential seedKeys,
+  // "search-0".."search-19999999", in ~1.4s found none, extrapolating to
+  // ~5 minutes for the full expected count with no guarantee of landing
+  // inside it). Not a proof of logical equivalence -- a seed producing that
+  // exact draw does exist -- but de facto unreachable by any seed a human or
+  // a scan would plausibly ever pin, which is why this is accepted rather
+  // than chased with a hunted seed the way e.g. mutation-rules.test.ts's
+  // 'hunt-13' pins a much more likely (1-in-26-ish) branch.
   const wantsSwap = rand() < 0.5 // draw #1, unconditionally
   const arity = tuples[0].components.length
   // Swap only ever transposes a tuple's first two components, so it's only

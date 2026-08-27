@@ -4,11 +4,17 @@
 // pair so repeated runs produce identical, diffable mutants.
 
 import { isTupleList, mutateTupleList } from './tuple-list.ts'
-// seededRandom, RandomFn and mutateInteger are re-exported below rather than
-// only used internally -- other modules (this file's own test, tuple-list.ts)
-// import them from here, and tuple-list.ts specifically cannot import them
-// from here without closing an import cycle back through the isTupleList
-// import above. See seeded-random.ts's own header for the full reasoning.
+// seededRandom and RandomFn -- not mutateInteger, which stays purely
+// internal to this file's own VALUE_RULES dispatch -- are re-exported below
+// so mutation-rules.test.ts's own 'seededRandom' describe block (the table
+// pinning mulberry32's draw sequence, colocated with the PINNED mutant table
+// it upstreams) can import them from the same module its other fixtures do,
+// rather than reaching into seeded-random.ts directly for just this one
+// case. tuple-list.ts imports seededRandom/RandomFn/mutateInteger from
+// seeded-random.ts itself, not through this re-export: it cannot import
+// anything from this file at all without closing an import cycle back
+// through the isTupleList import above. See seeded-random.ts's own header
+// for the full reasoning on that split.
 import { mutateInteger, nonzeroDelta, seededRandom, type RandomFn } from './seeded-random.ts'
 
 export { seededRandom, type RandomFn }

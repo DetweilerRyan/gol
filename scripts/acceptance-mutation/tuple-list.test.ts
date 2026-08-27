@@ -18,6 +18,14 @@ function pairsOf(value: string): string[] {
   return [...value.matchAll(PAIR)].map((m) => `${m[1]},${m[2]}`)
 }
 
+// Every individual numeric component across the whole list, flattened and in
+// document order -- arity-agnostic, unlike pairsOf above, so it also covers
+// 3-tuples. Used to tell a transposition (two components change at once)
+// apart from a component-change (exactly one does).
+function componentsOf(value: string): string[] {
+  return [...value.matchAll(/-?\d+/g)].map((m) => m[0])
+}
+
 // mutateTupleList draws from `rand` exactly twice, in either branch: a class
 // draw, then either a swap-candidate-index draw or a component-index draw.
 // The component-change branch's call into seeded-random.ts's mutateInteger
@@ -74,6 +82,33 @@ describe('isTupleList', () => {
   it('rejects an empty string', () => {
     expect(isTupleList('')).toBe(false)
   })
+
+  // Every fixture above this point uses exactly one canonical spacing
+  // ("(0, 0)": no space after '(', none before a comma, one space after a
+  // comma, none before ')') -- the shape prettier-plugin-gherkin actually
+  // produces. TUPLE_LIST_SHAPE's `\s*` is more permissive than that single
+  // shape at every one of its ten occurrences, and nothing above exercises
+  // the permissiveness itself: a canonical fixture matches a `\s*` position
+  // with either zero characters (untested against a mutant that instead
+  // requires NON-whitespace there) or exactly one (untested against a mutant
+  // that instead requires EXACTLY one whitespace character, since one space
+  // satisfies both). These two pin the actual, current tolerance at both
+  // ends -- liberal extra whitespace, and none at all -- rather than
+  // asserting a stricter contract nothing here has decided on.
+  it('tolerates extra whitespace around parens, commas and the top-level separator', () => {
+    expect(isTupleList('( 0 , 0 ) , ( 1 , 0 )')).toBe(true)
+  })
+
+  it('tolerates no whitespace at all around a comma', () => {
+    expect(isTupleList('(0,0),(1,0)')).toBe(true)
+  })
+
+  it('rejects a value with leading text before the first tuple', () => {
+    // The mirror image of "rejects a value with trailing text after the
+    // last tuple" above -- both ends of the anchored match matter, and nothing
+    // above tests the leading one.
+    expect(isTupleList('xyz(0, 0)')).toBe(false)
+  })
 })
 
 describe('mutateTupleList', () => {
@@ -103,10 +138,22 @@ describe('mutateTupleList', () => {
 
   it('swaps a pair transposition when swap is selected and a swappable candidate exists (first draw < 0.5)', () => {
     const mutated = mutateTupleList(CELLS, queuedRand([0.1, 0.1]), 'k')
-    // (0, 0), the first pair, has equal components so it is not swappable;
-    // the swap candidate pool is (1, 0), (0, 1), (1, 1) -- with the second
-    // draw (0.1) selecting the first candidate, (1, 0), swapped to (0, 1).
+    // (0, 0) and (1, 1), the first and last pairs, each have equal
+    // components so neither is swappable; the swap candidate pool is
+    // (1, 0), (0, 1) -- with the second draw (0.1) selecting the first
+    // candidate, (1, 0), swapped to (0, 1).
     expect(mutated).toBe('(0, 0), (0, 1), (0, 1), (1, 1)')
+  })
+
+  it('selects a different swap candidate for a different second draw when more than one exists', () => {
+    // Same pool as the previous test -- (1, 0) and (0, 1), 2 candidates.
+    // floor(draw * 2) must actually vary with draw, not collapse to the same
+    // index regardless of it (a mutant dividing by the candidate count
+    // instead of multiplying by it would always floor to 0 here, since
+    // draw / 2 < 1 for every draw in [0, 1)).
+    const first = mutateTupleList(CELLS, queuedRand([0.1, 0.1]), 'k') // floor(0.1 * 2) = 0 -> (1, 0)
+    const second = mutateTupleList(CELLS, queuedRand([0.1, 0.9]), 'k') // floor(0.9 * 2) = 1 -> (0, 1)
+    expect(first).not.toBe(second)
   })
 
   it('is a single transposition -- the swapped pair is a permutation of its own original components', () => {
@@ -131,11 +178,22 @@ describe('mutateTupleList', () => {
   })
 
   it('falls back to component-change for a non-2-arity tuple list even when the first draw wants swap', () => {
+    // Both 3-tuples here have differing first-two components (1 !== 2, 4 !==
+    // 5), so a mutant that dropped the arity === 2 restriction would still
+    // find a "swap candidate" and transpose two components at once -- which
+    // a same-digit-run-count check alone can't tell apart from a genuine
+    // single-component change, since a transposition also leaves the group
+    // count at 2 and the value different from the original.
     const value = '(1, 2, 3), (4, 5, 6)'
+    const before = componentsOf(value)
     const mutated = mutateTupleList(value, queuedRand([0.1, 0.1]), 'k')
+    const after = componentsOf(mutated)
     expect(mutated).not.toBe(value)
-    // Still a well-formed pair of 3-tuples with exactly one changed digit run.
+    // Still a well-formed pair of 3-tuples...
     expect([...mutated.matchAll(/\(([^()]*)\)/g)]).toHaveLength(2)
+    // ...with exactly one component changed, never two -- a transposition
+    // would change both of a pair's components simultaneously.
+    expect(after.filter((c, i) => c !== before[i])).toHaveLength(1)
   })
 
   it('mutates a single-pair list', () => {
