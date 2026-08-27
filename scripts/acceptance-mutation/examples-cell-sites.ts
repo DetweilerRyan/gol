@@ -11,7 +11,7 @@
 // exports anything a second finder would need to import.
 import { listScenarios, type Examples, type GherkinDocument, type TableRow } from './gherkin-document.ts'
 import type { MutationSite } from './mutation-sites.ts'
-import { findCellSpan } from './text-span.ts'
+import { escapeTableCell, findCellSpan, spliceSpan } from './text-span.ts'
 
 const KIND = 'examples-cell' as const
 
@@ -59,47 +59,17 @@ export function findExamplesCellSites(doc: GherkinDocument, lines: string[], fea
   return sites
 }
 
-// --- Rendering (step 3: row-rewrite, byte-identical to the pre-refactor
-// applyMutation; see mutant-parity-jig.test.ts) -----------------------------
-//
-// This whole section is deliberately temporary. It exists only so the site
-// abstraction lands with zero change to the mutant bytes this program has
-// already produced, which is what mutant-parity-jig.test.ts pins. The next
-// step replaces it with a direct spliceSpan + escapeTableCell call that
-// needs none of the row-reconstruction below, because a splice needs only
-// the site's own span -- not its siblings, and not a column index.
-
-function splitTableRow(line: string): string[] {
-  const trimmed = line.trim()
-  const inner = trimmed.replace(/^\|/, '').replace(/\|$/, '')
-  return inner.split('|').map((cell) => cell.trim())
-}
-
-function renderTableRow(cells: string[]): string {
-  return `      | ${cells.join(' | ')} |`
-}
-
-// The old applyMutation took a MutableCell carrying its own columnIndex
-// directly; a MutationSite deliberately doesn't, so this reconstructs it by
-// counting `|` characters before the span's own start column. Ignores
-// escaping the same way the old splitTableRow already did (a raw split on
-// every `|`), which is fine only because no real feature file today
-// contains an escaped pipe -- and irrelevant the moment step 4 deletes this
-// whole section.
-function columnIndexAtStart(line: string, startColumn: number): number {
-  let pipes = 0
-  for (let i = 0; i < startColumn; i++) {
-    if (line[i] === '|') pipes++
-  }
-  return pipes - 1
-}
-
+// Splices the mutated value directly into the site's own span, escaping it
+// first the same way Gherkin itself escapes a table cell on the way in (see
+// text-span.ts's findCellSpan for the read side of the same convention).
+// This touches exactly the bytes the span covers -- never a sibling cell,
+// never the row's column padding, never a second line -- which is the whole
+// point of carrying a byte-precise span on the site instead of a row index:
+// a full-table AST re-render would re-pad every cell to the new widest
+// value (measured by architect: more than one line changes for every one of
+// the 55 real mutants, one as high as 10, wherever Pulsar's own row is
+// touched), where this changes exactly the one line the span lives on, and
+// nothing else on it beyond the span itself.
 export function renderExamplesCellSite(featureText: string, site: MutationSite, mutatedValue: string): string {
-  const lines = featureText.split(/\r?\n/)
-  const rawLine = lines[site.span.line]
-  const originalRow = splitTableRow(rawLine)
-  const columnIndex = columnIndexAtStart(rawLine, site.span.startColumn)
-  const mutatedRow = originalRow.map((value, i) => (i === columnIndex ? mutatedValue : value))
-  lines[site.span.line] = renderTableRow(mutatedRow)
-  return lines.join('\n')
+  return spliceSpan(featureText, site.span, escapeTableCell(mutatedValue))
 }

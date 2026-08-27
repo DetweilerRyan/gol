@@ -151,12 +151,23 @@ describe('findExamplesCellSites', () => {
   })
 })
 
-// The row-rewrite renderer is deliberately temporary (see the module
-// comment in examples-cell-sites.ts) -- these tests exist to pin its
-// byte-for-byte parity with the pre-refactor applyMutation until step 4
-// replaces it with a splice, at which point this describe block is deleted
-// along with the code it covers.
-describe('renderExamplesCellSite (temporary row-rewrite)', () => {
+// Golden tests for the splice-based renderer, replacing
+// mutant-parity-jig.test.ts (retired here -- see this module's own history
+// for the row-rewrite renderer these superseded, which the jig existed to
+// pin byte-parity against while it still existed). A splice needs no
+// checked-in .feature fixture to prove itself against: the whole point of
+// carrying a byte-precise span is that its correctness is a property of the
+// span and the surrounding bytes, provable from a small inline sample the
+// same way text-span.test.ts already does -- not a regression pin against
+// whatever product happens to have written into features/ today.
+//
+// Fixtures are inline template literals rather than checked-in .feature
+// files on purpose: Prettier's prettier-plugin-gherkin formats every
+// features/*.feature in the tree (see CLAUDE.md's Conventions), and a
+// checked-in fixture would be silently re-padded by the next `npm run
+// format`, breaking these tests for a reason that has nothing to do with
+// this program.
+describe('renderExamplesCellSite (splice)', () => {
   it('changes only the targeted cell, leaving every other cell and line untouched', () => {
     const [site] = sitesOf(SAMPLE)
     const mutated = renderExamplesCellSite(SAMPLE, site, '999')
@@ -173,5 +184,73 @@ describe('renderExamplesCellSite (temporary row-rewrite)', () => {
     const [site] = sitesOf(SAMPLE)
     const mutated = renderExamplesCellSite(SAMPLE, site, '999')
     expect(mutated.split('\n')[6]).toBe(SAMPLE.split('\n')[6])
+  })
+
+  // The property a full-table re-render cannot offer: the bytes before and
+  // after the span, on the mutated line itself, are untouched -- including
+  // a neighboring cell's own column padding, which a splice never even
+  // looks at.
+  it('leaves the raw bytes on either side of the span untouched, padding included', () => {
+    // Mimics prettier-plugin-gherkin's own column alignment (see
+    // pattern-library.feature): every cell padded to the widest value in
+    // its column, not to a fixed single space.
+    const ALIGNED = `Feature: Sample
+  Scenario Outline: A rule
+    Given a value of <input>
+    Then the result is <output>
+
+    Examples:
+      | input        | output |
+      | 2            | four   |
+      | a longer one | six    |
+`
+    // Target the second row's *first* cell ("a longer one", the value that
+    // sets the column's width) so the first row -- on a different line
+    // entirely -- is a control for "every other row's padding is
+    // untouched", and the second row's own *other* cell is a control for
+    // "the rest of this row's padding is untouched too".
+    const target = sitesOf(ALIGNED)[2]
+    const mutated = renderExamplesCellSite(ALIGNED, target, 'X')
+    const originalLine = ALIGNED.split('\n')[target.span.line]
+    const mutatedLine = mutated.split('\n')[target.span.line]
+    expect(mutatedLine.slice(0, target.span.startColumn)).toBe(originalLine.slice(0, target.span.startColumn))
+    expect(mutatedLine.slice(target.span.startColumn + 1)).toBe(originalLine.slice(target.span.endColumn))
+    // The first row lives on a different line and is untouched outright.
+    expect(mutated.split('\n')[7]).toBe(ALIGNED.split('\n')[7])
+  })
+
+  // A mutated value containing a literal pipe or backslash must round-trip
+  // through re-parsing to the exact same value -- unescaped on the way in
+  // by @cucumber/gherkin, escaped on the way out by escapeTableCell. None
+  // of mutation-rules.ts's own strategies ever produce such a value today
+  // (ALPHABET is lowercase letters only), so this is a property of the
+  // renderer itself, pinned independently of what mutateValue happens to
+  // generate.
+  it.each([
+    ['a value containing a literal pipe', 'a|b'],
+    ['a value containing a literal backslash', 'a\\b'],
+    ['a value containing both, adjacent', 'a\\|b'],
+  ])('escapes %s so it round-trips back to the same unescaped value', (_name, mutatedValue) => {
+    const [site] = sitesOf(SAMPLE)
+    const mutated = renderExamplesCellSite(SAMPLE, site, mutatedValue)
+    const [after] = sitesOf(mutated)
+    expect(after.value).toBe(mutatedValue)
+  })
+
+  // The real-tree case architect measured: Pulsar's `cells` column is by
+  // far the widest in pattern-library.feature, so a full-table AST
+  // round-trip touches ~10 lines re-padding every other row to match a new
+  // width. A splice touches exactly the one line the mutated cell lives on.
+  it('mutating the widest real cell in a table changes exactly one line, not the whole table', () => {
+    const original = readFileSync(`${FEATURES_DIR}/pattern-library.feature`, 'utf8')
+    const sites = sitesOf(original, 'pattern-library.feature')
+    const pulsarCells = sites.find((s) => s.seedKey === 'pattern-library.feature:5:cells')!
+    const mutated = renderExamplesCellSite(original, pulsarCells, 'MUTATED')
+
+    const originalLines = original.split('\n')
+    const mutatedLines = mutated.split('\n')
+    expect(mutatedLines).toHaveLength(originalLines.length)
+    const changedLineIndexes = mutatedLines.flatMap((line, i) => (line !== originalLines[i] ? [i] : []))
+    expect(changedLineIndexes).toEqual([pulsarCells.span.line])
   })
 })
