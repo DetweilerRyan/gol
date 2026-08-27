@@ -117,9 +117,13 @@ function scenarioKey(step: CorpusStep): string {
 export function pairKey(a: string, b: string): string {
   // `.sort()` canonicalizes the pair, so the key does not depend on the order
   // the caller happens to hold the two texts in. That IS this function's
-  // contract and its removal is a killed mutant, not an equivalent one --
-  // analyze.property.test.ts's order-independence property is what kills it
-  // (measured: dropping the sort reds 1 of 649 in `npm run test:scripts`).
+  // contract and its removal is a killed mutant, not an equivalent one.
+  // Killed twice over in analyze.property.test.ts, and the distinction
+  // matters: the order-independence PROPERTY kills it in `npm run
+  // test:scripts` but cannot kill it in `npm run test:mutation:scripts` (a
+  // property's title carries fast-check's per-run seed and Stryker filters
+  // mutant runs by dry-run test name, so it never runs there -- measured);
+  // the deterministic `it.each` twin beside it is what the gate sees.
   // Removing it would not change today's report, since
   // findPlaceholderVariants registers both orders and a lookup built in
   // either order still hits -- but that is the caller's loop shape, which

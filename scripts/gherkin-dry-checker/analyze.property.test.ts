@@ -114,6 +114,27 @@ describe('pairKey', () => {
     expect(pairKey(a, b)).toBe(pairKey(b, a))
   })
 
+  // The deterministic twin of the property above, and the only form of that
+  // claim the MUTATION GATE can see. `@fast-check/vitest` interpolates the
+  // run's seed into a property's title, while Stryker's vitest runner filters
+  // each mutant run with a `testNamePattern` built from the DRY RUN's test
+  // names (vitest-test-runner.js's `run`) -- the seed differs between the two,
+  // so a property's title never matches and the property simply does not
+  // execute against any mutant. Measured on the `.sort()` mutant scoped alone:
+  // Survived with the seed left free, Killed once it was pinned, same config
+  // otherwise. So the property above kills that mutant in `npm run
+  // test:scripts` and could not kill it in `npm run test:mutation:scripts`;
+  // these fixed-input rows, whose titles are stable, are what close it.
+  it.each([
+    ['a', 'b'],
+    ['', 'a'],
+    ['a b', 'a'],
+    ['"', '\\'],
+    ['zz', 'aa'],
+  ])('does not depend on argument order, for %j and %j', (a, b) => {
+    expect(pairKey(a, b)).toBe(pairKey(b, a))
+  })
+
   it.each(PINNED)('keeps %j/%j distinct from %j/%j', (a, b, c, d) => {
     expect(pairKey(a, b)).not.toBe(pairKey(c, d))
   })
