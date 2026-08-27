@@ -11,6 +11,19 @@ function requireFinding(report: DryReport, kinds: FindingKind | FindingKind[]): 
   return finding as Finding
 }
 
+// Narrows to the one finding whose members are exactly { textA, textB } --
+// needed whenever a corpus incidentally produces several other findings too
+// (cross-pairs sharing a token once placeholders are stripped, say), so a
+// looser `findings.some(...)` check would pass whether or not the specific
+// pair under test was wrongly dropped.
+function requirePairFinding(report: DryReport, textA: string, textB: string): Finding {
+  const finding = report.findings.find(
+    (f) => f.members.length === 2 && f.members.some((m) => m.text === textA) && f.members.some((m) => m.text === textB),
+  )
+  expect(finding, `expected a finding whose members are exactly ${textA} and ${textB}`).toBeDefined()
+  return finding as Finding
+}
+
 function step(overrides: Partial<CorpusStep>): CorpusStep {
   return {
     feature: 'a.feature',
@@ -173,34 +186,46 @@ describe('analyzeSteps', () => {
     expect(report.findings.some((f) => f.kind === 'near-duplicate')).toBe(true)
   })
 
-  // pairKey sorts its two texts before joining them, and the join separator is
-  // load-bearing, not decorative: without it, two different pairs of texts can
-  // sort-and-concatenate to the identical string (e.g. sorted ["ab", "c"] and
-  // sorted ["a", "bc"] both join to "abc"). The corpus below is built from
-  // that exact shape -- a placeholder-variant pair whose sorted, unseparated
-  // concatenation collides with an unrelated pair's -- so that a dedupePairs
-  // key built without a separator wrongly marks the unrelated pair as already
-  // explained by the placeholder-variant pass, and its own possible-synonym
-  // finding silently vanishes.
-  it('does not let an unrelated pair collide with a placeholder-variant pair once their texts are sorted and joined', () => {
-    const report = analyzeSteps([
-      step({ text: '<foo>ab', scenarioIndex: 0 }),
-      step({ text: '<bar>ab', scenarioIndex: 1 }),
-      step({ text: '<bar>ab<', scenarioIndex: 2 }),
-      step({ text: 'foo>ab', scenarioIndex: 3 }),
-    ])
+  // Three ways pairKey's collision space can leak an unrelated pair past
+  // dedupePairs, all sharing one shape: a placeholder-variant group registers
+  // a key built from two of its own texts joined by a single space, and a
+  // *different*, unrelated pair's own sorted-and-joined texts land on that
+  // exact string, so dedupePairs.has() wrongly says "already explained" and
+  // the unrelated pair's own finding silently vanishes.
+  //
+  // 'separator': without pairKey's join(' ') separator, sorted ["ab", "c"]
+  // and sorted ["a", "bc"] both concatenate to "abc" -- the collision this
+  // slice's join-separator regression test already covered.
+  // 'diagonal': without the `a !== b` guard on the dedupe double loop, a
+  // self-pair key a + ' ' + a enters the set; a doubled string with an
+  // internal space admits an alternate split into two different texts.
+  // 'unsorted': without pairKey's own `.sort()`, a lookup key is built from
+  // corpus insertion order rather than a canonical order, so an unrelated
+  // pair's *unsorted* concatenation can land on a real entry's unsorted form.
+  it.each([
+    {
+      name: 'separator',
+      corpus: ['<foo>ab', '<bar>ab', '<bar>ab<', 'foo>ab'],
+      pair: ['<bar>ab<', 'foo>ab'],
+    },
+    {
+      name: 'diagonal',
+      corpus: ['w1 <p> w2', 'w1 <q> w2', 'w1 <p>', 'w2 w1 <p> w2'],
+      pair: ['w1 <p>', 'w2 w1 <p> w2'],
+    },
+    {
+      name: 'unsorted',
+      corpus: ['w1 <p> w2', 'w1 <q> w2', 'w1', '<p> w2 w1 <q> w2'],
+      pair: ['w1', '<p> w2 w1 <q> w2'],
+    },
+  ])('does not let an unrelated pair collide with a placeholder-variant dedupe key ($name)', ({ corpus, pair }) => {
+    const report = analyzeSteps(corpus.map((text, scenarioIndex) => step({ text, scenarioIndex })))
     expect(report.findings.some((f) => f.kind === 'placeholder-variant')).toBe(true)
-    // The unrelated pair's own finding, isolated from the other cross-pairs
-    // this corpus incidentally also produces (its members all share the token
-    // "ab" once placeholders are stripped, so several other pairs clear the
-    // similarity threshold too) -- this is the one a colliding key would drop.
-    const unrelatedPairFinding = report.findings.find(
-      (f) =>
-        f.members.length === 2 &&
-        f.members.some((m) => m.text === '<bar>ab<') &&
-        f.members.some((m) => m.text === 'foo>ab'),
-    )
-    expect(unrelatedPairFinding).toBeDefined()
+    // The pair's own finding, isolated from the other cross-pairs this
+    // corpus incidentally also produces (its members all share a token once
+    // placeholders are stripped, so several other pairs clear the similarity
+    // threshold too) -- this is the one a colliding key would drop.
+    requirePairFinding(report, pair[0], pair[1])
   })
 
   // The report is the product here -- a finding with blank prose or no members
