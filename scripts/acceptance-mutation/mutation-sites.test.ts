@@ -66,6 +66,21 @@ describe('listMutationSites duplicate seedKey detection', () => {
     )
   })
 
+  // The remedy text is load-bearing, not cosmetic: the seedKey alone can't
+  // distinguish the two colliding cells (that's the defect being reported),
+  // so a message carrying only the key would be unactionable. Pin the whole
+  // remedy -- rename the shared column, or widen seedKeyFor by table
+  // identity -- so a StringLiteral mutant on any of its three concatenated
+  // segments fails this test rather than surviving unnoticed.
+  it('names the remedy: rename the shared column, or widen seedKeyFor by table identity', () => {
+    expect(() => listMutationSites(TWO_TABLES_SHARED_COLUMN, 'dup.feature')).toThrow(
+      'Two Examples tables cannot share a column name -- rename the shared column. If two tables must ever ' +
+        "legitimately share one, widen examples-cell-sites.ts's seedKeyFor with the table's own identity " +
+        '(positional key + table ordinal); that moves every mutant value and needs a before/after dump to land ' +
+        'safely.',
+    )
+  })
+
   // A single duplicated key can't tell "collect every duplicate and throw
   // once" apart from "throw on the first duplicate found" -- one colliding
   // pair is indistinguishable between the two, and the join between
