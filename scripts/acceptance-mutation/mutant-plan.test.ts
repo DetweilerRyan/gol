@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
-import { applyMutation, listMutableCells } from './gherkin-examples.ts'
-import { buildMutantRecords, mutantSeedKey, type TargetPlan } from './mutant-plan.ts'
+import { listMutationSites, renderMutantText } from './mutation-sites.ts'
+import { buildMutantRecords, type TargetPlan } from './mutant-plan.ts'
 import { mutateValue } from './mutation-rules.ts'
 
 const FEATURE = `Feature: Sample
@@ -15,63 +15,52 @@ const FEATURE = `Feature: Sample
 `
 
 function planFor(feature: string, featureText = FEATURE): TargetPlan {
-  return { target: { feature }, featureText, cells: listMutableCells(featureText) }
+  return { target: { feature }, featureText, sites: listMutationSites(featureText, feature) }
 }
 
-describe('mutantSeedKey', () => {
-  it('addresses a cell by feature, row and column so a mutant value is reproducible across runs', () => {
-    const [cell] = listMutableCells(FEATURE)
-    expect(mutantSeedKey('sample.feature', cell)).toBe(`sample.feature:${cell.rowIndex}:${cell.columnName}`)
-  })
-
-  it('gives two cells in the same row different keys', () => {
-    const cells = listMutableCells(FEATURE)
-    const keys = cells.map((cell) => mutantSeedKey('sample.feature', cell))
-    expect(new Set(keys).size).toBe(cells.length)
-  })
-})
-
 describe('buildMutantRecords', () => {
-  it('produces one record per mutable cell of every plan', () => {
+  it('produces one record per mutation site of every plan', () => {
     const plan = planFor('sample.feature')
-    expect(buildMutantRecords([plan])).toHaveLength(plan.cells.length)
+    expect(buildMutantRecords([plan])).toHaveLength(plan.sites.length)
   })
 
   it('returns nothing for no plans', () => {
     expect(buildMutantRecords([])).toEqual([])
   })
 
-  // The invariant this module exists to gate, in both directions. Classification
-  // looks a mutant's result up BY ITS FILENAME (run.ts -> specFileName ->
-  // summary.bySpecFile), so if a record's filename, its stored `cell` and its
-  // mutated text were ever derived from different cells the run would
-  // misattribute a kill or a survivor with nothing in the output to notice it by.
-  it('derives each record mutated text from the cell it reports', () => {
+  // The invariant this module exists to gate, in both directions.
+  // Classification looks a mutant's result up BY ITS FILENAME (run.ts ->
+  // specFileName -> summary.bySpecFile), so if a record's filename, its
+  // stored `site` and its mutated text were ever derived from different
+  // sites the run would misattribute a kill or a survivor with nothing in
+  // the output to notice it by.
+  it('derives each record mutated text from the site it reports', () => {
     const plan = planFor('sample.feature')
     for (const record of buildMutantRecords([plan])) {
-      // applyMutation is the module's own collaborator, deliberately: what is
-      // under test here is the CORRESPONDENCE between record.cell and
-      // record.text, not applyMutation's formatting (gherkin-examples.test.ts
-      // owns that). Feeding it record.cell reproduces record.text only if
-      // buildMutantRecords used that same cell for both.
-      expect(record.text).toBe(applyMutation(plan.featureText, record.cell, record.mutatedValue))
+      // renderMutantText is the module's own collaborator, deliberately:
+      // what is under test here is the CORRESPONDENCE between record.site
+      // and record.text, not the renderer's own formatting (that's
+      // examples-cell-sites.test.ts's job). Feeding it record.site
+      // reproduces record.text only if buildMutantRecords used that same
+      // site for both.
+      expect(record.text).toBe(renderMutantText(plan.featureText, record.site, record.mutatedValue))
       expect(record.text).not.toBe(plan.featureText)
     }
   })
 
-  it('derives each record filename from the ordinal of the cell it reports', () => {
+  it('derives each record filename from the ordinal of the site it reports', () => {
     const plan = planFor('sample.feature')
     buildMutantRecords([plan]).forEach((record, index) => {
-      expect(record.cell).toBe(plan.cells[index])
+      expect(record.site).toBe(plan.sites[index])
       expect(record.fileName).toBe(`sample.mutant-${index}.feature`)
     })
   })
 
-  it('mutates the value the cell actually holds, seeded by that cell address', () => {
+  it('mutates the value the site actually holds, seeded by that site address', () => {
     const plan = planFor('sample.feature')
     for (const record of buildMutantRecords([plan])) {
-      expect(record.mutatedValue).toBe(mutateValue(record.cell.value, mutantSeedKey('sample.feature', record.cell)))
-      expect(record.mutatedValue).not.toBe(record.cell.value)
+      expect(record.mutatedValue).toBe(mutateValue(record.site.value, record.site.seedKey))
+      expect(record.mutatedValue).not.toBe(record.site.value)
     }
   })
 
@@ -97,5 +86,12 @@ describe('buildMutantRecords', () => {
   it('contributes nothing for a plan whose feature carries no Examples table', () => {
     const noTable = 'Feature: Bare\n  Scenario: Nothing\n    Given nothing\n'
     expect(buildMutantRecords([planFor('bare.feature', noTable)])).toEqual([])
+  })
+
+  it('gives two sites in the same row different seed keys, addressed by feature, row and column', () => {
+    const plan = planFor('sample.feature')
+    const keys = plan.sites.map((s) => s.seedKey)
+    expect(new Set(keys).size).toBe(plan.sites.length)
+    expect(plan.sites[0].seedKey).toBe('sample.feature:0:x')
   })
 })

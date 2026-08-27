@@ -3,8 +3,13 @@
 // https://github.com/unclebob/Acceptance-Pipeline-Specification: mutate one
 // Gherkin example cell at a time and check whether the acceptance scenario
 // notices. This mutates *specification data*, never source code -- see
-// scripts/acceptance-mutation/mutation-rules.ts for the value rules and
-// gherkin-examples.ts for the table locator/rewriter.
+// scripts/acceptance-mutation/mutation-rules.ts for the value rules.
+//
+// Which values are mutable, and how a mutant is located and rendered, is
+// mutation-sites.ts's job (see gherkin-document.ts for the AST adapter it
+// sits on) -- this file only asks it for every target's mutation sites and
+// prints the result generically, by seedKey, so a new site kind never
+// requires a change here.
 //
 // Batched Playwright design (architect-ratified, superseding the old
 // one-vitest-spawn-per-mutant form): every mutant and every baseline is
@@ -39,7 +44,7 @@ import path from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { assertBaselineSpecGreen, classifyMutant, summarizeResults, type Outcome } from './classify.ts'
 import { discoverTargets, filterTargets, parseArgs, type MutationTarget } from './discovery.ts'
-import { listMutableCells } from './gherkin-examples.ts'
+import { listMutationSites } from './mutation-sites.ts'
 import { buildMutantRecords, type TargetPlan } from './mutant-plan.ts'
 import { baselineFeatureFileName, specFileName } from './mutant-tree.ts'
 import {
@@ -52,10 +57,17 @@ import {
   sumSkipped,
 } from './playwright-runner.ts'
 
+// `site` is the mutation site's own seedKey, printed verbatim rather than
+// decomposed back into row/column -- a kind-specific decomposition here
+// would be exactly the "run.ts changes when a new site kind is added"
+// outcome the site abstraction exists to avoid. For today's only kind
+// (examples-cell) that seedKey already reads as `feature:row:column`, so
+// nothing is lost; a step-text mutant's seedKey would print with the same
+// column and mean something else entirely, which is fine -- this report
+// doesn't need to know which.
 interface MutantResult {
   feature: string
-  row: number
-  column: string
+  site: string
   original: string
   mutated: string
   outcome: Outcome
@@ -75,10 +87,10 @@ function resolveTargets(): MutationTarget[] {
 // therefore inside crap4ts/Stryker's scripts/ scope -- this file is not, by
 // the `**/run.ts` exclusion both configs carry.
 //
-// listMutableCells now parses real Gherkin (gherkin-document.ts's AST
-// adapter) rather than scanning lines, so a malformed .feature throws a
-// GherkinException instead of silently producing a wrong or empty table.
-// That's deliberately not caught inside gherkin-examples.ts or
+// listMutationSites parses real Gherkin (gherkin-document.ts's AST adapter)
+// rather than scanning lines, so a malformed .feature throws a
+// GherkinException instead of silently producing a wrong or empty set of
+// sites. That's deliberately not caught inside mutation-sites.ts or
 // gherkin-document.ts -- letting it throw and attaching context here, at the
 // one place that knows which target's feature file was being read, is this
 // program's abort-loudly ethos applied to a parse failure the same way it's
@@ -87,7 +99,7 @@ function loadTargetPlans(targets: MutationTarget[]): TargetPlan[] {
   return targets.map((target) => {
     const featureText = readFileSync(path.join(FEATURES_DIR, target.feature), 'utf8')
     try {
-      return { target, featureText, cells: listMutableCells(featureText) }
+      return { target, featureText, sites: listMutationSites(featureText, target.feature) }
     } catch (err) {
       throw new Error(`Failed to parse ${target.feature}: ${(err as Error).message}`)
     }
@@ -180,9 +192,8 @@ function runMutantPhase(
       const outcome = classifyMutant(baselineTotalTests, summary!.bySpecFile[spec])
       return {
         feature: record.target.feature,
-        row: record.cell.rowIndex + 1,
-        column: record.cell.columnName,
-        original: record.cell.value,
+        site: record.site.seedKey,
+        original: record.site.value,
         mutated: record.mutatedValue,
         outcome,
       }
@@ -216,8 +227,8 @@ function main(): void {
   // cannot report a target `--feature` excluded: filterTargets runs before
   // loadTargetPlans, so an unselected target never becomes a plan at all. The
   // printed label says so, rather than claiming a coverage it doesn't have.
-  const activePlans = plans.filter((p) => p.cells.length > 0)
-  const zeroMutantFeatures = plans.filter((p) => p.cells.length === 0).map((p) => p.target.feature)
+  const activePlans = plans.filter((p) => p.sites.length > 0)
+  const zeroMutantFeatures = plans.filter((p) => p.sites.length === 0).map((p) => p.target.feature)
 
   let results: MutantResult[] = []
   // Named by phase so a printed 0 is legible as "checked, and clean" for
@@ -252,20 +263,19 @@ function report(
   if (results.length > 0) {
     const widths = {
       feature: Math.max(7, ...results.map((r) => r.feature.length)),
-      row: 3,
-      column: Math.max(6, ...results.map((r) => r.column.length)),
+      site: Math.max(4, ...results.map((r) => r.site.length)),
       original: Math.max(8, ...results.map((r) => r.original.length)),
       mutated: Math.max(7, ...results.map((r) => r.mutated.length)),
       outcome: 8,
     }
     const pad = (s: string | number, w: number) => String(s).padEnd(w)
-    const header = `${pad('Feature', widths.feature)}  ${pad('Row', widths.row)}  ${pad('Column', widths.column)}  ${pad('Original', widths.original)}  ${pad('Mutated', widths.mutated)}  Outcome`
+    const header = `${pad('Feature', widths.feature)}  ${pad('Site', widths.site)}  ${pad('Original', widths.original)}  ${pad('Mutated', widths.mutated)}  Outcome`
     console.log(header)
     console.log('-'.repeat(header.length))
     for (const r of results) {
       const marker = r.outcome === 'killed' ? '✓' : r.outcome === 'survived' ? '✗' : '!'
       console.log(
-        `${pad(r.feature, widths.feature)}  ${pad(r.row, widths.row)}  ${pad(r.column, widths.column)}  ${pad(r.original, widths.original)}  ${pad(r.mutated, widths.mutated)}  ${marker} ${r.outcome}`,
+        `${pad(r.feature, widths.feature)}  ${pad(r.site, widths.site)}  ${pad(r.original, widths.original)}  ${pad(r.mutated, widths.mutated)}  ${marker} ${r.outcome}`,
       )
     }
     console.log('-'.repeat(header.length))
