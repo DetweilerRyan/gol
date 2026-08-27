@@ -2,6 +2,16 @@
 // of the full file with exactly one example cell changed -- mirroring the
 // Acceptance Pipeline Specification's restriction that acceptance mutation
 // touches only example cell values, never step text, keywords, or headers.
+//
+// Table location is delegated to gherkin-document.ts's AST adapter rather
+// than scanned line-by-line -- see that module for why (the same parser
+// playwright-bdd executes mutants with). This module's own job is narrower
+// now: walk the AST down to Examples tables, and re-render one row at a time
+// when applying a mutation (still line-based here; a later step moves
+// `applyMutation` to a byte-span splice, but the public shape below --
+// `ExamplesRow`/`ExamplesTable`/`MutableCell` and this module's four
+// exported functions -- is unaffected by that internal swap).
+import { listScenarios, parseFeature, type Examples } from './gherkin-document.ts'
 
 // One `| a | b |` data row of an Examples table, tagged with the 0-based line
 // index it occupies in the original feature text so a mutant can rewrite that
@@ -34,38 +44,32 @@ function splitTableRow(line: string): string[] {
   return inner.split('|').map((cell) => cell.trim())
 }
 
-// Locates the `| a | b |` header row belonging to an `Examples:` heading,
-// skipping any blank lines between the two. Returns null when the heading has
-// no table under it at all (end of file, or a non-table line) -- a malformed
-// outline we skip rather than fail on.
-function findHeaderLine(lines: string[], examplesLineIndex: number): number | null {
-  let headerLine = examplesLineIndex + 1
-  while (headerLine < lines.length && lines[headerLine].trim() === '') headerLine++
-  if (headerLine >= lines.length || !lines[headerLine].trim().startsWith('|')) return null
-  return headerLine
-}
-
-function readTableAt(lines: string[], headerLineIndex: number): ExamplesTable {
-  const rows: ExamplesRow[] = []
-  let rowLine = headerLineIndex + 1
-  while (rowLine < lines.length && lines[rowLine].trim().startsWith('|')) {
-    rows.push({ lineIndex: rowLine, cells: splitTableRow(lines[rowLine]) })
-    rowLine++
+// An Examples node with no `tableHeader` at all -- heading followed by
+// nothing, by end of file, or by non-table prose -- is not a table, the same
+// way the old line-scanner's `findHeaderLine` returning null meant "skip
+// this heading". A *titled* `Examples: named` heading is unaffected either
+// way; only the presence of a table under it decides whether it is mutable.
+function toExamplesTable(examples: Examples): ExamplesTable | null {
+  if (!examples.tableHeader) return null
+  return {
+    header: examples.tableHeader.cells.map((cell) => cell.value),
+    headerLineIndex: examples.tableHeader.location.line - 1,
+    rows: examples.tableBody.map((row) => ({
+      lineIndex: row.location.line - 1,
+      cells: row.cells.map((cell) => cell.value),
+    })),
   }
-  return { header: splitTableRow(lines[headerLineIndex]), headerLineIndex, rows }
 }
 
 export function findExamplesTables(featureText: string): ExamplesTable[] {
-  const lines = featureText.split(/\r?\n/)
+  const { doc } = parseFeature(featureText)
   const tables: ExamplesTable[] = []
-
-  for (let i = 0; i < lines.length; i++) {
-    if (!/^\s*Examples:\s*$/.test(lines[i])) continue
-    const headerLine = findHeaderLine(lines, i)
-    if (headerLine === null) continue
-    tables.push(readTableAt(lines, headerLine))
+  for (const scenario of listScenarios(doc)) {
+    for (const examples of scenario.examples) {
+      const table = toExamplesTable(examples)
+      if (table) tables.push(table)
+    }
   }
-
   return tables
 }
 

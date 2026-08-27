@@ -74,10 +74,23 @@ function resolveTargets(): MutationTarget[] {
 // the mutants derived from it then are is mutant-plan.ts's, which is pure and
 // therefore inside crap4ts/Stryker's scripts/ scope -- this file is not, by
 // the `**/run.ts` exclusion both configs carry.
+//
+// listMutableCells now parses real Gherkin (gherkin-document.ts's AST
+// adapter) rather than scanning lines, so a malformed .feature throws a
+// GherkinException instead of silently producing a wrong or empty table.
+// That's deliberately not caught inside gherkin-examples.ts or
+// gherkin-document.ts -- letting it throw and attaching context here, at the
+// one place that knows which target's feature file was being read, is this
+// program's abort-loudly ethos applied to a parse failure the same way it's
+// already applied to a bad baseline or a run-level Playwright error.
 function loadTargetPlans(targets: MutationTarget[]): TargetPlan[] {
   return targets.map((target) => {
     const featureText = readFileSync(path.join(FEATURES_DIR, target.feature), 'utf8')
-    return { target, featureText, cells: listMutableCells(featureText) }
+    try {
+      return { target, featureText, cells: listMutableCells(featureText) }
+    } catch (err) {
+      throw new Error(`Failed to parse ${target.feature}: ${(err as Error).message}`)
+    }
   })
 }
 
@@ -189,7 +202,13 @@ function main(): void {
     process.exit(1)
   }
 
-  const plans = loadTargetPlans(targets)
+  let plans: TargetPlan[]
+  try {
+    plans = loadTargetPlans(targets)
+  } catch (err) {
+    console.error((err as Error).message)
+    process.exit(1)
+  }
   // A target whose .feature carries no Examples table contributes zero
   // mutants -- it is reported, never silently dropped, but nothing is written
   // or spawned on its behalf (see summarizeResults in classify.ts for the

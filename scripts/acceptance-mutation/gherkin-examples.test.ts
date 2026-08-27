@@ -2,6 +2,7 @@ import { readFileSync } from 'node:fs'
 import path from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { describe, expect, it } from 'vitest'
+import { CompositeParserException } from './gherkin-document.ts'
 import { applyMutation, findExamplesTables, listMutableCells } from './gherkin-examples.ts'
 
 const FEATURES_DIR = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '../../features')
@@ -31,7 +32,29 @@ describe('findExamplesTables', () => {
   })
 
   it('finds multiple Examples tables in one file', () => {
-    const twoOutlines = SAMPLE + '\n' + SAMPLE.replace('Sample', 'Second')
+    // Two concatenated `Feature:` headings is not valid Gherkin (a feature
+    // file has exactly one Feature) -- re-expressed as the thing this test
+    // actually means: one Feature with two Scenario Outlines, each with its
+    // own Examples table.
+    const twoOutlines = `Feature: Sample
+  Scenario Outline: A rule
+    Given a value of <input>
+    Then the result is <output>
+
+    Examples:
+      | input | output |
+      | 2     | four   |
+      | 3     | six    |
+
+  Scenario Outline: A second rule
+    Given a value of <input>
+    Then the result is <output>
+
+    Examples:
+      | input | output |
+      | 2     | four   |
+      | 3     | six    |
+`
     expect(findExamplesTables(twoOutlines)).toHaveLength(2)
   })
 
@@ -55,9 +78,15 @@ describe('findExamplesTables', () => {
     expect(findExamplesTables(mention)).toEqual([])
   })
 
-  it('ignores an Examples: heading with a title after it', () => {
+  it('finds the table under a *titled* Examples: heading too', () => {
+    // The old line-scanner matched only a bare `Examples:` line and skipped
+    // a titled `Examples: named` heading entirely, silently excluding its
+    // table from mutation -- a latent bug the AST walk fixes, since a title
+    // has no bearing on whether the Examples node carries a table.
     const titled = 'Feature: F\n  Scenario Outline: S\n    Examples: named\n      | a |\n      | 1 |\n'
-    expect(findExamplesTables(titled)).toEqual([])
+    const [table] = findExamplesTables(titled)
+    expect(table.header).toEqual(['a'])
+    expect(table.rows).toHaveLength(1)
   })
 
   it('skips whitespace-only lines between the heading and the table', () => {
@@ -67,15 +96,42 @@ describe('findExamplesTables', () => {
     expect(table.rows).toHaveLength(1)
   })
 
-  it('requires a row to start with a pipe, not merely end with one', () => {
+  it('rejects a line that trails with a pipe but does not start with one, as malformed Gherkin', () => {
+    // The old line-scanner silently stopped reading rows once a line didn't
+    // *start* with `|`, treating a trailing-pipe line as harmless prose
+    // outside the table. It isn't -- a line here has to be a recognized
+    // keyword (Scenario/Examples/Rule/...), a comment, blank, or EOF, and
+    // "not a row |" is none of those, so real Gherkin parsing rejects the
+    // whole file rather than silently ignoring the stray line.
     const trailingPipe = 'Feature: F\n  Scenario Outline: S\n    Examples:\n      | a |\n      | 1 |\n    not a row |\n'
-    const [table] = findExamplesTables(trailingPipe)
-    expect(table.rows).toHaveLength(1)
+    expect(() => findExamplesTables(trailingPipe)).toThrow(CompositeParserException)
   })
 
   it('handles a table whose last row is the last line, with no trailing newline', () => {
     const noTrailingNewline = 'Feature: F\n  Scenario Outline: S\n    Examples:\n      | a |\n      | 1 |'
     const [table] = findExamplesTables(noTrailingNewline)
+    expect(table.rows).toHaveLength(1)
+    expect(table.rows[0].cells).toEqual(['1'])
+  })
+
+  it('finds a table inside a Scenario Outline nested under a Rule', () => {
+    // The old line-scanner never looked for the Rule: keyword at all, so it
+    // was "Rule-proof" only by accident -- it would have scanned straight
+    // through one. A naive `feature.children[].scenario` walk over the real
+    // AST is not accident-proof the same way: a Rule's own children live at
+    // `child.rule.children`, one level deeper, and have to be recursed into
+    // on purpose (see gherkin-document.ts's listScenarios).
+    const withRule = `Feature: F
+  Rule: R
+    Scenario Outline: S
+      Given a value of <input>
+
+      Examples:
+        | input |
+        | 1     |
+`
+    const [table] = findExamplesTables(withRule)
+    expect(table.header).toEqual(['input'])
     expect(table.rows).toHaveLength(1)
     expect(table.rows[0].cells).toEqual(['1'])
   })
