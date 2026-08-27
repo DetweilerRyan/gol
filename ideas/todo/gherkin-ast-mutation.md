@@ -31,6 +31,35 @@ key by scenario name plus a hash of the row's content, making seeds stable acros
 unrelated edits. Genuinely better — but a nice-to-have, since baselines here are
 compared in aggregate rather than per-mutant.
 
+## The trigger the file did not anticipate — and it is the one that fired
+
+Both triggers below are about the scanner **breaking**. Neither has fired: no `.feature` uses
+`Background`, `Rule` or a DocString, and the scanner has never produced a wrong mutant. (The
+separate `comma-list-mutants-are-all-syntax-breaking` finding is about `mutation-rules.ts`, a
+different file, and does not count.)
+
+**The user supplied a third, forward-looking one:** _"I'm interested in expanding the mutations
+beyond the example files in the future so this will be necessary."_
+
+That is a reason the trigger list structurally could not contain, because it is about **scope**
+rather than breakage. `gherkin-examples.ts` is `Examples:`-only by construction — `findExamplesTables`
+scans for `/^\s*Examples:\s*$/` and `readTableAt` consumes the `|` lines beneath it. Mutating step
+text, scenario names, DocStrings or step-level data tables is not a hardening of that scanner; it
+is a different program. An AST is the thing that makes it one program.
+
+**So the design must optimise for extensibility, not merely for parity.** A refactor that
+reproduces today's 55 mutants exactly and makes the next mutator no easier to add would satisfy
+the letter of this slice and miss its point. The measure is whether adding a step-text mutator
+afterwards is a small, local change.
+
+Two consequences for the verification below. **Comment fidelity is still potentially
+disqualifying** and is checked first regardless of motivation — an AST that drops the explanatory
+comments these files carry is the wrong tool whatever it enables. And **seed stability matters
+more, not less**: if the mutant set is about to grow beyond Examples cells, a keying scheme that
+renumbers on every unrelated edit gets worse with scale.
+
+The dependency is approved **conditional on that verification clearing**.
+
 ## Sketch
 
 Do it when **either** trigger fires:
