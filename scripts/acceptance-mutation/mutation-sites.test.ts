@@ -36,6 +36,81 @@ describe('listMutationSites', () => {
   })
 })
 
+describe('listMutationSites duplicate seedKey detection', () => {
+  // Two Examples tables in one feature that share a column name produce the
+  // same seedKey (`${featureFileName}:${rowIndex}:${columnName}`, rowIndex
+  // restarting at 0 per table) -- the exact collision assertUniqueSeedKeys
+  // exists to catch. The message must name both duplicated keys and, for
+  // each, every 1-based line the collision spans -- the key alone can't
+  // distinguish the two cells (that's the defect), so a message carrying
+  // only the key would be unactionable.
+  const TWO_TABLES_SHARED_COLUMN = `Feature: Duplicate columns
+  Scenario Outline: First
+    Given a value of <input>
+
+    Examples:
+      | input |
+      | 2     |
+
+  Scenario Outline: Second
+    Given another value of <input>
+
+    Examples:
+      | input |
+      | 3     |
+`
+
+  it('throws once, naming every duplicated seedKey and the 1-based line each colliding site is on', () => {
+    expect(() => listMutationSites(TWO_TABLES_SHARED_COLUMN, 'dup.feature')).toThrow(
+      /dup\.feature:0:input.*lines 7, 14/,
+    )
+  })
+
+  it('does not throw when two tables use distinct column names', () => {
+    const distinctColumns = `Feature: Distinct columns
+  Scenario Outline: First
+    Given a value of <first>
+
+    Examples:
+      | first |
+      | 2     |
+
+  Scenario Outline: Second
+    Given another value of <second>
+
+    Examples:
+      | second |
+      | 3      |
+`
+    expect(() => listMutationSites(distinctColumns, 'ok.feature')).not.toThrow()
+  })
+
+  // Two identical rows in one table are the case that looks like it should
+  // collide and doesn't: rowIndex still differs between them, so the
+  // seedKey stays unique even though the cell *values* are byte-identical.
+  // This is the fact that sank the content-addressed alternative -- a hash
+  // of the row's own content would have collapsed these two distinct sites
+  // into one mutant, reintroducing the exact collision this function exists
+  // to catch (see seedKeyFor's comment in examples-cell-sites.ts for the
+  // full accounting of why positional beat content-addressed).
+  it('does not throw on two identical rows, and assigns them distinct seedKeys', () => {
+    const identicalRows = `Feature: Identical rows
+  Scenario Outline: A rule
+    Given a value of <input>
+
+    Examples:
+      | input |
+      | 2     |
+      | 2     |
+`
+    const sites = listMutationSites(identicalRows, 'rows.feature')
+    expect(sites).toHaveLength(2)
+    expect(sites[0].value).toBe('2')
+    expect(sites[1].value).toBe('2')
+    expect(sites[0].seedKey).not.toBe(sites[1].seedKey)
+  })
+})
+
 describe('renderMutantText', () => {
   it('dispatches to the renderer registered for the site kind', () => {
     const [site] = listMutationSites(SAMPLE, 'sample.feature')

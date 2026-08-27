@@ -19,8 +19,27 @@ const KIND = 'examples-cell' as const
 // -- byte-identical to the pre-refactor key mutant-plan.ts used to build
 // itself. rowIndex is per-table, not per-file (cell-life-and-death's second
 // Examples table restarts at 0), which is what makes uniqueness rest on the
-// two tables never sharing a column name -- true today, not re-verified
-// here; replicating the old key exactly is the point, not improving it.
+// two tables never sharing a column name. That's no longer merely assumed:
+// mutation-sites.ts's listMutationSites calls assertUniqueSeedKeys as its
+// last step, over every site of every kind, and throws naming the
+// colliding keys and lines if it's ever violated.
+//
+// A content-addressed key (hashing the row, or the row plus column, instead
+// of using its position) was considered and rejected, measured against
+// cell-life-and-death.feature: deleting a row moves 9 of 25 mutant values
+// under this positional key vs 0 of 25 content-addressed -- a real
+// advantage -- but editing a single cell moves only 1 of 28 values here vs
+// 3 of 28 content-addressed, because a row hash covers every sibling cell
+// in that row, not just the edited one. Cell edits are the commoner
+// `product` action; the prune case moves the count either way, which is all
+// anything downstream compares (nothing persists a mutant list for a
+// before/after diff to run against); and two identical rows -- see
+// mutation-sites.test.ts's "does not throw on two identical rows" case --
+// would hash alike and collapse two distinct sites into one mutant,
+// reintroducing the exact collision content-addressing was meant to close.
+// A hash would also make the seedKey unreadable as the report's own `Site`
+// column. Positional stays the design; this comment is what stops the
+// option being re-proposed once its idea file is gone.
 function seedKeyFor(featureFileName: string, rowIndex: number, columnName: string): string {
   return `${featureFileName}:${rowIndex}:${columnName}`
 }

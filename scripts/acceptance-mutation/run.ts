@@ -44,6 +44,7 @@ import path from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { assertBaselineSpecGreen, classifyMutant, summarizeResults, type Outcome } from './classify.ts'
 import { discoverTargets, filterTargets, parseArgs, type MutationTarget } from './discovery.ts'
+import { GherkinException } from './gherkin-document.ts'
 import { listMutationSites } from './mutation-sites.ts'
 import { buildMutantRecords, type TargetPlan } from './mutant-plan.ts'
 import { baselineFeatureFileName, specFileName } from './mutant-tree.ts'
@@ -98,13 +99,25 @@ function resolveTargets(): MutationTarget[] {
 // one place that knows which target's feature file was being read, is this
 // program's abort-loudly ethos applied to a parse failure the same way it's
 // already applied to a bad baseline or a run-level Playwright error.
+//
+// listMutationSites can also throw for a reason that has nothing to do with
+// parsing -- its own assertUniqueSeedKeys, on a duplicate seedKey across a
+// target's sites. Re-labelling that as "Failed to parse" would be a
+// confidently wrong diagnosis: the file parsed fine, and the actual message
+// (which duplicated keys, which lines, what to do about it) would be
+// buried inside a string that tells the reader to look for a syntax error
+// instead. Narrow the catch to GherkinException specifically -- the real
+// parse-failure case -- and let anything else propagate as itself.
 function loadTargetPlans(targets: MutationTarget[]): TargetPlan[] {
   return targets.map((target) => {
     const featureText = readFileSync(path.join(FEATURES_DIR, target.feature), 'utf8')
     try {
       return { target, featureText, sites: listMutationSites(featureText, target.feature) }
     } catch (err) {
-      throw new Error(`Failed to parse ${target.feature}: ${(err as Error).message}`)
+      if (err instanceof GherkinException) {
+        throw new Error(`Failed to parse ${target.feature}: ${err.message}`)
+      }
+      throw err
     }
   })
 }
