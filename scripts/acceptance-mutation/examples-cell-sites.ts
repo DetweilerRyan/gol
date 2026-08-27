@@ -40,6 +40,17 @@ const KIND = 'examples-cell' as const
 // A hash would also make the seedKey unreadable as the report's own `Site`
 // column. Positional stays the design; this comment is what stops the
 // option being re-proposed once its idea file is gone.
+//
+// One of those reasons is a fact about today rather than a principle, so
+// re-open this on exactly that trigger: if this program ever persists a
+// mutant list (the way gherkin-dry-checker writes reports/gherkin-dry/report.json),
+// a before/after diff across a prune becomes something a reader can
+// actually run, and the 9-of-25 row above turns from a curiosity into a
+// real cost -- at which point the prune stability content-addressing buys
+// is worth re-weighing. The other objections are unaffected and
+// content-addressing still has to answer them: two identical rows would
+// still collapse into one mutant, and the `Site` column would still be a
+// hash.
 function seedKeyFor(featureFileName: string, rowIndex: number, columnName: string): string {
   return `${featureFileName}:${rowIndex}:${columnName}`
 }
