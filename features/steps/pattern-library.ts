@@ -82,18 +82,34 @@ Then('it should be listed under the {string} category', async ({ page }, categor
 // there rather than a literal.
 //
 // THE THREE ASSERTIONS ARE THE POINT OF THIS STEP, and they are three because
-// a one-directional check would not notice a mutation of this column.
+// no one of them notices every mutation acceptance-mutation makes to this
+// column. Which one fires has CHANGED, so read this against the current
+// runner rather than the shapes this comment used to cite.
 //
 // acceptance-mutation's mutateCommaList splits the cell on ',' and corrupts
-// one part in place (scripts/acceptance-mutation/mutation-rules.ts) -- it
-// never removes one, but "(0, 2)" becoming "(0, )2" is a pair the regex above
-// can no longer see, so the EXPECTED list silently gets shorter while the
-// pattern on screen does not. Every cell in a shortened list really is on
-// screen, so "each expected cell is present" passes against it. What the
-// count and the reverse inclusion add is the other half: nothing is on screen
-// that the table did not name, and there are exactly as many as it named.
-// Measured -- hand-applying that exact mutant to Glider fails on the count,
-// and nothing else in this step notices it.
+// one part in place (scripts/acceptance-mutation/mutation-rules.ts). It never
+// removes an item, but what it does to the one it picks moved with the
+// comma-list-mutants-are-all-syntax-breaking slice: stripParenAffixes now
+// exposes the digits inside a "(x, y)" fragment as the integers they are, so
+// every mutant of this column is a SAME-LENGTH coordinate change. Measured
+// over the current table, all 8 rows mutate to a well-formed list of exactly
+// as many pairs, carrying one coordinate the table never named -- "(1, 1)"
+// -> "(4, 1)" for Block. The count passes against that; the first inclusion
+// below is what fails, and before that slice it was exercised by nothing.
+//
+// The other class is the one this comment used to describe as the only one:
+// "(0, 2)" becoming "(0, )2", a pair the regex above can no longer see, so
+// the EXPECTED list silently gets shorter while the pattern on screen does
+// not -- and "each expected cell is present" passes against a shortened list.
+// The count is what reports it, with the reverse inclusion catching it if the
+// count is removed. It is closed only for the bracket shape written here:
+// stripParenAffixes strips parens and nothing else, so an "[x, y]" or
+// "{a, b}" column would fragment unbalanced exactly as before. Measured at
+// unit level -- 40 seeds per shape, paren 40/40 same-length, square bracket
+// 0/40.
+//
+// So keep all three regardless of which currently detects what, and keep the
+// count in particular for the auto-wait its own note below describes.
 Then(
   /^its live cells relative to the top-left corner of its bounding box should be (.+)$/,
   async ({ page }, cellList: string) => {
