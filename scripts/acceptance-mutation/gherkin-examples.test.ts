@@ -22,6 +22,9 @@ describe('findExamplesTables', () => {
   it('locates the header and every data row', () => {
     const [table] = findExamplesTables(SAMPLE)
     expect(table.header).toEqual(['input', 'output'])
+    // Line 6 (0-based) of SAMPLE is `| input | output |` -- see the
+    // 0-based-lineIndex convention noted in gherkin-document.ts.
+    expect(table.headerLineIndex).toBe(6)
     expect(table.rows).toHaveLength(2)
     expect(table.rows[0].cells).toEqual(['2', 'four'])
     expect(table.rows[1].cells).toEqual(['3', 'six'])
@@ -78,20 +81,16 @@ describe('findExamplesTables', () => {
     expect(findExamplesTables(mention)).toEqual([])
   })
 
-  it('finds the table under a *titled* Examples: heading too', () => {
-    // The old line-scanner matched only a bare `Examples:` line and skipped
-    // a titled `Examples: named` heading entirely, silently excluding its
-    // table from mutation -- a latent bug the AST walk fixes, since a title
-    // has no bearing on whether the Examples node carries a table.
-    const titled = 'Feature: F\n  Scenario Outline: S\n    Examples: named\n      | a |\n      | 1 |\n'
-    const [table] = findExamplesTables(titled)
-    expect(table.header).toEqual(['a'])
-    expect(table.rows).toHaveLength(1)
-  })
-
-  it('skips whitespace-only lines between the heading and the table', () => {
-    const spaced = 'Feature: F\n  Scenario Outline: S\n    Examples:\n   \n\n      | a |\n      | 1 |\n'
-    const [table] = findExamplesTables(spaced)
+  // The old line-scanner matched only a bare `Examples:` line and skipped a
+  // titled `Examples: named` heading entirely, silently excluding its table
+  // from mutation -- a latent bug the AST walk fixes below, since a title
+  // has no bearing on whether the Examples node carries a table.
+  it.each([
+    ['finds the table under a *titled* Examples: heading too', 'Examples: named'],
+    ['skips whitespace-only lines between the heading and the table', 'Examples:\n   \n'],
+  ])('%s', (_name, examplesHeading) => {
+    const source = `Feature: F\n  Scenario Outline: S\n    ${examplesHeading}\n      | a |\n      | 1 |\n`
+    const [table] = findExamplesTables(source)
     expect(table.header).toEqual(['a'])
     expect(table.rows).toHaveLength(1)
   })

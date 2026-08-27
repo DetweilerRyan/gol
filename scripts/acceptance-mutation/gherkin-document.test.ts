@@ -35,25 +35,44 @@ describe('parseFeature', () => {
 })
 
 describe('listScenarios', () => {
-  it('returns feature-level scenarios in document order', () => {
-    const { doc } = parseFeature('Feature: F\n  Scenario: A\n    Given a\n  Scenario: B\n    Given b\n')
-    expect(listScenarios(doc).map((s) => s.name)).toEqual(['A', 'B'])
-  })
-
-  it('skips a Background, which carries no Scenario of its own', () => {
-    const { doc } = parseFeature('Feature: F\n  Background:\n    Given setup\n  Scenario: A\n    Given a\n')
-    expect(listScenarios(doc).map((s) => s.name)).toEqual(['A'])
-  })
-
-  it('recurses into a Rule to find scenarios nested inside it', () => {
-    const { doc } = parseFeature(
+  it.each([
+    [
+      'returns feature-level scenarios in document order',
+      'Feature: F\n  Scenario: A\n    Given a\n  Scenario: B\n    Given b\n',
+      ['A', 'B'],
+    ],
+    [
+      'skips a Background, which carries no Scenario of its own',
+      'Feature: F\n  Background:\n    Given setup\n  Scenario: A\n    Given a\n',
+      ['A'],
+    ],
+    [
+      'recurses into a Rule to find scenarios nested inside it',
       'Feature: F\n  Rule: R\n    Scenario: Nested\n      Given a\n  Scenario: TopLevel\n    Given b\n',
-    )
-    expect(listScenarios(doc).map((s) => s.name)).toEqual(['Nested', 'TopLevel'])
+      ['Nested', 'TopLevel'],
+    ],
+    [
+      'skips a Background nested inside a Rule too, which carries no Scenario of its own either',
+      'Feature: F\n  Rule: R\n    Background:\n      Given setup\n    Scenario: Nested\n      Given a\n',
+      ['Nested'],
+    ],
+  ])('%s', (_name, source, expectedNames) => {
+    const { doc } = parseFeature(source)
+    expect(listScenarios(doc).map((s) => s.name)).toEqual(expectedNames)
   })
 
   it('returns an empty list for a feature with no scenarios at all', () => {
     const { doc } = parseFeature('Feature: F\n')
+    expect(listScenarios(doc)).toEqual([])
+  })
+
+  it('returns an empty list for a document with no Feature at all (e.g. comments-only text)', () => {
+    // @cucumber/gherkin parses this without throwing, but doc.feature comes
+    // back undefined rather than a Feature node -- the reason
+    // listScenarios's own `doc.feature?.children ?? []` needs both the
+    // optional chain and the fallback, not just one or the other.
+    const { doc } = parseFeature('# just a comment\n')
+    expect(doc.feature).toBeUndefined()
     expect(listScenarios(doc)).toEqual([])
   })
 })

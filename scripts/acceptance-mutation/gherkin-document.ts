@@ -85,20 +85,28 @@ export function parseFeature(text: string): FeatureDocument {
 // a projection down to just cells here would mean re-parsing to get anything
 // else back out.
 //
+// A Rule's own children live one level deeper than a Feature's -- split out
+// so listScenarios' own cyclomatic complexity stays low without changing
+// what either function does.
+function scenariosInRule(rule: messages.Rule): messages.Scenario[] {
+  const scenarios: messages.Scenario[] = []
+  for (const ruleChild of rule.children) {
+    if (ruleChild.scenario) scenarios.push(ruleChild.scenario)
+  }
+  return scenarios
+}
+
 // A Background carries no Scenario of its own and contributes nothing here.
 // Rule nesting is the one place a walk over this AST cannot be "correct by
 // accident" the way the old line-scanner incidentally was for Rule: blocks
 // (it never looked for the keyword at all) -- recursing into
-// `child.rule.children` is the deliberate replacement for that accident.
+// `child.rule.children` (via scenariosInRule above) is the deliberate
+// replacement for that accident.
 export function listScenarios(doc: messages.GherkinDocument): messages.Scenario[] {
   const scenarios: messages.Scenario[] = []
   for (const child of doc.feature?.children ?? []) {
     if (child.scenario) scenarios.push(child.scenario)
-    if (child.rule) {
-      for (const ruleChild of child.rule.children) {
-        if (ruleChild.scenario) scenarios.push(ruleChild.scenario)
-      }
-    }
+    if (child.rule) scenarios.push(...scenariosInRule(child.rule))
   }
   return scenarios
 }
