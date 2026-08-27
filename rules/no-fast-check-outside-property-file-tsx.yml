@@ -1,0 +1,32 @@
+id: no-fast-check-outside-property-file-tsx
+language: Tsx
+severity: warning
+message: A @fast-check/vitest property must live in a *.property.test.ts file -- nowhere else carries the seed pin.
+note: >-
+  The TSX half of no-fast-check-outside-property-file-ts, and NOT a formality: src/components/*.test.tsx
+  runs in the `dom` project, whose setupFiles is ['./src/test-setup.ts'] and does not carry the seed
+  pin, so a property declared there is exactly as blind in the mutation gate as one in `unit`. See the
+  -ts twin's note for the mechanism. ast-grep parses TypeScript and TSX with different parsers and a
+  rule is bound to one of them, so a single rule listing both globs would silently match nothing in
+  .tsx -- the same necessity that makes no-manual-memo-ts/-tsx and no-test-support-in-product-ts/-tsx
+  near-duplicates.
+# NO `ignores` ENTRY, DELIBERATELY. The -ts twin excuses *.property.test.ts because that suffix is
+# what vite.config.ts's `property` project includes. That include is `**/*.property.test.ts` and does
+# not match .tsx at all, so a hypothetical src/components/Foo.property.test.tsx would be collected by
+# `dom` alone -- unpinned, and therefore a violation rather than an exemption.
+# Double-star for the reason the -ts twin's comment gives at length: the single-star form matches
+# under ast-grep and resolves to nothing under npm run ast-grep:rules' node:fs globSync.
+files:
+  - 'src/**/*.test.tsx'
+rule:
+  any:
+    - kind: import_statement
+      has:
+        field: source
+        kind: string
+        regex: '^[''"]@fast-check/vitest[''"]$'
+    - kind: export_statement
+      has:
+        field: source
+        kind: string
+        regex: '^[''"]@fast-check/vitest[''"]$'

@@ -162,11 +162,16 @@ describe('fast-check-stryker-seed - generated title stability', () => {
   if (!underStryker) delete (globalThis as Record<string, unknown>).__stryker__
   fc.configureGlobal(priorGlobalParameters)
 
-  // Only meaningful when this process is genuinely unpinned -- if
-  // underStryker is true, the real setupFiles pin already fired before this
-  // module loaded, so "unpinned property A/B" above were never actually
-  // unpinned and this assertion would be false for a reason unrelated to
-  // what it's checking.
+  // Only meaningful when this process is genuinely unpinned, and the skip is
+  // deliberately CONSERVATIVE rather than precise. This file is collected by
+  // vite.config.ts's `unit` project, which carries no setupFiles entry at all
+  // -- so it would be wrong to say the pin has already fired whenever
+  // underStryker is true. What is true is weaker and is what the skip rests
+  // on: once the namespace pre-exists, whether fast-check's global seed is
+  // free is no longer a fact this file establishes, and this assertion's whole
+  // premise is that it is. Skipping loses a demonstration; asserting on a
+  // premise this file cannot guarantee would red for a reason unrelated to
+  // what it checks.
   it.skipIf(underStryker)('carries a varying seed marker across two unpinned declarations', () => {
     expect(extractSeedMarker(observedTitles.unpinnedA)).not.toBe(extractSeedMarker(observedTitles.unpinnedB))
   })

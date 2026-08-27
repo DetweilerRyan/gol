@@ -1,0 +1,56 @@
+id: no-fast-check-outside-property-file-ts
+language: TypeScript
+severity: warning
+message: A @fast-check/vitest property must live in a *.property.test.ts file -- nowhere else carries the seed pin.
+note: >-
+  @fast-check/vitest bakes the seed it draws into the test TITLE
+  (`${label} (with seed=${seed})`), and @stryker-mutator/vitest-runner filters each mutant run
+  with a testNamePattern built from the DRY RUN's titles. Unless the seed is identical in both
+  processes the title never matches, the test is filtered out, it produces no result at all, and
+  the mutant is reported Survived without the property ever having executed. fast-check-stryker-seed.ts
+  is what makes the two agree, and it reaches exactly two vitest scopes: vite.config.ts's `property`
+  project (include `**/*.property.test.ts`) and vitest.scripts.config.ts (project-wide). A property
+  declared in any other src/ test file lands in the `unit` or `dom` project instead, neither of which
+  carries that setupFiles entry -- so it is blind in the mutation gate, silently, which is the exact
+  failure the pin was written to end. Rename the file to *.property.test.ts; if the invariant belongs
+  to a hook or a component rather than to a framework-free module, that is the signal to extract the
+  rule into a module rather than to widen this scope.
+# SCOPED TO src/ ALONE, AND BOTH OMISSIONS ARE RULINGS RATHER THAN GAPS.
+# scripts/ is out because vitest.scripts.config.ts sets setupFiles for the WHOLE project, so a
+# property in any scripts/**/*.test.ts is pinned already and is not blind.
+# The repo root is out because fast-check-stryker-seed.test.ts legitimately declares UNPINNED
+# properties -- demonstrating that the seed marker varies without the guard is half of what that
+# file exists to prove -- and it is never collected under Stryker anyway (it imports nothing that
+# Stryker mutates, so vitest.related never selects it). Scoping this rule to src/ is what keeps
+# that from needing an `ignores` escape hatch.
+#
+# BARE `fast-check` IS DELIBERATELY NOT BANNED. The blindness is a property of the TITLE, and only
+# @fast-check/vitest's it.prop/test.prop put a seed in one. `fc.assert(fc.property(...))` inside an
+# ordinary `it` has a stable title, so Stryker's filter finds it -- it merely runs at an unpinned
+# seed, which is a determinism question and not this rule's.
+#
+# BANNING THE IMPORT RATHER THAN THE CALL, the same choke-point shape as
+# no-expect-in-screenplay-questions: it catches the record form `test.prop({ a: fc.integer() })`
+# and any future declaration shape, which a matcher written against `.prop([...])` would miss.
+# `src/**/*.test.ts` RATHER THAN `src/*.test.ts`, AND THE DIFFERENCE IS A GATE, NOT A STYLE.
+# ast-grep's own `*` crosses `/` (CLAUDE.md records that measurement twice), so both spellings
+# match src/equality/*.test.ts for the scanner. But npm run ast-grep:rules resolves `files:` globs
+# with node:fs globSync, where `*` does NOT cross `/` -- so the single-star form of the .tsx twin
+# below resolved to nothing and failed that gate, correctly refusing a glob that only works under
+# one of the two readers. Write the form that means the same thing to both.
+files:
+  - 'src/**/*.test.ts'
+ignores:
+  - 'src/**/*.property.test.ts'
+rule:
+  any:
+    - kind: import_statement
+      has:
+        field: source
+        kind: string
+        regex: '^[''"]@fast-check/vitest[''"]$'
+    - kind: export_statement
+      has:
+        field: source
+        kind: string
+        regex: '^[''"]@fast-check/vitest[''"]$'

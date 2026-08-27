@@ -1,0 +1,90 @@
+id: no-fast-check-outside-property-file-ts
+snapshots:
+  export * from '@fast-check/vitest':
+    labels:
+    - source: export * from '@fast-check/vitest'
+      style: primary
+      start: 0
+      end: 34
+    - source: '''@fast-check/vitest'''
+      style: secondary
+      start: 14
+      end: 34
+  export { it } from '@fast-check/vitest':
+    labels:
+    - source: export { it } from '@fast-check/vitest'
+      style: primary
+      start: 0
+      end: 39
+    - source: '''@fast-check/vitest'''
+      style: secondary
+      start: 19
+      end: 39
+  import '@fast-check/vitest':
+    labels:
+    - source: import '@fast-check/vitest'
+      style: primary
+      start: 0
+      end: 27
+    - source: '''@fast-check/vitest'''
+      style: secondary
+      start: 7
+      end: 27
+  import * as fcVitest from '@fast-check/vitest':
+    labels:
+    - source: import * as fcVitest from '@fast-check/vitest'
+      style: primary
+      start: 0
+      end: 46
+    - source: '''@fast-check/vitest'''
+      style: secondary
+      start: 26
+      end: 46
+  ? |
+    import {
+      fc,
+      test,
+    } from '@fast-check/vitest'
+  : labels:
+    - source: |-
+        import {
+          fc,
+          test,
+        } from '@fast-check/vitest'
+      style: primary
+      start: 0
+      end: 50
+    - source: '''@fast-check/vitest'''
+      style: secondary
+      start: 30
+      end: 50
+  import { fc, test } from '@fast-check/vitest':
+    labels:
+    - source: import { fc, test } from '@fast-check/vitest'
+      style: primary
+      start: 0
+      end: 45
+    - source: '''@fast-check/vitest'''
+      style: secondary
+      start: 25
+      end: 45
+  import { it as fcIt } from '@fast-check/vitest':
+    labels:
+    - source: import { it as fcIt } from '@fast-check/vitest'
+      style: primary
+      start: 0
+      end: 47
+    - source: '''@fast-check/vitest'''
+      style: secondary
+      start: 27
+      end: 47
+  import { it } from '@fast-check/vitest':
+    labels:
+    - source: import { it } from '@fast-check/vitest'
+      style: primary
+      start: 0
+      end: 39
+    - source: '''@fast-check/vitest'''
+      style: secondary
+      start: 19
+      end: 39

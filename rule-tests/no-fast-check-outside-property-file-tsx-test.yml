@@ -1,0 +1,22 @@
+id: no-fast-check-outside-property-file-tsx
+valid:
+  # What src/components/*.test.tsx actually imports.
+  - import { render, screen } from '@testing-library/react'
+  - import { describe, expect, it } from 'vitest'
+  - import { Cell } from './Cell.tsx'
+  # Bare fast-check is out of scope for the same reason as in the -ts twin.
+  - import fc from 'fast-check'
+  - import { pinFastCheckSeedUnderStryker } from '../../fast-check-stryker-seed.ts'
+invalid:
+  - import { it } from '@fast-check/vitest'
+  - import { fc, test } from '@fast-check/vitest'
+  - import * as fcVitest from '@fast-check/vitest'
+  - import '@fast-check/vitest'
+  - export { it } from '@fast-check/vitest'
+  # The star re-export has no import clause at all; the `field: source` clause is what still reaches it.
+  - export * from '@fast-check/vitest'
+  - |
+    import {
+      fc,
+      test,
+    } from '@fast-check/vitest'

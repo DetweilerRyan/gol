@@ -1,0 +1,28 @@
+id: no-fast-check-outside-property-file-ts
+valid:
+  # The ordinary unit-test imports every src/*.test.ts file actually carries.
+  - import { describe, expect, it } from 'vitest'
+  - import { toggleCell } from './gameOfLife.ts'
+  # Bare fast-check is NOT this rule's concern -- fc.assert inside a plain `it` has a stable title,
+  # so Stryker's testNamePattern still finds it. Only @fast-check/vitest puts a seed in the title.
+  - import fc from 'fast-check'
+  - import * as fc from 'fast-check'
+  - import { CELL_ARBITRARY } from './test-support/arbitraries.ts'
+  # Path near-misses: the anchored source regex is what discriminates these from the real package.
+  - import { pinFastCheckSeedUnderStryker } from '../fast-check-stryker-seed.ts'
+  - import { helper } from './fast-check/vitest-helpers.ts'
+invalid:
+  - import { it } from '@fast-check/vitest'
+  - import { fc, test } from '@fast-check/vitest'
+  - import { it as fcIt } from '@fast-check/vitest'
+  - import * as fcVitest from '@fast-check/vitest'
+  # A bare side-effect import still registers the module, so it is still a way in.
+  - import '@fast-check/vitest'
+  - export { it } from '@fast-check/vitest'
+  # The star re-export has no import clause at all; the `field: source` clause is what still reaches it.
+  - export * from '@fast-check/vitest'
+  - |
+    import {
+      fc,
+      test,
+    } from '@fast-check/vitest'
