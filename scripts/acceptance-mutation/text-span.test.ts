@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { parseFeature } from './gherkin-document.ts'
+import { parseFeature, type TableCell } from './gherkin-document.ts'
 import { escapeTableCell, findCellSpan, spliceSpan } from './text-span.ts'
 
 describe('spliceSpan', () => {
@@ -69,6 +69,17 @@ describe('escapeTableCell', () => {
   })
 })
 
+// Shared drill-down for the two probes below: parse a one-scenario,
+// one-Examples-table sample and hand back its raw lines plus the first data
+// row's cells, so each probe states only what's specific to it (the sample
+// text and the assertion) rather than repeating the walk down to a cell.
+function firstRowCells(sample: string): { lines: string[]; cells: readonly TableCell[] } {
+  const { doc, lines } = parseFeature(sample)
+  const [scenario] = doc.feature!.children.map((c) => c.scenario!)
+  const [examples] = scenario.examples
+  return { lines, cells: examples.tableBody[0].cells }
+}
+
 // Pins the two facts findCellSpan's own comment relies on, straight from
 // @cucumber/gherkin@39.1.0 (the same parser gherkin-document.ts wraps):
 // TableCell.location.column is 1-based and points at the first character of
@@ -79,36 +90,30 @@ describe('escapeTableCell', () => {
 // would catch that.
 describe('TableCell.location, as reported by the real parser', () => {
   it('points at the first character of the value, past any leading padding', () => {
-    const SAMPLE = `Feature: F
+    const { lines, cells } = firstRowCells(`Feature: F
   Scenario Outline: S
     Given <a>
 
     Examples:
       | a       | b    |
       | 2       | four |
-`
-    const { doc, lines } = parseFeature(SAMPLE)
-    const [scenario] = doc.feature!.children.map((c) => c.scenario!)
-    const [examples] = scenario.examples
-    const [cell] = examples.tableBody[0].cells
+`)
+    const [cell] = cells
     expect(cell.location.column).toBe(9)
     const rawLine = lines[cell.location.line - 1]
     expect(rawLine[cell.location.column! - 1]).toBe('2')
   })
 
   it('points at the closing pipe for a fully empty cell, which findCellSpan reads as a zero-width span', () => {
-    const SAMPLE = `Feature: F
+    const { lines, cells } = firstRowCells(`Feature: F
   Scenario Outline: S
     Given <a>
 
     Examples:
       | a  | b     |
       |    | seven |
-`
-    const { doc, lines } = parseFeature(SAMPLE)
-    const [scenario] = doc.feature!.children.map((c) => c.scenario!)
-    const [examples] = scenario.examples
-    const [emptyCell] = examples.tableBody[0].cells
+`)
+    const [emptyCell] = cells
     const rawLine = lines[emptyCell.location.line - 1]
     expect(rawLine[emptyCell.location.column! - 1]).toBe('|')
   })

@@ -47,6 +47,7 @@ import { discoverTargets, filterTargets, parseArgs, type MutationTarget } from '
 import { listMutationSites } from './mutation-sites.ts'
 import { buildMutantRecords, type TargetPlan } from './mutant-plan.ts'
 import { baselineFeatureFileName, specFileName } from './mutant-tree.ts'
+import { displaySite } from './report-format.ts'
 import {
   bddgenSpawn,
   genSpawnFailureReason,
@@ -57,14 +58,16 @@ import {
   sumSkipped,
 } from './playwright-runner.ts'
 
-// `site` is the mutation site's own seedKey, printed verbatim rather than
-// decomposed back into row/column -- a kind-specific decomposition here
-// would be exactly the "run.ts changes when a new site kind is added"
-// outcome the site abstraction exists to avoid. For today's only kind
-// (examples-cell) that seedKey already reads as `feature:row:column`, so
-// nothing is lost; a step-text mutant's seedKey would print with the same
-// column and mean something else entirely, which is fine -- this report
-// doesn't need to know which.
+// `site` is the mutation site's own seedKey, stored whole and only ever
+// trimmed presentationally (report()'s displaySite call strips the row's own
+// feature-name prefix so the table doesn't repeat it) -- never decomposed
+// back into row/column. A kind-specific decomposition here would be exactly
+// the "run.ts changes when a new site kind is added" outcome the site
+// abstraction exists to avoid. For today's only kind (examples-cell) that
+// seedKey already reads as `feature:row:column`, so nothing is lost; a
+// step-text mutant's seedKey would print with the same column and mean
+// something else entirely, which is fine -- this report doesn't need to
+// know which.
 interface MutantResult {
   feature: string
   site: string
@@ -261,9 +264,14 @@ function report(
   phaseStats: { phase: string; stats: PhaseStats }[],
 ): void {
   if (results.length > 0) {
+    // The Site column drops each row's own feature name off the front of its
+    // seedKey (displaySite, report-format.ts) -- the Feature column already
+    // says it, so printing it twice per row bought nothing. Widths are
+    // computed off the same trimmed strings the rows themselves print.
+    const sites = results.map((r) => displaySite(r.feature, r.site))
     const widths = {
       feature: Math.max(7, ...results.map((r) => r.feature.length)),
-      site: Math.max(4, ...results.map((r) => r.site.length)),
+      site: Math.max(4, ...sites.map((s) => s.length)),
       original: Math.max(8, ...results.map((r) => r.original.length)),
       mutated: Math.max(7, ...results.map((r) => r.mutated.length)),
       outcome: 8,
@@ -272,12 +280,12 @@ function report(
     const header = `${pad('Feature', widths.feature)}  ${pad('Site', widths.site)}  ${pad('Original', widths.original)}  ${pad('Mutated', widths.mutated)}  Outcome`
     console.log(header)
     console.log('-'.repeat(header.length))
-    for (const r of results) {
+    results.forEach((r, i) => {
       const marker = r.outcome === 'killed' ? '✓' : r.outcome === 'survived' ? '✗' : '!'
       console.log(
-        `${pad(r.feature, widths.feature)}  ${pad(r.site, widths.site)}  ${pad(r.original, widths.original)}  ${pad(r.mutated, widths.mutated)}  ${marker} ${r.outcome}`,
+        `${pad(r.feature, widths.feature)}  ${pad(sites[i], widths.site)}  ${pad(r.original, widths.original)}  ${pad(r.mutated, widths.mutated)}  ${marker} ${r.outcome}`,
       )
-    }
+    })
     console.log('-'.repeat(header.length))
   }
 
