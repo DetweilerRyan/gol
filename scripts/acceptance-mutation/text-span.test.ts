@@ -27,13 +27,6 @@ describe('spliceSpan', () => {
 })
 
 describe('findCellSpan', () => {
-  it('stops at the next unescaped pipe and trims trailing padding', () => {
-    const line = '      | input   | output |'
-    const span = findCellSpan(line, 3, 8)
-    expect(line.slice(span.startColumn, span.endColumn)).toBe('input')
-    expect(span).toEqual({ line: 3, startColumn: 8, endColumn: 13 })
-  })
-
   it('treats an escaped pipe (\\|) as literal content, not a cell boundary', () => {
     const line = '      | esc\\|pe | six    |'
     const span = findCellSpan(line, 0, 8)
@@ -54,6 +47,33 @@ describe('findCellSpan', () => {
     const span = findCellSpan(line, 0, 16)
     expect(span).toEqual({ line: 0, startColumn: 16, endColumn: 16 })
     expect(line.slice(span.startColumn, span.endColumn)).toBe('')
+  })
+
+  // The two ways the scan can end, tabled together because the drill-down is
+  // the same one twice (dry4ts scores the separate forms as a duplicate):
+  // at the next unescaped pipe, which is every well-formed row, or at the end
+  // of the line.
+  //
+  // The second case is the `i < line.length` half of the guard, and it is the
+  // malformed row findCellSpan's own comment sets aside -- a table whose last
+  // cell was never closed. Without the length bound that scan does not
+  // terminate at all: `line[i]` past the end is `undefined`, which is forever
+  // `!== '|'`. Pinned rather than left to the comment, because a surviving
+  // mutant on that bound reads as dead defensive code right up until a
+  // hand-edited feature file hangs the whole run.
+  it.each<[string, string, number, string, number]>([
+    ['stops at the next unescaped pipe, trimming trailing padding', '      | input   | output |', 3, 'input', 13],
+    [
+      'stops at the end of an unterminated line, trimming the same way',
+      '      | unterminated   ',
+      0,
+      'unterminated',
+      20,
+    ],
+  ])('%s', (_name, line, lineIndex, expected, endColumn) => {
+    const span = findCellSpan(line, lineIndex, 8)
+    expect(line.slice(span.startColumn, span.endColumn)).toBe(expected)
+    expect(span).toEqual({ line: lineIndex, startColumn: 8, endColumn })
   })
 })
 
