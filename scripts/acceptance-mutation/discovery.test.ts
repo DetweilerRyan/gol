@@ -88,6 +88,15 @@ describe('filterTargets', () => {
     const ambiguous = [{ feature: 'a/dup.feature' }, { feature: 'b/dup.feature' }]
     expect(() => filterTargets(ambiguous, 'dup')).toThrow(/(?=.*a\/dup\.feature)(?=.*b\/dup\.feature)/)
   })
+
+  // Pins the join separator itself, not just that both candidates appear:
+  // without it, 'a/dup.feature' and 'b/dup.feature' concatenated with no
+  // separator ('a/dup.featureb/dup.feature') would still satisfy the
+  // lookahead assertion above.
+  it('separates candidate names with a comma when naming an ambiguous match', () => {
+    const ambiguous = [{ feature: 'a/dup.feature' }, { feature: 'b/dup.feature' }]
+    expect(() => filterTargets(ambiguous, 'dup')).toThrow('a/dup.feature, b/dup.feature')
+  })
 })
 
 describe('parseArgs', () => {

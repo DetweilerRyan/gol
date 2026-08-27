@@ -47,8 +47,13 @@ describe('listFeatureFiles', () => {
   })
 
   it('throws naming the path when the features directory itself does not exist, rather than reporting it as empty', () => {
+    // The exact "Features directory not found" wording, not just the path
+    // substring: globSync returns [] for a missing directory exactly like it
+    // does for an empty real one, so selectFeatureFiles' own "No .feature
+    // files found in <path>" message also happens to contain the missing
+    // path -- a bare path-substring assertion can't tell the two apart.
     const missing = path.join(os.tmpdir(), 'feature-files-does-not-exist')
-    expect(() => listFeatureFiles(missing)).toThrow(missing)
+    expect(() => listFeatureFiles(missing)).toThrow(`Features directory not found: ${missing}`)
   })
 })
 

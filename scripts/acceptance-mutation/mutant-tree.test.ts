@@ -19,19 +19,8 @@ describe('mutantFeatureFileName', () => {
     )
   })
 
-  // A nested target's path is flattened into a single flat filename -- '/'
-  // becomes '__' -- so it can be written straight into the one shared temp
-  // `features/` directory, which has no subdirectories of its own.
-  it('flattens a nested target path into a flat filename', () => {
-    expect(mutantFeatureFileName('cell-life/cell-life.feature', 0)).toBe('cell-life__cell-life.mutant-0.feature')
-  })
-
   it('leaves a flat (non-nested) target path unchanged, other than appending the ordinal', () => {
     expect(mutantFeatureFileName('infinite-grid.feature', 3)).toBe('infinite-grid.mutant-3.feature')
-  })
-
-  it('throws naming the path when a nested target path contains an underscore', () => {
-    expect(() => mutantFeatureFileName('cell_life/cell-life.feature', 0)).toThrow(/cell_life\/cell-life\.feature/)
   })
 })
 
@@ -49,27 +38,34 @@ describe('baselineFeatureFileName', () => {
   it('stays distinct from any mutant filename for the same target', () => {
     expect(baselineFeatureFileName('infinite-grid.feature')).not.toBe(mutantFeatureFileName('infinite-grid.feature', 0))
   })
-
-  it('flattens a nested target path into a flat filename', () => {
-    expect(baselineFeatureFileName('cell-life/cell-life.feature')).toBe('cell-life__cell-life.baseline.feature')
-  })
-
-  it('throws naming the path when a nested target path contains an underscore', () => {
-    expect(() => baselineFeatureFileName('cell_life/cell-life.feature')).toThrow(/cell_life\/cell-life\.feature/)
-  })
 })
 
 // Both mutantFeatureFileName and baselineFeatureFileName funnel through the
-// same private baseName() validation in mutant-tree.ts, so their
-// non-.feature rejection is one behavior tested twice rather than two --
-// covered here once, per function, instead of as a near-identical `it` in
-// each describe block above.
-describe('rejects a filename that does not end in .feature', () => {
-  it.each([
-    { name: 'mutantFeatureFileName', derive: (f: string) => mutantFeatureFileName(f, 0) },
-    { name: 'baselineFeatureFileName', derive: baselineFeatureFileName },
-  ])('$name throws naming the offending filename', ({ derive }) => {
+// same private baseName() validation in mutant-tree.ts, so its three
+// behaviors -- non-.feature rejection, nested-path flattening, and
+// underscore rejection -- are each one behavior tested twice (once per
+// public function) rather than duplicated as near-identical `it`s per
+// function. One shared deriver table, reused across all three, so the
+// duplication doesn't just move into the table itself.
+const derivers = [
+  { name: 'mutantFeatureFileName', derive: (f: string) => mutantFeatureFileName(f, 0), flattenedSuffix: 'mutant-0' },
+  { name: 'baselineFeatureFileName', derive: baselineFeatureFileName, flattenedSuffix: 'baseline' },
+]
+
+describe('shared baseName validation', () => {
+  it.each(derivers)('$name rejects a filename that does not end in .feature', ({ derive }) => {
     expect(() => derive('infinite-grid.steps.test.ts')).toThrow(/infinite-grid\.steps\.test\.ts/)
+  })
+
+  // A nested target's path is flattened into a single flat filename -- '/'
+  // becomes '__' -- so it can be written straight into the one shared temp
+  // `features/` directory, which has no subdirectories of its own.
+  it.each(derivers)('$name flattens a nested target path into a flat filename', ({ derive, flattenedSuffix }) => {
+    expect(derive('cell-life/cell-life.feature')).toBe(`cell-life__cell-life.${flattenedSuffix}.feature`)
+  })
+
+  it.each(derivers)('$name throws naming the path when a nested target path contains an underscore', ({ derive }) => {
+    expect(() => derive('cell_life/cell-life.feature')).toThrow(/cell_life\/cell-life\.feature/)
   })
 })
 
