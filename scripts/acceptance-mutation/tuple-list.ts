@@ -19,7 +19,15 @@
 // "(2026-05-13, P3D)", not a numeric pair) the same way it fixes tuple ones.
 // This module replaces it with an actual parse: a list of fixed-arity numeric
 // tuples, each tuple's components individually addressable by byte offset.
-import { mutateValue, type RandomFn } from './mutation-rules.ts'
+// From seeded-random.ts, a leaf module, rather than from mutation-rules.ts:
+// mutation-rules.ts's own VALUE_RULES table imports isTupleList/
+// mutateTupleList below (the tuple rule sits ahead of the plain comma-list
+// rule -- see mutation-rules.ts's header), so importing anything back from
+// mutation-rules.ts here would close a module import cycle. seededRandom and
+// mutateInteger together reproduce exactly what recursing into
+// mutation-rules.ts's mutateValue would have done for a component's text --
+// see seeded-random.ts's own header for why that equivalence holds.
+import { mutateInteger, seededRandom, type RandomFn } from './seeded-random.ts'
 
 interface TupleComponent {
   start: number
@@ -74,11 +82,19 @@ export function isTupleList(value: string): boolean {
 // Swaps two components' text in place by index, exactly the splice-not-render
 // discipline mutateCommaList already followed (see its own comment on why
 // String#replace's $&-interpolating overload is avoided): only the two spans
-// themselves move, every other byte -- including inter-pair separator
-// whitespace -- is untouched.
-function spliceSwap(value: string, a: TupleComponent, b: TupleComponent): string {
-  const [first, second] = a.start < b.start ? [a, b] : [b, a]
-  return value.slice(0, first.start) + second.text + value.slice(first.end, second.start) + first.text + value.slice(second.end)
+// themselves move, every other byte -- including the ", " between them --
+// is untouched. `first` must precede `second` in `value`; the only caller,
+// below, always passes a tuple's own components[0] then components[1], which
+// matchAll guarantees are already in left-to-right document order, so there
+// is no reordering to do here.
+function spliceSwap(value: string, first: TupleComponent, second: TupleComponent): string {
+  return (
+    value.slice(0, first.start) +
+    second.text +
+    value.slice(first.end, second.start) +
+    first.text +
+    value.slice(second.end)
+  )
 }
 
 // component-change: today's behaviour, carried over from mutateCommaList's
@@ -89,11 +105,20 @@ function spliceSwap(value: string, a: TupleComponent, b: TupleComponent): string
 // derived seed key format, `${seedKey}[i]`, is mutateCommaList's own shape,
 // carried over unchanged; `i` is simply this module's analogue of that
 // function's flat split-list index.
+//
+// Calls mutateInteger directly, seeded exactly the way mutateValue seeds its
+// own rand (`${seedKey}::${originalValue}`), rather than calling mutateValue
+// itself -- see this file's import comment for why (mutateValue lives in
+// mutation-rules.ts, which imports this module, so importing it back here
+// would close a cycle). Every tuple component matches VALUE_RULES's integer
+// rule and nothing earlier in that table, so this is behaviourally identical
+// to what recursing into mutateValue would have produced.
 function mutateComponent(value: string, tuples: TupleMatch[], rand: RandomFn, seedKey: string): string {
   const flatComponents = tuples.flatMap((tuple) => tuple.components)
   const index = Math.floor(rand() * flatComponents.length)
   const target = flatComponents[index]
-  const mutated = mutateValue(target.text, `${seedKey}[${index}]`)
+  const derivedKey = `${seedKey}[${index}]`
+  const mutated = mutateInteger(target.text, seededRandom(`${derivedKey}::${target.text}`))
   return value.slice(0, target.start) + mutated + value.slice(target.end)
 }
 
@@ -117,7 +142,8 @@ export function mutateTupleList(value: string, rand: RandomFn, seedKey: string):
   // components actually differ: swapping (2, 2) is a byte-identical no-op
   // mutant, the exact bug class this module's nonzeroDelta/differentChar/
   // do-while discipline elsewhere exists to prevent.
-  const swapCandidates = arity === 2 ? tuples.filter((tuple) => tuple.components[0].text !== tuple.components[1].text) : []
+  const swapCandidates =
+    arity === 2 ? tuples.filter((tuple) => tuple.components[0].text !== tuple.components[1].text) : []
 
   if (wantsSwap && swapCandidates.length > 0) {
     const target = swapCandidates[Math.floor(rand() * swapCandidates.length)] // draw #2, swap branch

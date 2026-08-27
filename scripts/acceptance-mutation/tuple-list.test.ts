@@ -1,5 +1,12 @@
 import { describe, expect, it } from 'vitest'
 import { isTupleList, mutateTupleList } from './tuple-list.ts'
+// mutateValue, not tuple-list.ts's own exports: these fixtures moved here
+// from mutation-rules.test.ts and are meant to prove the WIRING (VALUE_RULES
+// routing a paren-delimited numeric-tuple value to this rule ahead of the
+// plain comma-list rule), not just the rule's own logic in isolation --
+// mutateTupleList is exercised directly by every describe block above this
+// one.
+import { mutateValue } from './mutation-rules.ts'
 
 const PAIR = /\((-?\d+),\s*(-?\d+)\)/g
 
@@ -141,5 +148,60 @@ describe('mutateTupleList', () => {
 
   it('throws on a value that is not a tuple list', () => {
     expect(() => mutateTupleList('alive,dead,alive', queuedRand([0.1, 0.1]), 'k')).toThrow(/not a tuple-list/)
+  })
+})
+
+// Moved from mutation-rules.test.ts's now-deleted "parenthesised coordinate
+// pairs" block: these exercise the rule through mutateValue's own VALUE_RULES
+// dispatch (mutation-rules.ts), the seeded-random plumbing this file's own
+// tests above bypass with a hand-fed `rand`.
+describe('through mutateValue (VALUE_RULES routing)', () => {
+  const CELLS = '(0, 0), (1, 0), (0, 1), (1, 1)'
+
+  it('stays parseable as the same number of coordinate pairs', () => {
+    for (let i = 0; i < 30; i++) {
+      const mutated = mutateValue(CELLS, `coords-${i}`)
+      expect(pairsOf(mutated)).toHaveLength(4)
+    }
+  })
+
+  it('changes exactly one coordinate value, numerically, and preserves the rest', () => {
+    const originalPairs = pairsOf(CELLS)
+    for (let i = 0; i < 30; i++) {
+      const mutated = mutateValue(CELLS, `coords-${i}`)
+      const mutatedPairs = pairsOf(mutated)
+      expect(mutatedPairs).toHaveLength(originalPairs.length)
+      const changed = mutatedPairs.filter((p, idx) => p !== originalPairs[idx])
+      expect(changed).toHaveLength(1)
+    }
+  })
+
+  it('never introduces a doubled paren -- each part has at most one leading/trailing paren', () => {
+    for (let i = 0; i < 30; i++) {
+      const mutated = mutateValue(CELLS, `coords-${i}`)
+      for (const part of mutated.split(',').map((p) => p.trim())) {
+        expect(part.match(/^\(*/)?.[0].length).toBeLessThanOrEqual(1)
+        expect(part.match(/\)*$/)?.[0].length).toBeLessThanOrEqual(1)
+      }
+    }
+  })
+
+  it('is deterministic for the same seedKey and value', () => {
+    expect(mutateValue(CELLS, 'k')).toBe(mutateValue(CELLS, 'k'))
+  })
+
+  it('mutates the digits inside a multi-digit coordinate, not just single-digit ones', () => {
+    // Every fixture above uses single-digit coordinates. 'paren-1' is a seed
+    // hunted against the current code to land on a multi-digit component.
+    expect(mutateValue('(1, 23)', 'paren-1')).toBe('(1, 29)')
+  })
+
+  it('rejects a paren-list whose items are not numeric tuples, and mutates it as a plain comma list instead', () => {
+    // "(2026-05-13, P3D), (1, 2)" is paren-delimited but its first item is a
+    // date and a duration, not a pair of integers -- isTupleList's boundary.
+    // It falls through to the plain comma-list rule, which has no notion of
+    // a paren at all, so this mutant lands on punctuation.
+    const mutated = mutateValue('(2026-05-13, P3D), (1, 2)', 'pinned')
+    expect(mutated).toBe('(2026-05-13, P3D), (1, v)')
   })
 })

@@ -161,66 +161,11 @@ describe('mutateValue', () => {
       expect(changedCount).toBe(1)
     })
 
-    // A naive split on ',' turns "(0, 0), (1, 0)" into unbalanced fragments
-    // ("(0", " 0)"), neither of which matches the integer rule on its own --
-    // see comma-list-mutants-are-all-syntax-breaking. Without the
-    // strip-and-restore in mutateCommaList, every mutant of a coordinate-pair
-    // list corrupts punctuation instead of a coordinate, and the resulting
-    // value is never parseable as the same shape.
-    describe('parenthesised coordinate pairs', () => {
-      const CELLS = '(0, 0), (1, 0), (0, 1), (1, 1)'
-      const PAIR = /\((-?\d+),\s*(-?\d+)\)/g
-
-      it('stays parseable as the same number of coordinate pairs', () => {
-        for (let i = 0; i < 30; i++) {
-          const mutated = mutateValue(CELLS, `coords-${i}`)
-          expect([...mutated.matchAll(PAIR)]).toHaveLength(4)
-        }
-      })
-
-      it('changes exactly one coordinate value, numerically, and preserves the rest', () => {
-        const originalPairs = [...CELLS.matchAll(PAIR)].map((m) => `${m[1]},${m[2]}`)
-        for (let i = 0; i < 30; i++) {
-          const mutated = mutateValue(CELLS, `coords-${i}`)
-          const mutatedPairs = [...mutated.matchAll(PAIR)].map((m) => `${m[1]},${m[2]}`)
-          expect(mutatedPairs).toHaveLength(originalPairs.length)
-          const changed = mutatedPairs.filter((p, idx) => p !== originalPairs[idx])
-          expect(changed).toHaveLength(1)
-        }
-      })
-
-      it('preserves the surrounding parens exactly, never a duplicated affix like ((7', () => {
-        for (let i = 0; i < 30; i++) {
-          const mutated = mutateValue(CELLS, `coords-${i}`)
-          for (const part of mutated.split(',').map((p) => p.trim())) {
-            // Every comma-list part, trimmed, has at most one leading '(' and
-            // at most one trailing ')' -- the affix strip restores what it
-            // stripped exactly once, rather than dropping it or duplicating
-            // it (e.g. "((7"). An OR of startsWith/endsWith alone can't tell
-            // a duplicated affix from a correctly-restored one; the two
-            // exact-count checks below can.
-            expect(part.match(/^\(*/)?.[0].length).toBeLessThanOrEqual(1)
-            expect(part.match(/\)*$/)?.[0].length).toBeLessThanOrEqual(1)
-          }
-        }
-      })
-
-      it('is deterministic for the same seedKey and value', () => {
-        expect(mutateValue(CELLS, 'k')).toBe(mutateValue(CELLS, 'k'))
-      })
-
-      it('mutates the digits inside a multi-digit closing fragment, not just single-digit ones', () => {
-        // Every fixture above uses single-digit coordinates, where
-        // core.slice(0, -1) (strip the trailing ')') and the mutation scan's
-        // core.slice(0, +1) (keep only the first char) coincide by
-        // construction: a 1-character core sliced either way keeps nothing
-        // extra. 'paren-1' is a seed hunted against the *unmutated* code to
-        // target the closing fragment (" 23)") of a multi-digit pair, where
-        // the two slice directions diverge -- see
-        // comma-list-mutants-are-all-syntax-breaking.
-        expect(mutateValue('(1, 23)', 'paren-1')).toBe('(1, 29)')
-      })
-    })
+    // A paren-delimited list of numeric tuples ("(0, 0), (1, 0)") is claimed
+    // by the tuple-list rule (tuple-list.ts), which sits ahead of this one in
+    // VALUE_RULES -- see tuple-list.test.ts for that shape's own coverage,
+    // including the fixtures that used to live here as regression tests for
+    // mutateCommaList's now-deleted strip-and-restore patch.
   })
 
   describe('ISO-8601 dates', () => {
@@ -375,12 +320,22 @@ describe('pinned mutants', () => {
     ['a,', 'ga,'],
     [',b', ',B'],
     ['2026-05-13,P3D', '2026-05-13,P4D'],
-    // parenthesised coordinate pairs (comma-list-mutants-are-all-syntax-breaking):
-    // the affix strip exposes the digits inside "(0" / " 0)" as the integer
-    // rule's input, so these mutate a coordinate value rather than corrupting
-    // punctuation into an unparseable fragment.
-    ['(0, 0), (1, 0), (0, 1), (1, 1)', '(0, 0), (1, 0), (3, 1), (1, 1)'],
-    ['(2026-05-13, P3D), (1, 2)', '(2026-05-13, P3D), (1, -1)'],
+    // a paren-delimited list of numeric tuples: claimed by the tuple-list
+    // rule (tuple-list.ts), ahead of this one, which parses the pairs
+    // directly rather than patching around a flat comma-split -- see
+    // tuple-list.test.ts for that rule's own coverage.
+    ['(0, 0), (1, 0), (0, 1), (1, 1)', '(0, 0), (1, 0), (0, 1), (-5, 1)'],
+    // the tuple-list rule's boundary: this list is paren-delimited but its
+    // first item, "2026-05-13, P3D", is a date and a duration rather than a
+    // pair of integers, so isTupleList rejects it (mixed, non-numeric
+    // components) and it falls through to the plain comma-list rule above --
+    // which still has no notion of a paren, so the mutant lands on
+    // punctuation rather than a value. This is the tuple grammar's boundary,
+    // not the affix-strip regression this row used to document: without a
+    // strict "numeric tuples only" predicate, a rule aggressive enough to
+    // reshape "(0" / " 0)" into "0" would reshape this list's non-tuple
+    // items the same way and mutate the wrong thing.
+    ['(2026-05-13, P3D), (1, 2)', '(2026-05-13, P3D), (1, v)'],
     [',', ''],
     [',,', ','],
     [' , ', ' x, '],

@@ -3,44 +3,23 @@
 // mutator-spec.md. Mutations are deterministic for a given (seedKey, value)
 // pair so repeated runs produce identical, diffable mutants.
 
-const ALPHABET = 'abcdefghijklmnopqrstuvwxyz'
+import { isTupleList, mutateTupleList } from './tuple-list.ts'
+// seededRandom, RandomFn and mutateInteger are re-exported below rather than
+// only used internally -- other modules (this file's own test, tuple-list.ts)
+// import them from here, and tuple-list.ts specifically cannot import them
+// from here without closing an import cycle back through the isTupleList
+// import above. See seeded-random.ts's own header for the full reasoning.
+import { mutateInteger, nonzeroDelta, seededRandom, type RandomFn } from './seeded-random.ts'
 
-// A seeded [0, 1) generator. Every mutation rule draws from one of these
-// rather than Math.random so a given (seedKey, value) pair always produces the
-// same mutant.
-export type RandomFn = () => number
+export { seededRandom, type RandomFn }
+
+const ALPHABET = 'abcdefghijklmnopqrstuvwxyz'
 
 // The five ways a free-text value can be perturbed. Kept as a closed union so
 // STRING_MUTATORS below has to cover every one of them -- an unhandled strategy
 // would return the value unmutated, which is exactly the no-op-mutant bug class
 // this module has to avoid.
 type StringMutationStrategy = 'insert' | 'delete' | 'replace' | 'swap' | 'case'
-
-function hashString(input: string): number {
-  let h = 1779033703 ^ input.length
-  for (let i = 0; i < input.length; i++) {
-    h = Math.imul(h ^ input.charCodeAt(i), 3432918353)
-    h = (h << 13) | (h >>> 19)
-  }
-  return h >>> 0
-}
-
-// mulberry32
-export function seededRandom(seedString: string): RandomFn {
-  let seed = hashString(seedString)
-  return function next() {
-    seed = (seed + 0x6d2b79f5) | 0
-    let t = Math.imul(seed ^ (seed >>> 15), 1 | seed)
-    t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t
-    return ((t ^ (t >>> 14)) >>> 0) / 4294967296
-  }
-}
-
-function nonzeroDelta(rand: RandomFn, max: number): number {
-  let delta = 0
-  while (delta === 0) delta = Math.floor(rand() * (max * 2 + 1)) - max
-  return delta
-}
 
 function randomChar(rand: RandomFn): string {
   return ALPHABET[Math.floor(rand() * ALPHABET.length)]
@@ -133,42 +112,22 @@ function mutableCommaIndexes(value: string): number[] {
   return parts.map((_, i) => i).filter((i) => parts[i].trim().length > 0)
 }
 
-// A naive split on ',' turns a value like "(0, 0), (1, 0)" into *unbalanced*
-// fragments -- "(0" and " 0)" -- never balanced ones, since the comma inside
-// each pair is exactly what the split breaks on. Left alone, neither
-// fragment's trimmed form matches the integer rule (`^-?\d+$`), so every
-// such part falls through to the free-text string mutator and every mutant
-// of a coordinate-pair list is syntax-breaking -- see the
-// comma-list-mutants-are-all-syntax-breaking idea this stripping exists to
-// close. Stripping a single leading '(' / trailing ')' before recursing
-// exposes the digits underneath as the integer they are, so the coordinate
-// itself gets mutated instead of the punctuation around it. Only one
-// paren is ever stripped per side: these fragments are never
-// doubly-parenthesised in this repo's data, and a value that legitimately
-// starts or ends with '(' outside a coordinate pair is left with an empty
-// prefix/suffix and mutates exactly as it did before this function existed.
-function stripParenAffixes(trimmed: string): { prefix: string; core: string; suffix: string } {
-  let core = trimmed
-  let prefix = ''
-  let suffix = ''
-  if (core.startsWith('(')) {
-    prefix = '('
-    core = core.slice(1)
-  }
-  if (core.endsWith(')')) {
-    suffix = ')'
-    core = core.slice(0, -1)
-  }
-  return { prefix, core, suffix }
-}
-
+// A plain comma-delimited list of free-text/typed items -- "alive,dead,alive".
+// A value that is instead a paren-delimited list of numeric tuples (e.g.
+// "(0, 0), (1, 0)") is claimed by the tuple-list rule below, which sits
+// ahead of this one in VALUE_RULES: mutateCommaList's naive split on ','
+// would otherwise break each pair into unbalanced fragments ("(0", " 0)"),
+// corrupting punctuation instead of mutating a coordinate -- see
+// tuple-list.ts's header for the full history (that used to be patched here
+// with a strip-and-restore of one leading/trailing paren; the tuple rule
+// replaces the patch with an actual parse and this function no longer needs
+// to know parens exist).
 function mutateCommaList(value: string, rand: RandomFn, seedKey: string): string {
   const parts = value.split(',')
   const mutableIndexes = mutableCommaIndexes(value)
   const target = mutableIndexes[Math.floor(rand() * mutableIndexes.length)]
   const trimmed = parts[target].trim()
-  const { prefix, core, suffix } = stripParenAffixes(trimmed)
-  const mutated = prefix + mutateValue(core, `${seedKey}[${target}]`) + suffix
+  const mutated = mutateValue(trimmed, `${seedKey}[${target}]`)
   // Splice by index rather than String#replace(trimmed, mutated): replace's
   // *string*-pattern overload still interprets $&, $`, $' and $-prefixed
   // digit sequences in the replacement text. Today's alphabet (lowercase
@@ -177,10 +136,6 @@ function mutateCommaList(value: string, rand: RandomFn, seedKey: string): string
   const start = parts[target].indexOf(trimmed)
   parts[target] = parts[target].slice(0, start) + mutated + parts[target].slice(start + trimmed.length)
   return parts.join(',')
-}
-
-function mutateInteger(value: string, rand: RandomFn): string {
-  return String(parseInt(value, 10) + nonzeroDelta(rand, 9))
 }
 
 function mutateDecimal(value: string, rand: RandomFn): string {
@@ -252,6 +207,11 @@ interface ValueRule {
 // the shape -- a duration with no digits, say, is left to the string fallback
 // rather than handled defensively inside mutateIsoDuration.
 const VALUE_RULES: ValueRule[] = [
+  // Ahead of the comma-list rule below: a paren-delimited list of numeric
+  // tuples ("(0, 0), (1, 0)") also `.includes(',')`, so it would otherwise
+  // be claimed by mutateCommaList's flat split -- see tuple-list.ts's own
+  // header for why that shredded a coordinate pair rather than mutating it.
+  { matches: isTupleList, mutate: mutateTupleList },
   { matches: (v) => v.includes(',') && mutableCommaIndexes(v).length > 0, mutate: mutateCommaList },
   { matches: (v) => /^true$/i.test(v), mutate: (v) => matchCase(v, 'false') },
   { matches: (v) => /^false$/i.test(v), mutate: (v) => matchCase(v, 'true') },
