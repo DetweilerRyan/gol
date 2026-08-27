@@ -25,16 +25,29 @@ export interface TextSpan {
 
 // Replaces exactly the bytes covered by `span` with `replacement`, leaving
 // every other byte of `text` -- including every other line, and the
-// untouched portion of the mutated line itself -- byte-identical. This is
-// the whole reason a site abstraction is worth having: a renderer that only
-// ever calls this needs no knowledge of the table (or step, or DocString)
-// the span came from, and can never accidentally touch a sibling cell's
-// column padding.
+// untouched portion of the mutated line itself -- byte-identical, *for LF
+// input*. This is the whole reason a site abstraction is worth having: a
+// renderer that only ever calls this needs no knowledge of the table (or
+// step, or DocString) the span came from, and can never accidentally touch
+// a sibling cell's column padding.
+//
+// That byte-identical claim does not extend to CRLF input, and the next
+// paragraph is why: every line's terminator is normalized to LF on the way
+// through, not just the mutated line's. This is pre-existing, intended
+// behavior carried forward rather than a bug -- see the paragraph below --
+// so if this function's claim and its own next paragraph ever seem to
+// disagree, fix this comment, not the code.
 //
 // Re-splits `text` on the same \r?\n gherkin-document.ts's own FeatureDocument
 // uses, and re-joins with a bare '\n' -- matching the old line-based
 // applyMutation's own behavior (see mutant-parity-jig.test.ts), not a new
-// choice made here.
+// choice made here. Under CRLF input this rewrites every line's terminator
+// to LF, not just the mutated line's -- a real deviation from "every other
+// byte... byte-identical" above, deliberately left in place: normalizing is
+// harmless today because `npm run format`/`format:check` run Prettier over
+// every file under features/, and Prettier's own default `endOfLine: "lf"`
+// (unoverridden in .prettierrc.json) already holds those files to LF, so
+// there is no CRLF input this function is ever actually handed.
 export function spliceSpan(text: string, span: TextSpan, replacement: string): string {
   const lines = text.split(/\r?\n/)
   const line = lines[span.line]
