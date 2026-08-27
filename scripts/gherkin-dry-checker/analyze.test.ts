@@ -186,30 +186,36 @@ describe('analyzeSteps', () => {
     expect(report.findings.some((f) => f.kind === 'near-duplicate')).toBe(true)
   })
 
-  // Three ways pairKey's collision space can leak an unrelated pair past
-  // dedupePairs, all sharing one shape: a placeholder-variant group registers
-  // a key built from two of its own texts joined by a single space, and a
-  // *different*, unrelated pair's own sorted-and-joined texts land on that
-  // exact string, so dedupePairs.has() wrongly says "already explained" and
-  // the unrelated pair's own finding silently vanishes.
+  // pairKey has to be injective over unordered text pairs. Each corpus below
+  // is a witness against one plausible-but-non-injective encoding: a
+  // placeholder-variant group registers a key built from two of its own
+  // texts, a *different*, unrelated pair's key lands on that same string, and
+  // dedupePairs.has() then wrongly says "already explained" -- so the
+  // unrelated pair's own finding silently vanishes from a report that exits 0
+  // either way.
   //
-  // 'separator': without pairKey's join(' ') separator, sorted ["ab", "c"]
-  // and sorted ["a", "bc"] both concatenate to "abc" -- the collision this
-  // slice's join-separator regression test already covered.
-  // 'diagonal': without the `a !== b` guard on the dedupe double loop, a
-  // self-pair key a + ' ' + a enters the set; a doubled string with an
-  // internal space admits an alternate split into two different texts.
-  // 'unsorted': without pairKey's own `.sort()`, a lookup key is built from
-  // corpus insertion order rather than a canonical order, so an unrelated
-  // pair's *unsorted* concatenation can land on a real entry's unsorted form.
+  // 'no-separator': concatenation with no delimiter -- sorted ["ab", "c"] and
+  // sorted ["a", "bc"] both give "abc".
+  // 'self-pair': a key set that admits a + SEP + a (an unguarded `a !== b` on
+  // the dedupe double loop) -- a doubled string with an internal separator
+  // admits an alternate split into two different texts.
+  // 'unsorted': a key built in the caller's insertion order rather than a
+  // canonical one, so an unrelated pair's unsorted concatenation can land on
+  // a real entry's unsorted form.
+  // 'space-joined': the encoding this file shipped with, `[a, b].sort()
+  // .join(' ')`. This one is not hypothetical -- it dropped the pair's
+  // finding on UNMUTATED source, because step texts contain spaces and a
+  // space-joined key therefore has more than one way to be split. The other
+  // three rows guard against reintroducing a collision-prone encoding; this
+  // row is the regression test for the defect that was actually present.
   it.each([
     {
-      name: 'separator',
+      name: 'no-separator',
       corpus: ['<foo>ab', '<bar>ab', '<bar>ab<', 'foo>ab'],
       pair: ['<bar>ab<', 'foo>ab'],
     },
     {
-      name: 'diagonal',
+      name: 'self-pair',
       corpus: ['w1 <p> w2', 'w1 <q> w2', 'w1 <p>', 'w2 w1 <p> w2'],
       pair: ['w1 <p>', 'w2 w1 <p> w2'],
     },
@@ -217,6 +223,11 @@ describe('analyzeSteps', () => {
       name: 'unsorted',
       corpus: ['w1 <p> w2', 'w1 <q> w2', 'w1', '<p> w2 w1 <q> w2'],
       pair: ['w1', '<p> w2 w1 <q> w2'],
+    },
+    {
+      name: 'space-joined',
+      corpus: ['<alpha> x <beta>', '<gamma> x <delta>', '<alpha> x', '<beta> <gamma> x <delta>'],
+      pair: ['<alpha> x', '<beta> <gamma> x <delta>'],
     },
   ])('does not let an unrelated pair collide with a placeholder-variant dedupe key ($name)', ({ corpus, pair }) => {
     const report = analyzeSteps(corpus.map((text, scenarioIndex) => step({ text, scenarioIndex })))

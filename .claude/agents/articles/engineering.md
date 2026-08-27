@@ -71,6 +71,18 @@ Only the file-wide form works, and it costs every mutant in the file. Worse, it 
 
 Neither tool is malfunctioning, so no upstream fix is coming: Stryker's instrumentation is a read of a mutable global during render, which is on React's own documented list of bailout conditions. The interaction has no public report — the nearest analogue is [stryker-js#2704](https://github.com/stryker-mutator/stryker-js/issues/2704), where instrumentation displaces the `@flow` pragma and silently disables that Babel plugin — and it is worth reporting now that React Compiler is stable and default-on in Next.js, since the population hitting it is about to grow.
 
+## Ruling a mutation survivor equivalent
+
+A surviving mutant is either a missing test or an equivalent mutant, and only one of those is free. The ruling is `architect`'s; anyone else who believes a survivor is equivalent reports it rather than closing the question.
+
+**Hand-apply the mutant and run the suite, unfiltered.** Stryker's own `coveredBy`/`killedBy` answer different questions — see CLAUDE.md's account of first-kill-wins attribution — so neither is evidence about equivalence. Say which command you ran and at what scope, per "The scope of a claim is the scope of the command that produced it" below.
+
+**A survivor ruled equivalent carries a one-or-two-line argument at its own site**, so the next full-scope run doesn't re-derive it. The convention is `scripts/acceptance-mutation/playwright-runner.ts`'s: name the mutation, then why no input distinguishes it. That comment is also the artifact a later reader can _check_, which a triage note in a commit message is not.
+
+**The corollary is the useful half: an argument that doesn't fit in two lines is not comment material, it is a warning.** Equivalence claims that stay local — this literal is unreachable, this bound is rejected one line later, this regex anchor is redundant because `.` matches no newline — compress honestly. A claim that has to reason about what callers pass, or about a value space shared between two functions, is the shape that has been wrong here. Treat "I can't state this in two lines" as a signal to write a test or find a counterexample, not to write a longer comment.
+
+The worked example is `scripts-mutation-survivors-untriaged`, which triaged 23 unexamined `scripts/` survivors. Every survivor whose site already carried an equivalence comment survived scrutiny intact; the two rulings that had to be overturned mid-slice, and the one **live defect** the slice then found in unmutated source, were all at the one site whose equivalence depended on a collision space shared between two functions (`analyze.ts`'s `pairKey` and its two callers). Read the arrow carefully — n is 23, and the likeliest common cause is that locally-arguable sites are both easier to comment and easier to get right, not that the writing itself confers correctness. The rule above holds under either reading.
+
 ## Structural rules (ast-grep)
 
 `rules/*.yml`, wired up by `sgconfig.yml`, encode architectural invariants that were previously prose — the framework-free layering, and repo conventions like "no manual `useMemo`/`useCallback` under an enabled React Compiler". `CLAUDE.md`'s Custom quality tooling section lists what they currently cover; read it there rather than from a list restated here, which would go stale the moment a rule is added.

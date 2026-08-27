@@ -1,0 +1,120 @@
+// Property tests for pairKey, the dedupe set's key for an unordered pair of
+// step texts. Its whole job is to be INJECTIVE over unordered pairs (see
+// analyze.ts) -- a collision makes dedupePairs.has() answer "already
+// explained" about a pair nothing explained, and that pair's finding
+// disappears from a report that exits 0 either way.
+//
+// The `.property.test.ts` suffix carries no project meaning in scripts/ --
+// there is no `property` vitest project here; vitest.scripts.config.ts's
+// `scripts/**/*.test.ts` include collects this file into the ordinary
+// `npm run test:scripts` run. Same note as mutation-rules.property.test.ts.
+//
+// Why a property rather than more fixtures: analyze.test.ts already carries
+// four hand-built collision corpora, and the fourth of them exists because
+// the shipped `[a, b].sort().join(' ')` encoding really did drop findings.
+// Four witnesses cannot say the fifth encoding is safe; a quantified
+// statement can.
+//
+// Measured against three deliberately broken implementations of pairKey,
+// running just this file with `npx vitest run --config
+// vitest.scripts.config.ts scripts/gherkin-dry-checker/analyze.property.test.ts`.
+// Counts are of THIS FILE's 8 tests; the property rows were run five times
+// each, since a generator that only sometimes finds a counterexample is a
+// generator that will one day not find one:
+//   * `[a, b].sort().join(' ')` -- the encoding this file was written to
+//     retire, and the one that really was shipping. 3 of 8 red, 5 runs out of
+//     5: the injectivity property plus its two space-collision pinned rows.
+//     Order-independence stays green, correctly -- that form is canonical.
+//   * `[a, b].sort().join('')` -- 5 of 8 red: injectivity plus four pinned
+//     rows, since a separator-free key collides far more densely.
+//   * `JSON.stringify([a, b])`, the sort dropped -- 1 of 8 red, 3 runs of 3:
+//     ONLY order-independence. That form is still injective, just not
+//     canonical, which is why both properties are here rather than one.
+//
+// One negative result worth keeping, because it is the trap this file nearly
+// fell into. The first draft stated injectivity over four independently drawn
+// strings (`pairKey(a, b) === pairKey(c, d)` iff the sorted pairs match) over
+// the wider alphabet below. It ran GREEN against the space-joined and
+// separator-free forms in every run -- only the pinned rows caught them. Four
+// loose draws from a roomy alphabet essentially never collide, so that form
+// of the property was documentation. The set-based form below is what
+// replaced it.
+
+import { fc, test } from '@fast-check/vitest'
+import { describe, expect, it } from 'vitest'
+import { pairKey } from './analyze.ts'
+
+// Two alphabets, for two different jobs.
+//
+// COLLIDABLE is deliberately TINY -- strings of length 0..4 over {'a', ' '},
+// a universe of exactly 31 values. That is the point: injectivity is a claim
+// about PAIRS of pairs, and four independently-drawn strings from a roomy
+// alphabet essentially never collide, so the naive four-argument form of this
+// property runs green against a broken implementation and proves nothing
+// (measured -- it did exactly that on the first draft of this file). Drawing
+// a set of texts from a small universe and checking every pair within it
+// instead puts a large, overlapping fraction of that universe's pairs in one
+// run, which is what makes a collision reachable. Brute-forcing this
+// alphabet's length-0..3 slice alone yields 51 distinct colliding
+// pair-of-pairs under the old space-joined key.
+//
+// ESCAPABLE is wider -- it adds the quote and the backslash, the two
+// characters a JSON-shaped encoding has to escape. It is used only for the
+// order-independence property, where no collision is needed.
+//
+// Do not widen COLLIDABLE to make a finding go away: widening it is exactly
+// how this property stops being able to see one.
+const COLLIDABLE = fc.stringMatching(/^[a ]{0,4}$/)
+const ESCAPABLE = fc.stringMatching(/^[ab "\\,]{0,3}$/)
+
+function sortedPair(a: string, b: string): string {
+  // NUL cannot occur in either alphabet, so this is a faithful identity for
+  // the unordered pair and is not itself a candidate key encoding.
+  return [a, b].sort().join('\u0000')
+}
+
+// Degenerate inputs pinned rather than left to the generator: each is a value
+// some plausible encoding mishandles, and several involve a character
+// COLLIDABLE does not contain at all.
+const PINNED: [string, string, string, string][] = [
+  // The space-joined collision, minimized from the brute-force scan.
+  ['', ' a', ' ', 'a'],
+  // The same shape one character over.
+  ['', 'a a', ' a', 'a'],
+  // Separator-free concatenation.
+  ['ab', 'c', 'a', 'bc'],
+  // The quote and backslash a JSON encoding has to escape.
+  ['"', 'a', '', '"a'],
+  ['\\', 'a', '', '\\a'],
+  // Two empty strings against one -- the self-pair shape.
+  ['', '', '', ' '],
+]
+
+describe('pairKey', () => {
+  // Every pair drawn from one set of distinct texts gets its own key. Stated
+  // over a set rather than over four loose strings for the reachability
+  // reason in the header comment.
+  test.prop([fc.uniqueArray(COLLIDABLE, { minLength: 10, maxLength: 20 })])(
+    'gives two different unordered pairs two different keys',
+    (texts) => {
+      const pairByKey = new Map<string, string>()
+      for (let i = 0; i < texts.length; i++) {
+        for (let j = i + 1; j < texts.length; j++) {
+          const key = pairKey(texts[i], texts[j])
+          const pair = sortedPair(texts[i], texts[j])
+          const prior = pairByKey.get(key)
+          if (prior !== undefined) expect(prior).toBe(pair)
+          pairByKey.set(key, pair)
+        }
+      }
+    },
+  )
+
+  test.prop([ESCAPABLE, ESCAPABLE])('does not depend on the order the caller holds the two texts in', (a, b) => {
+    expect(pairKey(a, b)).toBe(pairKey(b, a))
+  })
+
+  it.each(PINNED)('keeps %j/%j distinct from %j/%j', (a, b, c, d) => {
+    expect(pairKey(a, b)).not.toBe(pairKey(c, d))
+  })
+})

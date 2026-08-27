@@ -95,8 +95,33 @@ function scenarioKey(step: CorpusStep): string {
   return `${step.feature}::${step.section}::${step.scenarioIndex}`
 }
 
-function pairKey(a: string, b: string): string {
-  return [a, b].sort().join(' ')
+// The dedupe set's key for an unordered pair of step texts. It MUST be
+// injective over unordered pairs: the same key is built on both the add side
+// (findPlaceholderVariants) and the lookup side (findTokenSimilarities), so
+// two different pairs sharing a key make `dedupePairs.has()` answer "already
+// explained" about a pair nothing explained, and that pair's own finding
+// silently vanishes from the report. Nothing downstream would notice -- this
+// program exits 0 whatever it prints, so its tests are the only observer.
+//
+// `[a, b].sort().join(' ')` was NOT injective and did drop real findings:
+// step texts contain spaces, so {"<alpha> x", "<beta> <gamma> x <delta>"}
+// and {"<alpha> x <beta>", "<gamma> x <delta>"} both join to the same string
+// (measured on unmutated source -- the first pair's near-duplicate finding
+// disappears as soon as the second pair is in the corpus). JSON.stringify
+// escapes the members, so no member can forge the delimiter.
+//
+// Exported for analyze.property.test.ts alone -- it is the one contract in
+// this file a fixture cannot state, since injectivity is a claim about every
+// pair of pairs rather than about four witnesses. Nothing else imports it and
+// it is not part of the analysis surface; analyzeSteps is.
+export function pairKey(a: string, b: string): string {
+  // `.sort()` canonicalizes the pair so the key does not depend on the order
+  // the caller happens to hold the two texts in. Mutation-equivalent today
+  // (findPlaceholderVariants' double loop registers both orders, so a lookup
+  // built in either order still hits) -- kept because that is the caller's
+  // loop shape, not this function's contract. Measured post-fix against the
+  // whole scripts/ suite.
+  return JSON.stringify([a, b].sort())
 }
 
 function findDuplicatesInScenario(steps: CorpusStep[]): Finding[] {
@@ -163,6 +188,11 @@ function findPlaceholderVariants(byText: StepsByText, dedupePairs: Set<string>):
     })
     for (const a of texts) {
       for (const b of texts) {
+        // Mutation-equivalent to `true` now that pairKey is injective: a
+        // self-pair key can only ever equal another self-pair's, and every
+        // lookup key is built from two distinct byText keys. It is a real
+        // guard against a non-injective key, though -- see pairKey's comment
+        // and the collision cases in analyze.test.ts.
         if (a !== b) dedupePairs.add(pairKey(a, b))
       }
     }
