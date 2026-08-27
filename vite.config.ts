@@ -165,7 +165,16 @@ export default defineConfig({
         test: {
           name: 'property',
           environment: 'node',
-          setupFiles: [],
+          // Pins fast-check's global seed, but only when this process is
+          // itself running under Stryker -- see fast-check-stryker-seed.ts's
+          // header comment for why an unpinned seed makes a property test
+          // structurally unable to kill a mutant in that gate, and
+          // vitest.scripts.config.ts for the other setupFiles entry this
+          // needs (property tests live in both src/ and scripts/, and this
+          // config only reaches the former). A plain `npm run test:property`
+          // run stays exploratory -- the guard inside is what keeps it that
+          // way, not this config.
+          setupFiles: ['./fast-check-stryker-seed.ts'],
           include: propertyTests,
           exclude: sharedExclude,
         },

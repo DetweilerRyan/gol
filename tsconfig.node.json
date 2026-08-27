@@ -29,6 +29,8 @@
     "playwright.config.ts",
     "playwright.perf.config.ts",
     "playwright-shared.ts",
-    "playwright.acceptance-mutation.config.ts"
+    "playwright.acceptance-mutation.config.ts",
+    "fast-check-stryker-seed.ts",
+    "fast-check-stryker-seed.test.ts"
   ]
 }
