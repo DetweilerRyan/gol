@@ -25,6 +25,17 @@ stryker.log
 # Playwright
 /playwright-report/
 /test-results/
+# Separate from test-results/ on purpose -- see the outputDir comment in
+# playwright.acceptance-mutation.config.ts: sharing one directory lets any
+# `npm run test:e2e` wipe an aborted mutation run's only autopsy material.
+#
+# This entry also gates Prettier, which is not obvious and is why it is
+# commented: prettier 3.9.6 honors .gitignore by default, so this line is what
+# keeps `npm run format:check` off the artifacts. Measured -- with the entry,
+# 0 files matched; with `--ignore-path .prettierignore` (i.e. .gitignore not
+# consulted), 57 error-context.md files are reported unformatted. The same is
+# silently true of /test-results/ above.
+/test-results-acceptance-mutation/
 /blob-report/
 
 # playwright-bdd generated specs (features/*.feature -> .features-gen/bdd/features/*.feature.spec.js)
