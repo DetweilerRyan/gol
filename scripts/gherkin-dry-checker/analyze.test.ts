@@ -95,7 +95,27 @@ describe('analyzeSteps', () => {
       'near-duplicate',
     )
     expect(finding.score).toBeGreaterThanOrEqual(0.72)
-    expect(finding.confidence).toBe('medium')
+    expect(finding).toMatchObject({
+      confidence: 'medium',
+      suggested_action:
+        'Likely the same logical step with slightly different wording -- consider unifying the step definitions.',
+    })
+  })
+
+  // NEAR_DUPLICATE_THRESHOLD is 0.72 and the comparison is `score >=
+  // NEAR_DUPLICATE_THRESHOLD`, not `>` -- a score landing exactly on the
+  // threshold must still classify as near-duplicate. Built from 18 shared and
+  // 7 A-only tokens (18/25 = 0.72 exactly) rather than picked from ordinary
+  // step prose, since no realistic short pair happens to land exactly there.
+  it('classifies a score exactly at the near-duplicate threshold as near-duplicate, not possible-synonym', () => {
+    const shared = Array.from({ length: 18 }, (_, i) => `w${i + 1}`)
+    const uniqueToA = Array.from({ length: 7 }, (_, i) => `x${i + 1}`)
+    const finding = findingForTwoScenarios([...shared, ...uniqueToA].join(' '), shared.join(' '), [
+      'near-duplicate',
+      'possible-synonym',
+    ])
+    expect(finding.score).toBe(0.72)
+    expect(finding.kind).toBe('near-duplicate')
   })
 
   it('flags moderately similar wording as possible-synonym with a score between 0.45 and 0.72', () => {
@@ -106,6 +126,19 @@ describe('analyzeSteps', () => {
     expect(finding.score).toBeGreaterThanOrEqual(0.45)
     expect(finding.kind).toBe('possible-synonym')
     expect(finding.confidence).toBe('low')
+    expect(finding.suggested_action).toBe('Possibly related steps; review for accidental wording drift.')
+  })
+
+  // POSSIBLE_SYNONYM_THRESHOLD is 0.45 and the skip guard is `score <
+  // POSSIBLE_SYNONYM_THRESHOLD`, not `<=` -- a score landing exactly on the
+  // threshold must still produce a finding. Same construction as the
+  // near-duplicate boundary test above (9 shared, 11 A-only tokens; 9/20 =
+  // 0.45 exactly), since no realistic short pair lands exactly there either.
+  it('still reports a finding for a score exactly at the possible-synonym threshold', () => {
+    const shared = Array.from({ length: 9 }, (_, i) => `w${i + 1}`)
+    const uniqueToA = Array.from({ length: 11 }, (_, i) => `x${i + 1}`)
+    const finding = findingForTwoScenarios([...shared, ...uniqueToA].join(' '), shared.join(' '), 'possible-synonym')
+    expect(finding.score).toBe(0.45)
   })
 
   it('reports no similarity finding below the possible-synonym threshold', () => {
@@ -138,6 +171,36 @@ describe('analyzeSteps', () => {
     ])
     expect(report.findings.some((f) => f.kind === 'placeholder-variant')).toBe(true)
     expect(report.findings.some((f) => f.kind === 'near-duplicate')).toBe(true)
+  })
+
+  // pairKey sorts its two texts before joining them, and the join separator is
+  // load-bearing, not decorative: without it, two different pairs of texts can
+  // sort-and-concatenate to the identical string (e.g. sorted ["ab", "c"] and
+  // sorted ["a", "bc"] both join to "abc"). The corpus below is built from
+  // that exact shape -- a placeholder-variant pair whose sorted, unseparated
+  // concatenation collides with an unrelated pair's -- so that a dedupePairs
+  // key built without a separator wrongly marks the unrelated pair as already
+  // explained by the placeholder-variant pass, and its own possible-synonym
+  // finding silently vanishes.
+  it('does not let an unrelated pair collide with a placeholder-variant pair once their texts are sorted and joined', () => {
+    const report = analyzeSteps([
+      step({ text: '<foo>ab', scenarioIndex: 0 }),
+      step({ text: '<bar>ab', scenarioIndex: 1 }),
+      step({ text: '<bar>ab<', scenarioIndex: 2 }),
+      step({ text: 'foo>ab', scenarioIndex: 3 }),
+    ])
+    expect(report.findings.some((f) => f.kind === 'placeholder-variant')).toBe(true)
+    // The unrelated pair's own finding, isolated from the other cross-pairs
+    // this corpus incidentally also produces (its members all share the token
+    // "ab" once placeholders are stripped, so several other pairs clear the
+    // similarity threshold too) -- this is the one a colliding key would drop.
+    const unrelatedPairFinding = report.findings.find(
+      (f) =>
+        f.members.length === 2 &&
+        f.members.some((m) => m.text === '<bar>ab<') &&
+        f.members.some((m) => m.text === 'foo>ab'),
+    )
+    expect(unrelatedPairFinding).toBeDefined()
   })
 
   // The report is the product here -- a finding with blank prose or no members
