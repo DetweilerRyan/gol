@@ -28,10 +28,10 @@ function componentsOf(value: string): string[] {
 
 // mutateTupleList draws from `rand` exactly twice, in either branch: a class
 // draw, then either a swap-candidate-index draw or a component-index draw.
-// The component-change branch's call into seeded-random.ts's mutateInteger
-// re-seeds its own generator from `${derivedSeedKey}::${componentText}` (via
-// a fresh seededRandom call) and never touches the `rand` passed in here --
-// see tuple-list.ts's mutateComponent for that contract. So a two-element
+// The component-change branch delegates to the INJECTED ValueMutator
+// (mutateValue in production), which seeds its own generator from
+// `${derivedSeedKey}::${componentText}` and never touches the `rand` passed
+// in here -- see tuple-list.ts's mutateComponent for that contract. So a two-element
 // draw queue is exactly enough for any call.
 function queuedRand(draws: number[]): () => number {
   let i = 0
@@ -115,15 +115,15 @@ describe('mutateTupleList', () => {
   const CELLS = '(0, 0), (1, 0), (0, 1), (1, 1)'
 
   it('is deterministic for a fixed draw sequence', () => {
-    const first = mutateTupleList(CELLS, queuedRand([0.6, 0.1]), 'k')
-    const second = mutateTupleList(CELLS, queuedRand([0.6, 0.1]), 'k')
+    const first = mutateTupleList(CELLS, queuedRand([0.6, 0.1]), 'k', mutateValue)
+    const second = mutateTupleList(CELLS, queuedRand([0.6, 0.1]), 'k', mutateValue)
     expect(first).toBe(second)
   })
 
   it('stays a same-length list of tuples across many draw sequences', () => {
     for (let a = 0; a < 10; a++) {
       for (let b = 0; b < 10; b++) {
-        const mutated = mutateTupleList(CELLS, queuedRand([a / 10, b / 10]), `k-${a}-${b}`)
+        const mutated = mutateTupleList(CELLS, queuedRand([a / 10, b / 10]), `k-${a}-${b}`, mutateValue)
         expect(pairsOf(mutated)).toHaveLength(4)
       }
     }
@@ -131,13 +131,13 @@ describe('mutateTupleList', () => {
 
   it('changes exactly one pair when component-change is selected (first draw >= 0.5)', () => {
     const before = pairsOf(CELLS)
-    const after = pairsOf(mutateTupleList(CELLS, queuedRand([0.6, 0.1]), 'k'))
+    const after = pairsOf(mutateTupleList(CELLS, queuedRand([0.6, 0.1]), 'k', mutateValue))
     expect(after).toHaveLength(before.length)
     expect(after.filter((p, idx) => p !== before[idx])).toHaveLength(1)
   })
 
   it('swaps a pair transposition when swap is selected and a swappable candidate exists (first draw < 0.5)', () => {
-    const mutated = mutateTupleList(CELLS, queuedRand([0.1, 0.1]), 'k')
+    const mutated = mutateTupleList(CELLS, queuedRand([0.1, 0.1]), 'k', mutateValue)
     // (0, 0) and (1, 1), the first and last pairs, each have equal
     // components so neither is swappable; the swap candidate pool is
     // (1, 0), (0, 1) -- with the second draw (0.1) selecting the first
@@ -151,14 +151,29 @@ describe('mutateTupleList', () => {
     // index regardless of it (a mutant dividing by the candidate count
     // instead of multiplying by it would always floor to 0 here, since
     // draw / 2 < 1 for every draw in [0, 1)).
-    const first = mutateTupleList(CELLS, queuedRand([0.1, 0.1]), 'k') // floor(0.1 * 2) = 0 -> (1, 0)
-    const second = mutateTupleList(CELLS, queuedRand([0.1, 0.9]), 'k') // floor(0.9 * 2) = 1 -> (0, 1)
+    const first = mutateTupleList(CELLS, queuedRand([0.1, 0.1]), 'k', mutateValue) // floor(0.1 * 2) = 0 -> (1, 0)
+    const second = mutateTupleList(CELLS, queuedRand([0.1, 0.9]), 'k', mutateValue) // floor(0.9 * 2) = 1 -> (0, 1)
     expect(first).not.toBe(second)
+  })
+
+  it('treats a draw of exactly 0.5 as component-change, not swap', () => {
+    // The class draw's boundary, pinned deterministically rather than hunted
+    // for in a seed. `rand` is an injected parameter and 0.5 is in-domain for
+    // a [0, 1) RandomFn, so the exact boundary is reachable by construction:
+    // `< 0.5` sends 0.5 down the component-change branch, and the `<= 0.5`
+    // mutant sends it to swap instead. The two are told apart by how many
+    // components move -- a transposition changes two at once, a
+    // component-change exactly one -- which is a structural difference, not a
+    // value coincidence that a different draw queue could wash out.
+    const mutated = mutateTupleList(CELLS, queuedRand([0.5, 0.1]), 'k', mutateValue)
+    const before = componentsOf(CELLS)
+    const after = componentsOf(mutated)
+    expect(after.filter((c, i) => c !== before[i])).toHaveLength(1)
   })
 
   it('is a single transposition -- the swapped pair is a permutation of its own original components', () => {
     const before = pairsOf(CELLS)
-    const after = pairsOf(mutateTupleList(CELLS, queuedRand([0.1, 0.1]), 'k'))
+    const after = pairsOf(mutateTupleList(CELLS, queuedRand([0.1, 0.1]), 'k', mutateValue))
     const changedIndex = after.findIndex((p, idx) => p !== before[idx])
     const [bx, by] = before[changedIndex].split(',')
     const [ax, ay] = after[changedIndex].split(',')
@@ -168,7 +183,7 @@ describe('mutateTupleList', () => {
   it('falls back to component-change when every pair has equal components (no swap candidate)', () => {
     const value = '(2, 2), (3, 3)'
     const before = pairsOf(value)
-    const mutated = mutateTupleList(value, queuedRand([0.1, 0.1]), 'k') // wants swap, but nothing is swappable
+    const mutated = mutateTupleList(value, queuedRand([0.1, 0.1]), 'k', mutateValue) // wants swap, but nothing is swappable
     const after = pairsOf(mutated)
     expect(after).toHaveLength(before.length)
     // A no-op swap would leave the value unchanged; component-change must
@@ -186,7 +201,7 @@ describe('mutateTupleList', () => {
     // count at 2 and the value different from the original.
     const value = '(1, 2, 3), (4, 5, 6)'
     const before = componentsOf(value)
-    const mutated = mutateTupleList(value, queuedRand([0.1, 0.1]), 'k')
+    const mutated = mutateTupleList(value, queuedRand([0.1, 0.1]), 'k', mutateValue)
     const after = componentsOf(mutated)
     expect(mutated).not.toBe(value)
     // Still a well-formed pair of 3-tuples...
@@ -197,20 +212,22 @@ describe('mutateTupleList', () => {
   })
 
   it('mutates a single-pair list', () => {
-    const mutated = mutateTupleList('(0, 0)', queuedRand([0.6, 0.1]), 'k')
+    const mutated = mutateTupleList('(0, 0)', queuedRand([0.6, 0.1]), 'k', mutateValue)
     expect(pairsOf(mutated)).toHaveLength(1)
     expect(mutated).not.toBe('(0, 0)')
   })
 
   it('produces different mutants for different seedKeys under component-change with the same draws', () => {
     const results = new Set(
-      Array.from({ length: 20 }, (_, i) => mutateTupleList(CELLS, queuedRand([0.6, 0.1]), `k${i}`)),
+      Array.from({ length: 20 }, (_, i) => mutateTupleList(CELLS, queuedRand([0.6, 0.1]), `k${i}`, mutateValue)),
     )
     expect(results.size).toBeGreaterThan(1)
   })
 
   it('throws on a value that is not a tuple list', () => {
-    expect(() => mutateTupleList('alive,dead,alive', queuedRand([0.1, 0.1]), 'k')).toThrow(/not a tuple-list/)
+    expect(() => mutateTupleList('alive,dead,alive', queuedRand([0.1, 0.1]), 'k', mutateValue)).toThrow(
+      /not a tuple-list/,
+    )
   })
 })
 

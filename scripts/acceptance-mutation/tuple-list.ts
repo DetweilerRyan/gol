@@ -19,15 +19,21 @@
 // "(2026-05-13, P3D)", not a numeric pair) the same way it fixes tuple ones.
 // This module replaces it with an actual parse: a list of fixed-arity numeric
 // tuples, each tuple's components individually addressable by byte offset.
-// From seeded-random.ts, a leaf module, rather than from mutation-rules.ts:
-// mutation-rules.ts's own VALUE_RULES table imports isTupleList/
-// mutateTupleList below (the tuple rule sits ahead of the plain comma-list
-// rule -- see mutation-rules.ts's header), so importing anything back from
-// mutation-rules.ts here would close a module import cycle. seededRandom and
-// mutateInteger together reproduce exactly what recursing into
-// mutation-rules.ts's mutateValue would have done for a component's text --
-// see seeded-random.ts's own header for why that equivalence holds.
-import { mutateInteger, seededRandom, type RandomFn } from './seeded-random.ts'
+// This module imports nothing from mutation-rules.ts, and cannot: that file's
+// VALUE_RULES table imports isTupleList/mutateTupleList below (the tuple rule
+// sits ahead of the plain comma-list rule), so an import back would close a
+// module import cycle -- oxlint's import/no-cycle, an ERROR rather than a
+// warning. What this module needs from there, mutating one tuple component's
+// text, arrives as an injected ValueMutator parameter instead, on the
+// container-equality.ts precedent. Only the seeded stream's TYPE is imported.
+import type { RandomFn } from './seeded-random.ts'
+
+// The component mutator mutateTupleList is handed. In production this is
+// mutation-rules.ts's own mutateValue -- so a component's mutation is
+// literally recursion through VALUE_RULES, the same thing mutateCommaList
+// does with its own fragments, rather than a direct mutateInteger call that
+// merely happens to agree with it today.
+export type ValueMutator = (value: string, seedKey: string) => string
 
 interface TupleComponent {
   start: number
@@ -106,23 +112,26 @@ function spliceSwap(value: string, first: TupleComponent, second: TupleComponent
 // carried over unchanged; `i` is simply this module's analogue of that
 // function's flat split-list index.
 //
-// Calls mutateInteger directly, seeded exactly the way mutateValue seeds its
-// own rand (`${seedKey}::${originalValue}`), rather than calling mutateValue
-// itself -- see this file's import comment for why (mutateValue lives in
-// mutation-rules.ts, which imports this module, so importing it back here
-// would close a cycle). Every tuple component matches VALUE_RULES's integer
-// rule and nothing earlier in that table, so this is behaviourally identical
-// to what recursing into mutateValue would have produced.
-function mutateComponent(value: string, tuples: TupleMatch[], rand: RandomFn, seedKey: string): string {
+// Delegates the component's own mutation to the injected `mutate`, which in
+// production is mutateValue -- so this is recursion through VALUE_RULES, and
+// a component's text gets whatever rule that table says a bare digit run
+// gets, now and after any future edit to it.
+function mutateComponent(
+  value: string,
+  tuples: TupleMatch[],
+  rand: RandomFn,
+  seedKey: string,
+  mutate: ValueMutator,
+): string {
   const flatComponents = tuples.flatMap((tuple) => tuple.components)
   const index = Math.floor(rand() * flatComponents.length)
   const target = flatComponents[index]
-  const derivedKey = `${seedKey}[${index}]`
-  const mutated = mutateInteger(target.text, seededRandom(`${derivedKey}::${target.text}`))
+  const mutated = mutate(target.text, `${seedKey}[${index}]`)
   return value.slice(0, target.start) + mutated + value.slice(target.end)
 }
 
-// The rule's mutate: signature matches ValueRule.mutate exactly. Two
+// The rule's mutate, plus the injected component mutator -- so the
+// VALUE_RULES entry wraps it in an arrow rather than naming it directly. Two
 // strategies: component-change (above, today's behaviour) and swap-x-y
 // (transpose a tuple's two components). The class draw is always the FIRST
 // draw, regardless of arity or of whether any tuple is actually swappable --
@@ -130,25 +139,16 @@ function mutateComponent(value: string, tuples: TupleMatch[], rand: RandomFn, se
 // branch the first draw's outcome (plus the data-dependent, non-drawing
 // swappable-candidate check) sends it down. Everything after the first draw
 // is branch-local.
-export function mutateTupleList(value: string, rand: RandomFn, seedKey: string): string {
+export function mutateTupleList(value: string, rand: RandomFn, seedKey: string, mutate: ValueMutator): string {
   const tuples = parseTupleList(value)
   if (!tuples) throw new Error(`mutateTupleList called on a value that is not a tuple-list: ${JSON.stringify(value)}`)
 
-  // KNOWN, ACCEPTED SURVIVOR: `< 0.5` mutated to `<= 0.5` here is a boundary
-  // mutant that only differs when rand() returns EXACTLY 0.5. mulberry32's
-  // output is numerator / 2**32 for a 32-bit numerator, so hitting exactly
-  // 0.5 requires numerator === 2**31 -- one specific value out of 2**32
-  // possible outputs. Finding a seed that lands on it is a plain geometric
-  // expectation (not a birthday-collision bound -- there's no pair to
-  // collide, just one exact target), so the expected number of draws is on
-  // the order of 2**32 (measured: 20,000,000 sequential seedKeys,
-  // "search-0".."search-19999999", in ~1.4s found none, extrapolating to
-  // ~5 minutes for the full expected count with no guarantee of landing
-  // inside it). Not a proof of logical equivalence -- a seed producing that
-  // exact draw does exist -- but de facto unreachable by any seed a human or
-  // a scan would plausibly ever pin, which is why this is accepted rather
-  // than chased with a hunted seed the way e.g. mutation-rules.test.ts's
-  // 'hunt-13' pins a much more likely (1-in-26-ish) branch.
+  // The 0.5 boundary is pinned deterministically by tuple-list.test.ts's
+  // `() => 0.5` stub rather than left to a hunted seed: `rand` is an injected
+  // parameter, so the exact boundary value is reachable by construction and
+  // the `< 0.5` -> `<= 0.5` mutant dies without any seed search. 0.5 is
+  // in-domain for a [0, 1) RandomFn, which is what makes that stub a legal
+  // input rather than a contrived one.
   const wantsSwap = rand() < 0.5 // draw #1, unconditionally
   const arity = tuples[0].components.length
   // Swap only ever transposes a tuple's first two components, so it's only
@@ -169,5 +169,5 @@ export function mutateTupleList(value: string, rand: RandomFn, seedKey: string):
   // when it picked swap but no swap candidate existed (every pair's
   // components equal, or arity !== 2) -- draw #2 in this branch is
   // mutateComponent's own target-index draw, never a second class draw.
-  return mutateComponent(value, tuples, rand, seedKey)
+  return mutateComponent(value, tuples, rand, seedKey, mutate)
 }

@@ -4,18 +4,19 @@
 // pair so repeated runs produce identical, diffable mutants.
 
 import { isTupleList, mutateTupleList } from './tuple-list.ts'
-// seededRandom and RandomFn -- not mutateInteger, which stays purely
-// internal to this file's own VALUE_RULES dispatch -- are re-exported below
-// so mutation-rules.test.ts's own 'seededRandom' describe block (the table
-// pinning mulberry32's draw sequence, colocated with the PINNED mutant table
-// it upstreams) can import them from the same module its other fixtures do,
-// rather than reaching into seeded-random.ts directly for just this one
-// case. tuple-list.ts imports seededRandom/RandomFn/mutateInteger from
-// seeded-random.ts itself, not through this re-export: it cannot import
-// anything from this file at all without closing an import cycle back
-// through the isTupleList import above. See seeded-random.ts's own header
-// for the full reasoning on that split.
-import { mutateInteger, nonzeroDelta, seededRandom, type RandomFn } from './seeded-random.ts'
+// seededRandom and RandomFn are re-exported below so mutation-rules.test.ts's
+// own 'seededRandom' describe block (the table pinning mulberry32's draw
+// sequence, colocated with the PINNED mutant table it upstreams) can import
+// them from the same module its other fixtures do, rather than reaching into
+// seeded-random.ts directly for just this one case.
+//
+// tuple-list.ts imports seededRandom/RandomFn from seeded-random.ts itself,
+// never through this re-export: it cannot import anything from THIS file at
+// all without closing an import cycle back through the isTupleList import
+// above. What it needs from here -- the ability to mutate one tuple
+// component's text -- is injected into mutateTupleList at the VALUE_RULES
+// entry below instead. See seeded-random.ts's header.
+import { nonzeroDelta, seededRandom, type RandomFn } from './seeded-random.ts'
 
 export { seededRandom, type RandomFn }
 
@@ -144,6 +145,10 @@ function mutateCommaList(value: string, rand: RandomFn, seedKey: string): string
   return parts.join(',')
 }
 
+function mutateInteger(value: string, rand: RandomFn): string {
+  return String(parseInt(value, 10) + nonzeroDelta(rand, 9))
+}
+
 function mutateDecimal(value: string, rand: RandomFn): string {
   const decimals = value.split('.')[1].length
   // KNOWN DEFECT, left as-is deliberately: this is always exactly 1. The
@@ -217,7 +222,18 @@ const VALUE_RULES: ValueRule[] = [
   // tuples ("(0, 0), (1, 0)") also `.includes(',')`, so it would otherwise
   // be claimed by mutateCommaList's flat split -- see tuple-list.ts's own
   // header for why that shredded a coordinate pair rather than mutating it.
-  { matches: isTupleList, mutate: mutateTupleList },
+  // mutateValue is INJECTED rather than imported by tuple-list.ts, on
+  // container-equality.ts's precedent: that module takes its leaf comparison
+  // as a parameter so both comparators can share one walker. Here the reason
+  // is sharper than sharing -- tuple-list.ts importing mutateValue would
+  // close an import cycle back through this entry's own isTupleList. Passing
+  // the real dispatcher, rather than reimplementing "mutate a component" as
+  // a direct mutateInteger call over there, is what keeps a component's
+  // mutation DEFINED as recursion through this table (exactly what
+  // mutateCommaList does) instead of merely equivalent to it today -- so a
+  // future rule inserted ahead of the integer rule is picked up here rather
+  // than silently diverging.
+  { matches: isTupleList, mutate: (v, rand, key) => mutateTupleList(v, rand, key, mutateValue) },
   { matches: (v) => v.includes(',') && mutableCommaIndexes(v).length > 0, mutate: mutateCommaList },
   { matches: (v) => /^true$/i.test(v), mutate: (v) => matchCase(v, 'false') },
   { matches: (v) => /^false$/i.test(v), mutate: (v) => matchCase(v, 'true') },

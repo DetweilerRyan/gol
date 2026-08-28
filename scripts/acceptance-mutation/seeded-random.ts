@@ -1,25 +1,22 @@
-// Seeded pseudo-random generation, and the one numeric-mutation primitive
-// built directly on it that lives outside mutation-rules.ts's own
-// VALUE_RULES dispatch: mutateInteger.
+// The seeded pseudo-random stream every mutation rule draws from, and the one
+// delta helper built directly on it.
 //
-// This is a leaf module split out of mutation-rules.ts specifically so
-// tuple-list.ts can depend on it. mutation-rules.ts's own VALUE_RULES table
-// imports tuple-list.ts's isTupleList/mutateTupleList (the tuple rule sits
-// ahead of the plain comma-list rule -- see mutation-rules.ts's header), so
-// tuple-list.ts importing anything back from mutation-rules.ts would close a
-// module import cycle -- oxlint's import/no-cycle rule, an ERROR rather than
-// a warning, catches exactly this. Neither mutation-rules.ts nor
-// tuple-list.ts is imported here, so both can depend on this module without
-// forming one.
+// A leaf module: it imports nothing in this program, which is what lets both
+// mutation-rules.ts and tuple-list.ts depend on it without closing a cycle.
+// mutation-rules.ts's VALUE_RULES table imports isTupleList/mutateTupleList
+// from tuple-list.ts (the tuple rule sits ahead of the plain comma-list rule
+// -- see mutation-rules.ts's header), so the one edge that must never exist
+// is tuple-list.ts importing back from mutation-rules.ts. oxlint's
+// import/no-cycle rule is an ERROR rather than a warning and catches exactly
+// that.
 //
-// mutateInteger specifically, rather than the general mutateValue dispatcher,
-// is what tuple-list.ts's component-change strategy needs: every tuple
-// component matches VALUE_RULES's own integer rule (`/^-?\d+$/`) and nothing
-// earlier in that table -- a bare digit run can never also look like a
-// tuple-list, a comma-list, a boolean, a null-like, or an ISO
-// date/datetime/duration -- so calling mutateInteger with a rand seeded the
-// same way mutateValue seeds one (see seededRandom's own callers) produces
-// exactly what recursing through mutateValue would have, without the cycle.
+// What tuple-list.ts needs from mutation-rules.ts -- the ability to mutate a
+// single tuple component's text -- is INJECTED as a parameter instead (see
+// tuple-list.ts's ValueMutator), on the container-equality.ts precedent this
+// repo already documents. So nothing beyond the stream itself was moved down
+// here: mutateInteger stays in mutation-rules.ts beside the rest of
+// VALUE_RULES' mutators, where a reader comparing the table against
+// mutator-spec.md can still see it.
 
 function hashString(input: string): number {
   let h = 1779033703 ^ input.length
@@ -50,8 +47,4 @@ export function nonzeroDelta(rand: RandomFn, max: number): number {
   let delta = 0
   while (delta === 0) delta = Math.floor(rand() * (max * 2 + 1)) - max
   return delta
-}
-
-export function mutateInteger(value: string, rand: RandomFn): string {
-  return String(parseInt(value, 10) + nonzeroDelta(rand, 9))
 }
