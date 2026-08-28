@@ -58,6 +58,27 @@ function parseCellList(cellList: string): Array<[number, number]> {
     cellList.matchAll(/\((-?\d+),\s*(-?\d+)\)/g),
     (match) => [Number(match[1]), Number(match[2])] as [number, number],
   )
+  // THAT REGEX IS MIRRORED, BY HAND, IN TWO PLACES, AND THIS IS THE ONLY
+  // POINTER TO THEM. scripts/acceptance-mutation/tuple-list.test.ts and
+  // tuple-list.property.test.ts each declare a `PAIR` constant that is a
+  // byte-identical copy of it, and each says so; the tether ran one way only
+  // until this comment, so an editor of the regex above had nothing telling
+  // them two copies existed. Change it here and change it in both of those.
+  //
+  // The copies are deliberate rather than lazy. They are the ORACLE those
+  // properties check the tuple-list mutator against, and an oracle has to be
+  // independent of the thing under test IN THE DIRECTION THAT MATTERS: the
+  // acceptance suite reads a pattern's shape through THIS regex, so mirroring
+  // this file is what makes those properties say something about the contract
+  // rather than about tuple-list.ts agreeing with itself. Importing across the
+  // gap would defeat that, and cannot be done anyway -- parseCellList is not
+  // exported, importing this module executes createBdd() registration, and it
+  // would couple features/ to scripts/ in both directions.
+  //
+  // Nothing checks the agreement mechanically. That was ruled on rather than
+  // deferred: ast-grep matches within a single file and cannot express
+  // cross-file regex equality. This comment and its two counterparts are the
+  // whole guard, which is the argument for keeping all three exact.
   if (pairs.length === 0) throw new Error(`"${cellList}" names no cells`)
   return pairs
 }
@@ -83,33 +104,54 @@ Then('it should be listed under the {string} category', async ({ page }, categor
 //
 // THE THREE ASSERTIONS ARE THE POINT OF THIS STEP, and they are three because
 // no one of them notices every mutation acceptance-mutation makes to this
-// column. Which one fires has CHANGED, so read this against the current
-// runner rather than the shapes this comment used to cite.
+// column. WHICH ONE FIRES HAS CHANGED AGAIN, so read this against the current
+// runner rather than against the classes earlier versions of this comment
+// described.
 //
-// acceptance-mutation's mutateCommaList splits the cell on ',' and corrupts
-// one part in place (scripts/acceptance-mutation/mutation-rules.ts). It never
-// removes an item, but what it does to the one it picks moved with the
-// comma-list-mutants-are-all-syntax-breaking slice: stripParenAffixes now
-// exposes the digits inside a "(x, y)" fragment as the integers they are, so
-// every mutant of this column is a SAME-LENGTH coordinate change. Measured
-// over the current table, all 8 rows mutate to a well-formed list of exactly
-// as many pairs, carrying one coordinate the table never named -- "(1, 1)"
-// -> "(4, 1)" for Block. The count passes against that; the first inclusion
-// below is what fails, and before that slice it was exercised by nothing.
+// This column is now routed by VALUE_RULES to the tuple rule
+// (scripts/acceptance-mutation/tuple-list.ts), which parses it as a list of
+// fixed-arity numeric tuples ahead of the flat comma-list rule. It offers two
+// mutation classes, and each is caught by a DIFFERENT one of the inclusions
+// below:
 //
-// The other class is the one this comment used to describe as the only one:
-// "(0, 2)" becoming "(0, )2", a pair the regex above can no longer see, so
-// the EXPECTED list silently gets shorter while the pattern on screen does
-// not -- and "each expected cell is present" passes against a shortened list.
-// The count is what reports it, with the reverse inclusion catching it if the
-// count is removed. It is closed only for the bracket shape written here:
-// stripParenAffixes strips parens and nothing else, so an "[x, y]" or
-// "{a, b}" column would fragment unbalanced exactly as before. Measured at
-// unit level -- 40 seeds per shape, paren 40/40 same-length, square bracket
-// 0/40.
+//   component-change -- one component of one tuple gets a new value, e.g.
+//   "(2, 2)" -> "(2, 10)". The pattern on screen never grows that cell, so
+//   the FIRST inclusion fails: the table names a cell that is not shown.
 //
-// So keep all three regardless of which currently detects what, and keep the
-// count in particular for the auto-wait its own note below describes.
+//   swap-x-y -- one tuple's two components are transposed, e.g. Pulsar's
+//   "(12, 9)" -> "(9, 12)". This is the class the REVERSE inclusion exists
+//   for. When the transposed coordinate is itself already a true cell of the
+//   same pattern -- reachable on 7 of the 8 patterns in this table, and the
+//   Pulsar case above is exactly it, since (9, 12) is a real Pulsar cell --
+//   the mutated table names a strictly SMALLER set than the pattern really
+//   has, every member of which is on screen. "Every named cell is shown"
+//   then passes VACUOUSLY, and only "and nothing else is" reports it. On the
+//   remaining rows the transposed value lands off the shape and the first
+//   inclusion catches it too; do not read that as the reverse inclusion being
+//   redundant, it is the sole killer whenever the swap lands on the shape.
+//
+// THE COUNT NO LONGER CATCHES EITHER CLASS BY ITSELF -- both are same-length
+// by construction (a splice, never an insertion or a deletion), so it passes
+// against both. Keep it anyway, for two reasons that outlive today's rules:
+// it is the auto-wait its own note below describes, and it is what reports a
+// SHORTENED expected list if this column's shape ever stops satisfying the
+// tuple grammar.
+//
+// That last case is not hypothetical, it is merely not this column's today.
+// isTupleList is anchored and total: anything not WHOLLY a fixed-arity list
+// of parenthesised integers falls through to mutateCommaList, which splits on
+// ',' and can corrupt punctuation rather than a coordinate -- "(0, 2)" ->
+// "(0, )2", a pair the regex above can no longer see, so the EXPECTED list
+// silently gets shorter while the pattern on screen does not. A coordinate
+// column can land outside that grammar while still looking exactly like
+// coordinates: measured this pass over 40 seed keys, a half-cell world
+// coordinate of the shape "(-32, -22.5)" -- the app's own default camera
+// offset -- is rejected by isTupleList and shortens a pair-regex's view of it
+// on 30 of 40 mutants. So the old class is history for THIS column and live
+// for the next one. See tuple-list.ts's header and CLAUDE.md's residual
+// paragraph, which state the same boundary from the runner's side.
+//
+// Keep all three regardless of which currently detects what.
 Then(
   /^its live cells relative to the top-left corner of its bounding box should be (.+)$/,
   async ({ page }, cellList: string) => {
