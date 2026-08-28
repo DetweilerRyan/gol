@@ -155,8 +155,9 @@ export function mutateTupleList(value: string, rand: RandomFn, seedKey: string, 
   // offered for 2-tuples -- "swap x and y" is meaningless for a 1-tuple and
   // ambiguous for a 4-tuple. Restricted further to pairs where the two
   // components actually differ: swapping (2, 2) is a byte-identical no-op
-  // mutant, the exact bug class this module's nonzeroDelta/differentChar/
-  // do-while discipline elsewhere exists to prevent.
+  // mutant, the exact bug class this PROGRAM's no-op guards exist to prevent
+  // -- seeded-random.ts's nonzeroDelta and mutation-rules.ts's differentChar
+  // and its do-while retries, none of which live in this module.
   const swapCandidates =
     arity === 2 ? tuples.filter((tuple) => tuple.components[0].text !== tuple.components[1].text) : []
 
