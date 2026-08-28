@@ -51,6 +51,36 @@ interface TupleMatch {
 // outside that shape (including a doubly-parenthesised "((0, 0))", whose
 // outer '(' is not immediately followed by a digit) is rejected rather than
 // partially matched.
+//
+// The components are integer-only (-?\d+), and widening that to
+// -?\d+(?:\.\d+)? -- so a decimal pair like the app's own default camera
+// offset, "(-32, -22.5)" (half-cell, since 900px / 20px is odd) -- was
+// considered and declined. Declined, not merely unconsidered: a paren pair
+// with a decimal component is coordinate-shaped and rejected by this regex
+// today, so it falls through to mutateCommaList, which is no longer
+// paren-aware (stripParenAffixes is gone -- see this file's header) and
+// shatters the punctuation instead of proposing a same-length numeric
+// mutant. That is a measured REGRESSION against the pre-tuple-grammar code
+// for this one shape, not just a shape that "may" break like the rest of
+// the fall-through -- see CLAUDE.md's residual paragraph on this module for
+// the before/after mutant rates. Two things kept the widening from being
+// the obvious fix anyway. First, three copies of this grammar are
+// deliberately mirrored -- this regex, the step's PAIR regex in
+// features/steps/pattern-library.ts, and the byte-identical oracle in each
+// of this module's .test.ts/.property.test.ts -- and the second of those is
+// `product`'s file, so widening here alone would desynchronize the three
+// rather than fix anything; it is a two-role slice or nothing. Second,
+// routing a decimal component into mutateDecimal makes that rule's filed
+// KNOWN DEFECT (magnitude is always exactly 1, independent of precision)
+// reachable from a live path for the first time, where today it isn't.
+// Ruled closed without code in tuple-grammar-rejects-decimal-components:
+// no Examples cell in features/ is paren-delimited with a non-integer
+// component today, and .gherkin-lintrc's no-restricted-patterns bans
+// \boffset ?[xy]\b outright, so the one genuinely fractional quantity this
+// app has is precluded from the contract by the altitude linter rather than
+// merely absent from it. Re-open on either half growing a live path: an
+// Examples cell shaped that way, or any widening of this regex or the
+// step's PAIR regex.
 const TUPLE_LIST_SHAPE = /^\(\s*-?\d+(?:\s*,\s*-?\d+)*\s*\)(?:\s*,\s*\(\s*-?\d+(?:\s*,\s*-?\d+)*\s*\))*$/
 
 // Parses `value` into its tuples' component spans, or returns null if it
