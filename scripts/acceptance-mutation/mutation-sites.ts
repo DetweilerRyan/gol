@@ -64,6 +64,33 @@ const SITE_RENDERERS: Record<SiteKind, SiteRenderer> = {
 // because this is the one place that can see a *cross-kind* collision --
 // two different finders producing the same key -- which is structurally
 // invisible from inside either finder alone.
+//
+// Naming each colliding table's *header* line alongside its data-row line
+// was proposed -- the remedy below acts on a header, the reported lines are
+// data rows -- and ruled against on the measurement rather than the
+// aesthetics. The lines are labelled as the *sites'* lines, and the token
+// the remedy tells you to rename is already spelled out by the seedKey's
+// own last segment, so no number here points a reader at a line to edit;
+// the header is just the first pipe row of the same contiguous table,
+// measured 1-8 rows up across every Examples table on this tree. Two shapes
+// for carrying it were examined and both are premature rather than wrong:
+// an optional `headerLine` on MutationSite puts table vocabulary on a
+// deliberately kind-agnostic type, and a third
+// `Record<SiteKind, (site, doc, lines) => string>` describer registry
+// beside SITE_FINDERS/SITE_RENDERERS keeps that type at four fields for the
+// price of re-deriving a site's own table on the error path only -- viable,
+// and the one to reach for if this is ever revisited.
+//
+// Re-open on exactly one trigger: the slice that registers a second
+// SiteKind, which inherits this message whether it wants to or not. The
+// remedy sentence below is an examples-cell diagnosis sitting in a
+// kind-agnostic function, so a cross-kind collision -- the case this
+// function is placed *here* to catch at all -- would be told it
+// confidently and wrongly. That slice has to rewrite the prose regardless,
+// and it can decide the header-line question against a real second kind
+// instead of guessing one. mutation-sites.test.ts pins this prose by
+// literal restatement rather than import, deliberately (the
+// SCROLLBAR_THICKNESS_PX precedent), so the rewrite lands there too.
 function assertUniqueSeedKeys(sites: MutationSite[]): void {
   const byKey = new Map<string, MutationSite[]>()
   for (const site of sites) {
