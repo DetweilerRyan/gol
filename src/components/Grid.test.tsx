@@ -124,6 +124,21 @@ describe('DOM structure', () => {
     expect(content?.id).toBe(GRID_CONTENT_ID)
   })
 
+  it('renders GridLines as the FIRST child of #grid-content, before the transformed layer', () => {
+    // "First" is load-bearing: CSS paints later-in-DOM on top for two
+    // same-stacking-level absolutely-positioned siblings, so GridLines has to
+    // be earliest in the DOM to stay furthest back, behind every mounted
+    // Cell's own opaque border/background. See GridLines.tsx's own header.
+    const { container } = renderGrid()
+    const content = gridContentEl(container)
+    const firstChild = content.firstElementChild as HTMLElement
+    expect(firstChild.getAttribute('aria-hidden')).toBe('true')
+    expect(firstChild.style.transform).toBe('')
+
+    const layerDiv = content.children[1] as HTMLElement
+    expect(layerDiv.style.transform).toContain('translate(')
+  })
+
   it('#grid-content itself never carries a transform, before or after a pan', () => {
     // Load-bearing: useGridPointerGestures and useWheelInput both call
     // getBoundingClientRect() on #grid-content, so a transform here (rather
@@ -147,7 +162,10 @@ describe('DOM structure', () => {
     // "tile pan-stability" below for that), so it isn't sensitive to whether
     // a re-render happens -- only to what the layer div's style actually is.
     const { container } = renderGrid()
-    const layerDiv = gridContentEl(container).firstElementChild as HTMLElement
+    // children[1], not firstElementChild -- GridLines is the actual first
+    // child (see the DOM-structure test above); the transformed layer div
+    // wrapping GridCells is the second.
+    const layerDiv = gridContentEl(container).children[1] as HTMLElement
     const anchor = computeAnchor(CAMERA, TILE_SPAN_CELLS)
     const { xPx, yPx } = anchorOffsetPx(anchor, CAMERA)
     expect(layerDiv.style.transform).toBe(`translate(${xPx}px, ${yPx}px)`)
@@ -356,7 +374,8 @@ describe('tile pan-stability', () => {
     // describe.
     triggerResize(WIDTH, HEIGHT)
     const beforeCell = screen.getByRole('button', { name: 'Cell 0, 0' })
-    const layerDiv = gridContentEl(container).firstElementChild as HTMLElement
+    // children[1], not firstElementChild -- see the same note above.
+    const layerDiv = gridContentEl(container).children[1] as HTMLElement
     const transformBefore = layerDiv.style.transform
     const classNameBefore = layerDiv.className
 

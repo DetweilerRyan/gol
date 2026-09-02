@@ -9,6 +9,7 @@ import { useRafCoalescedPan } from '../hooks/useRafCoalescedPan'
 import { useWheelInput } from '../hooks/useWheelInput'
 import type { LiveCellStore } from '../liveCellStore'
 import GridCells from './GridCells'
+import GridLines from './GridLines'
 import PatternPreview from './PatternPreview'
 
 export interface GridOverlayContext {
@@ -133,6 +134,13 @@ export default function Grid({
             transform that makes a pan pan-stable-cell-cheap lives one level
             deeper, on the layer div below, which affects only where its
             children paint, not this element's own rect. */}
+        {/* GridLines paints first -- furthest back in stacking order for two
+            same-level absolutely-positioned siblings -- so every mounted Cell's
+            own opaque border/background fully occludes it today. See
+            GridLines.tsx's own header for why it sits here, untransformed,
+            rather than as a background on the transformed layer div below. */}
+        <GridLines camera={camera} />
+
         {/* Grid -> GridCells is a real component edge, kept even though every
             other sibling component was inverted into the overlay slot: cells
             must render *inside* #grid-content, and owning that containment is
