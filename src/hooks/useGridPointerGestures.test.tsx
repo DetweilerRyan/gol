@@ -29,6 +29,7 @@ function renderHarness(overrides: Partial<GridPointerGestureCallbacks> = {}) {
     onPanEnd: vi.fn(),
     onTap: vi.fn(),
     onHover: vi.fn(),
+    onPointerPosition: vi.fn(),
     ...overrides,
   }
   render(<Harness {...callbacks} />)
@@ -186,6 +187,74 @@ describe('trackHover', () => {
     vi.mocked(onHover).mockClear()
 
     fireEvent.pointerMove(surface, { pointerId: 1, clientX: 40, clientY: 0 })
+
+    expect(onHover).not.toHaveBeenCalled()
+  })
+})
+
+// COLLAPSE-DEAD-CELL-LAYER'S CORRECTIVE: keeping the pointer position
+// current while a pan is in flight, without adding a layout read. Written
+// against a SINGLE COARSE pointermove deliberately -- architect measured
+// that a fine-grained drag (many small steps) already lands correctly by
+// luck (each step re-resolves against a camera close enough to current that
+// the error is sub-pixel), which is exactly why it caught nothing. A single
+// event carrying the whole drag distance is the one input shape that can
+// tell "resolves the moved pointer, cached rect, no onHover/onPreviewCell"
+// apart from "coincidentally correct".
+describe('mid-drag pointer position (hover/click agreement corrective)', () => {
+  it('reports onPointerPosition, not onHover, for the single move that crosses the pan threshold', () => {
+    const { surface, onHover, onPointerPosition } = renderHarness({ trackHover: true })
+
+    fireEvent.pointerDown(surface, { pointerId: 1, clientX: 840, clientY: 550 })
+    // One event carrying the whole drag distance -- see this describe's own
+    // header for why this granularity, specifically, is the test.
+    fireEvent.pointerMove(surface, { pointerId: 1, clientX: 760, clientY: 430 })
+
+    expect(onHover).not.toHaveBeenCalled()
+    expect(onPointerPosition).toHaveBeenCalledWith(760, 430)
+  })
+
+  it('reports onPointerPosition for every further move once already panning, still not onHover', () => {
+    const { surface, onHover, onPointerPosition } = renderHarness({ trackHover: true })
+
+    fireEvent.pointerDown(surface, { pointerId: 1, clientX: 840, clientY: 550 })
+    fireEvent.pointerMove(surface, { pointerId: 1, clientX: 760, clientY: 430 }) // crosses threshold
+    vi.mocked(onPointerPosition).mockClear()
+
+    fireEvent.pointerMove(surface, { pointerId: 1, clientX: 700, clientY: 400 })
+
+    expect(onHover).not.toHaveBeenCalled()
+    expect(onPointerPosition).toHaveBeenCalledWith(700, 400)
+  })
+
+  it('resolves the cached rect from pointerdown, not a fresh getBoundingClientRect() call, for the crossing move', () => {
+    const rectSpy = stubBoundingClientRect({ left: 100, top: 50, width: 400, height: 300 })
+    const { surface, onPointerPosition } = renderHarness({ trackHover: true })
+
+    fireEvent.pointerDown(surface, { pointerId: 1, clientX: 840, clientY: 550 })
+    rectSpy.mockClear()
+
+    fireEvent.pointerMove(surface, { pointerId: 1, clientX: 760, clientY: 430 })
+
+    // Rect-relative against the rect cached AT pointerdown (left: 100, top:
+    // 50), and getBoundingClientRect must not have been called again to get
+    // there -- the whole point of caching it (see
+    // useGridPointerGestures.ts's own comment on containerRectRef).
+    expect(onPointerPosition).toHaveBeenCalledWith(760 - 100, 430 - 50)
+    expect(rectSpy).not.toHaveBeenCalled()
+  })
+
+  it('does not call onPreviewCell/onHover for the mid-drag position at all -- preview-during-pan stays out of scope', () => {
+    // onHover is the one callback this hook routes BOTH the indicator and
+    // the armed-pattern preview through (see Grid.tsx's own onHover, which
+    // calls both updateHovered and onPreviewCell) -- proving onHover never
+    // fires mid-drag, above, is what proves the preview never moves either,
+    // without this hook needing to know anything about a preview at all.
+    const { surface, onHover } = renderHarness({ trackHover: true })
+
+    fireEvent.pointerDown(surface, { pointerId: 1, clientX: 840, clientY: 550 })
+    fireEvent.pointerMove(surface, { pointerId: 1, clientX: 760, clientY: 430 })
+    fireEvent.pointerMove(surface, { pointerId: 1, clientX: 700, clientY: 400 })
 
     expect(onHover).not.toHaveBeenCalled()
   })

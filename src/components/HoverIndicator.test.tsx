@@ -1,11 +1,22 @@
 import { render } from '@testing-library/react'
 import { describe, expect, it } from 'vitest'
 import { worldToScreen, type Camera } from '../camera'
-import HoverIndicator from './HoverIndicator'
+import HoverIndicator, { HOVER_INDICATOR_ID } from './HoverIndicator'
 
 const CAMERA: Camera = { offsetX: 0, offsetY: 0, cellSize: 20 }
 
 describe('HoverIndicator', () => {
+  // A stable, non-visual test handle -- see this component's own comment on
+  // HOVER_INDICATOR_ID for why: before this, the only way to reach this
+  // element was its Tailwind paint class, which is a reach-around this repo
+  // otherwise forbids (see rules/no-aliveness-by-paint-class.yml's sibling
+  // reasoning) rather than a sanctioned handle.
+  it('carries a stable id, HOVER_INDICATOR_ID', () => {
+    const { container } = render(<HoverIndicator camera={CAMERA} hovered={{ x: 0, y: 0 }} />)
+    const el = container.firstElementChild as HTMLElement
+    expect(el.id).toBe(HOVER_INDICATOR_ID)
+  })
+
   it('renders nothing when nothing is hovered', () => {
     const { container } = render(<HoverIndicator camera={CAMERA} hovered={null} />)
     expect(container.firstChild).toBeNull()

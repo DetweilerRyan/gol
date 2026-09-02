@@ -21,7 +21,24 @@ export interface GridPointerGestureCallbacks {
   // waiting on a queued animation frame), only that the drag is ending.
   onPanEnd: () => void
   onTap: (pixelX: number, pixelY: number) => void
+  // Fires on a plain hover move -- pointer down or not, but never once a
+  // drag has crossed the pan threshold (see handlePointerMove). This is the
+  // FULL hover contract: the caller uses it to drive both the hover
+  // indicator and the armed-pattern preview.
   onHover: (pixelX: number, pixelY: number) => void
+  // Fires on EVERY pointermove once a drag IS panning (including the exact
+  // move that crosses the threshold), reporting the SAME rect-relative pixel
+  // shape onHover does, from the rect cached at pointerdown rather than a
+  // fresh getBoundingClientRect() call -- see handlePointerMove's own
+  // comment for why that's safe and why this is a separate callback from
+  // onHover rather than onHover with an extra flag: a caller must not treat
+  // this as "the pointer is hovering" and must not drive a placement
+  // preview from it (collapse-dead-cell-layer's hover/click-agreement
+  // corrective is explicit that preview-during-pan stays out of scope). Its
+  // only sanctioned use is keeping a LAST-KNOWN pointer position current for
+  // later re-resolution once the camera itself updates -- see Grid.tsx's own
+  // comment at its call site.
+  onPointerPosition: (pixelX: number, pixelY: number) => void
 }
 
 export interface GridPointerGestures {
@@ -40,9 +57,20 @@ export function useGridPointerGestures({
   onPanEnd,
   onTap,
   onHover,
+  onPointerPosition,
 }: GridPointerGestureCallbacks): GridPointerGestures {
   const dragStateRef = useRef<DragGesture | null>(null)
   const [isPanning, setIsPanning] = useState(false)
+  // The container's own rect, cached once per gesture at pointerdown rather
+  // than re-read via getBoundingClientRect() on every pointermove of a pan
+  // in flight -- #grid-content cannot move while pointer capture holds it
+  // (see handlePointerDown), so the rect taken there is exact for the whole
+  // gesture. This is what lets handlePointerMove keep the pointer position
+  // current DURING a pan (onPointerPosition, below) without adding a
+  // synchronous layout read to the highest-frequency event in the app --
+  // the same cost handlePointerMove's own onHover branch already guards
+  // against for the non-panning case.
+  const containerRectRef = useRef<{ left: number; top: number } | null>(null)
 
   function pointerPixels(e: ReactPointerEvent) {
     return rectRelativePixels(e.currentTarget.getBoundingClientRect(), e.clientX, e.clientY)
@@ -51,35 +79,46 @@ export function useGridPointerGestures({
   function handlePointerDown(e: ReactPointerEvent) {
     e.currentTarget.setPointerCapture(e.pointerId)
     dragStateRef.current = beginDrag(e.clientX, e.clientY)
+    containerRectRef.current = e.currentTarget.getBoundingClientRect()
   }
 
   function handlePointerMove(e: ReactPointerEvent) {
-    // pointermove fires on hover too, not just while a button is pressed, so
-    // onHover needs to run independent of drag state -- EXCEPT once a drag
-    // has actually crossed the pan threshold (dragStateRef.current.isPanning).
-    // An active pan already calls onPan every move, and a plain drag-to-pan
-    // gesture is never "hovering" a cell in any useful sense -- the pointer is
-    // capturing input, not aiming. Skipping onHover there is what keeps
-    // Grid.tsx's now-unconditional trackHover: true (see HoverIndicator.tsx)
-    // from adding a synchronous layout (getBoundingClientRect) to what is
-    // already the highest-frequency event in the app: exactly the cost the
-    // old, isPatternArmed-gated trackHover flag existed to avoid, now paid on
-    // every non-panning move instead of only while a pattern is armed.
-    if (trackHover && !dragStateRef.current?.isPanning) {
-      const { pixelX, pixelY } = pointerPixels(e)
-      onHover(pixelX, pixelY)
+    // advanceDrag runs FIRST, before either hover branch below, so both
+    // branches see the POST-advance isPanning -- including on the exact
+    // move that crosses the drag threshold this call. Checking pre-advance
+    // state here was the corrective's own root cause: the crossing move
+    // would take the "plain hover" branch below (correct only for the
+    // instant before the pan it itself triggers lands), and no later event
+    // ever re-resolved it once the camera actually moved -- see
+    // Grid.tsx's camera-change effect for the other half of that fix.
+    const drag = dragStateRef.current
+    if (drag) {
+      const advance = advanceDrag(drag, e.clientX, e.clientY)
+      dragStateRef.current = advance.gesture
+      // Guarded rather than panning by advanceDrag's zeroed deltas, so a
+      // sub-threshold move doesn't re-render on a camera that didn't move.
+      if (advance.gesture.isPanning) {
+        onPan(advance.panDxPixels, advance.panDyPixels)
+        setIsPanning(true)
+      }
     }
 
-    const drag = dragStateRef.current
-    if (!drag) return
+    if (!trackHover) return
 
-    const advance = advanceDrag(drag, e.clientX, e.clientY)
-    dragStateRef.current = advance.gesture
-    // Guarded rather than panning by advanceDrag's zeroed deltas, so a
-    // sub-threshold move doesn't re-render on a camera that didn't move.
-    if (advance.gesture.isPanning) {
-      onPan(advance.panDxPixels, advance.panDyPixels)
-      setIsPanning(true)
+    if (dragStateRef.current?.isPanning) {
+      // Mid-drag (including the crossing move above): keep the pointer
+      // position current via the CACHED rect, never a fresh
+      // getBoundingClientRect() call -- and never onHover, since a pan in
+      // flight is not "hovering" a cell and must not drive
+      // onPreviewCell (see this callback's own doc comment).
+      if (containerRectRef.current) {
+        const { pixelX, pixelY } = rectRelativePixels(containerRectRef.current, e.clientX, e.clientY)
+        onPointerPosition(pixelX, pixelY)
+      }
+    } else {
+      // Plain hover, or a sub-threshold drag that has not become a pan yet.
+      const { pixelX, pixelY } = pointerPixels(e)
+      onHover(pixelX, pixelY)
     }
   }
 
@@ -101,6 +140,7 @@ export function useGridPointerGestures({
       onTap(pixelX, pixelY)
     }
     dragStateRef.current = null
+    containerRectRef.current = null
     setIsPanning(false)
   }
 
@@ -108,6 +148,7 @@ export function useGridPointerGestures({
     onPanEnd()
     releaseCapture(e)
     dragStateRef.current = null
+    containerRectRef.current = null
     setIsPanning(false)
   }
 

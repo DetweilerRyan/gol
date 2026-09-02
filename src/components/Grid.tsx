@@ -1,4 +1,4 @@
-import { useState, useRef, type KeyboardEvent, type ReactNode } from 'react'
+import { useLayoutEffect, useState, useRef, type KeyboardEvent, type ReactNode } from 'react'
 import { screenToWorld, type Camera, type WheelInput } from '../camera'
 import { computeVisibleRange, type VisibleRange } from '../gridGeometry'
 import type { FocusDirection } from '../gridFocus'
@@ -128,6 +128,66 @@ export default function Grid({
     setHovered((prev) => (prev !== null && prev.x === x && prev.y === y ? prev : { x, y }))
   }
 
+  // THE HOVER/CLICK-AGREEMENT COROLLARY (corrective, collapse-dead-cell-layer):
+  // `hovered` above is a resolved WORLD cell, updated only when something
+  // ACTUALLY calls updateHovered. That used to be pointermove alone, which
+  // is exactly the gap architect's ADJUDICATE ruling measured -- a wheel-pan,
+  // a coarse drag, or an arrow-key reveal-pan all move `camera` with no
+  // pointermove of their own, so the indicator kept rendering the LAST
+  // resolved world cell through worldToScreen while it silently rode the
+  // panned content away from a pointer that never moved. See
+  // HoverIndicator.tsx's own header for the measured numbers.
+  //
+  // The fix is the one sentence the ruling states as the whole brief: the
+  // indicator is screenToWorld(CURRENT camera, CURRENT pointer pixels), same
+  // as a click, at the same instant. `camera` is already a prop this
+  // component re-renders on; what's missing is the CURRENT pointer pixels,
+  // which onHover only captures while it's actually firing. lastPointerPixelsRef
+  // closes that: every pointer position update (onHover -- not panning -- or
+  // onPointerPosition -- mid-drag, see useGridPointerGestures.ts) stashes the
+  // rect-relative pixels here, and this effect re-resolves `hovered` from
+  // them whenever `camera` itself changes, regardless of why.
+  //
+  // WHY A REF FOR THE PIXELS, NOT useState. Raw pixels change on every
+  // pointermove -- the highest-frequency event in the app, and this slice
+  // cannot run test:perf to catch a regression there. Putting them in state
+  // would re-render Grid on every pixel of travel; a ref lets
+  // lastPointerPixelsRef.current update with no render at all, and the only
+  // render this produces is the one updateHovered's own identity-deduped
+  // setter already causes when the resolved CELL (not the pixel) actually
+  // changes -- see that setter's own mutation-scan comment above, untouched
+  // by this addition.
+  //
+  // WHY useLayoutEffect, NOT a plain useEffect or render-time state
+  // adjustment (the pattern useCellTiles.ts/useGridFocus.ts's one-shot
+  // centering both use for a camera-derived value). A plain effect would
+  // let one frame commit and paint with the STALE indicator position before
+  // this ever ran, which is a real, if brief, visible flash on the commonest
+  // gesture there is (wheel-pan). Render-time adjustment (comparing `camera`
+  // against a remembered previous value and calling setState synchronously
+  // inside the render body) avoids that extra frame entirely, but it means
+  // duplicating updateHovered's own dedup ternary at a second call site for
+  // a saving that is invisible to a user either way -- useLayoutEffect fires
+  // synchronously after the DOM update but BEFORE the browser paints, so
+  // there is no visible flash, at the cost of one extra (pre-paint) commit
+  // React already schedules for free. That trade matches this hook's own
+  // pendingDomFocusRef sync effect one file over (useGridFocus.ts), which
+  // reads the same way for the same reason.
+  //
+  // WHY THIS ALSO CLOSES THE ARROW-KEY REVEAL-PAN GAP, FOR FREE:
+  // useGridFocus.moveFocus's panToRevealPx calls this component's own onPan,
+  // which -- like a wheel-pan or a drag -- only ever surfaces here as a
+  // change to the `camera` PROP. This effect does not know or care which of
+  // the three caused that change; it only asks "is this a new camera", so
+  // the same fix covers all three without a fourth call site.
+  const lastPointerPixelsRef = useRef<{ pixelX: number; pixelY: number } | null>(null)
+  useLayoutEffect(() => {
+    const pixels = lastPointerPixelsRef.current
+    if (pixels === null) return
+    const { x, y } = screenToWorld(camera, pixels.pixelX, pixels.pixelY)
+    updateHovered(x, y)
+  }, [camera])
+
   // Single-shot stamping (disarming immediately after a placement) belongs to
   // whoever owns the placement state -- usePatternPlacement's
   // stampArmedPattern -- not here: this branch only decides which of the two
@@ -206,6 +266,7 @@ export default function Grid({
       // toggle. useGridFocus's setFocus is what puts focus back on it.
     },
     onHover: (pixelX, pixelY) => {
+      lastPointerPixelsRef.current = { pixelX, pixelY }
       const { x, y } = screenToWorld(camera, pixelX, pixelY)
       updateHovered(x, y)
       // Called unconditionally now that this runs on every hover move, not
@@ -218,6 +279,19 @@ export default function Grid({
       // reaches -- an isPatternArmed guard here would only be defending
       // against a cost that provably doesn't exist.
       onPreviewCell(x, y)
+    },
+    // Mid-drag only (see useGridPointerGestures.ts's own doc comment on this
+    // callback) -- keeps lastPointerPixelsRef current WITHOUT resolving a
+    // world cell or touching onPreviewCell here. The indicator itself
+    // catches up once the camera-change effect above fires, which is what
+    // actually re-resolves `hovered` -- deliberately not done here too, so
+    // there is exactly one call site that turns pixels into a world cell
+    // during a pan (the effect), not two that could disagree on timing.
+    // Preview-during-pan is unchanged and out of scope for this fix: a
+    // brief mid-drag divergence between the indicator and an armed
+    // pattern's preview is accepted (see this slice's corrective handoff).
+    onPointerPosition: (pixelX, pixelY) => {
+      lastPointerPixelsRef.current = { pixelX, pixelY }
     },
   })
 
@@ -282,8 +356,15 @@ export default function Grid({
         // entirely -- the one case trackHover's own pointermove-driven
         // updateHovered can't reach, since there's no move event once the
         // pointer is off the element. Mirrors what CSS :hover used to do for
-        // free on every dead cell's own hover: class before this slice.
-        onPointerLeave={() => setHovered(null)}
+        // free on every dead cell's own hover: class before this slice. Also
+        // clears lastPointerPixelsRef, not just `hovered` -- otherwise a
+        // camera change AFTER the pointer has left (a wheel-pan reachable
+        // with the mouse off the grid entirely) would resurrect the
+        // indicator at a stale position via the camera-change effect above.
+        onPointerLeave={() => {
+          lastPointerPixelsRef.current = null
+          setHovered(null)
+        }}
         className={`absolute inset-0 touch-none ${isPanning ? 'cursor-grabbing' : 'cursor-grab'}`}
       >
         {/* NO transform here -- #grid-content's client rect is load-bearing.

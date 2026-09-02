@@ -15,6 +15,7 @@ import {
 import { gridContentEl } from '../test-support/gridDom'
 import Cell from './Cell'
 import Grid, { GRID_CONTENT_ID } from './Grid'
+import { HOVER_INDICATOR_ID } from './HoverIndicator'
 
 // Automocked with `spy: true` (Vitest 4's sanctioned way to spy on a
 // component the SUT imports directly, since a bare vi.spyOn on a named ESM
@@ -353,33 +354,82 @@ describe('wheel and preview wiring', () => {
 // (children[2]: GridLines, the transformed layer div, then this -- it has no
 // ARIA role by design, so it can't be reached via screen.getByRole).
 describe('hover indicator wiring', () => {
+  function hoverIndicator(container: HTMLElement): HTMLElement | null {
+    return gridContentEl(container).querySelector(`#${HOVER_INDICATOR_ID}`)
+  }
+
   it('positions the hover indicator at screenToWorld(camera, ...) on pointermove', () => {
     const { container } = renderGrid()
     const grid = gridContentEl(container)
 
     fireEvent.pointerMove(grid, { pointerId: 1, clientX: 20, clientY: 30 })
 
-    const indicator = gridContentEl(container).children[2] as HTMLElement
+    const indicator = hoverIndicator(container)!
     const expected = screenToWorld(CAMERA, 20, 30)
     expect(indicator.style.transform).toBe(expectedTransform(CAMERA, expected.x, expected.y))
   })
 
   it('renders no indicator at all before any hover has been reported', () => {
     const { container } = renderGrid()
-    // GridLines, then the transformed layer div -- nothing else yet, since
-    // HoverIndicator returns null for a null `hovered`.
-    expect(gridContentEl(container).children).toHaveLength(2)
+    expect(hoverIndicator(container)).toBeNull()
   })
 
   it('clears the indicator when the pointer leaves #grid-content', () => {
     const { container } = renderGrid()
     const grid = gridContentEl(container)
     fireEvent.pointerMove(grid, { pointerId: 1, clientX: 20, clientY: 30 })
-    expect(gridContentEl(container).children).toHaveLength(3)
+    expect(hoverIndicator(container)).not.toBeNull()
 
     fireEvent.pointerLeave(grid)
 
-    expect(gridContentEl(container).children).toHaveLength(2)
+    expect(hoverIndicator(container)).toBeNull()
+  })
+
+  // THE WHEEL-ROUTE REGRESSION TEST, written first per this fix's own
+  // ordering (see this slice's corrective handoff): a wheel-pan moves
+  // `camera` with NO pointermove of its own, so the pointer never reports a
+  // new position -- recomputing the indicator from `camera` alone, against
+  // the LAST pointer position already on file, is sufficient and is the
+  // whole fix. Before the fix, the indicator kept rendering the world cell
+  // resolved at the ORIGINAL pointermove and silently rode the panned
+  // content away from a pointer that never moved -- see HoverIndicator.tsx's
+  // own header for the measured, then-shipped defect this closes
+  // (architect ADJUDICATE).
+  //
+  // rerenderWith, not a real wheel event: useWheelInput's own translation
+  // from a native wheel event to a new `camera` prop is that hook's own
+  // tested contract (useWheelInput.test.ts) and LifeBoard's
+  // (useCamera.test.ts) -- what belongs here is only "given `camera` changed
+  // by ANY means, does the indicator re-resolve", which a direct prop change
+  // states more precisely than reconstructing a wheel event would.
+  it('re-resolves the indicator against a new camera with no further pointermove -- the wheel-pan route', () => {
+    const { container, rerenderWith } = renderGrid()
+    const grid = gridContentEl(container)
+
+    fireEvent.pointerMove(grid, { pointerId: 1, clientX: 20, clientY: 30 })
+    const before = hoverIndicator(container)!.style.transform
+
+    // A wheel-pan large enough to move the resolved cell: 130px at
+    // cellSize=20 is 6.5 cells, well past a single-cell rounding wobble.
+    const pannedCamera: Camera = { ...CAMERA, offsetY: CAMERA.offsetY + 130 / CAMERA.cellSize }
+    rerenderWith({ camera: pannedCamera })
+
+    const indicator = hoverIndicator(container)!
+    const expected = screenToWorld(pannedCamera, 20, 30)
+    expect(indicator.style.transform).toBe(expectedTransform(pannedCamera, expected.x, expected.y))
+    expect(indicator.style.transform).not.toBe(before)
+  })
+
+  it('stays cleared across a camera change once the pointer has left the grid, rather than resurrecting a stale position', () => {
+    const { container, rerenderWith } = renderGrid()
+    const grid = gridContentEl(container)
+    fireEvent.pointerMove(grid, { pointerId: 1, clientX: 20, clientY: 30 })
+    fireEvent.pointerLeave(grid)
+    expect(hoverIndicator(container)).toBeNull()
+
+    rerenderWith({ camera: { ...CAMERA, offsetY: CAMERA.offsetY + 130 / CAMERA.cellSize } })
+
+    expect(hoverIndicator(container)).toBeNull()
   })
 })
 
