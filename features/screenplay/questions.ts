@@ -172,6 +172,21 @@ export async function cellState(page: Page, x: number, y: number): Promise<'aliv
 // Counts only MOUNTED live cells -- the grid is infinite, so there is no such
 // thing as counting all of them. Sound wherever every cell that could change
 // is inside the mounted window.
+//
+// AND THE MOUNTED SET IS NOT A WINDOW, which is the trap this note exists for.
+// It is the live cells in range PLUS the cursor's own cell, wherever that is --
+// deliberately, since that one extra element is what keeps the grid reachable
+// by Tab once a pan has carried the cursor off screen. So this count can
+// include an off-window cell and then silently drop it, and the drop is caused
+// by the cursor MOVING rather than by any cell dying.
+//
+// Two consequences, both learned the expensive way. A before/after pair of
+// readings means nothing unless the cursor is the same in both -- park it first
+// (tasks.ts's parkKeyboardCursorAt) and the readings compare like with like.
+// And seeding by pointer parks the cursor on the LAST cell clicked, so a Given
+// whose final click lands off screen leaves this count carrying an extra that
+// the next cursor move will take away. A Given whose final click happens to
+// land in view is not safe, only lucky.
 export function aliveCellCount(page: Page): Promise<number> {
   return aliveCells(page).count()
 }

@@ -33,6 +33,8 @@ import {
   clickGridAt,
   originDisplacement,
   originRulerPx,
+  parkKeyboardCursorAt,
+  rovingCell,
   ORIGIN_RULER_X,
   ORIGIN_RULER_Y,
   cellScreenPosition,
@@ -108,6 +110,26 @@ async function balancedAxes(page: Page): Promise<{ x: boolean; y: boolean }> {
 Given('a camera centered on the origin at the default zoom', async ({ page }) => {
   await openGrid(page)
   await expect.poll(() => zoomPercent(page)).toBe(100)
+
+  // THE COUNT ROUND-TRIP BELOW IS ONLY STABLE IF THE CURSOR DOES NOT MOVE
+  // ACROSS IT, so the cursor is put where this step is about to click before
+  // the first reading is taken.
+  //
+  // The mounted set is not a window: it is the live cells in range PLUS the
+  // cursor's own cell, wherever that is, which is what keeps the grid reachable
+  // by Tab after a pan carries the cursor off screen. A preceding Given that
+  // seeded an off-screen cell last -- grid-scrollbars' 200-cells-across one
+  // does exactly that -- leaves the cursor out there on a LIVE cell, so it is
+  // mounted and counted. The first click below would then move the cursor, that
+  // cell would silently leave the DOM, and the closing count would be short by
+  // one through no fault of the two clicks it is checking.
+  //
+  // Parking is two clicks on one cell, which the pointer route makes net-zero
+  // on the board while still moving the cursor. Asserted rather than assumed:
+  // if the park ever stops landing, the count guard must not be the thing that
+  // reports it, because it would report it as a failure of something else.
+  await parkKeyboardCursorAt(page, 0, 0)
+  expect(await rovingCell(page)).toEqual([0, 0])
 
   const liveBefore = await aliveCellCount(page)
   await clickGridAt(page, CENTER)
