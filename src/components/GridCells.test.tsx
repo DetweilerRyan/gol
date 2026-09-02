@@ -89,6 +89,25 @@ describe('GridCells focus pass-through', () => {
     expect(screen.getByRole('button', { name: 'Cell -1, -1' }).tabIndex).toBe(0)
     expect(screen.getByRole('button', { name: 'Cell 0, 0' }).tabIndex).toBe(-1)
   })
+
+  // The pair above never puts x and y on opposite sides of a match/mismatch
+  // (both coordinates agree or both disagree), which is exactly the case
+  // the isFocused comparison's `&&` needs one-sided agreement to prove: a
+  // scoped mutation scan found `x === focus.x && y === focus.y` survives as
+  // `||`, and survives with either side hard-coded to `true`, against that
+  // pair alone. These two cells each match focus on exactly one axis.
+  it('a cell sharing only one coordinate with focus is not the tab stop, on either axis', () => {
+    const cells: WindowCell[] = [
+      { key: cellKey(5, 3), x: 5, y: 3, isAlive: true }, // the focus cell itself
+      { key: cellKey(5, 0), x: 5, y: 0, isAlive: true }, // x matches, y does not
+      { key: cellKey(1, 3), x: 1, y: 3, isAlive: true }, // y matches, x does not
+    ]
+    renderCells({ cells, focus: { x: 5, y: 3 } })
+
+    expect(screen.getByRole('button', { name: 'Cell 5, 3' }).tabIndex).toBe(0)
+    expect(screen.getByRole('button', { name: 'Cell 5, 0' }).tabIndex).toBe(-1)
+    expect(screen.getByRole('button', { name: 'Cell 1, 3' }).tabIndex).toBe(-1)
+  })
 })
 
 // THE IN-GATE GUARD FOR THE SLICE'S ENTIRE PREMISE: an empty board no longer

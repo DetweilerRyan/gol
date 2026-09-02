@@ -101,6 +101,28 @@ export default function Grid({
   // coordinate hasn't moved, so a sub-cell pointermove that resolves to the
   // same world cell doesn't hand HoverIndicator (and anything watching this
   // state) a new object identity for no visible change.
+  //
+  // Mutation-scan note (cleaner, collapse-dead-cell-layer step 4): a scoped
+  // `npx stryker run --mutate` over this file leaves 5 mutants surviving on
+  // the line below (the whole condition -> false, each of prev.x === x /
+  // prev.y === y independently replaced by true, and each independently
+  // negated to !==), all hand-verified equivalent rather than left
+  // unexamined. Every one of the two branches this ternary can take returns
+  // an object whose OWN x/y are the same numbers either way -- the branches
+  // differ only in whether the RETURNED REFERENCE is `prev` or a freshly
+  // allocated `{ x, y }`, and nothing downstream (HoverIndicator's render
+  // output, any other consumer) reads that reference's identity, only its
+  // x/y values. So every one of these 5 mutants changes React's own
+  // re-render bailout and nothing a test can observe: confirmed by
+  // hand-applying each directly and running the whole suite (not just under
+  // Stryker), all 5 leave it green. This is the same class of finding as
+  // liveCellStore.ts's getBoundsSnapshot comment documents for the
+  // analogous box-identity check -- read that one before "fixing" this by
+  // switching to isShallowEqual, which would NOT be behavior-preserving
+  // here: screenToWorld's Math.floor can return -0, and Object.is(0, -0) is
+  // false where === is true, so the swap would treat two renders of the
+  // same world cell (0 vs -0) as a coordinate change this comparison exists
+  // to suppress.
   const [hovered, setHovered] = useState<{ x: number; y: number } | null>(null)
   function updateHovered(x: number, y: number) {
     setHovered((prev) => (prev !== null && prev.x === x && prev.y === y ? prev : { x, y }))

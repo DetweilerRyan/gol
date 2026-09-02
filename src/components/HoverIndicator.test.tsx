@@ -18,6 +18,11 @@ describe('HoverIndicator', () => {
     expect(el.style.transform).toBe(`translate(${left}px, ${top}px)`)
     expect(el.style.width).toBe(`${CAMERA.cellSize}px`)
     expect(el.style.height).toBe(`${CAMERA.cellSize}px`)
+    // Same direct style-property assertion Cell.test.tsx and
+    // PatternPreview.test.tsx both make for their own boxSizing -- a scoped
+    // mutation scan found this one unguarded (StringLiteral 'border-box' ->
+    // '').
+    expect(el.style.boxSizing).toBe('border-box')
   })
 
   it('recomputes its position on a re-render with a new hovered cell', () => {
