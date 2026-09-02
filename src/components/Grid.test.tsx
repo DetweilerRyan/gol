@@ -49,8 +49,9 @@ vi.mock('./Cell', { spy: true })
 // underStryker gates one test in the "tile pan-stability" describe below --
 // see that site's own comment for why. globalThis.__stryker__ is set at module load
 // by any instrumented file's own bootstrap, before test collection, so it
-// reliably distinguishes a mutation-testing run from a normal one (see
-// useLiveCell.test.ts for the precedent).
+// reliably distinguishes a mutation-testing run from a normal one -- the
+// same pattern useLiveCell.test.ts's own resubscription test used, before
+// this slice's step 5 retired that file along with useLiveCell.ts itself.
 const underStryker = '__stryker__' in globalThis
 
 let resizeObserver: ResizeObserverController

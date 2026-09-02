@@ -33,4 +33,3 @@ export function cellSelector(x: number, y: number): string {
 }
 
 export const ALIVE_CELL_SELECTOR = `${CELL_SELECTOR}[${CELL_ALIVE_ATTR}="${CELL_ALIVE_VALUE}"]`
-export const DEAD_CELL_SELECTOR = `${CELL_SELECTOR}[${CELL_ALIVE_ATTR}="${CELL_DEAD_VALUE}"]`
