@@ -255,18 +255,29 @@ export async function viewportBox(page: Page): Promise<{ width: number; height: 
   return size
 }
 
-// WHAT THE GRID ANNOUNCES WHEN THE FOCUS LANDS ON A CELL, read from the
-// accessible description the focus cursor points at with aria-describedby --
-// the same channel, and the same by-id resolution, that
+// WHETHER THE CELL UNDER THE FOCUS IS ALIVE, in the domain's own word, read
+// from the accessible description the focus cursor points at with
+// aria-describedby -- the same channel, and the same by-id resolution, that
 // visibleProportionPercent already reads a scrollbar's proportion through.
 //
 // NOT aria-pressed. That attribute is the right ARIA state for a toggle and
 // stays exactly where it is, but what it makes a screen reader say is
 // "pressed" / "not pressed", which says nothing about a cell being alive. With
-// dead cells no longer rendered, this announcement is the entire channel a
+// dead cells no longer rendered, this description is the entire channel a
 // keyboard-only player has for reading the board, so it has to carry the
-// domain word. Returned whole rather than parsed: the caller checks that the
-// coordinate and the state word are both in it and pins no other wording.
+// domain word.
+//
+// THE DESCRIPTION CARRIES THE STATE AND NOT THE COORDINATE, deliberately, and
+// this is the one thing to preserve if it is ever rewritten. The coordinate is
+// already the focus cursor's accessible NAME, which a screen reader announces
+// on landing; repeating it here would produce "Cell 1, 0, button, not pressed,
+// Cell 1, 0 dead" -- the same double announcement a live region was rejected
+// for, one channel over. The scenario that reads this asks focusedCell above
+// for the coordinate and this function for the state, so both halves are still
+// READ off the page and neither is reconstructed from what was expected.
+//
+// Returned whole rather than parsed: the caller checks the state word is in it
+// and pins no other wording.
 export async function focusedCellAnnouncement(page: Page): Promise<string> {
   const describedBy = (await focusedCellElement(page).getAttribute('aria-describedby')) ?? ''
   const ids = describedBy.split(/\s+/).filter(Boolean)

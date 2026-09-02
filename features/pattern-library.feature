@@ -29,6 +29,21 @@ Feature: Pattern library
     And the cell at (5, 6) should be alive
     And the cell at (6, 6) should be alive
 
+  # The keyboard route and the pointer route mean the same thing with the same
+  # pattern armed: this scenario is the keyboard half of the stamp above, and it
+  # lives here rather than in keyboard-grid-navigation.feature because arming a
+  # pattern is this feature's vocabulary. The focus steps it borrows are defined
+  # once, in keyboard-grid-navigation.ts.
+  Scenario: Pressing Enter with a pattern armed stamps it at the focused cell
+    Given an empty grid
+    And I have armed the "Block" pattern
+    And the cell at (5, 5) has keyboard focus
+    When I press Enter
+    Then the cell at (5, 5) should be alive
+    And the cell at (6, 5) should be alive
+    And the cell at (5, 6) should be alive
+    And the cell at (6, 6) should be alive
+
   Scenario: Placing a pattern merges with existing live cells rather than replacing them
     Given a live cell at (20, 20)
     When I place the "Block" pattern with its top-left corner at (5, 5)

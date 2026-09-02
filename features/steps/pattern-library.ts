@@ -185,3 +185,11 @@ When(
     await clickCell(page, x, y)
   },
 )
+
+// Arms a pattern and leaves it armed, with no cell chosen yet -- the "I place
+// the ... pattern" step above both arms AND aims in one act, which cannot
+// express a stamp aimed by the keyboard instead of by the pointer.
+Given('I have armed the {string} pattern', async ({ page }, name: string) => {
+  await openGrid(page)
+  await selectPattern(page, name)
+})

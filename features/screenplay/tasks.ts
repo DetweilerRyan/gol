@@ -80,9 +80,15 @@ export async function clickCell(page: Page, x: number, y: number) {
 // questions.ts's focusedCell, and deliberately not shared between them: the
 // layering under the barrel runs tasks -> elements/interactions/viewport and
 // has no tasks -> questions edge (see this file's header), so importing the
-// Question would put a cycle-shaped edge on the graph for one regex. If a
-// third reader ever appears, the shared home is elements.ts, not an import
-// across this line.
+// Question would put a cycle-shaped edge on the graph for one regex.
+//
+// THE RATIFIED HOME FOR THE SHARED FORM IS src/test-support/cellQuery.ts -- a
+// parseCellLabel beside the cellLabel it inverts, on the scrollbarQuery.ts
+// precedent where a parser lives next to its builder precisely so the two
+// encodings cannot drift. That file is outside product's write boundary, so
+// both copies here stay until the slice that adds it; do not consolidate them
+// into elements.ts instead, which an earlier draft of this comment suggested
+// before the ruling.
 const FOCUSED_CELL_LABEL = /^Cell (-?\d+), (-?\d+)$/
 
 async function focusedCellCoordinate(page: Page): Promise<[number, number] | null> {
@@ -95,11 +101,14 @@ async function focusedCellCoordinate(page: Page): Promise<[number, number] | nul
 // Puts the keyboard focus on one named cell, by the route a keyboard player
 // actually takes: tab onto the grid, then step there with the arrow keys.
 //
-// It STEERS rather than assumes -- it reads where the tab landed and walks the
-// difference -- so it works whether or not the grid remembers a previous
-// position, and whether or not a pointer click moves the cursor. Both of those
-// are behaviours the scenarios above state in their own right; a task that
-// baked either one in would make them assert themselves.
+// IT STEERS RATHER THAN ASSUMES -- it reads where the tab actually landed and
+// walks the difference -- and that is a PRESERVATION CONSTRAINT, not an
+// implementation detail to simplify away. Two accepted decisions are reachable
+// only because this function assumes neither of them: the grid remembers the
+// cell that last had focus, and a pointer click makes the clicked cell the one
+// the keyboard is on. A "cheaper" rewrite that hardcoded a landing cell of
+// (0, 0) would silently TAKE both decisions as premises, and the two scenarios
+// that state them would then be asserting themselves.
 export async function focusGridCell(page: Page, x: number, y: number) {
   await blurFocus(page)
   await tabForward(page)

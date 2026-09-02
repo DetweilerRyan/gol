@@ -3,7 +3,7 @@ Feature: Keyboard grid navigation
   I want a focus cursor I can move around the grid and toggle the cell it rests on
   So that I can build and edit patterns without a pointing device
 
-  Scenario: Tabbing onto the grid stops on the cell in the middle of the view
+  Scenario: Tabbing onto a freshly opened grid stops on the cell at the center of the default view
     Given an empty grid
     When I tab forward onto the grid
     Then the focused cell should be (0, 0)
@@ -19,6 +19,12 @@ Feature: Keyboard grid navigation
     And the cell at (4, -2) has keyboard focus
     When I tab away from the grid and back
     Then the focused cell should be (4, -2)
+
+  Scenario: Clicking a cell makes it the cell the keyboard comes back to
+    Given an empty grid
+    And I have clicked the cell at (7, 2)
+    When I tab forward onto the grid
+    Then the focused cell should be (7, 2)
 
   # Every Examples column in this file has a name of its own, including the two
   # that carry the same kind of value as another table's: npm run
@@ -54,7 +60,7 @@ Feature: Keyboard grid navigation
     Given an empty grid
     And the cell at the left edge of the view has keyboard focus
     When I move the focus left
-    Then the focused cell should be in view
+    Then the focused cell should be one cell further left and still in view
 
   Scenario: Pressing Enter brings the focused cell to life
     Given an empty grid

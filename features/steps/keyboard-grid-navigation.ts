@@ -20,6 +20,12 @@
 // does to a cell is stated in the same words the pointer route already uses,
 // so the two routes cannot drift into two different vocabularies for one fact.
 //
+// STEPS THIS MODULE LENDS OUT. "the cell at (<x>, <y>) has keyboard focus" and
+// "I press <key>" are also used by pattern-library.feature, whose keyboard-stamp
+// scenario needs a focused cell and an Enter. They are defined here, not there,
+// because keyboard focus is what they are about -- and no import expresses that
+// dependency, because the registry is what shares them.
+//
 // WHAT "THE FOCUSED CELL" IS OBSERVED THROUGH. Only live cells have an element
 // of their own once this slice lands, so the focus cursor -- not a per-cell
 // button -- is what carries the coordinate and the aliveness of wherever the
@@ -29,6 +35,7 @@
 import { createBdd } from 'playwright-bdd'
 import { expect } from '@playwright/test'
 import {
+  clickCell,
   DEFAULT_CELL_SIZE_PX,
   focusedCell,
   focusedCellAnnouncement,
@@ -47,7 +54,8 @@ import {
 
 const { Given, When, Then } = createBdd()
 
-const FOCUS_ROW = 'row the focus started on'
+const FOCUS_START_X = 'column the focus started on'
+const FOCUS_START_Y = 'row the focus started on'
 
 Given('the grid has keyboard focus', async ({ page }) => {
   await openGrid(page)
@@ -58,14 +66,33 @@ Given('the grid has keyboard focus', async ({ page }) => {
 Given('the cell at \\({int}, {int}\\) has keyboard focus', async ({ page }, x, y) => {
   await openGrid(page)
   await focusGridCell(page, x, y)
-  remember(page, FOCUS_ROW, y)
+  remember(page, FOCUS_START_X, x)
+  remember(page, FOCUS_START_Y, y)
   expect(await focusedCell(page)).toEqual([x, y])
 })
 
 Given('the cell at the left edge of the view has keyboard focus', async ({ page }) => {
   await openGrid(page)
-  const [, y] = await focusEdgeCellInView(page, 'left')
-  remember(page, FOCUS_ROW, y)
+  // BOTH coordinates, and the x is the load-bearing one: the easiest wrong
+  // implementation of the next scenario clamps the focus AT the edge, which
+  // leaves it on a cell that is trivially in view. Remembering where the jump
+  // landed is what lets the Then name the cell the move must have reached.
+  const [x, y] = await focusEdgeCellInView(page, 'left')
+  remember(page, FOCUS_START_X, x)
+  remember(page, FOCUS_START_Y, y)
+})
+
+// "CLICKED" RATHER THAN "TOGGLED", and the near-duplicate npm run gherkin-dry
+// reports against cell-life-and-death's "I toggle the cell at (<x>, <y>)" is
+// considered and kept. They are not two words for one thing here: toggling is
+// what happens to the CELL and either route does it, while this scenario's
+// whole claim is that the POINTER route is what set the cell the keyboard is
+// on. Phrasing it as a toggle would leave the scenario unable to say which
+// route it meant, and it would be satisfied by the keyboard route it exists to
+// distinguish itself from.
+Given('I have clicked the cell at \\({int}, {int}\\)', async ({ page }, x, y) => {
+  await openGrid(page)
+  await clickCell(page, x, y)
 })
 
 When('I tab forward onto the grid', async ({ page }) => {
@@ -114,7 +141,7 @@ Then(
   async ({ page }, direction: string) => {
     const focused = await focusedCell(page)
     expect(focused, 'no cell is focused, so nothing jumped to an edge').not.toBeNull()
-    expect(focused![1]).toBe(recall(page, FOCUS_ROW))
+    expect(focused![1]).toBe(recall(page, FOCUS_START_Y))
 
     const box = await focusedCellBox(page)
     const viewport = await viewportBox(page)
@@ -130,7 +157,17 @@ Then(
   },
 )
 
-Then('the focused cell should be in view', async ({ page }) => {
+// TWO CLAUSES, AND THE FIRST IS WHY THIS STEP EXISTS IN THIS SHAPE. "Still in
+// view" alone is satisfied by an implementation that simply refuses to move the
+// focus past the edge -- the cursor stays on the edge cell, the edge cell is in
+// view, green. Naming the cell the move must have landed on is the positive
+// anchor that makes the absence clause mean something; the Home/End step above
+// is anchored the same way, by its row.
+Then('the focused cell should be one cell further left and still in view', async ({ page }) => {
+  const focused = await focusedCell(page)
+  expect(focused, 'no cell is focused, so nothing moved').not.toBeNull()
+  expect(focused).toEqual([recall(page, FOCUS_START_X) - 1, recall(page, FOCUS_START_Y)])
+
   const box = await focusedCellBox(page)
   const viewport = await viewportBox(page)
   expect(box.x).toBeGreaterThanOrEqual(0)
@@ -139,12 +176,14 @@ Then('the focused cell should be in view', async ({ page }) => {
   expect(box.y + box.height).toBeLessThanOrEqual(viewport.height)
 })
 
-// Both halves are read off ONE announced string, and neither is reconstructed
-// by this module: a mutated <x>, <y> or <state> cell fails on the half it
-// touched. Containment rather than equality, so the announcement may carry
-// ordinary connecting prose without this step pinning its wording.
+// TWO CHANNELS, TWO READS, and neither value is reconstructed by this module:
+// the coordinate comes from the cursor's accessible name and the state from its
+// accessible description. A mutated <announced x>, <announced y> or <state>
+// cell still fails on exactly the clause it touched, so splitting the read
+// costs no mutation sensitivity -- the requirement was two READ strings, never
+// one node. Reading both off one node would announce the coordinate twice; see
+// focusedCellAnnouncement's header for why that was rejected.
 Then('the grid should announce the cell at \\({int}, {int}\\) as {word}', async ({ page }, x, y, state: string) => {
-  const announcement = await focusedCellAnnouncement(page)
-  expect(announcement).toContain(`Cell ${x}, ${y}`)
-  expect(announcement).toContain(state)
+  expect(await focusedCell(page)).toEqual([x, y])
+  expect(await focusedCellAnnouncement(page)).toContain(state)
 })
