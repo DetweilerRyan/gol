@@ -2,13 +2,7 @@ import { it } from '@fast-check/vitest'
 import fc from 'fast-check'
 import { describe, expect } from 'vitest'
 import { MAX_CELL_SIZE, MIN_CELL_SIZE, worldToScreen, type Camera } from './camera'
-import {
-  computeMajorGridlines,
-  computeVisibleRange,
-  gridLinePhasePx,
-  isMajorGridline,
-  type VisibleRange,
-} from './gridGeometry'
+import { computeMajorGridlines, computeVisibleRange, gridLinePhasePx, type VisibleRange } from './gridGeometry'
 import { cameraArbitrary as camera } from './test-support/arbitraries'
 
 const worldCoord = fc.integer({ min: -10_000, max: 10_000 })
@@ -35,24 +29,24 @@ describe('computeVisibleRange (property)', () => {
   )
 })
 
-describe('isMajorGridline (property)', () => {
-  it.prop([worldCoord])('is periodic with period 10', (n) => {
-    expect(isMajorGridline(n + 10)).toBe(isMajorGridline(n))
-    expect(isMajorGridline(n - 10)).toBe(isMajorGridline(n))
-  })
-
-  it.prop([fc.integer({ min: -10_000, max: 10_000 })])('is true for every exact multiple of 10', (n) => {
-    expect(isMajorGridline(n * 10)).toBe(true)
-  })
-})
-
 describe('computeMajorGridlines (property)', () => {
   const rangeEndpoint = fc.integer({ min: -500, max: 500 })
+
+  // THE LITERAL 10 IS DELIBERATE -- do not "tidy" it into
+  // MAJOR_GRIDLINE_INTERVAL. This is the oracle, and an oracle importing the
+  // constant its subject also reads moves with it: measured on this file
+  // before the restatement, mutating the constant 10 -> 11 left this property
+  // green, because both sides changed together. The same restate-rather-than-
+  // import discipline Scrollbar.test.tsx applies to SCROLLBAR_THICKNESS_PX,
+  // for the same reason. This oracle used to be spelled isMajorGridline(i),
+  // which is where that self-reference came from; that predicate is gone
+  // (see gridGeometry.ts) and this is what replaced it.
+  const EVERY_TENTH_COORDINATE = 10
 
   function bruteForceGridlines(min: number, max: number): number[] {
     const lines: number[] = []
     for (let i = min; i <= max; i++) {
-      if (isMajorGridline(i)) lines.push(i)
+      if (i % EVERY_TENTH_COORDINATE === 0) lines.push(i)
     }
     return lines
   }
@@ -77,7 +71,10 @@ describe('computeMajorGridlines (property)', () => {
     for (const x of computeMajorGridlines(range).x) {
       expect(x).toBeGreaterThanOrEqual(range.minX)
       expect(x).toBeLessThanOrEqual(range.maxX)
-      expect(isMajorGridline(x)).toBe(true)
+      // `=== 0` rather than toBe(0) on the remainder itself: (-20) % 10 is
+      // -0 in JS and toBe uses Object.is, which separates -0 from 0. The
+      // retired isMajorGridline hid this behind its own `=== 0`.
+      expect(x % EVERY_TENTH_COORDINATE === 0).toBe(true)
     }
   })
 })

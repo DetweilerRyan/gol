@@ -1,42 +1,47 @@
 import { enableMapSet, freeze, produce } from 'immer'
 import {
-  advanceGeneration,
-  cellKey,
   computeContentBounds,
   createEmptyLiveCells,
+  getNextGeneration,
   toggleCell,
-  type CellKey,
   type ContentBounds,
   type LiveCells,
   type ReadonlyLiveCells,
 } from './gameOfLife'
-import { patternCellPositions, placePattern, type Pattern } from './patternLibrary'
+import { placePattern, type Pattern } from './patternLibrary'
 import { isShallowEqual } from './equality/is-shallow-equal'
 
-// The subscription store behind useLiveCell/useContentBounds: leaf
-// components subscribe to a single cell's boolean state (or to the content
-// bounds) instead of the whole liveCells Set, so a generation only re-renders
-// the cells that actually changed rather than every cell in the tree. This is
-// the fix for the identity-miss App -> LifeBoard -> Grid -> GridCells was
-// paying every tick: useImmer hands back a new Set identity on every produce,
-// which defeats React Compiler's memoization however deep the prop drilling
-// goes, whereas a subscription model only notifies the listeners for the
-// cells whose membership actually flipped.
+// The subscription store behind useLiveCells/useContentBounds: the live-cell
+// state lives here rather than in React, and components read it through
+// useSyncExternalStore pairs -- subscribeCells/getLiveCells for the whole
+// set, subscribeBounds/getBoundsSnapshot for the bounding box. It holds the
+// state as a frozen Set it owns outright, so nothing outside can mutate what
+// it has published. This replaced useImmer, which handed back a new Set
+// identity on every produce and defeated React Compiler's memoization however
+// deep the prop drilling went.
 //
-// subscribeCells/getLiveCells is the useSyncExternalStore pair for a
-// component that genuinely needs the whole set every mutation --
-// liveCellWindow.ts's projection (collapse-dead-cell-layer), which has to
-// see every live cell to decide which ones fall inside the current render
-// window. That is a real, if coarser, render source now, unlike the
-// getLiveCells()-during-render-with-no-subscription bug the comment here
-// used to warn against: getLiveCells() paired with subscribeCells is exactly
-// how useSyncExternalStore is meant to be used, the same shape
-// subscribeCell/getCellSnapshot and subscribeBounds/getBoundsSnapshot
-// already follow. What is still a correctness bug is calling getLiveCells()
-// during render WITHOUT the matching subscribeCells subscription -- that
-// still reads a value the component never subscribed to, and won't
-// re-render when it changes. subscribeCell/getCellSnapshot remain the
-// finer-grained, single-cell pair and are unaffected by this addition.
+// A THIRD PAIR USED TO EXIST AND WAS RETIRED, which matters because the
+// module's headline invariant went with it. subscribeCell/getCellSnapshot let
+// each mounted Cell watch its own coordinate, and the promise was "a mutation
+// notifies exactly the cells whose aliveness changed, each exactly once, and
+// nobody else" -- worth a per-key bucket map, a per-key dispatch loop, and
+// advanceGeneration's delta being threaded through notify(). collapse-dead-
+// cell-layer deleted the render path that used it: only live cells (plus the
+// keyboard cursor) mount now, so the component that has to decide WHICH cells
+// exist needs the whole set, and per-cell precision buys nothing when the
+// per-cell subscriber is gone. All three methods, the bucket map and the
+// per-key loop went; advance() now takes getNextGeneration, the projection
+// gameOfLife.ts exposes for exactly this caller. The successor contract is
+// written down rather than merely lost -- see liveCellStore.property.test.ts's
+// header for its three clauses, and note the cost it makes explicit: EVERY
+// mutation notifies EVERY whole-set subscriber, so a still-life tick
+// re-renders every mounted cell where the retired channel would have
+// re-rendered none.
+//
+// getLiveCells() is a legitimate render source only when paired with
+// subscribeCells -- reading it during render without subscribing still reads
+// a value the component is never notified about, which is a correctness bug
+// and not a missed optimization.
 
 export type Listener = () => void
 export type Unsubscribe = () => void
@@ -46,8 +51,6 @@ export interface LiveCellStore {
   toggle(x: number, y: number): void
   place(pattern: Pattern, anchorX: number, anchorY: number): void
 
-  subscribeCell(key: CellKey, listener: Listener): Unsubscribe
-  getCellSnapshot(key: CellKey): boolean
   subscribeBounds(listener: Listener): Unsubscribe
   getBoundsSnapshot(): ContentBounds | null
   subscribeCells(listener: Listener): Unsubscribe
@@ -56,8 +59,6 @@ export interface LiveCellStore {
   // (the useSyncExternalStore contract) -- reading it during render with no
   // matching subscription is still a correctness bug. See module header.
   getLiveCells(): ReadonlyLiveCells
-  // buckets.size -- the no-leak invariant unsubscribe is responsible for.
-  trackedCellCount(): number
 }
 
 export function createLiveCellStore(initialLiveCells: ReadonlyLiveCells = createEmptyLiveCells()): LiveCellStore {
@@ -76,7 +77,6 @@ export function createLiveCellStore(initialLiveCells: ReadonlyLiveCells = create
   // reach into this store's published state.
   let cells: ReadonlyLiveCells = freeze(new Set(initialLiveCells))
 
-  const cellListeners = new Map<CellKey, Set<Listener>>()
   const boundsListeners = new Set<Listener>()
   const cellsListeners = new Set<Listener>()
 
@@ -106,100 +106,63 @@ export function createLiveCellStore(initialLiveCells: ReadonlyLiveCells = create
 
   // Always called *after* publish(), never before: every listener, whenever
   // it runs during this dispatch, reads the new generation from
-  // getCellSnapshot. That ordering is what makes the copy-then-dispatch
-  // guarantee below a scheduling detail rather than a correctness one.
+  // getLiveCells/getBoundsSnapshot. That ordering is what makes the
+  // copy-then-dispatch guarantee below a scheduling detail rather than a
+  // correctness one.
   //
-  // Note the guarantee is per bucket, not per notification. A listener that
-  // subscribes to a *different* cell from inside another listener's body will
-  // be visited if that cell's bucket happens to come later in `keys` -- only
-  // same-bucket late subscribers are excluded. Deliberately not pinned as a
-  // contract: React subscribes at commit time via useEffect and never
-  // synchronously from a listener body, so no caller can observe the
-  // difference, and freezing an order no caller depends on would make a
-  // future batched dispatch a breaking change for no one's benefit. What
-  // does matter -- that a late-visited listener still reads correct state --
-  // follows from the publish-before-notify ordering above.
-  function notify(keys: readonly CellKey[]): void {
-    for (const key of keys) {
-      const bucket = cellListeners.get(key)
-      if (!bucket) continue
-      // Snapshot before dispatch: a listener subscribed during this
-      // notification must not be called for it (it wasn't in the bucket at
-      // snapshot time), and a listener unsubscribed mid-dispatch by another
-      // listener must still receive its already-snapshotted call. Array.from
-      // (not a spread, and not a plain for-of over the live Set) makes that
-      // copy explicit -- direct iteration would visit listeners added mid-loop.
-      for (const listener of Array.from(bucket)) {
-        listener()
-      }
-    }
+  // Takes no argument since collapse-dead-cell-layer retired the per-cell
+  // channel: both surviving channels are unconditional, so there is nothing
+  // left for a delta to select. That is the whole reason advance() no longer
+  // asks for one.
+  function notify(): void {
     notifyBounds()
     notifyCells()
   }
 
+  // Snapshot before dispatch: a listener subscribed during this notification
+  // must not be called for it (it wasn't subscribed at snapshot time), and a
+  // listener unsubscribed mid-dispatch by another listener must still receive
+  // its already-snapshotted call. Array.from (not a spread, and not a plain
+  // for-of over the live Set) makes that copy explicit -- direct iteration
+  // would visit listeners added mid-loop.
   function notifyBounds(): void {
     for (const listener of Array.from(boundsListeners)) {
       listener()
     }
   }
 
-  // Whole-set subscribers -- every mutator's notify() call reaches these
-  // too, since any change to `cells` (however small) can move which cells a
-  // range-based projection like liveCellWindow.ts's liveCellsInRange should
-  // show.
+  // Whole-set subscribers -- every mutator's notify() call reaches these,
+  // unconditionally, since any change to `cells` (however small) can move
+  // which cells a range-based projection like liveCellWindow.ts's
+  // liveCellsInRange should show. Same copy-before-dispatch shape as
+  // notifyBounds above, for the same reason.
   function notifyCells(): void {
     for (const listener of Array.from(cellsListeners)) {
       listener()
     }
   }
 
+  // getNextGeneration, not advanceGeneration: the delta this used to thread
+  // into notify() has no consumer left now that the per-cell channel is gone
+  // (see this module's header), and asking for a value in order to discard it
+  // is how a reader concludes the store still notifies per cell. The
+  // projection exists in gameOfLife.ts for exactly this caller.
   function advance(): void {
-    // advanceGeneration hands back the delta the rules pass already computed,
-    // so nothing here re-diffs the two generations to find it.
-    const { next, changed } = advanceGeneration(cells)
-    publish(next)
-    notify(changed)
+    publish(getNextGeneration(cells))
+    notify()
   }
 
   function toggle(x: number, y: number): void {
     publish(produce(cells as LiveCells, (draft) => toggleCell(draft, x, y)))
-    notify([cellKey(x, y)])
+    notify()
   }
 
   function place(pattern: Pattern, anchorX: number, anchorY: number): void {
-    const positions = patternCellPositions(pattern, anchorX, anchorY)
-    const changed = positions.filter(([x, y]) => !cells.has(cellKey(x, y))).map(([x, y]) => cellKey(x, y))
     publish(produce(cells as LiveCells, (draft) => placePattern(draft, pattern, anchorX, anchorY)))
-    notify(changed)
+    notify()
   }
 
-  function subscribeCell(key: CellKey, listener: Listener): Unsubscribe {
-    let bucket = cellListeners.get(key)
-    if (!bucket) {
-      bucket = new Set()
-      cellListeners.set(key, bucket)
-    }
-    bucket.add(listener)
-
-    let unsubscribed = false
-    return () => {
-      if (unsubscribed) return
-      unsubscribed = true
-      const currentBucket = cellListeners.get(key)
-      if (!currentBucket) return
-      currentBucket.delete(listener)
-      if (currentBucket.size === 0) {
-        cellListeners.delete(key)
-      }
-    }
-  }
-
-  function getCellSnapshot(key: CellKey): boolean {
-    return cells.has(key)
-  }
-
-  // subscribeBounds and subscribeCells are both a bare Set<Listener> with no
-  // per-key bucketing (unlike subscribeCell above, which needs one), so both
+  // subscribeBounds and subscribeCells are both a bare Set<Listener>, so both
   // funnel through this one add/remove-once shape rather than repeating it.
   function subscribeToSet(listeners: Set<Listener>, listener: Listener): Unsubscribe {
     listeners.add(listener)
@@ -257,20 +220,13 @@ export function createLiveCellStore(initialLiveCells: ReadonlyLiveCells = create
     return cells
   }
 
-  function trackedCellCount(): number {
-    return cellListeners.size
-  }
-
   return {
     advance,
     toggle,
     place,
-    subscribeCell,
-    getCellSnapshot,
     subscribeBounds,
     getBoundsSnapshot,
     subscribeCells,
     getLiveCells,
-    trackedCellCount,
   }
 }

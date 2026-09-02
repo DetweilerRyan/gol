@@ -1,0 +1,13 @@
+id: no-store-in-cell-components
+valid:
+  # What the cell layer actually takes: the projection's result type, pan-stable
+  # scalars, and the focus cursor -- never the store the projection was made from.
+  - "import type { WindowCell } from '../liveCellWindow'"
+  - "import { cellOffsetPx } from '../cellAnchor'"
+  - "import type { FocusCell } from '../gridFocus'"
+  - "import { cellKey } from '../gameOfLife'"
+  - "import Cell from './Cell'"
+invalid:
+  - "import type { LiveCellStore } from '../liveCellStore'"
+  - "import { createLiveCellStore } from '../liveCellStore'"
+  - "import { useLiveCells } from '../hooks/useLiveCells'"

@@ -3,7 +3,7 @@ valid:
   # The scalars these leaves actually take -- pan-stable, derived one level up.
   - "import { cellOffsetPx } from '../cellAnchor'"
   - "import { tileOriginCell } from '../cellTiles'"
-  - "import type { LiveCellStore } from '../liveCellStore'"
+  - "import type { WindowCell } from '../liveCellWindow'"
   - "import { cellKey } from '../gameOfLife'"
 invalid:
   - "import { worldToScreen, type Camera } from '../camera'"

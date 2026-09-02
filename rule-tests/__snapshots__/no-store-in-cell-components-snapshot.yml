@@ -1,0 +1,20 @@
+id: no-store-in-cell-components
+snapshots:
+  import type { LiveCellStore } from '../liveCellStore':
+    labels:
+    - source: import type { LiveCellStore } from '../liveCellStore'
+      style: primary
+      start: 0
+      end: 53
+  import { createLiveCellStore } from '../liveCellStore':
+    labels:
+    - source: import { createLiveCellStore } from '../liveCellStore'
+      style: primary
+      start: 0
+      end: 54
+  import { useLiveCells } from '../hooks/useLiveCells':
+    labels:
+    - source: import { useLiveCells } from '../hooks/useLiveCells'
+      style: primary
+      start: 0
+      end: 52

@@ -35,9 +35,19 @@ export function computeVisibleRange(camera: Camera, viewportWidthPx: number, vie
 
 export const MAJOR_GRIDLINE_INTERVAL = 10
 
-export function isMajorGridline(coordinate: number): boolean {
-  return coordinate % MAJOR_GRIDLINE_INTERVAL === 0
-}
+// There is deliberately no isMajorGridline(coordinate) predicate here any
+// more. It existed for Cell.tsx, which drew one cell's own major border at a
+// time; collapse-dead-cell-layer deleted that -- GridLines.tsx paints the
+// whole lattice as two repeating CSS backgrounds (see gridLinePhasePx below)
+// and the ruler enumerates through computeMajorGridlines, so nothing asks
+// "is THIS coordinate major?" any more. Its last two callers were
+// gridGeometry.test.ts and gridGeometry.property.test.ts, where it was also
+// serving as computeMajorGridlines' own oracle -- a self-reference through
+// the shared MAJOR_GRIDLINE_INTERVAL that made the brute-force property blind
+// to a mutant on that constant (measured: 10 -> 11 left that property green
+// and was caught only by isMajorGridline's own assertions, which restated the
+// literal 10). The oracle now restates the literal instead, which is the
+// stronger arrangement and the reason this deletion is not a coverage loss.
 
 export interface MajorGridlines {
   x: number[]

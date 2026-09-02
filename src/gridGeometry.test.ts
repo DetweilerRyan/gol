@@ -5,7 +5,6 @@ import {
   computeOnScreenRange,
   computeVisibleRange,
   gridLinePhasePx,
-  isMajorGridline,
   type VisibleRange,
 } from './gridGeometry'
 
@@ -32,25 +31,6 @@ describe('computeVisibleRange', () => {
     const range = computeVisibleRange(panned, 200, 100)
     expect(range.minX).toBe(Math.floor(4.7) - 2)
     expect(range.minY).toBe(Math.floor(-3.2) - 2)
-  })
-})
-
-describe('isMajorGridline', () => {
-  it('is true for zero and positive multiples of 10', () => {
-    expect(isMajorGridline(0)).toBe(true)
-    expect(isMajorGridline(10)).toBe(true)
-    expect(isMajorGridline(100)).toBe(true)
-  })
-
-  it('is true for negative multiples of 10', () => {
-    expect(isMajorGridline(-10)).toBe(true)
-    expect(isMajorGridline(-100)).toBe(true)
-  })
-
-  it('is false for non-multiples of 10', () => {
-    expect(isMajorGridline(5)).toBe(false)
-    expect(isMajorGridline(11)).toBe(false)
-    expect(isMajorGridline(-3)).toBe(false)
   })
 })
 

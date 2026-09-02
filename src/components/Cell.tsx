@@ -51,8 +51,9 @@ interface CellProps {
 }
 
 // One cell button. Takes its own aliveness as a plain prop now rather than
-// subscribing to the store itself (see liveCellStore.ts's useLiveCell,
-// retired as this component's own render source at this slice's step 4):
+// subscribing to the store itself (the useLiveCell hook this used to hold
+// was retired at step 4, and liveCellStore's whole subscribeCell channel
+// with it at the REVIEW pass -- see that module's header):
 // GridCells now mounts only live cells (plus the focus cursor's own cell --
 // liveCellWindow.ts's +1), so it already knows every mounted cell's
 // aliveness from the one liveCellsInRange call that decided to mount it in

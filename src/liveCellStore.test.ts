@@ -33,192 +33,93 @@ describe('createLiveCellStore', () => {
     })
   })
 
-  describe('empty grid', () => {
-    it('advance notifies nobody and leaves bounds null', () => {
+  // WHAT THIS BLOCK REPLACED, since a reader comparing against git history
+  // will find it much shorter. Until collapse-dead-cell-layer's REVIEW pass
+  // these cases were per-cell: subscribeCell on the cells a mutation should
+  // and should not touch, asserted through getCellSnapshot. That channel is
+  // retired with the render path that used it (see liveCellStore.ts's
+  // header), so what survives is the mutation's effect on the published set
+  // plus the whole-set dispatch. The per-cell precision is not weakened here
+  // and asserted elsewhere -- it is GONE, deliberately, and the successor
+  // contract is stated in liveCellStore.property.test.ts's header.
+  describe('mutators', () => {
+    it('advance on an empty grid changes nothing and leaves bounds null', () => {
       const store = createLiveCellStore()
-      const cellListener = vi.fn()
-      const boundsListener = vi.fn()
-      store.subscribeCell(cellKey(0, 0), cellListener)
-      store.subscribeBounds(boundsListener)
-
-      store.advance()
-
-      expect(cellListener).not.toHaveBeenCalled()
-      expect(store.getBoundsSnapshot()).toBeNull()
-    })
-  })
-
-  describe('single cell', () => {
-    it('advance kills an isolated cell (underpopulation), notifying its subscriber exactly once, bounds -> null', () => {
-      const store = createLiveCellStore(new Set([cellKey(3, 3)]))
       const listener = vi.fn()
-      store.subscribeCell(cellKey(3, 3), listener)
+      store.subscribeCells(listener)
 
       store.advance()
 
       expect(listener).toHaveBeenCalledTimes(1)
-      expect(store.getCellSnapshot(cellKey(3, 3))).toBe(false)
+      expect(store.getLiveCells().size).toBe(0)
       expect(store.getBoundsSnapshot()).toBeNull()
     })
-  })
 
-  describe('toggle', () => {
-    it('notifies exactly the toggled cell, and only it', () => {
-      const store = createLiveCellStore()
-      const toggledListener = vi.fn()
-      const otherListener = vi.fn()
-      store.subscribeCell(cellKey(2, 2), toggledListener)
-      store.subscribeCell(cellKey(9, 9), otherListener)
+    it('advance kills an isolated cell (underpopulation), bounds -> null', () => {
+      const store = createLiveCellStore(new Set([cellKey(3, 3)]))
 
-      store.toggle(2, 2)
+      store.advance()
 
-      expect(toggledListener).toHaveBeenCalledTimes(1)
-      expect(otherListener).not.toHaveBeenCalled()
-      expect(store.getCellSnapshot(cellKey(2, 2))).toBe(true)
+      expect(store.getLiveCells().has(cellKey(3, 3))).toBe(false)
+      expect(store.getBoundsSnapshot()).toBeNull()
     })
 
-    it('toggled twice returns to the original state, notifying the subscriber both times', () => {
+    it('toggled twice returns to the original state, notifying both times', () => {
       const store = createLiveCellStore()
       const listener = vi.fn()
-      store.subscribeCell(cellKey(4, 4), listener)
+      store.subscribeCells(listener)
 
       store.toggle(4, 4)
+      expect(store.getLiveCells().has(cellKey(4, 4))).toBe(true)
       store.toggle(4, 4)
 
+      expect(store.getLiveCells().has(cellKey(4, 4))).toBe(false)
       expect(listener).toHaveBeenCalledTimes(2)
-      expect(store.getCellSnapshot(cellKey(4, 4))).toBe(false)
     })
-  })
 
-  describe('place', () => {
-    it('notifies only the cells that actually changed, not the whole pattern footprint', () => {
-      // Block occupies (5,5) (6,5) (5,6) (6,6). Pre-seed one corner alive so
-      // it's already alive before the stamp -- it must not be notified.
+    it('place brings the whole footprint to life, including a corner that was already alive', () => {
+      // Block occupies (5,5) (6,5) (5,6) (6,6). One corner is pre-seeded, so
+      // this also covers the merge case: an already-live cell stays alive
+      // rather than being toggled off.
       const store = createLiveCellStore(new Set([cellKey(5, 5)]))
-      const alreadyAlive = vi.fn()
-      const newlyAlive = vi.fn()
-      store.subscribeCell(cellKey(5, 5), alreadyAlive)
-      store.subscribeCell(cellKey(6, 5), newlyAlive)
 
       store.place(BLOCK, 5, 5)
 
-      expect(alreadyAlive).not.toHaveBeenCalled()
-      expect(newlyAlive).toHaveBeenCalledTimes(1)
-      expect(store.getCellSnapshot(cellKey(5, 5))).toBe(true)
-      expect(store.getCellSnapshot(cellKey(6, 5))).toBe(true)
-      expect(store.getCellSnapshot(cellKey(5, 6))).toBe(true)
-      expect(store.getCellSnapshot(cellKey(6, 6))).toBe(true)
+      const live = store.getLiveCells()
+      for (const key of [cellKey(5, 5), cellKey(6, 5), cellKey(5, 6), cellKey(6, 6)]) {
+        expect(live.has(key)).toBe(true)
+      }
     })
 
-    it('notifies nobody when the whole footprint is already alive', () => {
+    it('place onto an already-live footprint still notifies, and keeps the published identity', () => {
+      // The one mutator path where immer returns the base Set unchanged (a
+      // redundant Set add is not a mutation), so it is the case that shows
+      // the whole-set channel is unconditional rather than delta-driven --
+      // the retired per-cell channel notified nobody here.
       const store = createLiveCellStore(new Set([cellKey(5, 5), cellKey(6, 5), cellKey(5, 6), cellKey(6, 6)]))
       const listener = vi.fn()
-      store.subscribeCell(cellKey(5, 5), listener)
+      store.subscribeCells(listener)
+      const before = store.getLiveCells()
 
       store.place(BLOCK, 5, 5)
 
-      expect(listener).not.toHaveBeenCalled()
+      expect(listener).toHaveBeenCalledTimes(1)
+      expect(store.getLiveCells()).toBe(before)
     })
   })
 
-  describe('unrelated subscribers', () => {
-    it('a subscriber on a cell that never changes is never notified', () => {
-      const store = createLiveCellStore(new Set([cellKey(0, 0)]))
-      const untouched = vi.fn()
-      store.subscribeCell(cellKey(50, 50), untouched)
-
-      store.toggle(1, 1)
-      store.advance()
-      store.place(BLOCK, 20, 20)
-
-      expect(untouched).not.toHaveBeenCalled()
-    })
-  })
-
-  describe('subscribe/unsubscribe lifecycle', () => {
-    it('unsubscribe stops further notifications', () => {
-      const store = createLiveCellStore()
-      const listener = vi.fn()
-      const unsubscribe = store.subscribeCell(cellKey(1, 1), listener)
-
-      store.toggle(1, 1)
-      expect(listener).toHaveBeenCalledTimes(1)
-
-      unsubscribe()
-      store.toggle(1, 1)
-      expect(listener).toHaveBeenCalledTimes(1)
-    })
-
-    // Bucket count after subscribing two listeners, then after dropping each
-    // in turn. The two cases below differ only in whether the listeners share
-    // a cell, so the walk is shared and each case asserts its own triple --
-    // which is the distinction being drawn, and stays visible here.
-    function bucketCountsWhileUnsubscribing(keyA: CellKey, keyB: CellKey): [number, number, number] {
-      const store = createLiveCellStore()
-      const unsubA = store.subscribeCell(keyA, vi.fn())
-      const unsubB = store.subscribeCell(keyB, vi.fn())
-
-      const withBoth = store.trackedCellCount()
-      unsubA()
-      const withB = store.trackedCellCount()
-      unsubB()
-      return [withBoth, withB, store.trackedCellCount()]
-    }
-
-    it('trackedCellCount returns to 0 after the last unsubscribe', () => {
-      expect(bucketCountsWhileUnsubscribing(cellKey(1, 1), cellKey(2, 2))).toEqual([2, 1, 0])
-    })
-
-    it('trackedCellCount stays at 1 bucket for multiple listeners on the same cell until all unsubscribe', () => {
-      expect(bucketCountsWhileUnsubscribing(cellKey(1, 1), cellKey(1, 1))).toEqual([1, 1, 0])
-    })
-
-    it('double-unsubscribe is idempotent', () => {
-      const store = createLiveCellStore()
-      const unsubscribe = store.subscribeCell(cellKey(1, 1), vi.fn())
-      unsubscribe()
-      expect(() => unsubscribe()).not.toThrow()
-      expect(store.trackedCellCount()).toBe(0)
-    })
-
-    it('a stale unsubscribe closure called again after resubscribing the same listener does not remove the new subscription', () => {
-      const store = createLiveCellStore()
-      const listener = vi.fn()
-      const unsubFirst = store.subscribeCell(cellKey(1, 1), listener)
-      unsubFirst()
-      // Resubscribe the same listener reference to the same key -- unsubFirst
-      // is now stale, but nothing has invalidated it. Calling it again must
-      // stay a no-op rather than tearing down the new subscription.
-      store.subscribeCell(cellKey(1, 1), listener)
-      unsubFirst()
-
-      store.toggle(1, 1)
-      expect(listener).toHaveBeenCalledTimes(1)
-    })
-
-    it('unsubscribing via a second closure for an already-fully-removed key does not throw', () => {
-      // subscribeCell twice with the same (key, listener) pair returns two
-      // independent Unsubscribe closures over one Set entry (add is
-      // idempotent). Calling the first removes the key's bucket entirely;
-      // the second closure's own first call must then find no bucket left
-      // to delete from, rather than dereferencing it.
-      const store = createLiveCellStore()
-      const listener = vi.fn()
-      const unsubA = store.subscribeCell(cellKey(1, 1), listener)
-      const unsubB = store.subscribeCell(cellKey(1, 1), listener)
-      unsubA()
-      expect(() => unsubB()).not.toThrow()
-    })
-  })
-
+  // Every guarantee here used to be stated on the per-cell channel and is
+  // re-anchored on the whole-set one rather than dropped: notify() dispatches
+  // over a copy (Array.from) in both surviving channels, and that copy is
+  // what these three cases are about.
   describe('dispatch-order edge cases', () => {
     it('a listener subscribed during notification is not called for that in-flight notification', () => {
       const store = createLiveCellStore()
       const lateListener = vi.fn()
       const subscribingListener = vi.fn(() => {
-        store.subscribeCell(cellKey(3, 3), lateListener)
+        store.subscribeCells(lateListener)
       })
-      store.subscribeCell(cellKey(3, 3), subscribingListener)
+      store.subscribeCells(subscribingListener)
 
       store.toggle(3, 3)
 
@@ -233,35 +134,17 @@ describe('createLiveCellStore', () => {
     it('every listener reads the already-published generation, whenever in the dispatch it runs', () => {
       // publish() precedes notify(), so dispatch order can never be a
       // correctness question -- an early listener and a late one see the same
-      // (new) state. This is what lets notify's copy-then-dispatch ordering
-      // stay an implementation detail rather than a contract; see its comment
-      // on the per-bucket limit of that guarantee.
+      // (new) state. A blinker, so the read is a real generation rather than
+      // a one-cell toggle: both ends die and one new cell is born.
       const store = createLiveCellStore(new Set([cellKey(0, 0), cellKey(1, 0), cellKey(2, 0)]))
-      // Keyed, not ordered: which bucket is dispatched first is deliberately
-      // not part of the contract (see notify's comment), so asserting a
-      // sequence here would pin down something no caller may rely on.
-      const seen = new Map<string, boolean>()
-      // The blinker's two dying ends and one born cell are all notified in a
-      // single advance, so this reads state from three different buckets
-      // mid-flight.
-      for (const [x, y] of [
-        [0, 0],
-        [2, 0],
-        [1, -1],
-      ]) {
-        store.subscribeCell(cellKey(x, y), () => seen.set(cellKey(x, y), store.getCellSnapshot(cellKey(x, y))))
-      }
+      const seen: Array<Set<CellKey>> = []
+      store.subscribeCells(() => seen.push(new Set(store.getLiveCells())))
+      store.subscribeCells(() => seen.push(new Set(store.getLiveCells())))
 
       store.advance()
 
-      // (0,0) and (2,0) are dead in the new generation; (1,-1) is newly alive.
-      expect(seen).toEqual(
-        new Map([
-          [cellKey(0, 0), false],
-          [cellKey(2, 0), false],
-          [cellKey(1, -1), true],
-        ]),
-      )
+      const expected = new Set([cellKey(1, -1), cellKey(1, 0), cellKey(1, 1)])
+      expect(seen).toEqual([expected, expected])
     })
 
     it('a listener unsubscribed mid-dispatch by another listener still receives its already-snapshotted call', () => {
@@ -271,14 +154,30 @@ describe('createLiveCellStore', () => {
       const unsubscriber = vi.fn(() => {
         unsubscribeVictim()
       })
-      unsubscribeVictim = store.subscribeCell(cellKey(3, 3), victim)
-      store.subscribeCell(cellKey(3, 3), unsubscriber)
+      unsubscribeVictim = store.subscribeCells(victim)
+      store.subscribeCells(unsubscriber)
 
       store.toggle(3, 3)
 
       expect(victim).toHaveBeenCalledTimes(1)
       expect(unsubscriber).toHaveBeenCalledTimes(1)
-      expect(store.trackedCellCount()).toBe(1)
+
+      // And is genuinely gone for the next one.
+      store.toggle(3, 3)
+      expect(victim).toHaveBeenCalledTimes(1)
+    })
+
+    it('double-unsubscribe is idempotent and does not disturb another subscriber', () => {
+      const store = createLiveCellStore()
+      const survivor = vi.fn()
+      const unsubscribe = store.subscribeCells(vi.fn())
+      store.subscribeCells(survivor)
+
+      unsubscribe()
+      expect(() => unsubscribe()).not.toThrow()
+
+      store.toggle(1, 1)
+      expect(survivor).toHaveBeenCalledTimes(1)
     })
   })
 
@@ -429,16 +328,21 @@ describe('createLiveCellStore', () => {
       expect(listener).toHaveBeenCalledTimes(1)
     })
 
-    it('does not notify a per-cell subscriber of an unrelated whole-set subscription, or vice versa', () => {
+    it('keeps the two surviving channels independent -- releasing one leaves the other subscribed', () => {
+      // The per-cell channel this case used to contrast against is gone, so
+      // the remaining pair worth separating is bounds vs cells: they are two
+      // Sets dispatched by one notify(), and a release on either must not
+      // reach the other.
       const store = createLiveCellStore()
-      const cellListener = vi.fn()
+      const boundsListener = vi.fn()
       const cellsListener = vi.fn()
-      store.subscribeCell(cellKey(9, 9), cellListener)
+      const releaseBounds = store.subscribeBounds(boundsListener)
       store.subscribeCells(cellsListener)
 
+      releaseBounds()
       store.toggle(0, 0)
 
-      expect(cellListener).not.toHaveBeenCalled()
+      expect(boundsListener).not.toHaveBeenCalled()
       expect(cellsListener).toHaveBeenCalledTimes(1)
     })
   })

@@ -1,0 +1,46 @@
+id: no-store-in-cell-components
+language: Tsx
+severity: warning
+message: The cell layer must not reach the live-cell store -- aliveness arrives as a prop, decided once by Grid.
+note: >-
+  collapse-dead-cell-layer replaced "every cell in range mounts and subscribes to its own
+  coordinate" with "Grid subscribes once (useLiveCells), projects the render window through
+  liveCellWindow.ts's liveCellsInRange, and hands each mounted Cell a plain isAlive boolean".
+  A store handle reaching GridCells.tsx or Cell.tsx is how the retired shape comes back: one
+  subscription per mounted cell, or a second, independent read of the live-cell set that can
+  disagree with the projection Grid already made. Aliveness is a prop here. If a cell needs to
+  know something the projection does not carry, widen WindowCell in liveCellWindow.ts -- that
+  keeps the one read in the one place that owns all three of its inputs.
+# WHY A RULE RATHER THAN A COMMENT, and it is specifically because of what the same slice
+# deleted. The store's old headline property -- "a mutation notifies exactly the cells whose
+# aliveness changed, each exactly once" -- was the thing that would have caught an
+# over-subscribing cell layer, and it was retired with subscribeCell itself (see
+# liveCellStore.property.test.ts's header). A reintroduced per-cell subscription renders
+# identical pixels and passes every rendering, Gherkin and e2e test in the repo; nothing left
+# in the suite fails. This rule is the structural replacement for the property that used to
+# see it.
+#
+# TWO CONCRETE PATHS, NO CARVE-OUT, the no-camera-in-cell-leaf shape rather than a directory
+# glob with an `ignores` for the one legitimate caller. Grid.tsx must import both of these and
+# lives in the same directory, so a `src/components/*.tsx` scope could only exist by naming
+# Grid.tsx as an exception -- a rule shipping a carve-out for the only code that resembles a
+# violation. These two files are where the ban is absolute. `npm run ast-grep:rules` fails if
+# either path stops resolving, so a rename surfaces as a gate failure rather than as silence.
+#
+# liveCellWindow.ts is deliberately NOT banned: GridCells.tsx imports `type WindowCell` from
+# it, which is the projection's own result type and exactly what this rule wants it reading.
+# The ban is on the SOURCE of truth (the store and its hook), not on the shape of what the
+# projection hands down.
+files:
+  - 'src/components/Cell.tsx'
+  - 'src/components/GridCells.tsx'
+# Metavariables do not interpolate inside string literals, so an import PATH has to be matched
+# with kind: + regex: rather than with a pattern -- two of this repo's rules were silently inert
+# for exactly that mistake. `files:` above pins the match to src/components/, so the relative
+# specifier is always '../liveCellStore' or '../hooks/useLiveCells'; the trailing quote stops
+# the alternation also matching a hypothetical '../liveCellStoreFoo'. Matches `import type` as
+# well as a value import, for the same reason its sibling does: a type-only handle is precisely
+# how a store prop gets reintroduced.
+rule:
+  kind: import_statement
+  regex: 'from [''"]\.\./(liveCellStore|hooks/useLiveCells)[''"]'

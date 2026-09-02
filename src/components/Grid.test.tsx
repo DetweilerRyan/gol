@@ -24,9 +24,9 @@ import Grid, { GRID_CONTENT_ID } from './Grid'
 // the literal successor of the getCellSnapshot-call-count probe the "tile
 // pan-stability" describe below used before this slice's step 4, which
 // retired useLiveCell as a render source entirely (see Cell.tsx's own
-// header) -- getCellSnapshot is no longer called from anywhere in the render
-// tree, so a spy on it would now read zero regardless of what actually
-// re-rendered.
+// header). getCellSnapshot is not merely uncalled now -- the REVIEW pass of
+// the same slice retired the whole per-cell channel it belonged to, so a spy
+// on it would not compile at all; see liveCellStore.ts's header.
 vi.mock('./Cell', { spy: true })
 
 // Grid itself composes useElementSize (ResizeObserver), useWheelInput,
@@ -395,9 +395,9 @@ describe('hover indicator wiring', () => {
 // store.getCellSnapshot, called by every mounted Cell's own useLiveCell
 // subscription) was retired along with that subscription at this slice's
 // step 4 -- Cell now takes isAlive as a plain prop instead (see Cell.tsx's
-// header), so getCellSnapshot is never called from the render tree at all
-// any more, and a probe still watching it would silently read zero
-// regardless of what actually re-rendered. The successor probe is
+// header). The method itself is gone as of this slice's REVIEW pass, along
+// with the rest of the per-cell channel, so there is nothing left to watch
+// even by mistake. The successor probe is
 // vi.mocked(Cell) (see the vi.mock('./Cell', { spy: true }) call at the top
 // of this file) -- a direct per-Cell render-call counter, the literal
 // successor of what getCellSnapshot's call count used to stand in for.
