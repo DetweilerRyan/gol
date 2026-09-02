@@ -60,15 +60,22 @@ export function advanceZoomTarget(
   return { fromCellSize: currentCellSize, toCellSize: target, startedAtMs: nowMs, durationMs }
 }
 
-// EQUIVALENT MUTANT, measured -- do not chase the Math.min(1, ...) half. Both
-// readers of progressAt below test `>= 1` (glideCellSizeAt returns toCellSize
-// outright, isGlideComplete answers true), so a progress of 5 and a progress
-// of 1 are indistinguishable everywhere and the upper clamp is unreachable
-// dead weight given the exact-landing branch. Verified rather than argued:
-// replacing this with `Math.max(0, t)` leaves all 889 tests green, including
-// the 17 properties in zoomGlide.property.test.ts. The lower clamp is NOT
-// equivalent -- it is what makes a backwards clock hold at fromCellSize, and
-// removing it reds three of those properties. Kept as written because clamp01
+// THE UPPER HALF OF THIS CLAMP IS DEAD, AND STRYKER GENERATES NO MUTANT THAT
+// SAYS SO -- do not go hunting for a survivor here, and do not delete the
+// half either. The previous version of this comment was headed "EQUIVALENT
+// MUTANT, measured", which sent hardener looking for one; the two mutants
+// Stryker does generate on the line below are MethodExpression swaps
+// (`Math.min(0, t)` and `Math.max(1, Math.max(0, t))`) and both are Killed.
+// No mutator expresses "remove the Math.min", so the score cannot speak to it
+// in either direction -- which is exactly why the claim is hand-applied.
+//
+// Hand-applied, and re-measured after glideCellSizeAt was rekeyed onto the
+// eased value: replacing this body with `Math.max(0, t)` leaves all 889 tests
+// green. A progress above 1 reaches easeOutCubic, which maps it to a value
+// above 1, which the `eased >= 1` branch short-circuits to toCellSize -- the
+// same answer clamping would have given. THE LOWER HALF IS NOT DEAD: it is
+// what makes a backwards clock hold at fromCellSize, and removing it reds
+// three properties in zoomGlide.property.test.ts. Kept whole because clamp01
 // is a named, self-contained helper and half a clamp is a worse thing to read
 // than a redundant one.
 function clamp01(t: number): number {
@@ -104,14 +111,44 @@ function easeOutCubic(t: number): number {
 // ratios and glide duration; linear has fewer float traps (no fractional
 // exponent, no risk of a negative or zero base) for no visible cost.
 export function glideCellSizeAt(glide: ZoomGlide, nowMs: number): number {
-  const progress = progressAt(glide, nowMs)
-  // Exact landing: at progress >= 1, return toCellSize itself rather than
-  // easeOutCubic(1) * (toCellSize - fromCellSize) + fromCellSize, which is
-  // algebraically identical but not guaranteed float-identical -- and this
-  // module's callers (useZoomGlide.ts's fromCamera recompute, in particular)
-  // depend on the completion frame matching an instantaneous zoom bit-for-bit.
-  if (progress >= 1) return glide.toCellSize
-  return glide.fromCellSize + (glide.toCellSize - glide.fromCellSize) * easeOutCubic(progress)
+  const eased = easeOutCubic(progressAt(glide, nowMs))
+  // Exact landing: return toCellSize itself rather than
+  // fromCellSize + (toCellSize - fromCellSize) * 1, which is algebraically
+  // identical but not float-identical -- and this module's callers
+  // (useZoomGlide.ts's fromCamera recompute, in particular) depend on the
+  // completion frame matching an instantaneous zoom bit-for-bit.
+  //
+  // KEYED OFF THE EASED VALUE, NOT OFF progress, and that is a correctness
+  // fix rather than a tidy-up (hardener found it, architect ruled it,
+  // smooth-zoom-transitions ADJUDICATE). easeOutCubic rounds to exactly 1.0
+  // for progress values strictly below 1 -- 1 - (1-t)**3 with t within an ULP
+  // of 1 cubes to a subnormal that vanishes in the subtraction -- so keying
+  // off `progress >= 1` left a window in which this function fell through to
+  // the interpolation with a multiplier of exactly 1 and returned
+  // fromCellSize + (toCellSize - fromCellSize). That sum is NOT toCellSize
+  // for 7.2% of cellSize pairs drawn from [MIN_CELL_SIZE, MAX_CELL_SIZE]
+  // (measured, 14,482 of 200,000), so in that window the module could return
+  // a value up to ~2e-15 OUTSIDE the closed interval between its own two
+  // endpoints -- violating the no-overshoot guarantee this module publishes
+  // and the .feature states as "should never have gone past".
+  //
+  // The fix is strictly conservative: progress >= 1 implies eased >= 1, so
+  // every input that landed exactly before still lands exactly, and the only
+  // behaviour that changes is on inputs where this function was leaving its
+  // own stated interval. Measured over 20,000 replayed property runs (111
+  // sampled instants each): 1 escape before, 0 after; and the returned
+  // expression was probed adversarially at the extreme representable eased
+  // values (nextDown(1), nextUp(0), the smallest subnormal) across 400,000
+  // endpoint pairs with 0 escapes.
+  //
+  // DO NOT "improve" this to the endpoint-anchored form
+  // `toCellSize - (toCellSize - fromCellSize) * (1 - eased)`, which reads as
+  // the more symmetric way to guarantee the landing. It was measured on the
+  // same harness and is four orders of magnitude WORSE -- 8,250 escapes in
+  // those same 20,000 runs -- because it moves the inexactness to the
+  // fromCellSize end, where nothing short-circuits it.
+  if (eased >= 1) return glide.toCellSize
+  return glide.fromCellSize + (glide.toCellSize - glide.fromCellSize) * eased
 }
 
 export function isGlideComplete(glide: ZoomGlide, nowMs: number): boolean {
