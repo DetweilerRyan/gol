@@ -13,14 +13,14 @@ Feature: Camera pan and zoom
     Given a camera centered on the origin at the default zoom
     When I zoom in once
     Then the zoom percentage should be 125
-    And the zoom percentage should have passed through the levels in between
+    And the zoom percentage should have passed through the percentages in between
     And the zoom percentage should never have gone past 125
 
   Scenario: Zooming out once glides down to the next zoom percentage
     Given a camera centered on the origin at the default zoom
     When I zoom out once
     Then the zoom percentage should be 80
-    And the zoom percentage should have passed through the levels in between
+    And the zoom percentage should have passed through the percentages in between
     And the zoom percentage should never have gone past 80
 
   Scenario: Two quick zoom-in clicks glide on to the level two steps up
@@ -34,7 +34,7 @@ Feature: Camera pan and zoom
     And a camera centered on the origin at the default zoom
     When I zoom in once
     Then the zoom percentage should be 125
-    And the zoom percentage should not have passed through any levels in between
+    And the zoom percentage should not have passed through any percentages in between
 
   Scenario: Zooming in stops at the maximum zoom
     Given a camera centered on the origin at the default zoom
@@ -51,6 +51,12 @@ Feature: Camera pan and zoom
     And I have gone on clicking zoom in past the maximum zoom
     When I zoom out once
     Then the zoom percentage should be 240
+
+  Scenario: Resetting the view while a zoom is still gliding returns to the default view
+    Given a camera centered on the origin at the default zoom
+    When I zoom in and immediately reset the view
+    Then the zoom percentage should be 100
+    And the coordinate labels in view should be balanced around the origin
 
   Scenario: Resetting the view returns to the default centered zoom
     Given a camera centered on the origin at the default zoom

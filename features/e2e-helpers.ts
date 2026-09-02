@@ -70,6 +70,7 @@ export {
 } from './screenplay/interactions.ts'
 export {
   selectPattern,
+  zoomInThenResetView,
   toggleFarCell,
   withCellInView,
   clickCell,

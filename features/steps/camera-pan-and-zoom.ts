@@ -47,6 +47,7 @@ import {
   resetView,
   watchZoomReadout,
   zoomIn,
+  zoomInThenResetView,
   zoomInTwiceQuickly,
   zoomOut,
   zoomPercent,
@@ -108,7 +109,15 @@ async function zoomAtRest(page: Page): Promise<number> {
 // came to rest -- the glide itself, with both endpoints dropped. Direction
 // falls out of the two endpoints rather than being passed in, so one function
 // reads a zoom in and a zoom out.
-function intermediateLevels(trail: readonly number[]): readonly number[] {
+//
+// PERCENTAGES, NOT LEVELS, and the word matters enough to have been changed
+// after review. A LEVEL in this feature is a rung -- what "the zoom level
+// should be unchanged" means one scenario away -- and there are no rungs
+// between 100 and 125 to pass through: the zoom is a plain continuous
+// quantity, and the rungs are only where clicking lands it. What a glide
+// passes through is intermediate PERCENTAGES, which is what the badge shows
+// and what the sentence now says.
+function intermediatePercentages(trail: readonly number[]): readonly number[] {
   const start = trail[0]
   const resting = trail[trail.length - 1]
   const low = Math.min(start, resting)
@@ -124,7 +133,57 @@ function intermediateLevels(trail: readonly number[]): readonly number[] {
 // extra frame, and it stays a statement about the MOTION rather than about
 // its duration -- any glide long enough to be seen clears it with room to
 // spare, and no easing curve or frame rate is implied by it.
-const GLIDE_LEVELS = 3
+//
+// The count lives here rather than in the .feature deliberately: it is the
+// RESOLUTION of the observation, not a promise a player could perceive, and
+// a sentence naming it would be the over-specificity that turns this layer
+// into a slow duplicate of a unit test.
+const GLIDE_PERCENTAGES = 3
+
+// A RUNG'S RESTING ZOOM, for the one caller that clicks in a loop.
+//
+// zoomAtRest has a second failure mode besides the rounding stall its own
+// comment describes, and this one bites SYSTEMATICALLY rather than
+// occasionally: if all three confirmations land before the glide's first
+// change to the readout, rest is confirmed on the value the click started
+// from. A Then step asserting a number fails loudly when that happens and
+// names the right quantity ("expected 125, received 100"), so those stay on
+// zoomAtRest -- a false failure that points at the right thing is the safe
+// direction. The ladder below is the unsafe one: it compares a rung against
+// the previous rung, where a stale reading is indistinguishable from a clamp,
+// and two in a row make it report a clamp it never reached. That is precisely
+// what its two-unchanged-readings guard exists to prevent and cannot prevent,
+// because systematic staleness hits both readings alike.
+//
+// So a rung waits for the readout to CHANGE before accepting a rest -- except
+// at the clamp, where the click is a no-op by design and no change is ever
+// coming. Those two cases cannot be told apart without a bounded wait, and
+// that is all CHANGE_GRACE_MS is: long enough that no glide anyone would ship
+// fails to move the rounded percentage inside it, and paid only on the two or
+// three clamped rungs that end each ladder.
+//
+// The rung this protects most is the zoom-out ladder's last real one, 41% to
+// 40%: a single one-point transition, where there is no second change to fall
+// back on if the first is missed.
+const CHANGE_GRACE_MS = 400
+
+async function zoomAtRestAfterClick(page: Page, before: number): Promise<number> {
+  const graceEnds = Date.now() + CHANGE_GRACE_MS
+  let previous = Number.NaN
+  let repeats = 0
+  await expect
+    .poll(
+      async () => {
+        const current = await zoomPercent(page)
+        repeats = current === previous ? repeats + 1 : 0
+        previous = current
+        return repeats >= REST_CONFIRMATIONS && (current !== before || Date.now() > graceEnds)
+      },
+      { intervals: [50, 50, 50, 100, 100, 250, 500] },
+    )
+    .toBe(true)
+  return previous
+}
 
 // Clicks the zoom button one step at a time until the clamp saturates -- the
 // same ladder a player climbs by clicking the toolbar button repeatedly,
@@ -136,13 +195,15 @@ const GLIDE_LEVELS = 3
 // Each rung is read AT REST for a second reason on top of that one: mid-glide
 // readings differ from each other whether or not the clamp has been reached,
 // so a ladder built on raw readings would describe how fast the machine is
-// rather than where the zoom stops.
+// rather than where the zoom stops. And at rest AFTER A CHANGE, per
+// zoomAtRestAfterClick above, without which the guard this comment describes
+// is defeated by a glide that has not started yet.
 async function zoomUntilSettled(page: Page, direction: 'in' | 'out') {
   let previous = await zoomAtRest(page)
   let unchanged = 0
   for (let click = 0; click < 25 && unchanged < 2; click++) {
     await (direction === 'in' ? zoomIn(page) : zoomOut(page))
-    const current = await zoomAtRest(page)
+    const current = await zoomAtRestAfterClick(page, previous)
     unchanged = current === previous ? unchanged + 1 : 0
     previous = current
   }
@@ -263,6 +324,14 @@ When('I zoom out once', async ({ page }) => {
   await zoomOut(page)
 })
 
+// Immediacy, not duration. The contract refuses to name how long a glide
+// takes; it does not refuse to say that one thing follows another at once,
+// which is an ordinary thing for a player to do and is already how the
+// two-quick-clicks scenario is written.
+When('I zoom in and immediately reset the view', async ({ page }) => {
+  await zoomInThenResetView(page)
+})
+
 When('I zoom in twice in quick succession', async ({ page }) => {
   await zoomInTwiceQuickly(page)
 })
@@ -303,15 +372,15 @@ Then('the zoom percentage should be {int}', async ({ page }, percentage) => {
 // The three steps below read the recording rather than the badge, and each
 // waits for rest first so it can be written in any order after the When
 // instead of depending on the resting Then having run before it.
-Then('the zoom percentage should have passed through the levels in between', async ({ page }) => {
+Then('the zoom percentage should have passed through the percentages in between', async ({ page }) => {
   await zoomAtRest(page)
   const trail = await zoomReadoutTrail(page)
-  expect(intermediateLevels(trail).length).toBeGreaterThanOrEqual(GLIDE_LEVELS)
+  expect(intermediatePercentages(trail).length).toBeGreaterThanOrEqual(GLIDE_PERCENTAGES)
 })
 
-Then('the zoom percentage should not have passed through any levels in between', async ({ page }) => {
+Then('the zoom percentage should not have passed through any percentages in between', async ({ page }) => {
   await zoomAtRest(page)
-  expect(intermediateLevels(await zoomReadoutTrail(page))).toEqual([])
+  expect(intermediatePercentages(await zoomReadoutTrail(page))).toEqual([])
 })
 
 // No overshoot, in whichever direction the zoom was travelling: a glide that

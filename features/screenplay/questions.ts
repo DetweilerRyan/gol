@@ -80,10 +80,21 @@ export async function zoomPercent(page: Page): Promise<number> {
 // technology user is told nothing when the zoom moves. That is reported as an
 // affordance gap rather than worked around here, because no test in this suite
 // needs it and inventing a hook for one would be a test speaking for a user
-// who has not been given the thing yet.
+// who has not been given the thing yet. One note for whoever does build it:
+// it must announce the RESTING percentage only. A live region driven off this
+// badge frame by frame would read out every percentage a glide passes
+// through, and this slice is what creates the conditions for someone to do
+// exactly that.
 //
 // The last-value guard keeps the trail free of repeats, so a step reading it
 // never has to know whether the app re-rendered the same percentage twice.
+//
+// WHAT WOULD BREAK IT, said out loud so it gets debugged here rather than in
+// the implementation: the observer watches the badge ELEMENT, so remounting or
+// restructuring that node orphans it and freezes the trail where it stood.
+// That fails RED -- a frozen trail shows no intermediate percentages -- which
+// is the safe direction, but it looks exactly like an implementation that
+// forgot to glide.
 const ZOOM_TRAIL_KEY = '__zoomReadoutTrail'
 
 export async function watchZoomReadout(page: Page): Promise<void> {

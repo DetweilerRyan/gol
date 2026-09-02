@@ -17,6 +17,7 @@ import {
   openPatternModal,
   pressKey,
   resetView,
+  zoomIn,
 } from './interactions.ts'
 import {
   CENTER,
@@ -28,6 +29,23 @@ import {
   PAN_TARGET_PX,
 } from './viewport.ts'
 import { type Page } from '@playwright/test'
+
+// Two acts that only mean anything TOGETHER, which is what makes this a task
+// rather than two steps in a row: the reset has to land while the zoom is
+// still moving, so nothing is awaited between the two clicks beyond the clicks
+// themselves. Whether it lands in time rests on the same sibling guarantee as
+// the two-quick-clicks scenario -- the glide is required to show several
+// intermediate percentages, and no animation short enough to finish inside one
+// click round trip can do that.
+//
+// Its failure direction is worth knowing before trusting it: if the glide ever
+// were that short, the reset would land after the zoom had already settled and
+// the scenario would go QUIET rather than red. It cannot fail spuriously; it
+// can only stop discriminating.
+export async function zoomInThenResetView(page: Page) {
+  await zoomIn(page)
+  await resetView(page)
+}
 
 export async function selectPattern(page: Page, name: string) {
   await openPatternModal(page)
