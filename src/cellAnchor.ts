@@ -26,9 +26,18 @@ import { worldToScreen, type Camera } from './camera'
 // margin below 2**24. (An earlier draft of this design proposed ~260,000
 // CELLS as the bound -- 260,000 * 60 ~= 15.6M px, which sits ON the cliff
 // rather than safely below it; ANCHOR_DRIFT_CELLS corrects that.) One
-// re-anchor forces a full re-render of every mounted cell (~180-200ms at min
-// zoom), so this is a rare hitch traded against never happening in an
-// ordinary session, not a per-pan cost the way EVICT_LAG_TILES is.
+// re-anchor forces a full re-render of every mounted cell, so this is a rare
+// hitch traded against never happening in an ordinary session, not a per-pan
+// cost the way EVICT_LAG_TILES is.
+//
+// That sentence used to cite ~180-200ms at min zoom. THE FIGURE IS WITHDRAWN,
+// not restated: it was measured when every cell in the mounted tile range had
+// a DOM button, dead or alive, and since collapse-dead-cell-layer only LIVE
+// cells in range plus the focus cursor mount (see liveCellWindow.ts) -- so an
+// empty grid re-renders one button, and the cost now scales with live cells
+// in range rather than with viewport area. No replacement number is recorded
+// here because none has been measured on the current tree; reports/perf is
+// where one would come from.
 export const ANCHOR_DRIFT_CELLS = 4096
 
 export interface Anchor {

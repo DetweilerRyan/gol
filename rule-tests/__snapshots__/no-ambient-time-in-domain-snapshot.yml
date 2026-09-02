@@ -1,0 +1,56 @@
+id: no-ambient-time-in-domain
+snapshots:
+  cancelAnimationFrame(id):
+    labels:
+    - source: cancelAnimationFrame(id)
+      style: primary
+      start: 0
+      end: 24
+  const now = Date.now():
+    labels:
+    - source: Date.now()
+      style: primary
+      start: 12
+      end: 22
+  const now = performance.now():
+    labels:
+    - source: performance.now
+      style: primary
+      start: 12
+      end: 27
+  const origin = performance.timeOrigin:
+    labels:
+    - source: performance.timeOrigin
+      style: primary
+      start: 15
+      end: 37
+  const stamp = new Date():
+    labels:
+    - source: new Date()
+      style: primary
+      start: 14
+      end: 24
+  const stamp = new Date(0):
+    labels:
+    - source: new Date(0)
+      style: primary
+      start: 14
+      end: 25
+  requestAnimationFrame(tick):
+    labels:
+    - source: requestAnimationFrame(tick)
+      style: primary
+      start: 0
+      end: 27
+  setInterval(tick, 16):
+    labels:
+    - source: setInterval(tick, 16)
+      style: primary
+      start: 0
+      end: 21
+  setTimeout(tick, 16):
+    labels:
+    - source: setTimeout(tick, 16)
+      style: primary
+      start: 0
+      end: 20

@@ -1,0 +1,43 @@
+id: no-ambient-time-in-domain
+language: TypeScript
+severity: warning
+message: Framework-free domain module must not read a clock or schedule work.
+note: >-
+  A domain module that reads the current time stops being a pure function of its arguments -- the
+  same call returns a different answer on every run, so a unit test can only assert loosely and a
+  property test cannot quantify over time at all. Time is an ARGUMENT here, exactly as the query
+  string is an argument to src/liveCellSeed.ts: src/zoomGlide.ts takes nowMs and returns where a
+  glide has got to, and src/hooks/useZoomGlide.ts is the adapter that reads performance.now() and
+  drives requestAnimationFrame. Scheduling belongs on the same side of that line for the same
+  reason -- see src/hooks/useRafCoalescedPan.ts, the repo's other animation-frame owner.
+  Not covered by no-dom-in-domain: performance.now(), Date.now() and a bare requestAnimationFrame
+  call mention neither window nor document, so they slip past that rule's three patterns entirely.
+# Domain modules are the framework-free .ts files at src/ root. Matching by glob rather
+# than by name means a NEW domain module is covered automatically -- a hand-listed set
+# would silently skip it, and a rule that matches nothing looks exactly like clean code.
+files:
+  - 'src/*.ts'
+# NB: ast-grep's `*` crosses `/`, so src/*.ts also reaches src/hooks/ etc. -- the
+# subdirectories must be excluded explicitly. Hooks legitimately read a clock and
+# schedule frames; that's their job as adapters.
+ignores:
+  - 'src/hooks/**'
+  - 'src/components/**'
+  - 'src/catalyst/**'
+  - 'src/test-support/**'
+  - 'src/*.test.ts'
+  - 'src/test-setup.ts'
+rule:
+  any:
+    # Bare `performance` rather than `performance.now()`, so every reading of that
+    # object is caught (now(), timeOrigin, mark()) rather than only the one spelling
+    # this slice happened to be tempted by.
+    - pattern: performance.$$$REST
+    - pattern: Date.now()
+    - pattern: new Date($$$REST)
+    # Reachable as bare globals, so they mention neither window nor document and
+    # no-dom-in-domain never sees them.
+    - pattern: requestAnimationFrame($$$REST)
+    - pattern: cancelAnimationFrame($$$REST)
+    - pattern: setTimeout($$$REST)
+    - pattern: setInterval($$$REST)

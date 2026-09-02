@@ -1,0 +1,21 @@
+id: no-ambient-time-in-domain
+valid:
+  # Time as an argument is the whole point of the rule -- these are the shapes
+  # src/zoomGlide.ts is required to use.
+  - 'export function glideCellSizeAt(glide: ZoomGlide, nowMs: number) { return nowMs }'
+  - const elapsed = nowMs - glide.startedAtMs
+  - const size = camera.cellSize * 2
+  # A field named `now` on an ordinary object is not a clock read.
+  - const t = sample.now
+  # Named like a clock but neither a call nor a global.
+  - const label = stamp.toISOString()
+invalid:
+  - const now = performance.now()
+  - const origin = performance.timeOrigin
+  - const now = Date.now()
+  - const stamp = new Date()
+  - const stamp = new Date(0)
+  - requestAnimationFrame(tick)
+  - cancelAnimationFrame(id)
+  - setTimeout(tick, 16)
+  - setInterval(tick, 16)

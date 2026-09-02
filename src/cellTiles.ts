@@ -61,10 +61,20 @@ import type { Camera } from './camera'
 // stays 4 as landed; it is NOT known to be optimal, and the experiment that
 // would settle it (run the wobble-tile-boundary family at S=2 and S=4 and
 // compare) is pending, not run. The lever that actually closes the gap is
-// mounted count, not strip size: an empty grid at min zoom mounts 19,680
-// buttons, but at default zoom only 3,264 mount and every scenario already
-// sits inside budget with zero long tasks. The 16.7ms goal isn't softened --
-// it moves to whichever slice addresses mounted count at min zoom.
+// mounted count, not strip size -- AND THAT LEVER HAS SINCE BEEN PULLED, so
+// read everything above as the argument for TILE_SPAN_CELLS = 4 and not as a
+// description of any tree that exists. This paragraph used to end "an empty
+// grid at min zoom mounts 19,680 buttons, but at default zoom only 3,264
+// mount". Both counts predate collapse-dead-cell-layer, which replaced "one
+// Cell per mounted tile slot, dead or alive" with "one Cell per LIVE cell in
+// range, plus the keyboard focus cursor's own cell" (see liveCellWindow.ts):
+// AN EMPTY GRID NOW MOUNTS EXACTLY ONE BUTTON, at every zoom, and mounted
+// count scales with live cells in range rather than with viewport area. The
+// 16.7ms goal is met on the current tree at the scenario that missed it --
+// pan-min-zoom-empty measures 8.30ms median / 9.20ms p95 with 0.0 node churn
+// per move and zero long tasks (reports/perf at 6be96a5, 1280x900). Every
+// c_strip / per-admitted-cell figure above was measured against the dead-cell
+// layer; don't quote one forward.
 export const TILE_SPAN_CELLS = 4
 
 // How many tiles of margin a retained range may carry beyond the covering
