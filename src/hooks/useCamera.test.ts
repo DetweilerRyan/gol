@@ -1,5 +1,5 @@
 import { act, renderHook } from '@testing-library/react'
-import { describe, expect, it } from 'vitest'
+import { beforeEach, describe, expect, it } from 'vitest'
 import {
   DEFAULT_CELL_SIZE,
   MAX_CELL_SIZE,
@@ -8,9 +8,24 @@ import {
   zoomCameraAtPoint,
   ZOOM_FACTOR,
 } from '../camera'
+import { stubAnimationFrames, stubMatchMedia, type AnimationFrameController } from '../test-support/domStubs'
 import { useCamera } from './useCamera'
 
 const initialCamera = { offsetX: 0, offsetY: 0, cellSize: DEFAULT_CELL_SIZE }
+
+// useCamera composes useZoomGlide, which composes useReducedMotion --
+// window.matchMedia is undefined in this repo's jsdom project (see
+// useReducedMotion.ts's own comment), so every test in this file needs the
+// stub even the ones that never touch zoomInCentered/zoomOutCentered.
+// stubAnimationFrames gives the toolbar-glide tests a controllable clock;
+// tests that never call zoomInCentered/zoomOutCentered simply never schedule
+// a frame, so the stub is inert for them.
+let raf: AnimationFrameController
+
+beforeEach(() => {
+  raf = stubAnimationFrames()
+  stubMatchMedia(false)
+})
 
 describe('useCamera', () => {
   it('starts centered on the origin at the default zoom', () => {
@@ -74,16 +89,25 @@ describe('useCamera', () => {
     expect(result.current.camera.offsetY).toBe(0)
   })
 
-  it('zoomInCentered zooms at the viewport center using ZOOM_FACTOR', () => {
+  // zoomInCentered/zoomOutCentered now GLIDE rather than snap (see
+  // useZoomGlide.ts), so the assertion has to wait for the glide to reach
+  // its completion frame before comparing against an instantaneous
+  // zoomCameraAtPoint call. The assertion itself is UNCHANGED from before
+  // the glide existed -- if it doesn't pass once the glide has settled, the
+  // from-camera invariant has been implemented as frame-chaining rather
+  // than a fixed starting camera, and that is the bug, not this assertion.
+  it('zoomInCentered zooms at the viewport center using ZOOM_FACTOR, once the glide settles', () => {
     const { result } = renderHook(() => useCamera())
     act(() => result.current.zoomInCentered(800, 600))
+    act(() => raf.advance(200))
 
     expect(result.current.camera).toEqual(zoomCameraAtPoint(initialCamera, 800 / 2, 600 / 2, ZOOM_FACTOR))
   })
 
-  it('zoomOutCentered zooms at the viewport center using 1 / ZOOM_FACTOR', () => {
+  it('zoomOutCentered zooms at the viewport center using 1 / ZOOM_FACTOR, once the glide settles', () => {
     const { result } = renderHook(() => useCamera())
     act(() => result.current.zoomOutCentered(800, 600))
+    act(() => raf.advance(200))
 
     expect(result.current.camera).toEqual(zoomCameraAtPoint(initialCamera, 800 / 2, 600 / 2, 1 / ZOOM_FACTOR))
   })
@@ -99,5 +123,65 @@ describe('useCamera', () => {
       offsetX: -800 / 2 / DEFAULT_CELL_SIZE,
       offsetY: -600 / 2 / DEFAULT_CELL_SIZE,
     })
+  })
+})
+
+// Step 6's funnel: EVERY camera write that is not the glide's own tick calls
+// commit(), which cancels an in-flight toolbar glide first. architect
+// verified these five functions are the entire remaining set of production
+// camera writers (CONTRACT review) -- one row per writer here, plus the
+// in-then-immediately-out row that catches advanceZoomTarget's null being
+// misread as "nothing to do" rather than "clear the glide" (see
+// src/zoomGlide.ts's own header comment on advanceZoomTarget for the
+// worked example this guards).
+describe('every non-glide camera writer cancels an in-flight toolbar zoom glide', () => {
+  const writers: Array<[string, (result: { current: ReturnType<typeof useCamera> }) => void]> = [
+    ['panByPixels', (result) => result.current.panByPixels(10, 10)],
+    ['zoomAtPoint', (result) => result.current.zoomAtPoint(0, 0, 2)],
+    [
+      'applyWheel',
+      (result) => result.current.applyWheel({ pixelX: 0, pixelY: 0, deltaX: 10, deltaY: 10, shiftKey: false }),
+    ],
+    ['centerView', (result) => result.current.centerView(800, 600)],
+    ['panByScrollbarDrag', (result) => result.current.panByScrollbarDrag('x', 10, 0.5)],
+  ]
+
+  it.each(writers)('%s cancels a pending glide rather than leaving it to keep ticking underneath', (_label, invoke) => {
+    const { result } = renderHook(() => useCamera())
+
+    // A toolbar click that hasn't run its completion frame yet -- the
+    // glide's own synchronous progress-0 apply is a same-reference bail, so
+    // the camera hasn't visibly moved, but a frame is pending.
+    act(() => result.current.zoomInCentered(800, 600))
+    expect(raf.pendingCount()).toBe(1)
+
+    act(() => invoke(result))
+
+    expect(raf.cancelCallCount()).toBe(1)
+    expect(raf.pendingCount()).toBe(0)
+
+    const afterWrite = result.current.camera
+    act(() => raf.advance(1000))
+    // The cancelled glide never gets to run its completion frame and
+    // overwrite what the writer above just committed.
+    expect(result.current.camera).toBe(afterWrite)
+  })
+
+  // Ruling 4's worked example, at the useCamera level: at rest 100%, click
+  // zoom-in (glide 20 -> 25, no frame run yet, displayed still 20), then
+  // immediately click zoom-out -- base 25, target 20, current 20 -> null.
+  // Left running (misread as "nothing to do"), the user would net a step UP
+  // despite clicking in and straight back out.
+  it('zoom-in then immediately zoom-out, before any frame runs, nets back to rest -- not one rung up', () => {
+    const { result } = renderHook(() => useCamera())
+
+    act(() => result.current.zoomInCentered(800, 600))
+    expect(raf.pendingCount()).toBe(1)
+
+    act(() => result.current.zoomOutCentered(800, 600))
+    expect(raf.pendingCount()).toBe(0)
+
+    act(() => raf.advance(1000))
+    expect(result.current.camera).toEqual(initialCamera)
   })
 })

@@ -5,6 +5,7 @@ import { createLiveCellStore } from '../liveCellStore'
 import { PATTERNS, type Pattern } from '../patternLibrary'
 import {
   stubBoundingClientRect,
+  stubMatchMedia,
   stubPointerCapture,
   stubResizeObserver,
   type ResizeObserverController,
@@ -32,6 +33,11 @@ beforeEach(() => {
   resizeObserver = stubResizeObserver()
   stubBoundingClientRect({ left: 0, top: 0, width: WIDTH, height: HEIGHT })
   stubPointerCapture()
+  // LifeBoard composes useCamera -> useZoomGlide -> useReducedMotion, which
+  // reads window.matchMedia -- undefined in this repo's jsdom project (see
+  // useReducedMotion.ts's own comment). Neither test here drives a toolbar
+  // zoom glide, so the stubbed value itself is arbitrary.
+  stubMatchMedia(false)
 })
 
 function triggerResize(width: number, height: number) {
