@@ -164,6 +164,50 @@ describe('useZoomGlide, motion not reduced', () => {
     expect(Math.round((expected.cellSize / DEFAULT_CELL_SIZE) * 100)).toBe(240)
   })
 
+  // GlideState.fromCamera's own header comment claims chaining
+  // zoomCameraToCellSize frame-over-frame is "algebraically exact but
+  // floating-point inexact" -- this pins that claim with a mutation that
+  // actually reproduces it, since most camera/anchor combinations DON'T
+  // diverge (the telescoping sum cancels exactly in float64 for "nice"
+  // values, which is why a naive hand-check can look bit-identical and be
+  // wrong about the general case). offsetX=99.69147330349733,
+  // cellSize=30.028873671091873 and anchorX=935 are not special in any way
+  // this app cares about -- they're an ordinary post-pan, mid-zoom camera at
+  // an ordinary click point -- but this particular combination, run through
+  // 12 real-cadence (~16.6667ms) frames at the app's actual ZOOM_FACTOR,
+  // accumulates exactly one ULP of divergence between "recompute from the
+  // camera the glide started at" (correct) and "recompute from the previous
+  // frame's own output" (the regression this guards). Found by fuzzing
+  // random reachable camera states, not hand-picked -- most inputs land on
+  // an exact float match either way, so this is one of the rare ones that
+  // doesn't, which is exactly why the claim needs a test rather than an
+  // assertion holding "by inspection".
+  it('accumulates zero float divergence from chaining, even over 12 real-cadence frames on an adversarial camera', () => {
+    const raf = stubAnimationFrames()
+    const adversarialCamera: Camera = {
+      offsetX: 99.69147330349733,
+      offsetY: -109.979532160271,
+      cellSize: 30.028873671091873,
+    }
+    const anchorX = 935
+    const anchorY = 401
+    const onCamera = vi.fn()
+    const { result } = renderHook(() => useZoomGlide(onCamera))
+
+    result.current.zoomBy(adversarialCamera, ZOOM_FACTOR, anchorX, anchorY)
+    onCamera.mockClear()
+
+    // 12 frames of ~16.6667ms -- an ordinary 60fps cadence over the 200ms
+    // duration -- rather than one raf.advance(200) jump straight to
+    // completion, which never gives frame-to-frame chaining anything to
+    // accumulate over.
+    for (let i = 0; i < 11; i++) raf.advance(16.6667)
+    raf.advance(200 - raf.now())
+
+    const expected = zoomCameraToCellSize(adversarialCamera, anchorX, anchorY, adversarialCamera.cellSize * ZOOM_FACTOR)
+    expect(onCamera).toHaveBeenLastCalledWith(expected)
+  })
+
   it('repeated clicks once already at the clamp bank nothing -- no onCamera call, no pending frame', () => {
     const onCamera = vi.fn()
     const { result } = renderHook(() => useZoomGlide(onCamera))

@@ -6,34 +6,35 @@ import { useReducedMotion } from './useReducedMotion'
 let matchMedia: MatchMediaController
 
 describe('useReducedMotion', () => {
-  it('reports false when the media query does not match at mount', () => {
+  it.each([
+    { initial: false, label: 'does not match' },
+    { initial: true, label: 'already matches' },
+  ])('reports $initial when the media query $label at mount', ({ initial }) => {
+    matchMedia = stubMatchMedia(initial)
+    const { result } = renderHook(() => useReducedMotion())
+    expect(result.current).toBe(initial)
+  })
+
+  // Pins the actual query text -- stubMatchMedia's mock ignores the query
+  // string entirely for its `matches` behavior (any query gets the same
+  // stubbed answer), so nothing else in this file would notice QUERY going
+  // empty.
+  it('queries prefers-reduced-motion, not an unconditional match', () => {
     matchMedia = stubMatchMedia(false)
-    const { result } = renderHook(() => useReducedMotion())
-    expect(result.current).toBe(false)
+    renderHook(() => useReducedMotion())
+    expect(window.matchMedia).toHaveBeenCalledWith('(prefers-reduced-motion: reduce)')
   })
 
-  it('reports true when the media query already matches at mount', () => {
-    matchMedia = stubMatchMedia(true)
+  it.each([
+    { from: false, to: true },
+    { from: true, to: false },
+  ])('updates when the underlying media query changes from $from to $to', ({ from, to }) => {
+    matchMedia = stubMatchMedia(from)
     const { result } = renderHook(() => useReducedMotion())
-    expect(result.current).toBe(true)
-  })
+    expect(result.current).toBe(from)
 
-  it('updates when the underlying media query changes from false to true', () => {
-    matchMedia = stubMatchMedia(false)
-    const { result } = renderHook(() => useReducedMotion())
-    expect(result.current).toBe(false)
-
-    matchMedia.changeTo(true)
-    expect(result.current).toBe(true)
-  })
-
-  it('updates when the underlying media query changes from true to false', () => {
-    matchMedia = stubMatchMedia(true)
-    const { result } = renderHook(() => useReducedMotion())
-    expect(result.current).toBe(true)
-
-    matchMedia.changeTo(false)
-    expect(result.current).toBe(false)
+    matchMedia.changeTo(to)
+    expect(result.current).toBe(to)
   })
 
   it('subscribes exactly one listener while mounted', () => {

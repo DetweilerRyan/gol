@@ -160,7 +160,21 @@ export interface MatchMediaController {
 
 export function stubMatchMedia(matches: boolean): MatchMediaController {
   let currentMatches = matches
-  const listeners = new Set<(event: { matches: boolean }) => void>()
+  // Keyed by event type, mirroring a real MediaQueryList rather than
+  // trusting every caller to pass 'change' -- addEventListener/
+  // removeEventListener on the wrong type is otherwise unobservable, since a
+  // single untyped Set would add or remove a listener regardless of what
+  // type string it was registered under.
+  const listenersByType = new Map<string, Set<(event: { matches: boolean }) => void>>()
+
+  function listenersFor(type: string): Set<(event: { matches: boolean }) => void> {
+    let forType = listenersByType.get(type)
+    if (forType === undefined) {
+      forType = new Set()
+      listenersByType.set(type, forType)
+    }
+    return forType
+  }
 
   vi.stubGlobal(
     'matchMedia',
@@ -169,11 +183,11 @@ export function stubMatchMedia(matches: boolean): MatchMediaController {
       get matches() {
         return currentMatches
       },
-      addEventListener: (_type: 'change', listener: (event: { matches: boolean }) => void) => {
-        listeners.add(listener)
+      addEventListener: (type: string, listener: (event: { matches: boolean }) => void) => {
+        listenersFor(type).add(listener)
       },
-      removeEventListener: (_type: 'change', listener: (event: { matches: boolean }) => void) => {
-        listeners.delete(listener)
+      removeEventListener: (type: string, listener: (event: { matches: boolean }) => void) => {
+        listenersFor(type).delete(listener)
       },
     })),
   )
@@ -182,10 +196,10 @@ export function stubMatchMedia(matches: boolean): MatchMediaController {
     changeTo(nextMatches: boolean) {
       currentMatches = nextMatches
       act(() => {
-        for (const listener of listeners) listener({ matches: nextMatches })
+        for (const listener of listenersFor('change')) listener({ matches: nextMatches })
       })
     },
-    listenerCount: () => listeners.size,
+    listenerCount: () => listenersFor('change').size,
   }
 }
 

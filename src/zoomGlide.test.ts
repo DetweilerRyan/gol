@@ -137,6 +137,25 @@ describe('glideCellSizeAt', () => {
     expect(glideCellSizeAt(glide, 1200)).toBe(40)
   })
 
+  // The module header comment's own claim, pinned: returning glide.toCellSize
+  // directly at progress >= 1 is NOT redundant with the eased formula below
+  // it, which is only "algebraically identical". fromCellSize/toCellSize
+  // above are a "nice" (integer) pair where fromCellSize + (toCellSize -
+  // fromCellSize) * easeOutCubic(1) happens to equal toCellSize bit-for-bit
+  // anyway, so it can't tell the exact-landing branch apart from the eased
+  // fallback. This pair isn't -- found by fuzzing reachable cellSize values,
+  // not hand-picked -- fromCellSize + (toCellSize - fromCellSize) is one ULP
+  // off from toCellSize here, so only the direct return lands exactly.
+  it('lands on toCellSize bit-for-bit even for a cellSize pair where the eased formula would be one ULP off', () => {
+    const glide: ZoomGlide = {
+      fromCellSize: 53.99754195805667,
+      toCellSize: 12.318251825953022,
+      startedAtMs: 0,
+      durationMs: 200,
+    }
+    expect(glideCellSizeAt(glide, 200)).toBe(12.318251825953022)
+  })
+
   it('returns toCellSize exactly well past the duration too, never an eased value near it', () => {
     const glide: ZoomGlide = { fromCellSize: 20, toCellSize: 40, startedAtMs: 1000, durationMs: 200 }
     expect(glideCellSizeAt(glide, 50000)).toBe(40)
