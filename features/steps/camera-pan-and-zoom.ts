@@ -74,17 +74,31 @@ const { Given, When, Then } = createBdd()
 // choice, and a contract that pinned it would fail the day someone tuned the
 // easing. Rest is defined as "stopped changing", which is true of an
 // instantaneous zoom too.
+//
+// THE ONE ASSUMPTION THIS MAKES ABOUT THE IMPLEMENTATION, and it is a
+// constraint on the design rather than a detail of the test: a glide that
+// moves less than one whole percentage point across the confirmation window
+// below reads as rest, because the readout is rounded and a stalled reading
+// is indistinguishable from a finished one. An ease that crawls near its
+// endpoints for a fifth of a second is what would trip it. Confirming over
+// three readings rather than two widens that window to roughly 150ms, which
+// covers any easing anybody would ship, but it cannot be closed from this
+// side at all -- so it is written down here and in the handoff instead of
+// being discovered later as an intermittent failure of something else.
+const REST_CONFIRMATIONS = 2
+
 async function zoomAtRest(page: Page): Promise<number> {
   let previous = Number.NaN
+  let repeats = 0
   await expect
     .poll(
       async () => {
         const current = await zoomPercent(page)
-        const resting = current === previous
+        repeats = current === previous ? repeats + 1 : 0
         previous = current
-        return resting
+        return repeats >= REST_CONFIRMATIONS
       },
-      { intervals: [50, 50, 100, 100, 250, 500] },
+      { intervals: [50, 50, 50, 100, 100, 250, 500] },
     )
     .toBe(true)
   return previous

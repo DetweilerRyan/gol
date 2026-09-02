@@ -98,12 +98,18 @@ export async function watchZoomReadout(page: Page): Promise<void> {
   }, ZOOM_TRAIL_KEY)
 }
 
-// Empty rather than throwing when no watcher was installed: the trail is
-// established by the same Given that opens the grid, so an empty array can
-// only mean a scenario that never opened one, and a step asserting over it
-// fails on its own terms.
+// Throws rather than returning an empty array when no watcher was installed,
+// because the two are not the same thing and one of them is silent: a step
+// asking "did it never go past 125" over an empty trail filters an empty
+// array and PASSES, reporting a promise nothing observed. An unwatched
+// scenario now says so in its own words instead.
 export async function zoomReadoutTrail(page: Page): Promise<readonly number[]> {
-  return page.evaluate((key) => (window as unknown as Record<string, number[]>)[key] ?? [], ZOOM_TRAIL_KEY)
+  const trail = await page.evaluate(
+    (key) => (window as unknown as Record<string, number[] | undefined>)[key],
+    ZOOM_TRAIL_KEY,
+  )
+  if (!trail) throw new Error('No step in this scenario has started watching the zoom readout')
+  return trail
 }
 
 // WHICH ELEMENT THE BROWSER'S HIT-TEST RETURNS AT A PIXEL -- a STACKING
