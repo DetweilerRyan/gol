@@ -198,14 +198,21 @@ export function createLiveCellStore(initialLiveCells: ReadonlyLiveCells = create
     return cells.has(key)
   }
 
-  function subscribeBounds(listener: Listener): Unsubscribe {
-    boundsListeners.add(listener)
+  // subscribeBounds and subscribeCells are both a bare Set<Listener> with no
+  // per-key bucketing (unlike subscribeCell above, which needs one), so both
+  // funnel through this one add/remove-once shape rather than repeating it.
+  function subscribeToSet(listeners: Set<Listener>, listener: Listener): Unsubscribe {
+    listeners.add(listener)
     let unsubscribed = false
     return () => {
       if (unsubscribed) return
       unsubscribed = true
-      boundsListeners.delete(listener)
+      listeners.delete(listener)
     }
+  }
+
+  function subscribeBounds(listener: Listener): Unsubscribe {
+    return subscribeToSet(boundsListeners, listener)
   }
 
   // Mutation-scan note (cleaner, live-cell-store slice): a scoped `npx
@@ -243,13 +250,7 @@ export function createLiveCellStore(initialLiveCells: ReadonlyLiveCells = create
   }
 
   function subscribeCells(listener: Listener): Unsubscribe {
-    cellsListeners.add(listener)
-    let unsubscribed = false
-    return () => {
-      if (unsubscribed) return
-      unsubscribed = true
-      cellsListeners.delete(listener)
-    }
+    return subscribeToSet(cellsListeners, listener)
   }
 
   function getLiveCells(): ReadonlyLiveCells {
