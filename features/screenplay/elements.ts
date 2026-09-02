@@ -52,7 +52,7 @@
 // interaction that needed a thumb's box measures the element directly rather
 // than asking a Question for it.
 import { type Locator, type Page } from '@playwright/test'
-import { ALIVE_CELL_SELECTOR, cellSelector } from '../../src/test-support/cellQuery.ts'
+import { ALIVE_CELL_SELECTOR, CELL_SELECTOR, cellSelector } from '../../src/test-support/cellQuery.ts'
 import { rulerGroupLabel } from '../../src/test-support/rulerQuery.ts'
 
 export function cellLocator(page: Page, x: number, y: number): Locator {
@@ -135,4 +135,21 @@ export function scrollbarThumb(page: Page, orientation: ScrollbarOrientation): L
 // scrollbarThumb above, the locator itself only ever exists to be read.
 export function focusedCellElement(page: Page): Locator {
   return page.locator(':focus')
+}
+
+// THE GRID'S SINGLE TAB STOP -- the one cell carrying tabindex="0" under the
+// roving-tabindex model, which is where sequential navigation enters the grid.
+//
+// Reached through tabindex, and that is NOT a reach-around: a reach-around
+// stands in for a perception the accessible tree does not offer, and roving
+// tabindex IS that perception -- the APG-published expression of "this whole
+// composite is one tab stop", which is exactly the claim the grid makes. So it
+// owes no deletion trigger and no affordance idea.
+//
+// It is used only to ESTABLISH a focus position in a Given, never to assert
+// one. What the tab order actually does is asserted by the three scenarios that
+// drive real Tab presses, so routing setup through this erodes no coverage.
+// Built on CELL_SELECTOR so "this is a cell" stays encoded in one place.
+export function rovingGridCell(page: Page): Locator {
+  return page.locator(`${CELL_SELECTOR}[tabindex="0"]`)
 }

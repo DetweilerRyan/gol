@@ -20,10 +20,14 @@ Feature: Keyboard grid navigation
     When I tab away from the grid and back
     Then the focused cell should be (4, -2)
 
+  # The click-route twin of the scenario above it: same When, same Then, and the
+  # only difference is how the cell became current. Coming back presupposes
+  # leaving, and a click leaves the focus ON the clicked button -- so a single
+  # forward Tab cannot be the return trip, it is the departure.
   Scenario: Clicking a cell makes it the cell the keyboard comes back to
     Given an empty grid
     And I have clicked the cell at (7, 2)
-    When I tab forward onto the grid
+    When I tab away from the grid and back
     Then the focused cell should be (7, 2)
 
   # Every Examples column in this file has a name of its own, including the two

@@ -7,9 +7,8 @@
 // Tasks may read a locator's own count (withCellInView asks whether the cell is
 // mounted at all) but ask no Questions: what the app SAYS about the outcome is
 // the caller's business, not the task's.
-import { focusedCellElement } from './elements.ts'
+import { focusedCellElement, rovingGridCell } from './elements.ts'
 import {
-  blurFocus,
   choosePatternFromLibrary,
   clickGridAt,
   dragPan,
@@ -18,7 +17,6 @@ import {
   openPatternModal,
   pressKey,
   resetView,
-  tabForward,
 } from './interactions.ts'
 import {
   CENTER,
@@ -160,8 +158,19 @@ async function focusedCellCoordinate(page: Page): Promise<[number, number] | nul
   return match ? [Number(match[1]), Number(match[2])] : null
 }
 
-// Puts the keyboard focus on one named cell, by the route a keyboard player
-// actually takes: tab onto the grid, then step there with the arrow keys.
+// Puts the keyboard focus on one named cell: enter the grid at its single tab
+// stop, then step to the cell with the arrow keys.
+//
+// IT DOES NOT PRESS TAB TO GET IN, AND THAT IS A CORRECTION RATHER THAN A
+// SHORTCUT. It used to blur and then Tab, which assumed blur() resets where
+// sequential navigation resumes from. It does not: a scenario that has just
+// closed the pattern library holds focus on the Patterns button, which sits
+// AFTER the grid in tab order, so a forward Tab from there correctly walks away
+// from the grid rather than into it -- and no amount of blur-side surgery can
+// change that, because a reattached node routes the next Tab to itself. Going
+// to the roving cell directly is what the tab stop means, and this is a Given
+// establishing a position, never an assertion about tab order. The three
+// scenarios that drive real Tab presses are where that is actually claimed.
 //
 // IT STEERS RATHER THAN ASSUMES -- it reads where the tab actually landed and
 // walks the difference -- and that is a PRESERVATION CONSTRAINT, not an
@@ -172,10 +181,9 @@ async function focusedCellCoordinate(page: Page): Promise<[number, number] | nul
 // (0, 0) would silently TAKE both decisions as premises, and the two scenarios
 // that state them would then be asserting themselves.
 export async function focusGridCell(page: Page, x: number, y: number) {
-  await blurFocus(page)
-  await tabForward(page)
+  await rovingGridCell(page).focus()
   const landed = await focusedCellCoordinate(page)
-  if (!landed) throw new Error('Tab did not put the keyboard focus on a grid cell')
+  if (!landed) throw new Error('Entering the grid did not put the keyboard focus on a cell')
 
   const [fromX, fromY] = landed
   for (let step = 0; step < Math.abs(x - fromX); step++) await moveFocus(page, x > fromX ? 'right' : 'left')
@@ -186,8 +194,7 @@ export async function focusGridCell(page: Page, x: number, y: number) {
 // entered on, and reports which cell that turned out to be -- a coordinate no
 // scenario can name, because it depends on where the camera is.
 export async function focusEdgeCellInView(page: Page, edge: 'left' | 'right'): Promise<[number, number]> {
-  await blurFocus(page)
-  await tabForward(page)
+  await rovingGridCell(page).focus()
   await pressKey(page, edge === 'left' ? 'Home' : 'End')
   const landed = await focusedCellCoordinate(page)
   if (!landed) throw new Error(`Nothing is focused after jumping to the ${edge} edge of the view`)
