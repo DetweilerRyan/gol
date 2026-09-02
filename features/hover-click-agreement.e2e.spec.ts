@@ -1,11 +1,14 @@
 import { test, expect } from '@playwright/test'
+import { ALIVE_CELL_SELECTOR } from '../src/test-support/cellQuery.ts'
 import {
+  CENTER,
   clickGridAt,
   DEFAULT_CELL_SIZE_PX,
   defaultViewCellCenterPx,
   expectCellState,
   hoverGridAt,
   hoverIndicatorBox,
+  originRulerPx,
   cellScreenPosition,
   resetView,
   zoomIn,
@@ -136,4 +139,101 @@ test('resetting the view leaves the highlight on the cell actually under the poi
   const highlighted = (await hoverIndicatorBox(page))!
   expect(highlighted.x).toBeCloseTo(clicked.x, 1)
   expect(highlighted.y).toBeCloseTo(clicked.y, 1)
+})
+
+// THE SAME AGREEMENT, ASKED AFTER THE CAMERA MOVES RATHER THAN AFTER THE
+// POINTER DOES -- the half this spec did not cover when it first landed, and
+// the half a real defect was hiding in.
+//
+// The band tests above move the pointer and hold the camera still. These hold
+// the POINTER still and move the camera underneath it, which is the case a
+// resolver that caches a world cell gets wrong: the cached cell keeps its
+// coordinate while the pixel under the cursor becomes a different cell. Found
+// with a mouse wheel rather than by a gate, measured at 120px -- six cells --
+// and adjudicated a regression, since Chromium re-runs hit-testing after a
+// transform commits and the cache did not.
+//
+// Every route below is one camera move with a stationary pointer. They are
+// separate tests rather than one loop because they enter Grid by three
+// different doors -- a wheel event, a pointer drag, and a keyboard reveal-pan --
+// and only the shared exit is meant to be common.
+async function expectHighlightAgreesWithPointerAt(
+  page: import('@playwright/test').Page,
+  at: { x: number; y: number },
+  rulerBefore: { x: number; y: number },
+) {
+  // THE ANTI-VACUITY ANCHOR. Every assertion below is trivially true if the
+  // camera never moved -- a stationary camera cannot desynchronise anything --
+  // so the camera is shown to have travelled at least a cell first, read off the
+  // ruler rather than off any internal. Measured travel is 6.5 cells for the
+  // wheel, 13 by 9 for the coarse drag and 9 for the arrows, which is the
+  // distance a stale resolver would have been wrong by.
+  const rulerAfter = await originRulerPx(page)
+  const travelled = Math.hypot(rulerAfter.x - rulerBefore.x, rulerAfter.y - rulerBefore.y)
+  expect(travelled, 'the camera did not move, so this proves nothing').toBeGreaterThan(DEFAULT_CELL_SIZE_PX)
+
+  const highlighted = await hoverIndicatorBox(page)
+  expect(highlighted, 'nothing is highlighted, so there is no agreement to check').not.toBeNull()
+
+  // The user-visible half: the highlight is drawn under the pointer, not
+  // somewhere the pointer used to be.
+  expect(at.x).toBeGreaterThanOrEqual(highlighted!.x)
+  expect(at.y).toBeGreaterThanOrEqual(highlighted!.y)
+
+  // The agreement half: it is the very cell a click resolves. Read back off the
+  // one cell that came alive rather than computed, so nothing here reconstructs
+  // what it is checking.
+  await clickGridAt(page, at)
+  const label = await page.locator(ALIVE_CELL_SELECTOR).getAttribute('aria-label')
+  const [, cx, cy] = /Cell (-?\d+), (-?\d+)/.exec(label ?? '')!
+  const clicked = await cellScreenPosition(page, Number(cx), Number(cy))
+  expect(highlighted!.x).toBeCloseTo(clicked.x, 1)
+  expect(highlighted!.y).toBeCloseTo(clicked.y, 1)
+}
+
+test('a wheel-pan under a stationary pointer leaves the highlight on the cell a click resolves', async ({ page }) => {
+  const at = { x: CENTER.x + 200, y: CENTER.y + 100 }
+  await hoverGridAt(page, at)
+  const rulerBefore = await originRulerPx(page)
+  await page.mouse.wheel(0, 130)
+
+  await expectHighlightAgreesWithPointerAt(page, at, rulerBefore)
+})
+
+// THE COARSE DRAG, AND THE GRANULARITY IS THE WHOLE TEST. A stepped drag
+// delivers many small pointermoves, each re-resolving against a camera that has
+// barely moved, so a stale resolver lands within the same cell and the case
+// passes BY LUCK -- measured at 1 / 8 / 40 pointermoves as errors of the whole
+// drag / one cell / exact. Delivering the entire distance in ONE pointermove is
+// what makes the error a whole drag rather than a rounding difference, so this
+// test states the invariant at the granularity that can actually see it. Do not
+// "stabilise" it by adding steps.
+test('a coarse one-move drag-pan leaves the highlight on the cell a click resolves', async ({ page }) => {
+  const from = { x: CENTER.x + 200, y: CENTER.y + 100 }
+  const to = { x: from.x + 260, y: from.y + 180 }
+
+  await hoverGridAt(page, from)
+  const rulerBefore = await originRulerPx(page)
+  await page.mouse.down()
+  await page.mouse.move(to.x, to.y) // one pointermove, no `steps`
+  await page.mouse.up()
+
+  await expectHighlightAgreesWithPointerAt(page, to, rulerBefore)
+})
+
+// The keyboard reveal-pan: arrowing the focus cursor past the edge of the view
+// scrolls the grid under a pointer that never moved. Covered compositionally by
+// the wheel case -- the effect that re-resolves is keyed on the camera and does
+// not branch on what moved it -- but this is the one route no test had ever
+// driven end to end, and a composition argument is exactly the kind of claim
+// this slice kept finding to be true for the wrong reason.
+test('an arrow-key reveal-pan leaves the highlight on the cell a click resolves', async ({ page }) => {
+  const at = { x: CENTER.x - 120, y: CENTER.y - 60 }
+  await hoverGridAt(page, at)
+  const rulerBefore = await originRulerPx(page)
+
+  await page.locator('#grid-content button[tabindex="0"]').focus()
+  for (let press = 0; press < 40; press++) await page.keyboard.press('ArrowRight')
+
+  await expectHighlightAgreesWithPointerAt(page, at, rulerBefore)
 })
