@@ -35,7 +35,18 @@
 // assuming it.
 import { createBdd } from 'playwright-bdd'
 import { expect } from '@playwright/test'
-import { CENTER, cellLocator, clickCell, dragPan, expectBlinker, recall, remember, resetView } from '../e2e-helpers'
+import {
+  CENTER,
+  cellLocator,
+  clickCell,
+  parkKeyboardCursorAt,
+  rovingCell,
+  dragPan,
+  expectBlinker,
+  recall,
+  remember,
+  resetView,
+} from '../e2e-helpers'
 
 const { Given, When, Then } = createBdd()
 
@@ -54,6 +65,24 @@ Given(
   async ({ page }, firstX, firstY, secondX, secondY) => {
     await clickCell(page, firstX, firstY)
     await clickCell(page, secondX, secondY)
+
+    // Seeding by pointer leaves the keyboard cursor on the LAST cell clicked,
+    // and the cursor's cell is mounted wherever the camera is -- that is what
+    // keeps the grid tabbable once the cursor is off-range. The pan step below
+    // asserts both of these cells have no element at all, so leaving the cursor
+    // on one of them would make that assertion permanently false about the
+    // second cell for a reason that has nothing to do with panning. Parked on a
+    // cell this scenario says nothing about; two clicks, so the board is exactly
+    // the two cells the step name promises.
+    if ((firstX === PARK.x && firstY === PARK.y) || (secondX === PARK.x && secondY === PARK.y))
+      throw new Error(
+        `This step parks the keyboard cursor at (${PARK.x}, ${PARK.y}), which is one of the cells it was asked to toggle -- park it somewhere this scenario does not assert about`,
+      )
+    await parkKeyboardCursorAt(page, PARK.x, PARK.y)
+    // Positively anchored here, where the cursor is readable in any renderer,
+    // rather than only inferred from the absence check the pan step makes.
+    expect(await rovingCell(page)).toEqual([PARK.x, PARK.y])
+
     remember(page, FIRST_X, firstX)
     remember(page, FIRST_Y, firstY)
     remember(page, SECOND_X, secondX)
@@ -68,6 +97,11 @@ Given(
 // enough: a cell is mounted only if both of its coordinates are in range.
 const PAN_AWAY_PX = -10640
 
+// Where the Given leaves the keyboard cursor. The origin only because it is the
+// one coordinate this feature never toggles; nothing about the scenario depends
+// on which cell it is, only that the pan step makes no claim about it.
+const PARK = { x: 0, y: 0 }
+
 When('I pan far away from both cells and back', async ({ page }) => {
   await dragPan(page, CENTER.x, CENTER.y, PAN_AWAY_PX, 0, 50)
 
@@ -77,6 +111,26 @@ When('I pan far away from both cells and back', async ({ page }) => {
   // policy moved, which is exactly the vacuously-true form this step exists to
   // replace. Measured 2026-08-26 rather than assumed: with PAN_AWAY_PX set to
   // 0 the scenario fails here, on the first of the two counts.
+  //
+  // WHAT THE TWO ABSENCES BELOW REST ON. Absence is a weak observation, so the
+  // question is what else could produce it -- and exactly one mounting rule
+  // keeps a cell for a reason of its own: the keyboard cursor's cell stays
+  // mounted wherever the camera is, so the grid still has a tab stop when the
+  // cursor is off-range. If the cursor sat on either of these cells, the second
+  // count would be false about mounting rather than about panning. It is parked
+  // at PARK by the Given, which asserts that positively and refuses to run if
+  // PARK is one of the two.
+  //
+  // NULL IS AN ACCEPTED ANSWER HERE, AND ONLY HERE, because the two renderers
+  // differ on this exact point and this step has to be true of both. Measured:
+  // while the cell layer mounts a tile range, panning the cursor out of range
+  // leaves NO element carrying the tab stop at all, so the cursor is
+  // unreadable -- and the collision this guards against cannot occur either,
+  // since nothing is mounted for it. Once the cursor's cell is mounted
+  // unconditionally, a cursor is always reported and this comparison bites.
+  const cursor = await rovingCell(page)
+  if (cursor !== null) expect(cursor).toEqual([PARK.x, PARK.y])
+
   await expect(cellLocator(page, recall(page, FIRST_X), recall(page, FIRST_Y))).toHaveCount(0)
   await expect(cellLocator(page, recall(page, SECOND_X), recall(page, SECOND_Y))).toHaveCount(0)
 

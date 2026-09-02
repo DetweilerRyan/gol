@@ -32,6 +32,7 @@ import {
   aliveCells,
   cellLocator,
   focusedCellElement,
+  rovingGridCell,
   patternLibraryModal,
   previewCells,
   rulerGroup,
@@ -248,6 +249,23 @@ const FOCUSED_CELL_LABEL = /^Cell (-?\d+), (-?\d+)$/
 // mounted cell -- so it is a real answer here and not an error.
 export async function focusedCell(page: Page): Promise<[number, number] | null> {
   const element = focusedCellElement(page)
+  if ((await element.count()) === 0) return null
+  const match = FOCUSED_CELL_LABEL.exec((await element.getAttribute('aria-label')) ?? '')
+  return match ? [Number(match[1]), Number(match[2])] : null
+}
+
+// WHICH CELL THE GRID WOULD RESUME AT -- the roving cursor, read from the one
+// cell carrying the grid's tab stop, whether or not the document's focus is
+// currently inside the grid at all.
+//
+// Distinct from focusedCell above, and the difference is the whole reason this
+// exists: focusedCell reads :focus, which is where the keyboard is NOW, while
+// this reads where the grid REMEMBERS being. They coincide whenever the grid
+// holds focus, and only this one still answers after focus has moved away --
+// which is exactly the state an absence assertion has to rule out, since the
+// cursor's cell stays mounted even when it is out of range.
+export async function rovingCell(page: Page): Promise<[number, number] | null> {
+  const element = rovingGridCell(page)
   if ((await element.count()) === 0) return null
   const match = FOCUSED_CELL_LABEL.exec((await element.getAttribute('aria-label')) ?? '')
   return match ? [Number(match[1]), Number(match[2])] : null

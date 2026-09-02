@@ -121,6 +121,26 @@ export async function clickCells(page: Page, cells: ReadonlyArray<readonly [numb
   }
 }
 
+// MOVES THE KEYBOARD CURSOR WITHOUT CHANGING THE BOARD, by clicking one cell
+// twice: the pointer route sets the cursor on every tap, and two taps on one
+// cell leave its aliveness exactly as they found it.
+//
+// It exists because the seeding route has a side effect the scenarios do not
+// ask for. Clicking a cell to bring it to life also parks the cursor there, and
+// the cursor's own cell stays mounted even when it is out of range -- that is
+// what keeps the grid tabbable from off-screen. A step that then asserts the
+// seeded cell has NO element is asserting against the one cell guaranteed to
+// have one. Parking the cursor somewhere the step says nothing about restores
+// the assertion to what it reads as.
+//
+// The keyboard route cannot do this job: reaching a distant cell by arrow keys
+// costs one press per cell AND scrolls the view to follow, so it would move the
+// camera the caller is about to make claims about.
+export async function parkKeyboardCursorAt(page: Page, x: number, y: number) {
+  await clickCell(page, x, y)
+  await clickCell(page, x, y)
+}
+
 // Clicks a single, possibly off-screen, cell.
 export async function clickCell(page: Page, x: number, y: number) {
   await clickCells(page, [[x, y]])
