@@ -60,6 +60,17 @@ export function advanceZoomTarget(
   return { fromCellSize: currentCellSize, toCellSize: target, startedAtMs: nowMs, durationMs }
 }
 
+// EQUIVALENT MUTANT, measured -- do not chase the Math.min(1, ...) half. Both
+// readers of progressAt below test `>= 1` (glideCellSizeAt returns toCellSize
+// outright, isGlideComplete answers true), so a progress of 5 and a progress
+// of 1 are indistinguishable everywhere and the upper clamp is unreachable
+// dead weight given the exact-landing branch. Verified rather than argued:
+// replacing this with `Math.max(0, t)` leaves all 889 tests green, including
+// the 17 properties in zoomGlide.property.test.ts. The lower clamp is NOT
+// equivalent -- it is what makes a backwards clock hold at fromCellSize, and
+// removing it reds three of those properties. Kept as written because clamp01
+// is a named, self-contained helper and half a clamp is a worse thing to read
+// than a redundant one.
 function clamp01(t: number): number {
   return Math.min(1, Math.max(0, t))
 }

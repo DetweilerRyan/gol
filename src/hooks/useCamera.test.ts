@@ -172,6 +172,17 @@ describe('every non-glide camera writer cancels an in-flight toolbar zoom glide'
   // immediately click zoom-out -- base 25, target 20, current 20 -> null.
   // Left running (misread as "nothing to do"), the user would net a step UP
   // despite clicking in and straight back out.
+  //
+  // DO NOT PRUNE THIS AS REDUNDANT WITH THE FIVE ROWS ABOVE, and do not
+  // assume the e2e layer would catch it. It is the only guard against
+  // routing zoomInCentered/zoomOutCentered through commit() "for
+  // consistency" with its five siblings: the second click would then cancel
+  // the pending glide and recreate it from the CURRENT cellSize (still 20)
+  // rather than from the pending TARGET (25), landing at 80% instead of
+  // netting back to 100%. The .feature's "two quick clicks -> 156%" scenario
+  // cannot see that -- it only discriminates while the first glide is still
+  // mid-flight, and the mis-wiring shows up in the opposite-direction case
+  // this test owns. Argued by coder, ruled to stay at architect's REVIEW.
   it('zoom-in then immediately zoom-out, before any frame runs, nets back to rest -- not one rung up', () => {
     const { result } = renderHook(() => useCamera())
 

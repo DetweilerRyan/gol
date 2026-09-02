@@ -42,6 +42,23 @@ export function useCamera() {
     commit((prev) => panCamera(prev, dxPixels, dyPixels))
   }
 
+  // PRODUCTION-DEAD SINCE smooth-zoom-transitions, AND KEPT ON PURPOSE -- do
+  // not delete it as an unused export. The toolbar was its only caller and
+  // zoomInCentered/zoomOutCentered took that over when zooming started to
+  // glide; LifeBoard has never destructured it, so today only
+  // useCamera.test.ts calls it.
+  //
+  // It stays because the FIVE-ROW CANCEL TABLE in that test file is the only
+  // thing holding the commit() invariant, and the table is documentation as
+  // much as it is a test: this is its generic member, the one a future
+  // non-animated zoom writer (pinch, zoom-to-selection, double-click-to-zoom)
+  // would be modelled on, and a four-row table with the generic row missing
+  // is a weaker prompt to route the new writer through commit() rather than
+  // straight to setCamera. Against that, keeping it costs three lines and
+  // three passing tests whose mutants are all killed. Removing it becomes
+  // right the day either something else needs a non-animated zoom-at-a-pixel
+  // (then it has a caller again) or the commit() funnel gains a mechanical
+  // guard that does not rely on the table.
   function zoomAtPoint(pixelX: number, pixelY: number, factor: number) {
     commit((prev) => zoomCameraAtPoint(prev, pixelX, pixelY, factor))
   }

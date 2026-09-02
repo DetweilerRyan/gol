@@ -75,13 +75,21 @@ export function useZoomGlide(onCamera: (next: Camera) => void): ZoomGlideControl
     }
   }
 
+  // ONE NULL GUARD, IN applyFrame, AND DELIBERATELY NOT A SECOND ONE HERE.
+  // This callback used to re-check stateRef.current before calling
+  // applyFrame, on the reasoning that the glide might have been cancelled or
+  // replaced between the frame being scheduled and it firing. It cannot have
+  // been: both cancel() and zoomBy() cancelAnimationFrame the pending frame
+  // synchronously before they touch stateRef, so a fired frame always has
+  // the state it was scheduled with. The re-check was therefore unreachable
+  // dead code, and measured as such -- a scoped Stryker run over this file
+  // reported four mutually-masking `=> false` survivors across the four null
+  // decisions this module used to have (architect, REVIEW pass). Removing
+  // this one and zoomBy's twin leaves applyFrame's own guard as the single
+  // decision, which is then genuinely reachable and killed.
   function scheduleFrame() {
     rafIdRef.current = requestAnimationFrame(() => {
       rafIdRef.current = null
-      // The glide may have been cancelled, or replaced by a new one from a
-      // later click, between this frame being scheduled and it firing --
-      // either way there is nothing left for this particular frame to do.
-      if (stateRef.current === null) return
       applyFrame(performance.now())
       if (stateRef.current !== null) scheduleFrame()
     })
@@ -108,8 +116,11 @@ export function useZoomGlide(onCamera: (next: Camera) => void): ZoomGlideControl
     stateRef.current =
       nextGlide === null ? null : { glide: nextGlide, fromCamera: camera, anchorX: anchorPixelX, anchorY: anchorPixelY }
 
-    if (nextGlide === null) return
-
+    // No early return for the null case, deliberately -- see scheduleFrame's
+    // comment above. applyFrame is a no-op on a null state, and the
+    // reschedule check below is false, so a refused click falls through here
+    // doing exactly nothing rather than through a guard of its own.
+    //
     // Apply synchronously once. At progress 0 this is a same-reference bail
     // in zoomCameraToCellSize (fromCellSize === camera.cellSize, so the
     // clamped target equals the current cellSize), which React's setState
@@ -132,6 +143,15 @@ export function useZoomGlide(onCamera: (next: Camera) => void): ZoomGlideControl
   }
 
   // Unmount cancels; it must NOT flush -- see the module comment above.
+  //
+  // EQUIVALENT MUTANT, measured -- the same one useRafCoalescedPan.ts's own
+  // unmount effect documents, for the same reason. Stryker replaces the `[]`
+  // with a single-element array and it survives: React compares deps by
+  // per-index Object.is, and a fresh same-valued literal is Object.is-equal to
+  // itself across renders exactly as `[]` is, so both schedule identically
+  // (mount/unmount only). It is the ONLY survivor left on this file -- a
+  // scoped, non-incremental run at architect's REVIEW pass reports 45 mutants
+  // and 97.78%, the missing 2.22% being this one line.
   useEffect(() => {
     return () => {
       cancel()
