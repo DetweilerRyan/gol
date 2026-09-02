@@ -96,7 +96,15 @@ describe('glideCellSizeAt (property)', () => {
   it.prop([glideArbitrary, fc.double({ min: 0, max: 1e6, noNaN: true })])(
     'returns toCellSize bit-for-bit at and after completion, never an eased value near it',
     (glide, overshootMs) => {
-      expect(glideCellSizeAt(glide, glide.startedAtMs + glide.durationMs + overshootMs)).toBe(glide.toCellSize)
+      const nowMs = glide.startedAtMs + glide.durationMs + overshootMs
+      // "AFTER COMPLETION" IS A CLAIM ABOUT ELAPSED TIME, and elapsed time is
+      // what progressAt actually computes -- see the boundary property below
+      // for the full measurement of why the two differ. Adding durationMs to
+      // a timestamp can round DOWN, so for a small enough overshoot this
+      // expression names an instant that is still, correctly, mid-glide.
+      // Measured at 2 failing runs in 400 before this guard.
+      fc.pre(nowMs - glide.startedAtMs >= glide.durationMs)
+      expect(glideCellSizeAt(glide, nowMs)).toBe(glide.toCellSize)
     },
   )
 
@@ -135,6 +143,30 @@ describe('glideCellSizeAt (property)', () => {
   // disagree.
   it.prop([glideArbitrary])('is complete, and exactly landed, at the instant its duration elapses', (glide) => {
     const atBoundary = glide.startedAtMs + glide.durationMs
+    // MEASURED FLAKE (hardener, smooth-zoom-transitions): as first written
+    // this property failed 7 runs in 60, and the module was right every
+    // time. `startedAtMs + durationMs` is a REAL-number instant, and
+    // fl(startedAtMs + durationMs) rounds DOWN whenever the sum crosses into
+    // a coarser binade -- so the representable timestamp it yields denotes an
+    // instant a fraction of an ULP BEFORE completion, and "not complete" is
+    // the correct answer there. Counterexample from seed=-1448494908:
+    // startedAtMs 52.212484599652846, durationMs 1996, where
+    // (startedAtMs + 1996) - startedAtMs is 1995.9999999999998 and progress
+    // is 0.9999999999999999.
+    //
+    // NOT AN ARBITRARY NARROWED UNTIL IT STOPPED SEEING THE THING -- the
+    // draws stay full-precision (this file's header explains why integers
+    // would be), and what is excluded is only a timestamp that does not
+    // denote the instant this property is about. progressAt reads
+    // (nowMs - startedAtMs), so the boundary instant, in the module's own
+    // arithmetic, is any nowMs where THAT difference is the whole duration;
+    // the line below says exactly that and nothing weaker. It retains ~98% of
+    // draws, and every retained case sits exactly on progress === 1, so the
+    // `>= 1` vs `> 1` discrimination this test exists for is untouched --
+    // verified by hand-applying that mutant, which still reds this property.
+    // zoomGlide.test.ts pins the same boundary deterministically at 1000/200
+    // besides.
+    fc.pre(atBoundary - glide.startedAtMs === glide.durationMs)
     expect(isGlideComplete(glide, atBoundary)).toBe(true)
     expect(glideCellSizeAt(glide, atBoundary)).toBe(glide.toCellSize)
   })
