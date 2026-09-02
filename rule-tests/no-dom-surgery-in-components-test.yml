@@ -1,0 +1,41 @@
+id: no-dom-surgery-in-components
+valid:
+  # DOM READS are the whole reason this rule is not "no DOM in a component".
+  # Grid.tsx genuinely does this -- a tap resolves to a world cell through it.
+  - const rect = containerRef.current.getBoundingClientRect()
+  # The WAI-ARIA roving-tabindex pattern: moving focus is not moving a node.
+  - el.focus()
+  - document.querySelector(`[aria-label="Cell ${x}, ${y}"]`).focus()
+  # A native, non-passive listener attached to a ref -- useWheelInput's shape.
+  - "containerRef.current.addEventListener('wheel', onWheel, { passive: false })"
+  # `remove` is deliberately NOT in the method list: these two are ordinary and
+  # would have made the rule noisy enough to get weakened.
+  - element.classList.remove('bg-gray-900')
+  - mounted.remove()
+  # Removal expressed DECLARATIVELY, which is the sanctioned way to do it.
+  - setTiles((prev) => prev.filter((t) => t.key !== key))
+  # A prose mention is not a call. The deleted onBlur's comment said all three.
+  - // the queued microtask would call parent.insertBefore on a node whose parent is already gone
+invalid:
+  # The exact two calls Cell.tsx's deleted onBlur made.
+  - parent.removeChild(el)
+  - parent.insertBefore(el, next)
+  # The rest of the enumerated list.
+  - parent.appendChild(el)
+  - parent.replaceChild(fresh, stale)
+  - el.replaceWith(clone)
+  - el.insertAdjacentElement('afterend', sibling)
+  - el.insertAdjacentHTML('beforeend', '<span></span>')
+  # A member expression as the receiver, not just an identifier.
+  - el.parentNode.removeChild(el)
+  # The deferred form the workaround actually shipped in -- the one this rule
+  # exists to catch coming back.
+  - |
+    queueMicrotask(() => {
+      if (!el.isConnected) return
+      const parent = el.parentNode
+      if (!parent) return
+      const next = el.nextSibling
+      parent.removeChild(el)
+      parent.insertBefore(el, next)
+    })

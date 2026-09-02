@@ -1,0 +1,55 @@
+id: no-dom-surgery-in-components
+language: Tsx
+severity: warning
+message: A component moved, inserted or removed a DOM node itself -- React owns the node tree here.
+note: >-
+  THIS IS NOT "never touch the DOM in a component". Reading the DOM is fine and this repo does it
+  deliberately: Grid.tsx calls getBoundingClientRect() on #grid-content (it is how a tap resolves to
+  a world cell), useGridFocus.ts's el.focus() is the WAI-ARIA roving-tabindex pattern, and
+  addEventListener on a ref is how a non-passive wheel listener gets attached. What this rule bans is
+  the narrow act of REPARENTING: appending, inserting, removing or replacing a node inside a subtree
+  React is rendering. React holds its own references to those nodes and their positions, so moving
+  one behind its back is a reconciler hazard that will not fail loudly.
+  WHAT IT IS ACTUALLY PROTECTING AGAINST, because the class this repo saw was not a performance hack
+  or a jQuery habit -- it was a workaround for a TEST-VISIBLE PLATFORM QUIRK migrating into product
+  code. Cell.tsx briefly carried an onBlur that detached and reattached its own button, in a
+  queueMicrotask, to defeat Chromium's sequential-focus-navigation resume position (which blur() does
+  not reset). By its own comment it "never fires in ordinary use" -- its only trigger was a Playwright
+  helper's synthetic blur. Measured at the time: deleting it cost nothing at full npm run test:e2e
+  scope once the helper stopped depending on it, and the quirk was better answered in the helper. So
+  when this rule fires, the question to ask first is WHO actually triggers this -- if the answer is a
+  test helper, the fix belongs in features/screenplay/, not here.
+  The method list is enumerated rather than shape-matched, and `remove` is deliberately absent:
+  classList.remove() and a Set's own remove() are ordinary and would swamp the rule with false
+  positives, which is how a rule gets weakened to clear a finding.
+# Scoped to the component layer, and both halves of that are decisions.
+#
+# NOT src/hooks/: a hook is this repo's sanctioned browser-API adapter (useElementSize owns
+# ResizeObserver, useWheelInput owns a native listener), and a hook that builds a detached node it
+# owns outright is never fighting the reconciler over it. The hazard is specific to a subtree React
+# is rendering, which is what a component returns.
+#
+# NO -ts TWIN, and unlike no-unbraced-accessible-name's twin argument this one is contingent rather
+# than structural: src/components/ happens to hold only .tsx files today, not "a .ts file could not
+# express this". A twin is also not authorable right now -- npm run ast-grep:rules fails a files:
+# glob that resolves to nothing, and src/components/*.ts matches nothing. So if a .ts module ever
+# lands in this directory, this rule goes blind to it and the twin becomes both necessary and
+# possible on the same day.
+files:
+  - 'src/components/*.tsx'
+# Same exclusion every component-scoped rule here carries. A test may legitimately assemble or tear
+# down a DOM fixture by hand; what it must not do is pin such surgery in the component itself, and
+# that is caught on the product-code side above.
+ignores:
+  - 'src/components/*.test.tsx'
+# Patterns rather than a regex over the call's text: a regex on kind: call_expression matches the
+# WHOLE call including its arguments, so an outer call wrapping an inner one reports twice.
+rule:
+  any:
+    - pattern: $NODE.appendChild($$$ARGS)
+    - pattern: $NODE.removeChild($$$ARGS)
+    - pattern: $NODE.insertBefore($$$ARGS)
+    - pattern: $NODE.replaceChild($$$ARGS)
+    - pattern: $NODE.replaceWith($$$ARGS)
+    - pattern: $NODE.insertAdjacentElement($$$ARGS)
+    - pattern: $NODE.insertAdjacentHTML($$$ARGS)

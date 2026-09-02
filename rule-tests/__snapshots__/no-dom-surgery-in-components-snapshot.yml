@@ -1,0 +1,64 @@
+id: no-dom-surgery-in-components
+snapshots:
+  el.insertAdjacentElement('afterend', sibling):
+    labels:
+    - source: el.insertAdjacentElement('afterend', sibling)
+      style: primary
+      start: 0
+      end: 45
+  el.insertAdjacentHTML('beforeend', '<span></span>'):
+    labels:
+    - source: el.insertAdjacentHTML('beforeend', '<span></span>')
+      style: primary
+      start: 0
+      end: 51
+  el.parentNode.removeChild(el):
+    labels:
+    - source: el.parentNode.removeChild(el)
+      style: primary
+      start: 0
+      end: 29
+  el.replaceWith(clone):
+    labels:
+    - source: el.replaceWith(clone)
+      style: primary
+      start: 0
+      end: 21
+  parent.appendChild(el):
+    labels:
+    - source: parent.appendChild(el)
+      style: primary
+      start: 0
+      end: 22
+  parent.insertBefore(el, next):
+    labels:
+    - source: parent.insertBefore(el, next)
+      style: primary
+      start: 0
+      end: 29
+  parent.removeChild(el):
+    labels:
+    - source: parent.removeChild(el)
+      style: primary
+      start: 0
+      end: 22
+  parent.replaceChild(fresh, stale):
+    labels:
+    - source: parent.replaceChild(fresh, stale)
+      style: primary
+      start: 0
+      end: 33
+  ? |
+    queueMicrotask(() => {
+      if (!el.isConnected) return
+      const parent = el.parentNode
+      if (!parent) return
+      const next = el.nextSibling
+      parent.removeChild(el)
+      parent.insertBefore(el, next)
+    })
+  : labels:
+    - source: parent.removeChild(el)
+      style: primary
+      start: 138
+      end: 160

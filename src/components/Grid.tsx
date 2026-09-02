@@ -122,20 +122,18 @@ export default function Grid({
       // ever lands on an already-visible cell. See useGridFocus.ts's own
       // header.
       gridFocus.setFocus(x, y)
-      // DELIBERATELY no blur() here, even though Chromium's own
-      // click-focuses-button default (pointer capture on #grid-content
-      // notwithstanding -- measured with a throwaway probe) means the
-      // clicked cell keeps real DOM focus after this. Blurring it would
-      // make "Clicking a cell makes it the cell the keyboard comes back to"
-      // pass (a later single Tab would then land here, not skip past it --
-      // see Cell.tsx's onBlur comment for that mechanism), but at the cost
-      // of features/hud-layout-and-shortcuts.e2e.spec.ts's "Enter on a
-      // focused grid cell..." test, which polls document.activeElement
-      // immediately after a click with NO intervening Tab and requires it
-      // to already be the clicked cell. The two contracts want opposite
-      // real-DOM-focus behavior from the same click, and Tab's own "always
-      // moves forward" semantics make both unsatisfiable at once -- see
-      // this slice's step-3 handoff for the escalation.
+      // DELIBERATELY no blur() here, and the click KEEPS real DOM focus --
+      // Chromium's own click-focuses-button default applies (pointer capture
+      // on #grid-content notwithstanding -- measured with a throwaway probe).
+      // That is the behavior the contract wants, not a compromise: the cursor
+      // and real focus then coincide on one cell, which is what "one current
+      // cell shared by both routes" means. It is what makes the click-then-
+      // Enter route work at all, pinned by
+      // features/hud-layout-and-shortcuts.e2e.spec.ts's "Enter on a focused
+      // grid cell..." -- which polls document.activeElement immediately after
+      // a click, with no intervening Tab, and requires it to already be the
+      // clicked cell. Blurring here would break that route outright: a user
+      // who clicks a cell and presses Enter would toggle nothing.
     },
     onHover: (pixelX, pixelY) => {
       const { x, y } = screenToWorld(camera, pixelX, pixelY)

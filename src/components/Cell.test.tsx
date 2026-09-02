@@ -185,50 +185,6 @@ describe('Cell roving tabindex and focus description', () => {
     const describedById = cell.getAttribute('aria-describedby')!
     expect(document.getElementById(describedById)!.className).toContain('sr-only')
   })
-
-  // BROWSER QUIRK WORKAROUND regression test -- see Cell.tsx's own onBlur
-  // comment for the full explanation (Chromium's sequential-focus-navigation
-  // resume position survives blur() on the same DOM node, so the next Tab
-  // press skips past a lone roving-tabindex cell entirely). This only proves
-  // the reattachment actually happens and preserves the node's identity and
-  // position -- the actual Tab-lands-back-on-a-cell claim is real-browser
-  // behavior this jsdom suite cannot observe at all, and is instead pinned
-  // by keyboard-grid-navigation.feature's own e2e scenarios.
-  it('on blur, reattaches its own DOM node at the same position (same object, same parent, same next sibling)', async () => {
-    renderCell({ x: 4, y: 4, ...transformFor(4, 4), isFocused: true })
-    const cell = screen.getByRole('button', { name: 'Cell 4, 4' })
-    const parent = cell.parentElement!
-    const originalNextSibling = cell.nextSibling
-
-    cell.focus()
-    fireEvent.blur(cell)
-    // The reattachment is deferred via queueMicrotask -- flush microtasks.
-    await Promise.resolve()
-    await Promise.resolve()
-
-    expect(parent.contains(cell)).toBe(true)
-    expect(cell.parentElement).toBe(parent)
-    expect(cell.nextSibling).toBe(originalNextSibling)
-  })
-
-  it('does nothing, and does not throw, if the node is already disconnected by the time the deferred reattach runs', async () => {
-    const { unmount } = renderCell({ x: 4, y: 4, ...transformFor(4, 4), isFocused: true })
-    const cell = screen.getByRole('button', { name: 'Cell 4, 4' })
-
-    cell.focus()
-    fireEvent.blur(cell)
-    unmount()
-    expect(cell.isConnected).toBe(false)
-
-    // If the isConnected guard were missing, the queued microtask would call
-    // parent.insertBefore on a node whose parent is already gone (or whose
-    // `next` sibling reference is stale), throwing asynchronously. Flushing
-    // past the microtask with nothing here failing the test IS the
-    // assertion -- vitest surfaces an unhandled rejection from a throwing
-    // queueMicrotask callback as a test failure.
-    await Promise.resolve()
-    await Promise.resolve()
-  })
 })
 
 describe('Cell click-to-activate', () => {

@@ -80,44 +80,6 @@ export default function Cell({ x, y, cellSize, transform, store, onActivate, isF
       // so it needs the same place-vs-toggle branch as the pointer
       // path.
       onClick={() => onActivate(x, y)}
-      // BROWSER QUIRK WORKAROUND, confined to this one handler.
-      //
-      // Chromium tracks a "sequential focus navigation" resume position
-      // that is NOT reset by blur() -- it stays pinned to whichever DOM
-      // node last held real focus, even after that node is blurred, for as
-      // long as the SAME node instance remains mounted. The next Tab press
-      // (from nothing focused) resumes searching forward from that node's
-      // position rather than from the top of the document -- and since this
-      // cell is the ONLY tabbable one in the grid (roving tabindex), "the
-      // next tabbable element after it" is necessarily OUTSIDE the grid
-      // (the toolbar), not another cell.
-      //
-      // This only matters for keyboard-grid-navigation.feature's own test
-      // helper (features/screenplay/tasks.ts's focusGridCell/
-      // focusEdgeCellInView, both blurFocus() then tabForward()) -- a real
-      // keyboard user never blurs without also tabbing in the same
-      // gesture, so this never fires in ordinary use. Measured (throwaway
-      // probe, not committed): reinserting the SAME DOM node at the same
-      // position invalidates Chromium's cached position and the next Tab
-      // correctly restarts from the top; changing tabIndex alone does not.
-      // Grid.tsx's onTap deliberately does NOT also blur on click (see its
-      // own comment) -- that would make this handler load-bearing for the
-      // click route too, but at the cost of an existing, unrelated e2e
-      // spec; see this slice's step-3 handoff.
-      // queueMicrotask defers past any concurrent REACT-driven removal (a
-      // tile eviction blurs too), and isConnected/parentNode guard against
-      // ever touching a node mid-unmount.
-      onBlur={(e) => {
-        const el = e.currentTarget
-        queueMicrotask(() => {
-          if (!el.isConnected) return
-          const parent = el.parentNode
-          if (!parent) return
-          const next = el.nextSibling
-          parent.removeChild(el)
-          parent.insertBefore(el, next)
-        })
-      }}
       style={{
         width: cellSize,
         height: cellSize,
