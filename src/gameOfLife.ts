@@ -15,7 +15,11 @@ export function cellKey(x: number, y: number): CellKey {
   return `${x},${y}`
 }
 
-function parseCellKey(key: CellKey): [number, number] {
+// Exported so liveCellWindow.ts's projection never re-splits a CellKey
+// itself -- the "x,y" encoding stays owned by exactly this module (see
+// cellKey's own definition just above), which is what an information-hiding
+// review would otherwise flag a second parser as violating.
+export function parseCellKey(key: CellKey): [number, number] {
   const [x, y] = key.split(',')
   return [Number(x), Number(y)]
 }

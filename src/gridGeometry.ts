@@ -61,3 +61,75 @@ export function computeMajorGridlines(range: VisibleRange): MajorGridlines {
     y: gridlinesInRange(range.minY, range.maxY),
   }
 }
+
+// The keyboard focus cursor's own range: which cells render FULLY inside the
+// viewport, no VISIBLE_BUFFER_CELLS margin and no partially-clipped edge
+// cell either. computeVisibleRange answers "what might need a DOM node" (the
+// ruler's use, and the old cell-enumeration use this module's header
+// describes as gone); this answers "what a keyboard user can actually see
+// in full" -- Home/End and the edge-reveal scenarios in
+// keyboard-grid-navigation.feature are stated against that stricter
+// boundary, and computing them from the buffered range would land the
+// focus cursor two cells off from where the scenario expects it.
+//
+// A cell x is fully inside the viewport iff worldToScreen(camera, x, y).x is
+// >= 0 and worldToScreen(camera, x + 1, y).x <= widthPx (i.e. neither edge
+// of the cell's own screen box is clipped). Solved for the integer x this
+// gives minX = ceil(offsetX) and maxX = floor(offsetX + widthPx / cellSize)
+// - 1 -- NOT coveringTileRange's floor/ceil-minus-one pair, which
+// deliberately includes a partially-visible edge cell because it answers a
+// different question (what must be MOUNTED to avoid a hole, not what is
+// fully ON SCREEN). The `|| 0` normalizes the -0 Math.ceil/Math.floor can
+// produce at a camera offset that lands exactly on a cell boundary (the
+// same defensive normalization gridlinesInRange uses above, for the same
+// reason -- see computeMajorGridlines' own -0 regression test).
+//
+// Clamped so maxX never falls below minX (an empty range would make
+// centerCell and jumpToRowEdge's "furthest cell" answer undefined) -- the
+// same clamp shape coveringTileRange uses for the pre-measurement 0x0
+// viewport case.
+export function computeOnScreenRange(camera: Camera, viewportWidthPx: number, viewportHeightPx: number): VisibleRange {
+  const minX = Math.ceil(camera.offsetX) || 0
+  const minY = Math.ceil(camera.offsetY) || 0
+  const maxX = Math.max(minX, Math.floor(camera.offsetX + viewportWidthPx / camera.cellSize) - 1)
+  const maxY = Math.max(minY, Math.floor(camera.offsetY + viewportHeightPx / camera.cellSize) - 1)
+  return { minX, maxX, minY, maxY }
+}
+
+// Proper modulo (always non-negative for a positive `period`), unlike JS's
+// `%` which keeps the sign of its left operand -- (-5) % 20 === -5, not 15.
+function positiveMod(value: number, period: number): number {
+  return ((value % period) + period) % period
+}
+
+// The pixel offset a CSS repeating background pattern needs (as its own
+// background-position) to align a grid line to world coordinate 0, at both
+// the per-cell (minor) and every-MAJOR_GRIDLINE_INTERVAL-cells (major)
+// period -- the phase Cell.tsx's own per-button border classes currently
+// encode implicitly, and this module's future caller draws as a background
+// instead once dead cells no longer carry an element of their own to put a
+// border on.
+//
+// worldToScreen(camera, 0, y).x is exactly -offsetX * cellSize -- the
+// screen-space position world x=0 currently sits at -- so that is the raw
+// phase; positiveMod wraps it into [0, period) so a background-position
+// declaration never carries an arbitrarily large (or negative) offset.
+export interface GridLinePhase {
+  minorXPx: number
+  minorYPx: number
+  majorXPx: number
+  majorYPx: number
+}
+
+export function gridLinePhasePx(camera: Camera): GridLinePhase {
+  const minorPeriod = camera.cellSize
+  const majorPeriod = camera.cellSize * MAJOR_GRIDLINE_INTERVAL
+  const rawXPx = -camera.offsetX * camera.cellSize
+  const rawYPx = -camera.offsetY * camera.cellSize
+  return {
+    minorXPx: positiveMod(rawXPx, minorPeriod),
+    minorYPx: positiveMod(rawYPx, minorPeriod),
+    majorXPx: positiveMod(rawXPx, majorPeriod),
+    majorYPx: positiveMod(rawYPx, majorPeriod),
+  }
+}

@@ -360,4 +360,86 @@ describe('createLiveCellStore', () => {
       expect(listener).toHaveBeenCalledTimes(1)
     })
   })
+
+  describe('subscribeCells / getLiveCells (whole-set subscription)', () => {
+    it('notifies a whole-set subscriber on toggle', () => {
+      const store = createLiveCellStore()
+      const listener = vi.fn()
+      store.subscribeCells(listener)
+
+      store.toggle(0, 0)
+
+      expect(listener).toHaveBeenCalledTimes(1)
+    })
+
+    it('notifies a whole-set subscriber on advance, even when the delta is empty', () => {
+      const store = createLiveCellStore()
+      const listener = vi.fn()
+      store.subscribeCells(listener)
+
+      store.advance()
+
+      expect(listener).toHaveBeenCalledTimes(1)
+    })
+
+    it('notifies a whole-set subscriber on place', () => {
+      const store = createLiveCellStore()
+      const listener = vi.fn()
+      store.subscribeCells(listener)
+
+      store.place(BLOCK, 0, 0)
+
+      expect(listener).toHaveBeenCalledTimes(1)
+    })
+
+    it('getLiveCells reflects the mutation a subscriber was notified about', () => {
+      const store = createLiveCellStore()
+      let seenAlive: boolean | undefined
+      store.subscribeCells(() => {
+        seenAlive = store.getLiveCells().has(cellKey(2, 2))
+      })
+
+      store.toggle(2, 2)
+
+      expect(seenAlive).toBe(true)
+    })
+
+    it('whole-set subscriptions unsubscribe cleanly', () => {
+      const store = createLiveCellStore()
+      const listener = vi.fn()
+      const unsubscribe = store.subscribeCells(listener)
+
+      store.toggle(0, 0)
+      expect(listener).toHaveBeenCalledTimes(1)
+
+      unsubscribe()
+      store.toggle(1, 1)
+      expect(listener).toHaveBeenCalledTimes(1)
+    })
+
+    it('a stale cells-unsubscribe closure called again after resubscribing the same listener does not remove the new subscription', () => {
+      const store = createLiveCellStore()
+      const listener = vi.fn()
+      const unsubFirst = store.subscribeCells(listener)
+      unsubFirst()
+      store.subscribeCells(listener)
+      unsubFirst()
+
+      store.toggle(0, 0)
+      expect(listener).toHaveBeenCalledTimes(1)
+    })
+
+    it('does not notify a per-cell subscriber of an unrelated whole-set subscription, or vice versa', () => {
+      const store = createLiveCellStore()
+      const cellListener = vi.fn()
+      const cellsListener = vi.fn()
+      store.subscribeCell(cellKey(9, 9), cellListener)
+      store.subscribeCells(cellsListener)
+
+      store.toggle(0, 0)
+
+      expect(cellListener).not.toHaveBeenCalled()
+      expect(cellsListener).toHaveBeenCalledTimes(1)
+    })
+  })
 })

@@ -23,12 +23,20 @@ import { isShallowEqual } from './equality/is-shallow-equal'
 // goes, whereas a subscription model only notifies the listeners for the
 // cells whose membership actually flipped.
 //
-// Deliberately no whole-set subscription. getLiveCells() exists for
-// inspection/export only -- a component reading it during render would be
-// reading a value it never subscribed to, which is a correctness bug (it
-// won't re-render when that value changes), not just a missed optimization.
-// Render code must go through subscribeCell/getCellSnapshot or
-// subscribeBounds/getBoundsSnapshot.
+// subscribeCells/getLiveCells is the useSyncExternalStore pair for a
+// component that genuinely needs the whole set every mutation --
+// liveCellWindow.ts's projection (collapse-dead-cell-layer), which has to
+// see every live cell to decide which ones fall inside the current render
+// window. That is a real, if coarser, render source now, unlike the
+// getLiveCells()-during-render-with-no-subscription bug the comment here
+// used to warn against: getLiveCells() paired with subscribeCells is exactly
+// how useSyncExternalStore is meant to be used, the same shape
+// subscribeCell/getCellSnapshot and subscribeBounds/getBoundsSnapshot
+// already follow. What is still a correctness bug is calling getLiveCells()
+// during render WITHOUT the matching subscribeCells subscription -- that
+// still reads a value the component never subscribed to, and won't
+// re-render when it changes. subscribeCell/getCellSnapshot remain the
+// finer-grained, single-cell pair and are unaffected by this addition.
 
 export type Listener = () => void
 export type Unsubscribe = () => void
@@ -42,8 +50,11 @@ export interface LiveCellStore {
   getCellSnapshot(key: CellKey): boolean
   subscribeBounds(listener: Listener): Unsubscribe
   getBoundsSnapshot(): ContentBounds | null
+  subscribeCells(listener: Listener): Unsubscribe
 
-  // Inspection/export only -- never a render source. See module header.
+  // A legitimate render source ONLY when paired with subscribeCells above
+  // (the useSyncExternalStore contract) -- reading it during render with no
+  // matching subscription is still a correctness bug. See module header.
   getLiveCells(): ReadonlyLiveCells
   // buckets.size -- the no-leak invariant unsubscribe is responsible for.
   trackedCellCount(): number
@@ -67,6 +78,7 @@ export function createLiveCellStore(initialLiveCells: ReadonlyLiveCells = create
 
   const cellListeners = new Map<CellKey, Set<Listener>>()
   const boundsListeners = new Set<Listener>()
+  const cellsListeners = new Set<Listener>()
 
   let boundsDirty = true
   let boundsSnapshot: ContentBounds | null = null
@@ -122,10 +134,21 @@ export function createLiveCellStore(initialLiveCells: ReadonlyLiveCells = create
       }
     }
     notifyBounds()
+    notifyCells()
   }
 
   function notifyBounds(): void {
     for (const listener of Array.from(boundsListeners)) {
+      listener()
+    }
+  }
+
+  // Whole-set subscribers -- every mutator's notify() call reaches these
+  // too, since any change to `cells` (however small) can move which cells a
+  // range-based projection like liveCellWindow.ts's liveCellsInRange should
+  // show.
+  function notifyCells(): void {
+    for (const listener of Array.from(cellsListeners)) {
       listener()
     }
   }
@@ -219,6 +242,16 @@ export function createLiveCellStore(initialLiveCells: ReadonlyLiveCells = create
     return boundsSnapshot
   }
 
+  function subscribeCells(listener: Listener): Unsubscribe {
+    cellsListeners.add(listener)
+    let unsubscribed = false
+    return () => {
+      if (unsubscribed) return
+      unsubscribed = true
+      cellsListeners.delete(listener)
+    }
+  }
+
   function getLiveCells(): ReadonlyLiveCells {
     return cells
   }
@@ -235,6 +268,7 @@ export function createLiveCellStore(initialLiveCells: ReadonlyLiveCells = create
     getCellSnapshot,
     subscribeBounds,
     getBoundsSnapshot,
+    subscribeCells,
     getLiveCells,
     trackedCellCount,
   }

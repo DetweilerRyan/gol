@@ -6,6 +6,7 @@ import {
   createEmptyLiveCells,
   getNextGeneration,
   isCellAlive,
+  parseCellKey,
   toggleCell,
   type LiveCells,
 } from './gameOfLife'
@@ -19,6 +20,23 @@ describe('cellKey', () => {
   it('encodes coordinates as a stable string', () => {
     expect(cellKey(3, 5)).toBe('3,5')
     expect(cellKey(-3, -5)).toBe('-3,-5')
+  })
+})
+
+describe('parseCellKey', () => {
+  it('decodes a key back into its coordinates', () => {
+    expect(parseCellKey('3,5')).toEqual([3, 5])
+    expect(parseCellKey('-3,-5')).toEqual([-3, -5])
+  })
+
+  it('round-trips through cellKey', () => {
+    expect(parseCellKey(cellKey(7, -2))).toEqual([7, -2])
+  })
+
+  it('decodes zero without producing -0 on either coordinate', () => {
+    const [x, y] = parseCellKey('0,0')
+    expect(Object.is(x, -0)).toBe(false)
+    expect(Object.is(y, -0)).toBe(false)
   })
 })
 
