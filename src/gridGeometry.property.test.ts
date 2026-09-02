@@ -1,7 +1,14 @@
 import { it } from '@fast-check/vitest'
 import fc from 'fast-check'
 import { describe, expect } from 'vitest'
-import { computeMajorGridlines, computeVisibleRange, isMajorGridline, type VisibleRange } from './gridGeometry'
+import { MAX_CELL_SIZE, MIN_CELL_SIZE, worldToScreen, type Camera } from './camera'
+import {
+  computeMajorGridlines,
+  computeVisibleRange,
+  gridLinePhasePx,
+  isMajorGridline,
+  type VisibleRange,
+} from './gridGeometry'
 import { cameraArbitrary as camera } from './test-support/arbitraries'
 
 const worldCoord = fc.integer({ min: -10_000, max: 10_000 })
@@ -73,4 +80,71 @@ describe('computeMajorGridlines (property)', () => {
       expect(isMajorGridline(x)).toBe(true)
     }
   })
+})
+
+// gridLinePhasePx (property): the coincidence identity GridLines.tsx's own
+// spike checked -- that its background-position phase lands on the exact
+// same screen pixel worldToScreen would place a cell's own border at. The
+// spike (see GridLines.test.tsx) hand-picked two cellSize points (20 and
+// 12.8, the default and two zoom-out steps) rather than sweeping the whole
+// reachable range; this closes that gap by quantifying over the entire
+// [MIN_CELL_SIZE, MAX_CELL_SIZE] span with a fractional cellSize (the app
+// reaches non-integer values like 12.8 and 8.192 via repeated ZOOM_FACTOR
+// steps -- arbitraries.ts's shared cellSizeArbitrary is integer-only, so a
+// local fractional one is built here instead, the same "build your own when
+// the shared one doesn't fit" pattern camera.property.test.ts's own comment
+// documents for exact-offset cameras).
+const fractionalCellSizeCameraArbitrary: fc.Arbitrary<Camera> = fc.record({
+  offsetX: fc.float({ min: Math.fround(-1000), max: Math.fround(1000), noNaN: true }),
+  offsetY: fc.float({ min: Math.fround(-1000), max: Math.fround(1000), noNaN: true }),
+  cellSize: fc.float({ min: Math.fround(MIN_CELL_SIZE), max: Math.fround(MAX_CELL_SIZE), noNaN: true }),
+})
+
+function wrapIntoPeriod(value: number, period: number): number {
+  return ((value % period) + period) % period
+}
+
+// Circular (modular) distance, not a plain difference: two phases pinned
+// right at opposite sides of a period boundary -- e.g. 0 and period - 1e-15
+// are the SAME line, approached from a different rounding direction, not a
+// seam. A plain toBeCloseTo treats those as ~period apart and fails; this
+// is what an early draft of the property below did, and shrinking found the
+// counterexample {offsetX: 5.55e-17, cellSize: 8, worldCoordinate: -1} in
+// under a second -- confirming the comparison, not gridLinePhasePx, was
+// wrong (GridLines.test.tsx's own toBeCloseTo never hit this because its
+// two hand-picked cameras don't land that close to a boundary).
+function circularDeltaPx(a: number, b: number, period: number): number {
+  const raw = wrapIntoPeriod(a - b, period)
+  return Math.min(raw, period - raw)
+}
+
+describe('gridLinePhasePx (property)', () => {
+  it.prop([fractionalCellSizeCameraArbitrary, worldCoord])(
+    'coincides with worldToScreen, wrapped into one cellSize period, at every cellSize -- not just the two points the GridLines.tsx spike hand-checked',
+    (cam, worldCoordinate) => {
+      const { minorXPx, minorYPx } = gridLinePhasePx(cam)
+      const screen = worldToScreen(cam, worldCoordinate, worldCoordinate)
+      // Congruent over the reals, not bit-exact: the two sides reach the same
+      // phase via a different sequence of floating-point operations (a
+      // multiply-then-wrap vs a subtract-then-multiply), and can land on
+      // opposite sides of the wrap boundary -- see circularDeltaPx above.
+      expect(circularDeltaPx(wrapIntoPeriod(screen.x, cam.cellSize), minorXPx, cam.cellSize)).toBeLessThan(1e-6)
+      expect(circularDeltaPx(wrapIntoPeriod(screen.y, cam.cellSize), minorYPx, cam.cellSize)).toBeLessThan(1e-6)
+    },
+  )
+
+  it.prop([fractionalCellSizeCameraArbitrary])(
+    'always returns a value in [0, period) on every axis, minor and major alike',
+    (cam) => {
+      const phase = gridLinePhasePx(cam)
+      expect(phase.minorXPx).toBeGreaterThanOrEqual(0)
+      expect(phase.minorXPx).toBeLessThan(cam.cellSize)
+      expect(phase.minorYPx).toBeGreaterThanOrEqual(0)
+      expect(phase.minorYPx).toBeLessThan(cam.cellSize)
+      expect(phase.majorXPx).toBeGreaterThanOrEqual(0)
+      expect(phase.majorXPx).toBeLessThan(cam.cellSize * 10)
+      expect(phase.majorYPx).toBeGreaterThanOrEqual(0)
+      expect(phase.majorYPx).toBeLessThan(cam.cellSize * 10)
+    },
+  )
 })
