@@ -139,6 +139,19 @@ A measured number licenses a conclusion exactly as wide as the command that prod
 
 This is the same family as the `--mutate`-is-last-wins and stale-`coverage/` traps in `CLAUDE.md`: a real measurement, correctly run, describing less than the reader will assume it describes.
 
+## A conclusion from a plausible mechanism outlives a measurement
+
+The section above is about a measurement whose scope gets widened. This one is about its more common sibling: **a conclusion that was never measured at all, reached instead from a mechanism that sounds right.** Those two are indistinguishable in a handoff — both arrive as a confident sentence — and only one of them has anything behind it. The asymmetry that makes this worth a section of its own is that **a wrong mechanism survives review far more easily than a wrong number does**, because a reviewer can check a number against the command that produced it and has nothing to check a mechanism against except their own intuition, which is usually the same intuition that produced it.
+
+Every role in this pipeline has published one. A DESIGN pass asserted a third-party runner's cleanup lifecycle and was wrong (`black-box-acceptance-pilot`). A REVIEW pass concluded a guard existed from reading call sites (`ruler-label-axis-affordance`). `smooth-zoom-transitions` produced three in a single slice, each caught by the next role rather than by its author: the exactness ruling's justification named a consequence two orders of magnitude larger than anything the instrument could see; "a bare unconditional statement call has no Stryker mutator" was false, and one scoped run showed the mutant existing and Killed; and a severity argument called a float boundary vanishingly unlikely when the arithmetic behind it holds for 7.2% of inputs. **In all six cases the verdict survived and the reason did not.** That is the characteristic signature — a right answer for a wrong reason is not self-correcting, because nothing downstream fails.
+
+What to do about it, in order of cost:
+
+- **Prefer the cheap command to the confident sentence.** The three `smooth-zoom-transitions` errors cost one Stryker run, one replay script and one arithmetic count between them, each under a minute. If a claim can be checked by running something, running it is nearly always cheaper than the paragraph arguing for it.
+- **When you can't check it, say the claim is unverified.** An unverified claim a later role can check is worth more than a confident one it has to refute, and it costs one clause. This is the same instruction the `architect` role carries about reachability claims, generalized: it applies to any mechanism, not just to what calls what.
+- **Write down the mechanism you actually verified, not the one you set out to verify.** When a check comes back confirming the verdict by a different route than you expected, the route is the finding. `smooth-zoom-transitions`' `clamp01` note is the worked example: the equivalence claim was right, the "measured equivalent mutant" heading was not, and the heading is what sent the next role hunting for a survivor that no mutator generates.
+- **Re-measure the premise you were handed, not just the conclusion.** This is the habit that caught all six, and it is the reason the pipeline's cost is worth paying. A role that only re-checks the previous role's _answer_ will agree with it; the errors live one level down, in why.
+
 ## Verification before handoff
 
 Ported from swarm-forge's six-pack branch's own `local-engineering.prompt`, which adds two rules on top of the generic constitution above:
