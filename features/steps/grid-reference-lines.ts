@@ -16,9 +16,15 @@
 // either, which is why the affordance landing changed nothing here.
 //
 // WHAT "A MAJOR GRIDLINE" MEANS TO A PLAYER: the coordinate is one of the
-// numbers written along the edge of the viewport. The pure-module layer
-// states the same clause as isMajorGridline(n), which is arithmetic; this is
-// the same fact as the thing on screen that the arithmetic exists to produce.
+// numbers written along the edge of the viewport. The pure-module layer states
+// the same clause by ENUMERATION -- gridGeometry.ts's computeMajorGridlines,
+// which is what the ruler is drawn from -- and this is the same fact as the
+// thing on screen that the arithmetic exists to produce. It used to name an
+// isMajorGridline(n) predicate; collapse-dead-cell-layer deleted that along
+// with the per-cell border it existed for, and read gridGeometry.ts's own
+// header before reaching for a replacement: the predicate was also serving as
+// the enumeration's oracle through a shared constant, which is exactly the
+// self-reference that made a mutant on it invisible.
 import { createBdd } from 'playwright-bdd'
 import { expect, type Page } from '@playwright/test'
 import { axisLabelValues, openGrid, recall, remember, withCellInView } from '../e2e-helpers'

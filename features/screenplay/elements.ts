@@ -153,3 +153,27 @@ export function focusedCellElement(page: Page): Locator {
 export function rovingGridCell(page: Page): Locator {
   return page.locator(`${CELL_SELECTOR}[tabindex="0"]`)
 }
+
+// THE HOVER INDICATOR -- the single cursor-following affordance that replaced
+// ~19,680 per-cell `hover:` rules.
+//
+// REACHED BY ITS PAINT CLASS, WHICH IS A COMPROMISE AND IS RECORDED AS ONE.
+// The element is deliberately aria-hidden: it is decoration, pointer-only, and
+// a screen-reader user's equivalent is the focus cursor, so there is no
+// accessible name to reach it by and there SHOULD NOT be -- giving it one would
+// be a test hook wearing an affordance's name, which this repo has ruled out
+// twice. That makes this unlike the two reach-arounds that were paid off:
+// nothing here stands in for a perception a user is denied.
+//
+// What it does stand in for is a missing TEST HANDLE. `#grid-content`'s own id
+// is the precedent, and the indicator has no equivalent -- so the only stable
+// thing about it is how it paints, and `bg-gray-500/20` is a design choice that
+// could change with no behaviour change at all and silently take this spec with
+// it. Position is not usable instead: PatternPreview renders after this element
+// while a pattern is armed, so "last child" is not stable either.
+//
+// DELETION TRIGGER: the slice that gives HoverIndicator its own id or data
+// handle. Replace this selector with it and delete this paragraph.
+export function hoverIndicator(page: Page): Locator {
+  return page.locator('#grid-content > div.pointer-events-none.absolute.top-0.left-0')
+}

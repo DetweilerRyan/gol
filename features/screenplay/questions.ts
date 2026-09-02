@@ -32,6 +32,7 @@ import {
   aliveCells,
   cellLocator,
   focusedCellElement,
+  hoverIndicator,
   rovingGridCell,
   patternLibraryModal,
   previewCells,
@@ -378,4 +379,17 @@ export async function originRulerPx(page: Page): Promise<{ x: number; y: number 
 export async function originDisplacement(page: Page): Promise<{ x: number; y: number }> {
   const now = await originRulerPx(page)
   return { x: now.x - recall(page, ORIGIN_RULER_X), y: now.y - recall(page, ORIGIN_RULER_Y) }
+}
+
+// WHERE THE HOVER INDICATOR IS PAINTED, as a measured box rather than as the
+// transform string it is set from -- the claim it serves is about what the user
+// sees under the pointer, so it is read the way the pixel geometry is read
+// everywhere else in this suite.
+//
+// Null when nothing is hovered, which is a real answer rather than an error:
+// the indicator is not rendered at all until the pointer has been over the grid.
+export async function hoverIndicatorBox(page: Page): Promise<{ x: number; y: number } | null> {
+  if ((await hoverIndicator(page).count()) === 0) return null
+  const box = await hoverIndicator(page).boundingBox()
+  return box ? { x: box.x, y: box.y } : null
 }

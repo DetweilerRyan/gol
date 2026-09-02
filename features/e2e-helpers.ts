@@ -40,6 +40,7 @@ export {
   originDisplacement,
   focusedCell,
   rovingCell,
+  hoverIndicatorBox,
   focusedCellBox,
   focusedCellAnnouncement,
   viewportBox,
