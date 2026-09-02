@@ -1,8 +1,6 @@
-import { act, fireEvent, render, screen } from '@testing-library/react'
+import { fireEvent, render, screen } from '@testing-library/react'
 import { describe, expect, it, vi } from 'vitest'
 import { worldToScreen, type Camera } from '../camera'
-import { cellKey } from '../gameOfLife'
-import { createLiveCellStore } from '../liveCellStore'
 import { CELL_ALIVE_ATTR, CELL_ALIVE_VALUE, CELL_DEAD_VALUE, cellLabel } from '../test-support/cellQuery'
 import Cell from './Cell'
 
@@ -24,7 +22,7 @@ function renderCell(props: Partial<React.ComponentProps<typeof Cell>> = {}) {
     y: 1,
     ...transformFor(1, 1),
     cellSize: camera.cellSize,
-    store: createLiveCellStore(),
+    isAlive: false,
     onActivate: vi.fn(),
     isFocused: false,
     ...props,
@@ -44,40 +42,6 @@ describe('Cell rendering', () => {
     renderCell({ x: 1, y: 1, transform: 'translate(7px, 11px)' })
     expect(screen.getByRole('button', { name: 'Cell 1, 1' }).style.transform).toBe('translate(7px, 11px)')
   })
-
-  it('adds a major-x border class, and not major-y, for a cell on a multiple-of-10 x coordinate', () => {
-    renderCell({ x: 10, y: 1, ...transformFor(10, 1) })
-    const onMajorX = screen.getByRole('button', { name: 'Cell 10, 1' })
-    expect(onMajorX.className).toContain('border-l-2 border-l-gray-400')
-    expect(onMajorX.className).not.toContain('border-t-2 border-t-gray-400')
-  })
-
-  it('adds a major-y border class, and not major-x, for a cell on a multiple-of-10 y coordinate', () => {
-    renderCell({ x: -1, y: 10, ...transformFor(-1, 10) })
-    const onMajorY = screen.getByRole('button', { name: 'Cell -1, 10' })
-    expect(onMajorY.className).toContain('border-t-2 border-t-gray-400')
-    expect(onMajorY.className).not.toContain('border-l-2 border-l-gray-400')
-  })
-
-  it('adds neither major-gridline class, and pins the exact class list, for a cell on neither', () => {
-    renderCell({ x: 1, y: 1, ...transformFor(1, 1) })
-    const onNeither = screen.getByRole('button', { name: 'Cell 1, 1' })
-    expect(onNeither.className).not.toContain('border-l-2 border-l-gray-400')
-    expect(onNeither.className).not.toContain('border-t-2 border-t-gray-400')
-    // Pins down the exact class list (not just the absence of the gridline classes above), so a
-    // mutation that swaps either '' fallback for stray literal text is still caught even though
-    // that text isn't one of the specific substrings checked above.
-    expect(onNeither.className.split(/\s+/).filter(Boolean)).toEqual(
-      'absolute top-0 left-0 border border-gray-200 bg-white hover:bg-gray-100'.split(' '),
-    )
-  })
-
-  it('a cell on both a major-x and major-y coordinate gets both border classes', () => {
-    renderCell({ x: 0, y: 0, ...transformFor(0, 0) })
-    const cell = screen.getByRole('button', { name: 'Cell 0, 0' })
-    expect(cell.className).toContain('border-l-2 border-l-gray-400')
-    expect(cell.className).toContain('border-t-2 border-t-gray-400')
-  })
 })
 
 // aria-pressed says WHAT a cell is (its aliveness); the paint class below
@@ -87,8 +51,7 @@ describe('Cell rendering', () => {
 // visual contract.
 describe('Cell aria-pressed aliveness', () => {
   it('exposes an alive cell as a pressed toggle button, readable through the accessibility tree', () => {
-    const store = createLiveCellStore(new Set([cellKey(0, 0)]))
-    renderCell({ x: 0, y: 0, ...transformFor(0, 0), store })
+    renderCell({ x: 0, y: 0, ...transformFor(0, 0), isAlive: true })
 
     // getByRole with a `pressed` filter resolves through ARIA semantics, not
     // an attribute string -- this is the assertion the accepted outline
@@ -97,7 +60,7 @@ describe('Cell aria-pressed aliveness', () => {
   })
 
   it('exposes a dead cell as an UNPRESSED toggle button, with aria-pressed="false" present rather than omitted', () => {
-    renderCell({ x: 1, y: 0, ...transformFor(1, 0) })
+    renderCell({ x: 1, y: 0, ...transformFor(1, 0), isAlive: false })
 
     const dead = screen.getByRole('button', { name: cellLabel(1, 0), pressed: false })
     // aria-pressed="false" and an absent aria-pressed are different ARIA
@@ -106,14 +69,27 @@ describe('Cell aria-pressed aliveness', () => {
     expect(dead).toHaveAttribute(CELL_ALIVE_ATTR, CELL_DEAD_VALUE)
   })
 
-  it('flips aria-pressed when the store toggles the cell', () => {
-    const store = createLiveCellStore()
-    renderCell({ x: 2, y: 2, ...transformFor(2, 2), store })
-
+  it('flips aria-pressed when a re-render hands it a new isAlive prop', () => {
+    // Cell no longer subscribes to a store itself (see this component's own
+    // header, collapse-dead-cell-layer step 4) -- GridCells recomputes
+    // isAlive from a fresh liveCellsInRange call and hands it down as a
+    // prop, so what used to be "toggle the store, the subscription fires" is
+    // now "re-render with a new prop value".
+    const { rerender } = renderCell({ x: 2, y: 2, ...transformFor(2, 2), isAlive: false })
     const cell = screen.getByRole('button', { name: cellLabel(2, 2) })
     expect(cell).toHaveAttribute(CELL_ALIVE_ATTR, CELL_DEAD_VALUE)
 
-    act(() => store.toggle(2, 2))
+    rerender(
+      <Cell
+        x={2}
+        y={2}
+        {...transformFor(2, 2)}
+        cellSize={camera.cellSize}
+        isAlive
+        onActivate={vi.fn()}
+        isFocused={false}
+      />,
+    )
 
     expect(cell).toHaveAttribute(CELL_ALIVE_ATTR, CELL_ALIVE_VALUE)
   })
@@ -121,19 +97,20 @@ describe('Cell aria-pressed aliveness', () => {
 
 // VISUAL CONTRACT. aria-pressed above says what a cell IS; this pins what it
 // LOOKS LIKE, and is deliberately the only place in this file that reads the
-// Tailwind paint class AS AN ALIVENESS ASSERTION (the exact-class-list pin
-// in 'Cell rendering' above also reads bg-white, but to pin the
-// gridline-fallback branch, not aliveness) -- the paint is still real
-// behaviour (see this slice's outline: "the cell's visible paint is
-// unchanged"), and something in this file should still assert it.
+// Tailwind paint class as an aliveness assertion. collapse-dead-cell-layer
+// step 4 drops the per-cell border and hover: classes (GridLines.tsx and
+// HoverIndicator.tsx own those now -- see Cell.tsx's own header), so a dead
+// cell now paints NOTHING: no class beyond bare positioning, letting
+// GridLines' own base fill and lines show straight through.
 describe('Cell paint', () => {
-  it('paints an alive cell dark and a dead cell light', () => {
-    const store = createLiveCellStore(new Set([cellKey(0, 0)]))
-    renderCell({ x: 0, y: 0, ...transformFor(0, 0), store })
-    renderCell({ x: 1, y: 0, ...transformFor(1, 0) })
+  it('paints an alive cell dark and a dead cell with no background class at all', () => {
+    renderCell({ x: 0, y: 0, ...transformFor(0, 0), isAlive: true })
+    renderCell({ x: 1, y: 0, ...transformFor(1, 0), isAlive: false })
 
-    expect(screen.getByRole('button', { name: cellLabel(0, 0) }).className).toContain('bg-gray-900')
-    expect(screen.getByRole('button', { name: cellLabel(1, 0) }).className).toContain('bg-white')
+    const alive = screen.getByRole('button', { name: cellLabel(0, 0) })
+    const dead = screen.getByRole('button', { name: cellLabel(1, 0) })
+    expect(alive.className.split(/\s+/).filter(Boolean)).toEqual(['absolute', 'top-0', 'left-0', 'bg-gray-900'])
+    expect(dead.className.split(/\s+/).filter(Boolean)).toEqual(['absolute', 'top-0', 'left-0'])
   })
 })
 
@@ -153,8 +130,7 @@ describe('Cell roving tabindex and focus description', () => {
   })
 
   it("the description node's own id matches aria-describedby, and its whole content is exactly the state word", () => {
-    const store = createLiveCellStore(new Set([cellKey(2, 3)]))
-    renderCell({ x: 2, y: 3, ...transformFor(2, 3), isFocused: true, store })
+    renderCell({ x: 2, y: 3, ...transformFor(2, 3), isFocused: true, isAlive: true })
     const cell = screen.getByRole('button', { name: 'Cell 2, 3' })
 
     const describedById = cell.getAttribute('aria-describedby')
@@ -167,14 +143,15 @@ describe('Cell roving tabindex and focus description', () => {
     expect(description!.textContent).toBe('alive')
   })
 
-  it('the description says "dead" for a dead focused cell, and updates live when the store toggles it', () => {
-    const store = createLiveCellStore()
-    renderCell({ x: 2, y: 3, ...transformFor(2, 3), isFocused: true, store })
+  it('the description says "dead" for a dead focused cell, and updates when a re-render flips isAlive', () => {
+    const { rerender } = renderCell({ x: 2, y: 3, ...transformFor(2, 3), isFocused: true, isAlive: false })
     const cell = screen.getByRole('button', { name: 'Cell 2, 3' })
     const describedById = cell.getAttribute('aria-describedby')!
     expect(document.getElementById(describedById)!.textContent).toBe('dead')
 
-    act(() => store.toggle(2, 3))
+    rerender(
+      <Cell x={2} y={3} {...transformFor(2, 3)} cellSize={camera.cellSize} isAlive onActivate={vi.fn()} isFocused />,
+    )
 
     expect(document.getElementById(describedById)!.textContent).toBe('alive')
   })

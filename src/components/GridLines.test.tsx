@@ -18,6 +18,16 @@ describe('GridLines rendering', () => {
     expect(el.className).toContain('inset-0')
   })
 
+  // collapse-dead-cell-layer step 4: a dead cell mostly no longer mounts at
+  // all, so without a base fill here the gaps between live cells would show
+  // #grid-content's own bg-gray-100 through instead of the solid white a
+  // dead cell used to paint -- a visible appearance regression the ruling on
+  // this slice's handoff explicitly rejects.
+  it('carries its own white base fill, so the gap between live cells still reads as white', () => {
+    const el = renderGridLines({ offsetX: 0, offsetY: 0, cellSize: 20 })
+    expect(el.className).toContain('bg-white')
+  })
+
   it('never carries a transform -- it is camera-exact via background-position, not a translated layer', () => {
     const el = renderGridLines({ offsetX: 123.4, offsetY: -56.7, cellSize: 20 })
     expect(el.style.transform).toBe('')

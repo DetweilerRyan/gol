@@ -1,76 +1,82 @@
-import { cellKey } from '../gameOfLife'
-import { isMajorGridline } from '../gridGeometry'
-import { useLiveCell } from '../hooks/useLiveCell'
-import type { LiveCellStore } from '../liveCellStore'
-
 // The id every focused cell's own visually-hidden description span is
 // rendered with. A single fixed constant is safe -- exactly one Cell is ever
-// isFocused at a time (CellTile computes it from the roving useGridFocus
+// isFocused at a time (GridCells computes it from the roving useGridFocus
 // cursor), so there is never a second live node to collide with. See
 // FOCUS_DESCRIPTION_ID's use below and features/screenplay/questions.ts's
 // focusedCellAnnouncement, which resolves aria-describedby generically and
 // never hardcodes this string.
 const FOCUS_DESCRIPTION_ID = 'focus-cell-description'
 
-// The cell's own paint, extracted from the component body rather than
-// inlined in the className: this slice added four focus-cursor decision
-// points to Cell (tabIndex, aria-describedby, the description span, and its
-// alive/dead word), which took the component past crap4ts's complexity
-// threshold of 6 at 8. The three branches here -- aliveness plus the two
-// major-gridline edges -- are the half that has nothing to do with the focus
-// cursor, so splitting them out is a division along a real seam rather than
-// an arbitrary shave to clear the gate. Module-level, not nested inside
-// Cell, because crap4ts scores only top-level functions (see CLAUDE.md's
-// note on [unmatched-no-ast]) and a nested helper would leave the count
-// where it was.
+// The cell's own paint. collapse-dead-cell-layer's step 4 drops two things
+// this used to carry: the border classes (GridLines.tsx is now the ONLY
+// gridline source -- see that component's header -- so a per-cell border
+// would double-paint the same lines) and the hover: classes (a single
+// cursor-following HoverIndicator.tsx replaced ~19,680 `hover:bg-gray-100`
+// rules, since most of the grid's area is unmounted cells now and CSS
+// :hover has nothing to attach to there). What's left is one branch: alive
+// paints solid, dead paints nothing at all, so GridLines' own white base
+// fill (and its gridlines) show straight through an unmounted -- or
+// mounted-but-dead-focused -- cell. A dead FOCUSED cell (the one case a dead
+// cell still mounts, via liveCellWindow.ts's own +1) must stay transparent
+// rather than e.g. bg-white for exactly that reason: a white fill here would
+// punch a solid hole in GridLines' lines wherever the keyboard cursor parks
+// on a dead cell.
+//
+// Named consequence of dropping the per-cell border, not silently absorbed:
+// two adjacent LIVE cells now merge into one unbroken black region -- the
+// gridline paints underneath the opaque cell, and there is no longer a
+// border to frame each one individually the way border-gray-200 used to.
+// The "appearance does not change" ruling on GridLines' base fill was about
+// the gap between live cells, not about this.
 //
 // No transition-colors: a generation step flips thousands of cells at once,
 // and animating every one of those class changes simultaneously is real
 // paint cost this project can't afford at the frame budgets perf/ tests
 // against.
-function cellPaintClasses(isAlive: boolean, x: number, y: number): string {
-  return `absolute top-0 left-0 border border-gray-200 ${
-    isAlive ? 'bg-gray-900 hover:bg-gray-700' : 'bg-white hover:bg-gray-100'
-  } ${isMajorGridline(x) ? 'border-l-2 border-l-gray-400' : ''} ${isMajorGridline(y) ? 'border-t-2 border-t-gray-400' : ''}`
+function cellPaintClasses(isAlive: boolean): string {
+  return `absolute top-0 left-0 ${isAlive ? 'bg-gray-900' : ''}`
 }
 
 interface CellProps {
-  x: number // world coordinate: aria-label, gridline classes, store key
+  x: number // world coordinate: aria-label, store key
   y: number
   cellSize: number
-  transform: string // finished CSS transform placing this cell -- see CellTile
-  store: LiveCellStore
+  transform: string // finished CSS transform placing this cell -- see GridCells
+  isAlive: boolean
   onActivate: (x: number, y: number) => void
   // Whether THIS cell is the roving-tabindex keyboard cursor -- see
-  // CellTile.tsx's comment on why this is a plain boolean rather than the
+  // GridCells.tsx's comment on why this is a plain boolean rather than the
   // whole FocusCell, and useGridFocus.ts for where it's decided.
   isFocused: boolean
 }
 
-// One cell button, split out so it can own its own aliveness subscription:
-// useLiveCell(store, key) means a generation only re-renders the cells whose
-// membership actually flipped, instead of every visible cell re-rendering
-// because liveCells is a prop-drilled Set with a new identity each tick --
-// see liveCellStore.ts's module header. The key is computed once here (not
-// passed down from CellTile's map) so getCellSnapshot stays an
-// allocation-free Set.has rather than building a string every render.
+// One cell button. Takes its own aliveness as a plain prop now rather than
+// subscribing to the store itself (see liveCellStore.ts's useLiveCell,
+// retired as this component's own render source at this slice's step 4):
+// GridCells now mounts only live cells (plus the focus cursor's own cell --
+// liveCellWindow.ts's +1), so it already knows every mounted cell's
+// aliveness from the one liveCellsInRange call that decided to mount it in
+// the first place, and threading that through as a prop is cheaper than a
+// second, per-cell subscription to the same store. The accepted cost: a
+// generation tick now re-renders every mounted cell (Grid's own
+// liveCellsInRange call reruns), not just the ones that flipped -- see
+// Grid.tsx's own header and this slice's step-4 handoff for the two perf
+// scenarios that show it.
 //
 // Takes plain scalars rather than a Camera: a Camera's identity changes on
-// every pointermove during a pan, and this component sits at the base of the
-// render tree CellTile maps over, so a Camera-typed prop here would defeat
-// the world-anchored tile range CellTile reads from (see cellTiles.ts and
-// cellAnchor.ts) -- every Cell would still re-render on every pan tick even
-// though its own world position never moved.
+// every pointermove during a pan, and a Camera-typed prop here would defeat
+// the world-anchored render window GridCells computes from (see
+// liveCellWindow.ts and cellAnchor.ts) -- every Cell would still re-render
+// on every pan tick even though its own world position never moved.
 //
 // Positioning arrives as a finished `transform` string rather than as
 // leftPx/topPx numbers this component would concatenate itself. Cell-to-pixel
-// mapping is CellTile's job end to end (it owns the cellOffsetPx calls);
+// mapping is GridCells' job end to end (it owns the cellOffsetPx calls);
 // splitting it -- caller derives the pixels, callee formats them, and both
 // hold cellSize -- put half of one derivation on each side of the boundary.
-// Cell now knows only its world coordinate and how to paint what it is told.
-export default function Cell({ x, y, cellSize, transform, store, onActivate, isFocused }: CellProps) {
-  const key = cellKey(x, y)
-  const isAlive = useLiveCell(store, key)
+// Cell now knows only its world coordinate, whether it's alive, and how to
+// paint what it is told.
+export default function Cell({ x, y, cellSize, transform, isAlive, onActivate, isFocused }: CellProps) {
   return (
     <button
       type="button"
@@ -108,7 +114,7 @@ export default function Cell({ x, y, cellSize, transform, store, onActivate, isF
         transform,
         boxSizing: 'border-box',
       }}
-      className={cellPaintClasses(isAlive, x, y)}
+      className={cellPaintClasses(isAlive)}
     >
       {/* The single word this cursor's accessible description carries, and
           deliberately not the coordinate too -- that's already the button's

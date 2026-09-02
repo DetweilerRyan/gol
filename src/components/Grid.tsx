@@ -1,4 +1,4 @@
-import { useRef, type KeyboardEvent, type ReactNode } from 'react'
+import { useState, useRef, type KeyboardEvent, type ReactNode } from 'react'
 import { screenToWorld, type Camera, type WheelInput } from '../camera'
 import { computeVisibleRange, type VisibleRange } from '../gridGeometry'
 import type { FocusDirection } from '../gridFocus'
@@ -7,11 +7,14 @@ import { useElementSize, type ElementSize } from '../hooks/useElementSize'
 import { useGridFocus } from '../hooks/useGridFocus'
 import { useGridPointerGestures } from '../hooks/useGridPointerGestures'
 import { useInitialCentering } from '../hooks/useInitialCentering'
+import { useLiveCells } from '../hooks/useLiveCells'
 import { useRafCoalescedPan } from '../hooks/useRafCoalescedPan'
 import { useWheelInput } from '../hooks/useWheelInput'
+import { liveCellsInRange } from '../liveCellWindow'
 import type { LiveCellStore } from '../liveCellStore'
 import GridCells from './GridCells'
 import GridLines from './GridLines'
+import HoverIndicator from './HoverIndicator'
 import PatternPreview from './PatternPreview'
 
 // The four arrow keys plus Home/End, mapped to the direction/edge vocabulary
@@ -69,6 +72,40 @@ export default function Grid({
   const tiles = useCellTiles(camera, containerSize)
   const gridFocus = useGridFocus(camera, containerSize, onPan)
 
+  // The render window itself: every live cell inside the mounted tile range,
+  // plus the focus cursor's own cell (liveCellWindow.ts's +1 guarantee) --
+  // see GridCells.tsx's own header. A plain expression, not a hand-written
+  // useMemo (rules/no-manual-memo-tsx.yml forbids it under React Compiler
+  // anyway): the compiler memoizes this call on its own three inputs --
+  // liveCells (the store's identity, stable across everything except a
+  // mutation), tiles.range (nextTileRange's own by-reference contract, held
+  // stable across an in-range pan), and gridFocus.focus (state, stable
+  // across everything except a focus move) -- so a within-range pointer-drag
+  // pan that touches none of the three still bails before this call ever
+  // reruns, exactly the pan-stable-cell-cheap contract GridCells used to get
+  // from CellTile's own prop stability. If that ever regresses, it shows up
+  // as Grid.test.tsx's existing pan-stability tests going red, not as a new
+  // assertion here.
+  const liveCells = useLiveCells(store)
+  const cells = liveCellsInRange(liveCells, tiles.range, gridFocus.focus)
+
+  // The single cursor-following hover affordance (HoverIndicator.tsx) that
+  // replaced ~19,680 per-cell `hover:` classes -- see that component's own
+  // header. Kept as its own bit of state, separate from usePatternPlacement's
+  // preview positions, because a hovered cell exists whether or not a
+  // pattern is armed -- onHover below now feeds both unconditionally (see
+  // its own comment on why that's safe for the preview half too).
+  //
+  // The updater function form, not a plain setHovered(next): it re-reads the
+  // PREVIOUS value at update time and keeps that exact object when the
+  // coordinate hasn't moved, so a sub-cell pointermove that resolves to the
+  // same world cell doesn't hand HoverIndicator (and anything watching this
+  // state) a new object identity for no visible change.
+  const [hovered, setHovered] = useState<{ x: number; y: number } | null>(null)
+  function updateHovered(x: number, y: number) {
+    setHovered((prev) => (prev !== null && prev.x === x && prev.y === y ? prev : { x, y }))
+  }
+
   // Single-shot stamping (disarming immediately after a placement) belongs to
   // whoever owns the placement state -- usePatternPlacement's
   // stampArmedPattern -- not here: this branch only decides which of the two
@@ -98,13 +135,18 @@ export default function Grid({
   // pushes, regardless of flush timing) this must preserve.
   const coalescedPan = useRafCoalescedPan(onPan)
 
-  // trackHover mirrors the isPatternArmed check the place-vs-toggle branch
-  // above also makes: only in placing mode does a pointermove need
-  // pointer-to-world resolution for the preview, so an ordinary pan drag
-  // doesn't pay for that per-move getBoundingClientRect call. See
-  // useGridPointerGestures for the guard itself.
+  // trackHover is unconditionally true now, not gated on isPatternArmed --
+  // this slice's own inherited acceptance criterion (see the idea file) is
+  // "the hover indicator and the click must resolve to the same cell at
+  // every point", which only holds if hover always runs through the same
+  // screenToWorld resolver onTap uses, whether or not a pattern is armed.
+  // useGridPointerGestures itself still skips the dispatch once a drag has
+  // crossed the pan threshold (see its own handlePointerMove comment), which
+  // is what keeps this from adding a getBoundingClientRect call to every
+  // pointermove of an ordinary pan drag -- the cost the old,
+  // isPatternArmed-gated flag used to avoid a different way.
   const { isPanning, handlers } = useGridPointerGestures({
-    trackHover: isPatternArmed,
+    trackHover: true,
     onPan: coalescedPan.push,
     // Flushes synchronously on release/cancel so a pan mid-frame settles
     // immediately rather than waiting on a queued animation frame -- see
@@ -137,6 +179,16 @@ export default function Grid({
     },
     onHover: (pixelX, pixelY) => {
       const { x, y } = screenToWorld(camera, pixelX, pixelY)
+      updateHovered(x, y)
+      // Called unconditionally now that this runs on every hover move, not
+      // just while a pattern is armed -- verified safe rather than guarded
+      // defensively: onPreviewCell is usePatternPlacement's previewAt,
+      // wrapping patternPlacement.ts's movePreviewTo, which returns its
+      // INPUT STATE UNCHANGED (same object identity) whenever mode isn't
+      // 'placing'. React's setState bails out on that exact identity, so a
+      // plain hover with nothing armed triggers no re-render anywhere this
+      // reaches -- an isPatternArmed guard here would only be defending
+      // against a cost that provably doesn't exist.
       onPreviewCell(x, y)
     },
   })
@@ -198,6 +250,12 @@ export default function Grid({
         id={GRID_CONTENT_ID}
         {...handlers}
         onKeyDown={handleKeyDown}
+        // Clears the hover indicator when the pointer leaves the grid
+        // entirely -- the one case trackHover's own pointermove-driven
+        // updateHovered can't reach, since there's no move event once the
+        // pointer is off the element. Mirrors what CSS :hover used to do for
+        // free on every dead cell's own hover: class before this slice.
+        onPointerLeave={() => setHovered(null)}
         className={`absolute inset-0 touch-none ${isPanning ? 'cursor-grabbing' : 'cursor-grab'}`}
       >
         {/* NO transform here -- #grid-content's client rect is load-bearing.
@@ -209,8 +267,12 @@ export default function Grid({
             deeper, on the layer div below, which affects only where its
             children paint, not this element's own rect. */}
         {/* GridLines paints first -- furthest back in stacking order for two
-            same-level absolutely-positioned siblings -- so every mounted Cell's
-            own opaque border/background fully occludes it today. See
+            same-level absolutely-positioned siblings -- so every mounted,
+            ALIVE Cell's own opaque background occludes it (a dead cell no
+            longer mounts at all, except the rare dead-and-focused case,
+            which stays transparent for exactly this reason -- see Cell.tsx's
+            own header). Showing through the vast unmounted majority of the
+            grid is the point now, not incidental staging: see
             GridLines.tsx's own header for why it sits here, untransformed,
             rather than as a background on the transformed layer div below. */}
         <GridLines camera={camera} />
@@ -225,15 +287,25 @@ export default function Grid({
           style={{ transform: `translate(${tiles.offsetXPx}px, ${tiles.offsetYPx}px)`, willChange: 'transform' }}
         >
           <GridCells
-            range={tiles.range}
+            cells={cells}
             anchorX={tiles.anchorX}
             anchorY={tiles.anchorY}
             cellSize={tiles.cellSize}
-            store={store}
             onActivateCell={activateCell}
             focus={gridFocus.focus}
           />
         </div>
+
+        {/* HoverIndicator renders after GridCells' layer and BEFORE
+            PatternPreview, deliberately -- later-in-DOM wins for two
+            same-level absolutely-positioned siblings, so the indicator paints
+            over an alive cell's own background (visible feedback on a live
+            cell too, not just the empty majority), and an armed pattern's
+            preview still paints over the indicator rather than fighting it
+            for the same pixels while a pattern is being aimed. Camera-exact
+            like PatternPreview, outside the transformed layer -- see
+            HoverIndicator.tsx. */}
+        <HoverIndicator camera={camera} hovered={hovered} />
 
         {/* PatternPreview renders after GridCells' layer, deliberately: both
             are absolutely positioned with auto z-index, so later-in-DOM wins,

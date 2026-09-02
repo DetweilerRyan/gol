@@ -139,6 +139,42 @@ describe('trackHover', () => {
     expect(rectSpy).not.toHaveBeenCalled()
     expect(onHover).not.toHaveBeenCalled()
   })
+
+  it('calls onHover on a plain hover move (no drag in progress) even once a PRIOR drag has ended', () => {
+    const { surface, onHover } = renderHarness({ trackHover: true })
+
+    fireEvent.pointerDown(surface, { pointerId: 1, clientX: 0, clientY: 0 })
+    fireEvent.pointerMove(surface, { pointerId: 1, clientX: 20, clientY: 0 }) // crosses threshold, now panning
+    fireEvent.pointerUp(surface, { pointerId: 1, clientX: 20, clientY: 0 })
+    vi.mocked(onHover).mockClear()
+
+    fireEvent.pointerMove(surface, { pointerId: 1, clientX: 30, clientY: 40 })
+
+    expect(onHover).toHaveBeenCalledWith(30, 40)
+  })
+
+  it('does not call onHover once a drag has crossed the pan threshold, even though trackHover is true', () => {
+    const { surface, onHover } = renderHarness({ trackHover: true })
+
+    fireEvent.pointerDown(surface, { pointerId: 1, clientX: 0, clientY: 0 })
+    fireEvent.pointerMove(surface, { pointerId: 1, clientX: 20, clientY: 0 }) // crosses threshold, now panning
+    vi.mocked(onHover).mockClear()
+
+    fireEvent.pointerMove(surface, { pointerId: 1, clientX: 40, clientY: 0 })
+
+    expect(onHover).not.toHaveBeenCalled()
+  })
+
+  it('still calls onHover for a sub-threshold move, since the drag has not become a pan yet', () => {
+    const { surface, onHover } = renderHarness({ trackHover: true })
+
+    fireEvent.pointerDown(surface, { pointerId: 1, clientX: 0, clientY: 0 })
+    vi.mocked(onHover).mockClear()
+
+    fireEvent.pointerMove(surface, { pointerId: 1, clientX: 2, clientY: 0 }) // within DRAG_THRESHOLD_PX
+
+    expect(onHover).toHaveBeenCalledWith(2, 0)
+  })
 })
 
 describe('pointer capture', () => {

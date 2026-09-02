@@ -55,11 +55,17 @@ export function useGridPointerGestures({
 
   function handlePointerMove(e: ReactPointerEvent) {
     // pointermove fires on hover too, not just while a button is pressed, so
-    // onHover needs to run independent of drag state. Guarded on trackHover
-    // even though onHover may be a no-op when the caller has nothing to do
-    // with it, so an ordinary pan drag doesn't force a synchronous layout
-    // (getBoundingClientRect) per move.
-    if (trackHover) {
+    // onHover needs to run independent of drag state -- EXCEPT once a drag
+    // has actually crossed the pan threshold (dragStateRef.current.isPanning).
+    // An active pan already calls onPan every move, and a plain drag-to-pan
+    // gesture is never "hovering" a cell in any useful sense -- the pointer is
+    // capturing input, not aiming. Skipping onHover there is what keeps
+    // Grid.tsx's now-unconditional trackHover: true (see HoverIndicator.tsx)
+    // from adding a synchronous layout (getBoundingClientRect) to what is
+    // already the highest-frequency event in the app: exactly the cost the
+    // old, isPatternArmed-gated trackHover flag existed to avoid, now paid on
+    // every non-panning move instead of only while a pattern is armed.
+    if (trackHover && !dragStateRef.current?.isPanning) {
       const { pixelX, pixelY } = pointerPixels(e)
       onHover(pixelX, pixelY)
     }
