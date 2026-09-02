@@ -43,12 +43,29 @@ export async function assertInViewAlivePopulation(
   const expectedFraction = (visibleXSpan * visibleYSpan) / seededArea
   const expectedCount = requestedCount * expectedFraction
 
-  const aliveCount = await page.locator(`#grid-content ${ALIVE_CELL_SELECTOR}`).count()
-
-  expect(
-    aliveCount,
-    `expected ~${expectedCount} alive cells in view, requestedCount=${requestedCount}`,
-  ).toBeGreaterThan(expectedCount * 0.7)
+  // expect.poll rather than a bare .count(): a single snapshot has no
+  // auto-wait, so a larger viewport -- which mounts more cells and takes longer
+  // to settle -- loses the race first. Measured: generation-advance-1k-inview
+  // failed at 1920x1080 with 6 alive against ~967 expected, passed at 1280x900
+  // in the SAME run, and passed 3/3 re-run alone. The bounds are a range rather
+  // than an equality, which is why this is expect.poll over a predicate rather
+  // than toHaveCount.
+  //
+  // Two consequences of a flaky guard here, both of which cost a real run
+  // before this was fixed: a nonzero test:perf exit short-circuits a chained
+  // `&& npm run perf-report`, leaving the PREVIOUS latest.md in place reading
+  // as a fresh run; and the failed scenario's stale raw sample survives in
+  // reports/perf/raw/, so a later report silently blends two trees.
+  let aliveCount = 0
+  await expect
+    .poll(
+      async () => {
+        aliveCount = await page.locator(`#grid-content ${ALIVE_CELL_SELECTOR}`).count()
+        return aliveCount
+      },
+      { message: `expected ~${expectedCount} alive cells in view, requestedCount=${requestedCount}` },
+    )
+    .toBeGreaterThan(expectedCount * 0.7)
   expect(aliveCount).toBeLessThan(expectedCount * 1.3)
 }
 

@@ -21,6 +21,7 @@ import type { Page } from '@playwright/test'
 import { panCamera, zoomPercentage, type Camera } from '../src/camera.ts'
 import { coveringTileRange, nextTileRange, TILE_SPAN_CELLS, type TileRange } from '../src/cellTiles.ts'
 import { DRAG_THRESHOLD_PX } from '../src/dragGesture.ts'
+import { rulerGroupLabel } from '../src/test-support/rulerQuery.ts'
 
 // Duplicated as a literal rather than imported from Grid.tsx's
 // GRID_CONTENT_ID: that is a .tsx module, and a value import would drag React
@@ -28,21 +29,44 @@ import { DRAG_THRESHOLD_PX } from '../src/dragGesture.ts'
 // pan.perf.spec.ts already hardcodes the same selector for its cell count.
 const GRID_CONTENT_SELECTOR = '#grid-content'
 
-// The two cell buttons the camera is triangulated from. Both are mounted in
-// every scenario this module serves: the closest any of them gets to the
-// origin is the default camera at 1280x900 (world x in [-32, 32), y in
-// [-22.5, 22.5)), and zooming out only widens that.
+// The one cell button the camera's offset is triangulated from. It is mounted
+// on an empty board for a reason that is easy to get wrong, and that changed
+// under this module's feet: since collapse-dead-cell-layer only LIVE cells
+// render, so this is not "every in-range cell is mounted" any more -- it is
+// mounted because liveCellsInRange always includes the keyboard focus cursor,
+// and useGridFocus centres that on (0, 0) at load. Measured on the landed
+// tree: an empty board mounts exactly one button, `Cell 0, 0`, carrying
+// tabindex="0". If a future slice moves the initial focus, this selector goes
+// with it and readGridGeometry throws by name rather than silently mis-reading.
 const ORIGIN_CELL_SELECTOR = '[aria-label="Cell 0, 0"]'
-const PROBE_CELL_OFFSET_CELLS = 16
-const PROBE_CELL_SELECTOR = `[aria-label="Cell ${PROBE_CELL_OFFSET_CELLS}, ${PROBE_CELL_OFFSET_CELLS}"]`
+
+// cellSize is measured across the COLUMN RULER's labels rather than across a
+// span of cells, because a span of cells no longer exists to measure: this
+// module's previous probe was `Cell 16, 16`, which is dead on an empty board
+// and therefore unmounted. The ruler is drawn from the camera alone and needs
+// nothing seeded.
+//
+// The span matters, not just the availability. Blink quantises layout to
+// 1/64px, and the caller asserts toBeCloseTo(cellSizePx, 2) -- within 0.005.
+// At this module's smallest zoom (8.192px) a SINGLE cell's own box can land
+// 0.011px off and fail that guard; ten cells of ruler pitch divide the same
+// error by ten. Measured at the default camera: labels sit at 42, 242, 442,
+// 642 -- exactly 200px per 10 cells, with a constant 2px label inset that
+// cancels in the difference, which is why this reads a delta and never an
+// absolute position.
+const RULER_AXIS: Parameters<typeof rulerGroupLabel>[0] = 'x'
 
 export interface MeasuredGrid {
   camera: Camera
   widthPx: number
   heightPx: number
-  // cellSize as measured across PROBE_CELL_OFFSET_CELLS rendered cells,
+  // cellSize as measured across the column ruler's own label pitch,
   // independent of the `cellSize` the caller passed in -- a cross-check on
   // that argument, not a second source of truth for it (see readGridGeometry).
+  // The caller already asserts the app's zoom READOUT separately; this is the
+  // second, independent route, confirming that what is painted agrees with
+  // what the camera says. Worth keeping precisely because this slice changed
+  // rendering: a camera/render divergence is what it would catch.
   measuredCellSizePx: number
 }
 
@@ -53,7 +77,6 @@ interface GridRects {
   contentHeight: number
   originLeft: number
   originTop: number
-  probeLeft: number
 }
 
 // Reads the camera back out of what the app actually rendered, rather than
@@ -77,11 +100,9 @@ export async function readGridGeometry(page: Page, cellSizePx: number): Promise<
   const rects = await page.evaluate((selectors) => {
     const content = document.querySelector(selectors.content)
     const origin = document.querySelector(selectors.origin)
-    const probe = document.querySelector(selectors.probe)
-    if (!content || !origin || !probe) return null
+    if (!content || !origin) return null
     const c = content.getBoundingClientRect()
     const o = origin.getBoundingClientRect()
-    const p = probe.getBoundingClientRect()
     return {
       contentLeft: c.left,
       contentTop: c.top,
@@ -89,23 +110,49 @@ export async function readGridGeometry(page: Page, cellSizePx: number): Promise<
       contentHeight: c.height,
       originLeft: o.left,
       originTop: o.top,
-      probeLeft: p.left,
     }
   }, mustMatchSelectors())
 
   if (!rects) {
     throw new Error(
-      `readGridGeometry: expected ${GRID_CONTENT_SELECTOR}, ${ORIGIN_CELL_SELECTOR} and ${PROBE_CELL_SELECTOR} to all be rendered`,
+      `readGridGeometry: expected ${GRID_CONTENT_SELECTOR} and ${ORIGIN_CELL_SELECTOR} to both be rendered`,
     )
   }
-  return toMeasuredGrid(rects, cellSizePx)
+  return toMeasuredGrid(rects, await readRulerCellSizePx(page), cellSizePx)
+}
+
+// The column ruler is located BY ROLE rather than by a CSS selector, which is
+// deliberate: src/test-support/rulerQuery.ts exports rulerGroupLabel and no
+// selector sibling on purpose, its header arguing that an accessible name is
+// computed rather than stored and only the role engine queries it faithfully.
+// So the group is found Playwright-side, and only then is one evaluate run
+// against it -- one round trip, with the part that needs the role engine using
+// it.
+async function readRulerCellSizePx(page: Page): Promise<number> {
+  const labels = await page.getByRole('group', { name: rulerGroupLabel(RULER_AXIS), exact: true }).evaluate((group) =>
+    [...group.children].map((node) => ({
+      coordinate: Number(node.textContent),
+      leftPx: node.getBoundingClientRect().left,
+    })),
+  )
+
+  const usable = labels.filter((label) => Number.isFinite(label.coordinate))
+  const first = usable.at(0)
+  const last = usable.at(-1)
+  if (!first || !last || first.coordinate === last.coordinate) {
+    throw new Error(
+      `readGridGeometry: the ${rulerGroupLabel(RULER_AXIS)} showed ${usable.length} usable labels; ` +
+        `at least two at distinct coordinates are needed to measure a cell size`,
+    )
+  }
+  return (last.leftPx - first.leftPx) / (last.coordinate - first.coordinate)
 }
 
 function mustMatchSelectors() {
-  return { content: GRID_CONTENT_SELECTOR, origin: ORIGIN_CELL_SELECTOR, probe: PROBE_CELL_SELECTOR }
+  return { content: GRID_CONTENT_SELECTOR, origin: ORIGIN_CELL_SELECTOR }
 }
 
-function toMeasuredGrid(rects: GridRects, cellSizePx: number): MeasuredGrid {
+function toMeasuredGrid(rects: GridRects, measuredCellSizePx: number, cellSizePx: number): MeasuredGrid {
   return {
     camera: {
       cellSize: cellSizePx,
@@ -114,7 +161,7 @@ function toMeasuredGrid(rects: GridRects, cellSizePx: number): MeasuredGrid {
     },
     widthPx: rects.contentWidth,
     heightPx: rects.contentHeight,
-    measuredCellSizePx: (rects.probeLeft - rects.originLeft) / PROBE_CELL_OFFSET_CELLS,
+    measuredCellSizePx,
   }
 }
 

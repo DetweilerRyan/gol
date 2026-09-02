@@ -34,6 +34,12 @@ import { installPerfInstrumentation } from './instrumentation'
 import { assertInViewAlivePopulation, assertOffscreenSeedTookEffect } from './population'
 import type { RepSample } from '../scripts/perf-report/raw-sample.ts'
 
+// Duplicated as a literal rather than imported from Grid.tsx's
+// GRID_CONTENT_ID, for the reason tile-boundary.ts's own copy records: that is
+// a .tsx module, and a value import would drag React and JSX into perf/'s
+// Node-side module graph for the sake of one string.
+const GRID_CONTENT_SELECTOR = '#grid-content'
+
 // Rep 0 is a discarded warm-up (see raw-sample.ts's MIN_REPS comment) --
 // this harness just records it like any other rep and leaves the discard to
 // scripts/perf-report/stats.ts.
@@ -91,7 +97,17 @@ async function runPanScenario(page: Page, testInfo: TestInfo, spec: PanScenarioS
   if (spec.timeoutMs !== undefined) {
     testInfo.setTimeout(spec.timeoutMs)
   }
-  await page.addInitScript(installPerfInstrumentation, { eventDurationThresholdMs: EVENT_DURATION_THRESHOLD_MS })
+  // nodeChurnSelector is what fills the report's `Node churn/move` column, and
+  // without it that column reads `n/a`. It was passed only by
+  // tile-boundary.perf.spec.ts until collapse-dead-cell-layer, whose whole
+  // claim is about how many nodes a pan admits and evicts -- so the pan
+  // scenarios were the one place the quantity mattered most and the one place
+  // it was not being recorded. The observer already existed in
+  // instrumentation.ts; only the selector was missing.
+  await page.addInitScript(installPerfInstrumentation, {
+    eventDurationThresholdMs: EVENT_DURATION_THRESHOLD_MS,
+    nodeChurnSelector: GRID_CONTENT_SELECTOR,
+  })
   await page.goto(spec.seedQuery ? `/${spec.seedQuery}` : '/')
   // The grid centers itself on the first ResizeObserver measurement
   // (useInitialCentering); waiting for the zoom readout is the same
@@ -124,12 +140,21 @@ async function runPanScenario(page: Page, testInfo: TestInfo, spec: PanScenarioS
     const wallClockMs = Date.now() - startedAtMs
     const after = await metrics.snapshot()
     const snapshot = await page.evaluate(readSnapshot)
-    const renderedCellCount = await page.locator('#grid-content button').count()
+    const renderedCellCount = await page.locator(`${GRID_CONTENT_SELECTOR} button`).count()
+
+    // Guarding the churn number, not just recording it: a nodeChurnSelector
+    // that matches nothing reports 0 churn, which is indistinguishable from a
+    // genuine 0 -- and post-collapse-dead-cell-layer a genuine 0 is exactly
+    // what these scenarios are expected to show, so the two are maximally easy
+    // to confuse here. tile-boundary.perf.spec.ts carries the same assertion
+    // for the same reason.
+    expect(snapshot.nodeChurnObserved, 'the node-churn observer must have attached').toBe(true)
 
     reps.push({
       frameIntervalsMs: snapshot.frameIntervalsMs,
       eventDurationsMs: snapshot.eventDurationsMs,
       longTaskCount: snapshot.longTaskCount,
+      nodeChurnCount: snapshot.nodeChurnCount,
       moveEventCount,
       renderedCellCount,
       metricsDelta: metrics.diff(before, after),
