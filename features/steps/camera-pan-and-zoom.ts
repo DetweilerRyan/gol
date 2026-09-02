@@ -41,15 +41,76 @@ import {
   axisLabelValues,
   dragPan,
   openGrid,
+  preferReducedMotion,
   recall,
   remember,
   resetView,
+  watchZoomReadout,
   zoomIn,
+  zoomInTwiceQuickly,
   zoomOut,
   zoomPercent,
+  zoomReadoutTrail,
 } from '../e2e-helpers'
 
 const { Given, When, Then } = createBdd()
+
+// THE RESTING ZOOM, WHICH IS THE ONLY ZOOM THIS CONTRACT EVER SPEAKS OF.
+//
+// Every "the zoom percentage should be <n>" in the .feature is a statement
+// about where the view COMES TO REST, never about what the badge happens to
+// read at the instant a step looks at it -- so it is read here by waiting for
+// two consecutive identical readings and then asserting on that value, rather
+// than by polling until the wanted number shows up.
+//
+// The difference is not stylistic and it is why this exists rather than the
+// expect.poll(...).toBe(n) these steps used before. A poll succeeds on the
+// first matching reading, so it PASSES ON A VALUE THE VIEW IS MERELY MOVING
+// THROUGH: an implementation gliding on past 125 to 156 satisfies "should be
+// 125" the moment it crosses it. Once zooming takes time, the resting form is
+// the only one that means what the sentence says.
+//
+// No duration is named here, deliberately: how long a glide takes is a design
+// choice, and a contract that pinned it would fail the day someone tuned the
+// easing. Rest is defined as "stopped changing", which is true of an
+// instantaneous zoom too.
+async function zoomAtRest(page: Page): Promise<number> {
+  let previous = Number.NaN
+  await expect
+    .poll(
+      async () => {
+        const current = await zoomPercent(page)
+        const resting = current === previous
+        previous = current
+        return resting
+      },
+      { intervals: [50, 50, 100, 100, 250, 500] },
+    )
+    .toBe(true)
+  return previous
+}
+
+// The readings the badge took strictly between where it started and where it
+// came to rest -- the glide itself, with both endpoints dropped. Direction
+// falls out of the two endpoints rather than being passed in, so one function
+// reads a zoom in and a zoom out.
+function intermediateLevels(trail: readonly number[]): readonly number[] {
+  const start = trail[0]
+  const resting = trail[trail.length - 1]
+  const low = Math.min(start, resting)
+  const high = Math.max(start, resting)
+  return trail.slice(1, -1).filter((level) => level > low && level < high)
+}
+
+// WHY SEVERAL RATHER THAN ONE. A single intermediate reading is one extra
+// frame, not a transition anybody would call smooth, and an implementation
+// that produced exactly one would satisfy a >= 1 check while looking to a
+// player almost exactly like the jump this slice exists to remove. Three is
+// the smallest count that cannot be reached by rounding noise around a single
+// extra frame, and it stays a statement about the MOTION rather than about
+// its duration -- any glide long enough to be seen clears it with room to
+// spare, and no easing curve or frame rate is implied by it.
+const GLIDE_LEVELS = 3
 
 // Clicks the zoom button one step at a time until the clamp saturates -- the
 // same ladder a player climbs by clicking the toolbar button repeatedly,
@@ -57,12 +118,17 @@ const { Given, When, Then } = createBdd()
 // application rather than about some particular number of clicks. Requires
 // two consecutive unchanged readings, so a single stale read of the badge
 // cannot end the loop early and report a clamp that was never reached.
+//
+// Each rung is read AT REST for a second reason on top of that one: mid-glide
+// readings differ from each other whether or not the clamp has been reached,
+// so a ladder built on raw readings would describe how fast the machine is
+// rather than where the zoom stops.
 async function zoomUntilSettled(page: Page, direction: 'in' | 'out') {
-  let previous = await zoomPercent(page)
+  let previous = await zoomAtRest(page)
   let unchanged = 0
   for (let click = 0; click < 25 && unchanged < 2; click++) {
     await (direction === 'in' ? zoomIn(page) : zoomOut(page))
-    const current = await zoomPercent(page)
+    const current = await zoomAtRest(page)
     unchanged = current === previous ? unchanged + 1 : 0
     previous = current
   }
@@ -139,6 +205,29 @@ Given('a camera centered on the origin at the default zoom', async ({ page }) =>
   remember(page, ORIGIN_RULER_Y, baseline.y)
   await clickGridAt(page, CENTER)
   await expect.poll(() => aliveCellCount(page)).toBe(liveBefore)
+
+  // Recording starts here, at the last moment before any scenario acts, so a
+  // Then can ask what the readout DID rather than only what it now says.
+  // Installed in the shared Given rather than in the zoom interactions
+  // themselves: a scenario that clicks twice needs one trail across both
+  // clicks, and nothing between this line and a scenario's When ever moves
+  // the zoom. Harmless for the features that borrow this Given and never ask.
+  await watchZoomReadout(page)
+})
+
+Given('I prefer reduced motion', async ({ page }) => {
+  await preferReducedMotion(page)
+})
+
+// Past the maximum, not merely up to it: the extra clicks are the point. An
+// implementation that accumulated each click as another step to travel would
+// bank them here invisibly -- the badge reads 300 either way -- and only give
+// them back later, as clicks of the OPPOSITE button that appear to do
+// nothing. The scenario's When is the first of those.
+Given('I have gone on clicking zoom in past the maximum zoom', async ({ page }) => {
+  await zoomUntilSettled(page, 'in')
+  for (let extra = 0; extra < 3; extra++) await zoomIn(page)
+  expect(await zoomAtRest(page)).toBe(300)
 })
 
 Given('I have panned and zoomed away from that view', async ({ page }) => {
@@ -158,6 +247,10 @@ When('I zoom in once', async ({ page }) => {
 
 When('I zoom out once', async ({ page }) => {
   await zoomOut(page)
+})
+
+When('I zoom in twice in quick succession', async ({ page }) => {
+  await zoomInTwiceQuickly(page)
 })
 
 When('I zoom in repeatedly until the zoom stops changing', async ({ page }) => {
@@ -190,7 +283,32 @@ Then('the zoom level should be unchanged', async ({ page }) => {
 })
 
 Then('the zoom percentage should be {int}', async ({ page }, percentage) => {
-  await expect.poll(() => zoomPercent(page)).toBe(percentage)
+  expect(await zoomAtRest(page)).toBe(percentage)
+})
+
+// The three steps below read the recording rather than the badge, and each
+// waits for rest first so it can be written in any order after the When
+// instead of depending on the resting Then having run before it.
+Then('the zoom percentage should have passed through the levels in between', async ({ page }) => {
+  await zoomAtRest(page)
+  const trail = await zoomReadoutTrail(page)
+  expect(intermediateLevels(trail).length).toBeGreaterThanOrEqual(GLIDE_LEVELS)
+})
+
+Then('the zoom percentage should not have passed through any levels in between', async ({ page }) => {
+  await zoomAtRest(page)
+  expect(intermediateLevels(await zoomReadoutTrail(page))).toEqual([])
+})
+
+// No overshoot, in whichever direction the zoom was travelling: a glide that
+// sails past its level and springs back is a bounce, and a grid that bounces
+// shows cells that were never asked for. Stated against the level the view
+// rests on, so one step reads both directions.
+Then('the zoom percentage should never have gone past {int}', async ({ page }, resting) => {
+  await zoomAtRest(page)
+  const trail = await zoomReadoutTrail(page)
+  const zoomingIn = resting > trail[0]
+  expect(trail.filter((level) => (zoomingIn ? level > resting : level < resting))).toEqual([])
 })
 
 // Polled: the preceding step resizes the viewport, and the ruler re-renders

@@ -25,6 +25,8 @@ export { cellLocator, patternsButton, patternLibraryModal, previewCells } from '
 export type { ScrollbarOrientation } from './screenplay/elements.ts'
 export {
   zoomPercent,
+  watchZoomReadout,
+  zoomReadoutTrail,
   elementAtPoint,
   patternCategoryInLibrary,
   previewCellPositions,
@@ -53,6 +55,8 @@ export {
   shiftWheel,
   zoomIn,
   zoomOut,
+  zoomInTwiceQuickly,
+  preferReducedMotion,
   dragScrollbarThumb,
   openGrid,
   openPatternModal,

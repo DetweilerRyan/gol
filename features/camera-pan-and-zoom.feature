@@ -9,15 +9,32 @@ Feature: Camera pan and zoom
     Then the camera should have moved left and up over the grid
     And the zoom level should be unchanged
 
-  Scenario: Zooming in once raises the zoom percentage one step
+  Scenario: Zooming in once glides up to the next zoom percentage
     Given a camera centered on the origin at the default zoom
     When I zoom in once
     Then the zoom percentage should be 125
+    And the zoom percentage should have passed through the levels in between
+    And the zoom percentage should never have gone past 125
 
-  Scenario: Zooming out once lowers the zoom percentage one step
+  Scenario: Zooming out once glides down to the next zoom percentage
     Given a camera centered on the origin at the default zoom
     When I zoom out once
     Then the zoom percentage should be 80
+    And the zoom percentage should have passed through the levels in between
+    And the zoom percentage should never have gone past 80
+
+  Scenario: Two quick zoom-in clicks glide on to the level two steps up
+    Given a camera centered on the origin at the default zoom
+    When I zoom in twice in quick succession
+    Then the zoom percentage should be 156
+    And the zoom percentage should never have gone past 156
+
+  Scenario: Zooming snaps straight to the next level for a player who prefers reduced motion
+    Given I prefer reduced motion
+    And a camera centered on the origin at the default zoom
+    When I zoom in once
+    Then the zoom percentage should be 125
+    And the zoom percentage should not have passed through any levels in between
 
   Scenario: Zooming in stops at the maximum zoom
     Given a camera centered on the origin at the default zoom
@@ -28,6 +45,12 @@ Feature: Camera pan and zoom
     Given a camera centered on the origin at the default zoom
     When I zoom out repeatedly until the zoom stops changing
     Then the zoom percentage should be 40
+
+  Scenario: Zooming out answers the first click after the maximum is reached
+    Given a camera centered on the origin at the default zoom
+    And I have gone on clicking zoom in past the maximum zoom
+    When I zoom out once
+    Then the zoom percentage should be 240
 
   Scenario: Resetting the view returns to the default centered zoom
     Given a camera centered on the origin at the default zoom

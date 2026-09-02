@@ -47,9 +47,63 @@ async function generationText(page: Page) {
   return page.getByText(/^Generation: \d+$/).textContent()
 }
 
+// Module-private for the same reason generationText above is: three readers
+// in this file now reach the zoom badge, and elements.ts's header licenses a
+// query to stay with its caller while the caller is the module that owns the
+// reading it belongs to. Hoisting it would split the locator from the two
+// functions that give it meaning.
+function zoomBadge(page: Page) {
+  return page.getByText(/^\d+%$/)
+}
+
 export async function zoomPercent(page: Page): Promise<number> {
-  const text = await page.getByText(/^\d+%$/).textContent()
+  const text = await zoomBadge(page).textContent()
   return Number(text!.replace('%', ''))
+}
+
+// EVERY VALUE THE ZOOM READOUT TAKES, IN ORDER -- the suite's only way to see
+// a transition rather than only its endpoints.
+//
+// Sampling would be a race: a glide the app runs over a few frames is over
+// before a poll loop of Playwright round trips has taken many readings, and a
+// scenario that says "it moved through the levels in between" would then pass
+// or fail on how busy the machine is. A MutationObserver has no such race --
+// the browser hands it every text change the badge makes, so the recording is
+// complete whatever the glide's duration turns out to be, and neither the
+// contract nor these functions have to name one.
+//
+// NOT AN ARIA REACH-AROUND. What is read is the readout's own visible text --
+// the same string zoomPercent above reads and the same one a player reads off
+// the corner of the screen -- not a paint class stood in for a state with no
+// affordance. What this layer genuinely cannot observe is a zoom change being
+// ANNOUNCED: the badge is a bare span in no live region, so an assistive
+// technology user is told nothing when the zoom moves. That is reported as an
+// affordance gap rather than worked around here, because no test in this suite
+// needs it and inventing a hook for one would be a test speaking for a user
+// who has not been given the thing yet.
+//
+// The last-value guard keeps the trail free of repeats, so a step reading it
+// never has to know whether the app re-rendered the same percentage twice.
+const ZOOM_TRAIL_KEY = '__zoomReadoutTrail'
+
+export async function watchZoomReadout(page: Page): Promise<void> {
+  await zoomBadge(page).evaluate((badge, key) => {
+    const readValue = () => Number((badge.textContent ?? '').replace('%', ''))
+    const trail = [readValue()]
+    ;(window as unknown as Record<string, number[]>)[key] = trail
+    new MutationObserver(() => {
+      const value = readValue()
+      if (value !== trail[trail.length - 1]) trail.push(value)
+    }).observe(badge, { childList: true, characterData: true, subtree: true })
+  }, ZOOM_TRAIL_KEY)
+}
+
+// Empty rather than throwing when no watcher was installed: the trail is
+// established by the same Given that opens the grid, so an empty array can
+// only mean a scenario that never opened one, and a step asserting over it
+// fails on its own terms.
+export async function zoomReadoutTrail(page: Page): Promise<readonly number[]> {
+  return page.evaluate((key) => (window as unknown as Record<string, number[]>)[key] ?? [], ZOOM_TRAIL_KEY)
 }
 
 // WHICH ELEMENT THE BROWSER'S HIT-TEST RETURNS AT A PIXEL -- a STACKING

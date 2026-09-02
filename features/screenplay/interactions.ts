@@ -51,6 +51,31 @@ export async function zoomOut(page: Page) {
   await page.locator('button[aria-label="Zoom out"]').click()
 }
 
+// TWO CLICKS A GLIDE CANNOT OUTRUN, and the tightest form of them a pointer
+// can actually produce: clickCount 2 is one double-click gesture, so the
+// second press follows the first with no artificial delay rather than after
+// another round trip from the test process.
+//
+// What the scenario using it discriminates depends on the second click
+// landing while the first is still moving, and nothing here can name a
+// duration to guarantee that -- the contract deliberately never names one.
+// What holds it up is the SIBLING scenario: "should have passed through the
+// levels in between" requires several distinct readouts, which no animation
+// short enough to finish inside a double-click's own gap can produce. The two
+// scenarios are load-bearing for each other, so don't delete that one as
+// redundant with this.
+export async function zoomInTwiceQuickly(page: Page) {
+  await page.locator('button[aria-label="Zoom in"]').click({ clickCount: 2 })
+}
+
+// Set before the app is opened, so it never depends on the app noticing the
+// preference CHANGE -- a player who prefers reduced motion has that preference
+// before they arrive, and emulating it that way is also the form that works
+// whether the app reads the query once at mount or subscribes to it.
+export async function preferReducedMotion(page: Page) {
+  await page.emulateMedia({ reducedMotion: 'reduce' })
+}
+
 // useGridPointerGestures reports panByPixels per pointermove with the
 // incremental delta (drag.lastX/lastY), so the net camera shift always equals
 // the requested (dx, dy) regardless of step count.
