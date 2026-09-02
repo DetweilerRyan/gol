@@ -58,6 +58,39 @@ magnitude. It is not vendored into this repo, so this needs fetching.
   `PINNED`, and the decimal loop tests, under resolution 2)
 - No `.feature` file, and no `src/`. Single-module slice; no design pass needed.
 
+## Answered: should a decimal column be added to a `.feature`?
+
+This was the third open question. `architect` answered it in
+`correct-decimal-coupling-claim`, in two halves that should not be conflated.
+
+**Measured.** Adding the column costs **zero tuple work in either direction**. A
+paren-delimited decimal like `(1.5, 2.5)` never reaches `mutateDecimal` at all —
+`isTupleList` rejects it (components are not `-?\d+`), it falls to the comma-list
+rule, and its `(1.5` / `2.5)` fragments match no numeric pattern either, so both
+land in `mutateString`. Conversely a column that _does_ exercise `mutateDecimal`
+cannot trip `tuple-grammar-rejects-decimal-components`' re-open trigger, which
+requires paren-delimited. The two are **disjoint**, not coupled — CLAUDE.md
+asserted the opposite until this slice, and it was backwards rather than merely
+loose.
+
+The precise reachability rule, since it is wider than "one bare cell":
+`mutateDecimal` fires exactly when a cell **or one of its trimmed comma-split
+fragments** is wholly `-?\d+\.\d+`. So `| 1.5 |` reaches it, and so does
+`| 0.25, 0.5 |` through `mutateCommaList`'s recursion.
+
+**Judgment, and `architect` flagged it as recommendation rather than
+measurement.** Every fractional quantity this app actually has sits on
+`.gherkin-lintrc`'s `no-restricted-patterns` ban list — `\boffset ?[xy]\b`,
+`\bcell ?size\b`, `\bthumb ?(offset ?)?ratio\b`, `\bworld (coordinate|position|point)`.
+So a decimal column would need a fractional _domain_ quantity the contract does
+not have and the altitude linter would refuse.
+
+**So: no column. This is a `scripts/`-only slice**, with the choice measured by
+re-pinning `mutation-rules.test.ts`'s PINNED decimal rows rather than by
+`npm run acceptance-mutation`. Note that is the same argument that closed
+[[tuple-grammar-rejects-decimal-components]], reached from the neighbouring card
+in the opposite direction — which is some evidence it is the right one.
+
 ## Open questions
 
 - What does `mutator-spec.md` actually say about numeric mutation magnitude?
@@ -65,7 +98,3 @@ magnitude. It is not vendored into this repo, so this needs fetching.
   terminate quickly for high-precision values? A magnitude of `1e-5` against
   `toFixed(6)` gives a much narrower band of deltas that survive the rounding
   round-trip than a magnitude of 1 does — worth a loop test over many seeds.
-- Should a decimal column be added to a `.feature` at the same time, so the
-  choice is measured by `npm run acceptance-mutation` rather than only by unit
-  tests? That would make this a `product`-opening slice rather than a
-  `scripts/`-only one.
