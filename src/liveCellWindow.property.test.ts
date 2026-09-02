@@ -51,25 +51,53 @@ function makeLiveCells(coords: readonly (readonly [number, number])[]): LiveCell
   return new Set(coords.map(([x, y]) => cellKey(x, y)))
 }
 
-function inRange(x: number, y: number, range: TileRange): boolean {
-  const minX = tileOriginCell(range.minTileX, range.spanCells)
-  const maxX = tileOriginCell(range.maxTileX, range.spanCells) + range.spanCells - 1
-  const minY = tileOriginCell(range.minTileY, range.spanCells)
-  const maxY = tileOriginCell(range.maxTileY, range.spanCells) + range.spanCells - 1
-  return x >= minX && x <= maxX && y >= minY && y <= maxY
+// THE ORACLE, AND IT ENUMERATES RATHER THAN COMPARES -- deliberately, on two
+// counts, and the second is the one to preserve if this is ever rewritten.
+//
+// INDEPENDENCE. It must never import cellInRange: Stryker does not mutate test
+// files, so an oracle that is a second, fixed expression of the same rule is
+// what makes a mutant in the implementation's comparisons observable at all.
+// Importing the real function would recreate the self-referential oracle the
+// same slice deleted from gridGeometry.property.test.ts, where a mutant on
+// MAJOR_GRIDLINE_INTERVAL moved both sides together and the property stayed
+// green.
+//
+// SHAPE. Independence does not require textual identity, and the first form of
+// this helper was a byte-for-byte copy of cellInRange's four-comparison body
+// -- which npm run dry4ts (a gate: failOnFound, exit 3) reported as a
+// duplicate, correctly. Enumerating restates the DEFINITION instead of the
+// formula: a tile covers spanCells x spanCells cells starting at its own
+// origin, walked tile by tile. That is strictly further from the code under
+// test than a min/max pair was -- it never writes `+ spanCells - 1` at all, so
+// the implementation's inclusive-bound arithmetic is checked against a
+// derivation rather than against a copy of itself. Same shape as
+// gridGeometry.property.test.ts's bruteForceGridlines, for the same reason.
+//
+// What it still shares with the module is tileOriginCell, so a mutant in THAT
+// moves both sides together -- unchanged from the previous form, and covered
+// where tileOriginCell is the subject rather than a helper
+// (cellTiles.property.test.ts).
+function coveredCells(range: TileRange): ReadonlySet<CellKey> {
+  const covered = new Set<CellKey>()
+  for (let tileX = range.minTileX; tileX <= range.maxTileX; tileX++) {
+    for (let tileY = range.minTileY; tileY <= range.maxTileY; tileY++) {
+      const originX = tileOriginCell(tileX, range.spanCells)
+      const originY = tileOriginCell(tileY, range.spanCells)
+      for (let offsetX = 0; offsetX < range.spanCells; offsetX++) {
+        for (let offsetY = 0; offsetY < range.spanCells; offsetY++) {
+          covered.add(cellKey(originX + offsetX, originY + offsetY))
+        }
+      }
+    }
+  }
+  return covered
 }
 
-// The oracle for "which live cells are in range", derived from the tile range
-// independently of the module under test. It restates the same bounds
-// arithmetic, which is the weakest part of this file and is stated as such:
-// a mutant in tileOriginCell moves both sides together. What covers that is
-// cellTiles.property.test.ts, where tileOriginCell is the subject rather than
-// a shared helper.
-function liveInRange(cells: LiveCells, range: TileRange): CellKey[] {
-  return [...cells].filter((key) => {
-    const [x, y] = key.split(',').map(Number)
-    return inRange(x, y, range)
-  })
+// Which live cells the oracle says should be mounted. A membership test now,
+// rather than a parse-then-compare -- which also drops this file's own
+// hand-rolled copy of parseCellKey.
+function liveInRange(cells: LiveCells, covered: ReadonlySet<CellKey>): CellKey[] {
+  return [...cells].filter((key) => covered.has(key))
 }
 
 function isSortedRowMajor(cells: readonly WindowCell[]): boolean {
@@ -84,14 +112,15 @@ describe('liveCellsInRange (property)', () => {
     (cells, range, focus) => {
       const result = liveCellsInRange(cells, range, focus)
       const keys = new Set(result.map((cell) => cell.key))
+      const covered = coveredCells(range)
 
       // Both directions, because each alone is satisfiable by a wrong
       // implementation: mounting everything satisfies the first, mounting
       // nothing satisfies the second.
-      for (const key of liveInRange(cells, range)) expect(keys.has(key)).toBe(true)
+      for (const key of liveInRange(cells, covered)) expect(keys.has(key)).toBe(true)
       for (const cell of result) {
         const isFocus = focus !== null && cell.x === focus.x && cell.y === focus.y
-        expect(isFocus || (cells.has(cell.key) && inRange(cell.x, cell.y, range))).toBe(true)
+        expect(isFocus || (cells.has(cell.key) && covered.has(cell.key))).toBe(true)
       }
     },
   )
@@ -104,7 +133,7 @@ describe('liveCellsInRange (property)', () => {
       // cursor. An implementation that mounted the focus cell's whole tile
       // -- the obvious wrong way to keep the cursor reachable -- fails here
       // and nowhere else in this file.
-      const expected = liveInRange(cells, range)
+      const expected = liveInRange(cells, coveredCells(range))
       const focusAlreadyIn = focus !== null && expected.includes(cellKey(focus.x, focus.y))
       const extra = focus !== null && !focusAlreadyIn ? 1 : 0
       expect(liveCellsInRange(cells, range, focus).length).toBe(expected.length + extra)
