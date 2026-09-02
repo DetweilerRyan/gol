@@ -1,5 +1,5 @@
 import { renderHook } from '@testing-library/react'
-import { beforeEach, describe, expect, it, vi } from 'vitest'
+import { beforeEach, describe, expect, it, vi, type Mock } from 'vitest'
 import {
   DEFAULT_CELL_SIZE,
   MAX_CELL_SIZE,
@@ -30,12 +30,45 @@ beforeEach(() => {
   matchMedia = stubMatchMedia(false)
 })
 
+// Every test here mounts the hook the same way and drives it through the same
+// two entry points, so the arrange is extracted and each test body is only the
+// part that differs -- the repeated two-line mount was duplication dry4ts
+// reported against useRafCoalescedPan.test.ts, the repo's other rAF-owning
+// hook's tests, as well as against this file's own siblings.
+//
+// zoomBy/cancel/glide read result.current AT CALL TIME rather than closing
+// over the first render's controller: useZoomGlide returns a fresh object
+// every render, and a captured one would quietly drive a stale closure.
+function mountGlide() {
+  const onCamera = vi.fn<(next: Camera) => void>()
+  const { result, unmount } = renderHook(() => useZoomGlide(onCamera))
+  return {
+    onCamera,
+    unmount,
+    zoomBy: (from: Camera, factor: number, anchorX = ANCHOR_X, anchorY = ANCHOR_Y) =>
+      result.current.zoomBy(from, factor, anchorX, anchorY),
+    cancel: () => result.current.cancel(),
+  }
+}
+
+// The end state a settled zoom must be in, whichever route reached it: one
+// onCamera call, carrying exactly the camera an instantaneous zoom of the same
+// factor produces, and no frame still pending. A completed glide and a
+// reduced-motion snap are required to agree on it exactly -- which is why the
+// two tests below assert through one shared expectation rather than restating
+// it (dry4ts reported the restatement at 0.83).
+function expectSettledOnInstantaneousZoom(onCamera: Mock, from: Camera, factor: number) {
+  const expected = zoomCameraAtPoint(from, ANCHOR_X, ANCHOR_Y, factor)
+  expect(onCamera).toHaveBeenCalledTimes(1)
+  expect(onCamera).toHaveBeenCalledWith(expected)
+  expect(raf.pendingCount()).toBe(0)
+}
+
 describe('useZoomGlide, motion not reduced', () => {
   it('applies the glide value synchronously once on zoomBy, before any frame has run', () => {
-    const onCamera = vi.fn()
-    const { result } = renderHook(() => useZoomGlide(onCamera))
+    const { onCamera, zoomBy } = mountGlide()
 
-    result.current.zoomBy(camera, ZOOM_FACTOR, ANCHOR_X, ANCHOR_Y)
+    zoomBy(camera, ZOOM_FACTOR)
 
     // Progress 0 is a same-reference bail in zoomCameraToCellSize -- the
     // synchronous call happens, but it hands back the same camera the caller
@@ -46,24 +79,19 @@ describe('useZoomGlide, motion not reduced', () => {
   })
 
   it('lands on exactly toCellSize once the full duration elapses -- bit-identical to an instantaneous zoom', () => {
-    const onCamera = vi.fn()
-    const { result } = renderHook(() => useZoomGlide(onCamera))
+    const { onCamera, zoomBy } = mountGlide()
 
-    result.current.zoomBy(camera, ZOOM_FACTOR, ANCHOR_X, ANCHOR_Y)
+    zoomBy(camera, ZOOM_FACTOR)
     onCamera.mockClear()
     raf.advance(200)
 
-    const expected = zoomCameraAtPoint(camera, ANCHOR_X, ANCHOR_Y, ZOOM_FACTOR)
-    expect(onCamera).toHaveBeenCalledTimes(1)
-    expect(onCamera).toHaveBeenCalledWith(expected)
-    expect(raf.pendingCount()).toBe(0)
+    expectSettledOnInstantaneousZoom(onCamera, camera, ZOOM_FACTOR)
   })
 
   it('reports at least one intermediate camera strictly between the start and end cellSize', () => {
-    const onCamera = vi.fn<(next: Camera) => void>()
-    const { result } = renderHook(() => useZoomGlide(onCamera))
+    const { onCamera, zoomBy } = mountGlide()
 
-    result.current.zoomBy(camera, ZOOM_FACTOR, ANCHOR_X, ANCHOR_Y)
+    zoomBy(camera, ZOOM_FACTOR)
     onCamera.mockClear()
     raf.advance(100)
 
@@ -77,10 +105,9 @@ describe('useZoomGlide, motion not reduced', () => {
   })
 
   it('schedules a fresh frame after each one fires, until the glide completes', () => {
-    const onCamera = vi.fn()
-    const { result } = renderHook(() => useZoomGlide(onCamera))
+    const { zoomBy } = mountGlide()
 
-    result.current.zoomBy(camera, ZOOM_FACTOR, ANCHOR_X, ANCHOR_Y)
+    zoomBy(camera, ZOOM_FACTOR)
     expect(raf.pendingCount()).toBe(1)
 
     raf.advance(50)
@@ -97,12 +124,11 @@ describe('useZoomGlide, motion not reduced', () => {
   // glide's own target (25), not the still-unmoved displayed cellSize (20),
   // so two rapid clicks land two rungs up (20 -> 25 -> 31.25, i.e. 156%).
   it('two quick clicks, before the first frame has run, chain onto the pending target rather than repeating the first rung', () => {
-    const onCamera = vi.fn()
-    const { result } = renderHook(() => useZoomGlide(onCamera))
+    const { onCamera, zoomBy } = mountGlide()
 
-    result.current.zoomBy(camera, ZOOM_FACTOR, ANCHOR_X, ANCHOR_Y)
+    zoomBy(camera, ZOOM_FACTOR)
     expect(raf.cancelCallCount()).toBe(0)
-    result.current.zoomBy(camera, ZOOM_FACTOR, ANCHOR_X, ANCHOR_Y)
+    zoomBy(camera, ZOOM_FACTOR)
     // The second click cancels the first click's pending frame outright.
     expect(raf.cancelCallCount()).toBe(1)
     expect(raf.pendingCount()).toBe(1)
@@ -126,14 +152,13 @@ describe('useZoomGlide, motion not reduced', () => {
   // zoom-out -- must clear the pending glide entirely rather than leaving it
   // running underneath a "nothing to do" no-op.
   it('an immediate opposite click clears the pending glide -- no further onCamera call, no pending frame', () => {
-    const onCamera = vi.fn()
-    const { result } = renderHook(() => useZoomGlide(onCamera))
+    const { onCamera, zoomBy } = mountGlide()
 
-    result.current.zoomBy(camera, ZOOM_FACTOR, ANCHOR_X, ANCHOR_Y) // 20 -> 25
+    zoomBy(camera, ZOOM_FACTOR) // 20 -> 25
     expect(onCamera).toHaveBeenCalledTimes(1)
     expect(raf.pendingCount()).toBe(1)
 
-    result.current.zoomBy(camera, 1 / ZOOM_FACTOR, ANCHOR_X, ANCHOR_Y) // clears: target 20 === current 20
+    zoomBy(camera, 1 / ZOOM_FACTOR) // clears: target 20 === current 20
 
     // The clearing click cancelled the pending frame and made no further
     // synchronous onCamera call of its own (advanceZoomTarget returned null,
@@ -151,11 +176,10 @@ describe('useZoomGlide, motion not reduced', () => {
   // chains off the CLAMPED target (60, 300%), landing on 60 / 1.25 = 48
   // (240%) -- not on 60 * (1 / 1.25) applied to some other base.
   it('zooming out once after settling at the clamp lands on clamp / factor (240%), chaining off the clamped target', () => {
-    const onCamera = vi.fn()
-    const { result } = renderHook(() => useZoomGlide(onCamera))
+    const { onCamera, zoomBy } = mountGlide()
     const atMax: Camera = { offsetX: 0, offsetY: 0, cellSize: MAX_CELL_SIZE }
 
-    result.current.zoomBy(atMax, 1 / ZOOM_FACTOR, ANCHOR_X, ANCHOR_Y)
+    zoomBy(atMax, 1 / ZOOM_FACTOR)
     onCamera.mockClear()
     raf.advance(200)
 
@@ -191,10 +215,9 @@ describe('useZoomGlide, motion not reduced', () => {
     }
     const anchorX = 935
     const anchorY = 401
-    const onCamera = vi.fn()
-    const { result } = renderHook(() => useZoomGlide(onCamera))
+    const { onCamera, zoomBy } = mountGlide()
 
-    result.current.zoomBy(adversarialCamera, ZOOM_FACTOR, anchorX, anchorY)
+    zoomBy(adversarialCamera, ZOOM_FACTOR, anchorX, anchorY)
     onCamera.mockClear()
 
     // 12 frames of ~16.6667ms -- an ordinary 60fps cadence over the 200ms
@@ -209,11 +232,10 @@ describe('useZoomGlide, motion not reduced', () => {
   })
 
   it('repeated clicks once already at the clamp bank nothing -- no onCamera call, no pending frame', () => {
-    const onCamera = vi.fn()
-    const { result } = renderHook(() => useZoomGlide(onCamera))
+    const { onCamera, zoomBy } = mountGlide()
     const atMax: Camera = { offsetX: 0, offsetY: 0, cellSize: MAX_CELL_SIZE }
 
-    result.current.zoomBy(atMax, ZOOM_FACTOR, ANCHOR_X, ANCHOR_Y)
+    zoomBy(atMax, ZOOM_FACTOR)
 
     expect(onCamera).not.toHaveBeenCalled()
     expect(raf.pendingCount()).toBe(0)
@@ -223,25 +245,20 @@ describe('useZoomGlide, motion not reduced', () => {
 describe('useZoomGlide, motion reduced', () => {
   it('snaps synchronously to the target in the one zoomBy call, scheduling no frame at all', () => {
     matchMedia.changeTo(true)
-    const onCamera = vi.fn()
-    const { result } = renderHook(() => useZoomGlide(onCamera))
+    const { onCamera, zoomBy } = mountGlide()
 
-    result.current.zoomBy(camera, ZOOM_FACTOR, ANCHOR_X, ANCHOR_Y)
+    zoomBy(camera, ZOOM_FACTOR)
 
-    const expected = zoomCameraAtPoint(camera, ANCHOR_X, ANCHOR_Y, ZOOM_FACTOR)
-    expect(onCamera).toHaveBeenCalledTimes(1)
-    expect(onCamera).toHaveBeenCalledWith(expected)
-    expect(raf.pendingCount()).toBe(0)
+    expectSettledOnInstantaneousZoom(onCamera, camera, ZOOM_FACTOR)
   })
 
   it('reads prefers-reduced-motion at click time, not just at mount', () => {
-    const onCamera = vi.fn()
-    const { result } = renderHook(() => useZoomGlide(onCamera))
+    const { onCamera, zoomBy } = mountGlide()
 
     // Motion starts enabled (stubbed false in the outer beforeEach); flip it
     // on before clicking.
     matchMedia.changeTo(true)
-    result.current.zoomBy(camera, ZOOM_FACTOR, ANCHOR_X, ANCHOR_Y)
+    zoomBy(camera, ZOOM_FACTOR)
 
     expect(raf.pendingCount()).toBe(0)
     expect(onCamera).toHaveBeenCalledWith(zoomCameraAtPoint(camera, ANCHOR_X, ANCHOR_Y, ZOOM_FACTOR))
@@ -250,13 +267,12 @@ describe('useZoomGlide, motion reduced', () => {
 
 describe('cancel', () => {
   it('cancels a pending frame and clears the glide, with no further onCamera calls', () => {
-    const onCamera = vi.fn()
-    const { result } = renderHook(() => useZoomGlide(onCamera))
+    const { onCamera, zoomBy, cancel } = mountGlide()
 
-    result.current.zoomBy(camera, ZOOM_FACTOR, ANCHOR_X, ANCHOR_Y)
+    zoomBy(camera, ZOOM_FACTOR)
     onCamera.mockClear()
 
-    result.current.cancel()
+    cancel()
     expect(raf.cancelCallCount()).toBe(1)
     expect(raf.pendingCount()).toBe(0)
 
@@ -265,22 +281,20 @@ describe('cancel', () => {
   })
 
   it('is a no-op when nothing is running', () => {
-    const onCamera = vi.fn()
-    const { result } = renderHook(() => useZoomGlide(onCamera))
+    const { cancel } = mountGlide()
 
-    expect(() => result.current.cancel()).not.toThrow()
+    expect(() => cancel()).not.toThrow()
     expect(raf.cancelCallCount()).toBe(0)
   })
 
   it('after a cancel, a fresh zoomBy call starts a new glide from the actual current cellSize', () => {
-    const onCamera = vi.fn()
-    const { result } = renderHook(() => useZoomGlide(onCamera))
+    const { onCamera, zoomBy, cancel } = mountGlide()
 
-    result.current.zoomBy(camera, ZOOM_FACTOR, ANCHOR_X, ANCHOR_Y)
-    result.current.cancel()
+    zoomBy(camera, ZOOM_FACTOR)
+    cancel()
     onCamera.mockClear()
 
-    result.current.zoomBy(camera, ZOOM_FACTOR, ANCHOR_X, ANCHOR_Y)
+    zoomBy(camera, ZOOM_FACTOR)
     raf.advance(200)
 
     expect(onCamera).toHaveBeenLastCalledWith(zoomCameraAtPoint(camera, ANCHOR_X, ANCHOR_Y, ZOOM_FACTOR))
@@ -289,10 +303,9 @@ describe('cancel', () => {
 
 describe('unmount', () => {
   it('cancels the pending frame and does not flush a final onCamera call for the unfinished glide', () => {
-    const onCamera = vi.fn()
-    const { result, unmount } = renderHook(() => useZoomGlide(onCamera))
+    const { onCamera, unmount, zoomBy } = mountGlide()
 
-    result.current.zoomBy(camera, ZOOM_FACTOR, ANCHOR_X, ANCHOR_Y)
+    zoomBy(camera, ZOOM_FACTOR)
     onCamera.mockClear()
 
     unmount()
@@ -305,8 +318,7 @@ describe('unmount', () => {
   })
 
   it('unmounting with nothing running does not throw and calls onCamera no further', () => {
-    const onCamera = vi.fn()
-    const { unmount } = renderHook(() => useZoomGlide(onCamera))
+    const { onCamera, unmount } = mountGlide()
 
     expect(() => unmount()).not.toThrow()
     expect(onCamera).not.toHaveBeenCalled()

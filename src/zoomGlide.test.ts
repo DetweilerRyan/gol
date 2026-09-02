@@ -167,39 +167,41 @@ describe('glideCellSizeAt', () => {
     expect(atHalfway - glide.fromCellSize).toBeGreaterThan((glide.toCellSize - glide.fromCellSize) / 2)
   })
 
-  it('never overshoots toCellSize or undershoots fromCellSize for a zoom-in glide, at any sampled time', () => {
-    const glide: ZoomGlide = { fromCellSize: 20, toCellSize: 40, startedAtMs: 0, durationMs: 200 }
-    for (const nowMs of [0, 1, 25, 50, 100, 150, 199, 200, 500]) {
-      const value = glideCellSizeAt(glide, nowMs)
-      expect(value).toBeGreaterThanOrEqual(20)
-      expect(value).toBeLessThanOrEqual(40)
-    }
-  })
+  // Both directions, one table: a zoom-in and a zoom-out glide differ only in
+  // which endpoint is the larger, and stating each direction as its own test
+  // was a verbatim duplicate of the other (dry4ts, score 1.00).
+  it.each([
+    ['zoom-in', 20, 40],
+    ['zoom-out', 40, 20],
+  ])(
+    'never overshoots toCellSize or undershoots fromCellSize for a %s glide, at any sampled time',
+    (_direction, fromCellSize, toCellSize) => {
+      const glide: ZoomGlide = { fromCellSize, toCellSize, startedAtMs: 0, durationMs: 200 }
+      for (const nowMs of [0, 1, 25, 50, 100, 150, 199, 200, 500]) {
+        const value = glideCellSizeAt(glide, nowMs)
+        expect(value).toBeGreaterThanOrEqual(20)
+        expect(value).toBeLessThanOrEqual(40)
+      }
+    },
+  )
 
-  it('never overshoots toCellSize or undershoots fromCellSize for a zoom-out glide, at any sampled time', () => {
-    const glide: ZoomGlide = { fromCellSize: 40, toCellSize: 20, startedAtMs: 0, durationMs: 200 }
-    for (const nowMs of [0, 1, 25, 50, 100, 150, 199, 200, 500]) {
-      const value = glideCellSizeAt(glide, nowMs)
-      expect(value).toBeGreaterThanOrEqual(20)
-      expect(value).toBeLessThanOrEqual(40)
-    }
-  })
-
-  it('is monotonically non-decreasing for a zoom-in glide as nowMs advances', () => {
-    const glide: ZoomGlide = { fromCellSize: 20, toCellSize: 40, startedAtMs: 0, durationMs: 200 }
-    const samples = [0, 25, 50, 75, 100, 125, 150, 175, 200].map((nowMs) => glideCellSizeAt(glide, nowMs))
-    for (let i = 1; i < samples.length; i++) {
-      expect(samples[i]).toBeGreaterThanOrEqual(samples[i - 1])
-    }
-  })
-
-  it('is monotonically non-increasing for a zoom-out glide as nowMs advances', () => {
-    const glide: ZoomGlide = { fromCellSize: 40, toCellSize: 20, startedAtMs: 0, durationMs: 200 }
-    const samples = [0, 25, 50, 75, 100, 125, 150, 175, 200].map((nowMs) => glideCellSizeAt(glide, nowMs))
-    for (let i = 1; i < samples.length; i++) {
-      expect(samples[i]).toBeLessThanOrEqual(samples[i - 1])
-    }
-  })
+  // Monotonicity stated once, in the direction of travel -- `travelled *
+  // direction >= 0` is the same claim the non-decreasing/non-increasing pair
+  // made separately, and is how zoomGlide.property.test.ts already words it.
+  it.each([
+    ['zoom-in', 20, 40],
+    ['zoom-out', 40, 20],
+  ])(
+    'moves monotonically toward toCellSize for a %s glide as nowMs advances',
+    (_direction, fromCellSize, toCellSize) => {
+      const glide: ZoomGlide = { fromCellSize, toCellSize, startedAtMs: 0, durationMs: 200 }
+      const samples = [0, 25, 50, 75, 100, 125, 150, 175, 200].map((nowMs) => glideCellSizeAt(glide, nowMs))
+      const direction = toCellSize - fromCellSize
+      for (let i = 1; i < samples.length; i++) {
+        expect((samples[i] - samples[i - 1]) * direction).toBeGreaterThanOrEqual(0)
+      }
+    },
+  )
 
   it('collapses to an immediate landing on toCellSize when durationMs is 0 (reduced motion), regardless of nowMs', () => {
     const glide: ZoomGlide = { fromCellSize: 20, toCellSize: 40, startedAtMs: 500, durationMs: 0 }
