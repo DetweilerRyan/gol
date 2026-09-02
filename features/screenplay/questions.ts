@@ -30,6 +30,7 @@ import { parseVisibleProportionText } from '../../src/test-support/scrollbarQuer
 import {
   aliveCells,
   cellLocator,
+  focusedCellElement,
   patternLibraryModal,
   previewCells,
   rulerGroup,
@@ -217,4 +218,61 @@ export async function visibleProportionPercent(page: Page, orientation: Scrollba
 export async function thumbPositionPercent(page: Page, orientation: ScrollbarOrientation): Promise<number> {
   const value = await scrollbarThumb(page, orientation).getAttribute('aria-valuenow')
   return Number(value)
+}
+
+// The label every cell announces itself by, as a pattern rather than as a
+// format this layer could build: it is read off whatever currently has focus
+// and never reconstructed from an expected coordinate, so a focus that landed
+// one cell away is a mismatch rather than a match against itself.
+const FOCUSED_CELL_LABEL = /^Cell (-?\d+), (-?\d+)$/
+
+// WHICH CELL THE KEYBOARD IS ON, or null if the focus is not in the grid at
+// all. The null case is the whole of "no cell should be focused" -- the claim
+// that the grid is a SINGLE stop in the tab order rather than one stop per
+// mounted cell -- so it is a real answer here and not an error.
+export async function focusedCell(page: Page): Promise<[number, number] | null> {
+  const element = focusedCellElement(page)
+  if ((await element.count()) === 0) return null
+  const match = FOCUSED_CELL_LABEL.exec((await element.getAttribute('aria-label')) ?? '')
+  return match ? [Number(match[1]), Number(match[2])] : null
+}
+
+// Where the focus cursor is painted. Used only for the two clauses about the
+// EDGE of the view -- how far a Home/End jump goes, and that arrowing off the
+// edge brings the cursor back -- which are relations between two rendered
+// boxes and have no coordinate form.
+export async function focusedCellBox(page: Page): Promise<{ x: number; y: number; width: number; height: number }> {
+  const box = await focusedCellElement(page).boundingBox()
+  if (!box) throw new Error('No cell has keyboard focus, so there is no focus cursor to measure')
+  return box
+}
+
+// The grid's own viewport, so an edge clause compares against what is actually
+// on screen rather than against playwright.config.ts's 1280x900 restated here.
+export async function viewportBox(page: Page): Promise<{ width: number; height: number }> {
+  const size = page.viewportSize()
+  if (!size) throw new Error('The page reports no viewport, so nothing can be said about what is in view')
+  return size
+}
+
+// WHAT THE GRID ANNOUNCES WHEN THE FOCUS LANDS ON A CELL, read from the
+// accessible description the focus cursor points at with aria-describedby --
+// the same channel, and the same by-id resolution, that
+// visibleProportionPercent already reads a scrollbar's proportion through.
+//
+// NOT aria-pressed. That attribute is the right ARIA state for a toggle and
+// stays exactly where it is, but what it makes a screen reader say is
+// "pressed" / "not pressed", which says nothing about a cell being alive. With
+// dead cells no longer rendered, this announcement is the entire channel a
+// keyboard-only player has for reading the board, so it has to carry the
+// domain word. Returned whole rather than parsed: the caller checks that the
+// coordinate and the state word are both in it and pins no other wording.
+export async function focusedCellAnnouncement(page: Page): Promise<string> {
+  const describedBy = (await focusedCellElement(page).getAttribute('aria-describedby')) ?? ''
+  const ids = describedBy.split(/\s+/).filter(Boolean)
+  if (ids.length !== 1)
+    throw new Error(
+      `The focused cell's aria-describedby names ${ids.length} ids ("${describedBy}"), not one, so it announces no single description`,
+    )
+  return (await page.locator(`[id="${ids[0]}"]`).textContent()) ?? ''
 }

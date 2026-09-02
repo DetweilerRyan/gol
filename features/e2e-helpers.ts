@@ -27,6 +27,10 @@ export {
   axisLabelValues,
   visibleProportionPercent,
   thumbPositionPercent,
+  focusedCell,
+  focusedCellBox,
+  focusedCellAnnouncement,
+  viewportBox,
 } from './screenplay/questions.ts'
 export {
   nextGeneration,
@@ -41,6 +45,17 @@ export {
   openGrid,
   openPatternModal,
   choosePatternFromLibrary,
+  moveFocus,
+  pressKey,
+  tabForward,
+  tabAwayAndBack,
 } from './screenplay/interactions.ts'
-export { selectPattern, toggleFarCell, withCellInView, clickCell } from './screenplay/tasks.ts'
+export {
+  selectPattern,
+  toggleFarCell,
+  withCellInView,
+  clickCell,
+  focusGridCell,
+  focusEdgeCellInView,
+} from './screenplay/tasks.ts'
 export { expectCellState, expectBlinker } from './screenplay/expectations.ts'

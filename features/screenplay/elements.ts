@@ -121,3 +121,18 @@ export type ScrollbarOrientation = 'horizontal' | 'vertical'
 export function scrollbarThumb(page: Page, orientation: ScrollbarOrientation): Locator {
   return page.locator(`[role="scrollbar"][aria-orientation="${orientation}"]`)
 }
+
+// WHEREVER THE KEYBOARD CURRENTLY IS, reached as the browser's own :focus.
+//
+// Once only live cells have elements of their own, there is no per-coordinate
+// button to ask "are you focused" -- the grid carries ONE focus cursor and
+// this is it. `:focus` rather than a class or an id because focus is a state
+// the browser owns and an assistive technology reads; anything else would be a
+// second, drifting copy of it.
+//
+// Read off by questions.ts (its coordinate, its box, what it announces) and by
+// tasks.ts (focusGridCell steers by it). Not a barrel export: like
+// scrollbarThumb above, the locator itself only ever exists to be read.
+export function focusedCellElement(page: Page): Locator {
+  return page.locator(':focus')
+}

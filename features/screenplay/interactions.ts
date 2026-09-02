@@ -134,3 +134,37 @@ export async function choosePatternFromLibrary(page: Page, name: string) {
   // instead of the grid underneath.
   await expect(patternLibraryModal(page)).toHaveCount(0)
 }
+
+// The four arrow keys, by the direction a player would name rather than by
+// the key's own DOM name. Throwing on anything else is load-bearing for
+// npm run acceptance-mutation: a mutated <direction> Examples cell must fail
+// by name here, not press nothing and let the scenario decide the focus
+// simply did not move.
+const ARROW_KEYS: Readonly<Record<string, string>> = {
+  left: 'ArrowLeft',
+  right: 'ArrowRight',
+  up: 'ArrowUp',
+  down: 'ArrowDown',
+}
+
+export async function moveFocus(page: Page, direction: string) {
+  const key = ARROW_KEYS[direction]
+  if (!key) throw new Error(`"${direction}" names no direction the focus can move in`)
+  await page.keyboard.press(key)
+}
+
+export async function pressKey(page: Page, key: string) {
+  await page.keyboard.press(key)
+}
+
+export async function tabForward(page: Page) {
+  await page.keyboard.press('Tab')
+}
+
+// Leaves the grid in the forward direction and comes back the way it went, so
+// what is being checked is the grid's own memory of where the focus was --
+// not a fresh entry that happens to start in the same place.
+export async function tabAwayAndBack(page: Page) {
+  await page.keyboard.press('Tab')
+  await page.keyboard.press('Shift+Tab')
+}
