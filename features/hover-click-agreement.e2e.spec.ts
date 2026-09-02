@@ -11,6 +11,7 @@ import {
   originRulerPx,
   cellScreenPosition,
   resetView,
+  waitForZoomToSettle,
   zoomIn,
   zoomOut,
   zoomPercent,
@@ -59,11 +60,23 @@ import {
 // used to resolve the higher one.
 const INTO_BAND_PX = 0.5
 
+// SETTLES AFTER EVERY CLICK, and that is not belt-and-braces -- without it
+// this helper is wrong rather than merely slow. Since smooth-zoom-transitions
+// a toolbar click GLIDES, so a percentage read straight after one is a value
+// the view is still moving through: the loop misses its target on every rung,
+// clicks the full eight times, and then asserts on a mid-glide reading.
+// Measured before the wait was added, two consecutive full runs of this
+// project at --workers=1: "Expected: 40, Received: 41", and 300 arriving as
+// 297 and 299. It passed under the default parallel workers, where contention
+// slowed each click round trip past the 200ms glide -- so the failure got
+// LESS likely the busier the machine was, which is the wrong way round and is
+// why it survived two green full runs before a single-worker one found it.
 async function zoomTo(page: import('@playwright/test').Page, percent: number) {
   const step = percent > 100 ? zoomIn : zoomOut
   for (let click = 0; click < 8; click++) {
     if ((await zoomPercent(page)) === percent) return
     await step(page)
+    await waitForZoomToSettle(page)
   }
   expect(await zoomPercent(page)).toBe(percent)
 }

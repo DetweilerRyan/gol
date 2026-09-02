@@ -53,6 +53,7 @@ export {
   dragPan,
   blurFocus,
   shiftWheel,
+  waitForZoomToSettle,
   zoomIn,
   zoomOut,
   zoomInTwiceQuickly,

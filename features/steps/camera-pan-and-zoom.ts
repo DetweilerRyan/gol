@@ -45,6 +45,7 @@ import {
   recall,
   remember,
   resetView,
+  waitForZoomToSettle,
   watchZoomReadout,
   zoomIn,
   zoomInThenResetView,
@@ -60,49 +61,42 @@ const { Given, When, Then } = createBdd()
 //
 // Every "the zoom percentage should be <n>" in the .feature is a statement
 // about where the view COMES TO REST, never about what the badge happens to
-// read at the instant a step looks at it -- so it is read here by waiting for
-// two consecutive identical readings and then asserting on that value, rather
-// than by polling until the wanted number shows up.
+// read at the instant a step looks at it.
 //
-// The difference is not stylistic and it is why this exists rather than the
+// The difference is not stylistic and it is why these exist rather than the
 // expect.poll(...).toBe(n) these steps used before. A poll succeeds on the
 // first matching reading, so it PASSES ON A VALUE THE VIEW IS MERELY MOVING
 // THROUGH: an implementation gliding on past 125 to 156 satisfies "should be
 // 125" the moment it crosses it. Once zooming takes time, the resting form is
 // the only one that means what the sentence says.
 //
-// No duration is named here, deliberately: how long a glide takes is a design
-// choice, and a contract that pinned it would fail the day someone tuned the
-// easing. Rest is defined as "stopped changing", which is true of an
-// instantaneous zoom too.
-//
-// THE ONE ASSUMPTION THIS MAKES ABOUT THE IMPLEMENTATION, and it is a
-// constraint on the design rather than a detail of the test: a glide that
-// moves less than one whole percentage point across the confirmation window
-// below reads as rest, because the readout is rounded and a stalled reading
-// is indistinguishable from a finished one. An ease that crawls near its
-// endpoints for a fifth of a second is what would trip it. Confirming over
-// three readings rather than two widens that window to roughly 150ms, which
-// covers any easing anybody would ship, but it cannot be closed from this
-// side at all -- so it is written down here and in the handoff instead of
-// being discovered later as an intermittent failure of something else.
-const REST_CONFIRMATIONS = 2
-
+// The waiting itself is e2e-helpers' waitForZoomToSettle, which used to be a
+// private loop here until VERIFY found the two hand-written specs that also
+// drive the zoom had no equivalent and were both wrong without it. No
+// duration is named on either side of that move: rest is "the readout stopped
+// changing", which is true of an instantaneous zoom too.
 async function zoomAtRest(page: Page): Promise<number> {
-  let previous = Number.NaN
-  let repeats = 0
-  await expect
-    .poll(
-      async () => {
-        const current = await zoomPercent(page)
-        repeats = current === previous ? repeats + 1 : 0
-        previous = current
-        return repeats >= REST_CONFIRMATIONS
-      },
-      { intervals: [50, 50, 50, 100, 100, 250, 500] },
-    )
-    .toBe(true)
-  return previous
+  await waitForZoomToSettle(page)
+  return zoomPercent(page)
+}
+
+// A RUNG'S RESTING ZOOM, for the one caller that clicks in a loop -- the same
+// wait, told what the reading was BEFORE the click so it cannot accept a rest
+// that is really a glide which has not started yet.
+//
+// The distinction matters here and nowhere else. A Then step asserting a
+// number fails loudly on a stale reading and names the right quantity
+// ("expected 125, received 100"), which is the safe direction. The ladder
+// below compares a rung against the previous rung, where a stale reading is
+// indistinguishable from a clamp -- two in a row and it reports a clamp it
+// never reached, defeating the very guard its own comment describes, because
+// systematic staleness hits both readings alike.
+//
+// The rung this protects most is the zoom-out ladder's last real one, 41% to
+// 40%: a single one-point transition, with no second change to fall back on.
+async function zoomAtRestAfterClick(page: Page, before: number): Promise<number> {
+  await waitForZoomToSettle(page, before)
+  return zoomPercent(page)
 }
 
 // The readings the badge took strictly between where it started and where it
@@ -139,51 +133,6 @@ function intermediatePercentages(trail: readonly number[]): readonly number[] {
 // a sentence naming it would be the over-specificity that turns this layer
 // into a slow duplicate of a unit test.
 const GLIDE_PERCENTAGES = 3
-
-// A RUNG'S RESTING ZOOM, for the one caller that clicks in a loop.
-//
-// zoomAtRest has a second failure mode besides the rounding stall its own
-// comment describes, and this one bites SYSTEMATICALLY rather than
-// occasionally: if all three confirmations land before the glide's first
-// change to the readout, rest is confirmed on the value the click started
-// from. A Then step asserting a number fails loudly when that happens and
-// names the right quantity ("expected 125, received 100"), so those stay on
-// zoomAtRest -- a false failure that points at the right thing is the safe
-// direction. The ladder below is the unsafe one: it compares a rung against
-// the previous rung, where a stale reading is indistinguishable from a clamp,
-// and two in a row make it report a clamp it never reached. That is precisely
-// what its two-unchanged-readings guard exists to prevent and cannot prevent,
-// because systematic staleness hits both readings alike.
-//
-// So a rung waits for the readout to CHANGE before accepting a rest -- except
-// at the clamp, where the click is a no-op by design and no change is ever
-// coming. Those two cases cannot be told apart without a bounded wait, and
-// that is all CHANGE_GRACE_MS is: long enough that no glide anyone would ship
-// fails to move the rounded percentage inside it, and paid only on the two or
-// three clamped rungs that end each ladder.
-//
-// The rung this protects most is the zoom-out ladder's last real one, 41% to
-// 40%: a single one-point transition, where there is no second change to fall
-// back on if the first is missed.
-const CHANGE_GRACE_MS = 400
-
-async function zoomAtRestAfterClick(page: Page, before: number): Promise<number> {
-  const graceEnds = Date.now() + CHANGE_GRACE_MS
-  let previous = Number.NaN
-  let repeats = 0
-  await expect
-    .poll(
-      async () => {
-        const current = await zoomPercent(page)
-        repeats = current === previous ? repeats + 1 : 0
-        previous = current
-        return repeats >= REST_CONFIRMATIONS && (current !== before || Date.now() > graceEnds)
-      },
-      { intervals: [50, 50, 50, 100, 100, 250, 500] },
-    )
-    .toBe(true)
-  return previous
-}
 
 // Clicks the zoom button one step at a time until the clamp saturates -- the
 // same ladder a player climbs by clicking the toolbar button repeatedly,

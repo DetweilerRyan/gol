@@ -1,5 +1,13 @@
 import { test, expect } from '@playwright/test'
-import { CENTER, cellLocator, clickGridAt, dragPan, expectCellState, openPatternModal } from './e2e-helpers'
+import {
+  CENTER,
+  cellLocator,
+  clickGridAt,
+  dragPan,
+  expectCellState,
+  openPatternModal,
+  waitForZoomToSettle,
+} from './e2e-helpers'
 
 // No matching .feature file (see CLAUDE.md's black-box e2e section for when a
 // spec is unpaired): there's no pure-logic layer here at all. What's under test
@@ -45,6 +53,15 @@ test('clicking a toolbar button behind the open modal has no effect', async ({ p
   await openPatternModal(page)
   await page.mouse.click(zoomInBox.x + zoomInBox.width / 2, zoomInBox.y + zoomInBox.height / 2)
 
+  // SETTLE FIRST, THEN ASSERT -- since smooth-zoom-transitions this assertion
+  // is about a zoom that would take 200ms to arrive rather than one that would
+  // already be here. A retrying toHaveText passes on the FIRST reading that
+  // matches, and the first frame of a glide still reads 100%, so on a fast
+  // enough machine this could have matched the very transition it exists to
+  // prove never started. Measured today it still catches one -- a probe that
+  // let the click through failed 5 times out of 5, reporting 125% -- so this
+  // is a margin being replaced by a guarantee, not a defect being repaired.
+  await waitForZoomToSettle(page)
   await expect(page.getByText(/^\d+%$/)).toHaveText('100%')
 })
 

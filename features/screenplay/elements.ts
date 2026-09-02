@@ -107,6 +107,14 @@ export function previewCells(page: Page): Locator {
 // `triage-paired-specs` deleted those; the one reader left is a sibling
 // module, which is exactly the condition that keeps scrollbarThumb off the
 // barrel too.
+// Hoisted out of questions.ts by smooth-zoom-transitions' VERIFY pass, under
+// this file's own rule: it is now reached from two modules -- questions.ts
+// reads the percentage off it, interactions.ts waits for it to stop changing
+// -- and a selector reached from more than one module belongs here.
+export function zoomBadge(page: Page) {
+  return page.getByText(/^\d+%$/)
+}
+
 export function rulerGroup(page: Page, axis: 'x' | 'y'): Locator {
   return page.getByRole('group', { name: rulerGroupLabel(axis) })
 }

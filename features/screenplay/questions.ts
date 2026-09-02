@@ -38,6 +38,7 @@ import {
   previewCells,
   rulerGroup,
   scrollbarThumb,
+  zoomBadge,
   type ScrollbarOrientation,
 } from './elements.ts'
 
@@ -45,15 +46,6 @@ import {
 // this file's business, the number is what a step or a spec asks for.
 async function generationText(page: Page) {
   return page.getByText(/^Generation: \d+$/).textContent()
-}
-
-// Module-private for the same reason generationText above is: three readers
-// in this file now reach the zoom badge, and elements.ts's header licenses a
-// query to stay with its caller while the caller is the module that owns the
-// reading it belongs to. Hoisting it would split the locator from the two
-// functions that give it meaning.
-function zoomBadge(page: Page) {
-  return page.getByText(/^\d+%$/)
 }
 
 export async function zoomPercent(page: Page): Promise<number> {

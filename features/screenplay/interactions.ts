@@ -21,7 +21,13 @@
 // under the barrel is what makes the extraction acyclic, so it is kept thin on
 // purpose.
 import { expect, type Page } from '@playwright/test'
-import { patternLibraryModal, patternsButton, scrollbarThumb, type ScrollbarOrientation } from './elements.ts'
+import {
+  patternLibraryModal,
+  patternsButton,
+  scrollbarThumb,
+  zoomBadge,
+  type ScrollbarOrientation,
+} from './elements.ts'
 
 // Every scenario starts on a freshly loaded grid, but the step that opens it
 // is a scenario's FIRST step in one feature and a LATER one in another:
@@ -41,6 +47,53 @@ export async function nextGeneration(page: Page) {
 
 export async function resetView(page: Page) {
   await page.locator('button[aria-label="Reset view"]').click()
+}
+
+// WAITING FOR THE ZOOM TO STOP MOVING -- expect as a WAIT, the third instance
+// of the licence this file's header describes and the same shape as the other
+// two: openPatternModal waits for a modal to mount, choosePatternFromLibrary
+// for a leave transition to finish, and this waits for a glide to land. None
+// of the three states an accepted behaviour; each stops the next act starting
+// against a UI that is still moving.
+//
+// IT LIVES HERE RATHER THAN IN A STEP MODULE BECAUSE THREE CALLERS NEEDED IT
+// AND ONLY ONE HAD IT. The generated step layer grew a private version of
+// this during SPECIFY; the two hand-written specs that also drive the zoom did
+// not, and both were measurably wrong for it once zooming took time --
+// hover-click-agreement's zoom ladder read a mid-glide percentage, missed its
+// target on every rung and failed on a fast machine, and modal-inertness's
+// "the zoom is still 100%" assertion could match the first frame of a glide it
+// was supposed to prove had not started. One definition, three callers.
+//
+// Rest is "the readout stopped changing", never a duration: REST_CONFIRMATIONS
+// identical readings in a row. Two failure modes are worth knowing about, and
+// only one is closable. A glide that HOLDS one rounded percentage for longer
+// than the confirmation window reads as rest -- unclosable from here, since
+// the readout is rounded and a stall is indistinguishable from a finish; it is
+// a constraint on the easing rather than on this function. A glide that has
+// not STARTED yet reads as rest at its own starting value, and that one is
+// closable: pass changedFrom and the wait refuses to accept a rest still
+// sitting on it. The bounded grace is what keeps that usable at the zoom
+// clamp, where the click is a no-op by design and no change is ever coming.
+const REST_CONFIRMATIONS = 2
+const CHANGE_GRACE_MS = 400
+
+export async function waitForZoomToSettle(page: Page, changedFrom?: number) {
+  const graceEnds = Date.now() + CHANGE_GRACE_MS
+  let previous: string | null = null
+  let repeats = 0
+  await expect
+    .poll(
+      async () => {
+        const current = await zoomBadge(page).textContent()
+        repeats = current === previous ? repeats + 1 : 0
+        previous = current
+        const moved = changedFrom === undefined || current !== `${changedFrom}%` || Date.now() > graceEnds
+        return repeats >= REST_CONFIRMATIONS && moved
+      },
+      { intervals: [50, 50, 50, 100, 100, 250, 500] },
+    )
+    .toBe(true)
 }
 
 export async function zoomIn(page: Page) {
