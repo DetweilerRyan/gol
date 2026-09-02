@@ -93,6 +93,17 @@ export interface PanReveal {
 // 'panToRevealPx' block applies the returned pixels through camera.ts's own
 // panCamera directly (not a mock) and asserts the resulting onScreen range
 // actually contains focus, rather than trusting the sign derivation alone.
+// EQUIVALENT MUTANTS, measured -- do not chase these four. Stryker reports
+// `<` -> `<=` and `>` -> `>=` on each of the four comparisons below as
+// Survived, and no test can kill them: the only input that distinguishes a
+// strict from a non-strict comparison here is focus sitting exactly ON the
+// edge, and there the mutated branch computes (onScreen.minX - focus.x) *
+// cellSize = 0 * cellSize = 0 -- byte-identical to the 0 the unmutated code
+// leaves in place by skipping the branch. The one input that could separate
+// them is an INVERTED range (minX > maxX), where the mutant would take the
+// first branch and the original the else-if; computeOnScreenRange never
+// produces one, returning minX === maxX even for a 0x0 pre-measurement
+// viewport (measured: {minX: -32, maxX: -32} at the default camera).
 export function panToRevealPx(focus: FocusCell, camera: Camera, onScreen: VisibleRange): PanReveal {
   let dxPixels = 0
   let dyPixels = 0

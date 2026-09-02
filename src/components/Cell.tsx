@@ -12,6 +12,28 @@ import type { LiveCellStore } from '../liveCellStore'
 // never hardcodes this string.
 const FOCUS_DESCRIPTION_ID = 'focus-cell-description'
 
+// The cell's own paint, extracted from the component body rather than
+// inlined in the className: this slice added four focus-cursor decision
+// points to Cell (tabIndex, aria-describedby, the description span, and its
+// alive/dead word), which took the component past crap4ts's complexity
+// threshold of 6 at 8. The three branches here -- aliveness plus the two
+// major-gridline edges -- are the half that has nothing to do with the focus
+// cursor, so splitting them out is a division along a real seam rather than
+// an arbitrary shave to clear the gate. Module-level, not nested inside
+// Cell, because crap4ts scores only top-level functions (see CLAUDE.md's
+// note on [unmatched-no-ast]) and a nested helper would leave the count
+// where it was.
+//
+// No transition-colors: a generation step flips thousands of cells at once,
+// and animating every one of those class changes simultaneously is real
+// paint cost this project can't afford at the frame budgets perf/ tests
+// against.
+function cellPaintClasses(isAlive: boolean, x: number, y: number): string {
+  return `absolute top-0 left-0 border border-gray-200 ${
+    isAlive ? 'bg-gray-900 hover:bg-gray-700' : 'bg-white hover:bg-gray-100'
+  } ${isMajorGridline(x) ? 'border-l-2 border-l-gray-400' : ''} ${isMajorGridline(y) ? 'border-t-2 border-t-gray-400' : ''}`
+}
+
 interface CellProps {
   x: number // world coordinate: aria-label, gridline classes, store key
   y: number
@@ -86,13 +108,7 @@ export default function Cell({ x, y, cellSize, transform, store, onActivate, isF
         transform,
         boxSizing: 'border-box',
       }}
-      // No transition-colors: a generation step flips thousands of cells at
-      // once, and animating every one of those class changes simultaneously
-      // is real paint cost this project can't afford at the frame budgets
-      // perf/ tests against.
-      className={`absolute top-0 left-0 border border-gray-200 ${
-        isAlive ? 'bg-gray-900 hover:bg-gray-700' : 'bg-white hover:bg-gray-100'
-      } ${isMajorGridline(x) ? 'border-l-2 border-l-gray-400' : ''} ${isMajorGridline(y) ? 'border-t-2 border-t-gray-400' : ''}`}
+      className={cellPaintClasses(isAlive, x, y)}
     >
       {/* The single word this cursor's accessible description carries, and
           deliberately not the coordinate too -- that's already the button's

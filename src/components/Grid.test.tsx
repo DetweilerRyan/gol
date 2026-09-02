@@ -10,6 +10,7 @@ import {
   tileRangeCellCount,
 } from '../cellTiles'
 import { DRAG_THRESHOLD_PX } from '../dragGesture'
+import { computeOnScreenRange } from '../gridGeometry'
 import { createLiveCellStore } from '../liveCellStore'
 import {
   stubBoundingClientRect,
@@ -569,5 +570,145 @@ describe('tile pan-stability', () => {
 
       expect(spy).toHaveBeenCalled()
     })
+  })
+})
+
+// The keyboard half of the roving-tabindex focus cursor: Grid owns the
+// keydown -> gridFocus translation (ARROW_KEY_DIRECTIONS plus the Home/End
+// branch), while useGridFocus owns what a move then does. These assert the
+// translation through the real hook rather than a mock, because the wiring
+// is exactly what a mock would assume rather than prove.
+//
+// The cursor is read off document.activeElement, which is the roving
+// tabindex's own observable: useGridFocus deliberately does NOT take DOM
+// focus on mount or on its one-shot recenter, and does take it on every
+// keyboard move, so a label is readable only after a key has been pressed.
+// That is why each test primes the cursor with a pointer tap first -- a tap
+// sets the cursor without touching DOM focus (see Grid's onTap comment), so
+// priming this way pins the tap -> setFocus half of "one current cell shared
+// by both routes" at the same time, rather than needing the pre-tap cursor's
+// coordinates restated here as geometry.
+describe('keyboard focus-cursor wiring', () => {
+  // The cell a tap at TAP_PX resolves to under CAMERA -- the same
+  // screenToWorld the pointer-surface describe above asserts against. Chosen
+  // so all four of its neighbours are mounted: this describe runs against the
+  // PRE-step-4 renderer, which still mounts one Cell per tile slot, so a
+  // cursor moved outside the covering tile range has no element for
+  // useGridFocus's DOM-sync effect to focus and focusedCellLabel would throw.
+  // (Once the live-cell projection lands, liveCellWindow always includes the
+  // focus cell and that constraint disappears.)
+  const TAP_PX = { clientX: 30, clientY: 30 }
+  const TAPPED = screenToWorld(CAMERA, TAP_PX.clientX, TAP_PX.clientY)
+
+  function focusedCellLabel(): string {
+    const label = document.activeElement?.getAttribute('aria-label')
+    if (!label) throw new Error('expected the roving tabindex to have moved DOM focus onto a cell')
+    return label
+  }
+
+  function renderMeasuredGrid(props: Partial<GridProps> = {}) {
+    const utils = renderGrid(props)
+    // Real measurement first: useGridFocus's one-shot latch recenters the
+    // cursor off centeredCamera(w, h) when the first size arrives, and a
+    // latch firing midway through a test would move the cursor under it.
+    triggerResize(WIDTH, HEIGHT)
+    return utils
+  }
+
+  function tapToPrimeCursor(grid: HTMLElement) {
+    fireEvent.pointerDown(grid, { pointerId: 1, ...TAP_PX })
+    fireEvent.pointerUp(grid, { pointerId: 1, ...TAP_PX })
+  }
+
+  // One case per key rather than one test over a table: each
+  // `ArrowLeft: 'left'` entry is its own StringLiteral mutant, and a mutant
+  // that blanks a single direction is killed only by that direction's own
+  // assertion.
+  it.each([
+    ['ArrowLeft', -1, 0],
+    ['ArrowRight', 1, 0],
+    ['ArrowUp', 0, -1],
+    ['ArrowDown', 0, 1],
+  ])('%s moves the focus cursor exactly one cell from where it was', (key, dx, dy) => {
+    const { container } = renderMeasuredGrid()
+    const grid = gridContentEl(container)
+    tapToPrimeCursor(grid)
+
+    fireEvent.keyDown(grid, { key })
+
+    expect(focusedCellLabel()).toBe(`Cell ${TAPPED.x + dx}, ${TAPPED.y + dy}`)
+  })
+
+  it.each([
+    ['Home', 'minX' as const],
+    ['End', 'maxX' as const],
+  ])('%s jumps the cursor along its own row to the on-screen edge', (key, edge) => {
+    const { container } = renderMeasuredGrid()
+    const grid = gridContentEl(container)
+    tapToPrimeCursor(grid)
+    const onScreen = computeOnScreenRange(CAMERA, WIDTH, HEIGHT)
+
+    fireEvent.keyDown(grid, { key })
+
+    expect(focusedCellLabel()).toBe(`Cell ${onScreen[edge]}, ${TAPPED.y}`)
+  })
+
+  // Home and End must differ from each other, which the two cases above
+  // cannot show on their own: a mutant collapsing both onto the same edge
+  // satisfies each of them separately whenever minX and maxX are compared
+  // against independently-computed expectations.
+  it('Home and End land on opposite edges of the row', () => {
+    const { container } = renderMeasuredGrid()
+    const grid = gridContentEl(container)
+    tapToPrimeCursor(grid)
+
+    fireEvent.keyDown(grid, { key: 'Home' })
+    const home = focusedCellLabel()
+    fireEvent.keyDown(grid, { key: 'End' })
+
+    expect(focusedCellLabel()).not.toBe(home)
+  })
+
+  // fireEvent returns false exactly when a handler called preventDefault, so
+  // this pins the six keys Grid claims to consume -- and, in the other
+  // direction, that every other key passes through untouched, which is what
+  // leaves native Tab/Shift+Tab sequential navigation working.
+  it.each(['ArrowLeft', 'ArrowRight', 'ArrowUp', 'ArrowDown', 'Home', 'End'])(
+    'consumes %s, preventing the browser default',
+    (key) => {
+      const { container } = renderMeasuredGrid()
+      expect(fireEvent.keyDown(gridContentEl(container), { key })).toBe(false)
+    },
+  )
+
+  it.each(['Tab', 'Enter', ' ', 'PageDown', 'a'])('lets %s through untouched, moving no cursor', (key) => {
+    const { container } = renderMeasuredGrid()
+    const grid = gridContentEl(container)
+    tapToPrimeCursor(grid)
+    fireEvent.keyDown(grid, { key: 'ArrowRight' })
+    const before = focusedCellLabel()
+
+    expect(fireEvent.keyDown(grid, { key })).toBe(true)
+
+    expect(focusedCellLabel()).toBe(before)
+  })
+
+  // The tap -> setFocus wiring on its own terms. Every test above primes with
+  // a tap, so each of them would also fail if setFocus were dropped -- but
+  // only by landing on the *centered* cursor's neighbour instead, which is a
+  // coordinate none of them names. This states the difference directly.
+  it('steps from the tapped cell rather than from the cursor the tap should have replaced', () => {
+    const withoutTap = renderMeasuredGrid()
+    fireEvent.keyDown(gridContentEl(withoutTap.container), { key: 'ArrowRight' })
+    const fromCentered = focusedCellLabel()
+    withoutTap.unmount()
+
+    const withTap = renderMeasuredGrid()
+    const grid = gridContentEl(withTap.container)
+    tapToPrimeCursor(grid)
+    fireEvent.keyDown(grid, { key: 'ArrowRight' })
+
+    expect(focusedCellLabel()).toBe(`Cell ${TAPPED.x + 1}, ${TAPPED.y}`)
+    expect(focusedCellLabel()).not.toBe(fromCentered)
   })
 })

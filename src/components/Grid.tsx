@@ -160,6 +160,12 @@ export default function Grid({
       gridFocus.jumpToEdge('left')
     } else if (e.key === 'End') {
       e.preventDefault()
+      // EQUIVALENT MUTANT, measured -- do not chase it. Stryker reports
+      // 'right' -> "" here as Survived and nothing can kill it:
+      // gridFocus.ts's jumpToRowEdge is `edge === 'left' ? minX : maxX`, so
+      // every non-'left' value takes the same branch 'right' does. The
+      // Home site's own 'left' -> "" mutant IS killed, by the Home case in
+      // Grid.test.tsx's keyboard describe.
       gridFocus.jumpToEdge('right')
     }
   }

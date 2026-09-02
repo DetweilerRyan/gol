@@ -2,6 +2,7 @@ import { act, render, renderHook } from '@testing-library/react'
 import React from 'react'
 import { describe, expect, it, vi } from 'vitest'
 import { panCamera, type Camera } from '../camera'
+import { centerCell } from '../gridFocus'
 import { computeOnScreenRange } from '../gridGeometry'
 import { useGridFocus } from './useGridFocus'
 import type { ElementSize } from './useElementSize'
@@ -67,6 +68,31 @@ describe('useGridFocus', () => {
     expect(result.current.focus).toEqual({ x: 1, y: 0 })
   })
 
+  // The one-shot latch's guard is two clauses (`width <= 0 || height <= 0`),
+  // and the two tests above exercise it only at {0, 0} -- where either clause
+  // alone returns early, so each MASKS the other and a mutant weakening one
+  // of them stays green. Measured: `width <= 0` -> `width < 0` survives the
+  // whole unit+dom suite without these. An axis-asymmetric zero is what
+  // separates them: a viewport measured on one axis only is still not a real
+  // measurement, so the latch must not fire and the cursor must still be the
+  // useState initializer's stale-camera value.
+  it.each([
+    ['only its height', { width: 0, height: SIZE.height }],
+    ['only its width', { width: SIZE.width, height: 0 }],
+  ])('does not fire the one-shot recenter when the viewport has measured %s', (_axis, partialSize) => {
+    const staleCamera: Camera = { offsetX: 500, offsetY: 500, cellSize: 20 }
+    const { result, rerender } = setupHook(staleCamera, partialSize)
+
+    expect(result.current.focus).toEqual(
+      centerCell(computeOnScreenRange(staleCamera, partialSize.width, partialSize.height)),
+    )
+
+    // ...and still fires normally once a genuinely real size arrives, so the
+    // assertion above is a deferral rather than the latch being broken.
+    rerender({ camera: staleCamera, size: SIZE })
+    expect(result.current.focus).toEqual({ x: 0, y: 0 })
+  })
+
   it('moveFocus steps exactly one cell in the given direction', () => {
     const { result } = setupHook(CAMERA, SIZE)
     act(() => result.current.moveFocus('right'))
@@ -107,6 +133,28 @@ describe('useGridFocus', () => {
     const nextCamera = panCamera(CAMERA, dxPixels, dyPixels)
     const nextOnScreen = computeOnScreenRange(nextCamera, SIZE.width, SIZE.height)
     expect(nextOnScreen.minX).toBe(onScreen.minX - 1)
+  })
+
+  // The vertical twin of the test above. `dxPixels !== 0 || dyPixels !== 0`
+  // is satisfied by its left operand alone on every horizontal reveal, so a
+  // mutant blanking the right operand survives unless a purely VERTICAL
+  // reveal -- dx exactly 0, dy non-zero -- is asserted too.
+  it('moveFocus pans vertically, with no horizontal component, when the move carries focus off the top edge', () => {
+    const onScreen = computeOnScreenRange(CAMERA, SIZE.width, SIZE.height)
+    const onPan = vi.fn()
+    const { result } = setupHook(CAMERA, SIZE, onPan)
+
+    act(() => result.current.setFocus(0, onScreen.minY))
+    onPan.mockClear()
+    act(() => result.current.moveFocus('up'))
+
+    expect(result.current.focus).toEqual({ x: 0, y: onScreen.minY - 1 })
+    expect(onPan).toHaveBeenCalledTimes(1)
+    const [dxPixels, dyPixels] = onPan.mock.calls[0]
+    expect(dxPixels).toBe(0)
+    expect(dyPixels).not.toBe(0)
+    const nextOnScreen = computeOnScreenRange(panCamera(CAMERA, dxPixels, dyPixels), SIZE.width, SIZE.height)
+    expect(nextOnScreen.minY).toBe(onScreen.minY - 1)
   })
 
   it('moveFocus does not call onPan when the move stays on screen', () => {
