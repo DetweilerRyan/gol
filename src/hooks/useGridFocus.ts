@@ -11,11 +11,11 @@ export interface UseGridFocusResult {
   // carried the cell off computeOnScreenRange -- see panToRevealPx.
   moveFocus: (direction: FocusDirection) => void
   jumpToEdge: (edge: 'left' | 'right') => void
-  // Pointer-driven: a click only ever lands on an already-visible cell (it's
-  // resolved from on-screen pixels), so this updates the roving-tabindex
-  // target without requesting DOM focus or a reveal-pan -- see this hook's
-  // own header comment for why forcing DOM focus here is deliberately out of
-  // scope.
+  // Pointer-driven: moves the roving-tabindex target AND requests real DOM
+  // focus onto the clicked cell, but never a reveal-pan -- a click is
+  // resolved from on-screen pixels, so its cell is already in view. See this
+  // hook's own header for why the DOM-focus half is required rather than
+  // optional.
   setFocus: (x: number, y: number) => void
 }
 
@@ -36,6 +36,28 @@ export interface UseGridFocusResult {
 // focusedCellAnnouncement) would keep reporting the stale coordinate. This
 // is the standard WAI-ARIA APG roving-tabindex pattern: update tabindex,
 // then move DOM focus programmatically.
+//
+// WHY THE POINTER ROUTE NEEDS THE SAME NUDGE, since step 4 of this slice.
+// It used not to: Chromium focuses a <button> it is clicked on by itself, so
+// while every cell in range had an element the clicked cell held real DOM
+// focus for free and setFocus only had to move the roving-tabindex target.
+// Collapsing the dead-cell layer falsified the sentence that rested on --
+// "a click only ever lands on an already-visible cell" is true of the
+// LOCATION and no longer of the ELEMENT. A dead cell has no button until
+// React commits the toggle, which is after the browser has already resolved
+// native focus to nothing, so real focus is left on the body: measured as
+// features/hud-layout-and-shortcuts.e2e.spec.ts's "Enter on a focused grid
+// cell ..." (activeElement null rather than `Cell 1, 0`) and
+// keyboard-grid-navigation.feature's "Clicking a cell makes it the cell the
+// keyboard comes back to". Requesting DOM focus here restores the behavior
+// both of those accepted before the flip, and it is safe for the same reason
+// the effect below can find its target at all -- liveCellWindow.ts mounts
+// the focus cursor's own cell unconditionally (its +1 guarantee), so the
+// cell a click just focused is mounted by the commit this ref is read in.
+//
+// This is NOT the blur() that step 3 tried and reverted, which pointed the
+// other way (see Grid.tsx's onTap comment): that one took focus OFF the
+// clicked cell, and it was rejected because the contract wants it ON.
 //
 // WHY THAT NUDGE MUST NOT FIRE ON EVERY RENDER. `pendingDomFocusRef` is the
 // gate: only moveFocus/jumpToEdge (real keyboard navigation) set it, so the
@@ -104,6 +126,13 @@ export function useGridFocus(
     focus,
     moveFocus: (direction) => requestFocus(stepFocus(focus, direction)),
     jumpToEdge: (edge) => requestFocus(jumpToRowEdge(focus, edge, onScreen)),
-    setFocus: (x, y) => setFocusState({ x, y }),
+    setFocus: (x, y) => {
+      setFocusState({ x, y })
+      // Same pending-DOM-focus request moveFocus/jumpToEdge make, and NOT a
+      // reveal-pan: see this hook's header for why the pointer route needs
+      // the focus half at all now, and requestFocus above for the pan half
+      // it deliberately does not share.
+      pendingDomFocusRef.current = { x, y }
+    },
   }
 }

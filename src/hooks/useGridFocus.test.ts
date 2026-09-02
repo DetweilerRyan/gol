@@ -182,6 +182,25 @@ describe('useGridFocus', () => {
     expect(document.activeElement).toBe(rightButton)
   })
 
+  // The pointer route's own DOM-focus half, added as this slice's step-4
+  // ADJUDICATE corrective. Before the dead-cell layer collapsed, the browser
+  // supplied this for free (a click lands on a mounted <button>, which
+  // Chromium focuses itself); with only live cells mounted, a click on a dead
+  // cell has no button to focus at native-focus time and real focus is left
+  // on the body. Asserting the ACTIVE ELEMENT rather than result.current.focus
+  // is the point -- the cursor coordinate moved either way, and it is the DOM
+  // half that the two e2e reds were about.
+  it('setFocus moves real DOM focus onto the clicked cell, not just the roving-tabindex target', () => {
+    mountCellButton(0, 0)
+    const clicked = mountCellButton(4, -2)
+    const { result } = setupHook(CAMERA, SIZE)
+
+    act(() => result.current.setFocus(4, -2))
+
+    expect(result.current.focus).toEqual({ x: 4, y: -2 })
+    expect(document.activeElement).toBe(clicked)
+  })
+
   it('does NOT steal DOM focus on initial mount or on the one-shot auto-recenter', () => {
     mountCellButton(0, 0)
     const activeBefore = document.activeElement

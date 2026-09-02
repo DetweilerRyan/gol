@@ -50,10 +50,16 @@ function byRowMajor(a: WindowCell, b: WindowCell): number {
 // tile's worth.
 //
 // Culls to `range` rather than returning every live cell regardless of
-// camera position -- infinite-grid.feature's "toHaveCount(0) on alive cells
-// after panning away" scenario holds only because mounting stays bounded;
-// see this slice's own handoff for why that settles the question rather
-// than leaving it open.
+// camera position, which is what makes an off-screen live cell cost nothing.
+// It does NOT settle what the black-box layers can observe, and the earlier
+// form of this comment claimed it did: the focus +1 above can sit OUTSIDE
+// `range`, so the mounted set is "live cells in the window, plus possibly
+// one anywhere at all" -- not a window. infinite-grid.feature's
+// "toHaveCount(0) on alive cells after panning away" holds because product's
+// own step parks the keyboard cursor off the cells it asserts absent
+// (features/screenplay/tasks.ts's parkKeyboardCursorAt), not because this
+// function bounds the answer. A step that reads a cell count without
+// establishing where the cursor is has a precondition, not a guarantee.
 export function liveCellsInRange(
   cells: ReadonlyLiveCells,
   range: TileRange,

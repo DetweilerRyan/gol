@@ -159,23 +159,29 @@ export default function Grid({
       // A pointer click also moves the roving keyboard cursor to the
       // clicked cell -- one "current cell" shared by both routes (see
       // keyboard-grid-navigation.feature's "Clicking a cell makes it the
-      // cell the keyboard comes back to"). The plain setter, not a request
-      // that also grabs real DOM focus or pans the camera -- a click only
-      // ever lands on an already-visible cell. See useGridFocus.ts's own
-      // header.
+      // cell the keyboard comes back to"). setFocus moves the cursor and
+      // requests real DOM focus, but never a reveal-pan: a click is resolved
+      // from on-screen pixels, so its cell is already in view. See
+      // useGridFocus.ts's own header.
       gridFocus.setFocus(x, y)
-      // DELIBERATELY no blur() here, and the click KEEPS real DOM focus --
-      // Chromium's own click-focuses-button default applies (pointer capture
-      // on #grid-content notwithstanding -- measured with a throwaway probe).
-      // That is the behavior the contract wants, not a compromise: the cursor
-      // and real focus then coincide on one cell, which is what "one current
-      // cell shared by both routes" means. It is what makes the click-then-
-      // Enter route work at all, pinned by
+      // DELIBERATELY no blur() here, and the click ends with real DOM focus
+      // ON the clicked cell. That is the behavior the contract wants, not a
+      // compromise: the cursor and real focus then coincide on one cell,
+      // which is what "one current cell shared by both routes" means, and it
+      // is what makes the click-then-Enter route work at all -- pinned by
       // features/hud-layout-and-shortcuts.e2e.spec.ts's "Enter on a focused
-      // grid cell..." -- which polls document.activeElement immediately after
+      // grid cell...", which polls document.activeElement immediately after
       // a click, with no intervening Tab, and requires it to already be the
       // clicked cell. Blurring here would break that route outright: a user
       // who clicks a cell and presses Enter would toggle nothing.
+      //
+      // WHAT CHANGED AT STEP 4, since the previous form of this comment
+      // credited the wrong mechanism: Chromium's own click-focuses-button
+      // default used to deliver that focus for free, because every cell in
+      // range had a button to be clicked on. Only live cells (plus the
+      // cursor) have one now, so a click on a DEAD cell resolves native focus
+      // to nothing -- the button does not exist until React commits the
+      // toggle. useGridFocus's setFocus is what puts focus back on it.
     },
     onHover: (pixelX, pixelY) => {
       const { x, y } = screenToWorld(camera, pixelX, pixelY)
