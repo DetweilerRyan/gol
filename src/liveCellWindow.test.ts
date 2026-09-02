@@ -38,6 +38,20 @@ describe('liveCellsInRange', () => {
     expect(liveCellsInRange(cells, range, null)).toEqual([{ key: '0,0', x: 0, y: 0, isAlive: true }])
   })
 
+  // The y-axis mirror of the test above -- cellInRange checks all four
+  // bounds, and only the x pair had a boundary-exclusion regression test
+  // until a scoped mutation scan found minY/maxY unexercised (3 of the 4
+  // ArithmeticOperator/ConditionalExpression mutants on cellInRange's y
+  // bounds survived a full unfiltered `npm test` run with no test noticing).
+  it('excludes a live cell outside the range on the y axis', () => {
+    const cells = makeLiveCells([
+      [0, 0],
+      [0, 4], // one past maxY
+      [0, -5], // one before minY
+    ])
+    expect(liveCellsInRange(cells, range, null)).toEqual([{ key: '0,0', x: 0, y: 0, isAlive: true }])
+  })
+
   it('orders results row-major: top-to-bottom, then left-to-right within a row', () => {
     const cells = makeLiveCells([
       [2, 1],
@@ -86,6 +100,25 @@ describe('liveCellsInRange', () => {
     ])
     const result = liveCellsInRange(cells, range, { x: 1000, y: -1000 })
     expect(result).toHaveLength(4)
+  })
+
+  // A focus cell inserted after the sort must be re-sorted into place, not
+  // merely appended -- appending would leave row-major order intact only by
+  // coincidence when the focus cell's own row already sorts last, which the
+  // 'keeps row-major order' case just below happens to do. This one puts the
+  // focus cell at the *front* by row, so a missing second sort produces a
+  // detectably wrong order rather than one that happens to still be right.
+  it('re-sorts, rather than appends, when an out-of-range focus cell belongs before the existing cells', () => {
+    const cells = makeLiveCells([
+      [0, 1],
+      [0, 2],
+    ])
+    const result = liveCellsInRange(cells, range, { x: 0, y: -100 })
+    expect(result.map((c) => [c.x, c.y])).toEqual([
+      [0, -100],
+      [0, 1],
+      [0, 2],
+    ])
   })
 
   it('keeps row-major order after inserting an out-of-range focus cell', () => {

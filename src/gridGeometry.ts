@@ -87,7 +87,13 @@ export function computeMajorGridlines(range: VisibleRange): MajorGridlines {
 // Clamped so maxX never falls below minX (an empty range would make
 // centerCell and jumpToRowEdge's "furthest cell" answer undefined) -- the
 // same clamp shape coveringTileRange uses for the pre-measurement 0x0
-// viewport case.
+// viewport case. That clamp is a deliberate, narrow weakening of this
+// function's own "every cell fully visible" contract: below one cell per
+// axis (viewportWidthPx/viewportHeightPx < cellSize) the returned single
+// cell at minX/minY is NOT fully on screen, only the least-clipped
+// candidate -- a property asserting full visibility over every returned
+// cell must therefore be scoped to viewports of at least one cell per axis,
+// the same scope this function's own callers already assume.
 export function computeOnScreenRange(camera: Camera, viewportWidthPx: number, viewportHeightPx: number): VisibleRange {
   const minX = Math.ceil(camera.offsetX) || 0
   const minY = Math.ceil(camera.offsetY) || 0
