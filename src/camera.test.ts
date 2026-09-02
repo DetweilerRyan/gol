@@ -11,6 +11,7 @@ import {
   screenToWorld,
   worldToScreen,
   zoomCameraAtPoint,
+  zoomCameraToCellSize,
   zoomPercentage,
   ZOOM_FACTOR,
   type Camera,
@@ -110,6 +111,48 @@ describe('zoomCameraAtPoint', () => {
 
     const noop = zoomCameraAtPoint(clamped, 0, 0, 0.001)
     expect(noop).toBe(clamped)
+  })
+})
+
+describe('zoomCameraToCellSize', () => {
+  it('keeps the world point under the cursor fixed on screen, given an absolute target cellSize', () => {
+    const pixelX = 100
+    const pixelY = 50
+    const next = zoomCameraToCellSize(camera, pixelX, pixelY, DEFAULT_CELL_SIZE * 2)
+    expect(next.cellSize).toBe(DEFAULT_CELL_SIZE * 2)
+    const screenAfter = worldToScreen(next, 5, 2.5)
+    expect(screenAfter.x).toBeCloseTo(pixelX)
+    expect(screenAfter.y).toBeCloseTo(pixelY)
+  })
+
+  it('is equivalent to zoomCameraAtPoint for every factor/cellSize pair the factor form implies', () => {
+    const pixelX = 37
+    const pixelY = 61
+    const factor = 1.25
+    expect(zoomCameraToCellSize(camera, pixelX, pixelY, camera.cellSize * factor)).toEqual(
+      zoomCameraAtPoint(camera, pixelX, pixelY, factor),
+    )
+  })
+
+  it('clamps to MAX_CELL_SIZE and returns the same camera reference once clamped', () => {
+    const clamped = zoomCameraToCellSize(camera, 0, 0, 10000)
+    expect(clamped.cellSize).toBe(MAX_CELL_SIZE)
+
+    const noop = zoomCameraToCellSize(clamped, 0, 0, 10000)
+    expect(noop).toBe(clamped)
+  })
+
+  it('clamps to MIN_CELL_SIZE and returns the same camera reference once clamped', () => {
+    const clamped = zoomCameraToCellSize(camera, 0, 0, 0.01)
+    expect(clamped.cellSize).toBe(MIN_CELL_SIZE)
+
+    const noop = zoomCameraToCellSize(clamped, 0, 0, 0.01)
+    expect(noop).toBe(clamped)
+  })
+
+  it('bails to the same reference when the requested cellSize already equals the current one, unclamped', () => {
+    const noop = zoomCameraToCellSize(camera, 100, 50, camera.cellSize)
+    expect(noop).toBe(camera)
   })
 })
 

@@ -1,46 +1,12 @@
 import { renderHook } from '@testing-library/react'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
+import { stubAnimationFrames, type AnimationFrameController } from '../test-support/domStubs'
 import { useRafCoalescedPan } from './useRafCoalescedPan'
 
-// jsdom has no requestAnimationFrame scheduler a test can step deterministically,
-// so this stub records scheduled callbacks and lets a test run them on demand
-// instead of racing a real frame.
-function stubRaf() {
-  let nextId = 1
-  const pending = new Map<number, FrameRequestCallback>()
-  let cancelCallCount = 0
-
-  vi.stubGlobal(
-    'requestAnimationFrame',
-    vi.fn((cb: FrameRequestCallback) => {
-      const id = nextId++
-      pending.set(id, cb)
-      return id
-    }),
-  )
-  vi.stubGlobal(
-    'cancelAnimationFrame',
-    vi.fn((id: number) => {
-      cancelCallCount++
-      pending.delete(id)
-    }),
-  )
-
-  return {
-    pendingCount: () => pending.size,
-    cancelCallCount: () => cancelCallCount,
-    runFrame: () => {
-      const callbacks = [...pending.values()]
-      pending.clear()
-      for (const cb of callbacks) cb(0)
-    },
-  }
-}
-
-let raf: ReturnType<typeof stubRaf>
+let raf: AnimationFrameController
 
 beforeEach(() => {
-  raf = stubRaf()
+  raf = stubAnimationFrames()
 })
 
 afterEach(() => {
@@ -57,7 +23,7 @@ describe('useRafCoalescedPan', () => {
     expect(raf.pendingCount()).toBe(1)
     expect(onPan).not.toHaveBeenCalled()
 
-    raf.runFrame()
+    raf.advance(0)
 
     expect(onPan).toHaveBeenCalledTimes(1)
     expect(onPan).toHaveBeenCalledWith(7, -1)
@@ -68,12 +34,12 @@ describe('useRafCoalescedPan', () => {
     const { result } = renderHook(() => useRafCoalescedPan(onPan))
 
     result.current.push(1, 1)
-    raf.runFrame()
+    raf.advance(0)
     onPan.mockClear()
 
     result.current.push(2, 2)
     expect(raf.pendingCount()).toBe(1)
-    raf.runFrame()
+    raf.advance(0)
 
     expect(onPan).toHaveBeenCalledTimes(1)
     expect(onPan).toHaveBeenCalledWith(2, 2)
@@ -92,7 +58,7 @@ describe('useRafCoalescedPan', () => {
     expect(raf.pendingCount()).toBe(0)
 
     // The frame that flush() cancelled must not fire a second, stale call.
-    raf.runFrame()
+    raf.advance(0)
     expect(onPan).toHaveBeenCalledTimes(1)
   })
 
@@ -169,7 +135,7 @@ describe('useRafCoalescedPan', () => {
 
     result.current.push(1, 1)
     rerender({ onPan: second })
-    raf.runFrame()
+    raf.advance(0)
 
     expect(first).not.toHaveBeenCalled()
     expect(second).toHaveBeenCalledWith(1, 1)

@@ -52,7 +52,18 @@ export function panCamera(camera: Camera, dxPixels: number, dyPixels: number): C
 }
 
 export function zoomCameraAtPoint(camera: Camera, pixelX: number, pixelY: number, factor: number): Camera {
-  const newCellSize = clampCellSize(camera.cellSize * factor)
+  return zoomCameraToCellSize(camera, pixelX, pixelY, camera.cellSize * factor)
+}
+
+// The absolute-target twin of zoomCameraAtPoint: instead of a factor applied
+// to the camera's own current cellSize, this takes the target cellSize
+// directly. zoomCameraAtPoint is now expressed through this (factor * cellSize
+// is the only difference), which is what smooth-zoom-transitions needs --
+// a glide's per-frame camera is computed from a fixed starting camera and an
+// eased cellSize, never by re-applying a factor to whatever the camera
+// currently is (see src/hooks/useZoomGlide.ts's header comment on why).
+export function zoomCameraToCellSize(camera: Camera, pixelX: number, pixelY: number, cellSize: number): Camera {
+  const newCellSize = clampCellSize(cellSize)
   if (newCellSize === camera.cellSize) return camera
 
   const worldX = camera.offsetX + pixelX / camera.cellSize

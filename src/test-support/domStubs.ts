@@ -92,6 +92,103 @@ export function stubBoundingClientRect(rect: {
   return stub
 }
 
+export interface AnimationFrameController {
+  // Advances the stubbed performance.now() clock by the given amount and
+  // then runs every frame callback scheduled so far, in the order they were
+  // scheduled -- mirroring a real rAF batch, where every callback in a frame
+  // sees the same timestamp.
+  advance(ms: number): void
+  pendingCount(): number
+  cancelCallCount(): number
+  now(): number
+}
+
+// requestAnimationFrame/cancelAnimationFrame plus a controllable
+// performance.now(), so a test can step a glide frame-by-frame and assert on
+// intermediate values instead of only the settled end state. Distinct from
+// useRafCoalescedPan.test.ts's own local stubRaf (which this module now
+// replaces the caller of, see that file's history) in the one respect that
+// matters here: that stub's runFrame() always calls back with 0, with no
+// notion of elapsed time, which useZoomGlide.ts's easing needs.
+export function stubAnimationFrames(): AnimationFrameController {
+  let nextId = 1
+  let nowMs = 0
+  const pending = new Map<number, FrameRequestCallback>()
+  let cancelCallCount = 0
+
+  vi.stubGlobal(
+    'requestAnimationFrame',
+    vi.fn((cb: FrameRequestCallback) => {
+      const id = nextId++
+      pending.set(id, cb)
+      return id
+    }),
+  )
+  vi.stubGlobal(
+    'cancelAnimationFrame',
+    vi.fn((id: number) => {
+      cancelCallCount++
+      pending.delete(id)
+    }),
+  )
+  vi.stubGlobal('performance', { ...performance, now: () => nowMs })
+
+  return {
+    advance(ms: number) {
+      nowMs += ms
+      const callbacks = [...pending.values()]
+      pending.clear()
+      for (const cb of callbacks) cb(nowMs)
+    },
+    pendingCount: () => pending.size,
+    cancelCallCount: () => cancelCallCount,
+    now: () => nowMs,
+  }
+}
+
+// window.matchMedia is undefined in this repo's jsdom project (unlike
+// requestAnimationFrame/performance.now, which jsdom does implement) -- see
+// useReducedMotion.ts's own comment on why that means no defensive
+// typeof-guard belongs in product code. `matches` is fixed for the stub's
+// lifetime; useReducedMotion.test.ts drives a change by firing a `change`
+// event on the returned MediaQueryList instead, the same way a real one
+// would notify a listener.
+export interface MatchMediaController {
+  changeTo(nextMatches: boolean): void
+  listenerCount(): number
+}
+
+export function stubMatchMedia(matches: boolean): MatchMediaController {
+  let currentMatches = matches
+  const listeners = new Set<(event: { matches: boolean }) => void>()
+
+  vi.stubGlobal(
+    'matchMedia',
+    vi.fn((query: string) => ({
+      media: query,
+      get matches() {
+        return currentMatches
+      },
+      addEventListener: (_type: 'change', listener: (event: { matches: boolean }) => void) => {
+        listeners.add(listener)
+      },
+      removeEventListener: (_type: 'change', listener: (event: { matches: boolean }) => void) => {
+        listeners.delete(listener)
+      },
+    })),
+  )
+
+  return {
+    changeTo(nextMatches: boolean) {
+      currentMatches = nextMatches
+      act(() => {
+        for (const listener of listeners) listener({ matches: nextMatches })
+      })
+    },
+    listenerCount: () => listeners.size,
+  }
+}
+
 export interface PointerCaptureStubs {
   setPointerCapture: Mock<(pointerId: number) => void>
   hasPointerCapture: Mock<(pointerId: number) => boolean>
