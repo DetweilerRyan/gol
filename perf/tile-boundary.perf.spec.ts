@@ -49,7 +49,7 @@
 // perf-report` computes the per-move-event normalisation.
 import { expect, test, type Page, type TestInfo } from '@playwright/test'
 import { startMetrics } from './cdp-metrics'
-import { panPaced, panWobblePaced } from './gestures'
+import { panPaced, panWobblePaced, waitForZoomAtRest } from './gestures'
 import {
   CPU_THROTTLING_RATE,
   EVENT_DURATION_THRESHOLD_MS,
@@ -138,6 +138,13 @@ async function prepareCamera(
   from: { x: number; y: number },
 ): Promise<AttainedPhase> {
   await zoomOutTimes(page, spec.zoomOutClicks)
+  // The toolbar zoom now glides (src/zoomGlide.ts) rather than snapping, and
+  // this scenario family's whole point is a fixed, exact cellSize (8.192 is
+  // one rung above the MIN_CELL_SIZE clamp -- see zoomOutClicks' own
+  // comment on the thrash row) -- so the geometry read just below this,
+  // toBeCloseTo'd to 2 decimal places, needs the glide to have actually
+  // settled first. See waitForZoomAtRest's own comment in gestures.ts.
+  await waitForZoomAtRest(page)
   await expect(page.getByText(expectedZoomReadout(spec.cellSizePx))).toBeVisible()
 
   const beforeNudge = await readGridGeometry(page, spec.cellSizePx)

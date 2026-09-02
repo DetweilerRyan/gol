@@ -15,7 +15,7 @@
 // Records raw samples only -- see raw-sink.ts's header comment.
 import { expect, test, type Page, type TestInfo } from '@playwright/test'
 import { startMetrics } from './cdp-metrics'
-import { clickPaced, zoomWheelPaced } from './gestures'
+import { clickPaced, waitForZoomAtRest, zoomWheelPaced } from './gestures'
 import {
   CPU_THROTTLING_RATE,
   EVENT_DURATION_THRESHOLD_MS,
@@ -160,6 +160,18 @@ test('zoom-toolbar-clamp', async ({ page }, testInfo) => {
       clickCount += await clickPaced(page, zoomInButton, ZOOM_IN_TO_MAX_CLICKS)
       clickCount += await clickPaced(page, zoomOutButton, ZOOM_OUT_TO_MIN_CLICKS)
       clickCount += await clickPaced(page, zoomInButton, ZOOM_IN_BACK_TO_MAX_CLICKS)
+      // Deliberately INSIDE the measured callback, not after runGesture
+      // returns: measureReps snapshots CDP metrics and renderedCellCount the
+      // instant this callback resolves, and the toolbar zoom now glides
+      // (src/zoomGlide.ts) rather than snapping -- so without this wait,
+      // that snapshot would land mid-glide on an arbitrary frame rather
+      // than on the sweep's actual resting state, and renderedCellCount
+      // (~3.4k buttons at the 300% resting zoom -- see this test's own
+      // header comment) would be read against whatever cellSize the last
+      // click's glide happened to have reached yet. Waiting here means the
+      // measurement covers the animated settling cost a real user pays,
+      // rather than excluding it.
+      await waitForZoomAtRest(page)
       return clickCount
     },
     viewport,

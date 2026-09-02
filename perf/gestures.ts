@@ -10,7 +10,7 @@
 // Deliberately no un-paced sibling helper "for convenience" -- if one
 // existed here, some future scenario would reach for it, and the resulting
 // number would look entirely plausible while measuring the wrong thing.
-import type { Locator, Page } from '@playwright/test'
+import { expect, type Locator, type Page } from '@playwright/test'
 import { DRAG_THRESHOLD_PX } from '../src/dragGesture.ts'
 
 export interface Point {
@@ -128,4 +128,54 @@ export async function clickPaced(page: Page, locator: Locator, times: number): P
     await waitForNextFrame(page)
   }
   return times
+}
+
+// Reads the on-screen zoom-percentage badge until it reports the SAME text
+// on several consecutive polls, and only then returns -- the perf-harness
+// form of the identical first-match-versus-rest distinction
+// features/steps/camera-pan-and-zoom.ts's zoomAtRest already solves on the
+// contract side (reimplemented locally here rather than imported, per this
+// file's own header comment on perf/ staying self-contained).
+//
+// Once the toolbar's zoom-in/zoom-out buttons GLIDE (src/zoomGlide.ts)
+// rather than snap, a bare `getByText(wantedPercent).toBeVisible()` is a
+// FIRST-MATCH wait: it resolves the instant the badge's ROUNDED text
+// happens to equal the wanted string, which is satisfied for a whole
+// stretch of frames strictly before the glide actually settles there. A
+// geometry read taken the instant that first match resolves can land well
+// outside any tolerance a caller then checks it against -- the
+// tile-boundary thrash scenario's 41% rung is the sharpest case: the
+// "rounds to 41%" band spans roughly 8.10-8.30px of cellSize, comfortably
+// wide enough to leave a still-gliding cellSize outside a two-decimal-place
+// toBeCloseTo(8.192, 2) (tolerance 0.005) while the badge already reads
+// "41%".
+//
+// REST_CONFIRMATIONS and the poll intervals mirror
+// camera-pan-and-zoom.ts's zoomAtRest exactly, for the same reason it gives:
+// two consecutive UNCHANGED readings (three consecutive equal ones counting
+// the first sighting) is long enough to clear any glide duration this app
+// ships (GLIDE_DURATION_MS=200 today) without hardcoding that number here,
+// so this helper keeps working if the duration or easing curve ever changes.
+const REST_CONFIRMATIONS = 2
+
+export async function waitForZoomAtRest(page: Page): Promise<string> {
+  const badge = page.getByText(/^\d+%$/)
+  let previous: string | null = null
+  let repeats = 0
+  await expect
+    .poll(
+      async () => {
+        const current = await badge.textContent()
+        repeats = current === previous ? repeats + 1 : 0
+        previous = current
+        return repeats >= REST_CONFIRMATIONS
+      },
+      { intervals: [50, 50, 50, 100, 100, 250, 500] },
+    )
+    .toBe(true)
+  // Non-null: the poll only resolves true once `previous` has been assigned
+  // a real reading (repeats can't reach REST_CONFIRMATIONS on the initial
+  // null), but TS's control-flow narrowing can't see that through the
+  // closure passed to expect.poll.
+  return previous!
 }

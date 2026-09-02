@@ -22,7 +22,7 @@
 // reports/perf/raw/*.json into reports/perf/latest.md.
 import { expect, test, type Page, type TestInfo } from '@playwright/test'
 import { startMetrics } from './cdp-metrics'
-import { panPaced } from './gestures'
+import { panPaced, waitForZoomAtRest } from './gestures'
 import {
   CPU_THROTTLING_RATE,
   EVENT_DURATION_THRESHOLD_MS,
@@ -63,6 +63,12 @@ async function zoomToMinimum(page: Page): Promise<void> {
   for (let i = 0; i < 8; i++) {
     await zoomOutButton.click()
   }
+  // The toolbar zoom now glides (src/zoomGlide.ts) rather than snapping --
+  // wait for the badge to actually stop changing before checking it reads
+  // the clamped value, or this can resolve on a still-gliding frame that
+  // merely happens to round to 40% in passing. See waitForZoomAtRest's own
+  // comment in gestures.ts.
+  await waitForZoomAtRest(page)
   await expect(page.getByText('40%')).toBeVisible()
 }
 
