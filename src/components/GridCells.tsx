@@ -1,4 +1,5 @@
 import { tileKey, type TileRange } from '../cellTiles'
+import type { FocusCell } from '../gridFocus'
 import type { LiveCellStore } from '../liveCellStore'
 import CellTile from './CellTile'
 
@@ -9,17 +10,30 @@ interface GridCellsProps {
   cellSize: number
   store: LiveCellStore
   onActivateCell: (x: number, y: number) => void
+  // The one deliberate exception to this component's own "every prop stays
+  // stable across a pan tick" contract below -- see CellTile.tsx's matching
+  // comment for why, and this slice's step-3 handoff for the measurement.
+  focus: FocusCell
 }
 
 // The cell layer, rendered as one CellTile per tile in `range` (see
 // cellTiles.ts's TileRange) rather than a camera-derived cells array: every
-// prop here -- range, anchorX, anchorY, cellSize, store, onActivateCell --
-// stays reference-/value-stable across a within-range pan tick (range by
-// nextTileRange's reference-identity contract; anchorX/anchorY only change on
-// a rare re-anchor; cellSize only on zoom), which is what lets that pan stop
-// re-rendering this component at all -- React Compiler's memoization of
-// Grid's <GridCells> element bails before this function body ever runs. Only
-// the transformed layer div Grid wraps this in (see Grid.tsx) moves.
+// prop here except `focus` -- range, anchorX, anchorY, cellSize, store,
+// onActivateCell -- stays reference-/value-stable across a within-range pan
+// tick (range by nextTileRange's reference-identity contract; anchorX/anchorY
+// only change on a rare re-anchor; cellSize only on zoom), which is what lets
+// that pan stop re-rendering this component at all -- React Compiler's
+// memoization of Grid's <GridCells> element bails before this function body
+// ever runs. Only the transformed layer div Grid wraps this in (see
+// Grid.tsx) moves.
+//
+// `focus` is the deliberate, temporary exception (collapse-dead-cell-layer
+// step 3): it changes on every keyboard focus move, forcing this component
+// and every CellTile it renders to re-run -- but a focus move is not a pan
+// tick, so the guarantee above still holds for the gestures it was written
+// to protect (pointer-drag, wheel). See CellTile.tsx's own comment on the
+// same prop for the cost and why it isn't worth fixing before step 4 deletes
+// this component.
 //
 // The React key is tileKey(tx, ty) -- the tile's own WORLD-ANCHORED
 // IDENTITY -- not a lattice-style linear slot index. THIS INVERTS THE
@@ -60,7 +74,7 @@ interface GridCellsProps {
 // Aliveness itself is no longer computed here -- each Cell subscribes to its
 // own membership via useLiveCell(store, key), so a generation only re-renders
 // the cells that actually changed. See liveCellStore.ts's module header.
-export default function GridCells({ range, anchorX, anchorY, cellSize, store, onActivateCell }: GridCellsProps) {
+export default function GridCells({ range, anchorX, anchorY, cellSize, store, onActivateCell, focus }: GridCellsProps) {
   const tiles: React.ReactNode[] = []
   for (let ty = range.minTileY; ty <= range.maxTileY; ty++) {
     for (let tx = range.minTileX; tx <= range.maxTileX; tx++) {
@@ -75,6 +89,7 @@ export default function GridCells({ range, anchorX, anchorY, cellSize, store, on
           anchorY={anchorY}
           store={store}
           onActivate={onActivateCell}
+          focus={focus}
         />,
       )
     }

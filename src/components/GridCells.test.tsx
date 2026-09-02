@@ -2,6 +2,7 @@ import { fireEvent, render, screen } from '@testing-library/react'
 import type { ReactElement } from 'react'
 import { describe, expect, it, vi } from 'vitest'
 import { tileKey, tileOriginCell, type TileRange } from '../cellTiles'
+import type { FocusCell } from '../gridFocus'
 import { createLiveCellStore } from '../liveCellStore'
 import GridCells from './GridCells'
 
@@ -16,6 +17,10 @@ const ANCHOR_X = 0
 const ANCHOR_Y = 0
 const CELL_SIZE = 20
 
+// Well outside the 4x4-cell range this fixture covers -- see
+// CellTile.test.tsx's own FOCUS_OUTSIDE_TILE for the identical reasoning.
+const FOCUS_OUTSIDE_RANGE: FocusCell = { x: 9999, y: 9999 }
+
 function renderCells(props: Partial<React.ComponentProps<typeof GridCells>> = {}) {
   const merged: React.ComponentProps<typeof GridCells> = {
     range: RANGE,
@@ -24,6 +29,7 @@ function renderCells(props: Partial<React.ComponentProps<typeof GridCells>> = {}
     cellSize: CELL_SIZE,
     store: createLiveCellStore(),
     onActivateCell: vi.fn(),
+    focus: FOCUS_OUTSIDE_RANGE,
     ...props,
   }
   return { ...render(<GridCells {...merged} />), ...merged }
@@ -98,6 +104,7 @@ describe('GridCells tile-range enumeration', () => {
       cellSize: CELL_SIZE,
       store: createLiveCellStore(),
       onActivateCell: vi.fn(),
+      focus: FOCUS_OUTSIDE_RANGE,
     })
     const keys = (element.props as { children: ReactElement[] }).children.map((child) => child.key)
 
@@ -108,5 +115,18 @@ describe('GridCells tile-range enumeration', () => {
       }
     }
     expect(keys).toEqual(expectedKeys)
+  })
+})
+
+// One thin test: `focus` is just threaded through to every CellTile (an
+// ordinary prop pass-through), with the actual per-cell tabIndex/description
+// decision already covered by CellTile.test.tsx and Cell.test.tsx. This only
+// proves the wiring reaches all the way down.
+describe('GridCells focus pass-through', () => {
+  it('a focus naming a cell in range makes that cell the single tab stop', () => {
+    renderCells({ focus: { x: -1, y: -1 } })
+    expect(screen.getByRole('button', { name: 'Cell -1, -1' }).tabIndex).toBe(0)
+    const others = screen.getAllByRole('button').filter((b) => b.getAttribute('aria-label') !== 'Cell -1, -1')
+    for (const other of others) expect(other.tabIndex).toBe(-1)
   })
 })

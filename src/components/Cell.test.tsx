@@ -26,6 +26,7 @@ function renderCell(props: Partial<React.ComponentProps<typeof Cell>> = {}) {
     cellSize: camera.cellSize,
     store: createLiveCellStore(),
     onActivate: vi.fn(),
+    isFocused: false,
     ...props,
   }
   return { ...render(<Cell {...merged} />), ...merged }
@@ -133,6 +134,100 @@ describe('Cell paint', () => {
 
     expect(screen.getByRole('button', { name: cellLabel(0, 0) }).className).toContain('bg-gray-900')
     expect(screen.getByRole('button', { name: cellLabel(1, 0) }).className).toContain('bg-white')
+  })
+})
+
+describe('Cell roving tabindex and focus description', () => {
+  it('a non-focused cell is out of the sequential tab order, with no description', () => {
+    renderCell({ x: 5, y: 5, ...transformFor(5, 5), isFocused: false })
+    const cell = screen.getByRole('button', { name: 'Cell 5, 5' })
+    expect(cell.tabIndex).toBe(-1)
+    expect(cell).not.toHaveAttribute('aria-describedby')
+  })
+
+  it('the focused cell is the single tab stop, and carries a description', () => {
+    renderCell({ x: 5, y: 5, ...transformFor(5, 5), isFocused: true })
+    const cell = screen.getByRole('button', { name: 'Cell 5, 5' })
+    expect(cell.tabIndex).toBe(0)
+    expect(cell).toHaveAttribute('aria-describedby')
+  })
+
+  it("the description node's own id matches aria-describedby, and its whole content is exactly the state word", () => {
+    const store = createLiveCellStore(new Set([cellKey(2, 3)]))
+    renderCell({ x: 2, y: 3, ...transformFor(2, 3), isFocused: true, store })
+    const cell = screen.getByRole('button', { name: 'Cell 2, 3' })
+
+    const describedById = cell.getAttribute('aria-describedby')
+    expect(describedById).toBeTruthy()
+    const description = document.getElementById(describedById!)
+    expect(description).not.toBeNull()
+    // Exactly the state word -- not the coordinate too. See Cell.tsx's own
+    // comment on why: the coordinate is already the accessible NAME
+    // (aria-label), and repeating it here would double-announce it.
+    expect(description!.textContent).toBe('alive')
+  })
+
+  it('the description says "dead" for a dead focused cell, and updates live when the store toggles it', () => {
+    const store = createLiveCellStore()
+    renderCell({ x: 2, y: 3, ...transformFor(2, 3), isFocused: true, store })
+    const cell = screen.getByRole('button', { name: 'Cell 2, 3' })
+    const describedById = cell.getAttribute('aria-describedby')!
+    expect(document.getElementById(describedById)!.textContent).toBe('dead')
+
+    act(() => store.toggle(2, 3))
+
+    expect(document.getElementById(describedById)!.textContent).toBe('alive')
+  })
+
+  it('the description is visually hidden rather than removed from the accessible tree', () => {
+    renderCell({ x: 2, y: 3, ...transformFor(2, 3), isFocused: true })
+    const cell = screen.getByRole('button', { name: 'Cell 2, 3' })
+    const describedById = cell.getAttribute('aria-describedby')!
+    expect(document.getElementById(describedById)!.className).toContain('sr-only')
+  })
+
+  // BROWSER QUIRK WORKAROUND regression test -- see Cell.tsx's own onBlur
+  // comment for the full explanation (Chromium's sequential-focus-navigation
+  // resume position survives blur() on the same DOM node, so the next Tab
+  // press skips past a lone roving-tabindex cell entirely). This only proves
+  // the reattachment actually happens and preserves the node's identity and
+  // position -- the actual Tab-lands-back-on-a-cell claim is real-browser
+  // behavior this jsdom suite cannot observe at all, and is instead pinned
+  // by keyboard-grid-navigation.feature's own e2e scenarios.
+  it('on blur, reattaches its own DOM node at the same position (same object, same parent, same next sibling)', async () => {
+    renderCell({ x: 4, y: 4, ...transformFor(4, 4), isFocused: true })
+    const cell = screen.getByRole('button', { name: 'Cell 4, 4' })
+    const parent = cell.parentElement!
+    const originalNextSibling = cell.nextSibling
+
+    cell.focus()
+    fireEvent.blur(cell)
+    // The reattachment is deferred via queueMicrotask -- flush microtasks.
+    await Promise.resolve()
+    await Promise.resolve()
+
+    expect(parent.contains(cell)).toBe(true)
+    expect(cell.parentElement).toBe(parent)
+    expect(cell.nextSibling).toBe(originalNextSibling)
+  })
+
+  it('does nothing, and does not throw, if the node is already disconnected by the time the deferred reattach runs', async () => {
+    const { unmount } = renderCell({ x: 4, y: 4, ...transformFor(4, 4), isFocused: true })
+    const cell = screen.getByRole('button', { name: 'Cell 4, 4' })
+
+    cell.focus()
+    fireEvent.blur(cell)
+    unmount()
+    expect(cell.isConnected).toBe(false)
+
+    // If the isConnected guard were missing, the queued microtask would call
+    // parent.insertBefore on a node whose parent is already gone (or whose
+    // `next` sibling reference is stale), throwing asynchronously. Flushing
+    // past the microtask with nothing here failing the test IS the
+    // assertion -- vitest surfaces an unhandled rejection from a throwing
+    // queueMicrotask callback as a test failure.
+    await Promise.resolve()
+    await Promise.resolve()
   })
 })
 

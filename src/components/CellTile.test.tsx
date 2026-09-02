@@ -3,6 +3,7 @@ import { describe, expect, it, vi } from 'vitest'
 import { cellOffsetPx } from '../cellAnchor'
 import { tileOriginCell } from '../cellTiles'
 import { cellKey } from '../gameOfLife'
+import type { FocusCell } from '../gridFocus'
 import { createLiveCellStore } from '../liveCellStore'
 import { CELL_ALIVE_ATTR, CELL_ALIVE_VALUE, CELL_DEAD_VALUE, cellLabel } from '../test-support/cellQuery'
 import CellTile from './CellTile'
@@ -26,7 +27,13 @@ function expectedTransform(x: number, y: number): string {
   return `translate(${leftPx}px, ${topPx}px)`
 }
 
-function renderTile(store = createLiveCellStore()) {
+// Well outside this tile by default -- see CellTile.tsx's own "no prop may
+// change per pan tick" comment for why `focus` is the one sanctioned
+// exception, and the "roving tabindex" describe block below for the test
+// that actually exercises a focus INSIDE the tile.
+const FOCUS_OUTSIDE_TILE: FocusCell = { x: 9999, y: 9999 }
+
+function renderTile(store = createLiveCellStore(), focus: FocusCell = FOCUS_OUTSIDE_TILE) {
   const onActivate = vi.fn()
   const utils = render(
     <CellTile
@@ -38,6 +45,7 @@ function renderTile(store = createLiveCellStore()) {
       anchorY={ANCHOR_Y}
       store={store}
       onActivate={onActivate}
+      focus={focus}
     />,
   )
   return { ...utils, store, onActivate }
@@ -127,5 +135,29 @@ describe('O(changed) rendering', () => {
     act(() => store.toggle(flippedX, flippedY))
 
     expect(cell).toHaveAttribute(CELL_ALIVE_ATTR, CELL_ALIVE_VALUE)
+  })
+})
+
+describe('roving tabindex (the collapse-dead-cell-layer step-3 exception)', () => {
+  it('marks exactly the cell matching `focus` as the tab stop, and no other', () => {
+    const originX = tileOriginCell(TILE_X, SPAN_CELLS)
+    const originY = tileOriginCell(TILE_Y, SPAN_CELLS)
+    const focused: FocusCell = { x: originX + 1, y: originY + 2 }
+    renderTile(createLiveCellStore(), focused)
+
+    const buttons = screen.getAllByRole('button')
+    const tabbable = buttons.filter((b) => b.tabIndex === 0)
+    expect(tabbable).toHaveLength(1)
+    expect(tabbable[0]).toBe(screen.getByRole('button', { name: `Cell ${focused.x}, ${focused.y}` }))
+
+    for (const button of buttons) {
+      if (button !== tabbable[0]) expect(button.tabIndex).toBe(-1)
+    }
+  })
+
+  it('marks none of its cells as the tab stop when `focus` names a cell outside this tile', () => {
+    renderTile()
+    const tabbable = screen.getAllByRole('button').filter((b) => b.tabIndex === 0)
+    expect(tabbable).toHaveLength(0)
   })
 })

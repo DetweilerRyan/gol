@@ -1,8 +1,10 @@
-import { useRef, type ReactNode } from 'react'
+import { useRef, type KeyboardEvent, type ReactNode } from 'react'
 import { screenToWorld, type Camera, type WheelInput } from '../camera'
 import { computeVisibleRange, type VisibleRange } from '../gridGeometry'
+import type { FocusDirection } from '../gridFocus'
 import { useCellTiles } from '../hooks/useCellTiles'
 import { useElementSize, type ElementSize } from '../hooks/useElementSize'
+import { useGridFocus } from '../hooks/useGridFocus'
 import { useGridPointerGestures } from '../hooks/useGridPointerGestures'
 import { useInitialCentering } from '../hooks/useInitialCentering'
 import { useRafCoalescedPan } from '../hooks/useRafCoalescedPan'
@@ -11,6 +13,17 @@ import type { LiveCellStore } from '../liveCellStore'
 import GridCells from './GridCells'
 import GridLines from './GridLines'
 import PatternPreview from './PatternPreview'
+
+// The four arrow keys plus Home/End, mapped to the direction/edge vocabulary
+// gridFocus.ts's pure functions take -- kept as a lookup rather than a
+// longer if/else chain so ARROW_KEY_DIRECTIONS and the Home/End branch below
+// read as one small table each.
+const ARROW_KEY_DIRECTIONS: Readonly<Record<string, FocusDirection>> = {
+  ArrowLeft: 'left',
+  ArrowRight: 'right',
+  ArrowUp: 'up',
+  ArrowDown: 'down',
+}
 
 export interface GridOverlayContext {
   size: ElementSize
@@ -54,6 +67,7 @@ export default function Grid({
 
   const visibleRange = computeVisibleRange(camera, containerSize.width, containerSize.height)
   const tiles = useCellTiles(camera, containerSize)
+  const gridFocus = useGridFocus(camera, containerSize, onPan)
 
   // Single-shot stamping (disarming immediately after a placement) belongs to
   // whoever owns the placement state -- usePatternPlacement's
@@ -100,12 +114,57 @@ export default function Grid({
     onTap: (pixelX, pixelY) => {
       const { x, y } = screenToWorld(camera, pixelX, pixelY)
       activateCell(x, y)
+      // A pointer click also moves the roving keyboard cursor to the
+      // clicked cell -- one "current cell" shared by both routes (see
+      // keyboard-grid-navigation.feature's "Clicking a cell makes it the
+      // cell the keyboard comes back to"). The plain setter, not a request
+      // that also grabs real DOM focus or pans the camera -- a click only
+      // ever lands on an already-visible cell. See useGridFocus.ts's own
+      // header.
+      gridFocus.setFocus(x, y)
+      // DELIBERATELY no blur() here, even though Chromium's own
+      // click-focuses-button default (pointer capture on #grid-content
+      // notwithstanding -- measured with a throwaway probe) means the
+      // clicked cell keeps real DOM focus after this. Blurring it would
+      // make "Clicking a cell makes it the cell the keyboard comes back to"
+      // pass (a later single Tab would then land here, not skip past it --
+      // see Cell.tsx's onBlur comment for that mechanism), but at the cost
+      // of features/hud-layout-and-shortcuts.e2e.spec.ts's "Enter on a
+      // focused grid cell..." test, which polls document.activeElement
+      // immediately after a click with NO intervening Tab and requires it
+      // to already be the clicked cell. The two contracts want opposite
+      // real-DOM-focus behavior from the same click, and Tab's own "always
+      // moves forward" semantics make both unsatisfiable at once -- see
+      // this slice's step-3 handoff for the escalation.
     },
     onHover: (pixelX, pixelY) => {
       const { x, y } = screenToWorld(camera, pixelX, pixelY)
       onPreviewCell(x, y)
     },
   })
+
+  // Arrow keys, Home/End -- Enter and Space need no handling here at all:
+  // they're native <button> activation, already wired via Cell's own
+  // onClick (see Cell.tsx's comment on that), and firing on whichever
+  // element genuinely holds DOM focus is exactly the roving-tabindex cell
+  // useGridFocus's el.focus() calls keep it pointed at. preventDefault only
+  // on the six keys this actually handles, so Tab/Shift+Tab (native
+  // sequential navigation) and every other key pass through untouched.
+  function handleKeyDown(e: KeyboardEvent<HTMLDivElement>) {
+    const direction = ARROW_KEY_DIRECTIONS[e.key]
+    if (direction) {
+      e.preventDefault()
+      gridFocus.moveFocus(direction)
+      return
+    }
+    if (e.key === 'Home') {
+      e.preventDefault()
+      gridFocus.jumpToEdge('left')
+    } else if (e.key === 'End') {
+      e.preventDefault()
+      gridFocus.jumpToEdge('right')
+    }
+  }
 
   return (
     <div ref={containerRef} className="relative h-full w-full overflow-hidden bg-gray-100">
@@ -121,9 +180,20 @@ export default function Grid({
           same reason: callers supply *what* the overlays are, never *where*
           they sit, so this sibling-not-ancestor layering can't be broken
           from outside Grid. */}
+      {/* Delegated, not an interactive control of its own -- this div is
+          never itself a focus/tab target (no role, no tabIndex), and never
+          will be. Its onKeyDown only catches keydown events BUBBLING up from
+          whichever Cell button currently holds real focus (the
+          roving-tabindex cursor -- see useGridFocus.ts), the same
+          delegation shape {...handlers}'s pointer listeners already use.
+          The actual interactive elements a11y cares about are the Cell
+          buttons themselves, each already correctly exposed as
+          role="button". */}
+      {/* oxlint-disable-next-line jsx-a11y/no-static-element-interactions */}
       <div
         id={GRID_CONTENT_ID}
         {...handlers}
+        onKeyDown={handleKeyDown}
         className={`absolute inset-0 touch-none ${isPanning ? 'cursor-grabbing' : 'cursor-grab'}`}
       >
         {/* NO transform here -- #grid-content's client rect is load-bearing.
@@ -157,6 +227,7 @@ export default function Grid({
             cellSize={tiles.cellSize}
             store={store}
             onActivateCell={activateCell}
+            focus={gridFocus.focus}
           />
         </div>
 

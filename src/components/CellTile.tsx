@@ -1,5 +1,6 @@
 import { cellOffsetPx } from '../cellAnchor'
 import { tileOriginCell } from '../cellTiles'
+import type { FocusCell } from '../gridFocus'
 import type { LiveCellStore } from '../liveCellStore'
 import Cell from './Cell'
 
@@ -12,6 +13,18 @@ interface CellTileProps {
   anchorY: number
   store: LiveCellStore
   onActivate: (x: number, y: number) => void
+  // THE ONE SANCTIONED EXCEPTION to "no prop on CellTile may change per pan
+  // tick" below -- collapse-dead-cell-layer step 3, and deliberately
+  // temporary. `focus` changes on every keyboard focus move (arrow keys,
+  // Home/End, a click), which is NOT a pan tick: a plain pointer-drag/wheel
+  // pan never touches useGridFocus's state at all, so GridCells still bails
+  // on those exactly as before. A focus move, in contrast, re-renders every
+  // mounted CellTile (~850 at a typical viewport) to find and update the
+  // one Cell whose x/y now (or no longer) matches -- a known, accepted cost
+  // that dies at step 4, when this component is deleted and only the
+  // handful of live+focused cells stay mounted. Do not optimise it now;
+  // see this slice's step-3 handoff for the measurement this rests on.
+  focus: FocusCell
 }
 
 // One mounted tile: spanCells x spanCells Cell buttons, rendered as a
@@ -75,6 +88,7 @@ export default function CellTile({
   anchorY,
   store,
   onActivate,
+  focus,
 }: CellTileProps) {
   const originX = tileOriginCell(tileX, spanCells)
   const originY = tileOriginCell(tileY, spanCells)
@@ -99,6 +113,7 @@ export default function CellTile({
           transform={`translate(${leftPx}px, ${topPx}px)`}
           store={store}
           onActivate={onActivate}
+          isFocused={x === focus.x && y === focus.y}
         />,
       )
     }
