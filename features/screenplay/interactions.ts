@@ -21,13 +21,7 @@
 // under the barrel is what makes the extraction acyclic, so it is kept thin on
 // purpose.
 import { expect, type Page } from '@playwright/test'
-import {
-  cellLocator,
-  patternLibraryModal,
-  patternsButton,
-  scrollbarThumb,
-  type ScrollbarOrientation,
-} from './elements.ts'
+import { patternLibraryModal, patternsButton, scrollbarThumb, type ScrollbarOrientation } from './elements.ts'
 
 // Every scenario starts on a freshly loaded grid, but the step that opens it
 // is a scenario's FIRST step in one feature and a LATER one in another:
@@ -67,11 +61,27 @@ export async function dragPan(page: Page, fromX: number, fromY: number, dx: numb
   await page.mouse.up()
 }
 
+// TOGGLES OR STAMPS THE CELL AT A PIXEL, which is what a mouse user does and
+// what Grid actually resolves: useGridPointerGestures takes pointer capture on
+// #grid-content, so the click retargets to the container and onTap resolves the
+// cell arithmetically through screenToWorld. Driving a cell's own element with
+// .click() was never that route -- it worked only because a dead cell happened
+// to have an element under the pointer, and it stops working entirely when dead
+// cells stop rendering.
+//
+// The caller supplies the pixel, computed from the cell's coordinate (see
+// viewport.ts's defaultViewCellCenterPx). Nothing here resolves a pixel back to
+// an element.
+export async function clickGridAt(page: Page, pixel: { x: number; y: number }) {
+  await page.mouse.click(pixel.x, pixel.y)
+}
+
 // Puts the pointer over a world cell, which is what arms the preview: Grid's
 // trackHover reports the cell under the pointer, and nothing is previewed
-// until it has.
-export async function hoverCell(page: Page, x: number, y: number) {
-  await cellLocator(page, x, y).hover()
+// until it has. Same conversion as clickGridAt above and for the same reason --
+// a hover aimed at a dead cell's element has nothing to aim at after the flip.
+export async function hoverGridAt(page: Page, pixel: { x: number; y: number }) {
+  await page.mouse.move(pixel.x, pixel.y)
 }
 
 // Playwright keeps keyboard focus on the button that was last clicked.

@@ -17,7 +17,7 @@
 // applyWheelInput directly.
 import { createBdd } from 'playwright-bdd'
 import { expect } from '@playwright/test'
-import { CENTER, cellScreenPosition, recall, remember, shiftWheel, zoomPercent } from '../e2e-helpers'
+import { CENTER, originDisplacement, recall, remember, shiftWheel, zoomPercent } from '../e2e-helpers'
 
 const { When, Then } = createBdd()
 
@@ -50,10 +50,10 @@ When('I scroll the wheel down while holding shift', async ({ page }) => {
 // on screen is the origin moving up and to the left. Pinned to the exact
 // distance rolled, not only to its direction.
 Then('the camera should have moved down and right into the grid', async ({ page }) => {
-  const origin = await cellScreenPosition(page, 0, 0)
-  expect(origin.x).toBeLessThan(CENTER.x)
-  expect(origin.y).toBeLessThan(CENTER.y)
-  expect(origin).toEqual({ x: CENTER.x - recall(page, 'wheelSideways'), y: CENTER.y - recall(page, 'wheelDown') })
+  const moved = await originDisplacement(page)
+  expect(moved.x).toBeLessThan(0)
+  expect(moved.y).toBeLessThan(0)
+  expect(moved).toEqual({ x: -recall(page, 'wheelSideways'), y: -recall(page, 'wheelDown') })
 })
 
 Then('the zoom percentage should be above {int}', async ({ page }, percentage) => {

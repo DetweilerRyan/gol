@@ -1,5 +1,5 @@
 import { test, expect } from '@playwright/test'
-import { CENTER, cellLocator, dragPan, expectCellState, openPatternModal } from './e2e-helpers'
+import { CENTER, cellLocator, clickGridAt, dragPan, expectCellState, openPatternModal } from './e2e-helpers'
 
 // No matching .feature file (see CLAUDE.md's black-box e2e section for when a
 // spec is unpaired): there's no pure-logic layer here at all. What's under test
@@ -49,6 +49,13 @@ test('clicking a toolbar button behind the open modal has no effect', async ({ p
 })
 
 test('dragging over the open modal does not pan the grid underneath', async ({ page }) => {
+  // The origin needs an element for its position to be readable, and once only
+  // live cells render, bringing it to life is the only way it gets one. Clicked
+  // at CENTER, the pixel the default camera puts the origin at, before anything
+  // moves the camera -- so the seeding itself asserts nothing and the claim
+  // below is unchanged.
+  await clickGridAt(page, CENTER)
+
   const before = (await cellLocator(page, 0, 0).boundingBox())!
 
   await openPatternModal(page)

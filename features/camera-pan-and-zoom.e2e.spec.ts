@@ -1,5 +1,5 @@
 import { test, expect } from '@playwright/test'
-import { CENTER, cellScreenPosition, dragPan, resetView, zoomPercent } from './e2e-helpers'
+import { CENTER, cellScreenPosition, clickGridAt, dragPan, resetView, zoomPercent } from './e2e-helpers'
 import { ALIVE_CELL_SELECTOR } from '../src/test-support/cellQuery.ts'
 
 // Re-homed from camera-pan-and-zoom.feature by the feature-prose-honesty slice,
@@ -62,6 +62,13 @@ test.beforeEach(async ({ page }) => {
 })
 
 test('zooming in via the toolbar keeps the world origin fixed at the viewport center', async ({ page }) => {
+  // The origin needs an element for its position to be readable, and once only
+  // live cells render, bringing it to life is the only way it gets one. Clicked
+  // at CENTER, the pixel the default camera puts the origin at, before anything
+  // moves the camera -- so the seeding itself asserts nothing and the claim
+  // below is unchanged.
+  await clickGridAt(page, CENTER)
+
   await page.locator('button[aria-label="Zoom in"]').click()
 
   await expect.poll(() => zoomPercent(page)).toBe(125)
@@ -81,6 +88,13 @@ test('toolbar buttons never toggle whatever cell happens to be positioned undern
 })
 
 test('resetting the view returns to the default centered zoom regardless of prior pan/zoom', async ({ page }) => {
+  // The origin needs an element for its position to be readable, and once only
+  // live cells render, bringing it to life is the only way it gets one. Clicked
+  // at CENTER, the pixel the default camera puts the origin at, before anything
+  // moves the camera -- so the seeding itself asserts nothing and the claim
+  // below is unchanged.
+  await clickGridAt(page, CENTER)
+
   await dragPan(page, 300, 300, 500, 500, 20)
   await page.locator('button[aria-label="Zoom in"]').click()
   await page.locator('button[aria-label="Zoom in"]').click()

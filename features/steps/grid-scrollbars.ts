@@ -42,7 +42,7 @@ import { expect, type Page } from '@playwright/test'
 import {
   aliveCellCount,
   CENTER,
-  cellScreenPosition,
+  originDisplacement,
   clickCell,
   DEFAULT_CELL_SIZE_PX,
   dragPan,
@@ -145,9 +145,9 @@ Then(
 // Dragging the thumb down pans the camera DOWN the grid, which on screen is
 // the content -- and so the origin -- moving up by the same distance.
 Then('the camera should have moved {int} pixels down the grid', async ({ page }, pixels) => {
-  await expect.poll(() => cellScreenPosition(page, 0, 0)).toEqual({ x: CENTER.x, y: CENTER.y - pixels })
+  await expect.poll(() => originDisplacement(page)).toEqual({ x: 0, y: -pixels })
 })
 
 Then('the camera should have moved {int} pixels right across the grid', async ({ page }, pixels) => {
-  await expect.poll(() => cellScreenPosition(page, 0, 0)).toEqual({ x: CENTER.x - pixels, y: CENTER.y })
+  await expect.poll(() => originDisplacement(page)).toEqual({ x: -pixels, y: 0 })
 })

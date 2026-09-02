@@ -1,9 +1,9 @@
 import { test, expect } from '@playwright/test'
 import {
   blurFocus,
-  cellLocator,
   CENTER,
-  elementAtPoint,
+  clickCell,
+  clickGridAt,
   expectCellState,
   patternLibraryModal,
   patternsButton,
@@ -60,8 +60,22 @@ test('the grid fills the entire viewport, edge to edge', async ({ page }) => {
   // strips (bottom edge, right edge) -- those are legitimate UI chrome,
   // not grid cells, so this checks the grid reaches right up to them
   // rather than leaving the old boxed-widget's margin.
-  await expect.poll(() => elementAtPoint(page, 5, 850)).toMatch(/^Cell /)
-  await expect.poll(() => elementAtPoint(page, 1260, 400)).toMatch(/^Cell /)
+  //
+  // ASKED BY CLICKING, NOT BY A HIT TEST. This used to read
+  // elementAtPoint(...) and match /^Cell /, which is document.elementFromPoint
+  // -- a stacking question standing in for "does the grid receive input here",
+  // and one that answers nothing at all once a dead cell has no element to
+  // return. Clicking the pixel and naming the cell that must come alive is a
+  // positive anchor: it drives the resolver the app actually uses
+  // (pointer capture -> screenToWorld), it cannot pass vacuously, and it says
+  // WHICH cell the corner belongs to rather than merely that some cell is
+  // there. The two coordinates are worked out from the default camera, the
+  // same coordinate -> pixel direction everything else in this suite uses.
+  await clickGridAt(page, { x: 5, y: 850 })
+  await expectCellState(page, -32, 20, 'alive')
+
+  await clickGridAt(page, { x: 1260, y: 400 })
+  await expectCellState(page, 31, -3, 'alive')
 })
 
 test('the HUD panel renders the title, next-generation button, and generation counter, top-left', async ({ page }) => {
@@ -75,9 +89,9 @@ test('the HUD panel renders the title, next-generation button, and generation co
 })
 
 test('the Next Generation button advances state through the real app wiring', async ({ page }) => {
-  await cellLocator(page, -1, 0).click()
-  await cellLocator(page, 0, 0).click()
-  await cellLocator(page, 1, 0).click()
+  await clickCell(page, -1, 0)
+  await clickCell(page, 0, 0)
+  await clickCell(page, 1, 0)
 
   await page.locator('#next-generation-button').click()
 
@@ -90,9 +104,9 @@ test('the Next Generation button advances state through the real app wiring', as
 })
 
 test('Enter does not advance the generation when nothing is focused', async ({ page }) => {
-  await cellLocator(page, -1, 0).click()
-  await cellLocator(page, 0, 0).click()
-  await cellLocator(page, 1, 0).click()
+  await clickCell(page, -1, 0)
+  await clickCell(page, 0, 0)
+  await clickCell(page, 1, 0)
   await blurFocus(page)
 
   await page.keyboard.press('Enter')
@@ -101,9 +115,9 @@ test('Enter does not advance the generation when nothing is focused', async ({ p
 })
 
 test('Enter on a focused grid cell toggles that cell and does not advance the generation', async ({ page }) => {
-  await cellLocator(page, -1, 0).click()
-  await cellLocator(page, 0, 0).click()
-  await cellLocator(page, 1, 0).click() // leaves (1,0) focused and alive
+  await clickCell(page, -1, 0)
+  await clickCell(page, 0, 0)
+  await clickCell(page, 1, 0) // leaves (1,0) focused and alive
 
   await expect.poll(() => page.evaluate(() => document.activeElement?.getAttribute('aria-label'))).toBe('Cell 1, 0')
 
@@ -121,9 +135,9 @@ test('Enter on a focused grid cell toggles that cell and does not advance the ge
 })
 
 test('Enter on the focused Next Generation button advances exactly once and does not double-fire', async ({ page }) => {
-  await cellLocator(page, -1, 0).click()
-  await cellLocator(page, 0, 0).click()
-  await cellLocator(page, 1, 0).click()
+  await clickCell(page, -1, 0)
+  await clickCell(page, 0, 0)
+  await clickCell(page, 1, 0)
 
   await page.locator('#next-generation-button').click()
   await expect(page.getByText(/^Generation: \d+$/)).toHaveText('Generation: 1')
@@ -161,7 +175,7 @@ test('stamping a pattern is single-shot -- a second click toggles only that one 
   // stampArmedPattern disarms in the same action as committing the pattern
   // (see usePatternPlacement.ts), so this second click at a clearly separate
   // empty cell must be an ordinary single-cell toggle, not a second stamp.
-  await cellLocator(page, 5, 5).click()
+  await clickCell(page, 5, 5)
 
   await expectCellState(page, 5, 5, 'alive')
   await expectCellState(page, 6, 5, 'dead')
@@ -205,7 +219,7 @@ test('clicking Patterns again while a pattern is armed cancels placement instead
   await page.mouse.move(CENTER.x - 60, CENTER.y - 60)
   await expect(preview).toHaveCount(0)
 
-  await cellLocator(page, -3, -3).click()
+  await clickCell(page, -3, -3)
 
   await expectCellState(page, -3, -3, 'alive')
   await expectCellState(page, -2, -3, 'dead')

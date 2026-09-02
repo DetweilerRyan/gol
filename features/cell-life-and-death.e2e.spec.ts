@@ -63,7 +63,7 @@
 // duplicate keyboard test here.
 
 import { test, expect } from '@playwright/test'
-import { cellLocator, expectCellState } from './e2e-helpers'
+import { clickCell, expectCellState } from './e2e-helpers'
 import { CELL_SELECTOR, ALIVE_CELL_SELECTOR, DEAD_CELL_SELECTOR, cellLabel } from '../src/test-support/cellQuery.ts'
 
 test.beforeEach(async ({ page }) => {
@@ -71,7 +71,7 @@ test.beforeEach(async ({ page }) => {
 })
 
 test('a cell brought to life is announced as a pressed toggle button', async ({ page }) => {
-  await cellLocator(page, 2, 3).click()
+  await clickCell(page, 2, 3)
   await expectCellState(page, 2, 3, 'alive')
 
   // Outline point 3, read through the ACCESSIBILITY TREE rather than the
@@ -84,9 +84,9 @@ test('a cell brought to life is announced as a pressed toggle button', async ({ 
 })
 
 test('a cell that is killed is announced as an unpressed toggle button, not a plain button', async ({ page }) => {
-  await cellLocator(page, 2, 3).click()
+  await clickCell(page, 2, 3)
   await expectCellState(page, 2, 3, 'alive')
-  await cellLocator(page, 2, 3).click()
+  await clickCell(page, 2, 3)
   await expectCellState(page, 2, 3, 'dead')
 
   // The unpressed half of the same accessibility-tree read. A dead cell must
@@ -97,7 +97,7 @@ test('a cell that is killed is announced as an unpressed toggle button, not a pl
 })
 
 test('every mounted cell is announced as a toggle button, alive or dead', async ({ page }) => {
-  await cellLocator(page, 2, 3).click()
+  await clickCell(page, 2, 3)
 
   // Outline points 1 and 2 across the whole mounted set, which the jsdom
   // component test cannot state -- it renders one cell at a time. If

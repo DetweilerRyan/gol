@@ -25,8 +25,8 @@ import { createBdd } from 'playwright-bdd'
 import { expect, type Page } from '@playwright/test'
 import {
   aliveCellCount,
-  cellLocator,
   cellState,
+  clickCells,
   expectBlinker,
   expectCellState,
   generationCount,
@@ -62,13 +62,7 @@ const SUBJECT = { x: 0, y: 0 }
 // pan: they are always within a cell or two of each other, so bringing the
 // first into view brings the rest.
 async function toggleCells(page: Page, cells: ReadonlyArray<readonly [number, number]>) {
-  if (cells.length === 0) return
-  const [firstX, firstY] = cells[0]
-  await withCellInView(page, firstX, firstY, async () => {
-    for (const [x, y] of cells) {
-      await cellLocator(page, x, y).click()
-    }
-  })
+  await clickCells(page, cells)
 }
 
 async function expectCells(page: Page, cells: ReadonlyArray<readonly [number, number, 'alive' | 'dead']>) {

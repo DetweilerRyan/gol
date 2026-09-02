@@ -7,18 +7,28 @@
 // Tasks may read a locator's own count (withCellInView asks whether the cell is
 // mounted at all) but ask no Questions: what the app SAYS about the outcome is
 // the caller's business, not the task's.
-import { cellLocator, focusedCellElement } from './elements.ts'
+import { focusedCellElement } from './elements.ts'
 import {
   blurFocus,
   choosePatternFromLibrary,
+  clickGridAt,
   dragPan,
+  hoverGridAt,
   moveFocus,
   openPatternModal,
   pressKey,
   resetView,
   tabForward,
 } from './interactions.ts'
-import { CENTER, DEFAULT_CELL_SIZE_PX, DEFAULT_OFFSET_X, DEFAULT_OFFSET_Y } from './viewport.ts'
+import {
+  CENTER,
+  DEFAULT_CELL_SIZE_PX,
+  DEFAULT_OFFSET_X,
+  DEFAULT_OFFSET_Y,
+  defaultViewCellCenterPx,
+  isCellInDefaultView,
+  PAN_TARGET_PX,
+} from './viewport.ts'
 import { type Page } from '@playwright/test'
 
 export async function selectPattern(page: Page, name: string) {
@@ -33,7 +43,7 @@ export async function selectPattern(page: Page, name: string) {
 // that does not put it back. toggleFarCell and withCellInView below are the
 // two supported ways to use it, and both restore the default camera.
 async function panCellIntoView(page: Page, worldX: number, worldY: number) {
-  const SPOT = { x: 200, y: 200 }
+  const SPOT = PAN_TARGET_PX
   const desiredOffsetX = worldX - SPOT.x / DEFAULT_CELL_SIZE_PX
   const desiredOffsetY = worldY - SPOT.y / DEFAULT_CELL_SIZE_PX
   const dx = -(desiredOffsetX - DEFAULT_OFFSET_X) * DEFAULT_CELL_SIZE_PX
@@ -47,7 +57,7 @@ async function panCellIntoView(page: Page, worldX: number, worldY: number) {
 // (offsetX=-32, offsetY=-22.5) formulas.
 export async function toggleFarCell(page: Page, worldX: number, worldY: number) {
   await panCellIntoView(page, worldX, worldY)
-  await cellLocator(page, worldX, worldY).click()
+  await clickGridAt(page, pannedCellCenterPx(worldX, worldY, worldX, worldY))
   await resetView(page)
 }
 
@@ -61,7 +71,7 @@ export async function toggleFarCell(page: Page, worldX: number, worldY: number) 
 // off-screen one costs a pan, and the camera is put back afterwards even if
 // `body` throws.
 export async function withCellInView<T>(page: Page, worldX: number, worldY: number, body: () => Promise<T>) {
-  if ((await cellLocator(page, worldX, worldY).count()) > 0) return body()
+  if (isCellInDefaultView(worldX, worldY)) return body()
   await panCellIntoView(page, worldX, worldY)
   try {
     return await body()
@@ -70,10 +80,62 @@ export async function withCellInView<T>(page: Page, worldX: number, worldY: numb
   }
 }
 
-// Clicks a single, possibly off-screen, cell -- the withCellInView + click
-// pair every step that toggles one cell (rather than a batch) needs.
+// AFTER panCellIntoView(anchorX, anchorY), the anchor's top-left sits exactly
+// at PAN_TARGET_PX, so every other cell's pixel follows from its offset from
+// the anchor. One derivation, from the same constant that did the panning --
+// the alternative is each call site restating the pan's arithmetic.
+function pannedCellCenterPx(anchorX: number, anchorY: number, x: number, y: number): { x: number; y: number } {
+  return {
+    x: PAN_TARGET_PX.x + (x - anchorX + 0.5) * DEFAULT_CELL_SIZE_PX,
+    y: PAN_TARGET_PX.y + (y - anchorY + 0.5) * DEFAULT_CELL_SIZE_PX,
+  }
+}
+
+// Clicks a group of cells, paying at most one pan for the whole group: the
+// first cell is the anchor, and the rest are clicked at their offsets from it.
+// Replaces the withCellInView + per-cell .click() pair every seeding step used,
+// which reached each cell through its own element and therefore needed that
+// element to exist even when the cell was dead.
+//
+// The group is required to be reachable TOGETHER, and says so by name if it is
+// not. That is not defensiveness: a group whose anchor is on screen but whose
+// tail is not would previously have clicked an element Playwright scrolled to,
+// and would now click a pixel outside the viewport -- silently doing nothing.
+export async function clickCells(page: Page, cells: ReadonlyArray<readonly [number, number]>) {
+  if (cells.length === 0) return
+  const [anchorX, anchorY] = cells[0]
+
+  if (isCellInDefaultView(anchorX, anchorY)) {
+    const unreachable = cells.filter(([x, y]) => !isCellInDefaultView(x, y))
+    if (unreachable.length > 0)
+      throw new Error(
+        `Cell ${anchorX}, ${anchorY} is on screen but ${unreachable.map(([x, y]) => `(${x}, ${y})`).join(', ')} ${unreachable.length === 1 ? 'is' : 'are'} not, so this group cannot be clicked without moving the camera between clicks`,
+      )
+    for (const [x, y] of cells) await clickGridAt(page, defaultViewCellCenterPx(x, y))
+    return
+  }
+
+  await panCellIntoView(page, anchorX, anchorY)
+  try {
+    for (const [x, y] of cells) await clickGridAt(page, pannedCellCenterPx(anchorX, anchorY, x, y))
+  } finally {
+    await resetView(page)
+  }
+}
+
+// Clicks a single, possibly off-screen, cell.
 export async function clickCell(page: Page, x: number, y: number) {
-  await withCellInView(page, x, y, () => cellLocator(page, x, y).click())
+  await clickCells(page, [[x, y]])
+}
+
+// Puts the pointer over a possibly off-screen cell, leaving it there -- the
+// hover half of clickCell, for the pattern preview. Unlike clickCells it cannot
+// restore the camera afterwards, because the whole point is that the pointer
+// stays where it was put; every caller today hovers a cell in the default view.
+export async function hoverCell(page: Page, x: number, y: number) {
+  if (!isCellInDefaultView(x, y))
+    throw new Error(`Cell ${x}, ${y} is off screen under the default camera, so the pointer cannot be put over it`)
+  await hoverGridAt(page, defaultViewCellCenterPx(x, y))
 }
 
 // The label the focus cursor announces itself by. Parsed here as well as in

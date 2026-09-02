@@ -11,8 +11,16 @@
 // "add it here" meant a function body in this file, and after it that would be
 // the wrong fix.
 
-export { CENTER, DEFAULT_CELL_SIZE_PX } from './screenplay/viewport.ts'
-export { remember, recall, rememberText, recallText } from './screenplay/notepad.ts'
+export {
+  CENTER,
+  DEFAULT_CELL_SIZE_PX,
+  VIEWPORT_WIDTH_PX,
+  VIEWPORT_HEIGHT_PX,
+  defaultViewCellPx,
+  defaultViewCellCenterPx,
+  isCellInDefaultView,
+} from './screenplay/viewport.ts'
+export { remember, recall, rememberText, recallText, ORIGIN_RULER_X, ORIGIN_RULER_Y } from './screenplay/notepad.ts'
 export { cellLocator, patternsButton, patternLibraryModal, previewCells } from './screenplay/elements.ts'
 export type { ScrollbarOrientation } from './screenplay/elements.ts'
 export {
@@ -27,6 +35,9 @@ export {
   axisLabelValues,
   visibleProportionPercent,
   thumbPositionPercent,
+  axisLabelPx,
+  originRulerPx,
+  originDisplacement,
   focusedCell,
   focusedCellBox,
   focusedCellAnnouncement,
@@ -36,7 +47,6 @@ export {
   nextGeneration,
   resetView,
   dragPan,
-  hoverCell,
   blurFocus,
   shiftWheel,
   zoomIn,
@@ -49,12 +59,16 @@ export {
   pressKey,
   tabForward,
   tabAwayAndBack,
+  clickGridAt,
+  hoverGridAt,
 } from './screenplay/interactions.ts'
 export {
   selectPattern,
   toggleFarCell,
   withCellInView,
   clickCell,
+  clickCells,
+  hoverCell,
   focusGridCell,
   focusEdgeCellInView,
 } from './screenplay/tasks.ts'

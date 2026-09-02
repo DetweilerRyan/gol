@@ -1,7 +1,7 @@
 import { test, expect, type Page } from '@playwright/test'
 import {
   CENTER,
-  cellLocator,
+  clickCell,
   dragPan,
   dragScrollbarThumb,
   elementAtPoint,
@@ -33,7 +33,7 @@ test.beforeEach(async ({ page }) => {
 // affordance free to drift away from the thumb it describes.
 test('content wider than the viewport shrinks only the horizontal thumb', async ({ page }) => {
   await toggleFarCell(page, 199, 0)
-  await cellLocator(page, 0, 0).click()
+  await clickCell(page, 0, 0)
 
   // contentBounds {minX:0,maxX:200,minY:0,maxY:1} -> extentWidth=4640,
   // thumbRatio = 1280/4640 ~= 0.276. The thumb is drawn against the TRACK,
@@ -133,7 +133,7 @@ test('the rendered thumb stays inside its own track on both axes, at rest and pa
   await expectThumbInsideTrack(page, 'horizontal', 'at rest')
   await expectThumbInsideTrack(page, 'vertical', 'at rest')
 
-  await cellLocator(page, 0, 0).click()
+  await clickCell(page, 0, 0)
   // The same far pan the position-and-proportion test below uses:
   // offsetX' = -32 + 582 = 550, far right of the single live cell, which puts
   // the horizontal thumb hard against the end of its track.
@@ -213,7 +213,7 @@ test('the visible proportion is announced as a description, and the accessible n
 // (position 100) while only a sliver of the grid is in view. A design that
 // let proportion overwrite position would collapse the two and fail here.
 test('position and proportion are announced as separate quantities on the same thumb', async ({ page }) => {
-  await cellLocator(page, 0, 0).click()
+  await clickCell(page, 0, 0)
   // Same pan as the far-pan test above: offsetX' = -32 + 582 = 550.
   await dragPan(page, CENTER.x, CENTER.y, -11640, 0, 50)
 

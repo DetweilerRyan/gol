@@ -1,5 +1,5 @@
 import { test, expect } from '@playwright/test'
-import { CENTER, elementAtPoint, shiftWheel, zoomPercent } from './e2e-helpers'
+import { CENTER, cellScreenPosition, clickGridAt, DEFAULT_CELL_SIZE_PX, shiftWheel, zoomPercent } from './e2e-helpers'
 
 // Re-homed from mouse-wheel-controls.feature by the feature-prose-honesty
 // slice, under the acceptance-contract-rulings ruling that a geometric promise
@@ -25,12 +25,25 @@ test.beforeEach(async ({ page }) => {
 })
 
 test('scrolling with shift held zooms instead of panning, keeping the cursor point fixed', async ({ page }) => {
-  // (700, 300): clear of the HUD panel, zoom toolbar, and scrollbars.
-  const before = await elementAtPoint(page, 700, 300)
-  await shiftWheel(page, 700, 300, 0, -100)
+  // (700, 310) is clear of the HUD panel, zoom toolbar and scrollbars, and is
+  // EXACTLY the top-left corner of world cell (3, -7) under the default camera.
+  // Rolling the wheel over a cell corner is what makes the claim checkable as an
+  // equality rather than as a tolerance: zoom-at-point holds the world point
+  // under the cursor fixed, so that corner must still be that same pixel.
+  //
+  // This replaced a before/after comparison of elementAtPoint against itself.
+  // That was a hit test standing in for a geometric claim, and on an EMPTY grid
+  // it degenerates to null === null the moment a dead cell has no element to
+  // return -- passing while observing nothing. Seeding the cell and measuring
+  // its box states the same claim positively and exactly.
+  const CORNER = { x: 700, y: 310 }
+  await clickGridAt(page, { x: CORNER.x + DEFAULT_CELL_SIZE_PX / 2, y: CORNER.y + DEFAULT_CELL_SIZE_PX / 2 })
+  await expect.poll(() => cellScreenPosition(page, 3, -7)).toEqual(CORNER)
+
+  await shiftWheel(page, CORNER.x, CORNER.y, 0, -100)
 
   await expect.poll(() => zoomPercent(page)).toBe(125)
-  await expect.poll(() => elementAtPoint(page, 700, 300)).toBe(before)
+  await expect.poll(() => cellScreenPosition(page, 3, -7)).toEqual(CORNER)
 })
 
 // THE ONE PLACE A SHIFT-WHEEL AXIS-PRIORITY INVERSION IS OBSERVABLE, and the

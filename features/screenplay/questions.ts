@@ -27,6 +27,7 @@
 import { type Page } from '@playwright/test'
 import { CELL_ALIVE_ATTR, CELL_ALIVE_VALUE, CELL_DEAD_VALUE } from '../../src/test-support/cellQuery.ts'
 import { parseVisibleProportionText } from '../../src/test-support/scrollbarQuery.ts'
+import { ORIGIN_RULER_X, ORIGIN_RULER_Y, recall } from './notepad.ts'
 import {
   aliveCells,
   cellLocator,
@@ -145,8 +146,23 @@ export async function cellScreenPosition(page: Page, x: number, y: number): Prom
 
 // Aliveness as the domain word rather than as the attribute value, so a step
 // can compare an observed outcome against a Gherkin Examples cell directly.
+//
+// DEAD HAS TWO SHAPES, AND BOTH ARE CORRECT ANSWERS. Once only live cells are
+// rendered, most dead cells have no element at all, so absence IS the answer
+// rather than a failure to find one -- but not every dead cell is absent: the
+// focus cursor stays mounted wherever the keyboard is, alive or not, which is
+// exactly what the space-bar scenario asserts against. A reader who expects one
+// shape and finds the other has not found a bug.
+//
+// ABSENCE IS ONLY SOUND BECAUSE THE CALLERS ANCHOR IT. On its own "no element"
+// is equally satisfied by the wrong camera, a renamed label and a crashed app,
+// so every step that reads a dead cell either runs inside withCellInView (which
+// establishes the camera) or sits in a scenario whose other clauses read a live
+// cell through the same selector.
 export async function cellState(page: Page, x: number, y: number): Promise<'alive' | 'dead'> {
-  const value = await cellLocator(page, x, y).getAttribute(CELL_ALIVE_ATTR)
+  const cell = cellLocator(page, x, y)
+  if ((await cell.count()) === 0) return 'dead'
+  const value = await cell.getAttribute(CELL_ALIVE_ATTR)
   if (value === CELL_ALIVE_VALUE) return 'alive'
   if (value === CELL_DEAD_VALUE) return 'dead'
   throw new Error(`Cell ${x}, ${y} announces ${CELL_ALIVE_ATTR}="${value}", which is neither alive nor dead`)
@@ -286,4 +302,47 @@ export async function focusedCellAnnouncement(page: Page): Promise<string> {
       `The focused cell's aria-describedby names ${ids.length} ids ("${describedBy}"), not one, so it announces no single description`,
     )
   return (await page.locator(`[id="${ids[0]}"]`).textContent()) ?? ''
+}
+
+// WHERE ONE COORDINATE'S RULER LABEL SITS ON SCREEN, along its own axis.
+//
+// This is the origin-tracking instrument for every step that says how far the
+// camera moved, and it replaced reading a DEAD cell's box for it. A cell at the
+// origin is not available once only live cells render -- a step would have to
+// seed one, and the step that would have to do the seeding is shared with
+// grid-scrollbars' empty-grid scenario, which would stop being about an empty
+// grid. The ruler needs nothing seeded: it is drawn from the camera alone, it is
+// always on screen while the coordinate is in view, and it is reached through
+// the same role="group" axis affordance axisLabelValues already reads.
+//
+// USE IT AS A DIFFERENCE, NEVER AS AN ABSOLUTE. RulerLabel offsets each label
+// from its coordinate's own pixel by a small constant so the digits clear the
+// gridline they mark, and this suite deliberately does not know that constant --
+// encoding it here would be a copy of a styling decision that could drift. Every
+// caller compares two readings of the same label, where the offset cancels
+// exactly; the absolute pixel is the one thing this function's answer does NOT
+// give you.
+export async function axisLabelPx(page: Page, axis: 'x' | 'y', coordinate: number): Promise<number> {
+  const box = await rulerGroup(page, axis).getByText(String(coordinate), { exact: true }).boundingBox()
+  if (!box) throw new Error(`The ${axis} ruler shows no label for ${coordinate}, so its position cannot be read`)
+  return axis === 'x' ? box.x : box.y
+}
+
+// Both axes at once, which is what a camera displacement is measured in.
+export async function originRulerPx(page: Page): Promise<{ x: number; y: number }> {
+  return { x: await axisLabelPx(page, 'x', 0), y: await axisLabelPx(page, 'y', 0) }
+}
+
+// HOW FAR THE ORIGIN HAS MOVED ON SCREEN since the centered-origin Given
+// recorded where it started -- which is what every "the camera should have
+// moved ..." step in three different features is actually asserting.
+//
+// The subtraction is the point: it is a difference of two readings of the same
+// ruler label, so RulerLabel's own offset from the coordinate cancels and this
+// suite never has to know it. Reading the baseline off the notepad rather than
+// re-deriving it is forced by when these steps run -- the camera has already
+// moved by then, and where it started is no longer observable.
+export async function originDisplacement(page: Page): Promise<{ x: number; y: number }> {
+  const now = await originRulerPx(page)
+  return { x: now.x - recall(page, ORIGIN_RULER_X), y: now.y - recall(page, ORIGIN_RULER_Y) }
 }

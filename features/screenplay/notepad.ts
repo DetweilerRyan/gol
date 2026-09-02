@@ -49,3 +49,14 @@ export const remember = scenarioNumbers.remember
 export const recall = scenarioNumbers.recall
 export const rememberText = scenarioTexts.remember
 export const recallText = scenarioTexts.recall
+
+// The one notepad key pair the suite names rather than leaving to its caller.
+//
+// Every other key is a private string in the step module that both writes and
+// reads it. These two are written by camera-pan-and-zoom.ts's centered-origin
+// Given and read by displacement Thens in THREE step modules, and a step module
+// may not import another one (rules/no-domain-imports-in-bdd-steps.yml) -- the
+// sharing is a registry fact, so the shared vocabulary has to live down here
+// rather than be re-typed as a literal in each of the three.
+export const ORIGIN_RULER_X = 'origin ruler label x at the default camera'
+export const ORIGIN_RULER_Y = 'origin ruler label y at the default camera'

@@ -28,7 +28,13 @@
 import { createBdd } from 'playwright-bdd'
 import { expect, type Page } from '@playwright/test'
 import {
+  aliveCellCount,
   CENTER,
+  clickGridAt,
+  originDisplacement,
+  originRulerPx,
+  ORIGIN_RULER_X,
+  ORIGIN_RULER_Y,
   cellScreenPosition,
   axisLabelValues,
   dragPan,
@@ -81,10 +87,36 @@ async function balancedAxes(page: Page): Promise<{ x: boolean; y: boolean }> {
   }
 }
 
+// SEED, MEASURE, UNSEED -- and the unseed is the load-bearing third act.
+//
+// The exact-pixel check needs an element at the origin, and once only live cells
+// render the only way to get one is to bring the origin to life. This Given is
+// shared with grid-scrollbars' "An empty grid's scrollbar thumbs fill the entire
+// track", though, so a cell left behind would quietly make that scenario stop
+// being about an empty grid -- the emptiest possible content is the whole point
+// of it. Toggling the origin back off restores exactly the board this step was
+// handed, and the count comparison is what proves it did.
+//
+// The click goes to CENTER, the pixel the default camera puts the origin at, so
+// the cell that comes alive being (0, 0) is itself part of the assertion: under
+// any other camera a different cell would.
+//
+// It also records where the origin's ruler label sits, which is the baseline
+// every "the camera should have moved ..." Then measures against. Recorded here
+// rather than read fresh in those steps because by the time they run the camera
+// has already moved -- there is no second chance to see where it started.
 Given('a camera centered on the origin at the default zoom', async ({ page }) => {
   await openGrid(page)
   await expect.poll(() => zoomPercent(page)).toBe(100)
+
+  const liveBefore = await aliveCellCount(page)
+  await clickGridAt(page, CENTER)
   await expect.poll(() => cellScreenPosition(page, 0, 0)).toEqual(CENTER)
+  const baseline = await originRulerPx(page)
+  remember(page, ORIGIN_RULER_X, baseline.x)
+  remember(page, ORIGIN_RULER_Y, baseline.y)
+  await clickGridAt(page, CENTER)
+  await expect.poll(() => aliveCellCount(page)).toBe(liveBefore)
 })
 
 Given('I have panned and zoomed away from that view', async ({ page }) => {
@@ -125,10 +157,10 @@ When('I reset the view for an {int} by {int} pixel viewport', async ({ page }, w
 // origin from where the centered-origin Given asserted it, and pinned to the
 // exact distance the pan was asked for rather than only to its direction.
 Then('the camera should have moved left and up over the grid', async ({ page }) => {
-  const origin = await cellScreenPosition(page, 0, 0)
-  expect(origin.x).toBeGreaterThan(CENTER.x)
-  expect(origin.y).toBeGreaterThan(CENTER.y)
-  expect(origin).toEqual({ x: CENTER.x + recall(page, 'panRight'), y: CENTER.y + recall(page, 'panDown') })
+  const moved = await originDisplacement(page)
+  expect(moved.x).toBeGreaterThan(0)
+  expect(moved.y).toBeGreaterThan(0)
+  expect(moved).toEqual({ x: recall(page, 'panRight'), y: recall(page, 'panDown') })
 })
 
 Then('the zoom level should be unchanged', async ({ page }) => {
