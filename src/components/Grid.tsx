@@ -102,27 +102,39 @@ export default function Grid({
   // same world cell doesn't hand HoverIndicator (and anything watching this
   // state) a new object identity for no visible change.
   //
-  // Mutation-scan note (cleaner, collapse-dead-cell-layer step 4): a scoped
-  // `npx stryker run --mutate` over this file leaves 5 mutants unkilled on
-  // the line below (1 Survived -- the whole condition -> false -- plus 4
-  // NoCoverage: each of prev.x === x / prev.y === y independently replaced
-  // by true, and each independently negated to !==), all hand-verified
-  // equivalent rather than left unexamined. Every one of the two branches
-  // this ternary can take returns an object whose OWN x/y are the same
-  // numbers either way -- the branches differ only in whether the RETURNED
-  // REFERENCE is `prev` or a freshly allocated `{ x, y }`, and nothing
-  // downstream (HoverIndicator's render output, any other consumer) reads
-  // that reference's identity, only its x/y values. So every one of these
-  // 5 mutants changes React's own re-render bailout and nothing a test can
-  // observe: confirmed by hand-applying each directly and running the whole
-  // suite (not just under Stryker), all 5 leave it green. This is the same
-  // class of finding as liveCellStore.ts's getBoundsSnapshot comment
-  // documents for the analogous box-identity check -- read that one before
-  // "fixing" this by switching to isShallowEqual, which would NOT be
-  // behavior-preserving here: screenToWorld's Math.floor can return -0, and
-  // Object.is(0, -0) is false where === is true, so the swap would treat
-  // two renders of the same world cell (0 vs -0) as a coordinate change
-  // this comparison exists to suppress.
+  // MUTATION-SCAN NOTE -- corrected at the corrective's hardening gate, and
+  // the correction matters more than the note. This comment previously said
+  // all 5 unkilled mutants on the line below were equivalent, and that was
+  // WRONG for 4 of them. The argument it gave -- "both branches return an
+  // object whose own x/y are the same numbers either way, so only the
+  // reference identity differs" -- holds ONLY for the whole-condition
+  // mutant. For the per-axis ones it is false: with `prev.x === x` forced to
+  // true, a move that changes x but not y takes the `prev` branch and
+  // renders prev's OLD x. Those mutants were not equivalent, only
+  // unexercised -- 4 of the 5 were NoCoverage, and the reasoning was applied
+  // to the whole set on the strength of a hand-check that could not
+  // distinguish "equivalent" from "nothing drives this yet".
+  //
+  // Measured on the corrective tree: the camera-change effect below gave
+  // those mutants coverage for the first time, the Y-axis pair died to the
+  // wheel-route test, and the X-axis pair died once its X-axis twin was
+  // added (see Grid.test.tsx's 'hover indicator wiring' describe, which now
+  // pins both axes and the mid-drag route).
+  //
+  // EXACTLY ONE EQUIVALENT MUTANT REMAINS: the whole condition -> false,
+  // which returns a freshly allocated { x, y } carrying the same numbers
+  // rather than `prev`. Nothing downstream reads that reference's identity,
+  // only its x/y, so it changes React's re-render bailout and nothing a test
+  // can observe.
+  //
+  // Still do NOT "fix" this by switching to isShallowEqual, which would not
+  // be behavior-preserving: screenToWorld's Math.floor can return -0, and
+  // Object.is(0, -0) is false where === is true, so the swap would treat two
+  // renders of the same world cell (0 vs -0) as a coordinate change this
+  // comparison exists to suppress. liveCellStore.ts's getBoundsSnapshot
+  // comment documents the analogous box-identity check -- and note its own
+  // survivor set was audited the same way, where 5 of 6 ARE equivalent and
+  // the sixth is a real kill the tool misattributes.
   const [hovered, setHovered] = useState<{ x: number; y: number } | null>(null)
   function updateHovered(x: number, y: number) {
     setHovered((prev) => (prev !== null && prev.x === x && prev.y === y ? prev : { x, y }))

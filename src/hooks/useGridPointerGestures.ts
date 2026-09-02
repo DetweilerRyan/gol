@@ -111,6 +111,12 @@ export function useGridPointerGestures({
       // getBoundingClientRect() call -- and never onHover, since a pan in
       // flight is not "hovering" a cell and must not drive
       // onPreviewCell (see this callback's own doc comment).
+      // EQUIVALENT MUTANT (measured): -> `if (true)` survives a full
+      // unfiltered run and cannot be killed. Reaching this branch requires
+      // dragStateRef.current?.isPanning, which requires a pointerdown, which
+      // is the same handler that sets containerRectRef -- so the guard is
+      // never false here. It stays for the TypeScript narrow it also
+      // provides, not as defence against a reachable null.
       if (containerRectRef.current) {
         const { pixelX, pixelY } = rectRelativePixels(containerRectRef.current, e.clientX, e.clientY)
         onPointerPosition(pixelX, pixelY)

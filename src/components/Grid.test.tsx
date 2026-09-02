@@ -402,22 +402,69 @@ describe('hover indicator wiring', () => {
   // (useCamera.test.ts) -- what belongs here is only "given `camera` changed
   // by ANY means, does the indicator re-resolve", which a direct prop change
   // states more precisely than reconstructing a wheel event would.
-  it('re-resolves the indicator against a new camera with no further pointermove -- the wheel-pan route', () => {
+  // ONE ROW PER AXIS, and the second is not symmetry for its own sake: a
+  // Y-only pan exercises only the `prev.y === y` half of updateHovered's
+  // identity dedup. Measured on this tree -- with the Y row alone, both
+  // `prev.x === x` mutants (-> true, and -> !==) survive a full unfiltered
+  // run while both `prev.y === y` mutants die. A dedup comparing one axis and
+  // ignoring the other would leave the indicator stuck on any purely
+  // horizontal camera move, which is the very class of staleness this
+  // corrective exists to remove. 130px at cellSize=20 is 6.5 cells, well past
+  // a single-cell rounding wobble.
+  it.each([
+    ['Y', (c: Camera): Camera => ({ ...c, offsetY: c.offsetY + 130 / c.cellSize })],
+    ['X', (c: Camera): Camera => ({ ...c, offsetX: c.offsetX + 130 / c.cellSize })],
+  ])('re-resolves the indicator against a camera panned on the %s axis, with no further pointermove', (_axis, pan) => {
     const { container, rerenderWith } = renderGrid()
     const grid = gridContentEl(container)
 
     fireEvent.pointerMove(grid, { pointerId: 1, clientX: 20, clientY: 30 })
     const before = hoverIndicator(container)!.style.transform
 
-    // A wheel-pan large enough to move the resolved cell: 130px at
-    // cellSize=20 is 6.5 cells, well past a single-cell rounding wobble.
-    const pannedCamera: Camera = { ...CAMERA, offsetY: CAMERA.offsetY + 130 / CAMERA.cellSize }
+    const pannedCamera = pan(CAMERA)
     rerenderWith({ camera: pannedCamera })
 
     const indicator = hoverIndicator(container)!
     const expected = screenToWorld(pannedCamera, 20, 30)
     expect(indicator.style.transform).toBe(expectedTransform(pannedCamera, expected.x, expected.y))
     expect(indicator.style.transform).not.toBe(before)
+  })
+
+  // THE MID-DRAG ROUTE, which is the half of this corrective that the wheel
+  // tests above cannot reach. Once a drag crosses the pan threshold,
+  // useGridPointerGestures stops calling onHover and reports raw pixels
+  // through onPointerPosition instead (see that hook's own handlePointerMove
+  // comment); Grid stashes them in lastPointerPixelsRef WITHOUT resolving a
+  // cell, and the camera-change effect is what resolves them. So nothing
+  // observable happens until a camera change arrives -- which is precisely
+  // why an empty onPointerPosition body went unnoticed: measured on this
+  // tree, deleting that callback's body entirely leaves all 636 tests green.
+  //
+  // The drag route is also the one architect's ADJUDICATE pass found broken
+  // AND passing by luck at Playwright's default pointermove granularity, so a
+  // unit-level pin on it is the specific thing that was missing.
+  it('tracks the pointer through a drag-pan, resolving the indicator at the LATEST drag pixels', () => {
+    const { container, rerenderWith } = renderGrid()
+    const grid = gridContentEl(container)
+
+    // Establish a hover position first, so a regression that ignores the
+    // mid-drag updates resolves against THIS stale point rather than nothing.
+    fireEvent.pointerMove(grid, { pointerId: 1, clientX: 20, clientY: 30 })
+    const staleTransform = hoverIndicator(container)!.style.transform
+
+    fireEvent.pointerDown(grid, { pointerId: 1, clientX: 20, clientY: 30 })
+    const draggedToX = 20 + DRAG_THRESHOLD_PX + 100
+    fireEvent.pointerMove(grid, { pointerId: 1, clientX: draggedToX, clientY: 30 })
+
+    // The parent applying the pan the drag just requested -- the only way a
+    // camera change reaches this component, drag or otherwise.
+    const pannedCamera: Camera = { ...CAMERA, offsetX: CAMERA.offsetX + 60 / CAMERA.cellSize }
+    rerenderWith({ camera: pannedCamera })
+
+    const indicator = hoverIndicator(container)!
+    const expected = screenToWorld(pannedCamera, draggedToX, 30)
+    expect(indicator.style.transform).toBe(expectedTransform(pannedCamera, expected.x, expected.y))
+    expect(indicator.style.transform).not.toBe(staleTransform)
   })
 
   it('stays cleared across a camera change once the pointer has left the grid, rather than resurrecting a stale position', () => {
