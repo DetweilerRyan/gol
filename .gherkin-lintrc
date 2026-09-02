@@ -52,7 +52,11 @@
         "\\b(min|max) ?[xy]\\b",
         "\\bworld (coordinate|position|point)",
         "\\bshould return\\b",
-        "\\bcell ?key\\b"
+        "\\bcell ?key\\b",
+        "\\baria-",
+        "\\brole=",
+        "\\btab ?index\\b",
+        "\\bgridcell\\b"
       ]
     }
   ]
