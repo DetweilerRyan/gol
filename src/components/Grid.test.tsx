@@ -311,26 +311,21 @@ describe('wheel and preview wiring', () => {
     })
   })
 
-  it('reports screenToWorld(camera, ...) coordinates via onPreviewCell on pointermove while a pattern is armed', () => {
-    const onPreviewCell = vi.fn()
-    const { container } = renderGrid({ onPreviewCell, isPatternArmed: true })
-    const grid = gridContentEl(container)
-
-    fireEvent.pointerMove(grid, { pointerId: 1, clientX: 20, clientY: 30 })
-
-    const expected = screenToWorld(CAMERA, 20, 30)
-    expect(onPreviewCell).toHaveBeenCalledWith(expected.x, expected.y)
-  })
-
-  // trackHover is unconditionally true now (see Grid.tsx's own comment at
-  // the useGridPointerGestures call site) -- this is the companion the old
-  // isPatternArmed-gated flag made untestable: onPreviewCell still fires with
-  // NOTHING armed, proven safe by usePatternPlacement's own movePreviewTo
+  // onPreviewCell fires on hover REGARDLESS of whether a pattern is armed:
+  // trackHover is unconditionally true now (see Grid.tsx's own comment at the
+  // useGridPointerGestures call site). The unarmed row is the companion the
+  // old isPatternArmed-gated flag made untestable -- onPreviewCell still fires
+  // with NOTHING armed, proven safe by usePatternPlacement's own movePreviewTo
   // returning its input state unchanged in idle mode (verified at that call
-  // site's own comment).
-  it('also reports onPreviewCell on an ordinary hover with no pattern armed', () => {
+  // site's own comment). One row per armed state rather than two hand-written
+  // twins, so a regression that re-gates the callback on `armed` is still
+  // killed by whichever row it breaks.
+  it.each([
+    ['while a pattern is armed', true],
+    ['on an ordinary hover with no pattern armed', false],
+  ])('reports screenToWorld(camera, ...) coordinates via onPreviewCell %s', (_label, isPatternArmed) => {
     const onPreviewCell = vi.fn()
-    const { container } = renderGrid({ onPreviewCell, isPatternArmed: false })
+    const { container } = renderGrid({ onPreviewCell, isPatternArmed })
     const grid = gridContentEl(container)
 
     fireEvent.pointerMove(grid, { pointerId: 1, clientX: 20, clientY: 30 })

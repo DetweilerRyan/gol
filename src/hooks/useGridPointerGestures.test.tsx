@@ -140,17 +140,42 @@ describe('trackHover', () => {
     expect(onHover).not.toHaveBeenCalled()
   })
 
-  it('calls onHover on a plain hover move (no drag in progress) even once a PRIOR drag has ended', () => {
+  // TWO STATES IN WHICH A HOVER MUST STILL BE REPORTED, one row each. They
+  // were hand-written near-twins (dry4ts 0.83) whose only real difference is
+  // the pointer state the move arrives in, so the claim is stated once. The
+  // NEGATIVE case -- a drag that HAS crossed the threshold, where onHover must
+  // not fire -- is deliberately not a row here: it asserts the opposite
+  // outcome and keeps its own test between these.
+  //
+  // `toHaveBeenCalledTimes(1)` rather than a bare toHaveBeenCalledWith: the
+  // sub-threshold row is exactly where a handler reporting both the hover AND
+  // a zero-length pan would otherwise still look correct.
+  it.each([
+    [
+      'even once a PRIOR drag has ended',
+      (surface: HTMLElement) => {
+        fireEvent.pointerDown(surface, { pointerId: 1, clientX: 0, clientY: 0 })
+        fireEvent.pointerMove(surface, { pointerId: 1, clientX: 20, clientY: 0 }) // crosses threshold, now panning
+        fireEvent.pointerUp(surface, { pointerId: 1, clientX: 20, clientY: 0 })
+      },
+      { clientX: 30, clientY: 40 },
+    ],
+    [
+      'during a sub-threshold drag that has not become a pan yet',
+      (surface: HTMLElement) => {
+        fireEvent.pointerDown(surface, { pointerId: 1, clientX: 0, clientY: 0 })
+      },
+      { clientX: 2, clientY: 0 }, // within DRAG_THRESHOLD_PX
+    ],
+  ])('calls onHover on a plain hover move %s', (_label, arrangePriorPointerState, move) => {
     const { surface, onHover } = renderHarness({ trackHover: true })
-
-    fireEvent.pointerDown(surface, { pointerId: 1, clientX: 0, clientY: 0 })
-    fireEvent.pointerMove(surface, { pointerId: 1, clientX: 20, clientY: 0 }) // crosses threshold, now panning
-    fireEvent.pointerUp(surface, { pointerId: 1, clientX: 20, clientY: 0 })
+    arrangePriorPointerState(surface)
     vi.mocked(onHover).mockClear()
 
-    fireEvent.pointerMove(surface, { pointerId: 1, clientX: 30, clientY: 40 })
+    fireEvent.pointerMove(surface, { pointerId: 1, ...move })
 
-    expect(onHover).toHaveBeenCalledWith(30, 40)
+    expect(onHover).toHaveBeenCalledTimes(1)
+    expect(onHover).toHaveBeenCalledWith(move.clientX, move.clientY)
   })
 
   it('does not call onHover once a drag has crossed the pan threshold, even though trackHover is true', () => {
@@ -163,17 +188,6 @@ describe('trackHover', () => {
     fireEvent.pointerMove(surface, { pointerId: 1, clientX: 40, clientY: 0 })
 
     expect(onHover).not.toHaveBeenCalled()
-  })
-
-  it('still calls onHover for a sub-threshold move, since the drag has not become a pan yet', () => {
-    const { surface, onHover } = renderHarness({ trackHover: true })
-
-    fireEvent.pointerDown(surface, { pointerId: 1, clientX: 0, clientY: 0 })
-    vi.mocked(onHover).mockClear()
-
-    fireEvent.pointerMove(surface, { pointerId: 1, clientX: 2, clientY: 0 }) // within DRAG_THRESHOLD_PX
-
-    expect(onHover).toHaveBeenCalledWith(2, 0)
   })
 })
 

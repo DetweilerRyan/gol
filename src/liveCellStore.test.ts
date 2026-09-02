@@ -1,5 +1,5 @@
 import { describe, expect, it, vi } from 'vitest'
-import { createLiveCellStore } from './liveCellStore'
+import { createLiveCellStore, type LiveCellStore } from './liveCellStore'
 import { cellKey, type CellKey } from './gameOfLife'
 import { getPatternByName } from './patternLibrary'
 
@@ -233,60 +233,25 @@ describe('createLiveCellStore', () => {
 
       expect(boundsListener).toHaveBeenCalledTimes(1)
     })
-
-    it('bounds subscriptions unsubscribe cleanly', () => {
-      const store = createLiveCellStore()
-      const listener = vi.fn()
-      const unsubscribe = store.subscribeBounds(listener)
-
-      store.toggle(0, 0)
-      expect(listener).toHaveBeenCalledTimes(1)
-
-      unsubscribe()
-      store.toggle(1, 1)
-      expect(listener).toHaveBeenCalledTimes(1)
-    })
-
-    it('a stale bounds-unsubscribe closure called again after resubscribing the same listener does not remove the new subscription', () => {
-      const store = createLiveCellStore()
-      const listener = vi.fn()
-      const unsubFirst = store.subscribeBounds(listener)
-      unsubFirst()
-      store.subscribeBounds(listener)
-      unsubFirst()
-
-      store.toggle(0, 0)
-      expect(listener).toHaveBeenCalledTimes(1)
-    })
   })
 
   describe('subscribeCells / getLiveCells (whole-set subscription)', () => {
-    it('notifies a whole-set subscriber on toggle', () => {
+    // One row per mutator rather than three hand-written twins: the claim is
+    // the same sentence three times over -- "every mutator dispatches exactly
+    // once" -- and each row is still its own test, so a mutant that breaks
+    // one mutator's dispatch is killed by that row alone. `advance` carries
+    // its own clause because an empty board's delta is empty and the
+    // notification must happen anyway.
+    it.each([
+      ['toggle', (store: LiveCellStore) => store.toggle(0, 0)],
+      ['advance, even when the delta is empty', (store: LiveCellStore) => store.advance()],
+      ['place', (store: LiveCellStore) => store.place(BLOCK, 0, 0)],
+    ])('notifies a whole-set subscriber on %s', (_label, mutate) => {
       const store = createLiveCellStore()
       const listener = vi.fn()
       store.subscribeCells(listener)
 
-      store.toggle(0, 0)
-
-      expect(listener).toHaveBeenCalledTimes(1)
-    })
-
-    it('notifies a whole-set subscriber on advance, even when the delta is empty', () => {
-      const store = createLiveCellStore()
-      const listener = vi.fn()
-      store.subscribeCells(listener)
-
-      store.advance()
-
-      expect(listener).toHaveBeenCalledTimes(1)
-    })
-
-    it('notifies a whole-set subscriber on place', () => {
-      const store = createLiveCellStore()
-      const listener = vi.fn()
-      store.subscribeCells(listener)
-
-      store.place(BLOCK, 0, 0)
+      mutate(store)
 
       expect(listener).toHaveBeenCalledTimes(1)
     })
@@ -301,31 +266,6 @@ describe('createLiveCellStore', () => {
       store.toggle(2, 2)
 
       expect(seenAlive).toBe(true)
-    })
-
-    it('whole-set subscriptions unsubscribe cleanly', () => {
-      const store = createLiveCellStore()
-      const listener = vi.fn()
-      const unsubscribe = store.subscribeCells(listener)
-
-      store.toggle(0, 0)
-      expect(listener).toHaveBeenCalledTimes(1)
-
-      unsubscribe()
-      store.toggle(1, 1)
-      expect(listener).toHaveBeenCalledTimes(1)
-    })
-
-    it('a stale cells-unsubscribe closure called again after resubscribing the same listener does not remove the new subscription', () => {
-      const store = createLiveCellStore()
-      const listener = vi.fn()
-      const unsubFirst = store.subscribeCells(listener)
-      unsubFirst()
-      store.subscribeCells(listener)
-      unsubFirst()
-
-      store.toggle(0, 0)
-      expect(listener).toHaveBeenCalledTimes(1)
     })
 
     it('keeps the two surviving channels independent -- releasing one leaves the other subscribed', () => {
@@ -344,6 +284,45 @@ describe('createLiveCellStore', () => {
 
       expect(boundsListener).not.toHaveBeenCalled()
       expect(cellsListener).toHaveBeenCalledTimes(1)
+    })
+  })
+
+  // RELEASE SEMANTICS, STATED ONCE FOR BOTH SURVIVING CHANNELS.
+  //
+  // subscribeBounds and subscribeCells are two Sets dispatched by the single
+  // private notify(), and nothing about either makes its unsubscribe contract
+  // differ from the other's -- so these two cases were previously written out
+  // per channel, verbatim apart from the method name, and dry4ts flagged both
+  // pairs. Parameterizing is the honest fix rather than deleting one channel's
+  // copy: each row is still its own test, so a mutant that breaks the release
+  // path of one channel alone is killed by that channel's row and not masked
+  // by the other's. The independence of the two channels is a DIFFERENT claim
+  // and keeps its own hand-written test above -- releasing one must not reach
+  // the other, which no per-channel table can state.
+  describe.each(['subscribeBounds', 'subscribeCells'] as const)('%s release semantics', (subscribe) => {
+    it('unsubscribes cleanly', () => {
+      const store = createLiveCellStore()
+      const listener = vi.fn()
+      const unsubscribe = store[subscribe](listener)
+
+      store.toggle(0, 0)
+      expect(listener).toHaveBeenCalledTimes(1)
+
+      unsubscribe()
+      store.toggle(1, 1)
+      expect(listener).toHaveBeenCalledTimes(1)
+    })
+
+    it('a stale unsubscribe closure called again after resubscribing the same listener leaves the new subscription alone', () => {
+      const store = createLiveCellStore()
+      const listener = vi.fn()
+      const unsubFirst = store[subscribe](listener)
+      unsubFirst()
+      store[subscribe](listener)
+      unsubFirst()
+
+      store.toggle(0, 0)
+      expect(listener).toHaveBeenCalledTimes(1)
     })
   })
 })

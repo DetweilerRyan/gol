@@ -70,8 +70,17 @@ describe('panToRevealPx', () => {
     expect(panToRevealPx({ x: 0, y: 0 }, camera, onScreen)).toEqual({ dxPixels: 0, dyPixels: 0 })
   })
 
-  it('reveals a cell one past the left edge: applying the pan through the real panCamera puts focus at the new minX', () => {
-    const focus = { x: onScreen.minX - 1, y: 0 }
+  // One row per distance, and the far row is the load-bearing one: it says the
+  // pan is computed from the ACTUAL gap rather than clamped to one cell or to
+  // the nearest edge. The two were hand-written twins differing only in that
+  // distance (dry4ts flagged them at 0.85), so the shared assertions are
+  // stated once -- which also strengthens the far case, which previously
+  // skipped the two containment checks.
+  it.each([
+    ['one cell', 1],
+    ['500 cells', 500],
+  ])('reveals a cell %s past the left edge, landing focus exactly on the new minX', (_label, distance) => {
+    const focus = { x: onScreen.minX - distance, y: 0 }
     const { dxPixels, dyPixels } = panToRevealPx(focus, camera, onScreen)
 
     // Verified against camera.ts's own panCamera -- the exact function
@@ -125,15 +134,5 @@ describe('panToRevealPx', () => {
     expect(focus.x).toBeLessThanOrEqual(nextOnScreen.maxX)
     expect(focus.y).toBeGreaterThanOrEqual(nextOnScreen.minY)
     expect(focus.y).toBeLessThanOrEqual(nextOnScreen.maxY)
-  })
-
-  it('a far-off-screen cell is still fully revealed in one pan, not clamped to the nearest edge', () => {
-    const focus = { x: onScreen.minX - 500, y: 0 }
-    const { dxPixels, dyPixels } = panToRevealPx(focus, camera, onScreen)
-
-    const nextCamera = panCamera(camera, dxPixels, dyPixels)
-    const nextOnScreen = computeOnScreenRange(nextCamera, 1280, 900)
-    expect(nextOnScreen.minX).toBe(focus.x)
-    expect(dyPixels).toBe(0)
   })
 })

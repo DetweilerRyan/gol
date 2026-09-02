@@ -81,9 +81,11 @@ describe('computeOnScreenRange', () => {
     // the leading and trailing cell are both half cut off, so neither is
     // "fully visible" and the range shrinks on both sides.
     const panned: Camera = { offsetX: 0, offsetY: 4.5, cellSize: 20 }
-    const range = computeOnScreenRange(panned, 200, 100)
-    expect(range.minY).toBe(5)
-    expect(range.maxY).toBe(8)
+    // Whole range rather than the two y bounds alone: the x bounds are
+    // unaffected by a y-only offset, and saying so is a stronger claim than
+    // leaving them unasserted -- a mutant that shifted x here would otherwise
+    // have to be caught by the test above it alone.
+    expect(computeOnScreenRange(panned, 200, 100)).toEqual({ minX: 0, maxX: 9, minY: 5, maxY: 8 })
   })
 
   it('every cell in the range is fully within the viewport, and the cell one beyond it is not', () => {
