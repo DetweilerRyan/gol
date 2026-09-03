@@ -9,6 +9,15 @@ import { MAX_CELL_SIZE, MIN_CELL_SIZE, type Camera } from '../camera'
 
 export const cellSizeArbitrary = fc.integer({ min: MIN_CELL_SIZE, max: MAX_CELL_SIZE })
 
+// A pixel POSITION. Do not reach for this as a magnitude -- a delta, a
+// distance, a length. fc.float draws uniformly over the REPRESENTABLE floats
+// in its range rather than uniformly over the interval, and representable
+// floats crowd towards zero: measured over 20,000 draws, 16,682 come out
+// under 0.01 in magnitude and 17,482 under 1. That bias is exactly right for
+// a position, where the near-origin cases are the interesting ones, and it
+// silently guts a property about how FAR something moved, since almost every
+// draw is a no-op. See camera.property.test.ts's wheelDelta for the worked
+// case, where it hid the one implementation those properties exist to reject.
 export const pixelArbitrary = fc.float({ min: Math.fround(-2000), max: Math.fround(2000), noNaN: true })
 
 // General-purpose camera with a fractional offset, for properties that
