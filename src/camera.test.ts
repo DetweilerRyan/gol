@@ -210,16 +210,14 @@ describe('applyWheelInput', () => {
     expect(screenAfter.y).toBeCloseTo(50)
   })
 
-  it('zooms in on ctrlKey alone (a trackpad pinch, delivered with no shiftKey) instead of panning', () => {
-    const next = applyWheelInput(camera, {
-      pixelX: 0,
-      pixelY: 0,
-      deltaX: 0,
-      deltaY: -100,
-      deltaMode: 0,
-      shiftKey: false,
-      ctrlKey: true,
-    })
+  // Structurally identical bodies (apply a fixed deltaX/deltaY pair, check
+  // the resulting cellSize) merged into one table -- dry4ts flagged these
+  // two as an exact duplicate when they were separate `it` blocks.
+  it.each([
+    ['ctrlKey alone (a trackpad pinch, delivered with no shiftKey) zooms in instead of panning', 0, -100, false, true],
+    ['deltaY is preferred over a populated deltaX for zoom direction', 50, -100, true, false],
+  ] as const)('%s', (_description, deltaX, deltaY, shiftKey, ctrlKey) => {
+    const next = applyWheelInput(camera, { pixelX: 0, pixelY: 0, deltaX, deltaY, deltaMode: 0, shiftKey, ctrlKey })
     expect(next.cellSize).toBe(DEFAULT_CELL_SIZE * ZOOM_FACTOR)
   })
 
@@ -242,19 +240,6 @@ describe('applyWheelInput', () => {
       pixelY: 0,
       deltaX: -100,
       deltaY: 0,
-      deltaMode: 0,
-      shiftKey: true,
-      ctrlKey: false,
-    })
-    expect(next.cellSize).toBe(DEFAULT_CELL_SIZE * ZOOM_FACTOR)
-  })
-
-  it('prefers deltaY over deltaX for zoom direction when both are populated', () => {
-    const next = applyWheelInput(camera, {
-      pixelX: 0,
-      pixelY: 0,
-      deltaX: 50,
-      deltaY: -100,
       deltaMode: 0,
       shiftKey: true,
       ctrlKey: false,
