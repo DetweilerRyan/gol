@@ -70,7 +70,17 @@ describe('useCamera', () => {
 
   it('applyWheel pans when shiftKey is false', () => {
     const { result } = renderHook(() => useCamera())
-    act(() => result.current.applyWheel({ pixelX: 0, pixelY: 0, deltaX: 40, deltaY: 100, shiftKey: false }))
+    act(() =>
+      result.current.applyWheel({
+        pixelX: 0,
+        pixelY: 0,
+        deltaX: 40,
+        deltaY: 100,
+        deltaMode: 0,
+        shiftKey: false,
+        ctrlKey: false,
+      }),
+    )
     expect(result.current.camera.cellSize).toBe(DEFAULT_CELL_SIZE)
     expect(result.current.camera.offsetX).toBeGreaterThan(0)
     expect(result.current.camera.offsetY).toBeGreaterThan(0)
@@ -78,7 +88,17 @@ describe('useCamera', () => {
 
   it('applyWheel zooms when shiftKey is true', () => {
     const { result } = renderHook(() => useCamera())
-    act(() => result.current.applyWheel({ pixelX: 0, pixelY: 0, deltaX: 0, deltaY: -100, shiftKey: true }))
+    act(() =>
+      result.current.applyWheel({
+        pixelX: 0,
+        pixelY: 0,
+        deltaX: 0,
+        deltaY: -100,
+        deltaMode: 0,
+        shiftKey: true,
+        ctrlKey: false,
+      }),
+    )
     expect(result.current.camera.cellSize).toBeGreaterThan(DEFAULT_CELL_SIZE)
   })
 
@@ -140,7 +160,16 @@ describe('every non-glide camera writer cancels an in-flight toolbar zoom glide'
     ['zoomAtPoint', (result) => result.current.zoomAtPoint(0, 0, 2)],
     [
       'applyWheel',
-      (result) => result.current.applyWheel({ pixelX: 0, pixelY: 0, deltaX: 10, deltaY: 10, shiftKey: false }),
+      (result) =>
+        result.current.applyWheel({
+          pixelX: 0,
+          pixelY: 0,
+          deltaX: 10,
+          deltaY: 10,
+          deltaMode: 0,
+          shiftKey: false,
+          ctrlKey: false,
+        }),
     ],
     ['centerView', (result) => result.current.centerView(800, 600)],
     ['panByScrollbarDrag', (result) => result.current.panByScrollbarDrag('x', 10, 0.5)],

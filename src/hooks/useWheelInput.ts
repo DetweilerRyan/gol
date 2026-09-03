@@ -17,7 +17,15 @@ export function useWheelInput(ref: RefObject<HTMLElement | null>, onWheelInput: 
     function handleWheel(e: WheelEvent) {
       e.preventDefault()
       const { pixelX, pixelY } = rectRelativePixels(el!.getBoundingClientRect(), e.clientX, e.clientY)
-      onWheelInput({ pixelX, pixelY, deltaX: e.deltaX, deltaY: e.deltaY, shiftKey: e.shiftKey })
+      onWheelInput({
+        pixelX,
+        pixelY,
+        deltaX: e.deltaX,
+        deltaY: e.deltaY,
+        deltaMode: e.deltaMode,
+        shiftKey: e.shiftKey,
+        ctrlKey: e.ctrlKey,
+      })
     }
 
     el.addEventListener('wheel', handleWheel, { passive: false })

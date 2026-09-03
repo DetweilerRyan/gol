@@ -159,9 +159,17 @@ describe('centeredCamera (property)', () => {
 
 describe('applyWheelInput (property)', () => {
   it.prop([camera, pixel, pixel, pixel, pixel])(
-    'never changes cellSize when shiftKey is false',
+    'never changes cellSize when neither shiftKey nor ctrlKey is held',
     (cam, pixelX, pixelY, deltaX, deltaY) => {
-      const next = applyWheelInput(cam, { pixelX, pixelY, deltaX, deltaY, shiftKey: false })
+      const next = applyWheelInput(cam, {
+        pixelX,
+        pixelY,
+        deltaX,
+        deltaY,
+        deltaMode: 0,
+        shiftKey: false,
+        ctrlKey: false,
+      })
       expect(next.cellSize).toBe(cam.cellSize)
     },
   )
@@ -170,18 +178,48 @@ describe('applyWheelInput (property)', () => {
     'when shiftKey is true and deltaY is nonzero, deltaX is completely ignored',
     (cam, pixelX, pixelY, deltaY, deltaX) => {
       fc.pre(deltaY !== 0)
-      const withDeltaX = applyWheelInput(cam, { pixelX, pixelY, deltaX, deltaY, shiftKey: true })
-      const withoutDeltaX = applyWheelInput(cam, { pixelX, pixelY, deltaX: 0, deltaY, shiftKey: true })
+      const withDeltaX = applyWheelInput(cam, {
+        pixelX,
+        pixelY,
+        deltaX,
+        deltaY,
+        deltaMode: 0,
+        shiftKey: true,
+        ctrlKey: false,
+      })
+      const withoutDeltaX = applyWheelInput(cam, {
+        pixelX,
+        pixelY,
+        deltaX: 0,
+        deltaY,
+        deltaMode: 0,
+        shiftKey: true,
+        ctrlKey: false,
+      })
       expect(withDeltaX).toEqual(withoutDeltaX)
     },
   )
 
+  // The resolved factor here has to stay a byte-identical restatement of
+  // camera.ts's own wheelZoomFactor expression at deltaMode 0 -- this is an
+  // equivalence property, not an independent oracle, and a mathematically
+  // equal but differently-associated expression can differ by the same float
+  // rounding that made the reciprocal-exactness unit test in camera.test.ts
+  // worth pinning with toBe in the first place.
   it.prop([camera, pixel, pixel, pixel])(
     'when shiftKey is true, is equivalent to calling zoomCameraAtPoint directly with the resolved factor',
     (cam, pixelX, pixelY, deltaY) => {
       fc.pre(deltaY !== 0)
-      const factor = deltaY < 0 ? ZOOM_FACTOR : 1 / ZOOM_FACTOR
-      const viaWheel = applyWheelInput(cam, { pixelX, pixelY, deltaX: 0, deltaY, shiftKey: true })
+      const factor = ZOOM_FACTOR ** -(deltaY / 100)
+      const viaWheel = applyWheelInput(cam, {
+        pixelX,
+        pixelY,
+        deltaX: 0,
+        deltaY,
+        deltaMode: 0,
+        shiftKey: true,
+        ctrlKey: false,
+      })
       const viaDirect = zoomCameraAtPoint(cam, pixelX, pixelY, factor)
       expect(viaWheel).toEqual(viaDirect)
     },

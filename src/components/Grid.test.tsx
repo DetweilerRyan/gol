@@ -308,7 +308,9 @@ describe('wheel and preview wiring', () => {
       pixelY: 130 - 30,
       deltaX: 40,
       deltaY: -20,
+      deltaMode: 0,
       shiftKey: false,
+      ctrlKey: false,
     })
   })
 

@@ -167,43 +167,249 @@ describe('centeredCamera', () => {
 })
 
 describe('applyWheelInput', () => {
-  it('pans (leaves cellSize unchanged) when shiftKey is false', () => {
-    const next = applyWheelInput(camera, { pixelX: 0, pixelY: 0, deltaX: 40, deltaY: 100, shiftKey: false })
+  it('pans (leaves cellSize unchanged) when neither shiftKey nor ctrlKey is held', () => {
+    const next = applyWheelInput(camera, {
+      pixelX: 0,
+      pixelY: 0,
+      deltaX: 40,
+      deltaY: 100,
+      deltaMode: 0,
+      shiftKey: false,
+      ctrlKey: false,
+    })
     expect(next.cellSize).toBe(camera.cellSize)
   })
 
   it('scrolling down/right (positive deltaY/deltaX) increases offsetY/offsetX -- the opposite sign convention from drag-to-pan', () => {
-    const next = applyWheelInput(camera, { pixelX: 0, pixelY: 0, deltaX: 40, deltaY: 100, shiftKey: false })
+    const next = applyWheelInput(camera, {
+      pixelX: 0,
+      pixelY: 0,
+      deltaX: 40,
+      deltaY: 100,
+      deltaMode: 0,
+      shiftKey: false,
+      ctrlKey: false,
+    })
     expect(next.offsetX).toBeGreaterThan(camera.offsetX)
     expect(next.offsetY).toBeGreaterThan(camera.offsetY)
   })
 
   it('zooms (leaves offset behaving like zoomCameraAtPoint) when shiftKey is true', () => {
-    const next = applyWheelInput(camera, { pixelX: 100, pixelY: 50, deltaX: 0, deltaY: -100, shiftKey: true })
+    const next = applyWheelInput(camera, {
+      pixelX: 100,
+      pixelY: 50,
+      deltaX: 0,
+      deltaY: -100,
+      deltaMode: 0,
+      shiftKey: true,
+      ctrlKey: false,
+    })
     expect(next.cellSize).toBe(DEFAULT_CELL_SIZE * ZOOM_FACTOR)
     const screenAfter = worldToScreen(next, 5, 2.5)
     expect(screenAfter.x).toBeCloseTo(100)
     expect(screenAfter.y).toBeCloseTo(50)
   })
 
+  it('zooms in on ctrlKey alone (a trackpad pinch, delivered with no shiftKey) instead of panning', () => {
+    const next = applyWheelInput(camera, {
+      pixelX: 0,
+      pixelY: 0,
+      deltaX: 0,
+      deltaY: -100,
+      deltaMode: 0,
+      shiftKey: false,
+      ctrlKey: true,
+    })
+    expect(next.cellSize).toBe(DEFAULT_CELL_SIZE * ZOOM_FACTOR)
+  })
+
   it('zooms out when the shift-held scroll direction is positive', () => {
-    const next = applyWheelInput(camera, { pixelX: 0, pixelY: 0, deltaX: 0, deltaY: 100, shiftKey: true })
+    const next = applyWheelInput(camera, {
+      pixelX: 0,
+      pixelY: 0,
+      deltaX: 0,
+      deltaY: 100,
+      deltaMode: 0,
+      shiftKey: true,
+      ctrlKey: false,
+    })
     expect(next.cellSize).toBe(DEFAULT_CELL_SIZE / ZOOM_FACTOR)
   })
 
   it('falls back to deltaX for zoom direction when deltaY is 0 and shiftKey is true', () => {
-    const next = applyWheelInput(camera, { pixelX: 0, pixelY: 0, deltaX: -100, deltaY: 0, shiftKey: true })
+    const next = applyWheelInput(camera, {
+      pixelX: 0,
+      pixelY: 0,
+      deltaX: -100,
+      deltaY: 0,
+      deltaMode: 0,
+      shiftKey: true,
+      ctrlKey: false,
+    })
     expect(next.cellSize).toBe(DEFAULT_CELL_SIZE * ZOOM_FACTOR)
   })
 
   it('prefers deltaY over deltaX for zoom direction when both are populated', () => {
-    const next = applyWheelInput(camera, { pixelX: 0, pixelY: 0, deltaX: 50, deltaY: -100, shiftKey: true })
+    const next = applyWheelInput(camera, {
+      pixelX: 0,
+      pixelY: 0,
+      deltaX: 50,
+      deltaY: -100,
+      deltaMode: 0,
+      shiftKey: true,
+      ctrlKey: false,
+    })
     expect(next.cellSize).toBe(DEFAULT_CELL_SIZE * ZOOM_FACTOR)
   })
 
-  it('zooms out (not in) at the zoomDelta === 0 boundary, pinning the `< 0` guard exactly', () => {
-    const next = applyWheelInput(camera, { pixelX: 0, pixelY: 0, deltaX: 0, deltaY: 0, shiftKey: true })
-    expect(next.cellSize).toBe(DEFAULT_CELL_SIZE / ZOOM_FACTOR)
+  // Latent-bug fix: today's sign-only implementation fails `0 < 0` and zooms
+  // OUT at a zero delta. The continuous mapping returns the camera BY
+  // REFERENCE instead (factor 1 hits zoomCameraToCellSize's own
+  // newCellSize === camera.cellSize early return), which is what "scrolling
+  // zero pixels" should mean. Not a gesture a user performs, so this is
+  // pinned only here and never in Gherkin.
+  it('returns the camera by reference at the zoomDelta === 0 boundary, no longer zooming out', () => {
+    const next = applyWheelInput(camera, {
+      pixelX: 0,
+      pixelY: 0,
+      deltaX: 0,
+      deltaY: 0,
+      deltaMode: 0,
+      shiftKey: true,
+      ctrlKey: false,
+    })
+    expect(next).toBe(camera)
+  })
+
+  it('lands on exactly one ZOOM_FACTOR step, in either direction, for a whole one-notch delta', () => {
+    const inNext = applyWheelInput(camera, {
+      pixelX: 0,
+      pixelY: 0,
+      deltaX: 0,
+      deltaY: -100,
+      deltaMode: 0,
+      shiftKey: true,
+      ctrlKey: false,
+    })
+    expect(inNext.cellSize).toBe(DEFAULT_CELL_SIZE * ZOOM_FACTOR)
+
+    const outNext = applyWheelInput(camera, {
+      pixelX: 0,
+      pixelY: 0,
+      deltaX: 0,
+      deltaY: 100,
+      deltaMode: 0,
+      shiftKey: true,
+      ctrlKey: false,
+    })
+    expect(outNext.cellSize).toBe(DEFAULT_CELL_SIZE / ZOOM_FACTOR)
+  })
+
+  // The discriminator: a mapping that keeps the fraction lands here at
+  // exactly a quarter-step of zoom (112%), where both a sign-only
+  // implementation and a quantize-to-notches one land on a whole step (125%).
+  it('zooms by less than a full step for a sub-notch delta, rather than rounding to the nearest notch', () => {
+    const next = applyWheelInput(camera, {
+      pixelX: 0,
+      pixelY: 0,
+      deltaX: 0,
+      deltaY: -50,
+      deltaMode: 0,
+      shiftKey: true,
+      ctrlKey: false,
+    })
+    expect(next.cellSize).toBeCloseTo(DEFAULT_CELL_SIZE * Math.sqrt(ZOOM_FACTOR))
+    expect(zoomPercentage(next)).toBe(112)
+  })
+
+  it('is reciprocal: zooming in by a delta and out by its negation are inverse factors', () => {
+    const inNext = applyWheelInput(camera, {
+      pixelX: 0,
+      pixelY: 0,
+      deltaX: 0,
+      deltaY: -73,
+      deltaMode: 0,
+      shiftKey: true,
+      ctrlKey: false,
+    })
+    const outNext = applyWheelInput(camera, {
+      pixelX: 0,
+      pixelY: 0,
+      deltaX: 0,
+      deltaY: 73,
+      deltaMode: 0,
+      shiftKey: true,
+      ctrlKey: false,
+    })
+    expect(inNext.cellSize * outNext.cellSize).toBeCloseTo(DEFAULT_CELL_SIZE * DEFAULT_CELL_SIZE)
+  })
+
+  it('composes additively: rolling a delta in two gestures lands on the same cellSize as rolling their sum in one', () => {
+    const inTwoGestures = applyWheelInput(
+      applyWheelInput(camera, {
+        pixelX: 0,
+        pixelY: 0,
+        deltaX: 0,
+        deltaY: -30,
+        deltaMode: 0,
+        shiftKey: true,
+        ctrlKey: false,
+      }),
+      { pixelX: 0, pixelY: 0, deltaX: 0, deltaY: -70, deltaMode: 0, shiftKey: true, ctrlKey: false },
+    )
+    const inOneGesture = applyWheelInput(camera, {
+      pixelX: 0,
+      pixelY: 0,
+      deltaX: 0,
+      deltaY: -100,
+      deltaMode: 0,
+      shiftKey: true,
+      ctrlKey: false,
+    })
+    expect(inTwoGestures.cellSize).toBeCloseTo(inOneGesture.cellSize)
+  })
+
+  it('rolling up then back down the same distance returns to the starting cellSize', () => {
+    const rolled = applyWheelInput(
+      applyWheelInput(camera, {
+        pixelX: 0,
+        pixelY: 0,
+        deltaX: 0,
+        deltaY: -300,
+        deltaMode: 0,
+        shiftKey: true,
+        ctrlKey: false,
+      }),
+      { pixelX: 0, pixelY: 0, deltaX: 0, deltaY: 300, deltaMode: 0, shiftKey: true, ctrlKey: false },
+    )
+    expect(rolled.cellSize).toBeCloseTo(camera.cellSize)
+  })
+
+  // deltaMode !== 0 (line/page mode) reports no pixel magnitude this repo can
+  // calibrate against -- no test here can ever produce one against a real
+  // browser (see camera.ts's own comment) -- so it takes exactly one
+  // ZOOM_FACTOR step regardless of how large the reported delta is.
+  it('takes exactly one ZOOM_FACTOR step for a non-pixel deltaMode, regardless of magnitude', () => {
+    const smallStep = applyWheelInput(camera, {
+      pixelX: 0,
+      pixelY: 0,
+      deltaX: 0,
+      deltaY: -1,
+      deltaMode: 1,
+      shiftKey: true,
+      ctrlKey: false,
+    })
+    const bigStep = applyWheelInput(camera, {
+      pixelX: 0,
+      pixelY: 0,
+      deltaX: 0,
+      deltaY: -1000,
+      deltaMode: 1,
+      shiftKey: true,
+      ctrlKey: false,
+    })
+    expect(smallStep.cellSize).toBe(DEFAULT_CELL_SIZE * ZOOM_FACTOR)
+    expect(bigStep.cellSize).toBe(DEFAULT_CELL_SIZE * ZOOM_FACTOR)
   })
 })
 

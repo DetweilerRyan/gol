@@ -35,7 +35,9 @@ describe('useWheelInput', () => {
       pixelY: 300,
       deltaX: 12,
       deltaY: -34,
+      deltaMode: 0,
       shiftKey: true,
+      ctrlKey: false,
     })
   })
 
@@ -45,7 +47,37 @@ describe('useWheelInput', () => {
 
     fireEvent.wheel(el, { clientX: 0, clientY: 0, deltaX: 0, deltaY: 5, shiftKey: false })
 
-    expect(onWheelInput).toHaveBeenCalledWith({ pixelX: 0, pixelY: 0, deltaX: 0, deltaY: 5, shiftKey: false })
+    expect(onWheelInput).toHaveBeenCalledWith({
+      pixelX: 0,
+      pixelY: 0,
+      deltaX: 0,
+      deltaY: 5,
+      deltaMode: 0,
+      shiftKey: false,
+      ctrlKey: false,
+    })
+  })
+
+  // Pinned separately from the shiftKey case above: a trackpad pinch is
+  // delivered as ctrlKey rather than shiftKey, and deltaMode is what
+  // distinguishes a detented (line-mode) wheel from a pixel-precise one --
+  // camera.ts interprets both, so this hook's only job is to forward them
+  // verbatim rather than default or normalize either.
+  it('forwards ctrlKey and a non-pixel deltaMode verbatim', () => {
+    const onWheelInput = vi.fn()
+    const { el } = renderWithElement(onWheelInput)
+
+    fireEvent.wheel(el, { clientX: 0, clientY: 0, deltaX: 0, deltaY: -1, deltaMode: 1, ctrlKey: true })
+
+    expect(onWheelInput).toHaveBeenCalledWith({
+      pixelX: 0,
+      pixelY: 0,
+      deltaX: 0,
+      deltaY: -1,
+      deltaMode: 1,
+      shiftKey: false,
+      ctrlKey: true,
+    })
   })
 
   it('preventDefaults the event, which requires the listener to be non-passive', () => {

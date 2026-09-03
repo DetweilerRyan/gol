@@ -89,24 +89,55 @@ export function zoomPercentage(camera: Camera): number {
 
 // A wheel gesture reduced to plain numbers, so useWheelInput.ts can hand this
 // module the parts of a native WheelEvent it needs without the DOM type
-// crossing the boundary.
+// crossing the boundary. useWheelInput.ts forwards deltaMode and ctrlKey
+// verbatim rather than interpreting them -- normalizing a line/page delta
+// into pixels in the hook would silently change what deltaX/deltaY mean with
+// nothing in the type recording it, so that interpretation happens here.
 export interface WheelInput {
   pixelX: number
   pixelY: number
   deltaX: number
   deltaY: number
+  deltaMode: number
   shiftKey: boolean
+  ctrlKey: boolean
+}
+
+// A wheel notch (WHEEL_ZOOM_NOTCH_PX of deltaMode-0 pixel delta) is exactly
+// one ZOOM_FACTOR step, and everything in between maps continuously rather
+// than snapping to the nearest notch -- otherwise a trackpad's sub-notch
+// roll would still be discarded, which is the whole point of this mapping.
+// The exponential form is what makes that continuous: factors compose by
+// multiplication, so wheelZoomFactor(a) * wheelZoomFactor(b) equals
+// wheelZoomFactor(a + b), and rolling a distance in two gestures lands on
+// the same cellSize as rolling it in one.
+const WHEEL_ZOOM_NOTCH_PX = 100
+
+// deltaMode !== 0 (line- or page-mode) reports no pixel magnitude this repo
+// can calibrate against -- browsers vary in what one line/page means in
+// pixels, and there is no test here that can ever produce a nonzero
+// deltaMode to calibrate against anyway. Rather than invent a conversion
+// factor, a nonzero deltaMode collapses zoomDelta to its own sign (-1, 0, or
+// 1) before reaching the same exponential, which for a nonzero delta always
+// lands on exactly one ZOOM_FACTOR step regardless of magnitude.
+function wheelZoomFactor(zoomDelta: number, deltaMode: number): number {
+  const notches = deltaMode === 0 ? zoomDelta / WHEEL_ZOOM_NOTCH_PX : Math.sign(zoomDelta)
+  return ZOOM_FACTOR ** -notches
 }
 
 export function applyWheelInput(camera: Camera, input: WheelInput): Camera {
-  if (input.shiftKey) {
+  if (input.shiftKey || input.ctrlKey) {
     // Some browser/OS combos (notably Firefox on Windows) convert a
     // vertical wheel gesture into a horizontal-scroll event under Shift,
     // zeroing deltaY and populating deltaX instead, before JS sees it. We
-    // key zoom-intent off shiftKey (which we control), then recover the
-    // scroll magnitude from whichever axis the browser actually populated.
+    // key zoom-intent off shiftKey/ctrlKey (which we control), then recover
+    // the scroll magnitude from whichever axis the browser actually
+    // populated. ctrlKey is what every major browser sets on the wheel
+    // event a trackpad pinch is delivered as -- the same event a mouse
+    // user's Ctrl+scroll produces, which is why this can't and doesn't try
+    // to tell the two apart.
     const zoomDelta = input.deltaY !== 0 ? input.deltaY : input.deltaX
-    const factor = zoomDelta < 0 ? ZOOM_FACTOR : 1 / ZOOM_FACTOR
+    const factor = wheelZoomFactor(zoomDelta, input.deltaMode)
     return zoomCameraAtPoint(camera, input.pixelX, input.pixelY, factor)
   }
   // Wheel-pan follows the "document scroll" convention (scroll down reveals
