@@ -32,6 +32,13 @@ both comments before touching either.
 `src/index.css`'s `@theme` block currently holds only two font tokens, so there is a clean, empty
 home for semantic colour tokens.
 
+**[[design-token-layer]] already exists and covers building that home — read it before starting here.**
+It was filed 2026-08-23 and its findings still hold (re-measured 2026-09-03): **36 `!important`
+escapes** across `src/components/`, two competing button idioms, and no colour token at all. Its
+observation that **`dry4ts` cannot see any of this** — it compares TypeScript structure, not Tailwind
+class strings — is why none of it has ever surfaced as a gate finding. This candidate should not
+re-propose that work; the two want designing together, and the ordering argument is recorded there.
+
 ## The hazard to design around first
 
 **`rules/no-aliveness-by-paint-class.yml` hardcodes `regex: 'bg-gray-900|bg-white'`.** It stops the

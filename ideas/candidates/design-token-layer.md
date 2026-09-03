@@ -8,7 +8,7 @@ created: 2026-08-23
 
 The app's styling has drifted into copy-paste, and the numbers say so:
 
-- **35 `!important` escapes** across `src/components/`. `GridToolbar` imports
+- **36 `!important` escapes** across `src/components/` (35 when this was filed on 2026-08-23; re-measured 2026-09-03). `GridToolbar` imports
   catalyst's `Button` with `plain`, then overrides it nine ways
   (`h-8!`, `rounded!`, `!bg-gray-900`, `!text-white`, …). Fighting a component
   library that hard usually means its tokens don't match what the app wants.
@@ -48,7 +48,7 @@ Plus code, deliberately outside every gate, and read rather than refactored.
 
 ## Open questions
 
-- Does the HUD's sizing change? `e2e/hud-layout-and-shortcuts.e2e.spec.ts`
+- Does the HUD's sizing change? `features/hud-layout-and-shortcuts.e2e.spec.ts`
   asserts layout. Grid and camera pixel math is unaffected either way — that
   geometry never touches these tokens.
 - Nothing in the pipeline owns visual design. Gherkin specifies behaviour and
@@ -56,3 +56,13 @@ Plus code, deliberately outside every gate, and read rather than refactored.
   contract. Worth deciding whether that stays informal.
 - Prerequisite if the Claude Design sync (claude.ai/design) is ever wanted:
   that would consume this token layer, not replace it.
+- **Ordering against [[dark-mode-following-system-appearance]], which is the live
+  question.** That candidate needs semantic colour tokens to be sane — without
+  them, dark mode means `dark:` variants scattered across components, including
+  on `Cell.tsx`, the per-cell hot path `collapse-dead-cell-layer` spent a whole
+  slice thinning. So this slice is plausibly a **prerequisite** rather than a
+  sibling. The counter-argument is that a token set designed without a second
+  theme in view tends to name the wrong things — a token layer's whole value is
+  that it has more than one value to hold — which argues for designing the
+  tokens _with_ dark mode as the second consumer even if light-only lands first.
+  Whichever order, they should not be designed independently.
