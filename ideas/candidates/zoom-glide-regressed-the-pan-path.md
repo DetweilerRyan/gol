@@ -78,6 +78,53 @@ open question: `zoom-shift-wheel-empty` is 8.50 / 8.40 against 8.51 / 9.16 befor
 magnitude mapping produces many more distinct `cellSize` values and did **not** measurably cost the
 reference-identity bail-out.
 
+## CONFIRMED 2026-09-03 — the regression is real, the harness is ruled out, and the code named the suspect in advance
+
+The pre-slice tree was re-measured three times in its own worktree at `6be96a5`, scoped to the one
+scenario. **Both trees are tightly clustered and ~8ms apart**, so the original n=1 sample was accurate
+and the "it was probably an outlier" hypothesis is dead:
+
+| tree                | 1280×900                      | 1920×1080                     |
+| ------------------- | ----------------------------- | ----------------------------- |
+| pre-slice `6be96a5` | 42.70 / 41.81 / 41.91         | 58.45 / 58.33 / 60.02         |
+| current `main`      | 50.00 / 50.00 / 49.91 / 50.00 | 66.70 / 66.60 / 66.07 / 66.60 |
+
+**~+8ms (≈19%) at 1280 and ~+7.5ms (≈13%) at 1920.** `pan-min-zoom-50k` is the only scenario that
+moved and stayed moved; every light pan is back at its pre-slice figure.
+
+**The instrument was checked before the code, and it is not the cause.** `perf/` did change in that
+span (`restore-perf-harness`), so three specific worries were each ruled out by inspection: the
+node-churn `MutationObserver` was **already present** at `6be96a5`; `perf/gestures.ts`'s diff is purely
+additive (`waitForZoomAtRest` is new, `panPaced` untouched); and `pan.perf.spec.ts`'s only change calls
+`waitForZoomAtRest` inside `beforeMeasuring`, which runs **before** the measured region.
+
+**`src/hooks/useReducedMotion.ts` predicted this in its own comment**, and that comment is now the
+starting point rather than a hypothesis someone has to reconstruct:
+
+> Constructs a MediaQueryList per call, and useSyncExternalStore calls this on every render of whatever
+> composes it — which, through useCamera, means once per camera change … **NOT MEASURED** on the perf
+> harness … so if a post-merge run shows the `pan-default-*` or `pan-min-zoom-*` per-move numbers
+> moving, **this is the first thing to look at.**
+
+**Two suspects, both introduced by `smooth-zoom-transitions`, both new on the pan hot path:**
+
+1. `useReducedMotion`'s `getSnapshot()` allocating a `MediaQueryList` per call. `hardener` bounded the
+   **CPU** at 0.54µs and explicitly could not bound **GC pressure**; a cost that compounds with heap
+   size fits a regression visible only on the 50k scenario.
+2. **`panByPixels` now routes through `commit()`, which calls `glide.cancel()` on every pan frame.**
+   Pre-slice it was a bare `setCamera(prev => panCamera(...))`. This is genuinely new per-frame work and
+   was not on anyone's list.
+
+**Note what the shape of the evidence rules out.** A _fixed_ per-render cost would show on the light pan
+scenarios too, and they are unmoved — so whatever this is, it scales with mounted cells or heap, not
+with render count. That points at GC pressure over raw CPU, and it is the one thing `hardener`
+said it could not measure.
+
+**Two earlier readings in this file were wrong and are withdrawn**, recorded because both were
+confidently stated: the "+0.7ms light / +8ms heavy, therefore it scales with weight" argument (the light
+figure was noise), and the expectation that re-measuring would show the pre-slice sample to be an
+outlier (it was not — I predicted that explicitly and it was refuted by three runs).
+
 ## Sketch
 
 **Measure the cause before changing anything.** The cheapest discriminating experiment: build with
