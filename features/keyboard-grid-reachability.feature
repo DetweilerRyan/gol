@@ -4,11 +4,12 @@ Feature: Keyboard reach after the view moves away
   So that panning with the mouse never strands my keyboard position off screen
 
   # The mouse is the only thing that can separate the view from the keyboard:
-  # every keyboard move brings its own cell back into view, so a cursor only
-  # ends up off screen because someone panned there with the pointer. What each
-  # of these three scenarios claims is that the separation costs nothing -- the
-  # grid is still enterable, it still knows what it is standing on, and one
-  # keystroke closes the gap again.
+  # every keyboard move brings its own cell back into view, so a cursor ends up
+  # off screen only because the view was moved out from under it -- by a pan
+  # here, and equally by a zoom in or a shrunken window. What each of these
+  # three scenarios claims is that the separation costs nothing, whichever way
+  # it arose: the grid is still enterable, it still knows what it is standing
+  # on, and one keystroke closes the gap again.
   Scenario: Tabbing back into a grid panned away from the cursor returns to the cell it left
     Given an empty grid
     And the cell at (0, 0) has keyboard focus
