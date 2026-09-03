@@ -350,10 +350,22 @@ export async function rovingCell(page: Page): Promise<[number, number] | null> {
   return match ? [Number(match[1]), Number(match[2])] : null
 }
 
-// Where the focus cursor is painted. Used only for the two clauses about the
-// EDGE of the view -- how far a Home/End jump goes, and that arrowing off the
-// edge brings the cursor back -- which are relations between two rendered
-// boxes and have no coordinate form.
+// Where the focus cursor is painted. Used only for clauses that relate two
+// rendered boxes and therefore have no coordinate form: how far a Home/End
+// jump goes, that arrowing off the edge brings the cursor back, and -- since
+// keyboard-grid-reachability -- that one arrow key brings a cursor stranded
+// hundreds of columns away back into view. That third feature also reads it
+// to find where to START its pan drag, which is the one use here that is not
+// an assertion: the drag has to begin on the focused cell itself or the press
+// blurs it (see that module's own comment).
+//
+// NOT AN ARIA REACH-AROUND, and the distinction is the one CLAUDE.md draws
+// around patternCategoryInLibrary. "In view" is a fact about paint with no
+// accessible-tree form at all, and inventing one would be a test hook wearing
+// an affordance's name -- so this owes no affordance idea and should not grow
+// one. What a keyboard-only user is owed here is that the cursor stays
+// REACHABLE, which is read through the accessible tree by focusedCell and
+// focusedCellAnnouncement, never through this.
 export async function focusedCellBox(page: Page): Promise<{ x: number; y: number; width: number; height: number }> {
   const box = await focusedCellElement(page).boundingBox()
   if (!box) throw new Error('No cell has keyboard focus, so there is no focus cursor to measure')

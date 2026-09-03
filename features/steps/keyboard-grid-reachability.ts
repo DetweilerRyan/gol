@@ -63,6 +63,43 @@
 //      off-screen cursor into view when focus lands on it, so the containment
 //      is observing this application's own reveal-pan and nothing else.
 //
+// THE PRECONDITION WAS SHOWN TO FIRE, which is a separate obligation from the
+// battery above: a setup assertion that can never fail protects nothing. With
+// PAN_AWAY_PX set to 0 all three scenarios fail IN THE GIVEN, each naming the
+// column it still reaches ("the view still reaches column 0/0/2, so it has not
+// panned away from it") -- measured, not assumed, the same way
+// infinite-grid.ts records the same probe for its own pan-away step.
+//
+// WHY THERE IS NO EXAMPLES TABLE, and the reason is narrower than "a table is
+// impossible here" -- that framing is false and would have been recorded as
+// permanent. Two of the three scenarios genuinely admit no discriminating
+// table: their coordinate appears in the Given AND in the Then, so a mutated
+// cell moves both together and the scenario still passes. Scenario three is
+// NOT of that shape -- its Given cell and its Then cell differ by the move, so
+// they decouple. Measured, by tabling it as | x | y | moved x | and running
+// npm run acceptance-mutation -- --feature keyboard-grid-reachability against
+// the probe: `x` 0->4 KILLED, `moved x` 1->2 KILLED, `y` 0->1 SURVIVED
+// (66.7%). So the table is possible; it is simply not worth having. Its two
+// lethal mutants re-measure the arrow arithmetic that
+// keyboard-grid-navigation's own "An arrow key moves the focus one cell in its
+// own direction" outline already covers in all four directions, while its
+// third column is a move-together survivor -- one new survivor bought with two
+// redundant kills. The absence stands on that cost, not on impossibility.
+//
+// THE POINTER IS NOT THE ONLY ROUTE INTO THIS STATE, which is what the
+// .feature's own comment now says and is measured rather than argued. Probe,
+// no pointer used anywhere in it: tab onto the grid, press Home to park the
+// cursor on the left-edge cell (-32, 0) with its box at x = 0, press Tab ONCE
+// -- which lands on Zoom in -- then Enter eight times. Zoom goes 100% -> 300%
+// and that cell's box goes to x = -1280, a full viewport clear of the screen,
+// while it stays mounted (count 1), still reports as the roving cursor, and a
+// single Shift+Tab returns focus to it. So the guarantee holds on a route no
+// scenario here drives, and the pan these three use is a convenience rather
+// than the only way in. Not converted into a fourth scenario: it would assert
+// the same three claims through a longer setup, and a scenario whose only
+// novelty is how the state was reached is the duplication triage-paired-specs
+// deleted 35 tests over.
+//
 import { createBdd } from 'playwright-bdd'
 import { expect } from '@playwright/test'
 import { axisLabelValues, dragPan, focusedCell, focusedCellBox, viewportBox } from '../e2e-helpers'
@@ -74,6 +111,8 @@ const { Given, Then } = createBdd()
 // viewport 64 columns wide plus its buffer and one tile of eviction lag.
 // The same distance and the same reasoning as infinite-grid.ts's own pan-away
 // step; a shorter one would leave the scenarios passing for the wrong reason.
+// Setting this to 0 is the probe that shows the ruler assertion below really
+// bites -- see the header.
 const PAN_AWAY_PX = -10640
 
 // THE DRAG STARTS ON THE FOCUSED CELL ITSELF, and that is the load-bearing
