@@ -156,6 +156,37 @@ describe('centeredCamera (property)', () => {
   )
 })
 
+// WHEEL DELTAS ARE DRAWN UNIFORMLY OVER A PLAUSIBLE ROLL, NOT FROM
+// pixelArbitrary, AND THE DIFFERENCE IS THE WHOLE STRENGTH OF THE TWO
+// ALGEBRAIC PROPERTIES BELOW.
+//
+// fc.float draws uniformly over the REPRESENTABLE floats in its range, not
+// uniformly over the interval, and representable floats crowd towards zero:
+// measured over 20,000 draws of pixelArbitrary (+/-2000), 16,682 came out
+// under 0.01 in magnitude and 17,482 under 1. That is right for a pixel
+// POSITION, where the near-origin cases are the interesting ones, and wrong
+// for a wheel DELTA, where a 0.005px roll is a gesture no mapping can be
+// told apart on -- every candidate implementation returns the camera
+// unchanged there.
+//
+// Measured consequence, on the fault the properties below exist to exclude
+// (quantizing a rolled distance to whole notches, which keeps the notch as
+// the unit and so still discards the sub-notch magnitude this module maps):
+// under pixelArbitrary the additive-composition property separates it on 7
+// of 26,192 kept draws (0.027%, ~2% per 100-run invocation); under this
+// arbitrary, on 13.9%, which is every invocation. Same property, same
+// implementation, opposite verdicts.
+//
+// 0.1px granularity so sub-notch fractions are actually drawn, and +/-400px
+// (four notches) because the range trades off against the zoom limits: the
+// whole MIN_CELL_SIZE..MAX_CELL_SIZE span is only 9.03 notches wide, so a
+// wide draw saturates and both sides of a composition land on the same
+// clamp, agreeing for a reason that has nothing to do with the mapping.
+// Measured, as the share of kept draws with both sides clamped / the share
+// on which the quantize fault is separated: +/-200px 10% / 15.8%, +/-400px
+// 19% / 14.2%, +/-1000px 50% / 8.2%, +/-2000px 69% / 3.2%.
+const wheelDelta = fc.integer({ min: -4000, max: 4000 }).map((tenthsOfAPixel) => tenthsOfAPixel / 10)
+
 describe('applyWheelInput (property)', () => {
   it.prop([camera, pixel, pixel, pixel, pixel])(
     'never changes cellSize when neither shiftKey nor ctrlKey is held',
@@ -205,13 +236,64 @@ describe('applyWheelInput (property)', () => {
   // against the implementation, not an independent oracle, since it agrees
   // with the source by construction. Both properties below instead pin the
   // algebraic structure wheelZoomFactor's own header comment claims
-  // (factors compose by multiplication) without ever restating the formula:
-  // "not clamped" is detected structurally, by the result sitting strictly
-  // inside (MIN_CELL_SIZE, MAX_CELL_SIZE) -- clampCellSize can only ever
-  // produce exactly one of those two boundary values, never a value
-  // strictly between them, so a result in the open interval could not have
-  // been clamped regardless of what formula produced it.
-  it.prop([camera, pixel, pixel, pixel])(
+  // (factors compose by multiplication) without ever restating the formula.
+  //
+  // The fc.pre calls SCOPE these properties rather than detecting anything:
+  // they say the invariants are claimed only for gestures that did not hit
+  // a zoom limit, since composition genuinely does not survive a clamp.
+  // clampCellSize can only ever return exactly MIN_CELL_SIZE or exactly
+  // MAX_CELL_SIZE, never a value strictly between, so a result in the open
+  // interval is one no clamp touched -- which is what makes the open-interval
+  // test an exact statement of that scope and not an approximation of it.
+  //
+  // FAULT BATTERY -- eight faults injected into src/camera.ts by hand, each
+  // run against src/camera.test.ts + src/camera.property.test.ts alone (59
+  // tests). Read the non-kills as carefully as the kills: they are what
+  // these two properties structurally cannot see.
+  //
+  //   F1  base ZOOM_FACTOR -> 1.5             both GREEN   (9 unit tests red)
+  //   F2  WHEEL_ZOOM_NOTCH_PX 100 -> 200      both GREEN   (7 unit tests red)
+  //   F3  exponent -notches -> notches        both GREEN   (8 unit tests red)
+  //   F4  exponential -> linear 1 - n * 0.25  BOTH RED     3/3 runs
+  //   F5  notches -> Math.round(notches)      additive RED 4/4; reciprocal GREEN
+  //   F6  deltaMode === 0 -> !== 0            additive RED 4/4; reciprocal GREEN
+  //   F7  zoom guard drops || input.ctrlKey   both GREEN   (1 unit test red)
+  //   F8  zoom anchor pixelX/pixelY swapped   both GREEN   (1 unit test red)
+  //
+  // BOTH properties are needed and neither subsumes the other. F4 is the
+  // only fault reciprocality catches that additive composition does not
+  // need, and F5/F6 are caught by additive composition alone -- a sign-only
+  // or round-to-notch mapping is still perfectly reciprocal, because
+  // Math.round(-x) === -Math.round(x) away from the .5 ties, so no amount of
+  // sampling would make reciprocality see either.
+  //
+  // F1, F2 and F3 are non-kills BY CONSTRUCTION, and no restatement of these
+  // properties would change that: reciprocality and additive composition
+  // hold for ANY exponential family b ** (kd), whatever b and k are and
+  // whichever sign k carries. So nothing here pins the base to ZOOM_FACTOR
+  // or a notch to WHEEL_ZOOM_NOTCH_PX -- that calibration is held entirely
+  // by unit tests in camera.test.ts ('lands on exactly one ZOOM_FACTOR
+  // step...' for the whole-notch rung, the 112% discriminator for the
+  // fraction, and the deltaMode-1 test for line mode), and by the Gherkin
+  // layer. That is a division of labour rather than a gap: a property that
+  // pinned the base could only do it by restating the formula, which is
+  // exactly what these two replaced.
+  //
+  // F5 is the fault that made this file's wheelDelta arbitrary necessary --
+  // see its comment above. It is what this whole slice exists to exclude,
+  // and drawn from pixelArbitrary the additive property separated it on
+  // 0.027% of kept draws, which is a property nobody would ever see fail.
+  //
+  // F7 and F8 are non-kills of REACH rather than of structure: every draw
+  // here fixes ctrlKey at false, and neither property looks at the resulting
+  // offsets at all. F7 is caught by the it.each pinch row in camera.test.ts;
+  // F8 by 'zooms (leaves offset behaving like zoomCameraAtPoint)...', which
+  // anchors at an asymmetric (100, 50) so a swap cannot hide. The offset
+  // half of this path is otherwise covered by composition rather than by
+  // restatement -- zoomCameraAtPoint's own fixed-point property above
+  // quantifies over factors in (0.1, 10), and an unclamped wheel zoom
+  // cannot produce a factor outside [8/60, 60/8].
+  it.prop([camera, pixel, pixel, wheelDelta])(
     'is reciprocal: zooming by a delta and then by its exact negation returns to the original cellSize',
     (cam, pixelX, pixelY, deltaY) => {
       fc.pre(deltaY !== 0)
@@ -238,7 +320,7 @@ describe('applyWheelInput (property)', () => {
     },
   )
 
-  it.prop([camera, pixel, pixel, pixel, pixel])(
+  it.prop([camera, pixel, pixel, wheelDelta, wheelDelta])(
     'composes additively: applying two deltas in sequence lands on the same cellSize as applying their sum in one gesture',
     (cam, pixelX, pixelY, deltaY1, deltaY2) => {
       const first = applyWheelInput(cam, {
