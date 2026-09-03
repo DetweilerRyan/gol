@@ -14,7 +14,6 @@ import {
   worldToScreen,
   zoomCameraAtPoint,
   zoomPercentage,
-  ZOOM_FACTOR,
   type Camera,
 } from './camera'
 import {
@@ -200,18 +199,23 @@ describe('applyWheelInput (property)', () => {
     },
   )
 
-  // The resolved factor here has to stay a byte-identical restatement of
-  // camera.ts's own wheelZoomFactor expression at deltaMode 0 -- this is an
-  // equivalence property, not an independent oracle, and a mathematically
-  // equal but differently-associated expression can differ by the same float
-  // rounding that made the reciprocal-exactness unit test in camera.test.ts
-  // worth pinning with toBe in the first place.
+  // These two replace a prior property that asserted applyWheelInput was
+  // equivalent to zoomCameraAtPoint called with a locally-rewritten copy of
+  // camera.ts's own wheelZoomFactor expression -- an equivalence check
+  // against the implementation, not an independent oracle, since it agrees
+  // with the source by construction. Both properties below instead pin the
+  // algebraic structure wheelZoomFactor's own header comment claims
+  // (factors compose by multiplication) without ever restating the formula:
+  // "not clamped" is detected structurally, by the result sitting strictly
+  // inside (MIN_CELL_SIZE, MAX_CELL_SIZE) -- clampCellSize can only ever
+  // produce exactly one of those two boundary values, never a value
+  // strictly between them, so a result in the open interval could not have
+  // been clamped regardless of what formula produced it.
   it.prop([camera, pixel, pixel, pixel])(
-    'when shiftKey is true, is equivalent to calling zoomCameraAtPoint directly with the resolved factor',
+    'is reciprocal: zooming by a delta and then by its exact negation returns to the original cellSize',
     (cam, pixelX, pixelY, deltaY) => {
       fc.pre(deltaY !== 0)
-      const factor = ZOOM_FACTOR ** -(deltaY / 100)
-      const viaWheel = applyWheelInput(cam, {
+      const forward = applyWheelInput(cam, {
         pixelX,
         pixelY,
         deltaX: 0,
@@ -220,8 +224,52 @@ describe('applyWheelInput (property)', () => {
         shiftKey: true,
         ctrlKey: false,
       })
-      const viaDirect = zoomCameraAtPoint(cam, pixelX, pixelY, factor)
-      expect(viaWheel).toEqual(viaDirect)
+      fc.pre(forward.cellSize > MIN_CELL_SIZE && forward.cellSize < MAX_CELL_SIZE)
+      const back = applyWheelInput(forward, {
+        pixelX,
+        pixelY,
+        deltaX: 0,
+        deltaY: -deltaY,
+        deltaMode: 0,
+        shiftKey: true,
+        ctrlKey: false,
+      })
+      expect(back.cellSize).toBeCloseTo(cam.cellSize)
+    },
+  )
+
+  it.prop([camera, pixel, pixel, pixel, pixel])(
+    'composes additively: applying two deltas in sequence lands on the same cellSize as applying their sum in one gesture',
+    (cam, pixelX, pixelY, deltaY1, deltaY2) => {
+      const first = applyWheelInput(cam, {
+        pixelX,
+        pixelY,
+        deltaX: 0,
+        deltaY: deltaY1,
+        deltaMode: 0,
+        shiftKey: true,
+        ctrlKey: false,
+      })
+      fc.pre(first.cellSize > MIN_CELL_SIZE && first.cellSize < MAX_CELL_SIZE)
+      const sequential = applyWheelInput(first, {
+        pixelX,
+        pixelY,
+        deltaX: 0,
+        deltaY: deltaY2,
+        deltaMode: 0,
+        shiftKey: true,
+        ctrlKey: false,
+      })
+      const combined = applyWheelInput(cam, {
+        pixelX,
+        pixelY,
+        deltaX: 0,
+        deltaY: deltaY1 + deltaY2,
+        deltaMode: 0,
+        shiftKey: true,
+        ctrlKey: false,
+      })
+      expect(sequential.cellSize).toBeCloseTo(combined.cellSize)
     },
   )
 })
