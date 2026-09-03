@@ -162,6 +162,43 @@ A valid arm C keeps `zoomBy` working and tests identity directly — e.g. memois
 or assert its identity across renders in a unit test, which is cheaper than a perf run and answers the
 same question.
 
+## CAUSE FOUND (2026-09-03) — identity churn through `commit()`, measured on both trees
+
+A `renderHook` probe comparing identities across a **no-op re-render**, run on `main` and on the
+pre-slice `6be96a5`, with a stable callback mirroring `useCamera`'s real `useZoomGlide(setCamera)`
+call shape:
+
+|                                | pre-slice `6be96a5`   | current `main`                |
+| ------------------------------ | --------------------- | ----------------------------- |
+| `useZoomGlide` controller      | _(did not exist)_     | **new identity every render** |
+| `useCamera` actions that churn | **none — all stable** | **all seven**                 |
+
+Post-slice the churned set is `panByPixels`, `zoomAtPoint`, `applyWheel`, `centerView`,
+`zoomInCentered`, `zoomOutCentered`, `panByScrollbarDrag`.
+
+**The chain, each link measured rather than inferred:** `useZoomGlide` returns a freshly-built
+controller → `commit()` closes over it and churns → every action closes over `commit` (or, for the two
+centered-zoom actions, over `glide` directly) → `LifeBoard` passes those into `Grid` → **`Grid`'s props
+differ on every render, so React Compiler's memoization bails and every mounted cell re-renders.**
+
+**This explains every observation this file has accumulated**, including the ones that eliminated the
+earlier suspects: the cost is per _mounted cell_, not per render, so the light pan scenarios are
+unmoved and only `pan-min-zoom-50k` regressed; and neither arm A nor arm B could move it, because
+removing the allocation or the per-frame cancel leaves the identity churn untouched.
+
+**The naive fix is wrong, which is why this wants a design pass rather than a one-liner.** Freezing the
+controller in a `useRef` on first render captures `prefersReducedMotion` in a stale closure —
+`zoomBy` reads it to choose `glideDurationMs`, so a user toggling the OS reduced-motion setting mid-session
+would keep the old duration. The hook already solves the same problem for its `onCamera` callback with
+an `onCameraRef` updated in an effect, so the shape of a correct fix exists in the file; whether that
+generalises, or whether the controller should be assembled differently, is `architect`'s call.
+
+**Two things worth checking as part of any fix.** Whether the `useEffect` with **no dependency array**
+(it runs after every render) is load-bearing or can take a dependency list. And whether an identity
+regression of this kind should be **guarded by a test** — the probe above is three lines of `renderHook`
+and would have failed the moment the churn was introduced, where the perf harness only caught it as an
+unexplained 8ms two slices later.
+
 ## Sketch
 
 **Measure the cause before changing anything.** The cheapest discriminating experiment: build with
