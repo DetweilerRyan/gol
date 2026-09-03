@@ -37,7 +37,34 @@ These docs describe the codebase as it currently stands, not a contract that fre
 
 ## Writing a property test
 
-Property tests (`@fast-check/vitest`, `*.property.test.ts`) cover every framework-free module, and **`architect` writes them** — `coder` writes focused unit tests and never property tests, which is why its fast path (`npm run test:unit`) skips that layer entirely. `hardener` and `product` confirm the results but don't author them. Two rules apply whenever `architect` adds or changes one.
+Property tests (`@fast-check/vitest`, `*.property.test.ts`) cover every framework-free module, and **`architect` writes them** — `coder` writes focused unit tests and never property tests (note `cleaner.md`'s Owns list also grants property tests, which this sentence and `coder.md` both contradict; the inconsistency is filed as `cleaner-property-tests-and-layer-overlap` and is not settled here), which is why its fast path (`npm run test:unit`) skips that layer entirely. `hardener` and `product` confirm the results but don't author them. Two rules apply whenever `architect` adds or changes one.
+
+### Which layer states which claim
+
+**A property states a law that a whole family of implementations satisfies. A unit test names one member of that family.** Neither does the other's job, and the choice follows from which kind of claim you have.
+
+Measured in `wheel-zoom-ignores-magnitude-and-pinch`, where `architect` ran eight faults against the wheel-zoom mapping's two properties (reciprocality — a delta then its exact negation returns the original; additive composition — two deltas in sequence land where their sum lands in one) and against its unit tests:
+
+| fault injected                          | properties       | unit tests |
+| --------------------------------------- | ---------------- | ---------- |
+| base `ZOOM_FACTOR` 1.25 → 1.5           | both green       | **9 red**  |
+| notch constant 100 → 200                | both green       | **7 red**  |
+| exponent sign flipped                   | both green       | **8 red**  |
+| exponential → linear                    | **both red**     | green      |
+| continuous → quantized to whole notches | **additive red** | green      |
+| `deltaMode === 0` branch inverted       | **additive red** | green      |
+| zoom guard drops `                      |                  | ctrlKey`   | both green | **1 red** |
+| zoom anchor x/y swapped                 | both green       | **1 red**  |
+
+The split is clean, and it generalizes: **the properties caught every change to the _shape_ of the relationship and none to its _calibration_; the unit tests caught exactly the reverse.** Reciprocality and additive composition hold for any exponential family `b ** (k*d)` — any base, any scale, either sign — so no property over that module could ever pin the base to `ZOOM_FACTOR`. That is a ruling recorded in `camera.property.test.ts`'s header, not an oversight.
+
+So:
+
+- **Reach for a property** when the claim is a relationship that survives changing the inputs — round trip, inverse, idempotence, composition, ordering, an invariant preserved across an operation, agreement with an independent oracle — and the input space is too large to enumerate.
+- **Reach for a unit test** when the claim names a value: a constant, a rung, a boundary, which branch ran, which field was read. A property attempting one of these can only do it by restating the implementation — at which point it agrees with the code by construction and can never fail.
+- **Expect to need both.** A module whose law is pinned but whose constants are not is satisfied by infinitely many wrong implementations. The reverse passes every named case and drifts everywhere between them.
+
+**Two ways this goes wrong, both measured in that slice rather than hypothesized.** A property that restates the implementation's own formula is an equivalence check rather than a test — `coder` flagged one against its own interest there, and it was replaced. And **a property is only as strong as the region its arbitrary actually samples**: those replacements drew from `pixelArbitrary`, whose `fc.float` draws uniformly over _representable_ floats, which crowd toward zero — **16,682 of 20,000 draws under 0.01 in magnitude**. Correct for a pixel position, useless for a wheel delta, and the quantize fault above survived at a **0.027%** detection rate until the arbitrary was replaced. **Ask what your arbitrary draws, not what its bounds are.**
 
 - **Pin the degenerate values deterministically; don't leave them to the generator.** A property over a broad arbitrary finds a defect only when the draw happens to produce it. Assert the boundary cases directly, alongside the property: `NaN`, `±0`, Invalid Date, empty `Set`/`Map`/array/object, single-element collections, and size or length comparisons in **both** directions — subset as well as superset, since a one-directional check lets `if (a.size !== b.size)` → `if (false)` survive mutation.
 - **Show a new property is non-vacuous before you trust it.** Temporarily break the code it exists to protect and confirm that property fails; then restore. A property that still passes against a deliberately broken implementation is documentation, not a test. If the break turns out to be undetectable, that _is_ the finding — reweight the arbitrary toward the near-misses rather than accepting the pass.
