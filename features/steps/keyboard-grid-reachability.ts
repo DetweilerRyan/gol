@@ -26,6 +26,43 @@
 // THIS MODULE DEFINES TWO STEPS AND LENDS OUT NEITHER. Both are about the gap
 // between where the view is and where the keyboard is, which is what this
 // feature is about and nothing else currently needs.
+// THE FAULT BATTERY THIS CONTRACT WAS SHOWN CATCHING. Every scenario here is
+// GREEN on the tree it was written against -- the guarantee was already
+// delivered and only unstated -- so passing is no evidence that any of them
+// discriminates. Each was therefore demonstrated the other way, by breaking the
+// code deliberately and running the whole Playwright suite (108 tests) to see
+// what noticed. Recorded because a scenario admitted on the strength of "it
+// passes" is exactly the incidental coverage this repo has been burned by, and
+// because each row below also says which scenario is the SOLE detector of what
+// it breaks:
+//
+//   1. liveCellWindow.ts -- cull the focus cursor to the mounted range
+//      (`if (!alreadyIncluded && cellInRange(focus.x, focus.y, range))`).
+//      3 failed / 105 passed: exactly this feature's three scenarios, each at
+//      its Then, each reporting a focused cell of `null` -- no tab stop at all.
+//      105 is the whole suite as it stood before this feature, so NOTHING ELSE
+//      in features/ catches it. The blunter fault -- deleting the focus +1
+//      outright -- reds half the suite and would have proved only that the +1
+//      matters, not that these scenarios add anything.
+//
+//   2. liveCellWindow.ts -- `isAlive: cells.has(focusKey)` -> `isAlive: false`.
+//      1 failed / 107 passed: scenario two alone, "Expected substring: alive /
+//      Received string: dead". A live focus cell that is IN range never reaches
+//      that branch (the live loop already included it), so an out-of-range live
+//      cursor is the only input that distinguishes the two -- which is why the
+//      live scenario earns its place by this measurement rather than by
+//      symmetry with the dead one.
+//
+//   3. gridFocus.ts -- clamp panToRevealPx to one cellSize per axis.
+//      1 failed / 107 passed: scenario three's in-view clause alone, with the
+//      cursor painted at x = -9960. This is the subsumption answer for
+//      keyboard-grid-navigation's "Moving the focus past the edge of the view
+//      brings that cell into view", which needs exactly one cell of pan and
+//      stays GREEN under the cap. It also rules out the one way that clause
+//      could have passed for the wrong reason: Chromium does not scroll the
+//      off-screen cursor into view when focus lands on it, so the containment
+//      is observing this application's own reveal-pan and nothing else.
+//
 import { createBdd } from 'playwright-bdd'
 import { expect } from '@playwright/test'
 import { axisLabelValues, dragPan, focusedCell, focusedCellBox, viewportBox } from '../e2e-helpers'
