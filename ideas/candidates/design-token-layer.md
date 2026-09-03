@@ -51,9 +51,18 @@ Plus code, deliberately outside every gate, and read rather than refactored.
 - Does the HUD's sizing change? `features/hud-layout-and-shortcuts.e2e.spec.ts`
   asserts layout. Grid and camera pixel math is unaffected either way — that
   geometry never touches these tokens.
-- Nothing in the pipeline owns visual design. Gherkin specifies behaviour and
-  cannot express "the button looks wrong", so the token set has no acceptance
-  contract. Worth deciding whether that stays informal.
+- ~~Nothing in the pipeline owns visual design.~~ **Decided 2026-09-03: it stays
+  informal, and the user is the "does this look right" gate.** Gherkin specifies
+  behaviour and cannot express "the button looks wrong", so the token set has no
+  acceptance contract and **none should be built for it**. Two consequences worth
+  stating, because they change how a slice here is run rather than merely noting a
+  gap. Do not reach for a screenshot-diff or visual-regression layer to fill it —
+  that is the move this ruling forecloses. And a visual slice is **not finished when
+  the gates are green**: it needs the user to look at the result, so plan for a
+  sign-off step that no role can discharge, the same way `product` SPECIFY stops for
+  approval. The behavioural half is unaffected — layout assertions in
+  `features/hud-layout-and-shortcuts.e2e.spec.ts` are rendered pixel geometry and
+  stay exactly as gated as they are now.
 - Prerequisite if the Claude Design sync (claude.ai/design) is ever wanted:
   that would consume this token layer, not replace it.
 - **Ordering against [[dark-mode-following-system-appearance]], which is the live

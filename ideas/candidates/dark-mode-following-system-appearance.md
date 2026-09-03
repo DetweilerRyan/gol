@@ -116,5 +116,10 @@ it trips several of CLAUDE.md's design-pass triggers. **Expect `architect` DESIG
 - Does anything in `perf/` read a colour? `no-aliveness-by-paint-class` scopes `features/*.ts` **and**
   `perf/*.ts` precisely because both were doing it once; worth re-checking rather than assuming the
   rule has held.
+- **Who says it looks right?** Settled 2026-09-03: the user does, informally — see
+  [[design-token-layer]]'s open questions. So this slice's contract can state that the
+  appearance follows the system and that an override sticks, but "the dark palette is
+  actually good" is a sign-off, not a gate, and the slice is not done when the gates go
+  green. Do not build a visual-regression layer to close it.
 - Should the `@theme` tokens be semantic (`--color-board`, `--color-cell-alive`) or literal? Semantic
   is the reason the token layer exists, but it adds an indirection a reader of `Cell.tsx` must follow.
