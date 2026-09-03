@@ -31,6 +31,11 @@ Feature: Mouse wheel and trackpad pinch controls
       | down      | 2       | 64   |
       | down      | 3       | 51   |
 
+  Scenario: Rolling the wheel gently zooms by less than a full step
+    Given a camera centered on the origin at the default zoom
+    When I scroll the wheel up half a notch while holding shift
+    Then the zoom percentage should be 112
+
   Scenario: Rolling the wheel back the same distance returns to the starting zoom
     Given a camera centered on the origin at the default zoom
     When I scroll the wheel up 3 notches and then back down 3 notches while holding shift

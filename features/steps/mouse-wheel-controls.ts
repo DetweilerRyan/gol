@@ -31,13 +31,21 @@ import { CENTER, originDisplacement, pinchWheel, recall, remember, shiftWheel } 
 
 const { When, Then } = createBdd()
 
-// ONE NOTCH OF A MOUSE WHEEL, in the pixels a browser reports for it.
+// ONE NOTCH OF A MOUSE WHEEL, CALIBRATED FOR THE BROWSER THIS SUITE RUNS IN.
 //
-// A detented wheel reports its clicks in whole notches and a browser turns one
-// notch into a wheel event of this size, so "notches" is what the contract
-// counts and this is the only place the pixel figure appears. The contract
-// never names it, which is the point: a scenario says "up 2 notches" and means
-// the gesture, not the number.
+// A detented wheel reports its clicks in whole notches, and this is the pixel
+// figure Chromium reports for one of them here. It is NOT a universal
+// constant: the same physical notch is reported at a different size by other
+// browser and OS combinations, and lands on a different rung of the zoom
+// scale there.
+//
+// That divide is why the number lives in this module and nowhere in the
+// contract. The promise a .feature makes -- roll further, zoom further -- is
+// browser-independent and belongs there; the pixels-per-notch that turns a
+// gesture into a number is a calibration of one browser and belongs here. So
+// "notches" is what the contract counts, this is the only place the pixel
+// figure appears, and a scenario saying "up 2 notches" means the gesture
+// rather than the number.
 //
 // The contract pins one notch to 125% and two to 156% -- the same two rungs
 // camera-pan-and-zoom.feature already pins for one and two toolbar zoom-in
@@ -87,14 +95,60 @@ When('I scroll the wheel down one notch while holding shift', async ({ page }) =
   await shiftWheel(page, CENTER.x, CENTER.y, 0, notchDeltaY('down', 1))
 })
 
-// The direction is QUOTED in the .feature, which is a mutation-survivability
-// decision rather than a stylistic one. acceptance-mutation perturbs the cell,
-// and a bare {word} placeholder would let a perturbation containing a space
-// stop the step MATCHING at all -- and a step that matches nothing is a bddgen
-// generation failure, which is all-or-nothing across every feature in the
-// batch, so one such mutant would take down the entire mutant phase rather
-// than scoring as a kill. Inside quotes any perturbation still matches, and
-// notchDeltaY above is what turns it into a named failure.
+// THE SUB-NOTCH ROLL, WHICH IS THE ONLY STEP THAT OBSERVES THIS FEATURE'S OWN
+// PROMISE OF "as little as I mean to".
+//
+// Every other scenario here rolls a WHOLE number of notches, and an
+// implementation that still rounds a rolled distance to the nearest notch
+// satisfies all of them -- so without this step the contract is silent about
+// the half of the narrative the slice exists for. Measured by architect
+// against three implementations: today's sign-only one fails 7 of the 11
+// other clauses, but a quantize-to-notches implementation and a genuinely
+// continuous one BOTH land every percentage the other scenarios name. Those
+// two are what this clause separates, and quantizing is the one that has to
+// be excluded by name -- it is the answer that keeps the notch as the unit
+// and so still discards exactly the sub-notch magnitude this slice is for.
+// It reads 125 here, as sign-only does; only a mapping that keeps the
+// fraction reads 112.
+//
+// 112 is a resting percentage rather than a chosen one, and it is comfortably
+// clear of a rounding edge: half a notch in is a quarter-step of zoom, which
+// puts the readout at 111.8, and the badge rounds. It sits 0.3 away from the
+// boundary at 111.5, so no float noise reaches it.
+//
+// Spelled out rather than added as a fifth Examples row, for two reasons on
+// top of the "1 notches is not a sentence" one above. The outline's
+// placeholder is an integer and would not match half a notch at all. And a
+// fractional Examples cell is live territory for npm run acceptance-mutation
+// -- CLAUDE.md's tuple-grammar section records that its coordinate grammar
+// takes integer components only -- so a decimal in that table would be
+// changing what the mutation runner is exercising as a side effect of adding
+// a scenario. A named step costs neither.
+When('I scroll the wheel up half a notch while holding shift', async ({ page }) => {
+  await shiftWheel(page, CENTER.x, CENTER.y, 0, notchDeltaY('up', 0.5))
+})
+
+// The direction is quoted in the .feature. This comment used to argue that
+// the quotes were what kept a mutated direction scoring as a kill, on the
+// grounds that a bare {word} placeholder would let a perturbation containing
+// a space stop the step matching at all. That argument is REFUTED, by reading
+// the mutator rather than reasoning about it: mutation-rules.ts draws every
+// substituted character from an alphabet of lowercase letters, and its other
+// strategies only ever delete, swap or re-case the value's own characters --
+// so a mutant of "up" or "down" is always letters-only. The whitespace-bearing
+// mutant the old argument defended against is unreachable, and {word} would
+// match every mutant that is reachable.
+//
+// The mechanism it invoked is real and stays written down, because it is what
+// would make such a mutant expensive rather than merely wrong: a step that
+// matches nothing is a bddgen generation failure, and bddgen is all-or-nothing
+// across every feature in the batch, so one such mutant would take down the
+// entire mutant phase instead of scoring as a kill.
+//
+// What actually turns a mutated direction into a named failure is notchDeltaY's
+// throw, above. The quotes are kept because they cost nothing and would become
+// load-bearing if that alphabet ever widened -- not because they do anything
+// today.
 When('I scroll the wheel {string} {int} notches while holding shift', async ({ page }, direction, notches) => {
   await shiftWheel(page, CENTER.x, CENTER.y, 0, notchDeltaY(direction, notches))
 })
