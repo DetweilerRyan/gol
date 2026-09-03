@@ -125,6 +125,43 @@ confidently stated: the "+0.7ms light / +8ms heavy, therefore it scales with wei
 figure was noise), and the expectation that re-measuring would show the pre-slice sample to be an
 outlier (it was not — I predicted that explicitly and it was refuted by three runs).
 
+## Both named suspects are ELIMINATED by measurement (2026-09-03)
+
+Three arms, two runs each, in a disposable worktree off `main`, scoped to the one scenario:
+
+| arm                                                                              | 1280×900      | 1920×1080     |
+| -------------------------------------------------------------------------------- | ------------- | ------------- |
+| control                                                                          | 49.97 / 50.00 | 62.55 / 64.55 |
+| **A** — `getSnapshot` returns a constant (no `MediaQueryList` per call)          | 49.82 / 50.00 | 63.66 / 66.70 |
+| **B** — `panByPixels` calls `setCamera` directly (no `glide.cancel()` per frame) | 50.00 / 50.00 | 66.60 / 66.70 |
+
+**Neither moved.** 1280 is rock-solid at ~50 in every arm, so **`useReducedMotion`'s allocation is not
+the cause** — despite its own comment nominating it — and neither is the per-frame cancel. Use 1280 to
+judge this scenario; 1920 varies by ~4ms between runs and cannot resolve an 8ms effect reliably.
+
+**The field is now very narrow.** Diffing `6be96a5..main` restricted to non-comment lines: `cellTiles.ts`
+and `cellAnchor.ts` changed **comments only**, and `useCamera.ts`'s entire real diff is the `commit()`
+wrapper (arm B, eliminated) plus one new line — `const glide = useZoomGlide(setCamera)`.
+
+**So the remaining hypothesis is the hook call itself**, and there is a concrete mechanism to test rather
+than a vague suspicion. `useZoomGlide` carries a `useEffect` with **no dependency array** (it runs after
+every render) and returns a freshly-built controller object. If that identity churns per render it flows
+through `commit` → `panByPixels` → `Grid`'s props → every mounted cell — which would **scale with mounted
+cells rather than render count**, matching the one thing the evidence has consistently said: the light pan
+scenarios are unmoved and only the 50k one regressed.
+
+**Arm C attempted this and was INVALID — recorded because the failure mode is the one this repo keeps
+paying for.** Replacing `useZoomGlide(setCamera)` with a stable noop broke `zoomBy`, which
+`pan-min-zoom-50k` needs _in its setup_ to reach min zoom. Playwright exited **1**, no fresh raw samples
+were written, and `npm run perf-report` regenerated the **previous** run's numbers — which came back
+byte-identical to control and read exactly like "arm C had no effect". Only `echo "exit=$?"` on its own
+line distinguished the two. **A perf arm must not stub anything a scenario's own setup depends on**, and a
+perf number must never be read without checking the run that produced it succeeded.
+
+A valid arm C keeps `zoomBy` working and tests identity directly — e.g. memoise the returned controller,
+or assert its identity across renders in a unit test, which is cheaper than a perf run and answers the
+same question.
+
 ## Sketch
 
 **Measure the cause before changing anything.** The cheapest discriminating experiment: build with
