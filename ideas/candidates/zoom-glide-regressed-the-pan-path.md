@@ -44,6 +44,40 @@ on `pan-default-empty` and **+8ms** on `pan-min-zoom-50k` — it scales with the
 That is consistent with GC pressure compounding against a larger heap, and equally consistent with
 something else entirely. **Do not start from the allocation as though it were established.**
 
+## RE-MEASURED 2026-09-03 on `main` at `eb00437` — the finding narrows, and my stated reasoning was wrong
+
+A fresh full baseline, taken after both `slice/wheel-zoom-ignores-magnitude-and-pinch` and
+`slice/grid-tabbable-when-cursor-off-screen` merged:
+
+| scenario                  | pre-zoom-slice | first re-run | now       |
+| ------------------------- | -------------- | ------------ | --------- |
+| `pan-default-empty` @1280 | 8.40           | 9.10         | **8.42**  |
+| `pan-default-empty` @1920 | 8.72           | 9.70         | **8.60**  |
+| `pan-min-zoom-50k` @1280  | 41.80          | 50.00        | **50.00** |
+| `pan-min-zoom-50k` @1920  | 58.45          | 66.70        | **66.60** |
+
+**The light-pan movement was noise, and the argument I built on it does not survive.** This file
+originally reasoned that the regression "scales with the scenario's weight — +0.7ms light, +8ms
+heavy", and used that to argue _against_ the fixed-per-render `useReducedMotion` allocation
+hypothesis. The light scenarios are now back at their pre-slice figures, so **there was no +0.7ms to
+scale from**. That argument is withdrawn; it does not resurrect the allocation hypothesis either,
+since a fixed per-render cost would still have to show up somewhere in the light scenarios.
+
+**What survives is narrower and more stable: `pan-min-zoom-50k` alone, ~+8ms, across four
+measurements** (50.00 / 50.00 / 49.91 / 50.00 at 1280). It is the only scenario that moved and stayed
+moved.
+
+**And the pre-slice figure it is measured against has n = 1.** 41.80/58.45 is a single sample from one
+run; the post figures are four. Before treating ~+8ms as established, the cheapest honest step is to
+re-measure the _pre-slice_ tree several times — `git stash`-free, since the baseline commit is
+reachable — rather than assuming one sample bounded the noise on the heaviest, most variable
+scenario in the harness.
+
+**Separately, the slice this file was named for cost nothing on the wheel path**, which was the other
+open question: `zoom-shift-wheel-empty` is 8.50 / 8.40 against 8.51 / 9.16 before. The continuous
+magnitude mapping produces many more distinct `cellSize` values and did **not** measurably cost the
+reference-identity bail-out.
+
 ## Sketch
 
 **Measure the cause before changing anything.** The cheapest discriminating experiment: build with

@@ -28,7 +28,56 @@ What has been measured:
 **So the gap is precisely: DPR 2, at the zoom levels `product` swept.** The math is proven over the
 full range; DPR 1 rasterization is proven at five points; DPR 2 rasterization is proven at two.
 
-## Sketch
+## MEASURED 2026-09-03 — clean. This candidate is answered; see the closing note.
+
+Run on `main` at `eb00437` with a throwaway Playwright probe (deleted, never landed), decoding
+screenshots with `pngjs` and scanning real device pixels along one row, at **both** DPR 1 and DPR 2,
+at the same five zoom levels `product` swept: `cellSize` 8 / 8.2 / 20 / 31.2 / 60.
+
+| cellSize | zoom | DPR 1 runs | DPR 2 runs | missing | doubled       |
+| -------- | ---- | ---------- | ---------- | ------- | ------------- |
+| 8        | 40%  | 125        | 125        | 0       | 0             |
+| 8.2      | 41%  | 122        | 125        | 0       | 0 (see below) |
+| 20       | 100% | 50         | 50         | 0       | 0             |
+| 31.2     | 156% | 32         | 32         | 0       | 0             |
+| 60       | 300% | 17         | 17         | 0       | 0             |
+
+**No missing lines and no doubled lines at any zoom, at either DPR.** The probe self-calibrated on
+the modal gap rather than assuming a `cellSize`, so it did not depend on hitting an exact zoom.
+
+**The one anomaly was the probe's, not the app's, and chasing it is what produced the real finding.**
+At `cellSize` 8.2 the DPR-2 arm counted 125 runs against DPR 1's arithmetically-correct 122. Dumping
+raw device pixels at the three extra sites showed all three identical:
+
+```
+px: 255 255  229 230  252  152 153 153 156  255 255
+              minor    ^    major line
+                     252, not 255
+```
+
+A `> 250` white threshold counted that **252** pixel as white and split one line into two runs. What
+is actually there is a minor line sitting **3 device px (1.5 CSS px)** from a major one — a sub-pixel
+phase difference between the two `background-position` layers at a fractional `cellSize`. DPR 2
+_resolves_ it; it does not cause it. At DPR 1 the same pair merges into one run, which is exactly
+why that arm reads 122.
+
+**So the answer to this candidate's own first open question — "does a seam at DPR 2 even matter
+visually?" — is that there is no seam, and the sub-CSS-pixel phase difference that does exist is
+below the bar the question sets.** Nothing to fix, and the SVG `<pattern>` fallback stays unneeded.
+
+**One incidental finding worth keeping, because it is about the harness rather than the paint.**
+Playwright's `page.mouse.wheel(x, y)` takes **device** pixels: measured, a requested `deltaY` of 100
+arrives as 100 / 50 / 33.3 at `deviceScaleFactor` 1 / 2 / 3. The first DPR-2 sweep silently ran at
+51/64/100/125/195% instead of the intended 40/41/100/156/300% because of it, and read as a completed
+measurement. Nothing in `features/` is affected today — the suite runs at DPR 1 — but every wheel
+scenario there would silently measure a different gesture if it ever ran at another DPR.
+
+**Reaching the fractional levels at all depended on `slice/wheel-zoom-ignores-magnitude-and-pinch`**,
+merged hours earlier: a wheel delta of `-100 * ln(c/20) / ln(1.25)` lands on an arbitrary `cellSize`,
+where before only `20 * 1.25^n` was reachable through the real wheel path. Two of the five sample
+points could not previously have been driven this way.
+
+## Sketch (superseded by the measurement above)
 
 Repeat `product`'s five-zoom line-count sweep at `deviceScaleFactor: 2`. The technique already
 exists in this repo's history — decode a screenshot and scan real device pixels for where the line
