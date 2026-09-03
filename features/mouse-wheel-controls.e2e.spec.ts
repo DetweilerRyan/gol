@@ -20,6 +20,35 @@ import { CENTER, cellScreenPosition, clickGridAt, DEFAULT_CELL_SIZE_PX, shiftWhe
 // the other needs a wheel event with both axes populated, which no step
 // sends.
 
+// -------------------------------------------------------------------------
+// OUTLINE FOR THIS SLICE'S VERIFY PASS -- wheel-zoom-ignores-magnitude-and-pinch.
+//
+// Written at SPECIFY, before any implementation, so the accepted behaviour is
+// on record rather than reconstructed later from whatever got built. Two
+// claims belong here and in no .feature, both of them residue in the
+// established sense -- rendered pixel geometry, which no Gherkin scenario may
+// name:
+//
+//   1. A PINCH HOLDS THE POINT BETWEEN THE FINGERS FIXED, exactly as a
+//      shift-held wheel zoom holds the point under the cursor fixed (the first
+//      test below). Same shape as that test: seed a cell whose corner is a
+//      known pixel, pinch centred on that pixel, re-measure the corner. The
+//      Gherkin pinch scenarios are deliberately centred on the world origin so
+//      this one can be written without any of them moving.
+//   2. THE PINCH AND THE WHEEL SHARE ONE SCALE -- a pinch of a given size and
+//      a shift-wheel roll of the same size land on the same rung. Stated in
+//      the contract as two scenarios that happen to both read 125, which is an
+//      agreement a reader has to notice; asserted here as one equality.
+//
+// AND ONE NUMBER IN THIS FILE GOES STALE WHEN THE SLICE LANDS. The second
+// test's comment records "80 instead of 125" for a flipped axis ternary. That
+// was measured against the sign-only implementation, where the wrong axis
+// still stepped by the whole zoom factor. Once the factor follows the delta's
+// magnitude, deltaX = 50 gives ~89, not 80. The test still discriminates --
+// anything other than 125 fails it -- but the comment must be re-measured at
+// VERIFY rather than copied forward.
+// -------------------------------------------------------------------------
+
 test.beforeEach(async ({ page }) => {
   await page.goto('/')
 })

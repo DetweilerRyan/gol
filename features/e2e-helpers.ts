@@ -53,6 +53,7 @@ export {
   dragPan,
   blurFocus,
   shiftWheel,
+  pinchWheel,
   waitForZoomToSettle,
   zoomIn,
   zoomOut,

@@ -177,6 +177,32 @@ export async function shiftWheel(page: Page, atX: number, atY: number, deltaX: n
   await page.keyboard.up('Shift')
 }
 
+// A TRACKPAD PINCH, EXPRESSED THE ONLY WAY A BROWSER EVER EXPRESSES ONE.
+//
+// A pinch is not delivered as a touch gesture to a desktop page at all: every
+// major browser reports it as an ordinary `wheel` event carrying ctrlKey, with
+// the spread encoded in deltaY -- negative for spreading apart (zoom in),
+// positive for drawing together (zoom out). So this is not a stand-in for the
+// gesture; it is the gesture, at the boundary where the application meets it.
+//
+// MEASURED rather than assumed, because the whole contract for pinching rests
+// on it. On this tree, `keyboard.down('Control')` around `mouse.wheel(0, -100)`
+// delivers exactly one event to a capture-phase window listener, reading
+// { deltaX: 0, deltaY: -100, deltaMode: 0, ctrlKey: true }. A raw CDP
+// Input.dispatchMouseEvent with `modifiers: 2` was tried alongside it and
+// produced a byte-identical event, so the plain Playwright route is used and
+// no CDP session is opened.
+//
+// The same event is what a mouse user's Ctrl+scroll produces, which is why the
+// application cannot tell the two apart and does not try to. Reading these
+// steps as "pinch only" would overstate what is driven.
+export async function pinchWheel(page: Page, atX: number, atY: number, deltaY: number) {
+  await page.mouse.move(atX, atY)
+  await page.keyboard.down('Control')
+  await page.mouse.wheel(0, deltaY)
+  await page.keyboard.up('Control')
+}
+
 export async function dragScrollbarThumb(page: Page, orientation: ScrollbarOrientation, deltaPx: number) {
   const box = (await scrollbarThumb(page, orientation).boundingBox())!
   const x = box.x + box.width / 2
