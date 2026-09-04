@@ -6,6 +6,14 @@ import { usePatternPlacement } from './usePatternPlacement'
 
 const GLIDER = PATTERNS.find((pattern) => pattern.name === 'Glider') as Pattern
 
+// Gates the identity-stability describe below, on useCamera.test.ts's/
+// Grid.test.tsx's/useZoomGlide.test.ts's precedent: Stryker's per-expression
+// instrumentation defeats React Compiler's memoization, so an ungated
+// identity assertion reds the dry run and npm run test:mutation never
+// starts. globalThis.__stryker__ is set at module load by any instrumented
+// file's own bootstrap, before test collection.
+const underStryker = '__stryker__' in globalThis
+
 type Hook = RenderHookResult<ReturnType<typeof usePatternPlacement>, unknown> & {
   onPlacePattern: ReturnType<typeof vi.fn>
 }
@@ -165,5 +173,47 @@ describe('usePatternPlacement', () => {
     unmount()
 
     expect(removeSpy).toHaveBeenCalledWith('keydown', handler)
+  })
+})
+
+// stable-hook-identities: architect's DESIGN pass measured stampArmedPattern
+// capturing `placement` directly, so it churned identity every time
+// previewAt moved the preview -- the only one of this hook's five returned
+// functions with a proven, measured cost (Cell.tsx's own header and
+// LifeBoard.test.tsx's "armed hover does not re-render mounted cells"
+// describe pin the propagated consequence; this describe pins the cause at
+// the hook boundary). The other four are inline arrows closing over nothing
+// but their own call-time arguments and setPlacement, which React Compiler
+// already keeps stable -- see usePatternPlacement.ts's own comment on why
+// stampArmedPattern alone needed a ref.
+describe('stampArmedPattern identity', () => {
+  // Skipped under Stryker for the same reason useCamera.test.ts's own
+  // "returned action identity" describe is: Stryker's per-expression
+  // instrumentation defeats React Compiler's memoization, so a mutated
+  // build returns a fresh stampArmedPattern on every render and this
+  // assertion fails in Stryker's dry run, before a single mutant executes.
+  // The unskipped companion below proves the probe can see a real change --
+  // placement's own identity DOES change when previewAt moves the preview --
+  // which holds with or without memoization, so it stays unskipped and
+  // still exercises this describe's setup under mutation testing.
+  it.skipIf(underStryker)('stampArmedPattern keeps identity across previewAt moving the preview', () => {
+    const hook = setup()
+    arm(hook)
+    const before = hook.result.current.stampArmedPattern
+
+    act(() => hook.result.current.previewAt(3, 4))
+    act(() => hook.result.current.previewAt(9, 9))
+
+    expect(hook.result.current.stampArmedPattern).toBe(before)
+  })
+
+  it('placement itself does change identity across previewAt -- the guard above is not vacuous', () => {
+    const hook = setup()
+    arm(hook)
+    const before = hook.result.current.placement
+
+    act(() => hook.result.current.previewAt(3, 4))
+
+    expect(hook.result.current.placement).not.toBe(before)
   })
 })

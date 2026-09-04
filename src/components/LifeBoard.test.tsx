@@ -14,18 +14,22 @@ import {
   type ResizeObserverController,
 } from '../test-support/domStubs'
 import { gridContentEl } from '../test-support/gridDom'
+import Cell from './Cell'
 import LifeBoard from './LifeBoard'
 
 // LifeBoard is the composition root: this file exists only to recover the
-// three behaviors that no single unit below it can prove on its own -- that a
+// four behaviors that no single unit below it can prove on its own -- that a
 // pointer tap on the grid reaches usePatternPlacement's single-shot
 // stampArmedPattern (whose own disarm-in-the-same-action rule is
 // usePatternPlacement.test.ts's job), the Patterns-button-while-placing
-// cancel path, and (as of smooth-zoom-transitions step 7) that a toolbar
-// zoom click actually reaches the on-screen zoom readout through the real
-// button -> useCamera -> useZoomGlide -> badge chain -- all three of which
-// would otherwise be e2e-only. Grid's own composition (pointer surface, DOM
-// layering, measurement) is Grid.test.tsx's job -- this file stays
+// cancel path, (as of smooth-zoom-transitions step 7) that a toolbar zoom
+// click actually reaches the on-screen zoom readout through the real button
+// -> useCamera -> useZoomGlide -> badge chain, and (as of
+// stable-hook-identities) that arming a pattern and moving the pointer does
+// NOT re-render every mounted cell -- all four of which would otherwise be
+// e2e-only, and the fourth of which no e2e test could even observe (a render
+// count is not a rendered pixel). Grid's own composition (pointer surface,
+// DOM layering, measurement) is Grid.test.tsx's job -- this file stays
 // deliberately small.
 // Gates the wheel-registration guard below, on Grid.test.tsx's/
 // useCamera.test.ts's/useZoomGlide.test.ts's precedent: Stryker's
@@ -34,6 +38,15 @@ import LifeBoard from './LifeBoard'
 // never starts. globalThis.__stryker__ is set at module load by any
 // instrumented file's own bootstrap, before test collection.
 const underStryker = '__stryker__' in globalThis
+
+// Automocked with `spy: true`, Grid.test.tsx's own precedent (see that
+// file's header comment for why this is the sanctioned way to spy on a
+// component the SUT imports directly under Vitest 4) -- the real Cell
+// implementation still runs, so every other test in this file renders
+// exactly the same DOM it always did. vi.mocked(Cell) is a direct per-Cell
+// render-call counter, used only by the "armed hover does not re-render
+// mounted cells" describe below.
+vi.mock('./Cell', { spy: true })
 
 let resizeObserver: ResizeObserverController
 
@@ -159,6 +172,76 @@ describe('Patterns toolbar button while placing', () => {
     fireEvent.pointerDown(grid, { pointerId: 2, clientX: 240, clientY: 260 })
     fireEvent.pointerUp(grid, { pointerId: 2, clientX: 240, clientY: 260 })
     expect(onToggleCell).toHaveBeenCalledTimes(1)
+  })
+})
+
+// stable-hook-identities: architect's DESIGN pass measured that arming a
+// pattern and moving the pointer re-rendered every mounted Cell on every
+// pointer move -- 5 renders across 5 moves in the fixture this describe is
+// modelled on, scaling to one render per mounted cell per move in the real
+// app (probe 2). The cause was usePatternPlacement's stampArmedPattern
+// capturing `placement` directly, so its identity churned every time
+// previewAt moved the preview -- which flowed into Grid's activateCell,
+// GridCells' onActivateCell prop, and from there defeated GridCells' (and
+// every Cell's) own compiler memoization even though every tile-derived
+// prop was unchanged. See usePatternPlacement.ts's own comment on the ref
+// fix that stops it. Positions below are spread by multiples of the default
+// 20px cellSize so each move resolves to a genuinely different world cell --
+// a move that resolves to the SAME cell is a no-op through
+// patternPlacement.ts's movePreviewTo (see Grid.tsx's own comment on why
+// that identity-dedup makes an isPatternArmed guard on the hover callback
+// unnecessary), so a same-cell fixture would pass this test even unfixed.
+describe('armed hover does not re-render mounted cells', () => {
+  // Skipped under Stryker for the same reason Grid.test.tsx's own
+  // tile-pan-stability test is: Stryker's per-expression instrumentation
+  // defeats React Compiler's memoization, so a mutated build re-renders Cell
+  // on every move and this assertion fails in Stryker's dry run, before a
+  // single mutant executes. The unskipped companion below proves the harness
+  // can observe a Cell render at all, independent of memoization surviving
+  // instrumentation.
+  it.skipIf(underStryker)('moving the pointer while a pattern is armed re-renders zero cells', async () => {
+    const store = createLiveCellStore()
+    const { container } = renderBoard({ store })
+    triggerResize(WIDTH, HEIGHT)
+    const grid = gridContentEl(container)
+
+    openPatternModal()
+    selectPattern(GLIDER)
+    await waitForModalToUnmount()
+
+    vi.mocked(Cell).mockClear()
+
+    fireEvent.pointerMove(grid, { pointerId: 1, clientX: 10, clientY: 260 })
+    fireEvent.pointerMove(grid, { pointerId: 1, clientX: 150, clientY: 260 })
+    fireEvent.pointerMove(grid, { pointerId: 1, clientX: 290, clientY: 260 })
+    fireEvent.pointerMove(grid, { pointerId: 1, clientX: 430, clientY: 260 })
+    fireEvent.pointerMove(grid, { pointerId: 1, clientX: 570, clientY: 260 })
+
+    expect(Cell).not.toHaveBeenCalled()
+  })
+
+  // Non-vacuous companion, unskipped: proves this harness (the vi.mock spy,
+  // the assertion shape) really can observe a Cell render at all --
+  // independent of whether React Compiler's memoization (what the skipped
+  // test above actually measures) survives Stryker's instrumentation. A
+  // stamp click mutates the store, a genuine prop change no memoization can
+  // bail out of, so this holds with or without compiler memoization intact.
+  it('stamping the armed pattern does re-render Cell (the guard above is not vacuous)', async () => {
+    const store = createLiveCellStore()
+    const { container } = renderBoard({ store })
+    triggerResize(WIDTH, HEIGHT)
+    const grid = gridContentEl(container)
+
+    openPatternModal()
+    selectPattern(GLIDER)
+    await waitForModalToUnmount()
+
+    vi.mocked(Cell).mockClear()
+
+    fireEvent.pointerDown(grid, { pointerId: 1, clientX: 10, clientY: 260 })
+    fireEvent.pointerUp(grid, { pointerId: 1, clientX: 10, clientY: 260 })
+
+    expect(Cell).toHaveBeenCalled()
   })
 })
 

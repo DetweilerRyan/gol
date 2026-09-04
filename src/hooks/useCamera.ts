@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import {
   applyWheelInput,
   centeredCamera,
@@ -23,6 +23,32 @@ export function useCamera() {
   // since cancelling on every one of its own frames would make it cancel
   // itself. See useZoomGlide.ts's header comment for the rAF lifecycle.
   const glide = useZoomGlide(setCamera)
+
+  // Read via a ref, exactly as useZoomGlide.ts's own onCameraRef/
+  // prefersReducedMotionRef are: zoomInCentered/zoomOutCentered below need
+  // the CURRENT camera at click time, not the camera value closed over when
+  // the function was created. Reading through a ref rather than closing
+  // over the render-local `camera` is what lets React Compiler memoize both
+  // functions against nothing that varies per render, which is what keeps
+  // them identity-stable across a pan -- measured (architect's
+  // stable-hook-identities DESIGN pass, superseding
+  // zoom-glide-regressed-the-pan-path's ruling that this churn was
+  // unavoidable): pre-fix, these were the only two of useCamera's seven
+  // returned actions that churned identity on every camera change. See
+  // useCamera.test.ts's "returned action identity" describe.
+  //
+  // Written in a dependency-array-free effect, never during render (React
+  // Compiler forbids reading OR writing a ref's .current at render time --
+  // see useRafCoalescedPan.ts's own comment on this trap), so the ref never
+  // lags a render by more than one effect flush -- and every zoomInCentered/
+  // zoomOutCentered call site in this app is itself a discrete event
+  // (a toolbar click) separated from the previous one by at least one
+  // commit, so the flush has always already happened by the time either
+  // function next reads it.
+  const cameraRef = useRef(camera)
+  useEffect(() => {
+    cameraRef.current = camera
+  })
 
   // EVERY camera write that is NOT the glide's own tick goes through this.
   // architect verified (CONTRACT review) that these five functions --
@@ -77,13 +103,14 @@ export function useCamera() {
   // know the camera's pixel-space zoom-at-point convention, only their own
   // measured size. Deliberately call glide.zoomBy directly rather than going
   // through zoomAtPoint/commit -- commit would cancel the very glide these
-  // two exist to drive.
+  // two exist to drive. Read cameraRef.current rather than the render-local
+  // `camera` -- see the ref's own comment above for why.
   function zoomInCentered(viewportWidthPx: number, viewportHeightPx: number) {
-    glide.zoomBy(camera, ZOOM_FACTOR, viewportWidthPx / 2, viewportHeightPx / 2)
+    glide.zoomBy(cameraRef.current, ZOOM_FACTOR, viewportWidthPx / 2, viewportHeightPx / 2)
   }
 
   function zoomOutCentered(viewportWidthPx: number, viewportHeightPx: number) {
-    glide.zoomBy(camera, 1 / ZOOM_FACTOR, viewportWidthPx / 2, viewportHeightPx / 2)
+    glide.zoomBy(cameraRef.current, 1 / ZOOM_FACTOR, viewportWidthPx / 2, viewportHeightPx / 2)
   }
 
   function panByScrollbarDrag(axis: ScrollbarAxis, deltaTrackPx: number, thumbRatio: number) {

@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import type { Pattern } from '../patternLibrary'
 import {
   armedPattern,
@@ -19,6 +19,29 @@ import {
 // reach for a pattern that isn't armed.
 export function usePatternPlacement(onPlacePattern: (pattern: Pattern, x: number, y: number) => void) {
   const [placement, setPlacement] = useState<PlacementState>(INITIAL_PLACEMENT)
+
+  // Read via a ref, exactly as useZoomGlide.ts's onCameraRef/
+  // prefersReducedMotionRef are: stampArmedPattern below needs the CURRENT
+  // placement at call time (Escape may have cancelled it since the last
+  // render -- see that function's own comment), not the placement value
+  // closed over when it was created. Reading through a ref rather than
+  // closing over the render-local `placement` is what lets React Compiler
+  // memoize stampArmedPattern against nothing that varies per render, which
+  // is what keeps it identity-stable while a pattern is being aimed --
+  // measured (architect's stable-hook-identities DESIGN pass): pre-fix,
+  // arming a pattern and moving the pointer re-rendered every mounted Cell
+  // on every move, because stampArmedPattern's churn flowed into Grid's
+  // activateCell and from there into GridCells' onActivateCell prop. See
+  // LifeBoard.test.tsx's "armed hover does not re-render mounted cells".
+  //
+  // Written in a dependency-array-free effect, never during render (React
+  // Compiler forbids reading OR writing a ref's .current at render time --
+  // see useRafCoalescedPan.ts's own comment on this trap), so the ref never
+  // lags a render by more than one effect flush.
+  const placementRef = useRef(placement)
+  useEffect(() => {
+    placementRef.current = placement
+  })
 
   // Escape only ever disarms a placing pattern here: while the library modal
   // is open, Escape is handled by the modal's own onClose, and cancelPlacing
@@ -41,7 +64,7 @@ export function usePatternPlacement(onPlacePattern: (pattern: Pattern, x: number
   // invariant asserted across a component boundary; nothing is committed when
   // nothing is armed.
   function stampArmedPattern(x: number, y: number) {
-    const pattern = armedPattern(placement)
+    const pattern = armedPattern(placementRef.current)
     if (!pattern) return
     onPlacePattern(pattern, x, y)
     setPlacement(cancelPlacing)

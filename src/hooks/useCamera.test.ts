@@ -186,16 +186,22 @@ describe('returned action identity', () => {
     expect(result.current.zoomOutCentered).toBe(first.zoomOutCentered)
   })
 
-  // The five commit()-routed writers, across a PAN -- the hot path this
-  // slice's perf finding is about (Grid pans through panByPixels many times a
-  // second during a drag). zoomInCentered/zoomOutCentered are deliberately
-  // NOT asserted stable here: they capture `camera` directly rather than
-  // going through commit()'s functional setCamera update (see useCamera.ts's
-  // own comment on why that bypass of commit() is load-bearing), so they
-  // legitimately churn whenever camera changes, with or without this slice's
-  // fix -- pinning them as stable would be asserting something architect's
-  // DESIGN ruling explicitly measured false.
-  it.skipIf(underStryker)('the five commit()-routed writers keep identity across a pan', () => {
+  // All seven of useCamera's returned actions, across a PAN -- the hot path
+  // this slice's perf finding is about (Grid pans through panByPixels many
+  // times a second during a drag). zoomInCentered/zoomOutCentered used to be
+  // excluded here: they capture `camera` directly rather than going through
+  // commit()'s functional setCamera update (see useCamera.ts's own comment
+  // on why that bypass of commit() is load-bearing), which used to make them
+  // churn identity on every camera change -- measured and ruled correct by
+  // zoom-glide-regressed-the-pan-path's DESIGN pass. stable-hook-identities'
+  // DESIGN pass superseded that ruling: it measured the churn as a live
+  // defect (a camera store cannot fix it, and neither writer's own perf cost
+  // was ever proven zero the way this test's sibling below proves the
+  // camera-identity churn genuinely happens), and useCamera.ts now reads
+  // `camera` through a ref at call time rather than closing over it, on
+  // useZoomGlide.ts's own onCameraRef precedent -- so both are asserted
+  // stable here like their five siblings.
+  it.skipIf(underStryker)('all seven returned actions keep identity across a pan', () => {
     const { result } = renderHook(() => useCamera())
     const before = result.current
 
@@ -206,6 +212,8 @@ describe('returned action identity', () => {
     expect(result.current.applyWheel).toBe(before.applyWheel)
     expect(result.current.centerView).toBe(before.centerView)
     expect(result.current.panByScrollbarDrag).toBe(before.panByScrollbarDrag)
+    expect(result.current.zoomInCentered).toBe(before.zoomInCentered)
+    expect(result.current.zoomOutCentered).toBe(before.zoomOutCentered)
   })
 
   it('camera itself does change identity across a pan -- the guards above are not vacuous', () => {
