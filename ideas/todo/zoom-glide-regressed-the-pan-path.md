@@ -369,9 +369,16 @@ React Compiler memoization, so an ungated identity assertion reds the **dry run*
    comment pointing at 2 above. Unskipped companion: `camera`'s own identity **does** change across that
    same pan, which holds with or without memoization and proves the probe can see a change.
 3. **`src/components/LifeBoard.test.tsx`** — `skipIf`: no `wheel` listener is registered during a
-   multi-frame drag pan, via `vi.spyOn(HTMLElement.prototype, 'addEventListener')` (vitest restores it;
-   do not hand-patch the prototype). Unskipped companion off the same spy: at least one `wheel`
-   registration is seen at mount, which proves the instrument observes the thing at all. This is the
+   multi-frame drag pan, spying on `addEventListener` at the prototype (it must be in place before
+   `render()`, since the mount registration is half of the instrument's own non-vacuity check).
+   **Two mechanics here are unverified and are `coder`'s to settle before trusting the guard**: the
+   probe that produced the 6-vs-0 figures above used a hand-written prototype assignment, not
+   `vi.spyOn`, and `addEventListener` is inherited from `EventTarget.prototype` — so if
+   `vi.spyOn(HTMLElement.prototype, …)` does not intercept, spy `EventTarget.prototype` instead. And
+   the spy must be restored explicitly: neither `restoreMocks` nor `clearMocks` is set in
+   `vite.config.ts` or `src/test-setup.ts` (checked), so nothing restores it for you. Unskipped
+   companion off the same spy: at least one `wheel` registration is seen at mount, which proves the
+   instrument observes the thing at all. This is the
    only guard that states the **cost** rather than the cause, and it is the one that survives the churn
    arriving later through some other prop. If the spy proves to leak across tests, the two hook-level
    guards are the required minimum and this one may be dropped — say so in the handoff if it is.
@@ -387,14 +394,24 @@ mattered.
 
 ### 5. Ordering — each commit leaves the suite green
 
+**Every guard is red-checked against TWO arms before it is trusted** — (a) the unfixed tree and (b) the
+misordered variant of section 3 — because (b) is the fault a reviewer cannot see and (a) alone does not
+catch it.
+
 1. `useZoomGlide.ts` fix (exact text in 2) **plus** guard 1, one commit. Write the test first, watch it
-   fail on the unfixed tree, and record that red in the commit message.
+   fail on both arms above, and record those reds in the commit message.
 2. Guard 2 in `useCamera.test.ts`. Prove it red by reverting step 1 locally before committing.
 3. Guard 3 in `LifeBoard.test.tsx`, same red-first discipline.
 4. Correct `src/hooks/useReducedMotion.ts`'s `getSnapshot` comment: it nominates itself as "the first
    thing to look at" if the pan numbers move, and they did and it was **not** the cause — arm A measured
    49.82/50.00 against a 49.97/50.00 control. Record the measurement rather than deleting the note.
 5. `git rm ideas/todo/zoom-glide-regressed-the-pan-path.md`.
+
+**Changed-files manifest for this slice, as a ruling** — it is wider than the prompt's scope, and the
+manifest is what routes findings at adjudication: `src/hooks/useZoomGlide.ts`,
+`src/hooks/useZoomGlide.test.ts`, `src/hooks/useCamera.test.ts`, `src/components/LifeBoard.test.tsx`
+(guard 3), `src/hooks/useReducedMotion.ts` (comment only, step 4), and the deleted idea file.
+`src/hooks/useCamera.ts` itself is **not** edited — the fix is entirely in `useZoomGlide.ts`.
 
 `architect`'s REVIEW pass owns the `CLAUDE.md` follow-up: one sentence on the `useZoomGlide.ts` bullet
 recording that the controller's identity stability is a contract with a named guard, and that the
