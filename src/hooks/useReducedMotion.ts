@@ -24,10 +24,18 @@ function subscribe(onStoreChange: () => void): () => void {
 // jsdom, where matchMedia is undefined, taking down every test that
 // transitively imports this file rather than only the ones that render it; a
 // lazily-memoised module-level `let` would be global mutable state surviving
-// across tests, defeating stubMatchMedia's per-test overrides. NOT MEASURED
-// on the perf harness -- test:perf is orchestrator-owned and this slice may
-// not run it -- so if a post-merge run shows the pan-default-* or
-// pan-min-zoom-* per-move numbers moving, this is the first thing to look at.
+// across tests, defeating stubMatchMedia's per-test overrides.
+//
+// MEASURED AND RULED OUT (zoom-glide-regressed-the-pan-path, architect's
+// DESIGN pass): this comment used to nominate the per-call allocation as
+// "the first thing to look at" if the pan-min-zoom-* numbers moved. They did
+// (~+8ms at 1280x900), and this was checked first and is NOT the cause -- a
+// throwaway arm returning a constant from getSnapshot (no MediaQueryList
+// allocation at all) scored 49.82/50.00 against a 49.97/50.00 control, i.e.
+// no movement. The actual cause was useZoomGlide.ts returning a
+// non-memoizable controller every render, fixed in that same slice -- see
+// this hook's one consumer, useZoomGlide.ts, for the ref that now reads this
+// hook's value instead of closing over it.
 function getSnapshot(): boolean {
   return window.matchMedia(QUERY).matches
 }
