@@ -21,6 +21,29 @@ exposing `useSyncExternalStore` pairs, with `getBoundsSnapshot()` keeping object
 box has not moved — which is precisely what stops the scrollbars re-rendering every tick. `App.tsx`
 holds the store as a stable handle and passes it down as an opaque thing rather than as a value.
 
+## Identity stability is NOT a motivation for this — ruled, with numbers
+
+Added by `stable-hook-identities`' DESIGN pass, because this is the wrong file to reach for after
+reading about hook-returned functions capturing `camera` in their closures. The proposal that arrives
+here naturally — _move the camera into a store so `getCameraState()` can be called inside an action
+instead of closed over, which makes the action identity-stable_ — was evaluated and **declined as the
+vehicle for that**, on measurement rather than taste:
+
+- A camera store fixes **2 of the 5** hook-returned functions that actually churn
+  (`useCamera`'s `zoomInCentered`/`zoomOutCentered`).
+- It partially addresses **2 more** (`useGridFocus`'s `moveFocus`/`jumpToEdge` also churn on `focus`,
+  which no camera store touches) — and those two were ruled exempt anyway, their churn reaching only a
+  DOM `onKeyDown` prop with no memoized subtree behind it.
+- It does **nothing** for `usePatternPlacement`'s `stampArmedPattern`, which churns on `placement` —
+  and that is the **only** churn site with measured component-level propagation (it re-rendered every
+  mounted cell on every pointer move while a pattern was armed).
+
+A synced ref, with two existing precedents in `src/hooks/`, delivers the whole of the identity win for
+about six lines. So identity stability is **not** a reason to do this slice, and this slice's case
+rests entirely on the re-render-narrowing argument below — which its own analysis scores at one clear
+winner out of seven consumers. Read that honestly rather than topping it up with a benefit that
+belongs elsewhere.
+
 ## Three things that make this narrower than it first looks
 
 Recorded up front because each one shrinks the expected win, and a slice run on the unqualified
@@ -93,9 +116,11 @@ components, so it trips several design-pass triggers. **Expect `architect` DESIG
 
 ## Open questions
 
-- **Does this subsume, conflict with, or depend on `zoom-glide-regressed-the-pan-path`?** That one is an
-  open, reproducible ~14% pan regression whose cause is unmeasured. Both touch the camera's hot path;
-  landing this first would make that regression much harder to attribute.
+- ~~**Does this subsume, conflict with, or depend on `zoom-glide-regressed-the-pan-path`?**~~
+  **Resolved.** That slice has landed: the cause was `useZoomGlide` returning a fresh controller object
+  every render, which `commit()` closed over, which broke every `useCamera` action's identity. It was
+  fixed with synced refs, not with a store — so this candidate neither subsumes nor depends on it, and
+  the attribution hazard is gone. See `stable-hook-identities` for the follow-on ruling.
 - If the ruler is the only real winner, is the right slice **much smaller** — give `GridRuler` a
   memoized projection of the camera it actually depends on, and leave the other six alone? That needs
   no store at all.
