@@ -258,3 +258,144 @@ exemption applies** and stage 4 runs in full.
   into a store partly on re-render grounds. **This finding changes its arithmetic** — some of the
   re-rendering it would attribute to prop-drilling is this bug, and should be measured again after this
   lands rather than before.
+
+## DESIGN RULING (architect, 2026-09-04) — the fix is ratified, and the stated CAUSE is CORRECTED
+
+Everything below was measured in this worktree with throwaway probes (all reverted; tree clean). Read
+this section as superseding "CAUSE FOUND" above wherever the two disagree.
+
+### 1. What the identity churn actually costs — the mounted-cell claim is REFUTED
+
+"CAUSE FOUND" says the churn makes React Compiler's memoization bail so **every mounted cell
+re-renders**. Measured at the `LifeBoard` level with `vi.mock('./Cell', { spy: true })` /
+`vi.mock('./GridCells', { spy: true })`, 400 mounted cells, a 6-frame paced drag pan (each `raf.advance`
+wrapped in `act`, without which every count is wrong — batching hides the renders):
+
+| arm                      | Cell renders per pan frame | GridCells renders | distinct `onPan` identities across 16 Grid renders | `wheel` listener registrations during the pan |
+| ------------------------ | -------------------------- | ----------------- | -------------------------------------------------- | --------------------------------------------- |
+| control (current `main`) | `[0,400,400,0,400,0]`      | `[0,1,1,0,1,0]`   | **7**                                              | **6**                                         |
+| fixed (the change below) | `[0,400,400,0,400,0]`      | `[0,1,1,0,1,0]`   | **1**                                              | **0**                                         |
+
+**Cell and GridCells render counts are byte-identical in both arms.** Those renders are driven by the
+tile-range rebuild, not by handler identity: `GridCells`' props are `cells`, `anchorX/Y`, `cellSize`,
+`onActivateCell` and `focus`, and none of them is derived from `panByPixels`/`applyWheel`. The
+scenario's own numbers say the same thing independently — `perf/pan.perf.spec.ts` pans `400px` per
+move, which at `MIN_CELL_SIZE = 8` is 50 cells, far past `EVICT_LAG_TILES`, so `nextTileRange` rebuilds
+on **every** move in **both** trees and every mounted cell re-renders in both regardless.
+
+**What does differ, measured: the non-passive `wheel` listener on `#grid-content` is removed and
+re-added on every camera commit.** `useWheelInput`'s effect is keyed `[ref, onWheelInput]`, and
+`onWheelInput` is `applyWheel` — 6 re-registrations over 6 pan frames in control, 0 after the fix.
+`useInitialCentering`'s layout effect (`[size, onFirstMeasure]`) re-runs per render too, but its
+`hasCenteredRef` latch makes the body a no-op and it touches no DOM; those two are the only effects
+in `src/hooks/` keyed on a churning callback.
+
+**Whether that explains the ~8ms is a HYPOTHESIS this pass cannot test.** jsdom has no compositor.
+The plausible browser-side mechanism is that adding/removing a blocking (non-passive) wheel handler
+forces Chromium to recompute the wheel/scroll-blocking event-handler region for the layer, whose cost
+scales with the subtree — which fits every surviving observation (invisible on the light pan
+scenarios, ~8ms on the ~19.3k-button min-zoom one, untouched by arms A and B). **It is not
+established.** Acceptance for this slice is therefore identity stability plus its guard; if the
+orchestrator's post-`hardener` `pan-min-zoom-50k` @1280 run does not come back toward ~42ms, that is a
+**new candidate**, not this slice failing — and the next arm to run is the one nobody has run: keep
+`zoomBy` working (so the scenario's own setup survives — see the invalid arm C above) and neutralise
+only `useWheelInput`'s re-registration.
+
+### 2. The ratified change — `src/hooks/useZoomGlide.ts`, and the exact text matters
+
+Read `prefersReducedMotion` through a ref updated in the hook's existing post-render effect, exactly as
+`onCamera` already is. Declaration order is **load-bearing** (see 3 below):
+
+```ts
+const prefersReducedMotion = useReducedMotion()
+const onCameraRef = useRef(onCamera)
+const prefersReducedMotionRef = useRef(prefersReducedMotion)
+useEffect(() => {
+  onCameraRef.current = onCamera
+  prefersReducedMotionRef.current = prefersReducedMotion
+})
+```
+
+and `zoomBy` calls `glideDurationMs(prefersReducedMotionRef.current)`. Keep the existing "Read via a
+ref, exactly as useRafCoalescedPan.ts reads onPan" comment attached to `onCameraRef`; add one sentence
+saying the reduced-motion ref exists so the returned controller closes over nothing that varies per
+render, which is what lets React Compiler memoize it.
+
+**No stale closure.** The ref is seeded from the first render's value and reassigned after every
+render, so `zoomBy` — only ever called from an event handler, i.e. after a commit — reads the current
+preference. `useZoomGlide.test.ts`'s existing **"reads prefers-reduced-motion at click time, not just
+at mount"** is the guard for this and passes unchanged (all 143 `dom`-project hook tests, and the full
+`npm test` at 898, were run green against the fix).
+
+**Rulings on the two questions the sketch left open.**
+
+- **Keep the effect's missing dependency array.** It must run after every render so neither ref lags,
+  which is the reasoning `useRafCoalescedPan.ts`'s own comment already records; a dep list would add
+  mutants and buy two skipped assignments.
+- **`zoomInCentered`/`zoomOutCentered` survive unchanged, and their `glide.zoomBy` bypass of `commit()`
+  is untouched.** Measured: post-fix all seven actions are stable across a no-op re-render, and five
+  stay stable across a camera change while those two churn — they capture `camera` (pre-slice they did
+  not; they delegated through `zoomAtPoint`'s functional `setCamera`). Deliberately not addressed: they
+  reach only `GridToolbar`, through inline arrows in `LifeBoard`'s `renderOverlays`, which is rebuilt on
+  every camera change anyway, so nothing observes the difference. Restoring parity would mean a second
+  latest-value ref (for `camera`) inside `useCamera`, i.e. more staleness machinery around the delicate
+  documented glide-chaining semantics, for zero measured benefit.
+
+### 3. The fault fixture, and why it is written down: a plausible fix that fixes NOTHING passes everything
+
+Placing the ref update in an effect written **above** the `const prefersReducedMotion = useReducedMotion()`
+declaration compiles, type-checks, and passes **all 143 hook tests** — and React Compiler then does not
+memoize the controller at all, so every identity still churns and the change is inert. Measured
+side-by-side against the correctly-ordered form (`CHURN` vs `STABLE`). **Every guard below must be
+observed red against the unfixed tree before it is trusted**, and this misordered shape is the second
+fault to check them against, because it is the one a reviewer cannot see.
+
+### 4. Where the guard lives, and the constraint that would otherwise break `hardener`
+
+**Every identity/memoization assertion must carry `it.skipIf(underStryker)` plus an unskipped
+non-vacuous companion**, following `src/components/Grid.test.tsx`'s "tile pan-stability" pair verbatim
+(`const underStryker = '__stryker__' in globalThis`). Stryker's per-expression instrumentation defeats
+React Compiler memoization, so an ungated identity assertion reds the **dry run** and
+`npm run test:mutation` never starts.
+
+1. **`src/hooks/useZoomGlide.test.ts`** — `skipIf`: the returned controller keeps its identity across a
+   re-render. Its non-vacuity companion already exists and needs nothing new: the reduced-motion
+   click-time test, which fails if the ref is never updated.
+2. **`src/hooks/useCamera.test.ts`** (a new `describe`, not a new file — this file already owns
+   `useCamera`'s contract and its five-row cancel table) — `skipIf`: (a) the **whole returned surface**
+   keeps identity across a no-op re-render; (b) the five `commit()`-routed writers (`panByPixels`,
+   `zoomAtPoint`, `applyWheel`, `centerView`, `panByScrollbarDrag`) keep identity across a pan, which is
+   the hot path. Do **not** pin `zoomInCentered`/`zoomOutCentered` as churning — exclude them with a
+   comment pointing at 2 above. Unskipped companion: `camera`'s own identity **does** change across that
+   same pan, which holds with or without memoization and proves the probe can see a change.
+3. **`src/components/LifeBoard.test.tsx`** — `skipIf`: no `wheel` listener is registered during a
+   multi-frame drag pan, via `vi.spyOn(HTMLElement.prototype, 'addEventListener')` (vitest restores it;
+   do not hand-patch the prototype). Unskipped companion off the same spy: at least one `wheel`
+   registration is seen at mount, which proves the instrument observes the thing at all. This is the
+   only guard that states the **cost** rather than the cause, and it is the one that survives the churn
+   arriving later through some other prop. If the spy proves to leak across tests, the two hook-level
+   guards are the required minimum and this one may be dropped — say so in the handoff if it is.
+
+**No ast-grep rule.** Identity stability is a runtime property of compiled output; ast-grep matches
+syntax within one file and cannot see whether a captured value varies per render. The nearest
+syntactic proxy ("a hook returning an object literal must not close over a non-ref local") would fire
+on correct code all over this repo. The guard is the test.
+
+**Do not touch `useWheelInput.ts` this slice.** A consumer-side ref there would also stop the
+re-registration, and landing both changes at once destroys the perf run's ability to test which one
+mattered.
+
+### 5. Ordering — each commit leaves the suite green
+
+1. `useZoomGlide.ts` fix (exact text in 2) **plus** guard 1, one commit. Write the test first, watch it
+   fail on the unfixed tree, and record that red in the commit message.
+2. Guard 2 in `useCamera.test.ts`. Prove it red by reverting step 1 locally before committing.
+3. Guard 3 in `LifeBoard.test.tsx`, same red-first discipline.
+4. Correct `src/hooks/useReducedMotion.ts`'s `getSnapshot` comment: it nominates itself as "the first
+   thing to look at" if the pan numbers move, and they did and it was **not** the cause — arm A measured
+   49.82/50.00 against a 49.97/50.00 control. Record the measurement rather than deleting the note.
+5. `git rm ideas/todo/zoom-glide-regressed-the-pan-path.md`.
+
+`architect`'s REVIEW pass owns the `CLAUDE.md` follow-up: one sentence on the `useZoomGlide.ts` bullet
+recording that the controller's identity stability is a contract with a named guard, and that the
+perf attribution stayed open.
