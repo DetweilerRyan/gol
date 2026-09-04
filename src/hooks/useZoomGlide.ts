@@ -50,15 +50,24 @@ interface GlideState {
 export function useZoomGlide(onCamera: (next: Camera) => void): ZoomGlideController {
   const stateRef = useRef<GlideState | null>(null)
   const rafIdRef = useRef<number | null>(null)
+  const prefersReducedMotion = useReducedMotion()
   // Read via a ref, exactly as useRafCoalescedPan.ts reads onPan -- the frame
   // callback scheduled by one render must call whichever onCamera is current
   // by the time it fires, not the one closed over when it was scheduled.
   const onCameraRef = useRef(onCamera)
+  // Same reasoning, for a different reason: zoomBy reads this to choose
+  // glideDurationMs, and reading it through a ref rather than closing over
+  // the render-local value is what lets the returned controller close over
+  // nothing that varies per render -- which is what lets React Compiler
+  // memoize it, restoring the identity stability every useCamera action
+  // depends on (measured: pre-slice all seven of useCamera's actions were
+  // identity-stable; without this, none were -- see
+  // zoom-glide-regressed-the-pan-path's DESIGN ruling).
+  const prefersReducedMotionRef = useRef(prefersReducedMotion)
   useEffect(() => {
     onCameraRef.current = onCamera
+    prefersReducedMotionRef.current = prefersReducedMotion
   })
-
-  const prefersReducedMotion = useReducedMotion()
 
   // Applies the glide's value at nowMs, then clears the ref if that lands it
   // complete -- so a later, unrelated zoomBy call starts from a clean slate
@@ -105,7 +114,7 @@ export function useZoomGlide(onCamera: (next: Camera) => void): ZoomGlideControl
     }
 
     const nowMs = performance.now()
-    const durationMs = glideDurationMs(prefersReducedMotion)
+    const durationMs = glideDurationMs(prefersReducedMotionRef.current)
     const prevGlide = stateRef.current?.glide ?? null
     const nextGlide = advanceZoomTarget(prevGlide, camera.cellSize, factor, nowMs, durationMs)
 

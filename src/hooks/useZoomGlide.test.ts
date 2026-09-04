@@ -20,6 +20,14 @@ const camera: Camera = { offsetX: 0, offsetY: 0, cellSize: DEFAULT_CELL_SIZE }
 const ANCHOR_X = 640
 const ANCHOR_Y = 450
 
+// Gates the identity-stability test below, on Grid.test.tsx's precedent:
+// Stryker's per-expression instrumentation defeats React Compiler's
+// memoization, so an ungated identity assertion reds the dry run and
+// npm run test:mutation never starts. globalThis.__stryker__ is set at
+// module load by any instrumented file's own bootstrap, before test
+// collection.
+const underStryker = '__stryker__' in globalThis
+
 let raf: AnimationFrameController
 let matchMedia: MatchMediaController
 
@@ -322,6 +330,36 @@ describe('unmount', () => {
 
     expect(() => unmount()).not.toThrow()
     expect(onCamera).not.toHaveBeenCalled()
+  })
+})
+
+describe('controller identity', () => {
+  // Skipped under Stryker for the same reason Grid.test.tsx's "tile
+  // pan-stability" pair does: Stryker's instrumentation defeats React
+  // Compiler's memoization, so a mutated build returns a fresh controller on
+  // every render and this assertion fails in Stryker's dry run, before a
+  // single mutant executes. The non-vacuous companion is the existing
+  // "reads prefers-reduced-motion at click time, not just at mount" test
+  // just above -- it fails if prefersReducedMotionRef is never reassigned,
+  // so it stays unskipped and still exercises the ref-read path under
+  // mutation testing regardless of whether memoization survives
+  // instrumentation.
+  //
+  // This is the regression zoom-glide-regressed-the-pan-path's own DESIGN
+  // ruling measured directly: pre-slice, useZoomGlide didn't exist; post-fix,
+  // the controller returned across a no-op re-render must be the SAME
+  // object, not merely one with the same shape -- a fresh literal every
+  // render is what let commit()'s closure over it churn all seven of
+  // useCamera's actions (see useCamera.test.ts's "returned action identity"
+  // describe for the consumer-side half of this).
+  it.skipIf(underStryker)('keeps its identity across a re-render', () => {
+    const onCamera = vi.fn<(next: Camera) => void>()
+    const { result, rerender } = renderHook(() => useZoomGlide(onCamera))
+
+    const first = result.current
+    rerender()
+
+    expect(result.current).toBe(first)
   })
 })
 
