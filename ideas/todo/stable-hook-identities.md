@@ -64,10 +64,16 @@ Real `<LifeBoard>` tree, `vi.mock('./Cell', { spy: true })`, counting `Cell` ren
 | Hover, pattern **armed**                                    | **5** — one per pointer move, per mounted cell |
 | Hover, armed, with `stampArmedPattern` stabilised via a ref | **0**                                          |
 
+**The cost scales with the mounted-cell count — measured, not projected.** A second fixture (80x80px
+viewport, 5 live cells, so 5 cells mounted) over 4 pointer moves produced **20** `Cell` renders: a
+ratio of exactly 5, the mounted count. So the per-move cost is one render per mounted cell, and the
+one-cell fixture above was not a special case. In the real app, aiming a pattern over a populated
+board re-renders the whole mounted set on every pointer move.
+
 The third row is a **counterfactual, not an inference**: causation is established by making the single
 suspected cause go away and watching the effect go away. `stampArmedPattern`'s identity churn is the
-whole cause. In this fixture the cost is 5 renders; in the real app it is one render per mounted cell
-per pointer move for the entire duration of aiming a pattern.
+whole cause. In this fixture the cost is 5 renders; scaled (see below) it is one render per mounted
+cell per pointer move, for the entire duration of aiming a pattern.
 
 **All 64 tests in `usePatternPlacement.test.ts` + `LifeBoard.test.tsx` + `Grid.test.tsx` pass both with
 and without the fix.** That is the finding that matters: nothing in the suite can see this, in either
@@ -110,7 +116,11 @@ Applied per hook:
 - **Must hold, currently broken — fix in this slice.** `useCamera` (all 7, via `cameraRef`) and
   `usePatternPlacement` (all 5, via `placementRef` for `stampArmedPattern`).
 - **Already hold, no work.** `useZoomGlide`, `useRafCoalescedPan` (both are the ref precedent this
-  slice copies), `useGridFocus.setFocus`, and `useGridPointerGestures`' four handler members.
+  slice copies), `useGridFocus.setFocus`. (`useGridPointerGestures`' four handler members hold against _their own_
+  dependencies, which is what was measured — but in the live `Grid` the `onTap`/`onHover` callbacks
+  capture `camera`, so `onPointerMove`/`onPointerUp` do churn during a pan. They belong to the
+  exempt-by-propagation class immediately below, not to this one: the churn lands on `#grid-content`'s
+  DOM props with no memoized subtree behind it.)
 - **Deliberately exempt, with the measurement as the reason.** `useGridFocus.moveFocus`/`jumpToEdge`
   churn on camera and focus, but reach only `Grid`'s local `handleKeyDown` and from there the
   `#grid-content` div's `onKeyDown` prop — a DOM property assignment, with **no memoized subtree
