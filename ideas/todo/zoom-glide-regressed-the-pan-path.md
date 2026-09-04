@@ -201,36 +201,60 @@ unexplained 8ms two slices later.
 
 ## Sketch
 
-**Measure the cause before changing anything.** The cheapest discriminating experiment: build with
-`useReducedMotion` replaced by a constant `false` and re-run `pan-min-zoom-50k` at both viewports.
-If the regression vanishes, the allocation is the cause and the fix is a caching strategy that
-survives `stubMatchMedia` — `architect`'s two rejected options are the starting point, not the
-end of the list. If it does not vanish, the cause is elsewhere in what `useCamera` gained: a
-`useZoomGlide` call, a ref, and a `commit()` wrapper on five writers.
+The cause is known, so this is no longer an investigation. **Restore identity stability to what
+`useCamera` returns**, so `Grid`'s props stop differing on every render and React Compiler's
+memoization holds again.
 
-Note the harness can now see the mechanism directly where it could not before
-`slice/restore-perf-harness`: `reports/perf/latest.json`'s `metricsDeltaPerMoveEvent` carries
-`ScriptDuration`, `RecalcStyleDuration`, `LayoutDuration` and the GC-adjacent counters per
-scenario. Read those before reasoning about frame p95 — and read `Script + Recalc + Layout` rather
-than `TaskDuration`, whose `TaskDuration/wallClock` ratio the report's own header records at
-~0.30.
+The constraint that makes it a design question rather than a one-liner: a controller frozen in a
+`useRef` on first render captures `prefersReducedMotion` in a **stale closure**, and `zoomBy` reads it
+to choose `glideDurationMs`. The hook already solves that exact shape for its `onCamera` callback
+(`onCameraRef`, updated in an effect), so a correct pattern exists in the file — whether to generalise
+it, restructure how the controller is assembled, or something else, is `architect`'s to rule.
+
+Worth resolving in the same pass: whether `useZoomGlide`'s `useEffect` with **no dependency array**
+(it runs after every render) is load-bearing or can take a dependency list.
+
+**Guard it with a test, and put the test where a gate can see it.** The three-line `renderHook`
+identity probe that found this would have failed the moment the churn was introduced. Identity
+stability is invisible to every current gate — mutation testing, `crap4ts` and the e2e layer all pass
+happily while every mounted cell re-renders — so without a test this regresses again silently. A
+jsdom test under `src/hooks/` is the right home; **not** a `*.browser.test.ts`, which `vite.config.ts`
+excludes from both `crap4ts` and Stryker.
+
+## Verification
+
+**Perf is orchestrator-owned — no role runs `npm run test:perf`.** The acceptance measurement is
+`pan-min-zoom-50k` at **1280×900**, which must return from ~50ms toward the pre-slice ~42ms. Use 1280
+and not 1920: measured across seven runs, 1280 is stable to ±0.2ms while 1920 varies by ~4ms and
+cannot resolve an 8ms effect. Reference figures, all measured:
+
+- pre-slice `6be96a5`: 42.70 / 41.81 / 41.91
+- current `main`: 49.97 / 50.00 / 49.91 / 50.00
+
+**A perf arm must not stub anything a scenario's own setup depends on**, and a perf number must never
+be read without confirming the run that produced it exited 0 — `pan-min-zoom-50k` reaches min zoom
+through the toolbar, so stubbing `zoomBy` makes the scenario fail, `perf-report` then re-renders the
+_previous_ run's numbers, and the result reads exactly like a clean null. That happened here.
 
 ## Touches
 
-Likely `src/hooks/useReducedMotion.ts` and `src/hooks/useCamera.ts`. **`perf/` is
-orchestrator-owned** — no role runs `npm run test:perf`, so whoever takes this needs the
-measurement handed to them or the loop stays open.
+`src/hooks/useZoomGlide.ts`, `src/hooks/useCamera.ts`, and a new identity test under `src/hooks/`.
 
-**Expect the mutation and CRAP figures to be unmoved** — this is a per-render allocation question,
-not a logic change. If they move, the fix did more than intended.
+No contract change and no user-visible behaviour change, so **`product` SPECIFY has nothing to write** —
+the shape is `architect` DESIGN → `coder` → `cleaner` → `architect` REVIEW → `hardener`, with `product`
+VERIFY at the end confirming nothing moved. The diff will be `src/`-only, so **no mutation-invariant
+exemption applies** and stage 4 runs in full.
 
 ## Open questions
 
-- **Is ~14% on the heaviest pan scenario worth a slice at all?** `pan-min-zoom-50k` at 66.70ms was
-  already far outside the 16.7ms frame budget before this slice (58.45ms), and CLAUDE.md records
-  that criterion as _missed rather than waived_ at min zoom. This makes a known-bad case ~14%
-  worse; it does not create a new one. A defensible answer is "record it and leave it".
-- Does the same cost land on **drag-pan in the app**, or only on the harness's synthetic pace?
-  `panPaced` drives moves at a fixed cadence; a real drag is rAF-coalesced against real input.
-- If the allocation is the cause, is there a third caching option neither rejected one covers —
-  e.g. lazily memoising on first call inside the hook's own module rather than at module scope?
+- **Should the identity guard be broader than this hook?** The same failure — a churning identity in
+  one hook poisoning every action a composition root passes down — could recur anywhere. A general test
+  over `useCamera`'s returned surface catches it wherever it originates, which is what the probe
+  actually did.
+- Does `zoomInCentered`/`zoomOutCentered` calling `glide.zoomBy` directly (deliberately bypassing
+  `commit()`) survive the fix unchanged? That bypass is load-bearing — `commit()` cancels the glide, so
+  routing them through it would cancel the glide they are starting.
+- Interaction with [[camera-as-a-store-instead-of-a-prop]]: that candidate proposes moving the camera
+  into a store partly on re-render grounds. **This finding changes its arithmetic** — some of the
+  re-rendering it would attribute to prop-drilling is this bug, and should be measured again after this
+  lands rather than before.
