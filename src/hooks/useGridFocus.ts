@@ -122,6 +122,21 @@ export function useGridFocus(
     if (dxPixels !== 0 || dyPixels !== 0) onPan(dxPixels, dyPixels)
   }
 
+  // DELIBERATELY EXEMPT from the call-time-read contract useCamera.ts and
+  // usePatternPlacement.ts follow (see CLAUDE.md's State flow section) --
+  // do not "fix" these two with synced refs. Both capture render-varying
+  // state (`focus`, and `camera`/`onScreen` through requestFocus), so both
+  // churn identity on every camera or focus change; that was measured
+  // (architect's stable-hook-identities DESIGN pass) and ruled acceptable
+  // because of where the churn LANDS, not because it doesn't happen: they
+  // reach only Grid's local handleKeyDown and from there the
+  // #grid-content div's onKeyDown prop -- a DOM property assignment with no
+  // memoized subtree behind it, so nothing re-renders. Stabilising them
+  // costs three synced refs plus a call-time onScreen recompute to buy
+  // nothing measurable. Revisit only if moveFocus or jumpToEdge ever
+  // becomes a prop of a memoized child, which is the condition that gives
+  // the churn somewhere to propagate. setFocus below needs no exemption --
+  // it closes over nothing that varies per render.
   return {
     focus,
     moveFocus: (direction) => requestFocus(stepFocus(focus, direction)),
