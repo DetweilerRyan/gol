@@ -13,6 +13,14 @@ import { useCamera } from './useCamera'
 
 const initialCamera = { offsetX: 0, offsetY: 0, cellSize: DEFAULT_CELL_SIZE }
 
+// Gates the identity-stability describe below, on Grid.test.tsx's and
+// useZoomGlide.test.ts's precedent: Stryker's per-expression instrumentation
+// defeats React Compiler's memoization, so an ungated identity assertion
+// reds the dry run and npm run test:mutation never starts. globalThis.__stryker__
+// is set at module load by any instrumented file's own bootstrap, before
+// test collection.
+const underStryker = '__stryker__' in globalThis
+
 // useCamera composes useZoomGlide, which composes useReducedMotion --
 // window.matchMedia is undefined in this repo's jsdom project (see
 // useReducedMotion.ts's own comment), so every test in this file needs the
@@ -143,6 +151,70 @@ describe('useCamera', () => {
       offsetX: -800 / 2 / DEFAULT_CELL_SIZE,
       offsetY: -600 / 2 / DEFAULT_CELL_SIZE,
     })
+  })
+})
+
+// zoom-glide-regressed-the-pan-path: useZoomGlide used to return a fresh
+// controller object every render, which commit() closed over, which made
+// every one of useCamera's returned actions churn identity on every render
+// -- which in turn made Grid's props differ on every render and defeated its
+// own memoization (measured: every mounted Cell re-rendered on every pan
+// frame at min zoom). See useZoomGlide.test.ts's "controller identity"
+// describe for the producer-side half of this fix.
+describe('returned action identity', () => {
+  // Skipped under Stryker for the same reason useZoomGlide.test.ts's
+  // "controller identity" test is: Stryker's instrumentation defeats React
+  // Compiler's memoization, so a mutated build returns a fresh action set on
+  // every render and this assertion fails in Stryker's dry run, before a
+  // single mutant executes. The unskipped companion at the end of this
+  // describe proves the probe can see a real change -- camera's own identity
+  // DOES change across a pan -- which holds with or without memoization, so
+  // it stays unskipped and still exercises this describe's setup under
+  // mutation testing.
+  it.skipIf(underStryker)('the whole returned surface keeps identity across a no-op re-render', () => {
+    const { result, rerender } = renderHook(() => useCamera())
+    const first = result.current
+
+    rerender()
+
+    expect(result.current.panByPixels).toBe(first.panByPixels)
+    expect(result.current.zoomAtPoint).toBe(first.zoomAtPoint)
+    expect(result.current.applyWheel).toBe(first.applyWheel)
+    expect(result.current.centerView).toBe(first.centerView)
+    expect(result.current.panByScrollbarDrag).toBe(first.panByScrollbarDrag)
+    expect(result.current.zoomInCentered).toBe(first.zoomInCentered)
+    expect(result.current.zoomOutCentered).toBe(first.zoomOutCentered)
+  })
+
+  // The five commit()-routed writers, across a PAN -- the hot path this
+  // slice's perf finding is about (Grid pans through panByPixels many times a
+  // second during a drag). zoomInCentered/zoomOutCentered are deliberately
+  // NOT asserted stable here: they capture `camera` directly rather than
+  // going through commit()'s functional setCamera update (see useCamera.ts's
+  // own comment on why that bypass of commit() is load-bearing), so they
+  // legitimately churn whenever camera changes, with or without this slice's
+  // fix -- pinning them as stable would be asserting something architect's
+  // DESIGN ruling explicitly measured false.
+  it.skipIf(underStryker)('the five commit()-routed writers keep identity across a pan', () => {
+    const { result } = renderHook(() => useCamera())
+    const before = result.current
+
+    act(() => result.current.panByPixels(10, 10))
+
+    expect(result.current.panByPixels).toBe(before.panByPixels)
+    expect(result.current.zoomAtPoint).toBe(before.zoomAtPoint)
+    expect(result.current.applyWheel).toBe(before.applyWheel)
+    expect(result.current.centerView).toBe(before.centerView)
+    expect(result.current.panByScrollbarDrag).toBe(before.panByScrollbarDrag)
+  })
+
+  it('camera itself does change identity across a pan -- the guards above are not vacuous', () => {
+    const { result } = renderHook(() => useCamera())
+    const before = result.current.camera
+
+    act(() => result.current.panByPixels(10, 10))
+
+    expect(result.current.camera).not.toBe(before)
   })
 })
 
