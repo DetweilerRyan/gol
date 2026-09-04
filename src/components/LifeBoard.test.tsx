@@ -1,6 +1,7 @@
 import { act, fireEvent, render, screen, waitFor } from '@testing-library/react'
-import { beforeEach, describe, expect, it, vi } from 'vitest'
+import { afterEach, beforeEach, describe, expect, it, vi, type MockInstance } from 'vitest'
 import { centeredCamera, screenToWorld } from '../camera'
+import { DRAG_THRESHOLD_PX } from '../dragGesture'
 import { createLiveCellStore } from '../liveCellStore'
 import { PATTERNS, type Pattern } from '../patternLibrary'
 import {
@@ -26,6 +27,14 @@ import LifeBoard from './LifeBoard'
 // would otherwise be e2e-only. Grid's own composition (pointer surface, DOM
 // layering, measurement) is Grid.test.tsx's job -- this file stays
 // deliberately small.
+// Gates the wheel-registration guard below, on Grid.test.tsx's/
+// useCamera.test.ts's/useZoomGlide.test.ts's precedent: Stryker's
+// per-expression instrumentation defeats React Compiler's memoization, so an
+// ungated identity assertion reds the dry run and npm run test:mutation
+// never starts. globalThis.__stryker__ is set at module load by any
+// instrumented file's own bootstrap, before test collection.
+const underStryker = '__stryker__' in globalThis
+
 let resizeObserver: ResizeObserverController
 
 // Small on purpose -- this file only exists to recover two wiring behaviors
@@ -210,5 +219,84 @@ describe('toolbar zoom glide reaches the on-screen badge', () => {
     // be pending, let alone produce an intermediate reading.
     expect(raf.pendingCount()).toBe(0)
     expect(zoomBadgeText()).toBe('125%')
+  })
+})
+
+// zoom-glide-regressed-the-pan-path: the cost this slice's identity fix
+// actually removes -- see useZoomGlide.test.ts's "controller identity" and
+// useCamera.test.ts's "returned action identity" for the identity guards
+// themselves. #grid-content's non-passive wheel listener (useWheelInput.ts)
+// is registered with effect deps [ref, onWheelInput], and pre-fix
+// onWheelInput (useCamera's applyWheel, routed through commit()) churned
+// identity on every render -- so it was torn down and re-added on every
+// camera commit during a drag pan (measured by architect's DESIGN pass: 6
+// re-registrations over a 6-frame paced pan, 0 after the fix). Whether that
+// explains the perf regression pan-min-zoom-50k measured is a hypothesis
+// jsdom cannot test (see the DESIGN ruling); this guard only pins the
+// registration count itself.
+describe('wheel listener registration during a pan', () => {
+  let raf: AnimationFrameController
+  // addEventListener is inherited from EventTarget.prototype rather than
+  // owned by HTMLElement.prototype, so the spy has to target the former to
+  // intercept #grid-content's own call -- verified by the non-vacuous
+  // companion below, which fails (proving the spy is live) if this is wrong.
+  // Nothing in vite.config.ts or src/test-setup.ts configures restoreMocks
+  // or clearMocks, so the spy is restored explicitly rather than relying on
+  // global cleanup.
+  let addEventListenerSpy: MockInstance<typeof EventTarget.prototype.addEventListener>
+
+  beforeEach(() => {
+    raf = stubAnimationFrames()
+    // In place before render(), so the mount registration -- the
+    // non-vacuity check's other half -- is captured too.
+    addEventListenerSpy = vi.spyOn(EventTarget.prototype, 'addEventListener')
+  })
+
+  afterEach(() => {
+    addEventListenerSpy.mockRestore()
+  })
+
+  function wheelRegistrationCount(): number {
+    return addEventListenerSpy.mock.calls.filter(([type]) => type === 'wheel').length
+  }
+
+  // Six pointermove/raf-advance pairs past the drag threshold, each one its
+  // own animation frame -- useRafCoalescedPan.ts coalesces multiple moves
+  // within one frame into a single onPan/commit, so this drives six distinct
+  // camera commits rather than one, matching the DESIGN measurement's
+  // 6-frame paced pan.
+  function driveMultiFramePan(grid: HTMLElement) {
+    fireEvent.pointerDown(grid, { pointerId: 1, clientX: 0, clientY: 0 })
+    for (let i = 1; i <= 6; i++) {
+      fireEvent.pointerMove(grid, { pointerId: 1, clientX: DRAG_THRESHOLD_PX + i * 20, clientY: 0 })
+      act(() => raf.advance(16))
+    }
+    fireEvent.pointerUp(grid, { pointerId: 1, clientX: DRAG_THRESHOLD_PX + 120, clientY: 0 })
+  }
+
+  it.skipIf(underStryker)('does not re-register the wheel listener during a multi-frame drag pan', () => {
+    const { container } = renderBoard()
+    triggerResize(WIDTH, HEIGHT)
+
+    const atMount = wheelRegistrationCount()
+    expect(atMount).toBeGreaterThanOrEqual(1)
+
+    driveMultiFramePan(gridContentEl(container))
+
+    // No further registrations beyond the one mount made -- a churning
+    // onWheelInput identity would add one per commit.
+    expect(wheelRegistrationCount()).toBe(atMount)
+  })
+
+  // Non-vacuous companion, unskipped: proves this instrument (the
+  // EventTarget.prototype spy) really can observe a wheel registration at
+  // all, independent of whether the pan re-registers one -- so the skip
+  // above doesn't remove all signal for this describe under mutation
+  // testing.
+  it('registers a wheel listener at mount, proving the instrument observes the thing at all', () => {
+    renderBoard()
+    triggerResize(WIDTH, HEIGHT)
+
+    expect(wheelRegistrationCount()).toBeGreaterThanOrEqual(1)
   })
 })
