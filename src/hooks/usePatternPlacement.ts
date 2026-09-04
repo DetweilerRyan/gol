@@ -55,6 +55,14 @@ export function usePatternPlacement(onPlacePattern: (pattern: Pattern, x: number
 
     window.addEventListener('keydown', handleKeyDown)
     return () => window.removeEventListener('keydown', handleKeyDown)
+    // EQUIVALENT MUTANT, measured -- the same one useZoomGlide.ts's own
+    // unmount effect documents, for the same reason. Stryker replaces `[]`
+    // with a single-element array literal and it survives: React compares
+    // deps by per-index Object.is, and a fresh same-valued literal is
+    // Object.is-equal to itself across renders exactly as `[]` is, so both
+    // schedule identically (mount/unmount only). Demonstrated (cleaner,
+    // stable-hook-identities): hand-applied, the whole unfiltered suite
+    // stays green.
   }, [])
 
   // Single-shot: stamping commits the armed pattern and disarms in the same

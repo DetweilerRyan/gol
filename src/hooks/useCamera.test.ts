@@ -124,13 +124,33 @@ describe('useCamera', () => {
   // the glide existed -- if it doesn't pass once the glide has settled, the
   // from-camera invariant has been implemented as frame-chaining rather
   // than a fixed starting camera, and that is the bug, not this assertion.
-  it('zoomInCentered zooms at the viewport center using ZOOM_FACTOR, once the glide settles', () => {
-    const { result } = renderHook(() => useCamera())
-    act(() => result.current.zoomInCentered(800, 600))
-    act(() => raf.advance(200))
+  //
+  // Parameterized over an optional pan first, rather than two near-identical
+  // bodies (dry4ts flagged the pair at 0.83 similarity): the (0, 0) row is
+  // the pre-existing "settles from the mount-time camera" case, and (120, 60)
+  // is what makes cameraRef.current (see useCamera.ts's own comment on it)
+  // load-bearing rather than incidental -- a live ref and one frozen at
+  // mount would disagree only once the camera has actually moved. A frozen
+  // ref would compute this glide's fromCamera from the pre-pan (0, 0)
+  // offset, snapping the view back toward the origin instead of zooming in
+  // place. (Measured, cleaner: emptying cameraRef's sync effect survives
+  // every other test in this file and every other file in the suite --
+  // the (120, 60) row is the one assertion that catches it.)
+  it.each([
+    { dx: 0, dy: 0 },
+    { dx: 120, dy: 60 },
+  ])(
+    'zoomInCentered zooms at the viewport center using ZOOM_FACTOR, once the glide settles, from a camera panned by ($dx, $dy)',
+    ({ dx, dy }) => {
+      const { result } = renderHook(() => useCamera())
+      act(() => result.current.panByPixels(dx, dy))
+      const fromCamera = result.current.camera
+      act(() => result.current.zoomInCentered(800, 600))
+      act(() => raf.advance(200))
 
-    expect(result.current.camera).toEqual(zoomCameraAtPoint(initialCamera, 800 / 2, 600 / 2, ZOOM_FACTOR))
-  })
+      expect(result.current.camera).toEqual(zoomCameraAtPoint(fromCamera, 800 / 2, 600 / 2, ZOOM_FACTOR))
+    },
+  )
 
   it('zoomOutCentered zooms at the viewport center using 1 / ZOOM_FACTOR, once the glide settles', () => {
     const { result } = renderHook(() => useCamera())
