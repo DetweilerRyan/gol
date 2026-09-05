@@ -13,9 +13,13 @@
 // SHARED STEPS ARE NOT REDEFINED HERE. The step registry is global across
 // features/steps/, so a step text may be defined exactly once and a second
 // definition is an ambiguous-step error rather than an override. This feature
-// borrows three from cell-life-and-death.ts -- "an empty grid", "a live cell
-// at (<x>, <y>)" and "the cell at (<x>, <y>) should be alive" -- which it
-// gets by writing the same text, and by defining nothing.
+// borrows five from cell-life-and-death.ts -- "an empty grid", "a live cell
+// at (<x>, <y>)", "I toggle the cell at (<x>, <y>)", "the cell at (<x>, <y>)
+// should be alive" and "the cell at (<x>, <y>) should be dead" -- which it
+// gets by writing the same text, and by defining nothing. (It read "three"
+// and named the first, second and fourth of those until this slice counted
+// them; the toggle and the dead clause had been borrowed since the scenarios
+// about what the NEXT click does were written.)
 //
 // HOW A SHAPE IS OBSERVED. Arming a pattern and moving the pointer over a
 // cell paints a preview of exactly the cells a stamp would bring to life,
@@ -34,7 +38,6 @@ import {
   openPatternModal,
   patternCategoryInLibrary,
   patternLibraryModal,
-  expectCellState,
   patternsButton,
   previewCellPositions,
   previewCells,
@@ -226,11 +229,14 @@ Given('I have armed the {string} pattern', async ({ page }, name: string) => {
 // reopening the library"; `re-audit-hand-written-e2e-residue` found that claim
 // was not residue in any of the four senses -- it is a stated product rule
 // about toggleLibrary, expressible as a scenario -- and restated it as this
-// feature's "Clicking Patterns while a pattern is armed cancels it rather than
-// reopening the library", which pins the library staying shut and the next
-// click being a plain single-cell toggle. So this line is still not the
-// coverage of toggleLibrary's cancel-from-placing branch and must not be read
-// as it; the scenario below is.
+// feature's PAIR of cancel scenarios: "Clicking Patterns while a pattern is
+// armed does not reopen the library" pins the library staying shut and the
+// preview going away, and "Cancelling with the Patterns control leaves the
+// next click a plain single-cell toggle" pins what the grid does afterwards.
+// Two scenarios rather than one because an observation has to sit between
+// the press and the click; the feature file's own comment records the
+// measurement. So this line is still not the coverage of toggleLibrary's
+// cancel-from-placing branch and must not be read as it; that pair is.
 //
 // IT IS KEPT FOR FAILURE LOCALIZATION. An implementation that opened the
 // library from `placing` instead reds here, naming the press whose branch is
@@ -264,10 +270,13 @@ When(
 )
 
 // PUTS THE POINTER OVER A CELL AND WAITS FOR THE PREVIEW TO ACTUALLY APPEAR.
-// That wait is load-bearing rather than defensive: the only Then this Given
-// leads to is "no pattern preview should be shown", which passes VACUOUSLY
-// against a preview that never rendered at all. Establishing the preview
-// exists here is what makes the later absence mean a cancel happened.
+// That wait is load-bearing rather than defensive, and for two distinct
+// reasons across the scenarios that use it. Where the Then is "no pattern
+// preview should be shown", the absence passes VACUOUSLY against a preview
+// that never rendered at all, so establishing the preview exists here is what
+// makes the later absence mean a cancel happened. Where the Then is about the
+// cell the next click toggles, the aim is what makes the press under test
+// cancel a LIVE placement rather than an idle one.
 Given('I am aiming it at the cell at \\({int}, {int}\\)', async ({ page }, x: number, y: number) => {
   await hoverCell(page, x, y)
   await expect(previewCells(page)).not.toHaveCount(0)
@@ -293,19 +302,4 @@ When('I click the Patterns control again', async ({ page }) => {
 // this wrong.
 Then('the pattern library should not be open', async ({ page }) => {
   await expect(patternLibraryModal(page)).toHaveCount(0)
-})
-
-// A Then THAT ACTS, and the shape is forced rather than chosen. Its scenario's
-// one When is the Patterns press -- .gherkin-lintrc's only-one-when allows no
-// second -- and what has to be observed after that press is what the NEXT
-// click does. Putting the click in the When instead makes the library clause
-// unfailable; the scenario's own comment records the measurement.
-//
-// Only the positive half is here. The two cells that must stay dead are named
-// in the Gherkin as ordinary "should be dead" clauses, so the Glider's shape
-// stays in the feature file where a reader can check it against the Examples
-// table above, rather than being reconstructed from offsets in this module.
-Then('clicking the cell at \\({int}, {int}\\) should bring it to life', async ({ page }, x, y) => {
-  await clickCell(page, x, y)
-  await expectCellState(page, x, y, 'alive')
 })

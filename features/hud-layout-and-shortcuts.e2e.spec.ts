@@ -62,10 +62,23 @@ import { CENTER, clickGridAt, expectCellState, previewCells, selectPattern } fro
 //     Reinstating a global Enter listener in GenerationHud reds 5 tests, of
 //     which those two scenarios and the clause above are the three that remain.
 //   - The Patterns control cancelling an armed pattern rather than reopening
-//     the library is pattern-library.feature's "Clicking Patterns while a
-//     pattern is armed cancels it rather than reopening the library". Removing
-//     toggleLibrary's cancel-from-placing branch reds 3 tests, that scenario
-//     among them, at exactly the clause it exists for.
+//     the library is pattern-library.feature's PAIR of cancel scenarios,
+//     "Clicking Patterns while a pattern is armed does not reopen the library"
+//     and "Cancelling with the Patterns control leaves the next click a plain
+//     single-cell toggle". Removing toggleLibrary's cancel-from-placing branch
+//     reds 3 tests IN THE PLAYWRIGHT RUN: the first scenario at its library
+//     clause, the second at its alive clause, and "Arming a second pattern
+//     replaces the first" at the guard features/steps/pattern-library.ts keeps
+//     for exactly that localization. Measured by `architect` on this shape --
+//     `product` cannot take it, the probe being an edit to src/.
+//
+//     THE COUNTING UNIVERSE IS NAMED BECAUSE THIS FIGURE HAS GONE STALE TWICE
+//     INSIDE ONE SLICE. It read 3 against the tree it was written on, fell to
+//     2 when the hand-written cancel test was deleted without re-measuring,
+//     and is 3 again only because the scenario pair replaced the single
+//     scenario in the same commit that states it. Vitest is deliberately
+//     outside the count -- src/components/LifeBoard.test.tsx covers this path
+//     too, so an unnamed universe is what let the figure drift.
 //
 // WHAT REMAINS, and the claim each test uniquely holds -- stated per test
 // below as well, since a file-level list is not what licenses a test to exist,
@@ -124,13 +137,14 @@ test('the HUD panel renders the title, next-generation button, and generation co
 // positions -- rendered pixel geometry, which no scenario may name.
 //
 // THE CANCEL HALF THIS TEST USED TO CARRY IS GONE, restated as
-// pattern-library.feature's "Clicking Patterns while a pattern is armed cancels
-// it rather than reopening the library". It was never residue: that the
-// Patterns control disarms rather than reopening is a stated product rule
-// (src/patternPlacement.ts's toggleLibrary), and a rule is contract. The
-// comment in features/steps/pattern-library.ts that used to designate this test
-// the sole holder of that claim was repointed in the same commit that wrote the
-// scenario.
+// pattern-library.feature's PAIR of cancel scenarios -- "Clicking Patterns
+// while a pattern is armed does not reopen the library" and "Cancelling with
+// the Patterns control leaves the next click a plain single-cell toggle". It
+// was never residue: that the Patterns control disarms rather than reopening
+// is a stated product rule (src/patternPlacement.ts's toggleLibrary), and a
+// rule is contract. The comment in features/steps/pattern-library.ts that used
+// to designate this test the sole holder of that claim was repointed in the
+// same commit that wrote the scenario, and repointed again at the pair.
 //
 // AN OPEN QUESTION THIS PASS DID NOT ACT ON, filed in the handoff rather than
 // resolved here. Preview cells announce their own world coordinates -- that is

@@ -113,32 +113,47 @@ Feature: Pattern library
     And the cell at (6, 5) should be dead
     And the cell at (5, 7) should be dead
 
-  # THE OTHER ROUTE OUT OF A PLACEMENT, and the first Then is what makes it a
-  # scenario of its own rather than a copy of the Escape pair above. The
-  # Patterns control is a toggle, so the obvious wrong implementation reopens
-  # the library from here; what it must do instead is put the armed pattern
-  # down.
+  # THE OTHER ROUTE OUT OF A PLACEMENT. The Patterns control is a toggle, so
+  # the obvious wrong implementation reopens the library from here; what it
+  # must do instead is put the armed pattern down.
   #
-  # THE PRESS IS THE When AND THE FOLLOWING CLICK IS INSIDE A Then, which is
-  # the wrong way round to read and is measured rather than preferred. With the
-  # click as the When instead, an implementation that reopens the library is
-  # reported at the CELL clause and never at the library clause: the reopened
-  # dialog swallows the grid click as an outside-click dismissal, so the cell
-  # stays dead AND the library is shut again by the time anything looks at it.
-  # That leaves the one clause this scenario exists for unable to fail.
+  # TWO SCENARIOS BECAUSE THERE ARE TWO ACTS WITH AN OBSERVATION THAT MUST SIT
+  # BETWEEN THEM. The press has to be observed -- library shut, preview gone --
+  # before the next click happens, and that click is a second act. One scenario
+  # cannot hold both: only-one-when allows a single When, and
+  # keywords-in-logical-order forbids the interleaved reading that would state
+  # them in order. Measured rather than preferred: with the click as the single
+  # When, an implementation that reopens the library is reported at the CELL
+  # clause and never at the library clause, because the reopened dialog
+  # swallows the grid click as an outside-click dismissal -- so the cell stays
+  # dead AND the library is shut again by the time anything looks at it,
+  # leaving the clause the scenario exists for unable to fail. Split, both
+  # halves can fail: removing the cancel branch reds the first at its library
+  # clause and the second at its alive clause.
   #
-  # (12, 12) is the anchor a Glider would have been stamped at and a Glider has
-  # no cell at its own anchor, so (12, 12) coming alive is what says a single
-  # cell was toggled -- while (13, 12) and (12, 14), both Glider cells relative
-  # to that anchor, staying dead say the pattern was genuinely disarmed rather
-  # than merely hidden.
-  Scenario: Clicking Patterns while a pattern is armed cancels it rather than reopening the library
+  # THE AIMING Given IS REQUIRED IN BOTH, for different reasons. The first
+  # needs it so that "no pattern preview should be shown" cannot pass
+  # vacuously against a preview that never rendered; the second needs it
+  # because the press under test has to cancel a live aim.
+  Scenario: Clicking Patterns while a pattern is armed does not reopen the library
     Given an empty grid
     And I have armed the "Glider" pattern
     And I am aiming it at the cell at (12, 12)
     When I click the Patterns control again
     Then the pattern library should not be open
     And no pattern preview should be shown
-    And clicking the cell at (12, 12) should bring it to life
+
+  # (12, 12) is the anchor a Glider would have been stamped at, and a Glider
+  # has no cell at its own anchor -- so (12, 12) coming alive is what says a
+  # single cell was toggled, while (13, 12) and (12, 14), both Glider cells
+  # relative to that anchor, staying dead say the pattern was genuinely
+  # disarmed rather than merely hidden.
+  Scenario: Cancelling with the Patterns control leaves the next click a plain single-cell toggle
+    Given an empty grid
+    And I have armed the "Glider" pattern
+    And I am aiming it at the cell at (12, 12)
+    And I click the Patterns control again
+    When I toggle the cell at (12, 12)
+    Then the cell at (12, 12) should be alive
     And the cell at (13, 12) should be dead
     And the cell at (12, 14) should be dead
