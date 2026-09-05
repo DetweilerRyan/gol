@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useLayoutEffect, useState } from 'react'
 import {
   APPEARANCE_STORAGE_KEY,
   parseAppearancePreference,
@@ -30,7 +30,13 @@ export function useAppearance(): UseAppearanceResult {
   const systemAppearance = useSystemAppearance()
   const appearance = resolveAppearance(preference, systemAppearance)
 
-  useEffect(() => {
+  // A layout effect (rather than a plain effect), so the .dark class lands
+  // before paint rather than after -- see useInitialCentering.ts's own
+  // comment for the same reasoning. A plain effect leaves a frame in which
+  // the app has already painted in the wrong appearance. useLayoutEffect
+  // warns during SSR, but this app has no SSR (main.tsx is a plain client
+  // bootstrap), so that's not a concern here.
+  useLayoutEffect(() => {
     document.documentElement.classList.toggle('dark', appearance === 'dark')
   }, [appearance])
 
