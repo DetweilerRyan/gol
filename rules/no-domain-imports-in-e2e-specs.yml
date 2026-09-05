@@ -47,14 +47,29 @@ note: >-
 # features/infinite-grid.e2e.spec.ts produced exactly one finding. The fixture proves the matcher,
 # the live probe proves the files: glob -- the standing bargain in CLAUDE.md for a new rule.
 #
-# WHEN THE SPECS ARE REPOINTED AT features/screenplay/ (the queued slice after this one), this is a
-# ONE-LINE WIDENING: add `\./screenplay/[a-z][a-z0-9-]*|` to the alternation, borrowing the
-# single-kebab-segment class from the retired no-domain-imports-in-black-box-steps.yml (git show it),
-# and drop './e2e-helpers' once the barrel has no importers left. It is deliberately NOT written
-# that way now: features/screenplay/ exists, but no spec imports it, and allowlisting a shape
-# nobody imports yet is how an allowlist quietly becomes a blocklist -- the same warning
-# no-domain-imports-in-bdd-steps.yml records about its own future widening. That slice owns any
-# further rewrite of this allowlist.
+# IF THE SPECS ARE EVER REPOINTED AT features/screenplay/, this is a ONE-LINE WIDENING: add
+# `\./screenplay/[a-z][a-z0-9-]*|` to the alternation, borrowing the single-kebab-segment class from
+# the retired no-domain-imports-in-black-box-steps.yml (git show it). It is deliberately NOT written
+# that way now: features/screenplay/ exists, but no spec imports it, and allowlisting a shape nobody
+# imports yet is how an allowlist quietly becomes a blocklist.
+#
+# TWO THINGS IN THAT PARAGRAPH WERE STALE AND ARE CORRECTED HERE (barrel-mandatory-for-step-modules,
+# 2026-09-05). It named the repointing as "the queued slice after this one" and planned on dropping
+# './e2e-helpers' "once the barrel has no importers left". No idea file has ever proposed that
+# repointing -- verified by pickaxe over the whole history of ideas/, including the three files
+# 8f8ef62 retired the same afternoon this note was written -- and the slice that did in fact run
+# next, triage-paired-specs the following day, CUT the hand-written layer (62 tests to 27, one file
+# deleted) rather than repointing it. The barrel losing its importers is now the LESS likely outcome
+# rather than the pending one:
+# the sibling rule no-domain-imports-in-bdd-steps.yml ran precisely that widening as a probe over the
+# step modules and ruled KEEP, on the measured ground that the barrel is a CURATED surface --
+# features/screenplay/* exports 92 names, the barrel publishes 80, and the 12 it withholds are nine
+# raw Locator factories in elements.ts plus three viewport constants, none of which any consumer
+# outside the layer has today. Read that argument in full at its own site before proposing this
+# widening for the specs; it applies here too, and the one number that differs does not rescue it --
+# the eight specs import from a median of 4 of the 7 screenplay roles, so they want breadth as much
+# as the step modules do. This rule takes no position beyond that: features/*.e2e.spec.ts belongs to
+# product, so raising the question for the specs is theirs.
 files:
   - 'features/*.e2e.spec.ts'
 rule:

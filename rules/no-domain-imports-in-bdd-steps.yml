@@ -41,10 +41,79 @@ note: >-
 # node's own text (quotes included), which is what stops '@playwright/test-extra' passing on a
 # prefix and what makes the traversal form a finding.
 #
-# IF features/e2e-helpers.ts IS EVER SPLIT into a directory, this is a one-line widening: add
-# `(/[a-z][a-z0-9-]*)?` before the optional extension, borrowing the sibling rule's single-kebab-
-# segment class so the traversal guard survives the split. It is deliberately not written that way
-# now -- allowlisting a shape that does not exist is how an allowlist quietly becomes a blocklist.
+# THE SPLIT HAS HAPPENED, THE WIDENING WAS MEASURED, AND IT WAS DECLINED. This block used to read
+# "if features/e2e-helpers.ts is ever split into a directory, this is a one-line widening ...
+# deliberately not written that way now, because allowlisting a shape that does not exist is how an
+# allowlist quietly becomes a blocklist". screenplay-e2e-decomposition performed that split on
+# 2026-08-25 -- the 468-line module became features/screenplay/, seven role modules under an acyclic
+# layering, with this file surviving as a pure re-export barrel -- so the shape now exists and the
+# old argument for silence no longer applies. barrel-mandatory-for-step-modules re-asked the
+# question on 2026-09-05, ran the probe, and ruled KEEP. It is recorded here rather than only in
+# that commit, because a ruling that lives in a commit message gets re-derived by whoever next
+# wonders.
+#
+# WHAT THE PROBE WAS, since a ruling is worth what the command behind it measured. The allowlist was
+# widened by exactly the recipe this block used to prescribe -- `\.\./screenplay/[a-z][a-z0-9-]*(\.ts)?`
+# added to the alternation -- features/steps/infinite-grid.ts was repointed at the seven modules it
+# reaches, and npm run build (exit 0), npm run ast-grep (clean) and npm run ast-grep:test (exit 4,
+# all three planted traversal cases firing -- see the snapshot note at the foot of this comment for
+# why a firing case reports as [Wrong] here) were run against it. The probe was then reverted in
+# full. It cost one pass and it is what the ruling rests on rather than on reasoning about what a
+# widening would probably feel like.
+#
+# THE RULING RESTS ON A REASON THAT DID NOT EXIST BEFORE THE SPLIT, so read it as a fresh answer and
+# not as the pre-split one restated. THE BARREL IS A CURATED SURFACE, NOT A FULL REPUBLISH. Measured
+# 2026-09-05: features/screenplay/* exports 92 names and this file publishes 80. The 12 it withholds
+# have no importer outside the layer at all -- three are viewport.ts's DEFAULT_OFFSET_X,
+# DEFAULT_OFFSET_Y and PAN_TARGET_PX, and NINE ARE RAW Locator FACTORIES IN elements.ts (aliveCells,
+# zoomBadge, rulerGroup, scrollbarThumb, focusedCellElement, rovingGridCell, hoverIndicator,
+# appearanceControl, plus APPEARANCE_OPTION_LABEL). Only 4 of that module's 13 locator functions are
+# published. Those nine withheld ones are the whole of what makes "this module names no selector of
+# its own" -- the discipline features/steps/grid-reference-lines.ts states in its own header -- a
+# structural fact rather than an aspiration. A PATH ALLOWLIST CANNOT EXPRESS THAT, because it sees
+# paths and never names: '../screenplay/elements' is one specifier whether the import pulls the
+# published cellLocator or the withheld rulerGroup out of it, so the widening would hand every step
+# module nine raw locators with nothing anywhere to notice. Enumerating the 80 published names in
+# this regex instead is precisely the hand-synchronized list CLAUDE.md records going stale in three
+# other places.
+#
+# AND THE ARGUMENT FOR WIDENING DOES NOT SURVIVE ITS OWN MEASUREMENT. "A step module importing
+# ../screenplay/questions states which Screenplay role it depends on" is only true if the answer
+# discriminates. Measured across all ten step modules: each imports from a median of 5 of the 7
+# roles, ranging from 2 (keyboard-grid-reachability) to all 7 (infinite-grid). Repointing every
+# module turns 10 import statements into 45 whose answer to "which roles?" is "nearly all of them".
+# The probe's own block is the exhibit: infinite-grid.ts went from a single 10-name import to seven
+# statements naming every module in the layer.
+#
+# THE THIRD OPTION HAS IT BACKWARDS. That option was to keep the barrel for the hand-written specs,
+# which supposedly want breadth, while allowlisting ../screenplay/* for the step modules, which
+# supposedly want specificity. Measured the same way, the eight features/*.e2e.spec.ts specs import
+# from a median of 4 of the 7 roles (8 statements would become 29) -- so the STEP modules have the
+# higher fan-in of the two, not the lower one, and the premise is inverted rather than merely
+# unsupported. It would also spend the curation above on the side carrying the stricter
+# no-selector-of-its-own discipline.
+#
+# WHAT WIDENING WOULD *NOT* HAVE COST, written down because assuming otherwise is the inference this
+# repo has been wrong about repeatedly. The anchored single-kebab-segment class leaves the traversal
+# guard intact: measured under the widened regex, '../screenplay/../src/gameOfLife',
+# '../screenplay/elements/../../src/gameOfLife' and '../screenplay/nested/deep' all still fire. So a
+# wider allowlist is NOT weaker at this rule's primary job -- blocking src/ and blocking
+# step->step -- and this ruling does not rest on pretending it is. It is weaker at exactly one
+# thing, the published/internal distinction above, and that one thing is sufficient on its own.
+#
+# NO DELETION TRIGGER, DELIBERATELY. A deletion trigger belongs to a workaround that owes a payoff
+# (see the ARIA reach-arounds in CLAUDE.md); this is a ratified decision, and a decision carrying an
+# expiry date invites being cleared rather than re-argued. What it owes instead is its INVALIDATING
+# CONDITIONS, any one of which makes the question worth re-opening: (a) the role fan-in above drops
+# toward 1-2 per step module, which would make a repointed import list genuinely informative;
+# (b) the barrel stops curating -- if every screenplay export is republished, the argument above is
+# gone and the barrel is pure indirection; or (c) the layer grows far enough that one surface is a
+# real cost to read. None of the three holds today.
+#
+# NOTE FOR WHOEVER RUNS THIS PROBE AGAIN: this rule has recorded snapshots under
+# rule-tests/__snapshots__/, so adding an invalid: case to its fixture reports [Wrong] "no baseline
+# found" rather than [Missing]. That is snapshot bookkeeping and NOT the matcher failing to fire --
+# the generated snapshot printed alongside it is the finding.
 files:
   - 'features/steps/*.ts'
 rule:
