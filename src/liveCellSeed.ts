@@ -25,6 +25,16 @@ const DEFAULT_SEED = 1
 export function parseSeedRequest(search: string): SeedRequest | undefined {
   const params = new URLSearchParams(search)
   const cellsRaw = params.get('cells')
+  // EQUIVALENT MUTANT, argued from code -- Stryker reports this whole
+  // condition -> `false` as Survived, and no test can kill it: removing the
+  // early return still routes cellsRaw === null into
+  // parseNonNegativeInteger(null), which returns undefined on its own guard
+  // below, and that undefined is caught two lines down by
+  // `count === undefined || ... return undefined` regardless of what
+  // spread/seed parse to. Both paths return the same undefined for every
+  // `search` with no `cells` param -- this early return is a fast path, not
+  // a different outcome. Hand-applied, the whole unfiltered suite stays
+  // green (909/909).
   if (cellsRaw === null) return undefined
 
   const count = parseNonNegativeInteger(cellsRaw)
@@ -52,6 +62,17 @@ function parseParamWithDefault(params: URLSearchParams, key: string, fallback: n
 // "-1", "1.5", "1e3", and non-numeric junk in one pass rather than accepting
 // them via Number() and then filtering.
 function parseNonNegativeInteger(raw: string | null): number | undefined {
+  // EQUIVALENT MUTANT, argued from code -- Stryker reports the `raw === null`
+  // disjunct -> `false` as Survived, and no test can kill it, doubly: this
+  // function's only two call sites never actually pass null (line 30 runs
+  // only after parseSeedRequest's own null guard above has returned, and
+  // parseParamWithDefault only calls here after `params.has(key)`, which
+  // guarantees `params.get(key)` is a string), so the disjunct is dead code
+  // for every reachable input. And even if it were reached, RegExp#test
+  // coerces a null argument to the string "null", which never satisfies
+  // `/^\d+$/` -- so the second disjunct alone already returns undefined for
+  // a null raw. Hand-applied, the whole unfiltered suite stays green
+  // (909/909).
   if (raw === null || !/^\d+$/.test(raw)) return undefined
   const value = Number(raw)
   return Number.isSafeInteger(value) ? value : undefined

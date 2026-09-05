@@ -69,6 +69,16 @@ function countNeighbors(liveCells: ReadonlyLiveCells): Map<CellKey, number> {
   for (const key of liveCells) {
     neighborCounts.set(key, neighborCounts.get(key) ?? 0)
     const [x, y] = parseCellKey(key)
+    // EQUIVALENT MUTANTS, argued from code -- Stryker reports `x + dx` ->
+    // `x - dx` and `y + dy` -> `y - dy` as Survived, and no test can kill
+    // either: NEIGHBOR_OFFSETS is exactly the 8 points of {-1, 0, 1}^2 minus
+    // (0, 0), which is symmetric under negating either component alone --
+    // negating every dx (or every dy) in the list just permutes which
+    // iteration produces which offset, landing on the same 8-point set. The
+    // loop only ever sums `+1` into a Map keyed by the resulting cell, so
+    // the final counts are the same regardless of which iteration visited
+    // which offset. Hand-applied (each independently), the whole unfiltered
+    // suite stays green (909/909).
     for (const [dx, dy] of NEIGHBOR_OFFSETS) {
       const neighborKey = cellKey(x + dx, y + dy)
       neighborCounts.set(neighborKey, (neighborCounts.get(neighborKey) ?? 0) + 1)

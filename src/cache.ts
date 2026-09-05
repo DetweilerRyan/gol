@@ -111,6 +111,17 @@ export class CacheError extends Error {
 // CacheError's keyPath so the error that reaches the caller names the full
 // path from the root, not just the point where it was thrown. Extracted
 // because the three call sites were otherwise identical catch blocks.
+//
+// EQUIVALENT MUTANT, argued from code -- Stryker reports `error instanceof
+// CacheError` -> `true` as Survived, and no test can kill it: every call
+// site's try block only ever recurses into _insert/_update/_removeAtChild,
+// and every base case those bottom out at throws `new CacheError(...)`, so
+// `error` here is always already a CacheError. Nothing else in a try block
+// (a Map get/set, an array destructure done before the try) can throw. The
+// guard is dead code inherited from `error: unknown`'s type, not defence
+// against a reachable non-CacheError value, so the two branches can never
+// observably diverge. Hand-applied, the whole unfiltered suite stays green
+// (909/909).
 function rethrowWithKey(error: unknown, key: unknown): never {
   if (error instanceof CacheError) {
     error.updateKeyPath(key)

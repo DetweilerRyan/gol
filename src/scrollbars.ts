@@ -28,6 +28,18 @@ export interface ScrollbarMetricsByAxis {
 // prettier-ignore
 function computeAxisScrollbarMetrics(offset: number, cellSize: number, viewportSizePx: number, contentMin: number | undefined, contentMax: number | undefined): ScrollbarMetrics {
   const contentPxLeft = contentMin === undefined ? 0 : (contentMin - offset) * cellSize
+  // EQUIVALENT MUTANT, argued from code -- Stryker reports this whole
+  // condition -> `false` as Survived, and no test can kill it. contentMax is
+  // undefined only when contentMin is too (both come from the same
+  // ContentBounds, whose four fields are always defined together -- see
+  // gameOfLife.ts), which is exactly the case contentPxLeft above already
+  // resolves to 0. Forcing the else branch here instead computes
+  // `(undefined - offset) * cellSize` = NaN, which then propagates through
+  // Math.max/Math.min into extentPxWidth as NaN; every comparison against a
+  // NaN is false, so thumbRatio's and thumbOffsetRatio's ternaries both take
+  // their same default (1 and 0 respectively) that the un-mutated "no
+  // content" case already produces by extentPxWidth === viewportSizePx.
+  // Hand-applied, the whole unfiltered suite stays green (909/909).
   const contentPxRight = contentMax === undefined ? viewportSizePx : (contentMax - offset) * cellSize
 
   const extentPxLeft = Math.min(contentPxLeft, 0)
