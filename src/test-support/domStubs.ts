@@ -191,6 +191,26 @@ export function stubMatchMedia(matches: boolean): MatchMediaController {
     return forType
   }
 
+  // addEventListener and removeEventListener are genuinely the same shape --
+  // increment a call counter, then apply a Set operation for the given
+  // type -- mirroring the real MediaQueryList pair rather than diverging by
+  // accident. That shape is named once here instead of restated twice, but
+  // each registration below still states its own counter and its own Set
+  // method, so the mirroring stays visible at the call site rather than
+  // being hidden inside a shared body.
+  function countedListenerOp(
+    increment: () => void,
+    apply: (
+      listeners: Set<(event: { matches: boolean }) => void>,
+      listener: (event: { matches: boolean }) => void,
+    ) => void,
+  ) {
+    return (type: string, listener: (event: { matches: boolean }) => void) => {
+      increment()
+      apply(listenersFor(type), listener)
+    }
+  }
+
   vi.stubGlobal(
     'matchMedia',
     vi.fn((query: string) => ({
@@ -198,14 +218,14 @@ export function stubMatchMedia(matches: boolean): MatchMediaController {
       get matches() {
         return currentMatches
       },
-      addEventListener: (type: string, listener: (event: { matches: boolean }) => void) => {
-        addCalls++
-        listenersFor(type).add(listener)
-      },
-      removeEventListener: (type: string, listener: (event: { matches: boolean }) => void) => {
-        removeCalls++
-        listenersFor(type).delete(listener)
-      },
+      addEventListener: countedListenerOp(
+        () => addCalls++,
+        (listeners, listener) => listeners.add(listener),
+      ),
+      removeEventListener: countedListenerOp(
+        () => removeCalls++,
+        (listeners, listener) => listeners.delete(listener),
+      ),
     })),
   )
 

@@ -15,6 +15,18 @@ let matchMedia: MatchMediaController
 // file's own bootstrap, before test collection.
 const underStryker = '__stryker__' in globalThis
 
+// Every test below that doesn't need a changing query mounts the hook the
+// same way (stub the system value, then render against the fixed QUERY), so
+// the arrange is extracted and each test body is only the part that
+// differs -- two of those bodies were flagged as dry4ts duplicates at score
+// 0.83 before this extraction. The one test that mutates its own query
+// (below) renders inline instead, since it needs a `let` binding the
+// closure captures rather than the fixed QUERY this helper always passes.
+function mountMatchMedia(initial: boolean) {
+  matchMedia = stubMatchMedia(initial)
+  return renderHook(() => useMatchMedia(QUERY))
+}
+
 // The generic subscribe/unsubscribe lifecycle both useReducedMotion.ts and
 // useSystemAppearance.ts inherit by composing this hook -- proven once here
 // rather than once per composer, which is what a `removes its change
@@ -26,23 +38,20 @@ describe('useMatchMedia', () => {
   it.each([{ initial: false }, { initial: true }])(
     'reports the raw matchMedia boolean, $initial, at mount',
     ({ initial }) => {
-      matchMedia = stubMatchMedia(initial)
-      const { result } = renderHook(() => useMatchMedia(QUERY))
+      const { result } = mountMatchMedia(initial)
       expect(result.current).toBe(initial)
     },
   )
 
   it('updates when the underlying media query changes', () => {
-    matchMedia = stubMatchMedia(false)
-    const { result } = renderHook(() => useMatchMedia(QUERY))
+    const { result } = mountMatchMedia(false)
 
     matchMedia.changeTo(true)
     expect(result.current).toBe(true)
   })
 
   it('subscribes exactly one listener while mounted', () => {
-    matchMedia = stubMatchMedia(false)
-    renderHook(() => useMatchMedia(QUERY))
+    mountMatchMedia(false)
     expect(matchMedia.listenerCount()).toBe(1)
   })
 
@@ -62,8 +71,7 @@ describe('useMatchMedia', () => {
   // listenerCount() cannot stand in for this: a resubscribe removes and
   // re-adds, so the NET count is 1 throughout either way.
   it.skipIf(underStryker)('does not resubscribe across a re-render, so a hot-path consumer pays nothing', () => {
-    matchMedia = stubMatchMedia(false)
-    const { rerender } = renderHook(() => useMatchMedia(QUERY))
+    const { rerender } = mountMatchMedia(false)
     expect(matchMedia.addCallCount()).toBe(1)
 
     rerender()
@@ -99,8 +107,7 @@ describe('useMatchMedia', () => {
   })
 
   it('removes its change listener on unmount, so a later change is not observed by a stale subscription', () => {
-    matchMedia = stubMatchMedia(false)
-    const { unmount } = renderHook(() => useMatchMedia(QUERY))
+    const { unmount } = mountMatchMedia(false)
     expect(matchMedia.listenerCount()).toBe(1)
 
     unmount()
