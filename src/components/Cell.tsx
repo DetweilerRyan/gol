@@ -33,8 +33,14 @@ const FOCUS_DESCRIPTION_ID = 'focus-cell-description'
 // and animating every one of those class changes simultaneously is real
 // paint cost this project can't afford at the frame budgets perf/ tests
 // against.
+//
+// bg-cell-alive rather than a literal bg-gray-900, and deliberately with no
+// dark: variant alongside it -- see src/index.css's own comment on
+// --color-cell-alive. The token re-binds under html.dark with no change to
+// this string, which is what keeps the per-cell hot path from paying for a
+// second class on every mounted cell.
 function cellPaintClasses(isAlive: boolean): string {
-  return `absolute top-0 left-0 ${isAlive ? 'bg-gray-900' : ''}`
+  return `absolute top-0 left-0 ${isAlive ? 'bg-cell-alive' : ''}`
 }
 
 interface CellProps {

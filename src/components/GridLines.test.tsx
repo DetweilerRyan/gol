@@ -20,12 +20,15 @@ describe('GridLines rendering', () => {
 
   // collapse-dead-cell-layer step 4: a dead cell mostly no longer mounts at
   // all, so without a base fill here the gaps between live cells would show
-  // #grid-content's own bg-gray-100 through instead of the solid white a
+  // #grid-content's own background through instead of the board's own fill a
   // dead cell used to paint -- a visible appearance regression the ruling on
-  // this slice's handoff explicitly rejects.
-  it('carries its own white base fill, so the gap between live cells still reads as white', () => {
+  // that slice's handoff explicitly rejects. bg-board rather than a literal
+  // bg-white since dark-mode-following-system-appearance: the token resolves
+  // to white in light mode and to the dark board fill under html.dark, with
+  // no change to this class string -- see src/index.css.
+  it('carries its own board base fill, so the gap between live cells still reads as the board', () => {
     const el = renderGridLines({ offsetX: 0, offsetY: 0, cellSize: 20 })
-    expect(el.className).toContain('bg-white')
+    expect(el.className).toContain('bg-board')
   })
 
   it('never carries a transform -- it is camera-exact via background-position, not a translated layer', () => {
@@ -65,10 +68,13 @@ describe('GridLines rendering', () => {
     expect(layers[3]).toContain('1px')
   })
 
-  it('uses the Tailwind theme gray-200/gray-400 CSS variables Cell.tsx borders with, not hardcoded hex', () => {
+  // dark-mode-following-system-appearance: these read the board-line design
+  // tokens rather than a literal --color-gray-* var directly, so the same
+  // string re-themes under html.dark -- see src/index.css.
+  it('uses the board-line design tokens, not hardcoded hex or a raw gray variable', () => {
     const el = renderGridLines({ offsetX: 0, offsetY: 0, cellSize: 20 })
-    expect(el.style.backgroundImage).toContain('var(--color-gray-200)')
-    expect(el.style.backgroundImage).toContain('var(--color-gray-400)')
+    expect(el.style.backgroundImage).toContain('var(--color-board-line-minor)')
+    expect(el.style.backgroundImage).toContain('var(--color-board-line-major)')
   })
 
   // The coincidence question this slice's spike had to answer: gridLinePhasePx's

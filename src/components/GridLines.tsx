@@ -15,16 +15,24 @@ interface GridLinesProps {
 // build) -- reading them rather than restating a hex literal is what keeps
 // this in sync with the design system without a shared constant.
 //
-// Carries its own white (bg-white) base fill, deliberately, for the same
+// Carries its own board (bg-board) base fill, deliberately, for the same
 // reason: a dead cell used to paint solid white (border-gray-200 + bg-white),
 // and dead cells mostly don't mount at all any more -- without a base fill
 // here, the gaps between live cells would show #grid-content's own
-// bg-gray-100 through instead, a visible appearance change nothing asked
+// background through instead, a visible appearance change nothing asked
 // for. See Cell.tsx's own header for the one place that fill is deliberately
 // NOT repeated: a dead, focused cell (liveCellWindow.ts's +1) stays fully
-// transparent, so it doesn't punch a white hole in these lines.
-const MINOR_LINE_COLOR = 'var(--color-gray-200)'
-const MAJOR_LINE_COLOR = 'var(--color-gray-400)'
+// transparent, so it doesn't punch a hole of the board's own colour in these
+// lines.
+//
+// bg-board / --color-board-line-* rather than bg-white / --color-gray-*
+// literals -- see src/index.css's own comment on why these are declared as
+// tokens rather than plain Tailwind colours: this component reads them
+// through a raw CSS var (inline backgroundImage, below), which a dark:
+// utility variant can't reach at all, so the token has to re-bind itself
+// under html.dark instead.
+const MINOR_LINE_COLOR = 'var(--color-board-line-minor)'
+const MAJOR_LINE_COLOR = 'var(--color-board-line-major)'
 const MINOR_LINE_WIDTH_PX = 1
 const MAJOR_LINE_WIDTH_PX = 2
 
@@ -100,7 +108,7 @@ export default function GridLines({ camera }: GridLinesProps) {
   return (
     <div
       aria-hidden="true"
-      className="pointer-events-none absolute inset-0 bg-white"
+      className="bg-board pointer-events-none absolute inset-0"
       style={{ backgroundImage, backgroundSize, backgroundPosition }}
     />
   )

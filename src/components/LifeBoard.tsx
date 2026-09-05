@@ -1,3 +1,4 @@
+import type { AppearancePreference } from '../appearance'
 import { zoomPercentage } from '../camera'
 import { computeMajorGridlines } from '../gridGeometry'
 import { useCamera } from '../hooks/useCamera'
@@ -12,6 +13,12 @@ import PatternLibraryModal from './PatternLibraryModal'
 
 interface LifeBoardProps {
   store: LiveCellStore
+  // Owned by App.tsx's single useAppearance() call and forwarded here
+  // unchanged -- see that hook's own comment on why there is exactly one
+  // call site. LifeBoard makes no decision about either value; it only
+  // hands them down to the one overlay that renders the control.
+  appearancePreference: AppearancePreference
+  onAppearanceChange: (preference: AppearancePreference) => void
 }
 
 // The composition root: owns the camera and placement state, derives what
@@ -20,7 +27,7 @@ interface LifeBoardProps {
 // everything above it. Kept wiring-only -- rules/no-logic-in-composition-root.yml
 // enforces that mechanically -- so any branching/arithmetic/string-building
 // belongs in a hook or pure module instead.
-export default function LifeBoard({ store }: LifeBoardProps) {
+export default function LifeBoard({ store, appearancePreference, onAppearanceChange }: LifeBoardProps) {
   const { camera, panByPixels, applyWheel, centerView, zoomInCentered, zoomOutCentered, panByScrollbarDrag } =
     useCamera()
   const { placement, openOrCancelLibrary, closeLibrary, selectPattern, previewAt, stampArmedPattern } =
@@ -36,7 +43,7 @@ export default function LifeBoard({ store }: LifeBoardProps) {
             edges depending on pan position. Nudged in from the corner (rather
             than the plain right-2/bottom-2 it used before the scrollbars were
             added) so it clears the new bottom/right scrollbar tracks. */}
-        <span className="pointer-events-none absolute right-4 bottom-4 rounded bg-gray-50/80 px-1.5 py-1 text-xs font-medium text-gray-600">
+        <span className="pointer-events-none absolute right-4 bottom-4 rounded bg-gray-50/80 px-1.5 py-1 text-xs font-medium text-gray-600 dark:bg-zinc-800/80 dark:text-zinc-300">
           {zoomPercentage(camera)}%
         </span>
 
@@ -59,6 +66,8 @@ export default function LifeBoard({ store }: LifeBoardProps) {
           onZoomOut={() => zoomOutCentered(size.width, size.height)}
           onReset={() => centerView(size.width, size.height)}
           onPatterns={openOrCancelLibrary}
+          appearancePreference={appearancePreference}
+          onAppearanceChange={onAppearanceChange}
         />
 
         {/* No open-state guard on onPatterns: Headless UI's Dialog makes the

@@ -16,7 +16,7 @@ export default function RulerLabel({ axis, coordinate, camera }: RulerLabelProps
 
   return (
     <span
-      className={`absolute ${edgeClass} pointer-events-none rounded bg-gray-50/80 px-0.5 text-[10px] leading-none text-gray-500`}
+      className={`absolute ${edgeClass} pointer-events-none rounded bg-gray-50/80 px-0.5 text-[10px] leading-none text-gray-500 dark:bg-zinc-800/80 dark:text-zinc-400`}
       style={{ transform }}
     >
       {coordinate}

@@ -337,7 +337,7 @@ export default function Grid({
   }
 
   return (
-    <div ref={containerRef} className="relative h-full w-full overflow-hidden bg-gray-100">
+    <div ref={containerRef} className="relative h-full w-full overflow-hidden bg-gray-100 dark:bg-zinc-900">
       {/* Owns the pan/toggle pointer handlers and sits below every overlay the
           caller supplies (today: ruler, zoom%, scrollbars, toolbar, modal) as
           a sibling rather than an ancestor, so overlay pointer events never

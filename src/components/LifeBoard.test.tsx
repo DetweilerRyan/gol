@@ -76,6 +76,8 @@ const GLIDER = PATTERNS.find((pattern) => pattern.name === 'Glider') as Pattern
 function renderBoard(props: Partial<React.ComponentProps<typeof LifeBoard>> = {}) {
   const merged: React.ComponentProps<typeof LifeBoard> = {
     store: createLiveCellStore(),
+    appearancePreference: 'system',
+    onAppearanceChange: vi.fn(),
     ...props,
   }
   const utils = render(<LifeBoard {...merged} />)

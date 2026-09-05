@@ -63,7 +63,7 @@ export default function HoverIndicator({ camera, hovered }: HoverIndicatorProps)
         transform: `translate(${left}px, ${top}px)`,
         boxSizing: 'border-box',
       }}
-      className="pointer-events-none absolute top-0 left-0 bg-gray-500/20"
+      className="pointer-events-none absolute top-0 left-0 bg-gray-500/20 dark:bg-zinc-100/10"
     />
   )
 }

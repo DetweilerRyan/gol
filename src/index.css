@@ -1,6 +1,70 @@
 @import 'tailwindcss';
 
+/* MANDATORY -- switches Tailwind's `dark:` variant, everywhere in the
+   compiled stylesheet (this file's own tokens below and every dark: class
+   Catalyst's vendored components already carry), from
+   `@media (prefers-color-scheme: dark)` to a class on an ancestor. Without
+   this, a player choosing Light while their system asks for Dark has no way
+   to override it: the media query wins regardless of what's in the DOM.
+   architect measured the default behaviour before landing this. `.dark *` is
+   there (not just `.dark`) so a dark: utility on a descendant of the
+   html.dark element -- which is every dark: class in this app -- matches. */
+@custom-variant dark (&:where(.dark, .dark *));
+
 @theme {
   --font-sans: Inter, sans-serif;
   --font-sans--font-feature-settings: 'cv11';
+
+  /* The design tokens the board reads through a raw CSS custom property
+     rather than through an ordinary dark: utility variant, because each has
+     a consumer that can't take a dark: class at all:
+
+       --color-board is read by GridLines.tsx's inline `backgroundImage`
+       string (a CSS var reference works inside an inline style; a dark:
+       class does not, since Tailwind never sees that string). Cell.tsx's
+       header explains the second reason this couldn't just be a dark:
+       variant on the utility class instead: Cell is the per-cell hot path
+       collapse-dead-cell-layer spent a whole slice thinning, and doubling
+       its class string (bg-cell-alive dark:bg-something) on every mounted
+       cell was ruled out on that basis.
+
+     Both are declared here so Tailwind also emits an ordinary utility for
+     each (bg-board, bg-cell-alive, bg-board-line-minor/-major) -- GridLines
+     and Cell use those utilities/vars rather than restating a literal
+     colour, the same "read the generated variable" convention GridLines
+     already followed for --color-gray-*. The light-mode values below are
+     exactly what GridLines/Cell already painted before this slice (bg-white,
+     gray-200/gray-400 lines, bg-gray-900 live cells) -- this introduces the
+     token layer without moving a light-mode pixel. The dark-mode override
+     sits in a plain rule below, under the same :where(.dark, .dark *)
+     selector the custom-variant above compiles to, since @theme itself can't
+     be conditionally scoped. */
+  --color-board: var(--color-white);
+  --color-board-line-minor: var(--color-gray-200);
+  --color-board-line-major: var(--color-gray-400);
+  --color-cell-alive: var(--color-gray-900);
+}
+
+/* The dark-mode repaint: live cells invert (light on a dark board), the
+   board itself goes near-black, and the gridlines land on a shade between
+   the two -- the exact zinc-900/zinc-700/zinc-100 triple the user chose
+   (#18181b / #3f3f46 / #f4f4f5), read through Tailwind's own generated zinc
+   variables rather than restated as hex literals, for the same reason the
+   light-mode values above read var(--color-gray-*). Dead cells need no
+   entry here: a dead cell paints nothing in either theme (Cell.tsx's own
+   header), so GridLines' board fill and lines already show straight through
+   without this rule doing anything for them.
+
+   The minor/major gridline split only had one colour named by the user
+   (#3f3f46, matched to zinc-700 below); zinc-800 for the minor line is this
+   slice's own call, preserving the existing light-mode relationship (minor
+   closer to the board fill, major more prominent) rather than collapsing
+   dark mode to a single flat gridline colour. Two separate tokens either
+   way, so a future palette pass can re-tune either independently of this
+   call without touching GridLines.tsx again. */
+:where(.dark, .dark *) {
+  --color-board: var(--color-zinc-900);
+  --color-board-line-minor: var(--color-zinc-800);
+  --color-board-line-major: var(--color-zinc-700);
+  --color-cell-alive: var(--color-zinc-100);
 }

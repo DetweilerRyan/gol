@@ -92,7 +92,7 @@ export default function Scrollbar({ axis, metrics, viewportLengthPx, onDrag, con
   // No click-to-jump on the empty track area, by design -- only the thumb
   // below has pointer handlers.
   return (
-    <div className={`${trackClass} rounded bg-gray-200/60`}>
+    <div className={`${trackClass} rounded bg-gray-200/60 dark:bg-white/10`}>
       <div
         role={'scrollbar'}
         aria-orientation={axis === 'x' ? 'horizontal' : 'vertical'}
@@ -106,7 +106,7 @@ export default function Scrollbar({ axis, metrics, viewportLengthPx, onDrag, con
         onPointerMove={handlePointerMove}
         onPointerUp={handlePointerUp}
         onPointerCancel={handlePointerUp}
-        className="absolute top-0 left-0 touch-none rounded bg-gray-900/70 transition-colors hover:bg-gray-900"
+        className="absolute top-0 left-0 touch-none rounded bg-gray-900/70 transition-colors hover:bg-gray-900 dark:bg-zinc-100/70 dark:hover:bg-zinc-100"
         style={thumbStyle}
       >
         <span id={descriptionId} className="sr-only">

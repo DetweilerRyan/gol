@@ -109,7 +109,7 @@ describe('Cell paint', () => {
 
     const alive = screen.getByRole('button', { name: cellLabel(0, 0) })
     const dead = screen.getByRole('button', { name: cellLabel(1, 0) })
-    expect(alive.className.split(/\s+/).filter(Boolean)).toEqual(['absolute', 'top-0', 'left-0', 'bg-gray-900'])
+    expect(alive.className.split(/\s+/).filter(Boolean)).toEqual(['absolute', 'top-0', 'left-0', 'bg-cell-alive'])
     expect(dead.className.split(/\s+/).filter(Boolean)).toEqual(['absolute', 'top-0', 'left-0'])
   })
 })
