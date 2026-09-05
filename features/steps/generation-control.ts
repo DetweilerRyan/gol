@@ -4,10 +4,10 @@
 // IMPORT ALLOWLIST -- playwright-bdd, @playwright/test, and ../e2e-helpers,
 // checked by rules/no-domain-imports-in-bdd-steps.yml.
 //
-// THIS MODULE DEFINES ONE STEP AND BORROWS FOUR. The step registry is global
+// THIS MODULE DEFINES ONE STEP AND BORROWS FIVE. The step registry is global
 // across features/steps/, so a step text may be defined exactly once and a
 // second definition is an ambiguous-step error rather than an override. The
-// four written with text another module already registers, and defined nowhere
+// five written with text another module already registers, and defined nowhere
 // here:
 //
 //   Given an empty grid                              cell-life-and-death.ts

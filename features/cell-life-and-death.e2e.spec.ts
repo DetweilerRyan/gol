@@ -86,20 +86,30 @@
 // bug confined to Cell.onClick -- measured: swapping Cell's onActivate(x, y)
 // to (y, x) leaves every test in this file green.
 //
-// WHERE THE KEYBOARD ROUTE IS COVERED HAS MOVED, and this pointer used to name
-// a test that no longer exists. It named hud-layout-and-shortcuts.e2e.spec.ts's
-// "Enter on a focused grid cell toggles that cell", which
-// `re-audit-hand-written-e2e-residue` deleted once the contract stated both its
-// halves. That same onActivate swap now reds three tests, re-measured on the
-// landed tree over the whole suite: exactly two, and both in the generated bdd
-// layer -- keyboard-grid-navigation.feature's "Pressing Enter brings the
-// focused cell to life" and "Pressing the space bar kills the focused live
-// cell". Note the two Enter tests still in hud-layout-and-shortcuts.e2e.spec.ts
-// do NOT red on it, which is the point: they are about which listener answers
-// a keystroke, not about which cell a cell activates. So the keyboard route is
-// now held by the CONTRACT rather than by a hand-written spec, which is the
-// right home for it; keep it that way rather than adding a duplicate keyboard
-// test here.
+// WHERE THE KEYBOARD ROUTE IS COVERED HAS MOVED, and this pointer has now been
+// repointed twice in one slice -- which is itself the lesson this file's other
+// header states, that a cross-reference decays silently while everything stays
+// green. It originally named hud-layout-and-shortcuts.e2e.spec.ts's "Enter on a
+// focused grid cell toggles that cell"; `re-audit-hand-written-e2e-residue`
+// deleted that test once the contract stated both its halves, and then deleted
+// the two Enter tests the replacement text referred to.
+//
+// THE ROUTE IS NOW HELD ENTIRELY BY THE CONTRACT, which is the right home for
+// it -- keep it that way rather than adding a duplicate keyboard test here.
+// Measured on the pre-deletion tree by swapping Cell's onActivate(x, y) to
+// (y, x) and running the whole suite: EXACTLY TWO tests red, both in the
+// generated bdd layer -- keyboard-grid-navigation.feature's "Pressing Enter
+// brings the focused cell to life" and "Pressing the space bar kills the
+// focused live cell".
+//
+// THE TWO ENTER TESTS THAT USED TO SIT ALONGSIDE THEM DID NOT RED ON IT, which
+// was the whole point of naming them and survives their deletion: they were
+// about which LISTENER answers a keystroke, never about which cell a cell
+// activates, so they were never this route's coverage even while an earlier
+// version of this pointer said they were. Their claims are now
+// generation-control.feature's two scenarios, and the same argument transfers
+// unchanged -- neither of those focuses a cell at all, so an onActivate swap
+// cannot reach either.
 
 import { test, expect } from '@playwright/test'
 import { clickCell, expectCellState } from './e2e-helpers'
