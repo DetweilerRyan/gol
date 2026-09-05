@@ -11,44 +11,63 @@ import {
   selectPattern,
 } from './e2e-helpers'
 
-// No matching .feature file (see CLAUDE.md's black-box e2e section for when a
-// spec is unpaired): the behaviors here -- full-window grid + HUD panel layout,
-// the Next Generation button's own native Enter activation, and the
-// pattern-stamp wiring (usePatternPlacement's stampArmedPattern, wired through
-// LifeBoard.tsx) -- are DOM/layout/App-wiring concerns with no pure-logic
-// layer to specify in Gherkin. This spec is that verification, made permanent
-// instead of one-off.
+// No matching .feature file, and since `re-audit-hand-written-e2e-residue`
+// that is a narrower statement than it used to be. What is left here is
+// residue in the four established senses (see CLAUDE.md's black-box e2e
+// section): hit-testing and stacking, the computed accessibility tree,
+// rendered pixel geometry, and native-event delivery.
 //
-// QA outline this spec records (remove-enter-shortcut slice):
-//   - The grid fills the window edge to edge, with the HUD panel top-left
-//     showing the title, Next Generation button, and generation counter.
-//   - The Next Generation button advances the real app's generation counter
-//     and live-cell state on click.
-//   - The Next Generation button, when it has keyboard focus, advances the
-//     generation exactly once on Enter -- this is the button's own native
-//     activation, not a global shortcut. Pressing it twice in a row must not
-//     double-advance.
-//   - Pressing Enter with nothing focused does not advance the generation
-//     (there is no global Enter shortcut any more).
-//   - Pressing Enter while a grid cell button is focused toggles that cell
-//     (native button activation) and does not advance the generation. This is
-//     the regression scenario for the bug the slice fixed: a focused, alive
-//     cell must flip to dead on Enter, unrelated cells are unaffected, and the
-//     generation counter stays at 0.
-//   - Arming a pattern from the library and stamping it onto the grid with a
-//     click brings that pattern's cells to life in the real app state.
+// WHY THIS FILE NEEDED RE-AUDITING AT ALL, recorded because the same drift can
+// recur. `triage-paired-specs` cut the hand-written layer to residue only, but
+// it worked file by file through the specs that SHARE A NAME with a .feature
+// -- so this file and modal-inertness.e2e.spec.ts, the two unpaired ones, were
+// never in its scope. The header this replaces licensed its tests as
+// "DOM/layout/App-wiring concerns with no pure-logic layer to specify in
+// Gherkin", which was true when the Gherkin layer ran in vitest against pure
+// modules and stopped being true the day playwright-bdd landed: a step module
+// now drives this same app in this same browser through these same screenplay
+// helpers, so "App wiring" is precisely what the generated layer does. App
+// wiring is not one of the four categories and never was.
 //
-// QA outline addendum (split-grid-render-props slice):
-//   - Stamping is single-shot: after a pattern is stamped once, the armed
-//     pattern is gone, so a second click on a clearly separate empty cell
-//     toggles only that one cell -- no second copy of the pattern appears,
-//     and the first stamp is unaffected.
-//   - While a pattern is armed and its preview is following the pointer,
-//     clicking the toolbar's Patterns button again cancels placement instead
-//     of reopening the library: the modal stays closed, the preview
-//     disappears and does not return on further pointer movement, and the
-//     next click toggles a single cell rather than stamping -- proving the
-//     armed pattern was genuinely cancelled, not just hidden.
+// FOUR CLAIMS LEFT THIS FILE IN THAT AUDIT, and none was dropped -- each is
+// now stated in features/**, which is the standing condition on deleting a
+// test here:
+//
+// Each figure below is a WHOLE-SUITE run on the LANDED tree -- one probe
+// applied at a time to an otherwise clean src/, reverted after. A count taken
+// under a --grep is a count of the subset, which is how the first draft of
+// this list under-reported one of them and over-reported another.
+//
+//   - The Next Generation button advancing the real app's state is
+//     cell-life-and-death.feature's blinker scenarios. Its "the next
+//     generation is computed" step clicks this very button and asserts the
+//     counter moved. No-oping the store's advance reds 7 bdd scenarios and no
+//     e2e test: four neighbour-count rows, both blinkers, and infinite-grid's
+//     far-from-the-origin blinker.
+//   - Stamping a pattern from the library bringing its cells to life is
+//     pattern-library.feature's "Placing a pattern anchors its top-left corner
+//     at the target cell". No-oping the store's place reds 6 bdd scenarios and
+//     no e2e test.
+//   - Stamping being single-shot is pattern-library.feature's "A stamped
+//     pattern is used up, so the next click toggles a single cell", written by
+//     that audit. Removing stampArmedPattern's disarm reds EXACTLY ONE test in
+//     the whole suite -- that scenario. Which is the point: before it was
+//     written, the one thing that caught this was the hand-written test this
+//     file no longer has.
+//   - Enter on a focused cell toggling it WITHOUT advancing the generation is
+//     keyboard-grid-navigation.feature's "Pressing Enter brings the focused
+//     cell to life", whose second Then was written by that audit. Reinstating
+//     a global Enter listener in GenerationHud reds 3 tests: that new clause
+//     and the two Enter tests still in this file.
+//
+// WHAT REMAINS, and the claim each test uniquely holds -- stated per test
+// below as well, since a file-level list is not what licenses a test to exist.
+// Two of them (the two Enter tests) are the honest residual of that audit
+// rather than clean category members: they are negative and positive claims
+// about which listener answers a keystroke, they ARE expressible as scenarios,
+// and they survive only because nothing else in the repo reds when the
+// behaviour they name breaks. See this slice's handoff, which proposes them as
+// scenarios for `architect` to rule on.
 
 test.beforeEach(async ({ page }) => {
   await page.goto('/')
@@ -78,6 +97,14 @@ test('the grid fills the entire viewport, edge to edge', async ({ page }) => {
   await expectCellState(page, 31, -3, 'alive')
 })
 
+// CATEGORY 3, AND CATEGORY 2 IN ITS FIRST LINE. The claim only this test
+// holds is that the panel is drawn where the layout says it is -- a measured
+// box within 30px of the viewport's top-left corner -- and that the three
+// things inside it are the title, the control and the count. The heading is
+// reached BY ROLE, so what is pinned is the accessible heading a screen reader
+// lands on rather than an h1 tag. No .feature states any of it: the panel's
+// position is pixel geometry, and there is no scenario about where a control
+// sits on screen at any altitude the contract permits.
 test('the HUD panel renders the title, next-generation button, and generation counter, top-left', async ({ page }) => {
   await expect(page.getByRole('heading', { name: "Conway's Game of Life" })).toBeVisible()
   await expect(page.locator('#next-generation-button')).toHaveText('Next Generation')
@@ -88,21 +115,21 @@ test('the HUD panel renders the title, next-generation button, and generation co
   expect(panelBox!.y).toBeLessThan(30)
 })
 
-test('the Next Generation button advances state through the real app wiring', async ({ page }) => {
-  await clickCell(page, -1, 0)
-  await clickCell(page, 0, 0)
-  await clickCell(page, 1, 0)
-
-  await page.locator('#next-generation-button').click()
-
-  await expect(page.getByText(/^Generation: \d+$/)).toHaveText('Generation: 1')
-  await expectCellState(page, 0, -1, 'alive')
-  await expectCellState(page, 0, 0, 'alive')
-  await expectCellState(page, 0, 1, 'alive')
-  await expectCellState(page, -1, 0, 'dead')
-  await expectCellState(page, 1, 0, 'dead')
-})
-
+// THE NEGATIVE HALF OF THE ENTER-ROUTING CONTRACT, IN THE STATE NO SCENARIO
+// SETS UP. keyboard-grid-navigation.feature now states that Enter on a focused
+// CELL does not advance the game, so a listener that answers Enter everywhere
+// is caught there. This test is the other state: nothing focused at all, which
+// no .feature establishes today and which a defect could single out -- a
+// listener guarded on "no cell has focus" reds here and passes every scenario.
+//
+// IT IS EXPRESSIBLE AS A SCENARIO and is kept only because nothing else reds
+// when its behaviour breaks. Measured at this slice's audit over the whole
+// suite by reinstating a global Enter listener in GenerationHud: exactly three
+// tests red -- this one, the test below, and the new clause in
+// keyboard-grid-navigation.feature, with nothing else. The scenario it
+// wants -- a Given for "nothing has keyboard focus" -- is proposed in that
+// audit's handoff rather than written here, because it is an altitude call
+// about contract vocabulary and not one to take while deleting things.
 test('Enter does not advance the generation when nothing is focused', async ({ page }) => {
   await clickCell(page, -1, 0)
   await clickCell(page, 0, 0)
@@ -114,26 +141,13 @@ test('Enter does not advance the generation when nothing is focused', async ({ p
   await expect(page.getByText(/^Generation: \d+$/)).toHaveText('Generation: 0')
 })
 
-test('Enter on a focused grid cell toggles that cell and does not advance the generation', async ({ page }) => {
-  await clickCell(page, -1, 0)
-  await clickCell(page, 0, 0)
-  await clickCell(page, 1, 0) // leaves (1,0) focused and alive
-
-  await expect.poll(() => page.evaluate(() => document.activeElement?.getAttribute('aria-label'))).toBe('Cell 1, 0')
-
-  await page.keyboard.press('Enter')
-
-  // Regression scenario for the bug this slice fixed: Enter on a focused
-  // cell button is native button activation only -- it toggles that cell
-  // and nothing else. There is no global listener left to also advance the
-  // generation, so (1,0) alone flips dead, (-1,0)/(0,0) are untouched, and
-  // the generation counter stays at 0.
-  await expect(page.getByText(/^Generation: \d+$/)).toHaveText('Generation: 0')
-  await expectCellState(page, 1, 0, 'dead')
-  await expectCellState(page, -1, 0, 'alive')
-  await expectCellState(page, 0, 0, 'alive')
-})
-
+// THE POSITIVE HALF, AND THE DOUBLE-FIRE CLAUSE IS WHAT MAKES IT ITS OWN
+// TEST. That Enter on the focused control advances the game is native button
+// activation; that it advances EXACTLY ONCE is the claim, and it is what a
+// second listener stacked on top of the button's own would break -- reading 3
+// where the contract says 2. No .feature states it, and it is expressible as
+// one; kept on the same measured basis as the test above, and proposed as a
+// scenario in the same handoff.
 test('Enter on the focused Next Generation button advances exactly once and does not double-fire', async ({ page }) => {
   await clickCell(page, -1, 0)
   await clickCell(page, 0, 0)
@@ -148,47 +162,15 @@ test('Enter on the focused Next Generation button advances exactly once and does
   await expect(page.getByText(/^Generation: \d+$/)).toHaveText('Generation: 2')
 })
 
-test('stamping a pattern from the library brings its cells to life in the real app state', async ({ page }) => {
-  await selectPattern(page, 'Block')
-  await page.mouse.click(CENTER.x, CENTER.y)
-
-  // Block's own cells are (0,0),(1,0),(0,1),(1,1) and CENTER is world cell
-  // (0, 0) under the default camera (CENTER, derived in
-  // features/screenplay/viewport.ts), so this is the one place the real
-  // App.tsx Immer stamp wiring is verified to produce live cells end to end
-  // -- not just to leave placing mode.
-  await expectCellState(page, 0, 0, 'alive')
-  await expectCellState(page, 1, 0, 'alive')
-  await expectCellState(page, 0, 1, 'alive')
-  await expectCellState(page, 1, 1, 'alive')
-})
-
-test('stamping a pattern is single-shot -- a second click toggles only that one cell', async ({ page }) => {
-  await selectPattern(page, 'Block')
-  await page.mouse.click(CENTER.x, CENTER.y)
-
-  await expectCellState(page, 0, 0, 'alive')
-  await expectCellState(page, 1, 0, 'alive')
-  await expectCellState(page, 0, 1, 'alive')
-  await expectCellState(page, 1, 1, 'alive')
-
-  // stampArmedPattern disarms in the same action as committing the pattern
-  // (see usePatternPlacement.ts), so this second click at a clearly separate
-  // empty cell must be an ordinary single-cell toggle, not a second stamp.
-  await clickCell(page, 5, 5)
-
-  await expectCellState(page, 5, 5, 'alive')
-  await expectCellState(page, 6, 5, 'dead')
-  await expectCellState(page, 5, 6, 'dead')
-  await expectCellState(page, 6, 6, 'dead')
-
-  // The first stamp is unaffected by the second click.
-  await expectCellState(page, 0, 0, 'alive')
-  await expectCellState(page, 1, 0, 'alive')
-  await expectCellState(page, 0, 1, 'alive')
-  await expectCellState(page, 1, 1, 'alive')
-})
-
+// TWO CLAIMS, ONE OF THEM CATEGORY 3 AND UNREACHABLE FROM THE CONTRACT: the
+// preview MOVES WITH THE POINTER, asserted as two measured boxes at two
+// pointer positions, which is rendered pixel geometry no scenario may name.
+// The other -- that the Patterns button cancels a placement rather than
+// reopening the library -- is expressible, and features/steps/pattern-library.ts
+// designates this test its sole coverage in the comment on "I have armed the
+// {string} pattern instead", which drives that same press for a different
+// purpose and says at length that it does NOT hold this claim. Read those two
+// comments together before touching either.
 test('clicking Patterns again while a pattern is armed cancels placement instead of reopening the library', async ({
   page,
 }) => {
