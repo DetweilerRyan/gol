@@ -33,6 +33,8 @@ import {
   openGrid,
   openPatternModal,
   patternCategoryInLibrary,
+  patternLibraryModal,
+  patternsButton,
   previewCellPositions,
   previewCells,
   recallText,
@@ -192,4 +194,49 @@ When(
 Given('I have armed the {string} pattern', async ({ page }, name: string) => {
   await openGrid(page)
   await selectPattern(page, name)
+})
+
+// ARMING A SECOND PATTERN, AND WHY THE ROUTE IS TWO PRESSES RATHER THAN ONE.
+// Stamping is single-shot, so a pattern can only be replaced from the library
+// -- and the Patterns button is a toggle whose first press while a pattern is
+// armed CANCELS rather than opens. That is the app's own route and the only
+// one a user has, which is why the two presses live here rather than in the
+// Gherkin: the scenario states "instead", not how many times a button is
+// clicked.
+//
+// The waits between them are waits, not assertions of accepted behaviour --
+// the same licence interactions.ts's header describes. The modal reaching
+// count 0 is what says the cancel press has landed before the opening press
+// is sent; without it the second press could race the first.
+Given('I have armed the {string} pattern instead', async ({ page }, name: string) => {
+  await patternsButton(page).click()
+  await expect(patternLibraryModal(page)).toHaveCount(0)
+  await openPatternModal(page)
+  await choosePatternFromLibrary(page, name)
+})
+
+// AIMS AN ALREADY-ARMED PATTERN AND STAMPS IT, which the "I place the ...
+// pattern with its top-left corner at" step above cannot express: that one
+// arms AND aims in one act, so it would discard whatever the scenario had
+// already armed and the switch would go unmeasured. The tail phrasing is
+// copied from it deliberately, so both stamps name their anchor the same way.
+When(
+  'I stamp the armed pattern with its top-left corner at \\({int}, {int}\\)',
+  async ({ page }, x: number, y: number) => {
+    await clickCell(page, x, y)
+  },
+)
+
+// PUTS THE POINTER OVER A CELL AND WAITS FOR THE PREVIEW TO ACTUALLY APPEAR.
+// That wait is load-bearing rather than defensive: the only Then this Given
+// leads to is "no pattern preview should be shown", which passes VACUOUSLY
+// against a preview that never rendered at all. Establishing the preview
+// exists here is what makes the later absence mean a cancel happened.
+Given('I am aiming it at the cell at \\({int}, {int}\\)', async ({ page }, x: number, y: number) => {
+  await hoverCell(page, x, y)
+  await expect(previewCells(page)).not.toHaveCount(0)
+})
+
+Then('no pattern preview should be shown', async ({ page }) => {
+  await expect(previewCells(page)).toHaveCount(0)
 })

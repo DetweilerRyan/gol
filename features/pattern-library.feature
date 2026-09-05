@@ -57,3 +57,41 @@ Feature: Pattern library
     And the cell at (6, 5) should be alive
     And the cell at (5, 6) should be alive
     And the cell at (6, 6) should be alive
+
+  # ARMING IS SINGLE-SHOT, so the only route from one armed pattern to another
+  # is back through the library, and what this scenario pins is that the SECOND
+  # choice is the one that gets stamped. Glider anchored at (5, 5) has no cell
+  # at its own anchor, so (5, 5) staying dead is what says the discarded Block
+  # was not stamped -- by itself, and whether or not the Glider was stamped too.
+  # (6, 5) is deliberately not asserted: both patterns cover it, so it
+  # discriminates nothing.
+  Scenario: Arming a second pattern replaces the first, and it is the second that is stamped
+    Given an empty grid
+    And I have armed the "Block" pattern
+    And I have armed the "Glider" pattern instead
+    When I stamp the armed pattern with its top-left corner at (5, 5)
+    Then the cell at (5, 7) should be alive
+    And the cell at (7, 6) should be alive
+    And the cell at (5, 5) should be dead
+    And the cell at (5, 6) should be dead
+    And the cell at (6, 6) should be dead
+
+  Scenario: Pressing Escape while aiming a pattern clears its preview
+    Given an empty grid
+    And I have armed the "Glider" pattern
+    And I am aiming it at the cell at (5, 5)
+    When I press Escape
+    Then no pattern preview should be shown
+
+  # The consequence of the cancel above, stated as the user would meet it: a
+  # cancelled pattern is not merely invisible, the grid is back to toggling one
+  # cell at a time. (6, 5) and (5, 7) are Glider cells relative to (5, 5), so
+  # either coming to life would mean the pattern was still armed.
+  Scenario: Cancelling an armed pattern leaves the next click a plain single-cell toggle
+    Given an empty grid
+    And I have armed the "Glider" pattern
+    And I press Escape
+    When I toggle the cell at (5, 5)
+    Then the cell at (5, 5) should be alive
+    And the cell at (6, 5) should be dead
+    And the cell at (5, 7) should be dead
