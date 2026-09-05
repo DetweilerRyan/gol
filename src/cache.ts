@@ -112,16 +112,31 @@ export class CacheError extends Error {
 // path from the root, not just the point where it was thrown. Extracted
 // because the three call sites were otherwise identical catch blocks.
 //
-// EQUIVALENT MUTANT, argued from code -- Stryker reports `error instanceof
-// CacheError` -> `true` as Survived, and no test can kill it: every call
-// site's try block only ever recurses into _insert/_update/_removeAtChild,
-// and every base case those bottom out at throws `new CacheError(...)`, so
-// `error` here is always already a CacheError. Nothing else in a try block
-// (a Map get/set, an array destructure done before the try) can throw. The
-// guard is dead code inherited from `error: unknown`'s type, not defence
-// against a reachable non-CacheError value, so the two branches can never
-// observably diverge. Hand-applied, the whole unfiltered suite stays green
-// (909/909).
+// SURVIVING MUTANT THAT IS *NOT* EQUIVALENT -- don't re-rule it as one, and
+// don't delete this guard as dead code. Stryker reports `error instanceof
+// CacheError` -> `true` as Survived, covered by 7 tests (so not a NoCoverage
+// row, and equivalence is a question that can be asked of it -- the answer is
+// no). The tempting argument is that the guard is dead: every error these
+// three try blocks raise from the cache's OWN logic really is a CacheError,
+// since each only recurses into _insert/_update/_remove and every base case
+// those bottom out at throws `new CacheError(...)`. That argument is wrong,
+// because a foreign error can arrive from the RUNTIME rather than from the
+// logic. `keyPath` is `unknown[]`, so a long enough one is a legal call that
+// overflows the stack inside the recursion, and the resulting RangeError
+// unwinds through every one of these catch frames. Measured (architect,
+// equivalence-rulings-live-in-commits-not-at-sites, Node 24 / darwin): an
+// 8,000-key insert throws RangeError in ~223ms as written, and TypeError
+// ("error.updateKeyPath is not a function") with the mutant applied. This
+// guard's real job is that unwind path -- keeping a foreign error intact
+// rather than masking it at the first catch frame.
+//
+// Deliberately left untested, which is why the mutant survives. The trigger
+// DEPTH is environmental (frame size varies by engine, and by how a runner
+// instruments the code) while the divergence is not; and on a larger stack
+// the O(n^2) rest-spread in the recursive case reaches an uncatchable heap
+// OOM before the RangeError -- measured at 200,000 keys, which kills the
+// worker outright instead of reddening an assertion. A portable test costs
+// more flakiness than this guard is worth.
 function rethrowWithKey(error: unknown, key: unknown): never {
   if (error instanceof CacheError) {
     error.updateKeyPath(key)

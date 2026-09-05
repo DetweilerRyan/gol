@@ -27,19 +27,31 @@ export interface ScrollbarMetricsByAxis {
 // viewport exactly.
 // prettier-ignore
 function computeAxisScrollbarMetrics(offset: number, cellSize: number, viewportSizePx: number, contentMin: number | undefined, contentMax: number | undefined): ScrollbarMetrics {
+  // EQUIVALENT MUTANTS, argued from code -- Stryker reports the `-> false`
+  // ConditionalExpression mutant on EACH of the two ternaries below as
+  // Survived, and no test can kill either. They are one mechanism, so they
+  // are ruled together. contentMin and contentMax go undefined only together:
+  // both come from a single `ContentBounds | null` via optional chaining in
+  // computeScrollbarMetrics -- this function is private and that is its only
+  // caller -- and ContentBounds' four fields are non-optional. Forcing either
+  // else branch in that no-content case computes `(undefined - offset) *
+  // cellSize` = NaN, which reaches extentPxWidth through Math.min/Math.max as
+  // NaN; every comparison against NaN is false, so thumbRatio and
+  // thumbOffsetRatio both fall to the same defaults (1 and 0) the un-mutated
+  // no-content case already produces via extentPxWidth === viewportSizePx --
+  // at every viewportSizePx, including 0 and negative. When the bounds ARE
+  // defined, both branches are identical anyway. Each hand-applied on its
+  // own: the whole unfiltered suite stays green (909/909).
+  //
+  // The `-> true` mutant on contentPxLeft is NOT equivalent and IS killed --
+  // two assertions in scrollbars.test.ts, in under a second. Only the
+  // `-> false` pair is ruled here. A scoped run reporting either line as
+  // Timeout rather than Survived is reporting a wall-clock artifact and not a
+  // kill: this function is straight-line arithmetic with no loop in it, so
+  // nothing here can hang. (Measured this slice -- a contaminated run had
+  // both of contentPxLeft's mutants as Timeout, which was misread as "killed
+  // elsewhere" and nearly lost this ruling.)
   const contentPxLeft = contentMin === undefined ? 0 : (contentMin - offset) * cellSize
-  // EQUIVALENT MUTANT, argued from code -- Stryker reports this whole
-  // condition -> `false` as Survived, and no test can kill it. contentMax is
-  // undefined only when contentMin is too (both come from the same
-  // ContentBounds, whose four fields are always defined together -- see
-  // gameOfLife.ts), which is exactly the case contentPxLeft above already
-  // resolves to 0. Forcing the else branch here instead computes
-  // `(undefined - offset) * cellSize` = NaN, which then propagates through
-  // Math.max/Math.min into extentPxWidth as NaN; every comparison against a
-  // NaN is false, so thumbRatio's and thumbOffsetRatio's ternaries both take
-  // their same default (1 and 0 respectively) that the un-mutated "no
-  // content" case already produces by extentPxWidth === viewportSizePx.
-  // Hand-applied, the whole unfiltered suite stays green (909/909).
   const contentPxRight = contentMax === undefined ? viewportSizePx : (contentMax - offset) * cellSize
 
   const extentPxLeft = Math.min(contentPxLeft, 0)

@@ -64,8 +64,8 @@ function parseParamWithDefault(params: URLSearchParams, key: string, fallback: n
 function parseNonNegativeInteger(raw: string | null): number | undefined {
   // EQUIVALENT MUTANT, argued from code -- Stryker reports the `raw === null`
   // disjunct -> `false` as Survived, and no test can kill it, doubly: this
-  // function's only two call sites never actually pass null (line 30 runs
-  // only after parseSeedRequest's own null guard above has returned, and
+  // function's only two call sites never actually pass null (parseSeedRequest
+  // passes cellsRaw, which its own null guard above has already screened, and
   // parseParamWithDefault only calls here after `params.has(key)`, which
   // guarantees `params.get(key)` is a string), so the disjunct is dead code
   // for every reachable input. And even if it were reached, RegExp#test
