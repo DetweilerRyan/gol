@@ -4,7 +4,10 @@ valid:
   - await expect(page.locator(ALIVE_CELL_SELECTOR)).toHaveCount(0)
   - await expect(cellLocator(page, 2, 3)).toHaveAttribute(CELL_ALIVE_ATTR, 'true')
   - const thumb = page.locator('[role="scrollbar"][aria-orientation="horizontal"]')
-  - const NOT_A_CELL_CLASS = /bg-gray-800/
+  # A RENDERED COLOUR is not a paint class. appearanceInEffect reads exactly this, and the rule
+  # deliberately does not reach it -- see the note in the rule file on class-vs-colour.
+  - const raw = getComputedStyle(element).backgroundColor
+  - const painted = await page.evaluate(() => getComputedStyle(document.body).backgroundColor)
 invalid:
   - const ALIVE_CLASS = /bg-gray-900/
   - const DEAD_CLASS = /bg-white/
@@ -12,3 +15,10 @@ invalid:
   - const aliveCount = await page.locator('#grid-content button.bg-gray-900').count()
   - return ((await locator.getAttribute('class')) ?? '').includes('bg-gray-900')
   - await expect(cellLocator(page, x - 1, y)).toHaveClass(/bg-white/)
+  # PALETTE-NEUTRAL CASES, which are what prove the widening. Every one of these was a silent
+  # non-match under the retired `bg-gray-900|bg-white` regex: the first is the fixture's own former
+  # `valid` entry (correctly a finding now), the rest are shapes this repo's next palette can take.
+  - const NOT_A_CELL_CLASS = /bg-gray-800/
+  - const ALIVE_CLASS = /bg-zinc-100/
+  - await expect(cellLocator(page, 0, 0)).toHaveClass(/bg-board/)
+  - const alive = page.locator('#grid-content button.bg-cell-alive')

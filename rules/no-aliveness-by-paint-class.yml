@@ -1,7 +1,7 @@
 id: no-aliveness-by-paint-class
 language: TypeScript
 severity: warning
-message: Read cell aliveness through src/test-support/cellQuery.ts, not through the bg-gray-900/bg-white paint class.
+message: Do not read app state off a Tailwind background paint class -- cell aliveness goes through src/test-support/cellQuery.ts.
 note: >-
   A cell's aliveness has an accessible representation -- aria-pressed on the Cell button (see
   src/components/Cell.tsx). The Tailwind background class is PAINT, and reading it as an aliveness
@@ -21,8 +21,27 @@ note: >-
 # assert the second). A src-wide version of this rule would have a permanently dirty baseline --
 # the fragility no-camera-in-cell-leaf.yml's own comment warns about.
 #
-# THE REGEX COVERS bg-gray-900/bg-white AND NOTHING ELSE, ALSO ON PURPOSE. The known neighbour is
-# features/grid-reference-lines.e2e.spec.ts, which reads `border-l-2 border-l-gray-400` off a cell to
+# THE REGEX NAMES NO COLOUR, AND THAT IS THE WHOLE POINT OF ITS CURRENT SHAPE. It used to read
+# `bg-gray-900|bg-white` -- the two classes Cell.tsx and GridLines.tsx happened to paint with -- and
+# dark-mode-following-system-appearance is the slice that showed why enumerating a palette here is
+# unsafe: that slice repaints every board surface, and a rule naming the OLD colours would have gone
+# silently inert on the day it landed, which is the failure direction CLAUDE.md documents for a
+# Stryker ignorePatterns glob, a -t pattern and a vitest include that match nothing. Widened to the
+# background-utility SHAPE instead (`\bbg-`), in that slice's CONTRACT pass, so the rule survives
+# every future palette change with no rule edit at all. Measured against ast-grep 0.45.1 on the tree
+# it was widened on: the baseline stays clean, because the only `bg-` text anywhere under features/
+# or perf/ sits in COMMENTS, which are not `string` or `regex` nodes.
+#
+# WHAT THAT WIDENING DOES AND DOES NOT SAY. It bans reading a CLASS NAME, which is a styling
+# decision a black-box layer has no business knowing. It does not ban reading a RENDERED COLOUR,
+# which is what a player actually perceives -- features/screenplay/questions.ts's appearanceInEffect
+# reads getComputedStyle().backgroundColor through a canvas normalisation and is deliberately
+# outside this rule's reach, carrying no class literal at all. That split (class = implementation,
+# colour = perception) is the same one that makes appearanceInEffect an honest instrument rather
+# than a reach-around; it was ruled on in the same pass that widened this regex.
+#
+# THE BORDER CLASSES STAY OUT, AND THE WIDENING DOES NOT REACH THEM. The known neighbour is
+# features/grid-reference-lines.e2e.spec.ts, which read `border-l-2 border-l-gray-400` off a cell to
 # answer "is this coordinate a major gridline". That was adjudicated (aria-pressed-cell-state review)
 # as a LEGITIMATE VISUAL CONTRACT, not a missing affordance: every cell's aria-label already carries
 # its exact coordinates, so an assistive-tech user has strictly more information than "is this a major
@@ -59,6 +78,6 @@ rule:
     # substring inside a longer literal ('button[aria-label^="Cell "].bg-gray-900') and metavariables
     # do not interpolate inside string literals -- see CLAUDE.md.
     - kind: string
-      regex: 'bg-gray-900|bg-white'
+      regex: '\bbg-'
     - kind: regex
-      regex: 'bg-gray-900|bg-white'
+      regex: '\bbg-'
