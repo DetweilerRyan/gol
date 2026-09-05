@@ -22,7 +22,7 @@ export {
 } from './screenplay/viewport.ts'
 export { remember, recall, rememberText, recallText, ORIGIN_RULER_X, ORIGIN_RULER_Y } from './screenplay/notepad.ts'
 export { cellLocator, patternsButton, patternLibraryModal, previewCells } from './screenplay/elements.ts'
-export type { ScrollbarOrientation } from './screenplay/elements.ts'
+export type { Appearance, AppearancePreference, ScrollbarOrientation } from './screenplay/elements.ts'
 export {
   zoomPercent,
   watchZoomReadout,
@@ -46,6 +46,8 @@ export {
   focusedCellBox,
   focusedCellAnnouncement,
   viewportBox,
+  appearanceInEffect,
+  appearancePreference,
 } from './screenplay/questions.ts'
 export {
   nextGeneration,
@@ -69,6 +71,9 @@ export {
   tabAwayAndBack,
   clickGridAt,
   hoverGridAt,
+  setSystemAppearance,
+  chooseAppearance,
+  returnToTheApp,
 } from './screenplay/interactions.ts'
 export {
   selectPattern,

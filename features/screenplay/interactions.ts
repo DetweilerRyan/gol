@@ -22,10 +22,14 @@
 // purpose.
 import { expect, type Page } from '@playwright/test'
 import {
+  APPEARANCE_OPTION_LABEL,
+  appearanceControl,
   patternLibraryModal,
   patternsButton,
   scrollbarThumb,
   zoomBadge,
+  type Appearance,
+  type AppearancePreference,
   type ScrollbarOrientation,
 } from './elements.ts'
 
@@ -281,4 +285,39 @@ export async function tabForward(page: Page) {
 export async function tabAwayAndBack(page: Page) {
   await page.keyboard.press('Tab')
   await page.keyboard.press('Shift+Tab')
+}
+
+// WHAT THE PLAYER'S SYSTEM IS ASKING FOR, which this suite can set both before
+// the app boots and while it is running -- both measured against Chromium
+// rather than assumed:
+//
+//   - Called before the app is opened, it is the appearance the app boots
+//     into. Same shape as preferReducedMotion above and for the same reason: a
+//     player arrives with this preference already set.
+//   - Called after, matchMedia's own matches flips AND a change listener
+//     fires, so an app that subscribes really is notified. The listener fires
+//     ASYNCHRONOUSLY though -- a probe that read it in the same tick as the
+//     call saw no event at all -- so anything asserting on the result of a
+//     mid-session change has to be a retrying assertion. The step module says
+//     so at each of its call sites.
+export async function setSystemAppearance(page: Page, appearance: Appearance) {
+  await page.emulateMedia({ colorScheme: appearance })
+}
+
+// The player saying what they want, through the control itself rather than
+// through whatever stores it.
+export async function chooseAppearance(page: Page, preference: AppearancePreference) {
+  await appearanceControl(page).selectOption({ label: APPEARANCE_OPTION_LABEL[preference] })
+}
+
+// COMING BACK TO THE APP LATER, as a reload of the same tab.
+//
+// The honest scope of that: it is the same browser context, so it exercises
+// whatever survives a page load in this browser and nothing wider. A genuinely
+// new session -- a fresh context, or another day -- is not driven here, and a
+// preference kept only in memory for the tab's lifetime would still pass. What
+// makes the scenario bite anyway is that a reload discards every scrap of the
+// running app, so nothing but real storage carries the choice across it.
+export async function returnToTheApp(page: Page) {
+  await page.reload()
 }

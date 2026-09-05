@@ -30,6 +30,8 @@ import { parseVisibleProportionText } from '../../src/test-support/scrollbarQuer
 import { ORIGIN_RULER_X, ORIGIN_RULER_Y, recall } from './notepad.ts'
 import {
   aliveCells,
+  APPEARANCE_OPTION_LABEL,
+  appearanceControl,
   cellLocator,
   focusedCellElement,
   hoverIndicator,
@@ -39,8 +41,11 @@ import {
   rulerGroup,
   scrollbarThumb,
   zoomBadge,
+  type Appearance,
+  type AppearancePreference,
   type ScrollbarOrientation,
 } from './elements.ts'
+import { CENTER } from './viewport.ts'
 
 // Module-private: generationCount below is the only reader. The raw text is
 // this file's business, the number is what a step or a spec asks for.
@@ -467,4 +472,81 @@ export async function hoverIndicatorBox(page: Page): Promise<{ x: number; y: num
   if ((await hoverIndicator(page).count()) === 0) return null
   const box = await hoverIndicator(page).boundingBox()
   return box ? { x: box.x, y: box.y } : null
+}
+
+// WHICH APPEARANCE A PLAYER HAS ASKED FOR -- read off the control's own
+// selected option, which is the same thing a sighted player reads and the same
+// thing a screen reader announces. No reach-around here: the preference IS a
+// control state, and the accessible tree carries it.
+export async function appearancePreference(page: Page): Promise<AppearancePreference> {
+  const label = await appearanceControl(page).locator('option:checked').textContent()
+  const found = (Object.keys(APPEARANCE_OPTION_LABEL) as AppearancePreference[]).find(
+    (preference) => APPEARANCE_OPTION_LABEL[preference] === label?.trim(),
+  )
+  if (found === undefined)
+    throw new Error(
+      `the appearance control is showing "${label?.trim()}", which is none of its three known options (${Object.values(APPEARANCE_OPTION_LABEL).join(', ')})`,
+    )
+  return found
+}
+
+// WHICH APPEARANCE IS ACTUALLY IN FRONT OF THE PLAYER -- and this one IS an
+// ARIA REACH-AROUND, filed as such rather than quietly worked around, because
+// it reads paint. Nothing in the app announces the appearance it resolved to:
+// the control says what was ASKED FOR ('Follow system'), never what that came
+// out as, so with the preference following the system there is no accessible
+// channel that distinguishes a dark screen from a light one.
+//
+// DELETION TRIGGER: the slice that gives the resolved appearance an announced
+// affordance -- the scrollbar-visible-proportion-affordance precedent, where a
+// thumb's measured box was replaced by a described proportion and both
+// tolerances went with it. Whether such an affordance is owed at all is a real
+// question rather than a formality, since "the screen is dark" is arguably a
+// visual fact with no screen-reader equivalent, and that is precisely why this
+// is filed for architect's CONTRACT pass to rule on instead of being settled
+// here.
+//
+// WHAT IT READS, AND WHY NOT SOMETHING SIMPLER. Not a class name and not a hex
+// value: the user is this slice's "does it look right" gate and may move the
+// palette afterwards, so anything pinned to a specific colour would be a
+// contract that a palette tweak breaks. Not document.elementFromPoint either,
+// which skips pointer-events-none elements -- and today's board fill sits on
+// exactly one of those (GridLines.tsx), so a point read walks straight past
+// the thing it came for (measured: that element is what carries bg-white).
+//
+// So it asks the flatter question instead: of every element whose box covers
+// the middle of the board, which are painted at all, and what does the last of
+// them in document order say. That is the app's own stacking rule for these
+// overlays -- absolutely positioned siblings with auto z-index, later wins,
+// which Grid.tsx's layering comment states outright -- and it is indifferent
+// to WHERE the fill ends up living, whether that stays GridLines or becomes a
+// token on the root element.
+//
+// The light/dark split is a brightness threshold rather than a colour match,
+// for the same palette-independence reason: any board a player would call dark
+// sits far below it and any board they would call light far above it.
+export async function appearanceInEffect(page: Page): Promise<Appearance> {
+  const painted = await page.evaluate(
+    ([x, y]) => {
+      const covering = [...document.querySelectorAll('*')].filter((element) => {
+        const box = element.getBoundingClientRect()
+        if (x < box.left || x > box.right || y < box.top || y > box.bottom) return false
+        const channels = getComputedStyle(element).backgroundColor.match(/[\d.]+/g)
+        return channels !== null && channels.length >= 3 && Number(channels[3] ?? 1) > 0
+      })
+      const topmost = covering.at(-1)
+      return topmost ? getComputedStyle(topmost).backgroundColor : null
+    },
+    [CENTER.x, CENTER.y] as const,
+  )
+
+  if (painted === null)
+    throw new Error('nothing is painted at the middle of the board, so no appearance can be read off it')
+
+  const [red, green, blue] = painted.match(/[\d.]+/g)!.map(Number)
+  // Perceived brightness of the gamma-encoded channels, 0 (black) to 1
+  // (white). Half is the boundary between a screen a player would call dark
+  // and one they would call light.
+  const brightness = (0.299 * red + 0.587 * green + 0.114 * blue) / 255
+  return brightness < 0.5 ? 'dark' : 'light'
 }

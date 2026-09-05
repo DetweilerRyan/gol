@@ -181,3 +181,44 @@ export function rovingGridCell(page: Page): Locator {
 export function hoverIndicator(page: Page): Locator {
   return page.locator('#hover-indicator')
 }
+
+// THE APPEARANCE CONTROL -- how a player says whether they want a light
+// screen, a dark one, or whatever their system is currently asking for.
+//
+// NOTHING IN src/ ANSWERS TO THIS YET, and that is the ordinary state of a
+// contract drafted before its implementation rather than a defect. Every
+// scenario in appearance-preference.feature is red until the control exists.
+// What is written here is therefore a PROPOSAL about the affordance, and it is
+// the half of this slice's contract that architect's CONTRACT pass has to
+// ratify before coder starts -- see that feature's step module for the two
+// alternatives that were weighed.
+//
+// The shape proposed: a single control whose accessible name is `Appearance`
+// and whose three options are named `Light`, `Dark` and `Follow system` --
+// sentence case with no role word, the convention every name this app ships
+// already follows. A native <select> is what getByRole('combobox') resolves
+// here, and src/catalyst/select.tsx is exactly that (a Headless.Select, which
+// renders a real <select>) already carrying the dark: variants this slice
+// needs. If architect prefers a different affordance -- a radio group, or a
+// button cycling through the three -- the change lands in this function and in
+// the two that drive and read it, and no .feature line moves.
+export function appearanceControl(page: Page): Locator {
+  return page.getByRole('combobox', { name: 'Appearance', exact: true })
+}
+
+// What a player wants: a fixed appearance, or whichever one the system is
+// asking for at the time.
+export type AppearancePreference = 'light' | 'dark' | 'system'
+
+// What is actually on screen once that preference has been resolved against
+// the system. There is no 'system' here on purpose -- following the system
+// still puts exactly one of these two in front of the player.
+export type Appearance = 'light' | 'dark'
+
+// The option labels the control announces, in one place, so a step reads and
+// drives the same strings.
+export const APPEARANCE_OPTION_LABEL: Record<AppearancePreference, string> = {
+  light: 'Light',
+  dark: 'Dark',
+  system: 'Follow system',
+}
