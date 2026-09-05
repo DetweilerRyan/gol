@@ -37,7 +37,23 @@
   "use-and": "on",
   "only-one-when": "on",
   "scenario-size": "on",
-  "max-scenarios-per-file": ["on", { "maxScenarios": 10, "countOutlineExamples": false }],
+  // 12 RATHER THAN THE LIBRARY DEFAULT OF 10, raised by `architect` in
+  // `re-audit-hand-written-e2e-residue`'s CONTRACT pass, and the reason is a
+  // measurement rather than a preference. The cap was binding on 3 of 11
+  // features at once, and it had already shaped a scenario's INTERNAL
+  // structure: a cancel whose two halves must be observed at DIFFERENT moments
+  // (the library shut right after the press, the next click a plain toggle)
+  // needs two scenarios, so with no budget for the second it was compressed
+  // into one scenario with a Then that acts. Measured under a probe removing
+  // toggleLibrary's cancel-from-placing branch, the compressed shape leaves one
+  // of the two clauses UNFAILABLE. A cap that trades a failable clause for a
+  // file-length budget is inverting its own purpose.
+  //
+  // Bumped to the smallest value that admits the split, and verified to still
+  // bite: 11 scenarios pass, 13 report "13/12". Read it as a budget on how much
+  // one feature file asks a reader to hold, never as a budget on acceptance
+  // mutants -- `npm run acceptance-mutation` measures those exactly.
+  "max-scenarios-per-file": ["on", { "maxScenarios": 12, "countOutlineExamples": false }],
   "name-length": ["on", { "Feature": 70, "Rule": 70, "Scenario": 100, "Step": 110 }],
   "no-restricted-patterns": [
     "on",
