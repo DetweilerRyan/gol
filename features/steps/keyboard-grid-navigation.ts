@@ -20,11 +20,23 @@
 // does to a cell is stated in the same words the pointer route already uses,
 // so the two routes cannot drift into two different vocabularies for one fact.
 //
-// STEPS THIS MODULE LENDS OUT. "the cell at (<x>, <y>) has keyboard focus" and
-// "I press <key>" are also used by pattern-library.feature, whose keyboard-stamp
-// scenario needs a focused cell and an Enter. They are defined here, not there,
-// because keyboard focus is what they are about -- and no import expresses that
-// dependency, because the registry is what shares them.
+// STEPS THIS MODULE LENDS OUT, both to pattern-library.feature. They are
+// defined here, not there, because keyboard focus is what they are about --
+// and no import expresses that dependency, because the registry is what shares
+// them. "the cell at (<x>, <y>) has keyboard focus" goes to one borrower, the
+// keyboard-stamp scenario, which needs a focused cell and an Enter. "I press
+// <key>" now goes to three: that stamp, "Pressing Escape while aiming a
+// pattern clears its preview", and "Cancelling an armed pattern leaves the next
+// click a plain single-cell toggle" -- where it is written `And I press Escape`
+// in a GIVEN position, after two Givens.
+//
+// THAT GIVEN-POSITION BORROWING OF A When() STEP IS SOUND, and is a config
+// default rather than a property of the runner: playwright-bdd matches by step
+// text and filters by keyword only under a matchKeywords option this repo does
+// not set. See CLAUDE.md's paragraph on it for the mechanism and for the
+// asymmetric trigger -- turning that option on would break only the
+// Given-position use, and bddgen being all-or-nothing, the whole bdd project
+// would stop generating rather than that one scenario.
 //
 // WHAT "THE FOCUSED CELL" IS OBSERVED THROUGH. Only live cells have an element
 // of their own once this slice lands, so the focus cursor -- not a per-cell

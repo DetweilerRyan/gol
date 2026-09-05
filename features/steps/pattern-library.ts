@@ -204,13 +204,44 @@ Given('I have armed the {string} pattern', async ({ page }, name: string) => {
 // Gherkin: the scenario states "instead", not how many times a button is
 // clicked.
 //
-// The waits between them are waits, not assertions of accepted behaviour --
-// the same licence interactions.ts's header describes. The modal reaching
-// count 0 is what says the cancel press has landed before the opening press
-// is sent; without it the second press could race the first.
+// THE toHaveCount(0) BETWEEN THE PRESSES IS AN ASSERTION, NOT A WAIT, and an
+// earlier version of this comment claimed the opposite in both directions.
+// Measured by architect with two probes, both reverted: the same assertion
+// inserted BEFORE the first press also passes, and changing this one to
+// toHaveCount(1) fails with Received: 0. The modal never opens on this press
+// at all -- patternPlacement.ts's toggleLibrary returns INITIAL_PLACEMENT from
+// `placing`, never `browsing` -- so there is no 0 -> 1 -> 0 transition to
+// await, and the line settles on its first evaluation whether or not the
+// cancel has landed. It cannot be what sequences the two presses.
+//
+// NOTHING SEQUENCES THEM AND NOTHING NEEDS TO. The race is real and resolves
+// LOUDLY: a second press arriving before the first had landed would cancel
+// again rather than open, and openPatternModal's own toHaveCount(1) is what
+// reports that.
+//
+// THE CLAIM IT LOOKS LIKE IT HOLDS IS HELD ELSEWHERE, and by a test whose
+// whole named subject it is -- hud-layout-and-shortcuts.e2e.spec.ts's
+// "clicking Patterns again while a pattern is armed cancels placement instead
+// of reopening the library", which pins the modal staying shut, the preview
+// clearing, and the next click being a plain toggle. So this line is not the
+// coverage of toggleLibrary's cancel-from-placing branch and must not be read
+// as it.
+//
+// IT IS KEPT FOR FAILURE LOCALIZATION. An implementation that opened the
+// library from `placing` instead reds here, naming the press whose branch is
+// wrong. Without it the same defect surfaces one line later and less legibly:
+// openPatternModal clicks a Patterns button the open modal has made inert
+// (choosePatternFromLibrary's own comment describes that inertness), so the
+// step fails on an actionability timeout that says nothing about which press
+// went the wrong way. One line for a legible failure.
+//
+// Contrast the wait in "I am aiming it at the cell at" below, which IS
+// load-bearing synchronization rather than a guard: there the state genuinely
+// transitions, and removing it lets the scenario pass against a preview that
+// never rendered.
 Given('I have armed the {string} pattern instead', async ({ page }, name: string) => {
   await patternsButton(page).click()
-  await expect(patternLibraryModal(page)).toHaveCount(0)
+  await expect(patternLibraryModal(page)).toHaveCount(0) // guard, not a wait -- see above
   await openPatternModal(page)
   await choosePatternFromLibrary(page, name)
 })
