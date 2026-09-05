@@ -57,11 +57,25 @@ export default function GridToolbar({
           from the widest OPTION's own text metrics, so it tracks the font and
           the option names together. Don't put a fixed width back. */}
       <div className="w-max">
+        {/* No h-, py-, or text- overrides here -- Select's own className lands
+            on Catalyst's wrapper <span>, never on the inner Headless.Select
+            it renders (src/catalyst/select.tsx builds that element's classes
+            itself and never merges an incoming className into it). h-8! py-0!
+            text-sm! used to sit here and none of the three did anything to
+            the inner <select>'s own box: measured, removing all three left
+            the inner <select> at an unchanged 36px tall with an unchanged
+            14px/24px font. The wrapper's own box did move -- unconstrained,
+            it now sizes to 36px instead of the 32px h-8! forced onto it --
+            which is the actual fix, since the wrapper's before: pseudo
+            (Catalyst's light-mode background fill) is drawn to the wrapper's
+            box and previously clipped 4px short of the child it's meant to
+            sit behind. The buttons below are raised to this control's own
+            36px (h-9) to match, rather than fighting Catalyst's padding to
+            shrink the select to 32px. */}
         <Select
           aria-label={'Appearance'}
           value={appearancePreference}
           onChange={(e) => onAppearanceChange(parseAppearancePreference(e.target.value))}
-          className="h-8! py-0! text-sm!"
         >
           {APPEARANCE_OPTIONS.map(({ value, label }) => (
             <option key={value} value={value}>
@@ -74,7 +88,7 @@ export default function GridToolbar({
         type="button"
         aria-label={'Zoom in'}
         onClick={onZoomIn}
-        className="h-8! w-8! justify-center rounded! font-medium!"
+        className="h-9! w-9! justify-center rounded! font-medium!"
       >
         +
       </Button>
@@ -82,7 +96,7 @@ export default function GridToolbar({
         type="button"
         aria-label={'Zoom out'}
         onClick={onZoomOut}
-        className="h-8! w-8! justify-center rounded! font-medium!"
+        className="h-9! w-9! justify-center rounded! font-medium!"
       >
         −
       </Button>
@@ -90,7 +104,7 @@ export default function GridToolbar({
         type="button"
         aria-label={'Reset view'}
         onClick={onReset}
-        className="h-8! justify-center rounded! px-2! text-sm! font-medium!"
+        className="h-9! justify-center rounded! px-2! text-sm! font-medium!"
       >
         Reset
       </Button>
@@ -98,7 +112,7 @@ export default function GridToolbar({
         type="button"
         aria-label={'Open pattern library'}
         onClick={onPatterns}
-        className="h-8! justify-center rounded! px-2! text-sm! font-medium!"
+        className="h-9! justify-center rounded! px-2! text-sm! font-medium!"
       >
         Patterns
       </Button>
