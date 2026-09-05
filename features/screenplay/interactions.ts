@@ -24,6 +24,7 @@ import { expect, type Page } from '@playwright/test'
 import {
   APPEARANCE_OPTION_LABEL,
   appearanceControl,
+  nextGenerationControl,
   patternLibraryModal,
   patternsButton,
   scrollbarThumb,
@@ -46,7 +47,19 @@ export async function openGrid(page: Page) {
 }
 
 export async function nextGeneration(page: Page) {
-  await page.locator('#next-generation-button').click()
+  await nextGenerationControl(page).click()
+}
+
+// PUTS THE KEYBOARD ON THE CONTROL WITHOUT USING IT, which no pointer act can
+// do: clicking this control advances the game, so "focused and not yet
+// pressed" is a state only the keyboard reaches. Tabbing to it is the route a
+// user takes and is not the route taken here -- the control is rendered after
+// the whole board in App.tsx, so the tab distance is a property of everything
+// between them and would silently change under an unrelated slice. .focus() is
+// the same shortcut tasks.ts's focusGridCell takes into the grid, for the same
+// reason.
+export async function focusNextGeneration(page: Page) {
+  await nextGenerationControl(page).focus()
 }
 
 export async function resetView(page: Page) {

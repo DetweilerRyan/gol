@@ -66,6 +66,16 @@ export function aliveCells(page: Page): Locator {
   return page.locator(ALIVE_CELL_SELECTOR)
 }
 
+// The control that steps the board forward one generation, reached by the
+// accessible name its own text gives it rather than by the id the app happens
+// to hang on it. Here rather than beside its caller because the floor above
+// reaches it twice over: interactions.ts drives it from two functions, and the
+// barrel publishes it so generation-control.ts can assert the keyboard really
+// landed on it.
+export function nextGenerationControl(page: Page): Locator {
+  return page.getByRole('button', { name: 'Next Generation' })
+}
+
 export function patternsButton(page: Page): Locator {
   return page.locator('button[aria-label="Open pattern library"]')
 }

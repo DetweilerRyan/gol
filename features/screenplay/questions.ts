@@ -338,6 +338,23 @@ export async function focusedCell(page: Page): Promise<[number, number] | null> 
   return match ? [Number(match[1]), Number(match[2])] : null
 }
 
+// WHETHER THE KEYBOARD IS ON ANYTHING AT ALL, which is a wider question than
+// focusedCell above and not answerable from it. focusedCell returns null both
+// when the focus has left the GRID and when it has left the page's controls
+// entirely, and only this one tells those apart -- with the focus parked on
+// some other button, focusedCell still says null while a key press still
+// activates something. A scenario whose whole subject is a keystroke reaching
+// NO control needs the second reading.
+//
+// document.activeElement is the only channel there is: "nothing is focused" is
+// a fact about the document's focus and has no accessible-tree form to read
+// instead, which is why this is not filed as a reach-around -- there is no
+// affordance the app could grow that would express it. blurFocus reaches for
+// the same property from the acting side.
+export async function keyboardFocusIsOnNothing(page: Page): Promise<boolean> {
+  return page.evaluate(() => document.activeElement === null || document.activeElement === document.body)
+}
+
 // WHICH CELL THE GRID WOULD RESUME AT -- the roving cursor, read from the one
 // cell carrying the grid's tab stop, whether or not the document's focus is
 // currently inside the grid at all.

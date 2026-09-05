@@ -20,15 +20,21 @@
 // does to a cell is stated in the same words the pointer route already uses,
 // so the two routes cannot drift into two different vocabularies for one fact.
 //
-// STEPS THIS MODULE LENDS OUT, both to pattern-library.feature. They are
+// STEPS THIS MODULE LENDS OUT, to pattern-library.feature and to
+// generation-control.feature. They are
 // defined here, not there, because keyboard focus is what they are about --
 // and no import expresses that dependency, because the registry is what shares
 // them. "the cell at (<x>, <y>) has keyboard focus" goes to one borrower, the
 // keyboard-stamp scenario, which needs a focused cell and an Enter. "I press
-// <key>" now goes to three: that stamp, "Pressing Escape while aiming a
+// <key>" now goes to five: that stamp, "Pressing Escape while aiming a
 // pattern clears its preview", and "Cancelling an armed pattern leaves the next
 // click a plain single-cell toggle" -- where it is written `And I press Escape`
-// in a GIVEN position, after two Givens.
+// in a GIVEN position, after two Givens -- plus both of
+// generation-control.feature's scenarios. "nothing has keyboard focus" goes to
+// that feature alone and is defined here rather than beside it for the reason
+// the whole convention rests on: the step is about where the keyboard is, which
+// is this module's subject, and a second definition of it there would be an
+// ambiguous-step error rather than a local override.
 //
 // THAT GIVEN-POSITION BORROWING OF A When() STEP IS SOUND, and is a config
 // default rather than a property of the runner: playwright-bdd matches by step
@@ -47,6 +53,7 @@
 import { createBdd } from 'playwright-bdd'
 import { expect } from '@playwright/test'
 import {
+  blurFocus,
   clickCell,
   DEFAULT_CELL_SIZE_PX,
   focusedCell,
@@ -54,6 +61,7 @@ import {
   focusedCellBox,
   focusGridCell,
   focusEdgeCellInView,
+  keyboardFocusIsOnNothing,
   moveFocus,
   openGrid,
   pressKey,
@@ -73,6 +81,24 @@ Given('the grid has keyboard focus', async ({ page }) => {
   await openGrid(page)
   await tabForward(page)
   expect(await focusedCell(page)).not.toBeNull()
+})
+
+// NOTHING FOCUSED AT ALL -- a wider absence than "no cell should be focused",
+// which is satisfied by the focus sitting on any control outside the grid.
+// generation-control.feature's negative scenario needs the wider one: a key
+// press only reaches nothing if there is nothing anywhere to reach.
+//
+// THE FOCUS IS PUT SOMEWHERE FIRST AND THEN TAKEN AWAY, deliberately, so the
+// state under test is one a player actually arrives at. A freshly loaded page
+// where nothing has ever been focused satisfies the same words while testing a
+// different thing, and would keep passing against an app that only ever
+// mis-routes a keystroke after the focus has moved.
+Given('nothing has keyboard focus', async ({ page }) => {
+  await openGrid(page)
+  await tabForward(page)
+  expect(await focusedCell(page)).not.toBeNull()
+  await blurFocus(page)
+  expect(await keyboardFocusIsOnNothing(page)).toBe(true)
 })
 
 Given('the cell at \\({int}, {int}\\) has keyboard focus', async ({ page }, x, y) => {

@@ -112,3 +112,33 @@ Feature: Pattern library
     Then the cell at (5, 5) should be alive
     And the cell at (6, 5) should be dead
     And the cell at (5, 7) should be dead
+
+  # THE OTHER ROUTE OUT OF A PLACEMENT, and the first Then is what makes it a
+  # scenario of its own rather than a copy of the Escape pair above. The
+  # Patterns control is a toggle, so the obvious wrong implementation reopens
+  # the library from here; what it must do instead is put the armed pattern
+  # down.
+  #
+  # THE PRESS IS THE When AND THE FOLLOWING CLICK IS INSIDE A Then, which is
+  # the wrong way round to read and is measured rather than preferred. With the
+  # click as the When instead, an implementation that reopens the library is
+  # reported at the CELL clause and never at the library clause: the reopened
+  # dialog swallows the grid click as an outside-click dismissal, so the cell
+  # stays dead AND the library is shut again by the time anything looks at it.
+  # That leaves the one clause this scenario exists for unable to fail.
+  #
+  # (12, 12) is the anchor a Glider would have been stamped at and a Glider has
+  # no cell at its own anchor, so (12, 12) coming alive is what says a single
+  # cell was toggled -- while (13, 12) and (12, 14), both Glider cells relative
+  # to that anchor, staying dead say the pattern was genuinely disarmed rather
+  # than merely hidden.
+  Scenario: Clicking Patterns while a pattern is armed cancels it rather than reopening the library
+    Given an empty grid
+    And I have armed the "Glider" pattern
+    And I am aiming it at the cell at (12, 12)
+    When I click the Patterns control again
+    Then the pattern library should not be open
+    And no pattern preview should be shown
+    And clicking the cell at (12, 12) should bring it to life
+    And the cell at (13, 12) should be dead
+    And the cell at (12, 14) should be dead

@@ -34,6 +34,7 @@ import {
   openPatternModal,
   patternCategoryInLibrary,
   patternLibraryModal,
+  expectCellState,
   patternsButton,
   previewCellPositions,
   previewCells,
@@ -219,13 +220,17 @@ Given('I have armed the {string} pattern', async ({ page }, name: string) => {
 // again rather than open, and openPatternModal's own toHaveCount(1) is what
 // reports that.
 //
-// THE CLAIM IT LOOKS LIKE IT HOLDS IS HELD ELSEWHERE, and by a test whose
-// whole named subject it is -- hud-layout-and-shortcuts.e2e.spec.ts's
-// "clicking Patterns again while a pattern is armed cancels placement instead
-// of reopening the library", which pins the modal staying shut, the preview
-// clearing, and the next click being a plain toggle. So this line is not the
+// THE CLAIM IT LOOKS LIKE IT HOLDS IS HELD ELSEWHERE, AND THAT ELSEWHERE HAS
+// MOVED. It used to be hud-layout-and-shortcuts.e2e.spec.ts's "clicking
+// Patterns again while a pattern is armed cancels placement instead of
+// reopening the library"; `re-audit-hand-written-e2e-residue` found that claim
+// was not residue in any of the four senses -- it is a stated product rule
+// about toggleLibrary, expressible as a scenario -- and restated it as this
+// feature's "Clicking Patterns while a pattern is armed cancels it rather than
+// reopening the library", which pins the library staying shut and the next
+// click being a plain single-cell toggle. So this line is still not the
 // coverage of toggleLibrary's cancel-from-placing branch and must not be read
-// as it.
+// as it; the scenario below is.
 //
 // IT IS KEPT FOR FAILURE LOCALIZATION. An implementation that opened the
 // library from `placing` instead reds here, naming the press whose branch is
@@ -270,4 +275,37 @@ Given('I am aiming it at the cell at \\({int}, {int}\\)', async ({ page }, x: nu
 
 Then('no pattern preview should be shown', async ({ page }) => {
   await expect(previewCells(page)).toHaveCount(0)
+})
+
+// THE SAME PRESS THE "instead" STEP ABOVE MAKES ON ITS WAY BACK TO THE
+// LIBRARY, and deliberately a step of its own rather than that one's first
+// line. There the press is a means to an end and the scenario is about which
+// pattern gets stamped; here the press IS the act under test, so it has to be
+// visible in the Gherkin. Registered as a When and written in a Given position
+// by its scenario, which playwright-bdd matches by text rather than by keyword
+// -- the same borrowing "And I press Escape" already relies on.
+When('I click the Patterns control again', async ({ page }) => {
+  await patternsButton(page).click()
+})
+
+// The negative half of the cancel, and the half no other scenario states: the
+// Escape route has no library to reopen, so only the Patterns route can get
+// this wrong.
+Then('the pattern library should not be open', async ({ page }) => {
+  await expect(patternLibraryModal(page)).toHaveCount(0)
+})
+
+// A Then THAT ACTS, and the shape is forced rather than chosen. Its scenario's
+// one When is the Patterns press -- .gherkin-lintrc's only-one-when allows no
+// second -- and what has to be observed after that press is what the NEXT
+// click does. Putting the click in the When instead makes the library clause
+// unfailable; the scenario's own comment records the measurement.
+//
+// Only the positive half is here. The two cells that must stay dead are named
+// in the Gherkin as ordinary "should be dead" clauses, so the Glider's shape
+// stays in the feature file where a reader can check it against the Examples
+// table above, rather than being reconstructed from offsets in this module.
+Then('clicking the cell at \\({int}, {int}\\) should bring it to life', async ({ page }, x, y) => {
+  await clickCell(page, x, y)
+  await expectCellState(page, x, y, 'alive')
 })

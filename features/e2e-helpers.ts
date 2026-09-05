@@ -21,7 +21,13 @@ export {
   isCellInDefaultView,
 } from './screenplay/viewport.ts'
 export { remember, recall, rememberText, recallText, ORIGIN_RULER_X, ORIGIN_RULER_Y } from './screenplay/notepad.ts'
-export { cellLocator, patternsButton, patternLibraryModal, previewCells } from './screenplay/elements.ts'
+export {
+  cellLocator,
+  nextGenerationControl,
+  patternsButton,
+  patternLibraryModal,
+  previewCells,
+} from './screenplay/elements.ts'
 export type { Appearance, AppearancePreference, ScrollbarOrientation } from './screenplay/elements.ts'
 export {
   zoomPercent,
@@ -41,6 +47,7 @@ export {
   originRulerPx,
   originDisplacement,
   focusedCell,
+  keyboardFocusIsOnNothing,
   rovingCell,
   hoverIndicatorBox,
   focusedCellBox,
@@ -51,6 +58,7 @@ export {
 } from './screenplay/questions.ts'
 export {
   nextGeneration,
+  focusNextGeneration,
   resetView,
   dragPan,
   blurFocus,

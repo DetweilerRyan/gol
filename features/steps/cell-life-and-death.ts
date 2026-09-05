@@ -160,6 +160,25 @@ Then('the game should still be on its first generation', async ({ page }) => {
   expect(await generationCount(page)).toBe(0)
 })
 
+// THE POSITIVE TWIN OF THE STEP ABOVE, reading the same counter and defined
+// beside it so one module owns the generation. Borrowed by
+// generation-control.feature, whose whole subject is which act advances the
+// game and by how much.
+//
+// ABSOLUTE FOR THE SAME REASON, and here the reason bites harder: this step's
+// entire job is to fail when a keystroke advances the game TWICE, and a
+// remembered-delta form would have to be told what "twice" was measured
+// against. Every scenario reaching it opens a fresh grid and advances once, so
+// "its second generation" is a state that can simply be named.
+//
+// POLLED RATHER THAN READ ONCE, unlike its sibling. A negative claim is safe
+// to read immediately -- a counter that has not moved cannot move late -- but a
+// positive one is racing React's render of the new count, exactly as the
+// "next generation is computed" step above is.
+Then('the game should be on its second generation', async ({ page }) => {
+  await expect.poll(() => generationCount(page)).toBe(1)
+})
+
 When('I toggle the cell at \\({int}, {int}\\)', async ({ page }, x, y) => {
   await toggleCells(page, [[x, y]])
 })
