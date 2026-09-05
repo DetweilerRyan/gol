@@ -156,6 +156,19 @@ export function stubAnimationFrames(): AnimationFrameController {
 export interface MatchMediaController {
   changeTo(nextMatches: boolean): void
   listenerCount(): number
+  // CALL counts, deliberately alongside listenerCount()'s NET count rather
+  // than replacing it: the two answer different questions and only these can
+  // see a resubscribe. A useSyncExternalStore resubscribe is a
+  // removeEventListener immediately followed by an addEventListener, so it
+  // leaves listenerCount() at 1 throughout and is invisible to it -- which is
+  // exactly the churn useMatchMedia.test.ts's identity-stability pair exists
+  // to pin. Counts never decrease; they count calls, not listeners, and
+  // deliberately count them across every event type rather than per type --
+  // listenerCount('change') above is what covers registering under the wrong
+  // type, and splitting these by type too would only make an assertion about
+  // resubscribe count read as one about type correctness.
+  addCallCount(): number
+  removeCallCount(): number
 }
 
 export function stubMatchMedia(matches: boolean): MatchMediaController {
@@ -166,6 +179,8 @@ export function stubMatchMedia(matches: boolean): MatchMediaController {
   // single untyped Set would add or remove a listener regardless of what
   // type string it was registered under.
   const listenersByType = new Map<string, Set<(event: { matches: boolean }) => void>>()
+  let addCalls = 0
+  let removeCalls = 0
 
   function listenersFor(type: string): Set<(event: { matches: boolean }) => void> {
     let forType = listenersByType.get(type)
@@ -184,9 +199,11 @@ export function stubMatchMedia(matches: boolean): MatchMediaController {
         return currentMatches
       },
       addEventListener: (type: string, listener: (event: { matches: boolean }) => void) => {
+        addCalls++
         listenersFor(type).add(listener)
       },
       removeEventListener: (type: string, listener: (event: { matches: boolean }) => void) => {
+        removeCalls++
         listenersFor(type).delete(listener)
       },
     })),
@@ -200,6 +217,8 @@ export function stubMatchMedia(matches: boolean): MatchMediaController {
       })
     },
     listenerCount: () => listenersFor('change').size,
+    addCallCount: () => addCalls,
+    removeCallCount: () => removeCalls,
   }
 }
 
