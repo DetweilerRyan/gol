@@ -70,7 +70,10 @@ import { CENTER, clickGridAt, expectCellState, previewCells, selectPattern } fro
 //     clause, the second at its alive clause, and "Arming a second pattern
 //     replaces the first" at the guard features/steps/pattern-library.ts keeps
 //     for exactly that localization. Measured by `architect` on this shape --
-//     `product` cannot take it, the probe being an edit to src/.
+//     `product` cannot take it, the probe being an edit to src/ -- and
+//     re-measured by `hardener` on the slice tip, which is the only tree the
+//     figure is claimed about: 3 failed of 127, at those three clauses, the
+//     third landing on pattern-library.ts's guard rather than on any Then.
 //
 //     THE COUNTING UNIVERSE IS NAMED BECAUSE THIS FIGURE HAS GONE STALE TWICE
 //     INSIDE ONE SLICE. It read 3 against the tree it was written on, fell to
