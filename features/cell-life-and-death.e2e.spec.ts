@@ -56,11 +56,22 @@
 // runs and Grid's onTap resolves the cell from pointerup pixels instead.
 // This spec therefore covers hit-testing, and nothing here would notice a
 // bug confined to Cell.onClick -- measured: swapping Cell's onActivate(x, y)
-// to (y, x) leaves every test in this file green. The keyboard route
-// (Enter on a focused cell button, which IS Cell.onClick) is covered by
-// hud-layout-and-shortcuts.e2e.spec.ts, where that same swap fails. Both
-// routes are covered by the e2e layer; keep it that way rather than adding a
-// duplicate keyboard test here.
+// to (y, x) leaves every test in this file green.
+//
+// WHERE THE KEYBOARD ROUTE IS COVERED HAS MOVED, and this pointer used to name
+// a test that no longer exists. It named hud-layout-and-shortcuts.e2e.spec.ts's
+// "Enter on a focused grid cell toggles that cell", which
+// `re-audit-hand-written-e2e-residue` deleted once the contract stated both its
+// halves. That same onActivate swap now reds three tests, re-measured on the
+// landed tree over the whole suite: exactly two, and both in the generated bdd
+// layer -- keyboard-grid-navigation.feature's "Pressing Enter brings the
+// focused cell to life" and "Pressing the space bar kills the focused live
+// cell". Note the two Enter tests still in hud-layout-and-shortcuts.e2e.spec.ts
+// do NOT red on it, which is the point: they are about which listener answers
+// a keystroke, not about which cell a cell activates. So the keyboard route is
+// now held by the CONTRACT rather than by a hand-written spec, which is the
+// right home for it; keep it that way rather than adding a duplicate keyboard
+// test here.
 
 import { test, expect } from '@playwright/test'
 import { clickCell, expectCellState, parkKeyboardCursorAt } from './e2e-helpers'
