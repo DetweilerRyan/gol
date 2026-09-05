@@ -16,32 +16,37 @@ afterEach(() => {
   document.documentElement.classList.remove('dark')
 })
 
+// Every test here mounts the hook the same way (stub the system value, then
+// render), so the arrange is extracted and each test body is only the part
+// that differs -- three of those bodies were flagged as dry4ts duplicates at
+// score 0.84 before this extraction.
+function mountAppearance(systemMatches: boolean) {
+  matchMedia = stubMatchMedia(systemMatches)
+  return renderHook(() => useAppearance())
+}
+
 describe('useAppearance', () => {
   it('defaults to following the system when nothing has been persisted', () => {
-    matchMedia = stubMatchMedia(true)
-    const { result } = renderHook(() => useAppearance())
+    const { result } = mountAppearance(true)
     expect(result.current.preference).toBe('system')
     expect(result.current.appearance).toBe('dark')
   })
 
   it('reads a persisted preference back on mount, overriding the system', () => {
     localStorage.setItem(APPEARANCE_STORAGE_KEY, 'light')
-    matchMedia = stubMatchMedia(true)
-    const { result } = renderHook(() => useAppearance())
+    const { result } = mountAppearance(true)
     expect(result.current.preference).toBe('light')
     expect(result.current.appearance).toBe('light')
   })
 
   it('falls back to system for a corrupted persisted value', () => {
     localStorage.setItem(APPEARANCE_STORAGE_KEY, 'sepia')
-    matchMedia = stubMatchMedia(false)
-    const { result } = renderHook(() => useAppearance())
+    const { result } = mountAppearance(false)
     expect(result.current.preference).toBe('system')
   })
 
   it('resolved appearance follows a live system change while preference is system', () => {
-    matchMedia = stubMatchMedia(false)
-    const { result } = renderHook(() => useAppearance())
+    const { result } = mountAppearance(false)
     expect(result.current.appearance).toBe('light')
 
     matchMedia.changeTo(true)
@@ -49,8 +54,7 @@ describe('useAppearance', () => {
   })
 
   it('choosePreference updates the resolved appearance and stops following the system', () => {
-    matchMedia = stubMatchMedia(true)
-    const { result } = renderHook(() => useAppearance())
+    const { result } = mountAppearance(true)
 
     act(() => result.current.choosePreference('light'))
     expect(result.current.preference).toBe('light')
@@ -61,16 +65,14 @@ describe('useAppearance', () => {
   })
 
   it('choosePreference persists the choice under the storage key', () => {
-    matchMedia = stubMatchMedia(false)
-    const { result } = renderHook(() => useAppearance())
+    const { result } = mountAppearance(false)
 
     act(() => result.current.choosePreference('dark'))
     expect(localStorage.getItem(APPEARANCE_STORAGE_KEY)).toBe('dark')
   })
 
   it('choosing system after a fixed choice hands the decision back to the live system value', () => {
-    matchMedia = stubMatchMedia(true)
-    const { result } = renderHook(() => useAppearance())
+    const { result } = mountAppearance(true)
 
     act(() => result.current.choosePreference('light'))
     expect(result.current.appearance).toBe('light')
@@ -81,8 +83,7 @@ describe('useAppearance', () => {
   })
 
   it('toggles the dark class on <html> to match the resolved appearance, and removes it for light', () => {
-    matchMedia = stubMatchMedia(true)
-    const { result } = renderHook(() => useAppearance())
+    const { result } = mountAppearance(true)
     expect(document.documentElement.classList.contains('dark')).toBe(true)
 
     act(() => result.current.choosePreference('light'))

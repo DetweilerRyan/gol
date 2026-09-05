@@ -6,14 +6,14 @@ import { useReducedMotion } from './useReducedMotion'
 let matchMedia: MatchMediaController
 
 describe('useReducedMotion', () => {
-  it.each([
-    { initial: false, label: 'does not match' },
-    { initial: true, label: 'already matches' },
-  ])('reports $initial when the media query $label at mount', ({ initial }) => {
-    matchMedia = stubMatchMedia(initial)
-    const { result } = renderHook(() => useReducedMotion())
-    expect(result.current).toBe(initial)
-  })
+  // No standalone mount-value test: useReducedMotion is a raw passthrough of
+  // useMatchMedia with no transformation, so a mount assertion here was a
+  // dry4ts-flagged duplicate of useMatchMedia.test.ts's own -- AND already
+  // redundant within this file, since the `updates` case below asserts the
+  // mount-time value (`from`) for both booleans before it ever calls
+  // changeTo. Same reasoning covers `subscribes exactly one listener while
+  // mounted`, dropped entirely: proven once, generically, in
+  // useMatchMedia.test.ts.
 
   // Pins the actual query text -- stubMatchMedia's mock ignores the query
   // string entirely for its `matches` behavior (any query gets the same
@@ -37,18 +37,7 @@ describe('useReducedMotion', () => {
     expect(result.current).toBe(to)
   })
 
-  it('subscribes exactly one listener while mounted', () => {
-    matchMedia = stubMatchMedia(false)
-    renderHook(() => useReducedMotion())
-    expect(matchMedia.listenerCount()).toBe(1)
-  })
-
-  it('removes its change listener on unmount, so a later change is not observed by a stale subscription', () => {
-    matchMedia = stubMatchMedia(false)
-    const { unmount } = renderHook(() => useReducedMotion())
-    expect(matchMedia.listenerCount()).toBe(1)
-
-    unmount()
-    expect(matchMedia.listenerCount()).toBe(0)
-  })
+  // Listener cleanup on unmount is useMatchMedia.ts's own contract, proven
+  // once in that hook's test file rather than duplicated here and in
+  // useSystemAppearance.test.ts (dry4ts flagged the two verbatim copies).
 })

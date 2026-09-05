@@ -34,12 +34,7 @@ describe('useSystemAppearance', () => {
     expect(result.current).toBe(expected)
   })
 
-  it('removes its change listener on unmount', () => {
-    matchMedia = stubMatchMedia(false)
-    const { unmount } = renderHook(() => useSystemAppearance())
-    expect(matchMedia.listenerCount()).toBe(1)
-
-    unmount()
-    expect(matchMedia.listenerCount()).toBe(0)
-  })
+  // Listener cleanup on unmount is useMatchMedia.ts's own contract, proven
+  // once in that hook's test file rather than duplicated here and in
+  // useReducedMotion.test.ts (dry4ts flagged the two verbatim copies).
 })

@@ -7,13 +7,14 @@ interface GridLinesProps {
 
 // Was staged pixel-for-pixel behind Cell.tsx's own per-cell border at step 2
 // of collapse-dead-cell-layer, invisible until step 4 deleted that border --
-// this is now the ONLY gridline source in the app: a 1px gray-200 line for
-// every cell boundary, widened to 2px gray-400 every MAJOR_GRIDLINE_INTERVAL
-// cells (the same convention Cell.tsx's isMajorGridline used to draw one
-// cell's own edge at a time). The CSS custom properties are Tailwind v4's own
-// generated theme variables (see dist/assets/*.css's `--color-gray-*` after a
-// build) -- reading them rather than restating a hex literal is what keeps
-// this in sync with the design system without a shared constant.
+// this is now the ONLY gridline source in the app: a 1px line for every cell
+// boundary, widened to 2px every MAJOR_GRIDLINE_INTERVAL cells (the same
+// convention Cell.tsx's isMajorGridline used to draw one cell's own edge at
+// a time). Both widths' colours are read through the --color-board-line-minor
+// / -major custom properties below (light mode: gray-200/gray-400, the same
+// values this always painted; dark mode: zinc-800/zinc-700) rather than
+// restated as literals -- see the third paragraph below and src/index.css's
+// own comment for why these are tokens rather than plain Tailwind colours.
 //
 // Carries its own board (bg-board) base fill, deliberately, for the same
 // reason: a dead cell used to paint solid white (border-gray-200 + bg-white),
