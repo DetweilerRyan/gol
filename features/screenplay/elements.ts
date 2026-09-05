@@ -185,23 +185,21 @@ export function hoverIndicator(page: Page): Locator {
 // THE APPEARANCE CONTROL -- how a player says whether they want a light
 // screen, a dark one, or whatever their system is currently asking for.
 //
-// NOTHING IN src/ ANSWERS TO THIS YET, and that is the ordinary state of a
-// contract drafted before its implementation rather than a defect. Every
-// scenario in appearance-preference.feature is red until the control exists.
-// What is written here is therefore a PROPOSAL about the affordance, and it is
-// the half of this slice's contract that architect's CONTRACT pass has to
-// ratify before coder starts -- see that feature's step module for the two
-// alternatives that were weighed.
-//
-// The shape proposed: a single control whose accessible name is `Appearance`
+// Drafted as a PROPOSAL, when nothing in src/ answered to it and every
+// scenario in appearance-preference.feature was red -- the ordinary state of a
+// contract written before its implementation. Architect's CONTRACT pass
+// ratified it unchanged and coder built it, so this is now a description of
+// what the app ships: a single control whose accessible name is `Appearance`
 // and whose three options are named `Light`, `Dark` and `Follow system` --
 // sentence case with no role word, the convention every name this app ships
-// already follows. A native <select> is what getByRole('combobox') resolves
-// here, and src/catalyst/select.tsx is exactly that (a Headless.Select, which
-// renders a real <select>) already carrying the dark: variants this slice
-// needs. If architect prefers a different affordance -- a radio group, or a
-// button cycling through the three -- the change lands in this function and in
-// the two that drive and read it, and no .feature line moves.
+// already follows. It is a native <select> in src/components/GridToolbar.tsx,
+// which is what getByRole('combobox') resolves here.
+//
+// What survives of the proposal is the seam it argued for, and it is still
+// true: the affordance is named in this one function and driven and read in
+// exactly two more (interactions.ts's chooseAppearance, questions.ts's
+// appearancePreference). Swapping the select for a radio group or a cycling
+// button is a change to those three, and no .feature line moves.
 export function appearanceControl(page: Page): Locator {
   return page.getByRole('combobox', { name: 'Appearance', exact: true })
 }

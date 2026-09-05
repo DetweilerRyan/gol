@@ -490,21 +490,49 @@ export async function appearancePreference(page: Page): Promise<AppearancePrefer
   return found
 }
 
-// WHICH APPEARANCE IS ACTUALLY IN FRONT OF THE PLAYER -- and this one IS an
-// ARIA REACH-AROUND, filed as such rather than quietly worked around, because
-// it reads paint. Nothing in the app announces the appearance it resolved to:
-// the control says what was ASKED FOR ('Follow system'), never what that came
-// out as, so with the preference following the system there is no accessible
-// channel that distinguishes a dark screen from a light one.
+// WHICH APPEARANCE IS ACTUALLY IN FRONT OF THE PLAYER -- and this is NOT an
+// ARIA reach-around, which was drafted the other way and ruled on by
+// architect's CONTRACT pass in this slice. It reads paint, so it looks like
+// one; the criterion is not "does it read paint" but "does it stand in for a
+// perception the accessible tree withholds", and here it does not.
 //
-// DELETION TRIGGER: the slice that gives the resolved appearance an announced
-// affordance -- the scrollbar-visible-proportion-affordance precedent, where a
-// thumb's measured box was replaced by a described proportion and both
-// tolerances went with it. Whether such an affordance is owed at all is a real
-// question rather than a formality, since "the screen is dark" is arguably a
-// visual fact with no screen-reader equivalent, and that is precisely why this
-// is filed for architect's CONTRACT pass to rule on instead of being settled
-// here.
+// The control announces the ACTIONABLE thing -- the preference -- and that is
+// the whole of what a screen-reader user can act on: they choose Light, Dark
+// or Follow system, and appearancePreference above reads exactly that, through
+// the tree, with no reach-around anywhere in it. What this function reads
+// instead is "the screen is dark", which is a VISUAL FACT WITH NO
+// SCREEN-READER EQUIVALENT. An aria-live announcement of "dark in effect"
+// would not serve a user; it would be a test hook wearing an affordance's
+// name, which is the same thing that ruled out aria-labelledby on the pattern
+// library's category headings. So this belongs with patternCategoryInLibrary
+// -- query mechanics for something a user genuinely perceives -- and not with
+// rulerGroup or thumbTrackFraction, which stood in for missing affordances and
+// were deleted when those affordances landed. There is NO DELETION TRIGGER
+// here, and none is owed: no future slice retires this function, because there
+// is no announcement that could replace it.
+//
+// WHY THAT COEXISTS WITH THE WIDENED PAINT-CLASS BAN rather than contradicting
+// it -- the two are about different channels. A CLASS NAME IS A STYLING
+// DECISION: `bg-gray-900` is one of several ways to ask for a colour, it is
+// invisible to the player, and reading it couples a test to a choice the
+// palette is free to revise, which is what rules/no-aliveness-by-paint-class
+// exists to stop. A RENDERED COLOUR IS WHAT THE USER PERCEIVES: it is the
+// output rather than the instruction, it survives any restyling that keeps the
+// board dark, and it is the only honest way to state "the screen a player is
+// looking at is a dim one". This function never touches a class string -- it
+// asks the browser for the computed colour and normalizes it through a canvas
+// (see below) -- which is precisely why it satisfies that rule rather than
+// evading it.
+//
+// PRECONDITION, MEASURED: ANY NON-BOARD PAINT COVERING BOARD CENTRE FLIPS THE
+// READ. This asks what is painted at exactly one point, so whatever is
+// topmost there is the answer -- a single live cell at CENTER on a light board
+// makes it report `dark`, and the sign inverts once live cells are painted
+// light on a dark board. None of the seven scenarios in
+// appearance-preference.feature creates a cell or moves the pointer, so the
+// contract is sound as it stands. Any future step that borrows "the appearance
+// in effect" must leave board centre bare: no live cell there, and no hover
+// indicator parked over it.
 //
 // WHAT IT READS, AND WHY NOT SOMETHING SIMPLER. Not a class name and not a hex
 // value: the user is this slice's "does it look right" gate and may move the

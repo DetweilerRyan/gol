@@ -8,9 +8,14 @@ Feature: Appearance preference
   # from -- the system, or a choice I made. None of them says what the dark
   # appearance actually looks like: which colour the board is, how a live cell
   # is painted against it, whether the two read well together. Those are
-  # judgements about a palette rather than statements about behaviour, they are
-  # settled by the user looking at the result, and the hand-written spec beside
-  # this feature is where the few of them that can be checked at all are stated.
+  # judgements about a palette rather than statements about behaviour, and they
+  # are asserted NOWHERE -- not here, and not in a hand-written spec either.
+  # There is no appearance-preference.e2e.spec.ts and none is owed: that layer
+  # holds only what a scenario cannot state, and rendered colour is not on its
+  # list -- it takes pixel GEOMETRY, a box or a coordinate, not a palette. A
+  # spec pinning the board to a colour would break the next time someone
+  # improved that colour, which is the opposite of what a contract is for. The
+  # last word on how this looks is the user's own eye.
   #
   # "Light" and "dark" here mean what a player means by them -- a bright screen
   # or a dim one -- and the scenarios stay true of any palette that stays on the

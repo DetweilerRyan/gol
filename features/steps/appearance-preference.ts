@@ -13,33 +13,29 @@
 // system appearance could be set, which is the one ordering this feature
 // depends on.
 //
-// THE CONTRACT PRESUMES AN AFFORDANCE THAT DOES NOT EXIST YET, which is the
-// ordinary shape of a spec written before its implementation and is why every
-// scenario here is red today. The proposal -- a control named `Appearance`
-// offering `Light`, `Dark` and `Follow system` -- is written down in
-// features/screenplay/elements.ts's appearanceControl, together with what
-// would change if architect prefers a different one. No .feature line depends
-// on which shape wins.
+// THE AFFORDANCE THIS CONTRACT PRESUMED HAS SINCE LANDED. The module was
+// drafted against a control that did not exist -- the ordinary shape of a spec
+// written before its implementation, and why every scenario here was red at
+// SPECIFY -- and architect's CONTRACT pass ratified the proposal unchanged: a
+// control named `Appearance` offering `Light`, `Dark` and `Follow system`,
+// which src/components/GridToolbar.tsx now ships as a native select.
+// features/screenplay/elements.ts's appearanceControl is what reaches it. No
+// .feature line moved for it, which is what writing them neutrally bought.
 //
-// THE TWO WAYS "the appearance in effect" COULD BE OBSERVED, because the
-// .feature text is deliberately neutral between them and the choice is
-// architect's CONTRACT call rather than this module's:
-//
-//   1. READ THE PAINT (what this draft does). questions.ts's
-//      appearanceInEffect asks what colour is painted at the middle of the
-//      board and classifies it as light or dark by brightness. It is filed
-//      there as an ARIA reach-around, with a deletion trigger, because nothing
-//      the app announces distinguishes a dark screen from a light one.
-//
-//   2. ANNOUNCE THE RESOLVED APPEARANCE. Give the app an accessible way to say
-//      which appearance it settled on -- not just which one was asked for --
-//      and the reach-around is deleted, on the exact
-//      scrollbar-visible-proportion-affordance precedent where an announced
-//      proportion replaced a measured thumb box and took two tolerances with
-//      it. The open question is whether that affordance is owed at all: "the
-//      screen is dark" may be a visual fact with no screen-reader equivalent,
-//      in which case reading the paint is the honest instrument rather than a
-//      workaround for a missing one.
+// HOW "the appearance in effect" IS OBSERVED, which was a real choice rather
+// than a default. The .feature text is neutral between reading the paint and
+// reading an announcement, and architect ruled for the paint: questions.ts's
+// appearanceInEffect asks what colour is painted at the middle of the board
+// and classifies it light or dark by brightness. The alternative -- giving the
+// app an accessible way to say which appearance it RESOLVED to, rather than
+// which one was asked for -- was rejected as a test hook wearing an
+// affordance's name: "the screen is dark" is a visual fact with no
+// screen-reader equivalent, and the control already announces the half a
+// screen-reader user can act on, which is the preference. So the paint read is
+// the honest instrument here rather than a reach-around, it carries no
+// deletion trigger, and the argument in full -- together with the one
+// precondition it places on any future step that borrows the Then below --
+// lives at its own site.
 //
 // WHY THERE IS NO EXAMPLES TABLE, and the reason is a survivor analysis rather
 // than "a table is impossible" -- the same shape keyboard-grid-reachability
@@ -71,13 +67,18 @@
 // erase the distinction the third scenario exists to make, and would leave a
 // When reading "the system appearance is dark", which states no act at all.
 //
-// RESIDUE LEFT TO THE HAND-WRITTEN SPEC, which product's VERIFY pass writes
-// from the outline in this slice's SPECIFY handoff: what the dark palette
-// actually IS -- the board's own fill, a live cell painted light against it, a
-// dead cell staying transparent so the board shows through, the gridlines
-// staying visible against both, and the chrome (HUD, toolbar, library) staying
-// legible. Those are rendered-pixel claims, and the last word on them is the
-// user's eye rather than any assertion.
+// THERE IS NO RESIDUE HERE, AND NO HAND-WRITTEN SPEC. The SPECIFY draft of
+// this paragraph promised an appearance-preference.e2e.spec.ts stating what
+// the dark palette actually IS -- the board's own fill, a live cell painted
+// light against it, a dead cell staying transparent so the board shows
+// through, the gridlines visible against both, the chrome legible. Architect's
+// CONTRACT ruling withdrew that promise and product's VERIFY pass wrote no
+// such file. Rendered colour is none of the four things the hand-written layer
+// exists for: its geometry category takes a measured box, a coordinate or an
+// element resolved by point, and a palette is not any of those. Every claim
+// about WHICH appearance is in effect is stated in the seven scenarios above;
+// how that appearance LOOKS is settled by the user looking at it, asserted
+// nowhere on purpose, so that improving the palette never reds a test.
 import { createBdd } from 'playwright-bdd'
 import { expect } from '@playwright/test'
 import {
@@ -158,10 +159,27 @@ Then('the appearance in effect should be {word}', async ({ page }, word: string)
   await expect.poll(() => appearanceInEffect(page), { message: `the board is not painted ${expected}` }).toBe(expected)
 })
 
+// The two polls below carry a message: for a reason worth knowing before
+// deleting one. expect.poll retries its callback until the timeout and then
+// reports the LAST VALUE, swallowing anything the callback threw -- and
+// appearancePreference throws a carefully worded error naming the unrecognized
+// option label it actually saw. Without a message the failure reads as a bare
+// timeout on `undefined` and that text is lost, so each message restates its
+// gist.
 Then('the appearance preference should be {word}', async ({ page }, word: string) => {
-  await expect.poll(() => appearancePreference(page)).toBe(asPreference(word))
+  const expected = asPreference(word)
+  await expect
+    .poll(() => appearancePreference(page), {
+      message: `the appearance control is not showing ${expected} (if it never settles, it is showing a label none of the three known options match)`,
+    })
+    .toBe(expected)
 })
 
 Then('the app should be following the system appearance', async ({ page }) => {
-  await expect.poll(() => appearancePreference(page)).toBe('system')
+  await expect
+    .poll(() => appearancePreference(page), {
+      message:
+        'the appearance control is not showing that the app is following the system (if it never settles, it is showing a label none of the three known options match)',
+    })
+    .toBe('system')
 })
