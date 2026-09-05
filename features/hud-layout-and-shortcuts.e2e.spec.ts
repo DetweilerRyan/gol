@@ -1,15 +1,5 @@
 import { test, expect } from '@playwright/test'
-import {
-  blurFocus,
-  CENTER,
-  clickCell,
-  clickGridAt,
-  expectCellState,
-  patternLibraryModal,
-  patternsButton,
-  previewCells,
-  selectPattern,
-} from './e2e-helpers'
+import { CENTER, clickGridAt, expectCellState, previewCells, selectPattern } from './e2e-helpers'
 
 // No matching .feature file, and since `re-audit-hand-written-e2e-residue`
 // that is a narrower statement than it used to be. What is left here is
@@ -29,14 +19,19 @@ import {
 // helpers, so "App wiring" is precisely what the generated layer does. App
 // wiring is not one of the four categories and never was.
 //
-// FOUR CLAIMS LEFT THIS FILE IN THAT AUDIT, and none was dropped -- each is
-// now stated in features/**, which is the standing condition on deleting a
-// test here:
+// THE GENERAL FORM OF THAT DRIFT, which is worth more than this file's own
+// history: the licence was a FILE-LEVEL header, written once and true once,
+// and it went on licensing tests long after the thing that made it true had
+// been replaced. A test is licensed by its CLAIM'S CHANNEL, never by a header
+// -- so audit by claim, not by pairing and not by file. Nine tests were here
+// when the audit started and three are now.
 //
-// Each figure below is a WHOLE-SUITE run on the LANDED tree -- one probe
-// applied at a time to an otherwise clean src/, reverted after. A count taken
-// under a --grep is a count of the subset, which is how the first draft of
-// this list under-reported one of them and over-reported another.
+// SIX CLAIMS LEFT THIS FILE, and none was dropped -- each is now stated in
+// features/**, which is the standing condition on deleting a test here. Every
+// figure below is a WHOLE-SUITE run with one probe applied at a time to an
+// otherwise clean src/, reverted after. A count taken under a --grep is a
+// count of the subset, which is how the first draft of this list
+// under-reported one of them and over-reported another.
 //
 //   - The Next Generation button advancing the real app's state is
 //     cell-life-and-death.feature's blinker scenarios. Its "the next
@@ -56,18 +51,27 @@ import {
 //     file no longer has.
 //   - Enter on a focused cell toggling it WITHOUT advancing the generation is
 //     keyboard-grid-navigation.feature's "Pressing Enter brings the focused
-//     cell to life", whose second Then was written by that audit. Reinstating
-//     a global Enter listener in GenerationHud reds 3 tests: that new clause
-//     and the two Enter tests still in this file.
+//     cell to life", whose second Then was written by that audit.
+//   - Enter reaching NOTHING while the keyboard is on nothing, and Enter on
+//     the focused control advancing the game EXACTLY ONCE, are
+//     generation-control.feature's two scenarios. Those two were the audit's
+//     honest residual for one commit -- kept only because nothing else redded
+//     when they broke -- and `architect` then ruled them contract rather than
+//     residue: no global Enter shortcut is a stated product decision, and a
+//     decision whose only guard is a hand-written spec is a contract gap.
+//     Reinstating a global Enter listener in GenerationHud reds 5 tests, of
+//     which those two scenarios and the clause above are the three that remain.
+//   - The Patterns control cancelling an armed pattern rather than reopening
+//     the library is pattern-library.feature's "Clicking Patterns while a
+//     pattern is armed cancels it rather than reopening the library". Removing
+//     toggleLibrary's cancel-from-placing branch reds 3 tests, that scenario
+//     among them, at exactly the clause it exists for.
 //
 // WHAT REMAINS, and the claim each test uniquely holds -- stated per test
-// below as well, since a file-level list is not what licenses a test to exist.
-// Two of them (the two Enter tests) are the honest residual of that audit
-// rather than clean category members: they are negative and positive claims
-// about which listener answers a keystroke, they ARE expressible as scenarios,
-// and they survive only because nothing else in the repo reds when the
-// behaviour they name breaks. See this slice's handoff, which proposes them as
-// scenarios for `architect` to rule on.
+// below as well, since a file-level list is not what licenses a test to exist,
+// which is the whole lesson above. All three are clean category members now:
+// two rendered-pixel-geometry claims and one that is geometry plus a computed
+// accessible name. The honest residual is gone.
 
 test.beforeEach(async ({ page }) => {
   await page.goto('/')
@@ -115,65 +119,28 @@ test('the HUD panel renders the title, next-generation button, and generation co
   expect(panelBox!.y).toBeLessThan(30)
 })
 
-// THE NEGATIVE HALF OF THE ENTER-ROUTING CONTRACT, IN THE STATE NO SCENARIO
-// SETS UP. keyboard-grid-navigation.feature now states that Enter on a focused
-// CELL does not advance the game, so a listener that answers Enter everywhere
-// is caught there. This test is the other state: nothing focused at all, which
-// no .feature establishes today and which a defect could single out -- a
-// listener guarded on "no cell has focus" reds here and passes every scenario.
+// CATEGORY 3, AND NOW ONLY CATEGORY 3. The claim is that the armed pattern's
+// preview MOVES WITH THE POINTER, asserted as two measured boxes at two pointer
+// positions -- rendered pixel geometry, which no scenario may name.
 //
-// IT IS EXPRESSIBLE AS A SCENARIO and is kept only because nothing else reds
-// when its behaviour breaks. Measured at this slice's audit over the whole
-// suite by reinstating a global Enter listener in GenerationHud: exactly three
-// tests red -- this one, the test below, and the new clause in
-// keyboard-grid-navigation.feature, with nothing else. The scenario it
-// wants -- a Given for "nothing has keyboard focus" -- is proposed in that
-// audit's handoff rather than written here, because it is an altitude call
-// about contract vocabulary and not one to take while deleting things.
-test('Enter does not advance the generation when nothing is focused', async ({ page }) => {
-  await clickCell(page, -1, 0)
-  await clickCell(page, 0, 0)
-  await clickCell(page, 1, 0)
-  await blurFocus(page)
-
-  await page.keyboard.press('Enter')
-
-  await expect(page.getByText(/^Generation: \d+$/)).toHaveText('Generation: 0')
-})
-
-// THE POSITIVE HALF, AND THE DOUBLE-FIRE CLAUSE IS WHAT MAKES IT ITS OWN
-// TEST. That Enter on the focused control advances the game is native button
-// activation; that it advances EXACTLY ONCE is the claim, and it is what a
-// second listener stacked on top of the button's own would break -- reading 3
-// where the contract says 2. No .feature states it, and it is expressible as
-// one; kept on the same measured basis as the test above, and proposed as a
-// scenario in the same handoff.
-test('Enter on the focused Next Generation button advances exactly once and does not double-fire', async ({ page }) => {
-  await clickCell(page, -1, 0)
-  await clickCell(page, 0, 0)
-  await clickCell(page, 1, 0)
-
-  await page.locator('#next-generation-button').click()
-  await expect(page.getByText(/^Generation: \d+$/)).toHaveText('Generation: 1')
-  await expect.poll(() => page.evaluate(() => document.activeElement?.id)).toBe('next-generation-button')
-
-  await page.keyboard.press('Enter')
-
-  await expect(page.getByText(/^Generation: \d+$/)).toHaveText('Generation: 2')
-})
-
-// TWO CLAIMS, ONE OF THEM CATEGORY 3 AND UNREACHABLE FROM THE CONTRACT: the
-// preview MOVES WITH THE POINTER, asserted as two measured boxes at two
-// pointer positions, which is rendered pixel geometry no scenario may name.
-// The other -- that the Patterns button cancels a placement rather than
-// reopening the library -- is expressible, and features/steps/pattern-library.ts
-// designates this test its sole coverage in the comment on "I have armed the
-// {string} pattern instead", which drives that same press for a different
-// purpose and says at length that it does NOT hold this claim. Read those two
-// comments together before touching either.
-test('clicking Patterns again while a pattern is armed cancels placement instead of reopening the library', async ({
-  page,
-}) => {
+// THE CANCEL HALF THIS TEST USED TO CARRY IS GONE, restated as
+// pattern-library.feature's "Clicking Patterns while a pattern is armed cancels
+// it rather than reopening the library". It was never residue: that the
+// Patterns control disarms rather than reopening is a stated product rule
+// (src/patternPlacement.ts's toggleLibrary), and a rule is contract. The
+// comment in features/steps/pattern-library.ts that used to designate this test
+// the sole holder of that claim was repointed in the same commit that wrote the
+// scenario.
+//
+// AN OPEN QUESTION THIS PASS DID NOT ACT ON, filed in the handoff rather than
+// resolved here. Preview cells announce their own world coordinates -- that is
+// how features/steps/pattern-library.ts reads all eight pattern shapes -- so
+// "the preview follows the pointer" may well be statable through the accessible
+// tree as a scenario about which cells the preview covers after the aim moves,
+// which would retire this test entirely. `architect` ruled it category 3 for
+// this slice; converting it is a contract question for a slice of its own, not
+// a deletion to take while auditing.
+test('the armed pattern preview follows the pointer across the grid', async ({ page }) => {
   await selectPattern(page, 'Glider')
 
   // Move the pointer over the grid so a preview follows it (Grid's
@@ -188,23 +155,4 @@ test('clicking Patterns again while a pattern is armed cancels placement instead
   const boxAtSecondPosition = (await preview.first().boundingBox())!
   expect(boxAtSecondPosition.x).not.toBe(boxAtFirstPosition.x)
   expect(boxAtSecondPosition.y).not.toBe(boxAtFirstPosition.y)
-
-  await patternsButton(page).click()
-
-  // toggleLibrary's rule: while a pattern is armed, Patterns disarms rather
-  // than reopening the modal (there's no browsing case to reach here at all).
-  await expect(patternLibraryModal(page)).toHaveCount(0)
-  await expect(preview).toHaveCount(0)
-
-  // Moving again must not resurrect a preview -- the pattern was genuinely
-  // disarmed by cancelPlacing, not merely hidden.
-  await page.mouse.move(CENTER.x - 60, CENTER.y - 60)
-  await expect(preview).toHaveCount(0)
-
-  await clickCell(page, -3, -3)
-
-  await expectCellState(page, -3, -3, 'alive')
-  await expectCellState(page, -2, -3, 'dead')
-  await expectCellState(page, -3, -2, 'dead')
-  await expectCellState(page, -2, -2, 'dead')
 })

@@ -37,16 +37,44 @@
 // rules/no-aliveness-by-paint-class forbids reading paint from features/ at
 // all.
 //
-// WHY THESE THREE AND NOT THE ELEVEN THAT WERE HERE. Everything deleted
-// asserted a domain fact -- a neighbour-count outcome, a blinker, a block --
-// that cell-life-and-death.feature now states and its generated Playwright
-// spec now drives through the same browser. Measured before deleting: each of
-// the eight neighbour-count rows has exactly one Examples row that reddens
-// when that row's own rule is inverted, and the three pattern tests all
-// redden when the birth rule is changed from 3 to 2. What is left is the part
-// the generated layer cannot reach -- it reads aria-pressed as an ATTRIBUTE
-// through a CSS selector, and the two toggle tests below read it as
-// ACCESSIBILITY-TREE state through getByRole.
+// WHY THESE TWO AND NOT THE ELEVEN THAT WERE HERE. Everything `triage-paired-
+// specs` deleted asserted a domain fact -- a neighbour-count outcome, a
+// blinker, a block -- that cell-life-and-death.feature now states and its
+// generated Playwright spec now drives through the same browser. Measured
+// before deleting: each of the eight neighbour-count rows has exactly one
+// Examples row that reddens when that row's own rule is inverted, and the three
+// pattern tests all redden when the birth rule is changed from 3 to 2. What is
+// left is the part the generated layer cannot reach -- it reads aria-pressed as
+// an ATTRIBUTE through a CSS selector, and both toggle tests below read it as
+// ACCESSIBILITY-TREE state through getByRole. That is category 2, the computed
+// accessibility tree, and it is the whole of this file's licence.
+//
+// A THIRD TEST WAS HERE AND IS NOT, deleted by
+// `re-audit-hand-written-e2e-residue` on a DEMONSTRATION rather than on
+// subsumption. "every mounted cell is announced as a toggle button, alive or
+// dead" summed two CSS-selector counts over the mounted set and asserted they
+// reached the total -- category 2 in substance, since its subject was the
+// omission of aria-pressed on a dead cell, but read through the ATTRIBUTE
+// channel rather than the computed tree, and channel is what the enumeration
+// turns on. So "keep it as it is" was never an available answer.
+//
+// `architect` measured the replacement rather than deriving it. Probe:
+// `aria-pressed={isAlive ? true : undefined}` in Cell.tsx, whole suite --
+// 13 failed / 113 passed of 126, of which TEN are contract scenarios across
+// four features (cell-life-and-death 6, infinite-grid, keyboard-grid-
+// navigation, pattern-library) plus two other hand-written specs, every one of
+// them reporting through questions.ts's named throw. The omission claim is held
+// robustly by the contract, not marginally. Its one distinctive assertion --
+// the whole-set sum -- quantified over exactly TWO cells on the current tree
+// (one alive, one the parked keyboard cursor), both of which the contract reads
+// individually elsewhere, and it bounded the mounted set in neither direction,
+// so it was not a mounting-policy guard either.
+//
+// ONE INCIDENTAL FINDING FROM THAT PROBE, recorded because it looks like a
+// defect and is not: modal-inertness.e2e.spec.ts's first test also reds on it,
+// through expectCellState(0, 0, 'dead'). That is an unrelated test genuinely
+// depending on the attribute being present, which is what the outline says it
+// should be.
 //
 // WHICH ACTIVATION ROUTE THIS SPEC EXERCISES (recorded in the
 // black-box-acceptance-pilot slice's VERIFY pass, because it is easy to
@@ -74,25 +102,8 @@
 // test here.
 
 import { test, expect } from '@playwright/test'
-import { clickCell, expectCellState, parkKeyboardCursorAt } from './e2e-helpers'
-import {
-  CELL_SELECTOR,
-  ALIVE_CELL_SELECTOR,
-  CELL_ALIVE_ATTR,
-  CELL_DEAD_VALUE,
-  cellLabel,
-} from '../src/test-support/cellQuery.ts'
-
-// Composed here rather than imported, because post-flip there is no general
-// category of dead cell to name. Only live cells render, plus the keyboard
-// cursor's own cell even when it is dead -- so this matches at most ONE element
-// and only while the cursor rests on a dead cell. The two halves of that are
-// owned by two different modules on purpose: how deadness is ANNOUNCED is
-// cellQuery.ts's business and is imported above, while which element is the
-// cursor belongs to features/screenplay/elements.ts, whose rovingGridCell reads
-// tabindex. Folding a tab-stop concept into cellQuery.ts would break its own
-// header, which scopes it to how ALIVENESS is encoded.
-const DEAD_MOUNTED_CELL_SELECTOR = `${CELL_SELECTOR}[${CELL_ALIVE_ATTR}="${CELL_DEAD_VALUE}"]`
+import { clickCell, expectCellState } from './e2e-helpers'
+import { cellLabel } from '../src/test-support/cellQuery.ts'
 
 test.beforeEach(async ({ page }) => {
   await page.goto('/')
@@ -122,36 +133,4 @@ test('a cell that is killed is announced as an unpressed toggle button, not a pl
   // this query would find nothing at all if aria-pressed were dropped when
   // false, which is exactly the rendering optimisation the outline forbids.
   await expect(page.getByRole('button', { name: cellLabel(2, 3), pressed: false, exact: true })).toBeVisible()
-})
-
-test('every mounted cell is announced as a toggle button, alive or dead', async ({ page }) => {
-  await clickCell(page, 2, 3)
-
-  // THE SECOND CELL IS THE WHOLE POINT, and this test was vacuous without it.
-  // Only live cells render now, so the mounted set after one click is a single
-  // ALIVE cell -- total 1, alive 1, dead 0 -- and "dead === total - 1" was
-  // 0 === 0, quantifying over nothing. It could no longer fail for the reason
-  // its own header licenses it by, which is the one thing a test may never do.
-  //
-  // Parking the keyboard cursor on a cell that is not alive puts a dead cell
-  // back in the mounted set, because the cursor's own cell is mounted whether
-  // or not it is alive -- that is what keeps the grid reachable by Tab. Two
-  // clicks on one cell is net-zero on the board, asserted rather than assumed
-  // by the dead-state check and by the alive count still being exactly 1.
-  await parkKeyboardCursorAt(page, 5, 5)
-  await expectCellState(page, 5, 5, 'dead')
-
-  // Outline points 1 and 2 across the whole mounted set, which the jsdom
-  // component test cannot state -- it renders one cell at a time. If
-  // aria-pressed were omitted on dead cells as a rendering optimisation, the
-  // two partial counts would no longer sum to the total.
-  const total = await page.locator(CELL_SELECTOR).count()
-
-  // The anti-vacuity guard, and it is an assertion rather than a comment
-  // precisely because the vacuous form passed for a whole slice: there has to
-  // be at least one dead cell for the count below to be about anything.
-  expect(total).toBeGreaterThan(1)
-
-  await expect(page.locator(ALIVE_CELL_SELECTOR)).toHaveCount(1)
-  await expect(page.locator(DEAD_MOUNTED_CELL_SELECTOR)).toHaveCount(total - 1)
 })
