@@ -66,11 +66,17 @@ Feature: Keyboard grid navigation
     When I move the focus left
     Then the focused cell should be one cell further left and still in view
 
+  # THE SECOND THEN IS THE NEGATIVE HALF, and it is what says Enter on a cell
+  # is the cell's own activation and nothing besides. There is no game-wide
+  # Enter shortcut: the only way to compute a generation is the Next
+  # Generation control, so pressing Enter here must leave the game exactly
+  # where it was.
   Scenario: Pressing Enter brings the focused cell to life
     Given an empty grid
     And the cell at (2, 3) has keyboard focus
     When I press Enter
     Then the cell at (2, 3) should be alive
+    And the game should still be on its first generation
 
   Scenario: Pressing the space bar kills the focused live cell
     Given a live cell at (2, 3)

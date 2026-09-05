@@ -145,6 +145,21 @@ When('the next generation is computed', async ({ page }) => {
   await expect.poll(() => generationCount(page)).toBe(before + 1)
 })
 
+// THE NEGATIVE HALF OF THE STEP ABOVE, reading the same counter, and defined
+// here rather than beside its caller because the generation is this module's
+// vocabulary -- keyboard-grid-navigation.feature borrows it by writing the
+// same text, the way it already borrows "an empty grid".
+//
+// ABSOLUTE RATHER THAN A REMEMBERED DELTA, deliberately. A delta form would
+// need a Given to have recorded a baseline, and the step would then pass
+// vacuously in any scenario that forgot to. Every scenario reaching this one
+// opens a fresh grid, so "its first generation" is a state that can be named
+// outright -- and naming it is what makes the step fail when a stray Enter
+// listener advances the game behind the scenario's back.
+Then('the game should still be on its first generation', async ({ page }) => {
+  expect(await generationCount(page)).toBe(0)
+})
+
 When('I toggle the cell at \\({int}, {int}\\)', async ({ page }, x, y) => {
   await toggleCells(page, [[x, y]])
 })

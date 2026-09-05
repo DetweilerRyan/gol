@@ -58,6 +58,23 @@ Feature: Pattern library
     And the cell at (5, 6) should be alive
     And the cell at (6, 6) should be alive
 
+  # STAMPING USES THE ARMED PATTERN UP, which is what makes the route between
+  # two patterns go back through the library at all (see the scenario below).
+  # (12, 12) is clear of the Block stamped at (5, 5), so its three neighbours
+  # staying dead is what says a single cell was toggled rather than a second
+  # copy of the pattern stamped -- and (5, 5) staying alive says the first
+  # stamp was not disturbed by the click that followed it.
+  Scenario: A stamped pattern is used up, so the next click toggles a single cell
+    Given an empty grid
+    And I have armed the "Block" pattern
+    And I stamp the armed pattern with its top-left corner at (5, 5)
+    When I toggle the cell at (12, 12)
+    Then the cell at (12, 12) should be alive
+    And the cell at (13, 12) should be dead
+    And the cell at (12, 13) should be dead
+    And the cell at (13, 13) should be dead
+    And the cell at (5, 5) should be alive
+
   # ARMING IS SINGLE-SHOT, so the only route from one armed pattern to another
   # is back through the library, and what this scenario pins is that the SECOND
   # choice is the one that gets stamped. Glider anchored at (5, 5) has no cell
