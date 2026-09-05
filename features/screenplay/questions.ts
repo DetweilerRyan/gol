@@ -525,17 +525,41 @@ export async function appearancePreference(page: Page): Promise<AppearancePrefer
 // The light/dark split is a brightness threshold rather than a colour match,
 // for the same palette-independence reason: any board a player would call dark
 // sits far below it and any board they would call light far above it.
+//
+// AND THE COLOUR IS NORMALIZED THROUGH A CANVAS RATHER THAN PARSED, which
+// looks like ceremony and is not. getComputedStyle hands back whichever syntax
+// the stylesheet used -- measured against this Chromium: `#18181b` comes back
+// `rgb(24, 24, 27)`, but `oklch(0.985 0 0)` comes back verbatim as
+// `oklch(0.985 0 0)`. Tailwind v4's palette IS oklch, so the colours this
+// slice is about are exactly the ones that arrive in that form, and pulling
+// the numbers out with a regex would read a near-white board's components as
+// (0.985, 0, 0) and call it dark. A canvas fill answers in sRGB bytes for
+// every CSS colour syntax there is, alpha included, which is also what makes
+// the transparency test below independent of syntax.
 export async function appearanceInEffect(page: Page): Promise<Appearance> {
   const painted = await page.evaluate(
     ([x, y]) => {
-      const covering = [...document.querySelectorAll('*')].filter((element) => {
+      const scratch = document.createElement('canvas').getContext('2d')!
+      function toSrgb(colour: string): [number, number, number, number] {
+        scratch.clearRect(0, 0, 1, 1)
+        scratch.fillStyle = colour
+        scratch.fillRect(0, 0, 1, 1)
+        const [red, green, blue, alpha] = scratch.getImageData(0, 0, 1, 1).data
+        return [red, green, blue, alpha]
+      }
+
+      // Last one wins: later-in-document among absolutely positioned siblings is
+      // what this app paints on top -- Grid.tsx's layering comment states the
+      // rule -- so the final painted element covering the point is the one the
+      // player is actually looking at.
+      let topmost: [number, number, number, number] | null = null
+      for (const element of document.querySelectorAll('*')) {
         const box = element.getBoundingClientRect()
-        if (x < box.left || x > box.right || y < box.top || y > box.bottom) return false
-        const channels = getComputedStyle(element).backgroundColor.match(/[\d.]+/g)
-        return channels !== null && channels.length >= 3 && Number(channels[3] ?? 1) > 0
-      })
-      const topmost = covering.at(-1)
-      return topmost ? getComputedStyle(topmost).backgroundColor : null
+        if (x < box.left || x > box.right || y < box.top || y > box.bottom) continue
+        const colour = toSrgb(getComputedStyle(element).backgroundColor)
+        if (colour[3] > 0) topmost = colour
+      }
+      return topmost
     },
     [CENTER.x, CENTER.y] as const,
   )
@@ -543,7 +567,7 @@ export async function appearanceInEffect(page: Page): Promise<Appearance> {
   if (painted === null)
     throw new Error('nothing is painted at the middle of the board, so no appearance can be read off it')
 
-  const [red, green, blue] = painted.match(/[\d.]+/g)!.map(Number)
+  const [red, green, blue] = painted
   // Perceived brightness of the gamma-encoded channels, 0 (black) to 1
   // (white). Half is the boundary between a screen a player would call dark
   // and one they would call light.
