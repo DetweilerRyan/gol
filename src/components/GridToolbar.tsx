@@ -36,12 +36,27 @@ export default function GridToolbar({
       {/* A native <select> (Headless.Select, via src/catalyst/select.tsx) --
           getByRole('combobox') resolves it directly, and it already carries
           the dark: variants this slice's @custom-variant makes work. Wrapped
-          in a fixed-width div rather than a w-* override on the Select's own
-          className: that className lands on the same element as the
-          component's own `block w-full`, and which of the two wins is a
+          in a div rather than a w-* override on the Select's own className:
+          that className lands on the same element as the component's own
+          `block w-full`, and which of the two wins is a
           stylesheet-generation-order question this app has no control over
-          -- a wrapper with an ordinary width avoids relying on it. */}
-      <div className="w-32">
+          -- a wrapper carrying the width avoids relying on it.
+
+          THE WRAPPER'S WIDTH IS max-content, NOT A FIXED w-*, and that is a
+          correctness requirement rather than a preference. A <select> clips
+          its selected option's text with `overflow: clip` and NO ellipsis,
+          so a box too narrow by a few pixels renders a word cut mid-letter
+          with nothing to signal it -- which is exactly what the fixed `w-32`
+          here shipped: 128px box, 11px + 35px of padding (the second for the
+          chevron), 80px of content box against a `Follow system` that
+          measures 88.68px at this font. It rendered `Follow syste`.
+          A wider fixed width only moves the cliff: measured in Chromium at
+          14px, the same string is 99.11px in a Verdana-class fallback, which
+          needs 145.1px and so re-clips at w-36 (144px). max-content is the
+          one width that cannot clip by construction -- the browser derives it
+          from the widest OPTION's own text metrics, so it tracks the font and
+          the option names together. Don't put a fixed width back. */}
+      <div className="w-max">
         <Select
           aria-label={'Appearance'}
           value={appearancePreference}
