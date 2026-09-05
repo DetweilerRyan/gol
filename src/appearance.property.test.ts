@@ -3,6 +3,26 @@ import fc from 'fast-check'
 import { describe, expect } from 'vitest'
 import { parseAppearancePreference, resolveAppearance, type Appearance, type AppearancePreference } from './appearance'
 
+// FAULT BATTERY these three properties were shown failing against, at this
+// slice's REVIEW pass -- a property nobody has seen fail is documentation.
+// Each fault was hand-applied to appearance.ts and the file re-run alone:
+//
+//   F1  parseAppearancePreference's fallback 'system' -> 'light'
+//         -> reds "anything other than the two fixed values resolves to system"
+//   F2  resolveAppearance's 'system' arm returns a hardcoded 'light'
+//         -> reds "'system' always defers to whatever the system is reporting"
+//   F3  resolveAppearance returns systemAppearance unconditionally
+//         -> reds "a fixed preference wins outright"
+//   F4  parseAppearancePreference drops its `raw === 'light'` arm
+//         -> SURVIVES all three properties. Not a gap: it is structural. The
+//            arbitrary below filters 'light' and 'dark' out by construction,
+//            so no property here can ever be handed the value F4 breaks.
+//            appearance.test.ts's `it.each(['light', 'dark', 'system'])`
+//            round-trip is its only killer, and hand-applying F4 reds exactly
+//            that one test (1 failed / 14 passed in that file). Read the
+//            closed 3-value union as covered by the unit layer, never by a
+//            green run here.
+
 const appearance: fc.Arbitrary<Appearance> = fc.constantFrom('light', 'dark')
 const fixedPreference: fc.Arbitrary<AppearancePreference> = fc.constantFrom('light', 'dark')
 
