@@ -7,10 +7,12 @@
 // possibility, and the failure has to be loud here rather than surfacing
 // three modules downstream as a report full of NaN/null.
 
-// One measured repetition of a scenario. rAF deltas and PerformanceObserver
-// event durations are recorded as raw arrays (not pre-aggregated) so this
-// reporter -- not the ungated harness -- owns every percentile/median
-// computation.
+/**
+ * One measured repetition of a scenario. rAF deltas and PerformanceObserver
+ * event durations are recorded as raw arrays (not pre-aggregated) so this
+ * reporter -- not the ungated harness -- owns every percentile/median
+ * computation.
+ */
 export interface RepSample {
   frameIntervalsMs: number[]
   eventDurationsMs: number[]
@@ -19,19 +21,23 @@ export interface RepSample {
   renderedCellCount: number
   metricsDelta: Record<string, number>
   wallClockMs: number
-  // DOM nodes added plus removed under the cell layer during this rep.
-  // OPTIONAL, and undefined rather than 0 when absent: only scenarios that
-  // asked perf/instrumentation.ts for a node-churn MutationObserver
-  // (currently just the tile-boundary wobble family) measure it at all, and
-  // a scenario that never measured churn has not measured zero churn. Every
-  // other scenario deliberately runs without that observer, so its numbers
-  // stay comparable with runs from before this field existed.
+  /**
+   * DOM nodes added plus removed under the cell layer during this rep.
+   * OPTIONAL, and undefined rather than 0 when absent: only scenarios that
+   * asked perf/instrumentation.ts for a node-churn MutationObserver
+   * (currently just the tile-boundary wobble family) measure it at all, and
+   * a scenario that never measured churn has not measured zero churn. Every
+   * other scenario deliberately runs without that observer, so its numbers
+   * stay comparable with runs from before this field existed.
+   */
   nodeChurnCount?: number
 }
 
-// buildMode travels per-sample rather than being read from the environment
-// at report time: nothing at report time can know what mode a given raw
-// file was captured under, only the harness run that produced it.
+/**
+ * buildMode travels per-sample rather than being read from the environment
+ * at report time: nothing at report time can know what mode a given raw
+ * file was captured under, only the harness run that produced it.
+ */
 export interface RawScenarioSample {
   scenario: string
   project: string
@@ -134,12 +140,14 @@ function parseRepSample(value: unknown, context: string): RepSample {
   }
 }
 
-// Rep 0 is always the reporter's discarded warm-up (see stats.ts's
-// aggregate), so a sample with fewer than 2 reps has zero usable
-// measurements -- rejected here, at the boundary, rather than letting
-// aggregate() discover it downstream as an empty-array edge case.
 const MIN_REPS = 2
 
+/**
+ * Rep 0 is always the reporter's discarded warm-up (see stats.ts's
+ * aggregate), so a sample with fewer than 2 reps has zero usable
+ * measurements -- rejected here, at the boundary, rather than letting
+ * aggregate() discover it downstream as an empty-array edge case.
+ */
 export function parseRawScenarioSample(value: unknown): RawScenarioSample {
   const sample = asRecord(value, 'raw scenario sample')
   const reps = requireField(sample, 'reps', isUnknownArray, 'raw scenario sample')

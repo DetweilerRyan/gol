@@ -48,9 +48,11 @@ const STOPWORDS = new Set([
 export const NEAR_DUPLICATE_THRESHOLD = 0.72
 export const POSSIBLE_SYNONYM_THRESHOLD = 0.45
 
-// Replaces each distinct placeholder *name* with a generic ordered slot
-// (<_1>, <_2>, ...) so two steps differing only in placeholder naming
-// normalize to the same shape.
+/**
+ * Replaces each distinct placeholder *name* with a generic ordered slot
+ * (<_1>, <_2>, ...) so two steps differing only in placeholder naming
+ * normalize to the same shape.
+ */
 export function slotPlaceholders(text: string): string {
   const slotByName = new Map<string, string>()
   let nextIndex = 0

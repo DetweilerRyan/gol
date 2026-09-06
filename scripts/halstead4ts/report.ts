@@ -5,12 +5,14 @@
 
 import type { AnalyzedFile } from 'fta-cli'
 
-// One row of the report: fta-cli's own per-file analysis plus the repo-relative
-// path run.ts fills in (fta-cli leaves file_name empty when handed a single
-// file rather than a directory to walk). `analysis` is null when fta-cli
-// returns no result at all -- it does this for any file under its size floor
-// (measured: <=6 code lines skipped, 7 analyzed; comment lines don't count)
-// rather than erroring, so run.ts can't just dereference the result.
+/**
+ * One row of the report: fta-cli's own per-file analysis plus the repo-relative
+ * path run.ts fills in (fta-cli leaves file_name empty when handed a single
+ * file rather than a directory to walk). `analysis` is null when fta-cli
+ * returns no result at all -- it does this for any file under its size floor
+ * (measured: <=6 code lines skipped, 7 analyzed; comment lines don't count)
+ * rather than erroring, so run.ts can't just dereference the result.
+ */
 export interface FileResult {
   file: string
   analysis: AnalyzedFile | null

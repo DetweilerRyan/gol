@@ -5,12 +5,14 @@
 
 import type { RawScenarioSample, RepSample } from './raw-sample.ts'
 
-// Linear interpolation between closest ranks (numpy's/Excel's default,
-// "R-7"): rank = p/100 * (n-1), then interpolate between the values at the
-// floor and ceiling of that rank. `sortedAscending` is a caller precondition
-// -- this never sorts and never mutates its input, so callers that already
-// hold a sorted array (or want to reuse one across several percentiles)
-// don't pay to re-sort.
+/**
+ * Linear interpolation between closest ranks (numpy's/Excel's default,
+ * "R-7"): rank = p/100 * (n-1), then interpolate between the values at the
+ * floor and ceiling of that rank. `sortedAscending` is a caller precondition
+ * -- this never sorts and never mutates its input, so callers that already
+ * hold a sorted array (or want to reuse one across several percentiles)
+ * don't pay to re-sort.
+ */
 export function percentile(sortedAscending: number[], p: number): number {
   if (sortedAscending.length === 0) {
     throw new Error('percentile: sortedAscending must not be empty')
@@ -25,7 +27,9 @@ export function percentile(sortedAscending: number[], p: number): number {
   return sortedAscending[lowerIndex] + (sortedAscending[upperIndex] - sortedAscending[lowerIndex]) * weight
 }
 
-// Sorts a copy (never mutates `values`) and delegates to percentile(_, 50).
+/**
+ * Sorts a copy (never mutates `values`) and delegates to percentile(_, 50).
+ */
 export function median(values: number[]): number {
   if (values.length === 0) {
     throw new Error('median: values must not be empty')
@@ -44,12 +48,14 @@ function nullableMax(values: number[]): number | null {
   return values.length === 0 ? null : Math.max(...values)
 }
 
-// Summary of one per-rep numeric series (frame intervals, event durations)
-// across every measured rep. `count` is the total number of underlying
-// samples across all reps -- what makes an all-empty series (no long-task
-// events recorded on a fast machine, the common case for eventDurationsMs)
-// distinguishable from a genuine measurement of zero, rather than both
-// collapsing to the same number.
+/**
+ * Summary of one per-rep numeric series (frame intervals, event durations)
+ * across every measured rep. `count` is the total number of underlying
+ * samples across all reps -- what makes an all-empty series (no long-task
+ * events recorded on a fast machine, the common case for eventDurationsMs)
+ * distinguishable from a genuine measurement of zero, rather than both
+ * collapsing to the same number.
+ */
 export interface MetricSummary {
   count: number
   medianOfMedians: number | null
@@ -149,10 +155,12 @@ export interface ScenarioStats {
   metricsDeltaPer1000Cells: Record<string, number | null>
 }
 
-// Discards rep 0 (the warm-up) and reduces the remaining reps to one summary
-// per scenario. raw-sample.ts's MIN_REPS check guarantees at least one
-// measured rep survives, so every plain median() call below has non-empty
-// input.
+/**
+ * Discards rep 0 (the warm-up) and reduces the remaining reps to one summary
+ * per scenario. raw-sample.ts's MIN_REPS check guarantees at least one
+ * measured rep survives, so every plain median() call below has non-empty
+ * input.
+ */
 export function aggregate(sample: RawScenarioSample): ScenarioStats {
   const [, ...measuredReps] = sample.reps
 
@@ -192,19 +200,21 @@ function sumTaskDurationAndWallClock(samples: RawScenarioSample[]): RatioSums {
   return { taskDurationSum, wallClockSum, sawTaskDuration: taskDurations.length > 0 }
 }
 
-// A sanity signal, not a conversion: this function is itself unit-agnostic,
-// dividing whatever TaskDuration/wallClockMs values it's handed. In the real
-// pipeline (format.ts's buildLatestReport) that input has already had
-// units.ts's CDP-seconds-to-ms conversion applied, so the ratio reads close
-// to 1.0 -- see units.ts's header comment for the empirical values (~0.0009
-// before that conversion existed, ~0.93 after). Computed from raw sums
-// across every rep of every sample (including rep 0 -- this is about
-// unit-correctness, not about the discard policy the rest of this module
-// applies to warm-ups) so it's one headline ratio in the run header; if the
-// ratio ever reads ~1000x off from 1 again, that's the sign a unit
-// assumption broke somewhere upstream, not something for this function to
-// "fix". `undefined` (never NaN) when no rep recorded a TaskDuration key at
-// all.
+/**
+ * A sanity signal, not a conversion: this function is itself unit-agnostic,
+ * dividing whatever TaskDuration/wallClockMs values it's handed. In the real
+ * pipeline (format.ts's buildLatestReport) that input has already had
+ * units.ts's CDP-seconds-to-ms conversion applied, so the ratio reads close
+ * to 1.0 -- see units.ts's header comment for the empirical values (~0.0009
+ * before that conversion existed, ~0.93 after). Computed from raw sums
+ * across every rep of every sample (including rep 0 -- this is about
+ * unit-correctness, not about the discard policy the rest of this module
+ * applies to warm-ups) so it's one headline ratio in the run header; if the
+ * ratio ever reads ~1000x off from 1 again, that's the sign a unit
+ * assumption broke somewhere upstream, not something for this function to
+ * "fix". `undefined` (never NaN) when no rep recorded a TaskDuration key at
+ * all.
+ */
 export function taskDurationToWallClockRatio(samples: RawScenarioSample[]): number | undefined {
   const { taskDurationSum, wallClockSum, sawTaskDuration } = sumTaskDurationAndWallClock(samples)
   if (!sawTaskDuration || wallClockSum === 0) return undefined

@@ -9,9 +9,11 @@
 // be read as a step. No feature file here uses doc strings, and supporting one
 // means tracking its `"""` fences, not just skipping lines.
 
-// A step belongs either to a Background (shared, no owning scenario) or to a
-// Scenario/Scenario Outline. Background steps carry null scenario index/name
-// precisely because they aren't scoped to one scenario.
+/**
+ * A step belongs either to a Background (shared, no owning scenario) or to a
+ * Scenario/Scenario Outline. Background steps carry null scenario index/name
+ * precisely because they aren't scoped to one scenario.
+ */
 export type StepSection = 'background' | 'scenario'
 
 export interface ParsedStep {

@@ -16,13 +16,15 @@ export interface RunHeader {
   buildModes: string[]
   taskDurationToWallClockRatio: number | undefined
   sampleCount: number
-  // The metricsDelta keys that units.ts converted CDP-seconds -> ms before
-  // any scenario stat was computed -- every other key in a scenario's
-  // metricsDeltaPerMoveEvent/metricsDeltaPer1000Cells (in latest.json) is a
-  // raw CDP count or byte total, unconverted. Carried in the header (rather
-  // than repeated per scenario) since the set is fixed for a whole run, and
-  // read from units.ts's own list rather than duplicated here, so the two
-  // can't drift apart.
+  /**
+   * The metricsDelta keys that units.ts converted CDP-seconds -> ms before
+   * any scenario stat was computed -- every other key in a scenario's
+   * metricsDeltaPerMoveEvent/metricsDeltaPer1000Cells (in latest.json) is a
+   * raw CDP count or byte total, unconverted. Carried in the header (rather
+   * than repeated per scenario) since the set is fixed for a whole run, and
+   * read from units.ts's own list rather than duplicated here, so the two
+   * can't drift apart.
+   */
   metricsDeltaMsKeys: string[]
 }
 
@@ -50,10 +52,12 @@ function compareScenarios(a: ScenarioStats, b: ScenarioStats): number {
   return a.scenario === b.scenario ? a.project.localeCompare(b.project) : a.scenario.localeCompare(b.scenario)
 }
 
-// The one call site for units.ts's conversion -- every sample stats.ts and
-// buildRunHeader see from here on has already had its CDP-seconds duration
-// keys converted to milliseconds; see units.ts's header comment for why
-// report entry, not perf/ and not stats.ts, is where that has to happen.
+/**
+ * The one call site for units.ts's conversion -- every sample stats.ts and
+ * buildRunHeader see from here on has already had its CDP-seconds duration
+ * keys converted to milliseconds; see units.ts's header comment for why
+ * report entry, not perf/ and not stats.ts, is where that has to happen.
+ */
 export function buildLatestReport(environment: RunEnvironment, samples: RawScenarioSample[]): LatestReport {
   const msSamples = samples.map(convertSampleMetricsToMs)
   return {

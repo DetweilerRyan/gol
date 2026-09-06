@@ -13,15 +13,19 @@ import {
 } from './similarity.ts'
 import type { ParsedStep, StepSection } from './step-parser.ts'
 
-// A parsed step tagged with the .feature file it came from -- the extra field
-// that lifts this analysis from single-file to whole-corpus scope.
+/**
+ * A parsed step tagged with the .feature file it came from -- the extra field
+ * that lifts this analysis from single-file to whole-corpus scope.
+ */
 export interface CorpusStep extends ParsedStep {
   feature: string
 }
 
-// The snake_case field names below are the report's JSON wire format
-// (reports/gherkin-dry/report.json), matching ir-dry-checker-spec.md's schema
-// rather than this codebase's camelCase convention.
+/**
+ * The snake_case field names below are the report's JSON wire format
+ * (reports/gherkin-dry/report.json), matching ir-dry-checker-spec.md's schema
+ * rather than this codebase's camelCase convention.
+ */
 export interface StepLocation {
   feature: string
   section: StepSection
@@ -49,8 +53,10 @@ export interface Finding {
   members: FindingMember[]
   reason: string
   suggested_action: string
-  // Only the similarity-derived kinds carry a Jaccard score; the exact and
-  // placeholder-normalized kinds are matches, not scored comparisons.
+  /**
+   * Only the similarity-derived kinds carry a Jaccard score; the exact and
+   * placeholder-normalized kinds are matches, not scored comparisons.
+   */
   score?: number
 }
 
@@ -95,25 +101,26 @@ function scenarioKey(step: CorpusStep): string {
   return `${step.feature}::${step.section}::${step.scenarioIndex}`
 }
 
-// The dedupe set's key for an unordered pair of step texts. It MUST be
-// injective over unordered pairs: the same key is built on both the add side
-// (findPlaceholderVariants) and the lookup side (findTokenSimilarities), so
-// two different pairs sharing a key make `dedupePairs.has()` answer "already
-// explained" about a pair nothing explained, and that pair's own finding
-// silently vanishes from the report. Nothing downstream would notice -- this
-// program exits 0 whatever it prints, so its tests are the only observer.
-//
+/**
+ * The dedupe set's key for an unordered pair of step texts. It MUST be
+ * injective over unordered pairs: the same key is built on both the add side
+ * (findPlaceholderVariants) and the lookup side (findTokenSimilarities), so
+ * two different pairs sharing a key make `dedupePairs.has()` answer "already
+ * explained" about a pair nothing explained, and that pair's own finding
+ * silently vanishes from the report. Nothing downstream would notice -- this
+ * program exits 0 whatever it prints, so its tests are the only observer.
+ *
+ * Exported for analyze.property.test.ts alone -- it is the one contract in
+ * this file a fixture cannot state, since injectivity is a claim about every
+ * pair of pairs rather than about four witnesses. Nothing else imports it and
+ * it is not part of the analysis surface; analyzeSteps is.
+ */
 // `[a, b].sort().join(' ')` was NOT injective and did drop real findings:
 // step texts contain spaces, so {"<alpha> x", "<beta> <gamma> x <delta>"}
 // and {"<alpha> x <beta>", "<gamma> x <delta>"} both join to the same string
 // (measured on unmutated source -- the first pair's near-duplicate finding
 // disappears as soon as the second pair is in the corpus). JSON.stringify
 // escapes the members, so no member can forge the delimiter.
-//
-// Exported for analyze.property.test.ts alone -- it is the one contract in
-// this file a fixture cannot state, since injectivity is a claim about every
-// pair of pairs rather than about four witnesses. Nothing else imports it and
-// it is not part of the analysis surface; analyzeSteps is.
 export function pairKey(a: string, b: string): string {
   // `.sort()` canonicalizes the pair, so the key does not depend on the order
   // the caller happens to hold the two texts in. That IS this function's
