@@ -31,9 +31,10 @@ const KNOWN_MODELS = ['opus', 'sonnet', 'haiku']
 /**
  * Check 1: every `npm run <script>` reference in the docs names a real
  * package.json script. One failure per distinct (file, script) pair, not
- * one per occurrence -- a script mentioned wrong three times in the same
- * file is one typo to fix, not three failures to wade through.
+ * one per occurrence.
  */
+// A script mentioned wrong three times in the same file is one typo to
+// fix, not three failures to wade through.
 export function checkNpmRunReferencesResolve(docFiles: RawFile[], packageScripts: ReadonlySet<string>): Failure[] {
   const failures: Failure[] = []
   for (const file of docFiles) {

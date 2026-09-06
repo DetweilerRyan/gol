@@ -19,11 +19,11 @@ export function extractRulePathMentions(text: string): string[] {
   return [...text.matchAll(RULE_PATH_MENTION)].map((match) => match[1])
 }
 
-// this repo's one paired-shorthand convention, "`no-manual-memo-ts` /
-// `-tsx`" (or "... and `-tsx`"), which reads as "no-manual-memo-ts and
-// no-manual-memo-tsx" to a human but never spells the second id out in
-// full. synthesizeShorthandIds recovers it so the forward check doesn't
-// misreport a real mention as missing.
+// Recovers this repo's one paired-shorthand convention, "`no-manual-memo-ts`
+// / `-tsx`" (or "... and `-tsx`"), which reads as "no-manual-memo-ts and
+// no-manual-memo-tsx" to a human but never spells the second id out in full
+// -- so the forward check in extractMentionedRuleIds below doesn't misreport
+// a real mention as missing.
 function synthesizeShorthandIds(text: string): string[] {
   const synthesized: string[] = []
   for (const match of text.matchAll(SHORTHAND_PAIR)) {
@@ -37,9 +37,10 @@ function synthesizeShorthandIds(text: string): string[] {
 /**
  * extractMentionedRuleIds is the forward direction instead: does the rule
  * documentation file (run.ts's ruleDocFile) mention this real rule id at
- * all. It's deliberately permissive -- every
- * backticked token counts as a candidate, since a false-positive candidate
- * here only means "counts as mentioned," never "flagged as missing" -- plus
+ * all. It's deliberately permissive -- every backticked token counts as a
+ * candidate (plus every path mention and every synthesized shorthand pair),
+ * since a false-positive candidate here only means "counts as mentioned,"
+ * never "flagged as missing."
  */
 export function extractMentionedRuleIds(text: string): Set<string> {
   const bareTokens = [...text.matchAll(BACKTICKED_TOKEN)].map((match) => match[1])

@@ -40,18 +40,17 @@ function toToolsList(value: string | undefined): string[] | undefined {
 }
 
 /**
- * Parses one .claude/agents/*.md file's YAML-shaped frontmatter block into
- * the four fields checks.ts validates. Deliberately NOT a real YAML parser:
- * several agent descriptions are long, hand-written prose containing a
- * literal ": " sequence (e.g. "REVIEW (the default, and its slot in the
- * cycle) -- invoke after..."), which a real YAML parser reads as a nested
- * mapping and refuses -- measured against the `yaml` package already a
- * dependency of this repo, it fails to parse 2 of the 5 agent files today
- * (architect.md, coder.md) for exactly that reason. Every field in this
- * frontmatter format is written on exactly one line by this repo's own
- * convention (no multi-line values), so a line-anchored `key: value` regex
- * reads every field exactly as intended without choking on the prose.
+ * Parses one `.claude/agents/*.md` file's YAML-shaped frontmatter block into
+ * the fields {@link AgentFrontmatter} lists. Deliberately not a real YAML
+ * parser: every field must be written on its own line (no multi-line
+ * values), so a line-anchored `key: value` regex reads a long, hand-written
+ * agent description straight through even when it contains a literal `": "`
+ * sequence that a real YAML parser would read as a nested mapping and
+ * refuse.
  */
+// Measured against the `yaml` package already a dependency of this repo: it
+// fails to parse 2 of the 5 agent files as they stand (architect.md,
+// coder.md) for exactly that reason.
 export function parseAgentFrontmatter(relativePath: string, rawText: string): AgentFrontmatter {
   const filenameStem = filenameStemOf(relativePath)
   const match = rawText.match(FRONTMATTER_BLOCK)

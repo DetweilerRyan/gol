@@ -17,11 +17,12 @@ function escapeRegExp(value: string): string {
  * CLAUDE.md and the agent files use the same "→" glyph for other, unrelated
  * chains (e.g. "framework-free → hook → component", "Grid → GridCells →
  * Cell"), and a plain arrow-chain scan would misread those as a cycle
- * mention. Every occurrence found in this repo's docs today is the full
- * six-link cycle, but a shorter, still-all-roles fragment is accepted too --
- * nothing in the source docs currently produces one, so this is future
- * headroom rather than something exercised today.
+ * mention.
  */
+// Every occurrence found in this repo's docs today is the full six-link
+// cycle, but a shorter, still-all-roles fragment is accepted too -- nothing
+// in the source docs currently produces one, so this is future headroom
+// rather than something exercised today.
 export function findCycleMentions(text: string, knownRoles: ReadonlySet<string>): CycleMention[] {
   if (knownRoles.size === 0) return []
   const roleAlternation = [...knownRoles].map(escapeRegExp).join('|')

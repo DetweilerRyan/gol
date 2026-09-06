@@ -25,9 +25,9 @@ function formatLines(input: CheckInput, failures: Failure[]): string[] {
  * shrinks to gathering the CheckInput off disk (agent files, other docs,
  * package.json's scripts, rule filenames) and handing it to decide() here --
  * which is what lets a test pin the exit code without touching the
- * filesystem. Mirrors ast-grep-rule-check's decide.ts split for the same
- * reason.
+ * filesystem.
  */
+// Mirrors ast-grep-rule-check's decide.ts split for the same reason.
 export function decide(input: CheckInput): DecideResult {
   const failures = checkAll(input)
   return {
