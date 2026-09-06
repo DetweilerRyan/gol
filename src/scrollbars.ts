@@ -61,13 +61,14 @@ function computeAxisScrollbarMetrics(offset: number, cellSize: number, viewportS
 }
 
 /**
- * The scrollable "extent" is the union of the content bounds and the
- * current visible viewport, in pixels -- not the content bounds alone.
+ * Computes horizontal and vertical scrollbar thumb ratio/offset from the
+ * camera and the live-cell content bounds.
  *
- * Growing the extent to always include the viewport keeps every ratio
- * valid with no special-casing: an empty/fully-visible grid falls out of
- * the same formula as thumbRatio = 1, offsetRatio = 0, since extent then
- * equals the viewport exactly.
+ * The scrollable extent a thumb represents is the union of the content
+ * bounds and the current viewport, not the content bounds alone, so
+ * thumbRatio and thumbOffsetRatio stay valid (1 and 0) even when
+ * `contentBounds` is null or the camera has panned away from all live
+ * cells.
  */
 // prettier-ignore
 export function computeScrollbarMetrics(camera: Camera, contentBounds: ContentBounds | null, viewportWidthPx: number, viewportHeightPx: number): ScrollbarMetricsByAxis {
@@ -97,9 +98,11 @@ export interface ThumbGeometry {
 const MIN_THUMB_PX = 24
 
 /**
- * MIN_THUMB_PX keeps the thumb grabbable even when the content is
- * enormous relative to the viewport, clamped so it never exceeds the
- * track itself.
+ * Computes a scrollbar thumb's rendered length and offset, in track
+ * pixels.
+ *
+ * The length is clamped to a minimum grabbable size and never exceeds
+ * the track itself.
  */
 export function computeThumbGeometry(metrics: ScrollbarMetrics, trackLengthPx: number): ThumbGeometry {
   // The thumb's rendered size/position is a pure rendering concern, separate
@@ -112,19 +115,24 @@ export function computeThumbGeometry(metrics: ScrollbarMetrics, trackLengthPx: n
 export type ScrollbarAxis = 'x' | 'y'
 
 /**
- * Thumb-drag pixels are treated as 1:1 with on-screen track pixels, and a
- * deltaTrackPx thumb movement corresponds to deltaTrackPx / thumbRatio px of
- * content motion -- the inverse of thumbRatio being how much the track is
+ * Pans the camera along one axis to follow a scrollbar-thumb drag of
+ * `deltaTrackPx` track pixels.
+ *
+ * Thumb-drag pixels are treated as 1:1 with on-screen track pixels: a
+ * `deltaTrackPx` movement corresponds to `deltaTrackPx / thumbRatio` px of
+ * content motion, the inverse of thumbRatio being how much the track is
  * compressed relative to the content it represents.
  *
- * Follows the "document scroll" sign convention (thumb
- * right/down reveals further content, offset increases), matching
- * camera.ts's applyWheelInput -- the opposite sign from
- * panCamera's drag-to-pan convention.
+ * Follows the "document scroll" sign convention (thumb right/down reveals
+ * further content, offset increases), matching camera.ts's
+ * `applyWheelInput` -- the opposite sign from `panCamera`'s drag-to-pan
+ * convention.
  *
- * thumbRatio must be the value from when
- * the drag started, not recomputed mid-drag, since panning changes the
- * content's own pixel position and would otherwise feed back on itself.
+ * @returns `camera` unchanged, by reference, when `thumbRatio` is 0 or
+ * negative (an empty or inverted track).
+ * @param thumbRatio must be the value from when the drag started, not
+ * recomputed mid-drag, since panning changes the content's own pixel
+ * position and would otherwise feed back on itself.
  */
 // prettier-ignore
 export function panCameraByScrollbarDrag(camera: Camera, axis: ScrollbarAxis, deltaTrackPx: number, thumbRatio: number): Camera {
