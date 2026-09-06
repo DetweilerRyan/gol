@@ -45,7 +45,7 @@ npm run lint               # oxlint
 npm run format             # prettier --write . (covers .feature Examples-table alignment too, via prettier-plugin-gherkin)
 npm run format:check       # prettier --check .
 
-npm test                    # vitest run (all three projects: unit + property + dom -- see Architecture)
+npm test                    # vitest run (all three projects: unit + property + dom -- see `.claude/agents/articles/testing-layers.md`)
 npm run test:unit           # vitest run --project '!property' -- fast path for iterative TDD (runs the unit and dom projects, node + jsdom; --exclude flags don't work here, since --exclude is a no-op once `projects` is set -- filter with --project instead)
 npm run test:property       # vitest run --project property -- only the property project (*.property.test.ts)
 npm run test:coverage       # vitest run --coverage
@@ -242,11 +242,11 @@ If you use the native `EnterWorktree({ name })` or `Agent({ isolation: 'worktree
    rm -f reports/stryker-incremental.json reports/stryker-incremental-scripts.json
    ```
 
-   then invoke `hardener` on `main` with the whole tree as its scope. Deleting the caches is the honest expression of intent: they aren't stale, they're describing a tree that no longer exists — the situation the mutation-testing note in Commands already names.
+   then invoke `hardener` on `main` with the whole tree as its scope. Deleting the caches is the honest expression of intent: they aren't stale, they're describing a tree that no longer exists — the situation `.claude/agents/articles/mutation-testing.md` already names.
 
    **Mutation-invariant merges — the one exemption, and it is stage 4 only.** Steps 3 and 5 both mandate `npm run test:mutation:full`, and for some diffs that is two full runs measuring a quantity that provably did not move. `stryker.config.json`'s `mutate` list covers only `src/**`, and its `ignorePatterns` keeps `features/` out of the sandbox entirely, so for a diff confined to the paths below neither a mutant nor a test that could kill one is reachable. Left unaddressed this is not merely a cost — it is a standing incentive to bundle unrelated features into one slice to pay the bill once, which is the opposite of what the serial-landing rule is for.
 
-   **The predicate is an allowlist of paths that cannot move the score, not a list of the paths that can.** That direction is the whole design: a blocklist fails **open** — a path nobody thought to list silently skips the mutation gate, and a skipped run reads exactly like a passing one — which is the same dangerous direction as the `ignorePatterns` glob that matches nothing, already described in the Commands section. An allowlist fails safe: an unanticipated path simply runs the gate.
+   **The predicate is an allowlist of paths that cannot move the score, not a list of the paths that can.** That direction is the whole design: a blocklist fails **open** — a path nobody thought to list silently skips the mutation gate, and a skipped run reads exactly like a passing one — which is the same dangerous direction as the `ignorePatterns` glob that matches nothing, already described in `.claude/agents/articles/mutation-testing.md`. An allowlist fails safe: an unanticipated path simply runs the gate.
 
    **The predicate is a single path check.** Evaluated over the landing diff:
 
