@@ -30,15 +30,14 @@ export function discoverTargets(featuresDir: string): MutationTarget[] {
 }
 
 /**
- * `--feature` narrows a run to one target, accepting the bare slice name,
- * the bare `.feature` filename, or (once a target is nested) its full
- * relative path -- a match on either the target's whole `feature` or just
- * its basename. An unrecognized name throws rather than silently matching
- * nothing -- the same silent-empty-glob hazard listFeatureFiles guards
- * against, one level up -- and more than one match (two nested targets
- * sharing a basename) throws naming every candidate rather than silently
- * picking the first, since a match this ambiguous is exactly the kind of
- * "confident number about nothing" this program guards against elsewhere.
+ * Narrows `targets` to the one named by `--feature`, accepting the bare
+ * slice name, the bare `.feature` filename, or (once a target is nested)
+ * its full relative path -- a match on either the target's whole `feature`
+ * or just its basename. Returns `targets` unchanged when `featureArg` is
+ * `undefined`.
+ *
+ * @throws Error if no target matches `featureArg`.
+ * @throws Error if more than one target matches (naming every candidate) -- e.g. two nested targets sharing a basename.
  */
 export function filterTargets(targets: MutationTarget[], featureArg: string | undefined): MutationTarget[] {
   if (featureArg === undefined) return targets
@@ -57,8 +56,13 @@ export function filterTargets(targets: MutationTarget[], featureArg: string | un
   return matches
 }
 
-// The only flag run.ts's main() takes: `--feature <name>` scopes the run to
-// one target (see filterTargets above). A thin wrapper over node:util's
+/**
+ * The only flag run.ts's main() takes: `--feature <name>` scopes the run to
+ * one target (see filterTargets above).
+ *
+ * @throws Error naming the accepted form, on any unknown flag, missing value, or positional argument.
+ */
+// A thin wrapper over node:util's
 // parseArgs, kept here rather than inlined at the call site, for the same
 // reason as above -- run.ts is excluded from crap4ts/Stryker's scripts/
 // scope by their `run.ts`-at-any-depth globs, so the one line of logic (translating

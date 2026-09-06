@@ -44,11 +44,16 @@ function baseName(targetFeatureFileName: string): string {
  * has to be unique *across* targets, not just within one -- prefixing with
  * the target's own base name is what keeps "infinite-grid" and
  * "camera-pan-and-zoom" from colliding on "mutant-0.feature".
+ *
+ * @throws Error if `targetFeatureFileName` doesn't end in `.feature`, or contains `_`.
  */
 export function mutantFeatureFileName(targetFeatureFileName: string, ordinal: number): string {
   return `${baseName(targetFeatureFileName)}.mutant-${ordinal}.feature`
 }
 
+/**
+ * @throws Error if `targetFeatureFileName` doesn't end in `.feature`, or contains `_`.
+ */
 export function baselineFeatureFileName(targetFeatureFileName: string): string {
   return `${baseName(targetFeatureFileName)}.baseline.feature`
 }

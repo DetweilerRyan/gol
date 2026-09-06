@@ -40,12 +40,12 @@ export function classifyMutant(baselineTotalTests: number, summary: SpecSummary 
  * *this* number as an infrastructure error, so if the baseline spec itself
  * isn't green there is no trustworthy count to compare mutants against --
  * every mutant for this target would then misreport rather than merely
- * under-report. Throws naming the feature and spec file so an aborted run
- * says exactly which target was the problem. `< 1`, not `<= 1`: a baseline
- * that collected exactly one test is the smallest count that must still
- * pass, mirroring the boundary the vitest-based predecessor of this
- * function pinned.
+ * under-report. `< 1`, not `<= 1`: a baseline that collected exactly one
+ * test is the smallest count that must still pass.
+ *
+ * @throws Error naming the feature and spec file, if the baseline is not green.
  */
+// `< 1` mirrors the boundary the vitest-based predecessor of this function pinned.
 export function assertBaselineSpecGreen(
   featureFileName: string,
   specFileName: string,
@@ -74,19 +74,17 @@ export interface ResultSummary {
 }
 
 /**
- * A target whose .feature lost its Examples table (or wasn't selected by
- * --feature) contributes zero mutants, and killed/0 is NaN -- printed
- * verbatim, that made a run which legitimately tested nothing
- * indistinguishable from a broken report (the defect this function exists to
- * close: `npm run acceptance-mutation -- --feature camera-pan-and-zoom`
- * printed "mutation score: NaN%" at exit 0, since that feature no longer
- * carries an Examples table). Zero mutants is vacuously a clean run --
- * nothing survived because nothing ran -- so it scores 100.0%, the same
- * convention coverage tools use for an empty denominator; the load-bearing
- * part is that the count is legible as `0 mutants` and the score is a
- * defined string, not that 100.0% specifically is the "right" number for
- * nothing having run.
+ * Zero mutants (a target with no Examples table, or excluded by --feature)
+ * is vacuously a clean run -- nothing survived because nothing ran -- so
+ * `scorePercent` is `"100.0"`, the same convention coverage tools use for an
+ * empty denominator, rather than `NaN` from a killed/0 division.
  */
+// The defect this function exists to close: `npm run acceptance-mutation --
+// --feature camera-pan-and-zoom` printed "mutation score: NaN%" at exit 0,
+// since that feature no longer carries an Examples table. The load-bearing
+// part is that the count is legible as `0 mutants` and the score is a
+// defined string, not that 100.0% specifically is the "right" number for
+// nothing having run.
 export function summarizeResults(results: { outcome: Outcome }[]): ResultSummary {
   const total = results.length
   const killed = results.filter((r) => r.outcome === 'killed').length

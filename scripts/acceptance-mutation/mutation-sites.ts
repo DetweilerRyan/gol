@@ -118,10 +118,14 @@ function assertUniqueSeedKeys(sites: MutationSite[]): void {
 }
 
 /**
- * Every SiteKind's finders run over the same parsed document, in
- * registration order -- there is only one kind today, so order is not yet
- * observable, but a future second finder inherits this rather than needing
- * its own iteration policy.
+ * Every mutation site in `featureText`, across every registered SiteKind.
+ * Every kind's finder runs over the same parsed document, in registration
+ * order -- there is only one kind today, so order is not yet observable, but
+ * a future second finder inherits this rather than needing its own
+ * iteration policy.
+ *
+ * @throws GherkinException if `featureText` fails to parse.
+ * @throws Error if two sites (of any kind) collide on the same seedKey.
  */
 export function listMutationSites(featureText: string, featureFileName: string): MutationSite[] {
   const { doc, lines } = parseFeature(featureText)

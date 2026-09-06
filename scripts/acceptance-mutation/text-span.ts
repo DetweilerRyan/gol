@@ -11,16 +11,20 @@
 // gherkin-document.ts and would not even reach this file).
 
 /**
- * A half-open range within one line of a FeatureDocument's `lines` array:
- * `line` is the same 0-based index gherkin-document.ts's own convention uses
- * (AST locations are 1-based; callers subtract 1 once, at the adapter
- * boundary, and hand this module 0-based numbers throughout), and
- * [startColumn, endColumn) is 0-based and exclusive on the end, so a
- * zero-width span (startColumn === endColumn) is a valid insertion point
- * rather than a special case.
+ * A half-open range within one line of a FeatureDocument's `lines` array.
  */
 export interface TextSpan {
+  /**
+   * The same 0-based index gherkin-document.ts's own convention uses (AST
+   * locations are 1-based; callers subtract 1 once, at the adapter boundary,
+   * and hand this module 0-based numbers throughout).
+   */
   line: number
+  /**
+   * [startColumn, endColumn) is 0-based and exclusive on the end, so a
+   * zero-width span (startColumn === endColumn) is a valid insertion point
+   * rather than a special case.
+   */
   startColumn: number
   endColumn: number
 }

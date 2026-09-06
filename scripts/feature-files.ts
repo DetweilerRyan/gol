@@ -6,6 +6,11 @@
 // that list.
 import { existsSync, globSync } from 'node:fs'
 
+/**
+ * Filters `names` to `.feature` files and sorts them.
+ *
+ * @throws Error if none remain after filtering.
+ */
 // Pure filter+sort+validate over an already-read directory listing, so the
 // sorting behavior is testable without depending on a filesystem's own
 // (unspecified, and on some platforms already-alphabetical) readdir order --
@@ -21,13 +26,18 @@ export function selectFeatureFiles(names: string[], featuresDir: string): string
 }
 
 /**
- * listFeatureFiles returns paths *relative to featuresDir*, using '/' as the
- * separator (measured on darwin; this repo is darwin-only) -- while the
- * tree is flat these are bare basenames, and every call site's
- * `path.join(FEATURES_DIR, file)` keeps working unchanged once a file lives
- * in a subdirectory, since path.join accepts a relative path with
- * separators in it just as readily as a bare filename.
+ * Every `.feature` file under `featuresDir`, sorted, as paths *relative to
+ * featuresDir* using '/' as the separator (measured on darwin; this repo is
+ * darwin-only).
+ *
+ * @throws Error if `featuresDir` does not exist.
+ * @throws Error if `featuresDir` contains no `.feature` files.
  */
+// While the tree is flat these are bare basenames, and every call site's
+// `path.join(FEATURES_DIR, file)` keeps working unchanged once a file lives
+// in a subdirectory, since path.join accepts a relative path with
+// separators in it just as readily as a bare filename.
+//
 // Throws rather than returning an empty array on a features directory with
 // no .feature files in it -- the silent-empty-glob hazard vite.config.ts's
 // `dom` project comment warns about: a wrong path here would otherwise look

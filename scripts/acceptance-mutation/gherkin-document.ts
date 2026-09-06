@@ -55,24 +55,28 @@ export type {
 export const { CompositeParserException, GherkinException, ParserException } = Errors
 
 /**
- * A parsed feature file: the original text (so a caller can re-render without
- * re-reading the file), the same text split into lines (matching the
- * 0-based-`lineIndex` convention the rest of this program already uses,
- * derived once here rather than by every caller), and the raw AST.
+ * A parsed feature file.
  */
 export interface FeatureDocument {
+  /** The original text, so a caller can re-render without re-reading the file. */
   text: string
+  /**
+   * The same text split into lines, matching the 0-based-`lineIndex`
+   * convention the rest of this program already uses -- derived once here
+   * rather than by every caller.
+   */
   lines: string[]
+  /** The raw AST. */
   doc: messages.GherkinDocument
 }
 
 /**
- * Parses one feature file's text into its AST. Throws (an `@cucumber/gherkin`
- * GherkinException, most commonly CompositeParserException) on malformed
- * Gherkin -- deliberately not caught here. This module locates spans, it does
- * not decide what to do when a file can't be parsed at all; that decision
- * belongs to the caller, which has the target name to attach to the error
- * (see run.ts).
+ * Parses one feature file's text into its AST. This module locates spans; it
+ * does not decide what to do when a file can't be parsed at all -- that
+ * decision belongs to the caller, which has the target name to attach to
+ * the error (see run.ts).
+ *
+ * @throws GherkinException (most commonly CompositeParserException) on malformed Gherkin, deliberately uncaught here.
  */
 export function parseFeature(text: string): FeatureDocument {
   const newId = IdGenerator.incrementing()

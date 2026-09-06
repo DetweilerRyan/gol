@@ -165,16 +165,19 @@ function mutateComponent(
 }
 
 /**
- * The rule's mutate, plus the injected component mutator -- so the
- * VALUE_RULES entry wraps it in an arrow rather than naming it directly. Two
- * strategies: component-change (above, today's behaviour) and swap-x-y
- * (transpose a tuple's two components). The class draw is always the FIRST
- * draw, regardless of arity or of whether any tuple is actually swappable --
- * so this rule's draw sequence never depends on data shape, only which
- * branch the first draw's outcome (plus the data-dependent, non-drawing
- * swappable-candidate check) sends it down. Everything after the first draw
- * is branch-local.
+ * Mutates `value`, a fixed-arity numeric tuple list. Two strategies:
+ * component-change (delegates one component's text to the injected `mutate`)
+ * and swap-x-y (transpose a 2-tuple's two components). The class draw is
+ * always the FIRST draw, regardless of arity or of whether any tuple is
+ * actually swappable -- so this rule's draw sequence never depends on data
+ * shape, only which branch the first draw's outcome (plus the
+ * data-dependent, non-drawing swappable-candidate check) sends it down.
+ *
+ * @throws Error if `value` is not a tuple-list (see {@link isTupleList}).
  */
+// The rule's mutate, plus the injected component mutator -- so the
+// VALUE_RULES entry wraps it in an arrow rather than naming it directly.
+// Everything after the first draw is branch-local.
 export function mutateTupleList(value: string, rand: RandomFn, seedKey: string, mutate: ValueMutator): string {
   const tuples = parseTupleList(value)
   if (!tuples) throw new Error(`mutateTupleList called on a value that is not a tuple-list: ${JSON.stringify(value)}`)
