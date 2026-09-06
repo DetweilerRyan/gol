@@ -3,14 +3,12 @@ import {
   CENTER,
   clickCell,
   dragPan,
-  dragScrollbarThumb,
   elementAtPoint,
   thumbPositionPercent,
   toggleFarCell,
   visibleProportionPercent,
   type ScrollbarOrientation,
 } from './e2e-helpers'
-import { ALIVE_CELL_SELECTOR } from '../src/test-support/cellQuery.ts'
 
 function horizontalThumb(page: Page) {
   return page.locator('[role="scrollbar"][aria-orientation="horizontal"]')
@@ -22,6 +20,32 @@ function verticalThumb(page: Page) {
 test.beforeEach(async ({ page }) => {
   await page.goto('/')
 })
+
+// ---------------------------------------------------------------------------
+// A TEST LEFT THIS FILE BY CONVERSION, NOT BY SUBSUMPTION. "dragging a
+// scrollbar thumb never toggles whatever cell happens to be positioned
+// underneath it" asserted that no cell was alive after two thumb drags, and
+// its own note had already reported the claim as sayable at domain altitude
+// and as `architect`'s to rule on. It ruled, in
+// `rule-on-chrome-propagation-guards`: the claim is contract-eligible, and it
+// is now the "And no cell should be alive" clause on
+// grid-scrollbars.feature's "Dragging the vertical scrollbar thumb down
+// reveals content further down" -- folded into that scenario rather than
+// given its own, since a dedicated one would repeat its Given, When and first
+// Then word for word.
+//
+// TWO MEASURED FACTS ABOUT WHAT LEFT, so nobody re-derives them from the
+// title. First, the test was near-unreachable: the thumb takes pointer
+// capture and a 50px drag resolves as a PAN rather than a tap, so it stayed
+// green under the layering fault on its own and went red only in conjunction
+// with a raised drag threshold. Second, the mechanism its own comment
+// described -- a track that stopped propagation on pointerdown but not on
+// pointerup -- is not current code and has not been for some time: there is
+// no stopPropagation anywhere in src/ at all, and the only two mentions of
+// the word are comments saying it is not needed. That story is recorded in
+// the commit that removed the test and deliberately does not appear in the
+// contract, which states the promise and not the bug it once guarded.
+// ---------------------------------------------------------------------------
 
 // THE LAST RENDERED-THUMB-LENGTH CHECK IN THE REPO, and the reason this one
 // test survived the `triage-paired-specs` cut while seven siblings around it
@@ -163,45 +187,6 @@ test('the rendered thumb stays inside its own track on both axes, at rest and pa
 
   await expectThumbInsideTrack(page, 'horizontal', 'panned far past all content')
   await expectThumbInsideTrack(page, 'vertical', 'panned far past all content')
-})
-
-// (a) THE CLAIM: dragging a scrollbar thumb never edits the board underneath
-//     it. Nothing else in the repo asserts the board is still empty after a
-//     drag on chrome.
-//
-// (b) IS AN OPEN QUESTION, AND THE OLD REASON HERE WAS WRONG TWICE OVER. This
-//     note said "NO .feature CAN HOLD THIS CLAIM ... unstateable without the
-//     pixel vocabulary .gherkin-lintrc's no-restricted-patterns keeps out of
-//     the contract". Neither half survives checking.
-//     First, that config bans ALTITUDE vocabulary -- offsetX, cell size,
-//     delta, world coordinate -- and not "pixel", which grid-scrollbars.feature
-//     itself uses nine times in its own step text.
-//     Second, the sentence described this note's own narrative -- a cell that
-//     happens to lie under the thumb -- rather than what the test asserts,
-//     which is that NO cell is alive after two thumb drags. That is sayable at
-//     domain altitude and would not be FALSE at another viewport, merely
-//     vacuous if the scrollbars stopped overlapping the grid.
-//     So the honest status is: currently stated nowhere else, and whether it
-//     BELONGS in the contract is `architect`'s ruling, reported as a hypothesis
-//     by `correct-hand-written-spec-headers` rather than settled by it. Its
-//     sibling in camera-pan-and-zoom.e2e.spec.ts (the toolbar's own propagation
-//     regression) is in exactly the same position and says so in its own note.
-//
-// (c) WHAT WOULD RETIRE IT: a scenario asserting the board is still empty after
-//     a thumb drag. Until one exists this test is the only guard, so the pass
-//     that found the flawed reasoning corrected the reasoning and left the test
-//     standing.
-test('dragging a scrollbar thumb never toggles whatever cell happens to be positioned underneath it', async ({
-  page,
-}) => {
-  // Regression test: the scrollbar track previously only stopped
-  // propagation on pointerdown, not pointerup/pointermove, so releasing a
-  // drag over the track could bubble through to the grid's own
-  // handlePointerUp and toggle the cell rendered underneath the thumb.
-  await dragScrollbarThumb(page, 'horizontal', 50)
-  await dragScrollbarThumb(page, 'vertical', 50)
-
-  await expect(page.locator(ALIVE_CELL_SELECTOR)).toHaveCount(0)
 })
 
 // ---------------------------------------------------------------------------

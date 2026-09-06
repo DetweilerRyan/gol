@@ -1,6 +1,6 @@
 import { test, expect, type Page } from '@playwright/test'
 import { CENTER, cellScreenPosition, clickGridAt, dragPan, resetView, zoomIn, zoomPercent } from './e2e-helpers'
-import { ALIVE_CELL_SELECTOR, cellSelector } from '../src/test-support/cellQuery.ts'
+import { cellSelector } from '../src/test-support/cellQuery.ts'
 
 interface GlideFrame {
   atMs: number
@@ -104,9 +104,18 @@ const SAMPLE_WINDOW_MS = 700
 // pan test and the two zoom-clamp tests went: the feature states all three
 // claims, and its generated spec drives them through the same browser. What
 // is left is the two promises above -- both pixel-exact, and both invisible to
-// the badge and the ruler for the reasons each records -- plus the toolbar
-// propagation regression below, whose licence is weaker than this paragraph
-// claimed and is now stated honestly in that test's own note.
+// the badge and the ruler for the reasons each records.
+//
+// A FOURTH TEST LEFT LATER, BY CONVERSION AND NOT BY SUBSUMPTION. "toolbar
+// buttons never toggle whatever cell happens to be positioned underneath
+// them" asserted that no cell was alive after three toolbar presses, and its
+// own note had already reported the claim as sayable at domain altitude and
+// as `architect`'s to rule on. It ruled, in `rule-on-chrome-propagation-
+// guards`: the claim is contract-eligible, so camera-pan-and-zoom.feature's
+// "Pressing a zoom control brings no cell to life underneath it" states it
+// now, and the layout fact it leans on is prose beside that scenario rather
+// than a precondition step. Read the scenario for what the promise is; this
+// paragraph only records where it went.
 //
 // THE INSTRUMENT, AND WHY THE COMPARISON CARRIES NO TOLERANCE. Both promises
 // are checked by reading where the origin cell RENDERS -- cellScreenPosition,
@@ -151,40 +160,6 @@ test('zooming in via the toolbar keeps the world origin fixed at the viewport ce
 
   await expect.poll(() => zoomPercent(page)).toBe(125)
   await expect.poll(() => cellScreenPosition(page, 0, 0)).toEqual(CENTER)
-})
-
-// (a) THE CLAIM: pressing a toolbar control never edits the board underneath
-//     it. Nothing else in the repo asserts that the board is still empty after
-//     a press on chrome.
-//
-// (b) IS AN OPEN QUESTION, AND THIS NOTE WILL NOT PRETEND OTHERWISE. The file
-//     header said this claim "has no domain counterpart at all", and its
-//     sibling in grid-scrollbars.e2e.spec.ts said "NO .feature CAN HOLD THIS
-//     CLAIM". Both described the header's own narrative -- a cell that happens
-//     to lie under a control -- rather than what the test asserts, which is
-//     that NO cell is alive after three toolbar clicks. That is sayable at
-//     domain altitude ("Then no cell should be alive"), names nothing
-//     .gherkin-lintrc bans, and would not be FALSE at another viewport, merely
-//     vacuous if the toolbar stopped overlapping the grid. So the honest
-//     status is: currently stated nowhere else, and whether it BELONGS in the
-//     contract is `architect`'s ruling. Reported as a hypothesis by
-//     `correct-hand-written-spec-headers`, which is a comments-only pass and
-//     may not convert it.
-//
-// (c) WHAT WOULD RETIRE IT: a scenario asserting the board is still empty
-//     after a toolbar press. Until one exists this test is the only guard,
-//     which is why the pass that found the flawed reasoning corrected the
-//     reasoning and left the test standing.
-test('toolbar buttons never toggle whatever cell happens to be positioned underneath them', async ({ page }) => {
-  // Regression test: the toolbar previously only stopped propagation on
-  // pointerdown, not pointerup, so releasing a click over the toolbar could
-  // bubble through to the grid's own handlePointerUp and toggle the cell
-  // rendered underneath the button.
-  await page.locator('button[aria-label="Zoom in"]').click()
-  await page.locator('button[aria-label="Zoom out"]').click()
-  await page.locator('button[aria-label="Reset view"]').click()
-
-  await expect(page.locator(ALIVE_CELL_SELECTOR)).toHaveCount(0)
 })
 
 test('resetting the view returns to the default centered zoom regardless of prior pan/zoom', async ({ page }) => {
