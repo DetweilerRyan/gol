@@ -41,6 +41,7 @@ Adapted from unclebob/swarm-forge's `main`-branch constitution (`swarmforge/cons
 - **One slice, one git worktree, one branch, one Claude Code session.** The branch is named for the slice — the same stable name `product` invents, per `handoffs.md`. Every role in a cycle runs in that slice's worktree and commits to that slice's branch.
 - **Never commit to `main`.** `main` is written to only by the merge protocol in `CLAUDE.md`'s "Running slices concurrently" section, which the orchestrating session drives. If you find yourself on `main`, or in a directory that isn't your slice's worktree, stop and report it rather than committing.
 - The worktree may live outside the repo (`../gol-claude-worktrees/<slice>`) or inside it (`.claude/worktrees/<slice>`, where Claude Code's own `EnterWorktree` puts it). Both are supported and both are invisible to git, Prettier, oxlint, and vitest. Each worktree has its own `node_modules` (run `npm ci` once when it's created) and its own dev-server port, derived in `dev-port.ts`.
+- **Pass `LSP` an absolute path, always.** A relative one resolves against the session's working directory rather than your worktree, and because the same relative path exists in both trees it answers about the wrong copy silently, with no error — measured. See `.claude/agents/articles/doc-comments.md`'s Part 2 §7.
 - **Never `git checkout`, `rebase`, `merge`, or `push`.** Those are the orchestrating session's, for the same reason: you can only see your own slice.
 
 ## Dropped from the source article (not applicable here)
