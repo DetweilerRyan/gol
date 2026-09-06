@@ -1,23 +1,3 @@
-// Parses one .claude/agents/*.md file's YAML-shaped frontmatter block into
-// the four fields checks.ts validates. Deliberately NOT a real YAML parser:
-// several agent descriptions are long, hand-written prose containing a
-// literal ": " sequence (e.g. "REVIEW (the default, and its slot in the
-// cycle) -- invoke after..."), which a real YAML parser reads as a nested
-// mapping and refuses -- measured against the `yaml` package already a
-// dependency of this repo, it fails to parse 2 of the 5 agent files today
-// (architect.md, coder.md) for exactly that reason. Every field in this
-// frontmatter format is written on exactly one line by this repo's own
-// convention (no multi-line values), so a line-anchored `key: value` regex
-// reads every field exactly as intended without choking on the prose.
-//
-// FRONTMATTER_FIELD's trailing `$` assumes an LF-only line (this repo's own
-// convention, via .gitattributes/Prettier) -- a CRLF line leaves a trailing
-// `\r` that `.` never matches (it's a line terminator, not an ordinary
-// character), so `$` then can't reach the true end of the raw line and the
-// whole field silently fails to parse. Pinned by
-// agent-frontmatter.test.ts's CRLF test rather than "fixed" by stripping
-// `\r`, since no file in this repo is expected to have one.
-
 export interface AgentFrontmatter {
   path: string
   filenameStem: string
@@ -29,6 +9,13 @@ export interface AgentFrontmatter {
 }
 
 const FRONTMATTER_BLOCK = /^---\n([\s\S]*?)\n---\n/
+// FRONTMATTER_FIELD's trailing `$` assumes an LF-only line (this repo's own
+// convention, via .gitattributes/Prettier) -- a CRLF line leaves a trailing
+// `\r` that `.` never matches (it's a line terminator, not an ordinary
+// character), so `$` then can't reach the true end of the raw line and the
+// whole field silently fails to parse. Pinned by
+// agent-frontmatter.test.ts's CRLF test rather than "fixed" by stripping
+// `\r`, since no file in this repo is expected to have one.
 const FRONTMATTER_FIELD = /^([A-Za-z_-]+):\s?(.*)$/
 
 export function filenameStemOf(relativePath: string): string {
@@ -52,6 +39,19 @@ function toToolsList(value: string | undefined): string[] | undefined {
     .filter((tool) => tool.length > 0)
 }
 
+/**
+ * Parses one .claude/agents/*.md file's YAML-shaped frontmatter block into
+ * the four fields checks.ts validates. Deliberately NOT a real YAML parser:
+ * several agent descriptions are long, hand-written prose containing a
+ * literal ": " sequence (e.g. "REVIEW (the default, and its slot in the
+ * cycle) -- invoke after..."), which a real YAML parser reads as a nested
+ * mapping and refuses -- measured against the `yaml` package already a
+ * dependency of this repo, it fails to parse 2 of the 5 agent files today
+ * (architect.md, coder.md) for exactly that reason. Every field in this
+ * frontmatter format is written on exactly one line by this repo's own
+ * convention (no multi-line values), so a line-anchored `key: value` regex
+ * reads every field exactly as intended without choking on the prose.
+ */
 export function parseAgentFrontmatter(relativePath: string, rawText: string): AgentFrontmatter {
   const filenameStem = filenameStemOf(relativePath)
   const match = rawText.match(FRONTMATTER_BLOCK)

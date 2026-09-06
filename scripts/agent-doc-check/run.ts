@@ -27,12 +27,14 @@ function readRawFile(repoRoot: string, relativePath: string): RawFile {
   return { path: relativePath, text: readFileSync(path.join(repoRoot, relativePath), 'utf8') }
 }
 
-// Non-recursive by design: .claude/agents/ holds agent files as direct
-// children only. Its one subdirectory, articles/, holds shared house rules
-// with no frontmatter at all -- recursing into it would hand those files to
-// check2's frontmatter parser, which would report every one of them as
-// malformed. See CLAUDE.md's own note that articles/*.md files are "not
-// agent files."
+/**
+ * Non-recursive by design: .claude/agents/ holds agent files as direct
+ * children only. Its one subdirectory, articles/, holds shared house rules
+ * with no frontmatter at all -- recursing into it would hand those files to
+ * check2's frontmatter parser, which would report every one of them as
+ * malformed. See CLAUDE.md's own note that articles/*.md files are "not
+ * agent files."
+ */
 export function listAgentFiles(repoRoot: string): RawFile[] {
   const dir = path.join(repoRoot, '.claude/agents')
   return readdirSync(dir, { withFileTypes: true })
@@ -58,10 +60,12 @@ function isInsideExcludedDocDir(candidatePath: string): boolean {
   return candidatePath.split('/').some((segment) => EXCLUDED_DOC_DIRS.has(segment))
 }
 
-// CLAUDE.md plus every .md under .claude/** -- agents and articles alike,
-// since checks 1/3/4 (npm run references, stale role references, the cycle
-// string) all need to see prose in both places. Sorted so file discovery
-// order never changes the order failures are reported in.
+/**
+ * CLAUDE.md plus every .md under .claude/** -- agents and articles alike,
+ * since checks 1/3/4 (npm run references, stale role references, the cycle
+ * string) all need to see prose in both places. Sorted so file discovery
+ * order never changes the order failures are reported in.
+ */
 export function listDocFiles(repoRoot: string): RawFile[] {
   const claudeMd = readRawFile(repoRoot, 'CLAUDE.md')
   const agentDocs = globSync('.claude/**/*.md', { cwd: repoRoot, exclude: isInsideExcludedDocDir })
@@ -70,11 +74,13 @@ export function listDocFiles(repoRoot: string): RawFile[] {
   return [claudeMd, ...agentDocs]
 }
 
-// Rule ids are read off the filename, not a parsed `id:` field -- check5
-// asks "is this filename named in the rule documentation file," which is a
-// question about the file that exists on disk, not about what the rule
-// happens to declare about itself (that agreement is ast-grep-rule-check's
-// checkIdMatchesFilename's job, not this program's).
+/**
+ * Rule ids are read off the filename, not a parsed `id:` field -- check5
+ * asks "is this filename named in the rule documentation file," which is a
+ * question about the file that exists on disk, not about what the rule
+ * happens to declare about itself (that agreement is ast-grep-rule-check's
+ * checkIdMatchesFilename's job, not this program's).
+ */
 export function listRuleIds(repoRoot: string): string[] {
   const dir = path.join(repoRoot, 'rules')
   return readdirSync(dir, { withFileTypes: true })

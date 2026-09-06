@@ -28,10 +28,12 @@ export interface Failure {
 const KNOWN_TOOLS = ['Read', 'Write', 'Edit', 'Bash', 'Grep', 'Glob', 'LSP']
 const KNOWN_MODELS = ['opus', 'sonnet', 'haiku']
 
-// Check 1: every `npm run <script>` reference in the docs names a real
-// package.json script. One failure per distinct (file, script) pair, not
-// one per occurrence -- a script mentioned wrong three times in the same
-// file is one typo to fix, not three failures to wade through.
+/**
+ * Check 1: every `npm run <script>` reference in the docs names a real
+ * package.json script. One failure per distinct (file, script) pair, not
+ * one per occurrence -- a script mentioned wrong three times in the same
+ * file is one typo to fix, not three failures to wade through.
+ */
 export function checkNpmRunReferencesResolve(docFiles: RawFile[], packageScripts: ReadonlySet<string>): Failure[] {
   const failures: Failure[] = []
   for (const file of docFiles) {
@@ -110,17 +112,21 @@ function checkOneAgentFrontmatter(file: RawFile): Failure[] {
   ]
 }
 
-// Check 2: every .claude/agents/*.md file's frontmatter validates -- name
-// matches the filename, description is present, tools is a subset of the
-// known tool set, model is a known model.
+/**
+ * Check 2: every .claude/agents/*.md file's frontmatter validates -- name
+ * matches the filename, description is present, tools is a subset of the
+ * known tool set, model is a known model.
+ */
 export function checkAgentFrontmatterValid(agentFiles: RawFile[]): Failure[] {
   return agentFiles.flatMap(checkOneAgentFrontmatter)
 }
 
-// Check 3: no backticked mention of a retired role (`qa`, `refactorer`,
-// `specifier`) without a historical qualifier nearby -- see roles.ts for
-// why the check is scoped to this short, git-verified list rather than a
-// generic "role-shaped token" scan.
+/**
+ * Check 3: no backticked mention of a retired role (`qa`, `refactorer`,
+ * `specifier`) without a historical qualifier nearby -- see roles.ts for
+ * why the check is scoped to this short, git-verified list rather than a
+ * generic "role-shaped token" scan.
+ */
 export function checkNoStaleRoleReferences(docFiles: RawFile[]): Failure[] {
   const failures: Failure[] = []
   for (const file of docFiles) {
@@ -135,12 +141,14 @@ export function checkNoStaleRoleReferences(docFiles: RawFile[]): Failure[] {
   return failures
 }
 
-// Check 4: every cycle-shaped string (role → role → ... → role) across the
-// docs is byte-identical. Reports every mention that differs from the
-// most-common form found, and reports its own failure if no cycle mention
-// was found anywhere at all -- an empty result set here would otherwise
-// look identical to a clean repo, the same failure mode
-// ast-grep-rule-check's checkAnyRulesFound exists to catch.
+/**
+ * Check 4: every cycle-shaped string (role → role → ... → role) across the
+ * docs is byte-identical. Reports every mention that differs from the
+ * most-common form found, and reports its own failure if no cycle mention
+ * was found anywhere at all -- an empty result set here would otherwise
+ * look identical to a clean repo, the same failure mode
+ * ast-grep-rule-check's checkAnyRulesFound exists to catch.
+ */
 export function checkCycleStringConsistent(docFiles: RawFile[], knownRoles: ReadonlySet<string>): Failure[] {
   const allMentions = docFiles.flatMap((file) =>
     findCycleMentions(file.text, knownRoles).map((mention) => ({ file: file.path, ...mention })),
@@ -167,18 +175,20 @@ export function checkCycleStringConsistent(docFiles: RawFile[], knownRoles: Read
     }))
 }
 
-// Check 5: every real rules/*.yml is named in the rule documentation file
-// (forward -- currently .claude/agents/articles/ast-grep-rules.md, read by
-// run.ts and handed in as ruleDocFile; see the comment there for the
-// invariant this file is meant to satisfy, "documented somewhere roles will
-// read", as distinct from "named in CLAUDE.md specifically"), and every
-// explicit `rules/<id>.yml` path mentioned in *any* doc file resolves to a
-// real rule file (reverse -- see rule-mentions.ts for why only path
-// mentions, not bare backticked ids, are used in this direction). The
-// reverse direction reads every docFiles entry independently, rather than
-// concatenating their text first, so a bad path is attributed to the actual
-// file it was found in -- CLAUDE.md, an article, or an agent file -- and
-// not blamed on ruleDocFile regardless of where it lives.
+/**
+ * Check 5: every real rules/*.yml is named in the rule documentation file
+ * (forward -- currently .claude/agents/articles/ast-grep-rules.md, read by
+ * run.ts and handed in as ruleDocFile; see the comment there for the
+ * invariant this file is meant to satisfy, "documented somewhere roles will
+ * read", as distinct from "named in CLAUDE.md specifically"), and every
+ * explicit `rules/<id>.yml` path mentioned in *any* doc file resolves to a
+ * real rule file (reverse -- see rule-mentions.ts for why only path
+ * mentions, not bare backticked ids, are used in this direction). The
+ * reverse direction reads every docFiles entry independently, rather than
+ * concatenating their text first, so a bad path is attributed to the actual
+ * file it was found in -- CLAUDE.md, an article, or an agent file -- and
+ * not blamed on ruleDocFile regardless of where it lives.
+ */
 export function checkRulesDocumented(ruleDocFile: RawFile, docFiles: RawFile[], ruleIds: string[]): Failure[] {
   const mentioned = extractMentionedRuleIds(ruleDocFile.text)
   const forwardFailures: Failure[] = ruleIds
