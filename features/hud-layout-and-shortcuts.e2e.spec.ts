@@ -10,11 +10,15 @@ import { clickGridAt, expectCellState } from './e2e-helpers'
 // WHY THIS FILE NEEDED RE-AUDITING AT ALL, recorded because the same drift can
 // recur. `triage-paired-specs` cut the hand-written layer to residue only, but
 // it worked file by file through the specs that SHARE A NAME with a .feature
-// -- so this file and modal-inertness.e2e.spec.ts, the two unpaired ones, were
-// never in its scope. (That second file is gone: all three of its tests turned
-// out to be statable after all, and `convert-modal-inertness-to-scenarios`
-// restated them as while-the-pattern-library-is-open.feature. This file is now
-// the only unpaired spec, which makes the drift below its alone to avoid.) The
+// -- so the unpaired specs were never in its scope, and this file is one of
+// them. (It named "the two unpaired ones" until
+// `convert-modal-inertness-to-scenarios` counted them; there were three --
+// this file, hover-click-agreement.e2e.spec.ts and modal-inertness.e2e.spec.ts
+// -- which is the very drift this paragraph is about, committed inside the
+// paragraph. That slice deleted the third: all three of its tests turned out to
+// be statable after all and are now
+// while-the-pattern-library-is-open.feature's scenarios, so two are left. Take
+// the count from `comm` over the two file lists, never from here.) The
 // header this replaces licensed its tests as
 // "DOM/layout/App-wiring concerns with no pure-logic layer to specify in
 // Gherkin", which was true when the Gherkin layer ran in vitest against pure
