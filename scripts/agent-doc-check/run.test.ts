@@ -71,12 +71,36 @@ describe('loadPackageScripts', () => {
   })
 })
 
+const ARTICLE_PATH = '.claude/agents/articles/ast-grep-rules.md'
+
 describe('runCheck', () => {
   it('exits 0 on a fully consistent, minimal repo', () => {
     const root = tempRepo()
     const cycle = 'product → coder → cleaner → architect → hardener → product'
     writeFile(root, 'package.json', JSON.stringify({ scripts: { build: 'vite build' } }))
     writeFile(root, 'CLAUDE.md', `\`npm run build\`\n${cycle}\nthe \`no-foo\` rule.\n`)
+    writeFile(root, ARTICLE_PATH, 'the `no-foo` rule.\n')
+    writeFile(root, 'rules/no-foo.yml', 'id: no-foo\n')
+    for (const role of ['product', 'coder', 'cleaner', 'architect', 'hardener']) {
+      writeFile(
+        root,
+        `.claude/agents/${role}.md`,
+        `---\nname: ${role}\ndescription: Does things.\ntools: Read\nmodel: sonnet\n---\n\n${cycle}\n`,
+      )
+    }
+    const result = runCheck(root)
+    expect(result.exitCode).toBe(0)
+  })
+
+  // The repoint's whole point: a rule documented only in the article, never
+  // in CLAUDE.md, must still pass -- this is what would fail if check5's
+  // forward direction were still reading CLAUDE.md's text.
+  it('exits 0 when a rule is documented only in the article, not in CLAUDE.md', () => {
+    const root = tempRepo()
+    const cycle = 'product → coder → cleaner → architect → hardener → product'
+    writeFile(root, 'package.json', JSON.stringify({ scripts: { build: 'vite build' } }))
+    writeFile(root, 'CLAUDE.md', `\`npm run build\`\n${cycle}\n`)
+    writeFile(root, ARTICLE_PATH, 'the `no-foo` rule.\n')
     writeFile(root, 'rules/no-foo.yml', 'id: no-foo\n')
     for (const role of ['product', 'coder', 'cleaner', 'architect', 'hardener']) {
       writeFile(
@@ -93,10 +117,20 @@ describe('runCheck', () => {
     const root = tempRepo()
     writeFile(root, 'package.json', JSON.stringify({ scripts: {} }))
     writeFile(root, 'CLAUDE.md', 'nothing relevant\n')
+    writeFile(root, ARTICLE_PATH, 'nothing rule-shaped\n')
     mkdirSync(path.join(root, 'rules'), { recursive: true })
     writeFile(root, '.claude/agents/coder.md', GOOD_AGENT.replace('name: coder', 'name: cleaner'))
     const result = runCheck(root)
     expect(result.exitCode).toBe(1)
     expect(result.lines.some((line) => line.includes('.claude/agents/coder.md'))).toBe(true)
+  })
+
+  it('throws naming the missing path when the rule documentation article is absent', () => {
+    const root = tempRepo()
+    writeFile(root, 'package.json', JSON.stringify({ scripts: {} }))
+    writeFile(root, 'CLAUDE.md', 'nothing relevant\n')
+    mkdirSync(path.join(root, 'rules'), { recursive: true })
+    writeFile(root, '.claude/agents/coder.md', GOOD_AGENT)
+    expect(() => runCheck(root)).toThrow(ARTICLE_PATH)
   })
 })

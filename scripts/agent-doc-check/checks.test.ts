@@ -4,7 +4,7 @@ import {
   checkCycleStringConsistent,
   checkNoStaleRoleReferences,
   checkNpmRunReferencesResolve,
-  checkRulesNamedInClaudeMd,
+  checkRulesDocumented,
   type Failure,
 } from './checks.ts'
 
@@ -182,27 +182,53 @@ describe('checkCycleStringConsistent', () => {
   })
 })
 
-describe('checkRulesNamedInClaudeMd', () => {
-  it('passes when every rule id is mentioned and every path mention resolves', () => {
-    const text = 'the `no-react-in-domain` rule, see also `rules/no-dom-in-domain.yml`'
-    expect(checkRulesNamedInClaudeMd(text, ['no-react-in-domain', 'no-dom-in-domain'])).toEqual([])
+describe('checkRulesDocumented', () => {
+  const ARTICLE_PATH = '.claude/agents/articles/ast-grep-rules.md'
+
+  it('passes when every rule id is mentioned in the rule doc file and every path mention resolves', () => {
+    const ruleDocFile = {
+      path: ARTICLE_PATH,
+      text: 'the `no-react-in-domain` rule, see also `rules/no-dom-in-domain.yml`',
+    }
+    const docFiles = [ruleDocFile, { path: 'CLAUDE.md', text: 'nothing rule-shaped here' }]
+    expect(checkRulesDocumented(ruleDocFile, docFiles, ['no-react-in-domain', 'no-dom-in-domain'])).toEqual([])
   })
 
-  it('fails a real rule id never mentioned in CLAUDE.md', () => {
-    const failures = checkRulesNamedInClaudeMd('nothing here', ['no-tile-policy-in-components'])
+  it('fails a real rule id never mentioned in the rule doc file, naming that file', () => {
+    const ruleDocFile = { path: ARTICLE_PATH, text: 'nothing here' }
+    const failures = checkRulesDocumented(ruleDocFile, [ruleDocFile], ['no-tile-policy-in-components'])
     expectSingleFailure(failures, {
-      check: 'rules-named-in-claude-md',
-      file: 'CLAUDE.md',
+      check: 'rules-documented',
+      file: ARTICLE_PATH,
       messageIncludes: 'no-tile-policy-in-components',
     })
   })
 
   it('fails a `rules/<id>.yml` path mention that names no real rule file', () => {
-    const text = 'see `rules/no-longer-exists.yml`'
-    const failures = checkRulesNamedInClaudeMd(text, [])
+    const ruleDocFile = { path: ARTICLE_PATH, text: 'see `rules/no-longer-exists.yml`' }
+    const failures = checkRulesDocumented(ruleDocFile, [ruleDocFile], [])
     expectSingleFailure(failures, {
-      check: 'rules-named-in-claude-md',
-      file: 'CLAUDE.md',
+      check: 'rules-documented',
+      file: ARTICLE_PATH,
+      messageIncludes: 'no-longer-exists',
+    })
+  })
+
+  // The reverse direction's whole point (per checks.ts's own comment) is
+  // attributing a bad path to the doc file it actually appeared in, not to
+  // whichever file happens to be ruleDocFile -- this is the test that would
+  // fail if the reverse check went back to concatenating every docFiles
+  // entry's text before scanning it.
+  it('attributes a reverse-direction failure to the article it was found in, not to CLAUDE.md', () => {
+    const ruleDocFile = { path: ARTICLE_PATH, text: 'no path mentions in the rule doc file itself' }
+    const docFiles = [
+      { path: 'CLAUDE.md', text: 'nothing rule-shaped here' },
+      { path: ARTICLE_PATH, text: 'see `rules/no-longer-exists.yml`' },
+    ]
+    const failures = checkRulesDocumented(ruleDocFile, docFiles, [])
+    expectSingleFailure(failures, {
+      check: 'rules-documented',
+      file: ARTICLE_PATH,
       messageIncludes: 'no-longer-exists',
     })
   })

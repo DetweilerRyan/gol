@@ -167,28 +167,38 @@ export function checkCycleStringConsistent(docFiles: RawFile[], knownRoles: Read
     }))
 }
 
-// Check 5: every real rules/*.yml is named in CLAUDE.md (forward), and
-// every explicit `rules/<id>.yml` path CLAUDE.md names resolves to a real
-// rule file (reverse -- see rule-mentions.ts for why only path mentions,
-// not bare backticked ids, are used in this direction).
-export function checkRulesNamedInClaudeMd(claudeMdText: string, ruleIds: string[]): Failure[] {
-  const mentioned = extractMentionedRuleIds(claudeMdText)
+// Check 5: every real rules/*.yml is named in the rule documentation file
+// (forward -- currently .claude/agents/articles/ast-grep-rules.md, read by
+// run.ts and handed in as ruleDocFile; see the comment there for the
+// invariant this file is meant to satisfy, "documented somewhere roles will
+// read", as distinct from "named in CLAUDE.md specifically"), and every
+// explicit `rules/<id>.yml` path mentioned in *any* doc file resolves to a
+// real rule file (reverse -- see rule-mentions.ts for why only path
+// mentions, not bare backticked ids, are used in this direction). The
+// reverse direction reads every docFiles entry independently, rather than
+// concatenating their text first, so a bad path is attributed to the actual
+// file it was found in -- CLAUDE.md, an article, or an agent file -- and
+// not blamed on ruleDocFile regardless of where it lives.
+export function checkRulesDocumented(ruleDocFile: RawFile, docFiles: RawFile[], ruleIds: string[]): Failure[] {
+  const mentioned = extractMentionedRuleIds(ruleDocFile.text)
   const forwardFailures: Failure[] = ruleIds
     .filter((ruleId) => !mentioned.has(ruleId))
     .map((ruleId) => ({
-      check: 'rules-named-in-claude-md',
-      file: 'CLAUDE.md',
-      message: `rule \`${ruleId}\` (rules/${ruleId}.yml) is not named in CLAUDE.md`,
+      check: 'rules-documented',
+      file: ruleDocFile.path,
+      message: `rule \`${ruleId}\` (rules/${ruleId}.yml) is not named in ${ruleDocFile.path}`,
     }))
 
   const knownRuleIds = new Set(ruleIds)
-  const reverseFailures: Failure[] = [...new Set(extractRulePathMentions(claudeMdText))]
-    .filter((pathMention) => !knownRuleIds.has(pathMention))
-    .map((pathMention) => ({
-      check: 'rules-named-in-claude-md',
-      file: 'CLAUDE.md',
-      message: `CLAUDE.md references \`rules/${pathMention}.yml\`, which does not exist`,
-    }))
+  const reverseFailures: Failure[] = docFiles.flatMap((file) =>
+    [...new Set(extractRulePathMentions(file.text))]
+      .filter((pathMention) => !knownRuleIds.has(pathMention))
+      .map((pathMention) => ({
+        check: 'rules-documented',
+        file: file.path,
+        message: `${file.path} references \`rules/${pathMention}.yml\`, which does not exist`,
+      })),
+  )
 
   return [...forwardFailures, ...reverseFailures]
 }
@@ -196,7 +206,7 @@ export function checkRulesNamedInClaudeMd(claudeMdText: string, ruleIds: string[
 export interface CheckInput {
   docFiles: RawFile[]
   agentFiles: RawFile[]
-  claudeMdText: string
+  ruleDocFile: RawFile
   packageScripts: ReadonlySet<string>
   ruleIds: string[]
 }
@@ -214,6 +224,6 @@ export function checkAll(input: CheckInput): Failure[] {
     ...checkAgentFrontmatterValid(input.agentFiles),
     ...checkNoStaleRoleReferences(input.docFiles),
     ...checkCycleStringConsistent(input.docFiles, knownRoles),
-    ...checkRulesNamedInClaudeMd(input.claudeMdText, input.ruleIds),
+    ...checkRulesDocumented(input.ruleDocFile, input.docFiles, input.ruleIds),
   ]
 }

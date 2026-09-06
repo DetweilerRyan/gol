@@ -13,7 +13,7 @@
 // something needing judgment, so this process exits non-zero on any
 // failure.
 
-import { globSync, readdirSync, readFileSync } from 'node:fs'
+import { existsSync, globSync, readdirSync, readFileSync } from 'node:fs'
 import path from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { type CheckInput, type RawFile } from './checks.ts'
@@ -89,11 +89,37 @@ export function loadPackageScripts(repoRoot: string): Set<string> {
   return new Set(Object.keys(parsed.scripts ?? {}))
 }
 
+// The file check5's forward direction reads: "is every real rules/*.yml
+// named somewhere roles will read." Since `split-claude-md` moved the rule
+// prose out of CLAUDE.md, that place is this article rather than CLAUDE.md
+// itself -- CLAUDE.md now carries only a routing index, and
+// checkRulesDocumented no longer cares which file makes the mention true,
+// only that ruleDocFile does. A rename of this file is silent to
+// `git mv` and to every other check here (it's just another .md under
+// .claude/**, still picked up by listDocFiles), so this reads it through an
+// explicit existsSync guard naming the path and what it's for, rather than
+// a glob that would match nothing and report a clean run -- the same
+// silent-blindness shape as a Stryker `ignorePatterns` glob, a `-t`
+// pattern, or a vitest `include` that matches nothing (see
+// scripts/feature-files.ts's listFeatureFiles for the precedent this
+// mirrors).
+const RULE_DOC_PATH = '.claude/agents/articles/ast-grep-rules.md'
+
+function readRuleDocFile(repoRoot: string): RawFile {
+  const fullPath = path.join(repoRoot, RULE_DOC_PATH)
+  if (!existsSync(fullPath)) {
+    throw new Error(
+      `Rule documentation file not found: ${RULE_DOC_PATH} -- check5's forward direction (every rules/*.yml named somewhere roles will read) has nothing to read`,
+    )
+  }
+  return readRawFile(repoRoot, RULE_DOC_PATH)
+}
+
 export function gatherCheckInput(repoRoot: string): CheckInput {
   return {
     docFiles: listDocFiles(repoRoot),
     agentFiles: listAgentFiles(repoRoot),
-    claudeMdText: readRawFile(repoRoot, 'CLAUDE.md').text,
+    ruleDocFile: readRuleDocFile(repoRoot),
     packageScripts: loadPackageScripts(repoRoot),
     ruleIds: listRuleIds(repoRoot),
   }

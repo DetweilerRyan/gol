@@ -6,16 +6,19 @@ const GOOD_AGENT = (name: string) =>
 
 const CYCLE = 'product → coder → cleaner → architect → hardener → product'
 const ROLES = ['product', 'coder', 'cleaner', 'architect', 'hardener']
+const ARTICLE_PATH = '.claude/agents/articles/ast-grep-rules.md'
 
 function baseInput() {
-  const claudeMdText = `\`npm run build\`\n${CYCLE}\nthe \`no-foo\` rule (\`rules/no-foo.yml\`)`
+  const claudeMdText = `\`npm run build\`\n${CYCLE}\n`
+  const ruleDocFile = { path: ARTICLE_PATH, text: 'the `no-foo` rule (`rules/no-foo.yml`)' }
   return {
     docFiles: [
       { path: 'CLAUDE.md', text: claudeMdText },
+      ruleDocFile,
       ...ROLES.map((role) => ({ path: `.claude/agents/${role}.md`, text: `${GOOD_AGENT(role)}\n${CYCLE}\n` })),
     ],
     agentFiles: ROLES.map((role) => ({ path: `.claude/agents/${role}.md`, text: GOOD_AGENT(role) })),
-    claudeMdText,
+    ruleDocFile,
     packageScripts: new Set(['build']),
     ruleIds: ['no-foo'],
   }
