@@ -4,7 +4,7 @@
 // plain string constants and pure functions only -- so it is safe to import
 // into three different module graphs at once (Playwright's transform,
 // perf/'s tsconfig.app.json program, and vitest's `dom` project), none of
-// which this file needs to know about. Do not import @playwright/test types
+// which this file needs to know about. Do not import `@playwright/test` types
 // here, and do not import this file from src/components/Cell.tsx: that would
 // put a product string outside every gate this repo runs over src/.
 //
