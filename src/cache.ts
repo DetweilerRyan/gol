@@ -344,29 +344,19 @@ export interface ReadonlyCache<TKeyPath extends unknown[], T> extends Iterable<[
 }
 
 /**
- * For performance reasons the following methods will mutate the cache instance:
- *  - insert
- *  - update
- *  - remove
+ * Mutates the cache instance in place for performance -- `insert`,
+ * `update`, and `remove` never return a new cache. Each also bumps an
+ * internal fence, so any of the three invalidates an iteration already in
+ * progress over the cache (see `remove`'s note).
  */
 export interface Cache<TKeyPath extends unknown[], T> extends ReadonlyCache<TKeyPath, T> {
   /**
    * Inserts a value at the key path.
    *
-   * Throws if an entry does exist at the key path. Use the
-   * {@link Cache.has} method to guard for an entry that
-   * may already exist in the cache:
-   *
-   * ```typescript
-   * if(cache.has(keyPath)) {
-   *   cache.insert(keyPath, value);
-   * }
-   * ```
-   *
-   * @param keyPath
-   * @param value
+   * @throws CacheError if an entry already exists at the key path --
+   * guard with {@link Cache.has} first.
    */
-  // @remark @todo a future improvment under consideration is for
+  // TODO: a future improvement under consideration is for
   // the insert method to return a remove, update, retrieve, and has methods
   // that don't require the keyPath to be passed in. This will reduce
   // the chances of code errors when keeping track of key paths for
@@ -384,39 +374,13 @@ export interface Cache<TKeyPath extends unknown[], T> extends ReadonlyCache<TKey
   /**
    * Removes the entry from the cache at the provided key path.
    *
-   * Throws if an entry does not exist at the key path. Use the
-   * {@link Cache.has} method to guard before removing the entry
-   * at a key path you're unsure exists in the cache.
+   * @throws CacheError if no entry exists at the key path -- guard with
+   * {@link Cache.has} first.
    *
-   * ```typescript
-   * if(cache.has(keyPath)) {
-   *   cache.remove(keyPath);
-   * }
-   * ```
-   *
-   * Removing an entry from a cache while iterating over it will
-   * throw. This is because it is unstable to continue iterating
-   * over the cache after it has been mutated:
-   *
-   * ```typescript
-   * // remove all entries from the cache
-   * for (const [keyPath, value] of cache) {
-   *   // the first call to remove in this loop will succeed, but
-   *   //  retrieving the next iteration will throw.
-   *   cache.remove(keyPath);
-   * }
-   * ```
-   *
-   * Instead, make sure to complete the iteration of the cache before,
-   * beginning to mutatate it:
-   *
-   * ```typescript
-   * // remove all entries from the cache
-   * for (const [keyPath, value] of Array.from(cache)) {
-   *   cache.remove(keyPath);
-   * }
-   * ```
-   * @param keyPath
+   * Removing mid-iteration invalidates that iteration: the *iterator's
+   * next step* throws a {@link CacheError} (not this call). Finish
+   * iterating first -- e.g. `Array.from(cache)` -- if you need to remove
+   * while iterating.
    */
   remove(keyPath: TKeyPath): void
   update(keyPath: TKeyPath, value: T): void
