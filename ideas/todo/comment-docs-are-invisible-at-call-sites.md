@@ -49,26 +49,61 @@ imported from elsewhere and the ones whose callers never open them.
 
 ## Sketch
 
-Convert the `//` blocks that sit directly above an exported declaration into
-`/** */`, keeping the existing prose and adding a summary first line. This is
-deliberately **not** described as a punctuation pass — see the first open
-question, which is the real cost.
+**Ratified 2026-09-06.** The approach is a **partition**, not a fold, and it
+runs as three slices.
 
-Two mechanical hazards the survey turned up:
+The governing rule is _A Philosophy of Software Design_'s separation of comment
+kinds: interface comments say what a caller must know to use the thing;
+implementation comments say how it works inside. The interface half goes up
+into JSDoc, where hover and the `.d.ts` can see it; the implementation half
+stays `//`, relocated below the signature. That split is load-bearing rather
+than stylistic, because of a third measured fact: **hover renders the whole
+comment, tags included** — `fc.integer` shows `@param`, `@remarks` and
+`@public` inline, `Arbitrary.filter` renders `@example` as a full fenced code
+block — so there is no truncation lever, and whatever goes into JSDoc is paid
+for at every hover at every call site. Ousterhout's "if a user must read the
+code of a method in order to use it, then there is no abstraction" is the token
+argument, stated years before agents.
+
+The convention itself lands as a new article,
+`.claude/agents/articles/doc-comments.md`, carrying both halves of one loop:
+how to write an interface comment, and how to read one via `LSP` instead of
+opening a body. Tag vocabulary is governed by an **information test** — does
+this line say something the signature cannot? — rather than an allowlist, with
+`architect` as arbiter (DESIGN sets the target, REVIEW rules per export on
+whether hover is necessary and sufficient). Overflow past a ~15-line hover
+budget goes to a sidecar `<module>.md` referenced by `@see`, giving a
+three-tier escalation: hover for the contract, sidecar for the depth,
+implementation only when changing it.
+
+Three slices, serial: **`jsdoc-in-src`** (the article, its pointers and read
+triggers, plus the 39-file `src/` backfill), **`jsdoc-in-scripts`** (30 files;
+carries every syntax hazard), **`jsdoc-standing-rule`** (the role-file
+responsibilities, and `architect`'s call on whether an ast-grep guard is
+warranted). Entry is `architect` DESIGN, not `product` — nothing here is
+user-visible, so there is no contract to write.
+
+Hazards the survey turned up, all of them real:
 
 - **`// prettier-ignore` gets swallowed.** `src/scrollbars.ts:128` is a bare
-  directive sitting as the **last line of a 9-line prose block** immediately
-  above `export function panCameraByScrollbarDrag`. Prettier honours the
-  directive only as its own `//` or `/* */` comment, so folding that block into
-  a single `/** */` silently reformats a hand-laid signature. Two more
-  directives at `:28` and `:68`.
-- **File-top module headers are not convertible, and "skip line 1" is the
-  wrong fix.** 8 files in `src/` and 31 in `scripts/` open with a true module
-  header, which JSDoc cannot attach to anything TypeScript will hover. But
-  **11 blocks** begin at line 1 _and_ document the first export — e.g.
-  `scripts/agent-doc-check/roles.ts:1`, 23 lines above
-  `export const RETIRED_ROLES` — so a naive line-1 exclusion drops real
-  declaration docs.
+  directive sitting as the **last line** of a prose block immediately above
+  `export function panCameraByScrollbarDrag`; `:68` is a lone directive above
+  `computeScrollbarMetrics`. Prettier honours the directive only as its own
+  `//` or `/* */` comment, so folding either silently reformats a hand-laid
+  signature. Whether TypeScript still attaches JSDoc across an intervening
+  directive is the design pass's first checkpoint.
+- **`*/` inside prose terminates the block.** Six lines, all in `scripts/`, all
+  from globs like `**/run.ts`: `scripts/test-support.ts:13`,
+  `acceptance-mutation/mutant-plan.ts:7`, `discovery.ts:62`,
+  `report-format.ts:2`, `run.ts:92`, `agent-doc-check/npm-run-refs.ts:11`.
+- **Line-leading `@` parses as a tag.** Three lines, all
+  `@cucumber/gherkin` in `acceptance-mutation/gherkin-document.ts` (`:12`,
+  `:49`, `:54`).
+- **File-top module headers are not convertible, and "skip line 1" is the wrong
+  fix.** 29 files open with a true module header, which JSDoc cannot attach to
+  anything. But 2 blocks begin at line 1 _and_ document the first export
+  (`agent-doc-check/roles.ts:1`, `acceptance-mutation/report-format.ts:1`), so
+  a naive line-1 exclusion drops real docs.
 
 One thing that is safe: no rule in `rules/` matches on comments, and a `//`
 block above an export is a **sibling** of the `export_statement` rather than
@@ -92,74 +127,69 @@ Two candidates already on the board bear on this:
   concrete instance of that candidate's argument, arriving from a direction it
   did not anticipate.
 - **`module-depth-as-a-token-ratio`** — its raw column measures a module's
-  `.d.ts` against its source, and JSDoc is carried into declaration emit.
-  Whether plain `//` leading comments survive `tsc --emitDeclarationOnly` is
-  **not established here**, and that candidate's own measurements hint they may;
-  if they do not, this slice would move its raw column substantially. Worth
-  measuring before either idea is promoted, since the answer changes what that
-  metric means.
+  `.d.ts` against its source. **Measured at promotion, correcting what this
+  file said when it was filed:** `//` leading comments do **not** survive
+  `tsc --emitDeclarationOnly` — `cellTiles.d.ts` comes out with zero comment
+  lines, the 113-, 64- and 42-line blocks all gone — while
+  `is-strict-equal.d.ts` keeps its JSDoc verbatim, `@see` included. So this
+  slice moves that candidate's raw column substantially and in one direction:
+  prose that is invisible today becomes part of the measured interface
+  surface. Whichever lands second must re-baseline.
 
-## Open questions
+## Resolved at promotion
 
-- **This is authorship, not punctuation, and that is the whole cost.** Only
-  **8 of 164** blocks are a single line; the median is ~5 lines and the tail
-  reaches 113. A hover popup that dumps a hundred lines of numbered findings is
-  not obviously better than none, and those tokens land on every hover by every
-  role. Doing this properly means writing a one-sentence summary first line for
-  ~150 declarations — a judgment call each — with the existing prose demoted
-  below it. Whether that is one slice, several, or not worth doing is the
-  question this candidate exists to ask.
-- **Which role owns this, and is it one owner or two?** The proposal on the
-  table is `coder` and `cleaner` author, `architect` ratifies in its REVIEW
-  slot. It splits cleanly along what each role already knows: `coder` has the
-  context at the moment the export is written, `cleaner` is chartered for
-  structure-preserving cleanup and already owns naming — a doc summary is
-  naming's longer form — and `architect` REVIEW is the role that judges
-  interface surface, which is exactly what a one-line summary of an export is.
-  Three objections to weigh against it. (1) It widens `coder`, and that has
-  been ruled against before; the narrower reading is that `coder` writes only
-  what the approved spec implies, and the _why_ behind an interface is often
-  not yet settled when the code first lands. (2) It is a third concern in a
-  `cleaner` pass already carrying `crap4ts`, `dry4ts` and the scoped mutation
-  scan, and `cleaner` runs after **every** `coder` invocation, so the cost is
-  per-invocation rather than per-slice. (3) `architect` ratifying prose quality
-  has no mechanical check behind it, unlike every other thing it reviews — and
-  an `architect` that authors the summaries it also reviews is the same
-  one-pass-two-jobs collision that split `hardener` out in the first place.
-  `hardener` and `product` are both out on existing boundaries: `hardener`'s
-  stages are all mechanical, and `product` never writes `src/` in either mode.
-- **The backfill and the standing rule are different questions.** Converting
-  the ~150 existing blocks is a one-off slice whose owner is a scoping call —
-  it is behaviour-preserving and structure-preserving, which reads as
-  `cleaner`'s charter, but at a size no cleanup pass has ever carried. Who
-  writes JSDoc on a **new** export from then on is a process amendment to the
-  role files, and it is the half that decides whether this stays true a month
-  later. Answering only the first leaves the repo drifting back.
-- **Does it fight the stated comment convention?** `CLAUDE.md`: "Comments are
-  reserved for non-obvious _why_." JSDoc's tag vocabulary pulls the other way —
-  `@param`/`@returns` restating a type signature is precisely the noise that
-  line forbids. The proposal is **JSDoc as a container, not as a tag
-  vocabulary**: prose stays prose, and no `@param` unless it says something the
-  type cannot. If that ruling is taken it belongs in `engineering.md`, which is
-  read unconditionally, rather than in `CLAUDE.md`'s conventions list.
+Each of the questions this candidate was filed with, and how it was answered.
+
+- **Authorship, not punctuation — and the answer is a partition.** Only 8 of
+  164 blocks are a single line; the median is ~5 and the tail reaches 113. The
+  resolution is not "write a summary and keep the rest", it is Ousterhout's
+  split: the interface half goes into JSDoc, the implementation half stays
+  `//`. A block's length stops being the problem once most of it is correctly
+  classified as implementation.
+- **Who owns it: `coder` and `cleaner` author, `architect` ratifies.** `coder`
+  writes JSDoc on any new export, `cleaner` treats a doc summary as part of the
+  naming work it already owns, `architect` REVIEW rules on it as an
+  interface-surface judgment. The objections stand but were accepted:
+  `architect` reviewing prose it partly shaped is the same one-pass-two-jobs
+  tension that split `hardener` out, and it has no mechanical check behind it.
+- **Backfill and standing rule are separate, and are separate slices.**
+  `jsdoc-in-src` and `jsdoc-in-scripts` do the backfill; `jsdoc-standing-rule`
+  codifies the duty afterward, so the convention is proven against 84 real
+  blocks before it becomes a rule.
+- **It does not fight the comment convention; it sharpens it.** The ruling is
+  an **information test** rather than a tag allowlist: does this line say
+  something the signature cannot? `@param constraints — Constraints to apply`
+  is the type name in English and fails; `@param thumbRatio — must be the value
+from when the drag started` passes. `@example`, `@param`, `@returns`,
+  `@throws` and `@see` each have a trigger that earns them, the default posture
+  is minimal, and `architect` arbitrates.
+- **Both `src/` and `scripts/`**, as two slices. Every syntax hazard is on the
+  `scripts/` side, which is most of why they are separate.
+- **A mechanical guard is `architect`'s call, deliberately left open.** A
+  presence-only ast-grep rule cannot tell whether a summary says anything, so
+  declining it is a defensible outcome rather than a gap.
+- **One measurement moves, and it is not one of the gates.** `halstead4ts`
+  ignores comment lines and `crap4ts` scores complexity against coverage;
+  `dry4ts` fingerprints oxc AST node kinds, among which there is no comment
+  kind (inferred from the binary's symbol table, not measured — so a move is a
+  real finding about the tool). What does move is `module-depth-as-a-token-ratio`'s
+  raw column, per the correction under Touches.
+
+## Still open
+
 - **Exported declarations only, or interface and type members too?** The survey
-  counted top-level exports, but the repo's own precedent (`cache.ts`) is
-  mostly on **interface methods** — and members are where hover pays off most,
-  since a caller reaches `cache.set` without ever opening `cache.ts`. Counting
-  the member surface would change the size estimate above.
-- **`src/` only, or `scripts/` as well?** `scripts/` has zero JSDoc and 79
-  candidate blocks. It is also the tooling every role's gate runs on, and is
-  read by roles at least as often as `src/`, so excluding it is hard to defend
-  on grounds other than slice size.
-- **Anything mechanical, or nothing at all?** No oxlint JSDoc plugin is
-  enabled, no `rules/*.yml` matches comments, and nothing in the repo would
-  notice a regression. An ast-grep rule requiring JSDoc on exported
-  declarations is conceivable and would be `architect`'s to author, but it is a
-  new gate over a convention that has not been ratified — a follow-on at best,
-  and possibly the wrong instrument, since it can check for a `/** */` and
-  never for whether the first line is a useful summary.
-- **Does any measurement move?** `halstead4ts` states comment lines don't count
-  and `crap4ts` scores complexity against coverage, so neither should — but
-  whether `dry4ts` counts comment text toward duplication is unverified, and a
-  repo-wide comment rewrite is exactly the diff that would find out. Worth
-  checking on a handful of files before committing to the whole sweep.
+  counted top-level exports, but the repo's existing JSDoc precedent
+  (`cache.ts`) is mostly on **interface methods** — and members are where hover
+  pays off most, since a caller reaches `cache.set` without ever opening
+  `cache.ts`. Left to `architect` DESIGN to scope, since it changes the size
+  estimate the batch ordering was built from.
+- **Whether the sidecar `<module>.md` tier survives contact with the first real
+  case.** `cellTiles.ts` is the likeliest first one. Two things are unverified:
+  whether a relative `@see ./cellTiles.md` renders legibly in hover (versus
+  `{@link}`, which expects a declaration reference or URL), and where such a
+  file sits in CLAUDE.md's documentation-routing test, which currently routes
+  to CLAUDE.md, an article, or a role file and has no entry for a file beside
+  the source. Both are design-pass checkpoints.
+- **Nothing checks that a sidecar reference resolves.** `agent-doc-check` scans
+  `.claude/**/*.md` plus CLAUDE.md, not `src/**`, so a `@see ./name.md` can rot
+  silently. Filed separately as `sidecar-doc-links-are-checked-by-nothing`.
