@@ -329,19 +329,23 @@ When('I aim it at the cell at \\({int}, {int}\\) instead', async ({ page }, x: n
 // A preview that stayed at the previous aim fails the first two together,
 // because the two aims this scenario uses cover disjoint cells.
 //
-// WHAT THIS STEP WAS SHOWN CATCHING, AND WHAT IT WAS NOT. The fault it exists
-// for is a preview that LATCHES -- movePreviewTo ignoring a move once a
-// preview is up -- and that probe is an edit to src/, which product may not
-// take; it is routed to `architect` and the deletion of the hand-written test
-// this replaces waits on it. What WAS measured here, whole-suite, is the
-// mirror of it inside features/: rewriting the scenario's expected list to the
-// FIRST aim's cells -- (5, 5), (6, 5), (5, 6), (6, 6) -- reds exactly one test
-// of 128, this scenario, reporting `Pattern preview cell 5, 5` resolved to 0
-// elements over 14 retries. So after the move the preview provably covers
-// neither more nor less than the second aim's block, which is the same
-// observation a latched preview would fail from the other side. It is a
-// surrogate and is written down as one: it proves the clause is live and reads
-// the post-move frame, not that the app tracks the pointer continuously.
+// WHAT THIS STEP WAS SHOWN CATCHING. The fault it exists for is a preview that
+// LATCHES -- movePreviewTo ignoring a move once a preview is up. That probe is
+// an edit to src/, which product may not take, so it was routed to `architect`
+// and taken there: whole-suite, no --grep, it reds 2 of 128 -- this scenario at
+// the anchor below (`Pattern preview cell 12, 12` resolved to 0 elements over
+// 14 retries) and the hand-written test this scenario replaced, which the same
+// pass then deleted. Nothing else in the suite aims twice, and that run is what
+// says so rather than an argument about which flows hover.
+//
+// AND WHAT PRECEDED IT, kept because it is a different observation and because
+// it is the one product could make for itself: rewriting this scenario's
+// expected list to the FIRST aim's cells -- (5, 5), (6, 5), (5, 6), (6, 6) --
+// reds exactly one test of 128, this scenario, at the same anchor. That is a
+// surrogate and was labelled one: it proves the clause is live and reads the
+// post-move frame, not that the app tracks the pointer. The latch probe is what
+// proves the second thing, and the two together are why the pixel-measuring
+// test could go.
 //
 // NOTE WHICH ASSERTION REPORTED IT -- the retrying anchor, not either
 // inclusion. That is expected rather than a flaw: the anchor is the first

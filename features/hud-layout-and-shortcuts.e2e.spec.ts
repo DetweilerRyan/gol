@@ -1,5 +1,5 @@
 import { test, expect } from '@playwright/test'
-import { CENTER, clickGridAt, expectCellState, previewCells, selectPattern } from './e2e-helpers'
+import { clickGridAt, expectCellState } from './e2e-helpers'
 
 // No matching .feature file, and since `re-audit-hand-written-e2e-residue`
 // that is a narrower statement than it used to be. What is left here is
@@ -24,9 +24,9 @@ import { CENTER, clickGridAt, expectCellState, previewCells, selectPattern } fro
 // and it went on licensing tests long after the thing that made it true had
 // been replaced. A test is licensed by its CLAIM'S CHANNEL, never by a header
 // -- so audit by claim, not by pairing and not by file. Nine tests were here
-// when the audit started and three are now.
+// when the audit started and two are now.
 //
-// SIX CLAIMS LEFT THIS FILE, and none was dropped -- each is now stated in
+// SEVEN CLAIMS LEFT THIS FILE, and none was dropped -- each is now stated in
 // features/**, which is the standing condition on deleting a test here. Every
 // figure below is a WHOLE-SUITE run with one probe applied at a time to an
 // otherwise clean src/, reverted after. A count taken under a --grep is a
@@ -82,6 +82,31 @@ import { CENTER, clickGridAt, expectCellState, previewCells, selectPattern } fro
 //     scenario in the same commit that states it. Vitest is deliberately
 //     outside the count -- src/components/LifeBoard.test.tsx covers this path
 //     too, so an unnamed universe is what let the figure drift.
+//   - The armed pattern's preview MOVING WITH THE AIM rather than staying
+//     where it was first shown is pattern-library.feature's "Aiming at a
+//     different cell moves the preview there rather than leaving it behind",
+//     written by `preview-follows-pointer-may-be-statable`. This one left the
+//     file last and is the only claim here that was ever converted rather than
+//     found already stated: it read as pixel geometry -- two measured bounding
+//     boxes at two pointer positions -- until someone asked what the boxes were
+//     standing in for, and the answer was a set of world coordinates the
+//     preview announces for itself. Making movePreviewTo LATCH, so it ignores a
+//     move once a preview is up, reds 2 of 128 in the whole Playwright run: the
+//     scenario at its retrying anchor (`Pattern preview cell 12, 12` resolved
+//     to 0 elements over 14 retries) and the test this file no longer has, at
+//     its first not.toBe (`Expected: not 720`). Nothing else in the suite aims
+//     twice, which that run confirms rather than assumes. Measured by
+//     `architect` on the slice tip -- `product` cannot take it, the probe being
+//     an edit to src/, the same routing the cancel-branch figure above records.
+//
+// THE LESSON THAT GENERALISES PAST THIS FILE, since it is what shrank the list
+// twice: "no scenario may name a pixel" is a rule about the ASSERTION, not
+// about the claim underneath it. Ask what a measured box is a proxy for before
+// filing a test as category 3. Two boxes differing is a proxy for "the preview
+// is somewhere else now", and "somewhere" was nameable all along. What did NOT
+// convert -- the panel within 30px of the corner, the grid reaching the
+// viewport edge -- is where the pixel IS the claim, with nothing behind it to
+// name. That is the question to put to the next candidate.
 //
 // WHAT REMAINS, and the claim each test uniquely holds -- stated per test
 // below as well, since a file-level list is not what licenses a test to exist,
@@ -106,8 +131,12 @@ import { CENTER, clickGridAt, expectCellState, previewCells, selectPattern } fro
 //      note now says where. Restating them in Gherkin would manufacture the
 //      duplication `triage-paired-specs` deletes, and would not retire the
 //      test anyway, because the box would remain.
-//   3. The preview test is the one that CONVERTED, and it is still here only
-//      because its successor has not been probed yet. See its own note.
+//   3. The preview test CONVERTED AND IS GONE, deleted by `architect` in the
+//      same slice once the probe `product` could not take came back matching
+//      its predicted signature exactly -- 2 failed of 128, at the two clauses
+//      predicted, with no third failure and none missing. Its claim is the
+//      seventh bullet above; the standing order was restate, probe, then
+//      delete, and all three steps are now taken.
 
 test.beforeEach(async ({ page }) => {
   await page.goto('/')
@@ -193,66 +222,4 @@ test('the HUD panel renders the title, next-generation button, and generation co
   const panelBox = await page.getByRole('heading', { name: "Conway's Game of Life" }).locator('..').boundingBox()
   expect(panelBox!.x).toBeLessThan(30)
   expect(panelBox!.y).toBeLessThan(30)
-})
-
-// CATEGORY 3, AND NOW ONLY CATEGORY 3. The claim is that the armed pattern's
-// preview MOVES WITH THE POINTER, asserted as two measured boxes at two pointer
-// positions -- rendered pixel geometry, which no scenario may name.
-//
-// THE CANCEL HALF THIS TEST USED TO CARRY IS GONE, restated as
-// pattern-library.feature's PAIR of cancel scenarios -- "Clicking Patterns
-// while a pattern is armed does not reopen the library" and "Cancelling with
-// the Patterns control leaves the next click a plain single-cell toggle". It
-// was never residue: that the Patterns control disarms rather than reopening
-// is a stated product rule (src/patternPlacement.ts's toggleLibrary), and a
-// rule is contract. The comment in features/steps/pattern-library.ts that used
-// to designate this test the sole holder of that claim was repointed in the
-// same commit that wrote the scenario, and repointed again at the pair.
-//
-// THAT OPEN QUESTION HAS BEEN ANSWERED AND THE CLAIM HAS MOVED. Preview cells
-// announce their own world coordinates -- the channel
-// features/steps/pattern-library.ts reads all eight pattern shapes through --
-// so this IS statable, and it is now stated:
-// pattern-library.feature's "Aiming at a different cell moves the preview
-// there rather than leaving it behind". Given an aim at (5, 5), When the aim
-// moves to (12, 12), Then the preview covers exactly the Block's four cells
-// there. One When, because only the second aim is the act; the first is prior
-// state, which is why this did not need the cancel pair's split.
-//
-// THIS TEST IS STILL HERE BECAUSE THE PROBE HAS NOT BEEN TAKEN, and the order
-// is the standing one: restate, probe, then delete. The fault that licenses
-// the deletion is a LATCHING preview -- movePreviewTo ignoring a move once a
-// preview is up -- which is an edit to src/ and therefore `architect`'s to
-// take, not product's. A total no-op is the WRONG probe: it reds every "I am
-// aiming it at the cell at" Given in the feature and says nothing about the
-// new Then. An offset fault is also wrong: the shape outline already catches
-// that, aiming once at (0, 0) and reading absolute coordinates back.
-//
-// PREDICTED SIGNATURE, so a run that differs is a finding: 2 failed of 128 --
-// the new scenario at its anchor (`Pattern preview cell 12, 12` resolving to
-// 0 elements) and this test at its first not.toBe. Nothing else in the suite
-// aims twice.
-//
-// WHAT IS ALREADY MEASURED, and it is a surrogate rather than the probe.
-// Rewriting the scenario's expected list to the FIRST aim's cells reds exactly
-// one test of 128, that scenario, at the anchor over 14 retries. So the
-// preview provably covers the second aim's block and not the first's after the
-// move -- which is the same observation a latched preview fails from the other
-// side. It proves the clause is live and reads the post-move frame; it does
-// not prove the app tracks the pointer, which is what the src probe is for.
-test('the armed pattern preview follows the pointer across the grid', async ({ page }) => {
-  await selectPattern(page, 'Glider')
-
-  // Move the pointer over the grid so a preview follows it (Grid's
-  // trackHover guard only computes/calls onHover once a pattern is armed).
-  await page.mouse.move(CENTER.x + 60, CENTER.y + 60)
-  const preview = previewCells(page)
-  await expect(preview.first()).toBeVisible()
-  await expect(preview).toHaveCount(5) // Glider has 5 live cells
-  const boxAtFirstPosition = (await preview.first().boundingBox())!
-
-  await page.mouse.move(CENTER.x + 120, CENTER.y + 120)
-  const boxAtSecondPosition = (await preview.first().boundingBox())!
-  expect(boxAtSecondPosition.x).not.toBe(boxAtFirstPosition.x)
-  expect(boxAtSecondPosition.y).not.toBe(boxAtFirstPosition.y)
 })
