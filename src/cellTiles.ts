@@ -12,7 +12,7 @@ import type { Camera } from './camera'
 // this module stores no cellSize and does not import worldToScreen.
 
 /**
- * Cell span per tile side.
+ * Number of world cells along one side of a tile.
  */
 export const TILE_SPAN_CELLS = 4
 // The design below this comment (ratified
@@ -82,7 +82,10 @@ export const TILE_SPAN_CELLS = 4
 
 /**
  * How many tiles of margin a retained range may carry beyond the covering
- * set, on any one side, before nextTileRange rebuilds.
+ * set, on any one side, before {@link nextTileRange} rebuilds it.
+ *
+ * @see {@link tileRangeHolds} for the eviction-only asymmetry this permits
+ * -- trailing edge only, never the leading edge.
  */
 export const EVICT_LAG_TILES = 1
 // This is EVICTION
@@ -128,23 +131,28 @@ export const EVICT_LAG_TILES = 1
 // anything on its own).
 
 export interface TileRange {
-  /** inclusive tile indices */
+  /** Inclusive tile index. */
   minTileX: number
+  /** Inclusive tile index. */
   minTileY: number
+  /** Inclusive tile index. */
   maxTileX: number
+  /** Inclusive tile index. */
   maxTileY: number
+  /** The cell span this range was computed with. */
   spanCells: number // carried so consumers never re-import the constant
 }
 
 /**
  * The tile index containing a world coordinate.
+ *
+ * @remarks Rounds toward negative infinity, not toward zero: tile -1 covers
+ * world cells [-spanCells, -1], not [-spanCells + 1, 0].
  */
 export function tileIndexOf(worldCoordinate: number, spanCells: number): number {
-  // Math.floor rather than
-  // Math.trunc so negative coordinates round toward negative infinity, the
-  // same convention slotWorldCoordinate/cellKey already use elsewhere in this
-  // codebase -- tile -1 covers world cells [-spanCells, -1], not [-spanCells +
-  // 1, 0].
+  // Math.floor rather than Math.trunc so negative coordinates round toward
+  // negative infinity, the same convention slotWorldCoordinate/cellKey
+  // already use elsewhere in this codebase.
   return Math.floor(worldCoordinate / spanCells)
 }
 
@@ -160,23 +168,26 @@ export function tileOriginCell(tileIndex: number, spanCells: number): number {
  * The identity a mounted tile is keyed by.
  */
 export function tileKey(tileX: number, tileY: number): string {
-  // World-based, unlike the old
-  // lattice's slotIndex -- see GridCells.tsx's keying comment for why that
-  // inversion is correct here.
+  // World-based, unlike the old lattice's slotIndex -- see GridCells.tsx's
+  // keying comment for why that inversion is correct here.
   return `${tileX},${tileY}`
 }
 
 /**
  * The exact minimal set of tiles needed to fully cover the viewport under
- * the given camera -- no admission margin (see EVICT_LAG_TILES above).
+ * the given camera -- no admission margin (see {@link EVICT_LAG_TILES}).
+ *
+ * @remarks The trailing edge is clamped to never fall short of the leading
+ * edge, so a zero-size viewport still returns a valid single-tile range
+ * rather than an inverted or empty one.
  */
 export function coveringTileRange(camera: Camera, widthPx: number, heightPx: number, spanCells: number): TileRange {
   // Mirrors computeLattice's floor/ceil edge convention (gridGeometry.ts's
-  // computeVisibleRange uses the same pair), except the trailing edge is
-  // clamped to never fall short of the leading edge: a 0-width/0-height
-  // viewport (Grid's pre-measurement render) would otherwise invert into an
-  // empty or negative range, and Grid.test.tsx's "renders a small cell grid
-  // immediately on mount" test depends on cell (0, 0) existing at size {0, 0}.
+  // computeVisibleRange uses the same pair). The clamp above exists because
+  // a 0-width/0-height viewport (Grid's pre-measurement render) would
+  // otherwise invert into an empty or negative range, and Grid.test.tsx's
+  // "renders a small cell grid immediately on mount" test depends on cell
+  // (0, 0) existing at size {0, 0}.
   const leftCell = Math.floor(camera.offsetX)
   const topCell = Math.floor(camera.offsetY)
   const rightCell = Math.max(leftCell, Math.ceil(camera.offsetX + widthPx / camera.cellSize) - 1)
@@ -214,6 +225,10 @@ function axisHolds(
  * `required`: it must still fully contain `required` (never a hole in the
  * viewport), and it must not exceed `required` by more than `evictLagTiles`
  * tiles on any one of the four sides.
+ *
+ * @remarks Asymmetric: tolerates `previous` being wider than `required`, and
+ * never narrower -- a narrower range would leave an unrendered gap at the
+ * viewport's leading edge.
  */
 export function tileRangeHolds(previous: TileRange, required: TileRange, evictLagTiles: number): boolean {
   // NOTE THE ASYMMETRY, because the ratified design got this wrong and the
@@ -257,39 +272,20 @@ function axisRetained(
 }
 
 /**
- * The sticky-range rule: keep `previous` BY REFERENCE while it holds
- * (tileRangeHolds against the freshly-required covering set), and otherwise
- * rebuild onto the EVICT_LAG_TILES-clamped union of `previous` and
- * `required` -- composing axisRetained over X and Y -- rather than onto
- * `required` exactly.
+ * Advances `previous` to the tile range required to cover `camera`'s
+ * viewport, retaining as much of `previous` as {@link EVICT_LAG_TILES}
+ * allows rather than replacing it outright.
  *
- * Three things follow by
- * construction, not by argument: the result always contains `required` (no
- * hole -- axisRetained's min can only move DOWN to requiredMin, never past
- * it, and symmetrically for max); it never exceeds `required` by more than
- * evictLagTiles per side (so idempotence-by-reference, the no-infinite-loop
- * guarantee below, is now a theorem of the clamp rather than a coincidence
- * of `required` covering itself); and it never mounts a per-axis bound
- * `previous` didn't already hold (each clamp's own bounds are built from
- * `previous` and `required` alone -- there is no third value it could admit
- * from).
+ * @returns `previous` itself, by reference, when it already covers the
+ * viewport within {@link EVICT_LAG_TILES} tiles per side -- the identity
+ * `useCellTiles`'s render loop depends on to stop re-rendering. Otherwise a
+ * new range that always contains the required covering set and never drifts
+ * from it by more than {@link EVICT_LAG_TILES} tiles per side. Idempotent:
+ * applying it again to its own result returns that same result.
  *
- * after the first rebuild, the trailing edge in
- * whichever direction the wobble reverses toward carries up to one tile of
- * slack, so the reversal still holds.
- *
- * THE RESIDUAL LIMIT, disclosed rather than fixed: an oscillation whose
- * REALIZED tile indices swing by two or more tiles still rebuilds on every
- * reversal, because a single tile of lag cannot cover a two-tile swing.
- *
- *   1. It returns `previous` BY REFERENCE when it holds. That reference
- *      identity is what the hook's `current !== range` guard tests, so an
- *      implementation returning a structurally-equal copy would make the
- *      hook call setState on every render forever.
- *   2. Applying it to its own result is a no-op. That is the
- *      no-infinite-loop guarantee: the hook's second render re-runs this
- *      against the range the first render just stored, and gets that same
- *      object back.
+ * @remarks The one-tile lag only bounds a wobble whose realized tile indices
+ * swing by one tile; a swing of two or more (real panning, or float
+ * rounding at exactly one span) rebuilds on every reversal.
  */
 export function nextTileRange(previous: TileRange, camera: Camera, widthPx: number, heightPx: number): TileRange {
   // That last property is what makes this retention, not admission
@@ -298,9 +294,9 @@ export function nextTileRange(previous: TileRange, camera: Camera, widthPx: numb
   //
   // This is also what actually bounds a same-tile-boundary wobble to one
   // rebuild (tileRangeHolds' NOTE-THE-ASYMMETRY comment explains why that
-  // predicate alone can't):
-  //
-  // THAT BOUND IS OVER THE REALS, and the
+  // predicate alone can't): after the first rebuild, the trailing edge in
+  // whichever direction the wobble reverses toward carries up to one tile of
+  // slack, so the reversal still holds. THAT BOUND IS OVER THE REALS, and the
   // residual below is where the distinction stops being pedantic.
   //
   // A swing gets there two ways, and the second is easy to miss:
@@ -328,12 +324,13 @@ export function nextTileRange(previous: TileRange, camera: Camera, widthPx: numb
   // cellTiles.property.test.ts's 'eviction hysteresis' block.
   //
   // Pure, and deliberately here rather than inline in useCellTiles, for the
-  // same reason cellLattice.ts's nextLattice was -- two properties the hook's
-  // setState-during-render pattern depends on are properties of this function
-  // alone rather than of React (see cellTiles.property.test.ts):
-  //
-  // Since the fix it is a theorem of axisRetained's clamp
-  // rather than a coincidence of `required` covering itself.
+  // same reason cellLattice.ts's nextLattice was -- the by-reference and
+  // idempotence guarantees documented above are properties of this function
+  // alone rather than of React (see cellTiles.property.test.ts). The hook's
+  // second render re-runs this against the range the first render just
+  // stored and gets that same object back; since the fix it is a theorem of
+  // axisRetained's clamp rather than a coincidence of `required` covering
+  // itself.
   //
   // No cellSize parameter, deliberately: a zoom needs no special case here.
   // Zooming out grows the covering set, so containment fails and this
@@ -392,11 +389,11 @@ export function nextTileRange(previous: TileRange, camera: Camera, widthPx: numb
 }
 
 /**
- * The total number of cells mounted by every tile in the range -- Guard 1 of
- * the tile-virtualized-cells design (see cellTiles.test.ts's table-driven
- * test for the exact figures this was chosen against).
+ * The total number of cells mounted by every tile in the range.
  */
 export function tileRangeCellCount(range: TileRange): number {
+  // Guard 1 of the tile-virtualized-cells design -- see cellTiles.test.ts's
+  // table-driven test for the exact figures this was chosen against.
   const tilesX = range.maxTileX - range.minTileX + 1
   const tilesY = range.maxTileY - range.minTileY + 1
   return tilesX * range.spanCells * tilesY * range.spanCells
