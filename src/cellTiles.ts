@@ -15,9 +15,9 @@ import type { Camera } from './camera'
  * Number of world cells along one side of a tile.
  */
 export const TILE_SPAN_CELLS = 4
-// The design below this comment (ratified
-// tile-virtualized-cells design, derived from reports/perf/latest.md @
-// 5042ab3, 2026-08-22) chose S=4 from an F(S) = c_cell * enteringCells(S) +
+// The design below this comment (the ratified tile-virtualized-cells
+// design, derived from reports/perf/latest.md @ 5042ab3, 2026-08-22)
+// chose S=4 from an F(S) = c_cell * enteringCells(S) +
 // c_tile * tileCount(S) model built on a *pre-tiling* calibration -- the
 // zoom-shift-wheel scenarios it read c_remount from didn't remount at all
 // under the lattice that predated this module (GridCells.tsx keyed by
@@ -88,11 +88,10 @@ export const TILE_SPAN_CELLS = 4
  * -- trailing edge only, never the leading edge.
  */
 export const EVICT_LAG_TILES = 1
-// This is EVICTION
-// HYSTERESIS, not admission overscan, and the two are easy to conflate with
-// prior art (e.g. TanStack Virtual's `overscan`) -- worth stating plainly
-// since the first reader to meet that library will otherwise assume
-// EVICT_LAG_TILES is the same knob and "fix" it:
+// This is EVICTION HYSTERESIS, not admission overscan, and the two are easy
+// to conflate with prior art (e.g. TanStack Virtual's `overscan`) -- worth
+// stating plainly, since the first reader to meet that library will
+// otherwise assume EVICT_LAG_TILES is the same knob and "fix" it:
 //
 //   - overscan is an ADMISSION margin: always mount N extra tiles beyond the
 //     covering set, symmetrically, on every render. Permanent cost, buys
@@ -405,8 +404,8 @@ export function tileRangeCellCount(range: TileRange): number {
  * one tile boundary along `axis`.
  */
 export function enteringStripCellCount(range: TileRange, axis: 'x' | 'y'): number {
-  // Guard 2 of the design -- the quantity the
-  // strip-event cost model (F(S) in this module's header) is built from.
+  // Guard 2 of the design -- the quantity the strip-event cost model (F(S)
+  // in this module's header) is built from.
   const tilesX = range.maxTileX - range.minTileX + 1
   const tilesY = range.maxTileY - range.minTileY + 1
   return axis === 'x' ? range.spanCells * (tilesY * range.spanCells) : range.spanCells * (tilesX * range.spanCells)

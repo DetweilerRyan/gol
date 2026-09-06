@@ -86,9 +86,9 @@ export interface PanReveal {
  * @returns `{0, 0}` on an axis that's already satisfied, so a caller can
  * apply the result unconditionally after every focus move.
  */
-// panByPixels
-// calls camera.ts's panCamera(camera, dxPixels, dyPixels) UNCHANGED --
-// no negation -- which computes `offsetX -= dxPixels / cellSize`. So to
+// panByPixels calls camera.ts's panCamera(camera, dxPixels, dyPixels)
+// UNCHANGED -- no negation -- which computes `offsetX -= dxPixels /
+// cellSize`. So to
 // reach a target offsetX' = offsetX + shiftWorldX, the caller must pass
 // dxPixels = -shiftWorldX * cellSize.
 //

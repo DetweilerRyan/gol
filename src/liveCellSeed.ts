@@ -92,9 +92,9 @@ function parseNonNegativeInteger(raw: string | null): number | undefined {
  * so a caller that builds its own `request` and violates it hangs rather
  * than throwing.
  */
-// Draws a
-// capacity-space index per cell from a Math.imul-based LCG (its high bits,
-// which are the well-distributed ones) and resolves collisions by linear
+// Draws a capacity-space index per cell from a Math.imul-based LCG (its
+// high bits, which are the well-distributed ones) and resolves collisions by
+// linear
 // probing forward through that same capacity space rather than redrawing.
 export function buildSeededLiveCells(request: SeedRequest): LiveCells {
   const { count, spread, seed } = request
@@ -125,8 +125,8 @@ export function buildSeededLiveCells(request: SeedRequest): LiveCells {
  * The whole seeding pipeline as one call: parse, and build only if the query
  * string actually asked for a satisfiable population.
  */
-// Lives here rather than
-// in src/main.tsx because the `request ? ... : undefined` decision is real
+// Lives here rather than in src/main.tsx because the
+// `request ? ... : undefined` decision is real
 // logic, and main.tsx is bootstrap code outside every quality gate -- a
 // branch there is neither mutation-tested nor complexity-scored. main.tsx
 // keeps only what has to be there: the import.meta.env.MODE check Rolldown

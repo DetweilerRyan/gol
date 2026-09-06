@@ -22,8 +22,8 @@ import { worldToScreen, type Camera } from './camera'
  * How far the camera's world offset may drift from the anchor, on either
  * axis, before {@link nextAnchor} re-quantises.
  */
-// Chosen against the float32
-// integer-exactness cliff at 2**24 (~16.78M), which is where a compositor
+// Chosen against the float32 integer-exactness cliff at 2**24 (~16.78M),
+// which is where a compositor
 // transform stops representing every pixel offset exactly: at
 // MAX_CELL_SIZE (60px/cell), ANCHOR_DRIFT_CELLS * 60 = 245,760px, a 68x
 // margin below 2**24. (An earlier draft of this design proposed ~260,000

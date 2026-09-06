@@ -386,13 +386,13 @@ export interface Cache<TKeyPath extends unknown[], T> extends ReadonlyCache<TKey
   /**
    * Removes the entry from the cache at the provided key path.
    *
-   * @throws CacheError if no entry exists at the key path -- guard with
-   * {@link Cache.has} first.
-   *
    * Removing mid-iteration invalidates that iteration: the *iterator's
    * next step* throws a {@link CacheError} (not this call). Finish
    * iterating first -- e.g. `Array.from(cache)` -- if you need to remove
    * while iterating.
+   *
+   * @throws CacheError if no entry exists at the key path -- guard with
+   * {@link Cache.has} first.
    */
   remove(keyPath: TKeyPath): void
 

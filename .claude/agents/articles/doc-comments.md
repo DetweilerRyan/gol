@@ -31,7 +31,9 @@ _A Philosophy of Software Design_ separates two kinds of comment:
 That last line **is** the token argument, stated years before agents existed. So this is a **partition, not a fold**:
 
 - **Interface half → JSDoc above the declaration.** Visible in hover and in the `.d.ts`. What a caller needs in order to use the thing correctly.
-- **Implementation half → stays `//`,** relocated below the signature or into the body. Invisible to hover, which is _correct_: a caller should neither be exposed to internals nor pay tokens for them.
+- **Implementation half → stays `//`,** relocated below the signature or into the body — **or between the JSDoc block and the declaration**, which is measured safe and is what this repo's sweep actually landed in 36 places. Invisible to hover, which is _correct_: a caller should neither be exposed to internals nor pay tokens for them.
+
+**The between-position is sanctioned, and it was measured rather than assumed.** `/** … */`, then a `//` block, then the declaration: the JSDoc still reaches a cross-file hover, tags and all. That matters because it is the only placement that keeps an implementation note adjacent to the signature it qualifies without pushing it inside the body, and because the failure mode if it _had_ severed is the silent one — a bare signature, indistinguishable from no doc having been written. Do not "fix" a file into the below-the-signature form on the belief that the between form is broken; it is not.
 
 **Partitioning is not the same as being already-JSDoc.** A block can be in the right channel and still be the wrong content at the wrong length. When this article was authored, `src/equality/is-deep-equal.ts` carried a 22-line JSDoc whose middle paragraph ("`isDeepEqual` is its own leaf comparator here — `structurallyEqual`'s own initial short-circuit…") was pure implementation rationale sitting on the hover channel, and `Cache.insert` in `src/cache.ts` hovered at roughly 30 rendered lines carrying a misspelled `@remark` that renders as an empty tag, an `@todo` about a future API, and two bare `@param`s that name the parameters and say nothing. **Apply the split test to JSDoc you find, not only to `//` you find** — "it is already JSDoc" is not a reason to skip a file.
 
@@ -165,26 +167,28 @@ So the placement rule has two arms and no third:
 
 **A brace in a block tag's leading position is read as a _type slot_, and the tags disagree about what happens next.** Measured cross-file on a probe file the language server had not previously read:
 
-| written                                                                     | rendered in hover                                                  |
-| --------------------------------------------------------------------------- | ------------------------------------------------------------------ |
-| `@param {number} value …`                                                   | type **stripped**, renders clean                                   |
-| `@returns {TileRange} …`                                                    | type **stripped**, renders clean                                   |
-| `@throws {CacheError} …`                                                    | `{CacheError}` **literally, braces and all, no link** — do not use |
-| `@see {CacheError}`                                                         | `{CacheError}` literally, same leak as `@throws`                   |
-| **`@throws CacheError …`**                                                  | **`CacheError`, clean — this is the mandated form**                |
-| `@throws {@link CacheError} …`                                              | **broken** — a stray `{`, then `@link` parsed as its own tag       |
-| `@returns {@link CacheError} …`                                             | **broken** — worse: the `@returns` text is lost entirely           |
-| `@param value {@link CacheError} …` (after the name, outside the type slot) | the link resolves                                                  |
-| `@throws CacheError … guard with {@link Cache.has} first` (mid-prose)       | the link resolves                                                  |
-| `@see {@link ./cellTiles.md}`                                               | resolves — rule 7's mandated form, and `@see`'s own special case   |
+| written                                                                         | rendered in hover                                                  |
+| ------------------------------------------------------------------------------- | ------------------------------------------------------------------ |
+| `@param {number} value …`                                                       | type **stripped**, renders clean                                   |
+| `@returns {TileRange} …`                                                        | type **stripped**, renders clean                                   |
+| `@throws {CacheError} …`                                                        | `{CacheError}` **literally, braces and all, no link** — do not use |
+| `@see {CacheError}`                                                             | `{CacheError}` literally, same leak as `@throws`                   |
+| **`@throws CacheError …`**                                                      | **`CacheError`, clean — this is the mandated form**                |
+| `@throws {@link CacheError} …`                                                  | **broken** — a stray `{`, then `@link` parsed as its own tag       |
+| `@returns {@link CacheError} …`                                                 | **broken** — worse: the `@returns` text is lost entirely           |
+| `@param value {@link CacheError} …` (after the name, outside the type slot)     | the link resolves                                                  |
+| `@throws CacheError … guard with {@link Cache.has} first` (mid-prose)           | the link resolves                                                  |
+| `@see {@link ./cellTiles.md}`                                                   | resolves — rule 7's mandated form, and `@see`'s own special case   |
+| `@see {@link tileRangeHolds} for the asymmetry this permits` (link, then prose) | resolves, and the trailing prose renders after it — measured       |
 
 Read across it: **`@param` and `@returns` strip a well-formed braced type; `@throws` and `@see` print it verbatim** — so a `@throws` gets its exception type written **bare**. And the rows that matter most are the two broken ones, because a leading `{@link}` is exactly what a reader deduces from "braces leak, but `{@link}` resolves". It does not: TS tries the type slot first, `{@link …}` is not a type, and the `@link` behind the brace is picked up as a block tag despite being brace-preceded — the one measured place the whitespace rule above does not hold. `@see` is the exception to the exception, special-casing `{@link}` while still leaking a plain `{Type}`. Put every other link in the tag's **prose**, where it resolves and where it belongs.
 
-**Not measured, so do not assume either way:** a `{@link}` inside `@param`'s own type slot (`@param {@link X} value`), and `@example`.
+**Not measured, so do not assume either way:** a `{@link}` inside `@param`'s own type slot (`@param {@link X} value`), and `@example`. (`@example` is still unmeasured because, as of this sweep, **`src/` contains no `@example` at all** — the budget's highest-variance construct is simply absent here.)
 
 Three more. The first is fatal; the second is silent, which is worse; the third is a coexistence ruling rather than a hazard:
 
 - **A `*/` inside prose terminates the block early**, leaving a syntax error. Lines mentioning a glob like `**/run.ts` are the usual source. Reword such a line _before_ moving it into JSDoc, as its own commit — see the commit discipline below.
+- **Neither a blank line nor an intervening `//` block detaches a JSDoc block from the declaration below it.** The `//` half was measured on a probe file the server had not read, at a cross-file call site, and is what rule 4's between-position rests on.
 - **A blank line does not detach a JSDoc block from the declaration below it.** Measured: a `/** … */` block, then a blank line, then `export function afterBlankLine` — the block still reaches that function's hover at a cross-file call site. So a file-leading block that _looks_ like a module header is silently documenting the first declaration under it, whatever the author intended. Before treating any leading block as a module header, hover the first export and see whether it comes back; if it does, that block is already an interface comment and gets partitioned like one. A true module header — one that should reach nobody's hover — must be `//`.
 - **`// prettier-ignore` and JSDoc coexist, in either order.** Measured on a 126-character signature that Prettier reformats when the directive is removed: with the directive present, `npx prettier --check` stays clean and hover returns the full JSDoc **both** when the directive sits above the JSDoc and when it sits between the JSDoc and the declaration. **Mandate the second — JSDoc, then `// prettier-ignore`, then the declaration** — so the directive stays adjacent to the thing whose formatting it suppresses. The other ordering reads as suppressing the comment's formatting, which it does not. Both were green; if a future TypeScript or Prettier upgrade breaks one, that is a change against this record rather than evidence the convention was wrong.
 

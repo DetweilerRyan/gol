@@ -143,10 +143,9 @@ export function advanceGeneration(previous: ReadonlyLiveCells): GenerationStep {
  * The generation alone, for callers with no use for the delta (the Gherkin
  * step definitions, which speak in whole generations).
  */
-// Deliberately a
-// projection of advanceGeneration rather than a second implementation of the
-// rules: two loops applying willSurvive could drift, and the survival rule
-// living in exactly one place is the point.
+// Deliberately a projection of advanceGeneration rather than a second
+// implementation of the rules: two loops applying willSurvive could drift,
+// and the survival rule living in exactly one place is the point.
 export function getNextGeneration(liveCells: ReadonlyLiveCells): LiveCells {
   return advanceGeneration(liveCells).next
 }

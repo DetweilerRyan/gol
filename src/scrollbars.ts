@@ -136,8 +136,8 @@ export type ScrollbarAxis = 'x' | 'y'
  */
 // prettier-ignore
 export function panCameraByScrollbarDrag(camera: Camera, axis: ScrollbarAxis, deltaTrackPx: number, thumbRatio: number): Camera {
-  // That 1:1 relation is the
-  // ACCEPTED CONTRACT ("dragging a thumb covering a quarter of its track pans
+  // That 1:1 relation is the ACCEPTED CONTRACT ("dragging a thumb covering a
+  // quarter of its track pans
   // four times as far", asserted exactly with toEqual), not a consequence of
   // the track spanning the full viewport edge -- Scrollbar.tsx's track is
   // inset by SCROLLBAR_THICKNESS_PX (10px) on each axis, so track pixels and

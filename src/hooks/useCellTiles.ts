@@ -5,32 +5,49 @@ import type { Camera } from '../camera'
 import type { ElementSize } from './useElementSize'
 
 export interface CellTilesView {
+  /**
+   * The tiles currently mounted. Reference-stable across renders that did
+   * not change it, so it is safe as a memo dependency.
+   */
   range: TileRange
+  /** The anchor's world-cell x coordinate -- world cells, not pixels. */
   anchorX: number
+  /** The anchor's world-cell y coordinate -- world cells, not pixels. */
   anchorY: number
+  /** Viewport pixels per world cell, passed through from the camera. */
   cellSize: number
+  /**
+   * Viewport pixels, not world cells: apply `translate(offsetXPx,
+   * offsetYPx)` to the layer wrapping every mounted cell, so a pan moves
+   * this one offset rather than each cell's own position.
+   */
   offsetXPx: number
+  /** The y half of {@link CellTilesView.offsetXPx}'s translate, same units. */
   offsetYPx: number
 }
 
 /**
- * Thin adapter over cellTiles.ts and cellAnchor.ts: replaces
- * useCellLattice.ts now that mounting coverage and precision bounding are two
- * independent concerns (see cellAnchor.ts's header) instead of one lattice
- * origin doing both jobs. Holds two sticky anchors -- a TileRange (via
- * useState) and an Anchor (via a second, independent useState) -- and
- * delegates every actual rule to nextTileRange/nextAnchor; this hook decides
- * nothing about tiling or precision itself.
+ * Which world tiles to mount under `camera`, plus the anchor offset to
+ * translate them by. Thin adapter: every actual rule is
+ * {@link nextTileRange}'s and {@link nextAnchor}'s.
  *
- * range is returned as an object, unlike useCellLattice.ts's flattened
- * scalars -- a deliberate reversal, not a regression of that hook's
- * discipline. That flattening existed so Grid held no object identity from
- * the hook; here, reference stability is instead a property-tested contract
- * of nextTileRange itself (the same guarantee this hook's own loop-freedom
- * rests on), so the returned TileRange is exactly as memo-stable as a scalar
- * would be, and bundling its four bounds together stops a caller
- * reconstructing an inconsistent range from separately-drawn fields.
+ * Both the returned `range` and the offsets are sticky -- an unchanged
+ * camera hands back the same `range` object by reference -- so a caller may
+ * use them as memo dependencies directly.
  */
+// WHY `range` IS AN OBJECT rather than the flattened scalars
+// useCellLattice.ts returned: that flattening existed so Grid held no object
+// identity from the hook. Here reference stability is a property-tested
+// contract of nextTileRange itself (the same guarantee this hook's own
+// loop-freedom rests on), so the returned TileRange is exactly as memo-stable
+// as a scalar would be, and bundling its four bounds together stops a caller
+// reconstructing an inconsistent range from separately-drawn fields.
+//
+// This hook replaced useCellLattice.ts once mounting coverage and precision
+// bounding became two independent concerns (see cellAnchor.ts's header)
+// instead of one lattice origin doing both jobs. It holds two sticky anchors
+// -- a TileRange and an Anchor, each via its own useState -- and decides
+// nothing about tiling or precision itself.
 // Both coverage checks run during render, not in a useEffect, for the same
 // reason useCellLattice.ts's did: nextTileRange/nextAnchor each return either
 // the stored value (by reference, if it still holds) or a freshly computed
