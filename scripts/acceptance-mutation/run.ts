@@ -89,7 +89,7 @@ function resolveTargets(): MutationTarget[] {
 // The I/O half of planning: reading each target's feature text off disk. What
 // the mutants derived from it then are is mutant-plan.ts's, which is pure and
 // therefore inside crap4ts/Stryker's scripts/ scope -- this file is not, by
-// the `**/run.ts` exclusion both configs carry.
+// the run.ts-at-any-depth exclusion both configs carry.
 //
 // listMutationSites parses real Gherkin (gherkin-document.ts's AST adapter)
 // rather than scanning lines, so a malformed .feature throws a

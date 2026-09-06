@@ -4,7 +4,7 @@
 // mutated feature text itself.
 //
 // Split out of run.ts rather than left there, for the reason
-// crap4ts.scripts.config.ts states about every `**/run.ts`: those files are
+// crap4ts.scripts.config.ts states about every `run.ts` (matched at any depth): those files are
 // excluded from crap4ts and Stryker as I/O shells, so a pure function left in
 // one is invisible to both gates. This is the same relocation the
 // acceptance-mutation-on-playwright cleanup made for playwright-runner.ts's

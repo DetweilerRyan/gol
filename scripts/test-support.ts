@@ -10,7 +10,7 @@ import path from 'node:path'
 // Excluded from crap4ts/Stryker's scripts/ scope the same way
 // scripts/perf-report/test-support.ts already is -- see
 // crap4ts.scripts.config.ts and stryker.scripts.config.json's shared
-// `**/test-support.ts` exclusion. This is test infrastructure, not product
+// `test-support.ts` exclusion (matched at any depth). This is test infrastructure, not product
 // code.
 export function writeFile(root: string, relativePath: string, contents: string): void {
   const full = path.join(root, relativePath)

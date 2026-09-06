@@ -6,7 +6,7 @@
 // and the shared primitive a renderer uses to touch only those bytes.
 //
 // Deliberately parser-free: a TextSpan is plain line/column numbers, so this
-// module never imports @cucumber/gherkin or @cucumber/messages (see
+// module never imports `@cucumber/gherkin` or `@cucumber/messages` (see
 // rules/no-cucumber-parser-outside-adapter.yml, which scopes to
 // gherkin-document.ts and would not even reach this file).
 
@@ -65,7 +65,7 @@ export function spliceSpan(text: string, span: TextSpan, replacement: string): s
 //
 // The scan stops at the first *unescaped* `|` (or end of line, for a
 // malformed table no caller here is expected to hand this), then trims
-// trailing whitespace -- @cucumber/gherkin's own location already points past
+// trailing whitespace -- `@cucumber/gherkin`'s own location already points past
 // any *leading* whitespace (see the probe in text-span.test.ts), so only the
 // trailing padding before the next `|` needs trimming here.
 export function findCellSpan(line: string, lineIndex: number, startColumn: number): TextSpan {

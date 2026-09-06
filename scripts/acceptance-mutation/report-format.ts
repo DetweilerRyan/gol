@@ -1,5 +1,5 @@
 // Presentational formatting for run.ts's own report() table, split out
-// because **/run.ts is excluded from crap4ts and Stryker as an I/O shell
+// because run.ts (matched at any depth) is excluded from crap4ts and Stryker as an I/O shell
 // (see mutant-plan.ts's own comment on the same exclusion) -- anything worth
 // gating has to live outside it.
 //

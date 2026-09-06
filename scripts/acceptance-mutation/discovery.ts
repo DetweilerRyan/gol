@@ -59,7 +59,7 @@ export function filterTargets(targets: MutationTarget[], featureArg: string | un
 // one target (see filterTargets above). A thin wrapper over node:util's
 // parseArgs, kept here rather than inlined at the call site, for the same
 // reason as above -- run.ts is excluded from crap4ts/Stryker's scripts/
-// scope by their `**/run.ts` globs, so the one line of logic (translating
+// scope by their `run.ts`-at-any-depth globs, so the one line of logic (translating
 // parseArgs' `values` shape into `{ feature } | {}`) needs to live somewhere
 // covered.
 //

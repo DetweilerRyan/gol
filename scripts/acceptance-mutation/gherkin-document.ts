@@ -1,15 +1,15 @@
-// The sole @cucumber/* importer in this program -- see
+// The sole `@cucumber/*` importer in this program -- see
 // rules/no-cucumber-parser-outside-adapter.yml, which enforces exactly this
 // from the other direction. Every other module in scripts/acceptance-mutation
 // deals in the AST node types re-exported below, or in MutationSite/TextSpan
-// (a later step), and never imports @cucumber/gherkin or @cucumber/messages
+// (a later step), and never imports `@cucumber/gherkin` or `@cucumber/messages`
 // directly.
 //
-// The coupling this module owns is real, not incidental: @cucumber/gherkin is
+// The coupling this module owns is real, not incidental: `@cucumber/gherkin` is
 // the parser that locates spans in a feature file, and it is also the parser
 // `playwright-bdd` (via bddgen) uses to turn a written mutant .feature back
 // into the spec run.ts actually executes. Both are the same deduped copy of
-// @cucumber/gherkin@39.1.0 today (see package.json) -- a mutant this module
+// `@cucumber/gherkin@39.1.0` today (see package.json) -- a mutant this module
 // locates a span in is guaranteed to be read back the same way at generation
 // time, because there is exactly one parser in the dependency graph. A second
 // importer, or a second major version, would break that guarantee silently.
@@ -25,7 +25,7 @@ import { AstBuilder, Errors, GherkinClassicTokenMatcher, Parser } from '@cucumbe
 import { IdGenerator } from '@cucumber/messages'
 import type * as messages from '@cucumber/messages'
 
-// Re-exported so a consumer never needs its own @cucumber/messages import to
+// Re-exported so a consumer never needs its own `@cucumber/messages` import to
 // name an AST node type -- widen this list rather than let a consumer reach
 // around the adapter (see the ast-grep rule's own note).
 export type {
@@ -46,12 +46,12 @@ export type {
   Tag,
 } from '@cucumber/messages'
 
-// @cucumber/gherkin's own parse errors -- GherkinException and its
+// `@cucumber/gherkin`'s own parse errors -- GherkinException and its
 // subclasses (ParserException, CompositeParserException, ...), which the
 // library groups under one `Errors` namespace rather than exporting
 // individually. Re-exported by name here so a caller can narrow a caught
 // error (`instanceof CompositeParserException`) without importing
-// @cucumber/gherkin itself.
+// `@cucumber/gherkin` itself.
 export const { CompositeParserException, GherkinException, ParserException } = Errors
 
 // A parsed feature file: the original text (so a caller can re-render without
@@ -64,7 +64,7 @@ export interface FeatureDocument {
   doc: messages.GherkinDocument
 }
 
-// Parses one feature file's text into its AST. Throws (an @cucumber/gherkin
+// Parses one feature file's text into its AST. Throws (an `@cucumber/gherkin`
 // GherkinException, most commonly CompositeParserException) on malformed
 // Gherkin -- deliberately not caught here. This module locates spans, it does
 // not decide what to do when a file can't be parsed at all; that decision
