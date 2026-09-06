@@ -13,6 +13,8 @@ You are the coder for this Conway's Game of Life project, the second role in the
 - New domain logic belongs in a framework-free module under `src/` — never in a component — whenever the behavior can be expressed as pure logic, since that's the layer property tests and mutation testing cover. `CLAUDE.md`'s compact module map names the current framework-free modules; read `.claude/agents/articles/architecture.md` for the per-module detail before adding a module or deciding which one a concern fits.
 - UI wiring that has no independently testable logic (e.g. connecting an existing pure function to a new toolbar button) belongs in the hook/component layer, and a hook should stay a thin adapter over one browser API or one piece of state — again, `CLAUDE.md`'s compact module map has the current file list, and `.claude/agents/articles/state-flow.md` has what each hook owns and why. Read that article before touching a hook or a composition root.
 
+- Read `.claude/agents/articles/doc-comments.md` **before writing or moving a comment block**, and before opening a file just to find out what one of its exports does. A `//` comment reaches neither `LSP` hover nor declaration emit, so an interface fact written that way is invisible at every call site; that article's Part 2 is the cheaper way to read one — hover the symbol where it is called, and only open the defining file if the hover did not answer the question.
+
 ## Workflow
 
 1. Read the approved `features/*.feature` scenario(s) you're implementing.

@@ -14,6 +14,8 @@ Adapted from unclebob/swarm-forge's `main`-branch constitution (`swarmforge/cons
 
   Push new logic down into a framework-free module whenever it can be expressed as a pure function — a hook should stay a thin adapter around one browser API — so it stays covered by unit tests, property tests, and mutation testing, not stranded where it can't be.
 
+**Where a comment goes is a design decision too.** A `//` comment is invisible to `LSP` hover and is stripped from declaration emit, so anything a _caller_ needs in order to use a thing correctly has to be JSDoc above the declaration, while everything about how it works inside stays `//`. That partition, the hover budget it implies, the sidecar `<module>.md` overflow tier, and the reading habit that makes it pay (hover before `Read`) are all in `.claude/agents/articles/doc-comments.md` — read it before writing or moving a comment block.
+
 ## Where guidance and file names live
 
 These docs describe the codebase as it currently stands, not a contract that freezes it. Three standing rules follow from that:
