@@ -2,9 +2,7 @@
  * The one place that says how the ruler's two axis groups are named for
  * accessibility, for every layer that needs to query it: GridRuler.test.tsx
  * in the RTL component layer and features/e2e-helpers.ts in the Playwright
- * one. Deliberately imports NOTHING -- plain string constants and pure
- * functions only -- see cellQuery.ts's header for why that matters across
- * module graphs.
+ * one.
  *
  * GridRuler.tsx wraps each axis's RulerLabels in a `role="group"` container
  * named by rulerGroupLabel(axis) rather than putting `aria-label` on each
@@ -15,6 +13,10 @@
  * -- see its own comment -- because rules/no-test-support-in-product-tsx.yml
  * forbids a component importing this directory.
  */
+// Deliberately imports NOTHING -- plain string constants and pure functions
+// only -- see cellQuery.ts's header for why that matters across module
+// graphs.
+//
 // ONE EXPORT ON PURPOSE, and no CSS-selector sibling. cellQuery.ts exports a
 // cellSelector(x, y) because aria-pressed is an ATTRIBUTE a CSS selector can
 // address exactly; an accessible NAME is computed, not stored, so the only

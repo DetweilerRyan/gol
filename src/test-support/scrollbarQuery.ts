@@ -2,24 +2,26 @@
  * The one place that says how a scrollbar's visible-proportion affordance is
  * worded, for every layer that needs to build or parse it: Scrollbar.test.tsx
  * in the RTL component layer and features/screenplay/questions.ts in the
- * black-box layer. Deliberately imports NOTHING -- plain string constants and
- * pure functions only -- see rulerQuery.ts's header for why that matters
- * across module graphs.
+ * black-box layer.
  *
  * This is announced as an accessible DESCRIPTION (aria-describedby -> a
- * visually-hidden span), not aria-valuetext -- aria-valuetext supersedes
- * aria-valuenow per spec, and CDP reports it empty for scrollbar, slider,
- * spinbutton and progressbar alike, so a valuetext design would be
- * verifiable only by reading the attribute back. aria-describedby is
- * additive: aria-valuenow keeps carrying position, and the two coexist.
+ * visually-hidden span), not aria-valuetext -- aria-valuenow keeps carrying
+ * position, and the two coexist.
  *
  * Scrollbar.tsx keeps a deliberate duplicate of this template -- see its own
  * comment -- because rules/no-test-support-in-product-tsx.yml forbids the
- * component importing this directory, the same reason GridRuler.tsx
- * duplicates rulerGroupLabel() and Cell.tsx duplicates cellLabel().
- * Scrollbar.test.tsx pins both copies via visibleProportionText() so they
- * can't drift.
+ * component importing this directory. Scrollbar.test.tsx pins both copies
+ * via visibleProportionText() so they can't drift.
  */
+// Deliberately imports NOTHING -- plain string constants and pure functions
+// only -- see rulerQuery.ts's header for why that matters across module
+// graphs.
+//
+// aria-valuetext supersedes aria-valuenow per spec, and CDP reports it empty
+// for scrollbar, slider, spinbutton and progressbar alike, so a valuetext
+// design would be verifiable only by reading the attribute back -- which is
+// why this is a description, not a valuetext.
+//
 // "percent" IS SPELLED OUT DELIBERATELY, and the reason lives nowhere else in
 // the tree. Playwright's getByText(string) is substring and case-insensitive
 // by default, and three perf/ specs match the zoom badge by bare percent
