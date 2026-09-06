@@ -16,6 +16,15 @@
 //   When  the next generation is computed
 //   Then  the cell at (<x>, <y>) should be alive / should be dead
 //
+// TWO MORE BORROWERS ARRIVED WITH THE CHROME-PROPAGATION RULING.
+// camera-pan-and-zoom.feature now opens its own "Pressing a zoom control
+// brings no cell to life underneath it" with "an empty grid" before its
+// camera Given, and "Then no cell should be alive" -- defined below -- is
+// borrowed by that scenario and by grid-scrollbars.feature's vertical-thumb
+// drag. Both are about whether the board is still empty, which is this
+// module's subject and not the camera's or the scrollbar's, so the definition
+// lives here and neither borrower imports anything to say so.
+//
 // REACHING A CELL. Only a bounded window of the infinite grid is mounted, so
 // every cell interaction goes through withCellInView: a mounted cell is
 // clicked or read where it is, and an off-screen one is panned into view and
@@ -189,6 +198,22 @@ Then('the cell at \\({int}, {int}\\) should be alive', async ({ page }, x, y) =>
 
 Then('the cell at \\({int}, {int}\\) should be dead', async ({ page }, x, y) => {
   await expectCells(page, [[x, y, 'dead']])
+})
+
+// THE WHOLE-BOARD FORM OF THE CLAUSE ABOVE, and the one clause that can say a
+// press or a drag aimed at the app's own chrome edited nothing. Naming a
+// coordinate would be worse than useless here: the cell a control happens to
+// cover is a different cell at every viewport, so the claim is about the board
+// rather than about any cell in it.
+//
+// POLLED, unlike "the game should still be on its first generation" further
+// up, which reads its counter once because a counter that has not moved cannot
+// move late. That argument does not carry over. A cell brought to life by a
+// leaked pointer event arrives with React's next render, so an immediate read
+// can pass in the window before the mount this step exists to catch -- the
+// poll is waiting for a defect to appear, not for a value to settle.
+Then('no cell should be alive', async ({ page }) => {
+  await expect.poll(() => aliveCellCount(page)).toBe(0)
 })
 
 // Compared against the expected word directly, rather than reduced to a

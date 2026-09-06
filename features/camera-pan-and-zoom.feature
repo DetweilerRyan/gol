@@ -64,3 +64,36 @@ Feature: Camera pan and zoom
     When I reset the view for an 800 by 600 pixel viewport
     Then the coordinate labels in view should be balanced around the origin
     And the zoom percentage should be 100
+
+  # THE ZOOM CLAUSE IS PART OF THE CLAIM, NOT SCENERY. An empty board is also
+  # what a press that landed on nothing leaves behind, so without a clause
+  # saying the control answered, this scenario would be satisfied by a button
+  # that was never reached. The percentage is that clause: it says the press
+  # arrived. It is written first for the same reason -- under the layering
+  # this scenario guards, a broken build reds here and reports a missed press
+  # as a missed press, rather than at the aliveness clause, which would name
+  # the wrong quantity.
+  #
+  # THERE IS ALWAYS A CELL UNDERNEATH. The toolbar is drawn on the board
+  # rather than beside it, so a press on a zoom control is always also a press
+  # over some cell of the grid. Which cell that is depends on the size of the
+  # window and is deliberately not named here -- the promise is about the
+  # board, not about any one cell of it.
+  #
+  # IF THE TOOLBAR EVER MOVED OFF THE BOARD this scenario would go on passing
+  # while guarding nothing, and that is accepted rather than overlooked: the
+  # same move ends the class of defect it guards against, since a control with
+  # no board under it has nothing to leak into. There is no precondition step
+  # for the covering, deliberately -- it can only be observed by hit-testing
+  # or by measuring boxes, which is not the altitude of this contract.
+  #
+  # THIS IS THE STATED GUARD for the grid overlay being a sibling of the
+  # board's own content rather than an ancestor of it -- src/components/
+  # Grid.tsx's layering. Other scenarios happen to fail when that inverts;
+  # this is the one that says so on purpose.
+  Scenario: Pressing a zoom control brings no cell to life underneath it
+    Given an empty grid
+    And a camera centered on the origin at the default zoom
+    When I zoom in once
+    Then the zoom percentage should be 125
+    And no cell should be alive

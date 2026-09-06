@@ -36,8 +36,9 @@ import {
 
 // Every scenario starts on a freshly loaded grid, but the step that opens it
 // is a scenario's FIRST step in one feature and a LATER one in another:
-// "a camera centered on the origin at the default zoom" opens every
-// camera-pan-and-zoom scenario and follows a live-cell step in
+// "a camera centered on the origin at the default zoom" opens all but one
+// camera-pan-and-zoom scenario -- the chrome-press guard puts "an empty grid"
+// ahead of it, which opens the grid itself -- and follows a live-cell step in
 // grid-scrollbars'. Navigating unconditionally would wipe the cells the
 // earlier step just placed, so this navigates only from the blank page
 // Playwright hands each test.
