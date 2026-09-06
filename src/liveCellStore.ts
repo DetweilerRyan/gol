@@ -55,12 +55,19 @@ export interface LiveCellStore {
   getBoundsSnapshot(): ContentBounds | null
   subscribeCells(listener: Listener): Unsubscribe
 
-  // A legitimate render source ONLY when paired with subscribeCells above
-  // (the useSyncExternalStore contract) -- reading it during render with no
-  // matching subscription is still a correctness bug. See module header.
+  /**
+   * A legitimate render source ONLY when paired with subscribeCells above
+   * (the useSyncExternalStore contract) -- reading it during render with no
+   * matching subscription is still a correctness bug. See module header.
+   */
   getLiveCells(): ReadonlyLiveCells
 }
 
+/**
+ * Ownership is taken here, once: copy the caller's Set rather than adopt
+ * it by reference, so a caller mutating their own Set afterward can never
+ * reach into this store's published state.
+ */
 export function createLiveCellStore(initialLiveCells: ReadonlyLiveCells = createEmptyLiveCells()): LiveCellStore {
   // Called here rather than at module scope: the unit/property vitest
   // projects run in plain Node with setupFiles: [], so nothing else on this
@@ -72,9 +79,6 @@ export function createLiveCellStore(initialLiveCells: ReadonlyLiveCells = create
   // rules/no-module-state-in-domain.yml, which matches let/var, not calls.
   enableMapSet()
 
-  // Ownership is taken here, once: copy the caller's Set rather than adopt
-  // it by reference, so a caller mutating their own Set afterward can never
-  // reach into this store's published state.
   let cells: ReadonlyLiveCells = freeze(new Set(initialLiveCells))
 
   const boundsListeners = new Set<Listener>()

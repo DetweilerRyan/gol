@@ -7,9 +7,11 @@ import { cellKey, type LiveCells } from './gameOfLife'
 // picks or aims a pattern. The dependency runs one way -- the catalog knows
 // about the live-cell model, the model knows nothing about the catalog.
 
-// Canonical display order for the pattern library modal. PatternCategory is
-// derived from this array rather than declared separately, so a new category
-// can only be added in one place.
+/**
+ * Canonical display order for the pattern library modal. PatternCategory is
+ * derived from this array rather than declared separately, so a new category
+ * can only be added in one place.
+ */
 export const PATTERN_CATEGORIES = ['Still Life', 'Oscillators', 'Spaceships'] as const
 
 export type PatternCategory = (typeof PATTERN_CATEGORIES)[number]
@@ -17,8 +19,10 @@ export type PatternCategory = (typeof PATTERN_CATEGORIES)[number]
 export interface Pattern {
   name: string
   category: PatternCategory
-  // Live cells relative to the top-left corner of the pattern's own
-  // bounding box (0, 0), as spec'd in features/pattern-library.feature.
+  /**
+   * Live cells relative to the top-left corner of the pattern's own
+   * bounding box (0, 0), as spec'd in features/pattern-library.feature.
+   */
   cells: ReadonlyArray<readonly [number, number]>
 }
 
@@ -170,11 +174,13 @@ export function patternsByCategory(category: PatternCategory): readonly Pattern[
   return PATTERNS.filter((pattern) => pattern.category === category)
 }
 
-// Computes the absolute world-space positions a pattern's cells would occupy
-// if its bounding-box top-left corner were placed at (anchorX, anchorY).
-// Single source of truth for the anchor convention -- shared by placePattern
-// (to stamp cells) and the placing-mode preview in GridCells.tsx (to render
-// them before committing), so preview and actual placement can't drift apart.
+/**
+ * Computes the absolute world-space positions a pattern's cells would occupy
+ * if its bounding-box top-left corner were placed at (anchorX, anchorY).
+ * Single source of truth for the anchor convention -- shared by placePattern
+ * (to stamp cells) and the placing-mode preview in GridCells.tsx (to render
+ * them before committing), so preview and actual placement can't drift apart.
+ */
 export function patternCellPositions(
   pattern: Pattern,
   anchorX: number,
@@ -183,9 +189,11 @@ export function patternCellPositions(
   return pattern.cells.map(([dx, dy]) => [anchorX + dx, anchorY + dy] as const)
 }
 
-// Translates the pattern's shape so its bounding-box top-left corner sits at
-// (anchorX, anchorY), then unions it into the existing live cells: cells
-// already alive stay alive, matching stamping behavior rather than toggling.
+/**
+ * Translates the pattern's shape so its bounding-box top-left corner sits at
+ * (anchorX, anchorY), then unions it into the existing live cells: cells
+ * already alive stay alive, matching stamping behavior rather than toggling.
+ */
 export function placePattern(draft: LiveCells, pattern: Pattern, anchorX: number, anchorY: number): void {
   for (const [x, y] of patternCellPositions(pattern, anchorX, anchorY)) {
     draft.add(cellKey(x, y))

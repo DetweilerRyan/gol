@@ -4,11 +4,15 @@
 // other way round.
 
 export type CellKey = string
-// The draft/mutable type -- immer producers (toggleCell, placePattern) need a
-// mutable Set to write into.
+/**
+ * The draft/mutable type -- immer producers (toggleCell, placePattern) need a
+ * mutable Set to write into.
+ */
 export type LiveCells = Set<CellKey>
-// Published state: application state is always immutable, so anything handed
-// out to a reader (rather than a producer) is typed as a ReadonlySet.
+/**
+ * Published state: application state is always immutable, so anything handed
+ * out to a reader (rather than a producer) is typed as a ReadonlySet.
+ */
 export type ReadonlyLiveCells = ReadonlySet<CellKey>
 
 export function cellKey(x: number, y: number): CellKey {
@@ -94,8 +98,18 @@ function willSurvive(isAlive: boolean, liveNeighborCount: number): boolean {
   return liveNeighborCount === 3
 }
 
-// One generation, plus the exact set of cells whose aliveness flipped.
-//
+export interface GenerationStep {
+  next: LiveCells
+  /**
+   * Every key whose membership differs between the previous generation and
+   * `next`, in no particular order. The store notifies exactly these.
+   */
+  changed: CellKey[]
+}
+
+/**
+ * One generation, plus the exact set of cells whose aliveness flipped.
+ */
 // The delta is collected in the same pass that decides survival rather than
 // recovered afterwards by diffing the two sets: willSurvive(wasAlive, count)
 // already answers "is it alive next" for a candidate whose "was it alive"
@@ -103,13 +117,6 @@ function willSurvive(isAlive: boolean, liveNeighborCount: number): boolean {
 // itself, not a re-derivation of it. Every cell that can change is a key of
 // neighborCounts (see that function on why that includes the isolated live
 // cell), so this single loop is exhaustive.
-export interface GenerationStep {
-  next: LiveCells
-  // Every key whose membership differs between the previous generation and
-  // `next`, in no particular order. The store notifies exactly these.
-  changed: CellKey[]
-}
-
 export function advanceGeneration(previous: ReadonlyLiveCells): GenerationStep {
   const neighborCounts = countNeighbors(previous)
 
@@ -124,8 +131,11 @@ export function advanceGeneration(previous: ReadonlyLiveCells): GenerationStep {
   return { next, changed }
 }
 
-// The generation alone, for callers with no use for the delta (the Gherkin
-// step definitions, which speak in whole generations). Deliberately a
+/**
+ * The generation alone, for callers with no use for the delta (the Gherkin
+ * step definitions, which speak in whole generations).
+ */
+// Deliberately a
 // projection of advanceGeneration rather than a second implementation of the
 // rules: two loops applying willSurvive could drift, and the survival rule
 // living in exactly one place is the point.
@@ -140,9 +150,11 @@ export interface ContentBounds {
   maxY: number
 }
 
-// maxX/maxY are the highest live cell coordinate plus one, so a single live
-// cell yields a full 1x1 footprint (matching how it actually renders) rather
-// than a zero-size point.
+/**
+ * maxX/maxY are the highest live cell coordinate plus one, so a single live
+ * cell yields a full 1x1 footprint (matching how it actually renders) rather
+ * than a zero-size point.
+ */
 export function computeContentBounds(liveCells: ReadonlyLiveCells): ContentBounds | null {
   if (liveCells.size === 0) return null
 

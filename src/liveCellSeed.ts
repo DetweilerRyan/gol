@@ -17,11 +17,13 @@ export interface SeedRequest {
 const DEFAULT_SPREAD = 200
 const DEFAULT_SEED = 1
 
-// Parses a `?cells=...&spread=...&seed=...` query string. `spread`/`seed`
-// default when absent; `cells` is required (its absence means "no seeding
-// requested"). Every other malformed or unsatisfiable input also collapses
-// to `undefined` rather than throwing, so a typo'd URL fails quietly instead
-// of hanging or crashing the harness.
+/**
+ * Parses a `?cells=...&spread=...&seed=...` query string. `spread`/`seed`
+ * default when absent; `cells` is required (its absence means "no seeding
+ * requested"). Every other malformed or unsatisfiable input also collapses
+ * to `undefined` rather than throwing, so a typo'd URL fails quietly instead
+ * of hanging or crashing the harness.
+ */
 export function parseSeedRequest(search: string): SeedRequest | undefined {
   const params = new URLSearchParams(search)
   const cellsRaw = params.get('cells')
@@ -78,14 +80,17 @@ function parseNonNegativeInteger(raw: string | null): number | undefined {
   return Number.isSafeInteger(value) ? value : undefined
 }
 
-// Builds exactly `request.count` live cells, deterministically from
-// `request.seed`, placed within the [-spread, spread] square. Draws a
+/**
+ * Builds exactly `request.count` live cells, deterministically from
+ * `request.seed`, placed within the [-spread, spread] square.
+ * Because parseSeedRequest already guarantees count <= capacity for every
+ * request it can produce, a free slot always exists and this loop is
+ * bounded by capacity -- no iteration cap, no unreachable defensive throw.
+ */
+// Draws a
 // capacity-space index per cell from a Math.imul-based LCG (its high bits,
 // which are the well-distributed ones) and resolves collisions by linear
 // probing forward through that same capacity space rather than redrawing.
-// Because parseSeedRequest already guarantees count <= capacity for every
-// request it can produce, a free slot always exists and this loop is
-// bounded by capacity -- no iteration cap, no unreachable defensive throw.
 export function buildSeededLiveCells(request: SeedRequest): LiveCells {
   const { count, spread, seed } = request
   const side = 2 * spread + 1
@@ -111,8 +116,11 @@ export function buildSeededLiveCells(request: SeedRequest): LiveCells {
   return live
 }
 
-// The whole seeding pipeline as one call: parse, and build only if the query
-// string actually asked for a satisfiable population. Lives here rather than
+/**
+ * The whole seeding pipeline as one call: parse, and build only if the query
+ * string actually asked for a satisfiable population.
+ */
+// Lives here rather than
 // in src/main.tsx because the `request ? ... : undefined` decision is real
 // logic, and main.tsx is bootstrap code outside every quality gate -- a
 // branch there is neither mutation-tested nor complexity-scored. main.tsx

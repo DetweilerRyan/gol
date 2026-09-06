@@ -17,11 +17,12 @@ export interface FocusCell {
   y: number
 }
 
-// The cell nearest the center of `range`. `range` is expected to be a
-// computeOnScreenRange result (the unbuffered, fully-visible range) --
-// centering against the buffered computeVisibleRange would land the initial
-// tab-in focus outside what a sighted user can actually see.
-//
+/**
+ * The cell nearest the center of `range`. `range` is expected to be a
+ * computeOnScreenRange result (the unbuffered, fully-visible range) --
+ * centering against the buffered computeVisibleRange would land the initial
+ * tab-in focus outside what a sighted user can actually see.
+ */
 // (min + max + 1) / 2, floored, rather than the more obvious (min + max) / 2:
 // for an EVEN cell count the plain average lands exactly on a half-integer
 // boundary (e.g. minX=-32, maxX=31 -> -0.5), and Math.floor of that rounds
@@ -39,9 +40,11 @@ export function centerCell(range: VisibleRange): FocusCell {
   }
 }
 
-// One cell in `direction`. No bounds checking -- the grid is conceptually
-// infinite (see gameOfLife.ts's own header), so a focus cell is never
-// clamped, only panned into view by panToRevealPx below.
+/**
+ * One cell in `direction`. No bounds checking -- the grid is conceptually
+ * infinite (see gameOfLife.ts's own header), so a focus cell is never
+ * clamped, only panned into view by panToRevealPx below.
+ */
 export function stepFocus(focus: FocusCell, direction: FocusDirection): FocusCell {
   switch (direction) {
     case 'left':
@@ -55,10 +58,12 @@ export function stepFocus(focus: FocusCell, direction: FocusDirection): FocusCel
   }
 }
 
-// Home/End: jump along the focus's own row to the furthest cell still fully
-// on screen, per `onScreen` (a computeOnScreenRange result -- see that
-// function's own comment for why this must be the unbuffered range and not
-// computeVisibleRange).
+/**
+ * Home/End: jump along the focus's own row to the furthest cell still fully
+ * on screen, per `onScreen` (a computeOnScreenRange result -- see that
+ * function's own comment for why this must be the unbuffered range and not
+ * computeVisibleRange).
+ */
 export function jumpToRowEdge(focus: FocusCell, edge: 'left' | 'right', onScreen: VisibleRange): FocusCell {
   return { x: edge === 'left' ? onScreen.minX : onScreen.maxX, y: focus.y }
 }
@@ -68,14 +73,17 @@ export interface PanReveal {
   dyPixels: number
 }
 
-// The pixel pan a caller must apply, via useCamera's panByPixels, to bring
-// `focus` back inside `onScreen` after a keyboard move has carried it past
-// the edge. Returns {0, 0} on an axis that's already satisfied, so a caller
-// can apply the result unconditionally after every focus move.
-//
-// SIGN CONVENTION -- checked against useCamera.ts's panByPixels, not derived
-// from intuition (see CLAUDE.md's camera.ts note on the deliberate
-// asymmetry between drag-to-pan and wheel-pan/scrollbar-drag). panByPixels
+/**
+ * The pixel pan a caller must apply, via useCamera's panByPixels, to bring
+ * `focus` back inside `onScreen` after a keyboard move has carried it past
+ * the edge. Returns {0, 0} on an axis that's already satisfied, so a caller
+ * can apply the result unconditionally after every focus move.
+ *
+ * SIGN CONVENTION -- checked against useCamera.ts's panByPixels, not derived
+ * from intuition (see CLAUDE.md's camera.ts note on the deliberate
+ * asymmetry between drag-to-pan and wheel-pan/scrollbar-drag).
+ */
+// panByPixels
 // calls camera.ts's panCamera(camera, dxPixels, dyPixels) UNCHANGED --
 // no negation -- which computes `offsetX -= dxPixels / cellSize`. So to
 // reach a target offsetX' = offsetX + shiftWorldX, the caller must pass

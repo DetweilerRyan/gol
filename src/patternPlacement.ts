@@ -7,10 +7,11 @@ import { patternCellPositions, type Pattern } from './patternLibrary'
 // impossible combinations (library open *and* a pattern armed, a preview cell
 // with nothing to preview) unrepresentable rather than merely avoided by
 // convention.
-//
-// - idle: neither browsing nor placing; clicks toggle single cells.
-// - browsing: the pattern library modal is open.
-// - placing: a pattern is armed and follows the pointer until it's stamped.
+/**
+ * - idle: neither browsing nor placing; clicks toggle single cells.
+ * - browsing: the pattern library modal is open.
+ * - placing: a pattern is armed and follows the pointer until it's stamped.
+ */
 export type PlacementState =
   | { mode: 'idle' }
   | { mode: 'browsing' }
@@ -24,30 +25,38 @@ export function armPattern(pattern: Pattern): PlacementState {
   return { mode: 'placing', pattern, previewCell: null }
 }
 
-// The Patterns button's rule: while a pattern is armed it disarms instead of
-// reopening the library, so the button doubles as the cancel affordance.
-//
+/**
+ * The Patterns button's rule: while a pattern is armed it disarms instead of
+ * reopening the library, so the button doubles as the cancel affordance.
+ *
+ * Pressing while the library is already up hands back the very `BROWSING`
+ * constant the state already is, so it is a no-op that does not even
+ * re-render.
+ */
 // THE BROWSING CASE IS HANDLED BY THE ELSE BRANCH RATHER THAN BEING
 // UNREACHABLE, which is what this comment used to claim. `browsing` falls to
-// `: BROWSING` and gets back the very constant it already is, so a press that
-// did arrive while the library is up is a no-op that does not even re-render
-// -- and that, not the dialog's inertness, is what makes the missing
-// open-state guard on LifeBoard's onPatterns safe. See that file's own
-// comment there for the two DOM mechanisms that stop the press arriving at
-// all, and for the measurement showing they are redundant with each other.
+// `: BROWSING` and gets back the very constant it already is -- and that, not
+// the dialog's inertness, is what makes the missing open-state guard on
+// LifeBoard's onPatterns safe. See that file's own comment there for the two
+// DOM mechanisms that stop the press arriving at all, and for the measurement
+// showing they are redundant with each other.
 export function toggleLibrary(state: PlacementState): PlacementState {
   return state.mode === 'placing' ? INITIAL_PLACEMENT : BROWSING
 }
 
-// Returns the same state reference when nothing is armed, so callers can pass
-// this straight to a state setter without forcing a no-op re-render.
+/**
+ * Returns the same state reference when nothing is armed, so callers can pass
+ * this straight to a state setter without forcing a no-op re-render.
+ */
 export function cancelPlacing(state: PlacementState): PlacementState {
   return state.mode === 'placing' ? INITIAL_PLACEMENT : state
 }
 
-// Preview tracking is ignored outside placing mode (pointer moves happen
-// constantly, armed or not), again returning the same reference so only a
-// genuine preview change re-renders.
+/**
+ * Preview tracking is ignored outside placing mode (pointer moves happen
+ * constantly, armed or not), again returning the same reference so only a
+ * genuine preview change re-renders.
+ */
 export function movePreviewTo(state: PlacementState, x: number, y: number): PlacementState {
   if (state.mode !== 'placing') return state
   return { ...state, previewCell: { x, y } }
@@ -61,10 +70,12 @@ export function armedPattern(state: PlacementState): Pattern | null {
   return state.mode === 'placing' ? state.pattern : null
 }
 
-// World cells the armed pattern would occupy if stamped at the current preview
-// cell -- empty whenever there's nothing to preview. Built on the same
-// patternCellPositions helper placePattern itself uses, so the preview can't
-// drift from where a stamp would actually land.
+/**
+ * World cells the armed pattern would occupy if stamped at the current preview
+ * cell -- empty whenever there's nothing to preview. Built on the same
+ * patternCellPositions helper placePattern itself uses, so the preview can't
+ * drift from where a stamp would actually land.
+ */
 export function previewPositions(state: PlacementState): ReadonlyArray<readonly [number, number]> {
   if (state.mode !== 'placing' || !state.previewCell) return []
   return patternCellPositions(state.pattern, state.previewCell.x, state.previewCell.y)

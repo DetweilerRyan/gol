@@ -33,12 +33,14 @@ export function screenToWorld(camera: Camera, pixelX: number, pixelY: number) {
   }
 }
 
-// Client (window-relative) coordinates -> viewport pixels, i.e. pixels
-// relative to the top-left of the element the camera is rendered into. Every
-// pixel-taking function in this module and in scrollbars.ts expects that
-// viewport-relative space, so this is the single translation point from a DOM
-// event's clientX/clientY; the parameter is structurally typed rather than a
-// DOMRect so this module stays free of DOM types.
+/**
+ * Client (window-relative) coordinates -> viewport pixels, i.e. pixels
+ * relative to the top-left of the element the camera is rendered into. Every
+ * pixel-taking function in this module and in scrollbars.ts expects that
+ * viewport-relative space, so this is the single translation point from a DOM
+ * event's clientX/clientY; the parameter is structurally typed rather than a
+ * DOMRect so this module stays free of DOM types.
+ */
 export function rectRelativePixels(rect: { left: number; top: number }, clientX: number, clientY: number) {
   return { pixelX: clientX - rect.left, pixelY: clientY - rect.top }
 }
@@ -55,13 +57,15 @@ export function zoomCameraAtPoint(camera: Camera, pixelX: number, pixelY: number
   return zoomCameraToCellSize(camera, pixelX, pixelY, camera.cellSize * factor)
 }
 
-// The absolute-target twin of zoomCameraAtPoint: instead of a factor applied
-// to the camera's own current cellSize, this takes the target cellSize
-// directly. zoomCameraAtPoint is now expressed through this (factor * cellSize
-// is the only difference), which is what smooth-zoom-transitions needs --
-// a glide's per-frame camera is computed from a fixed starting camera and an
-// eased cellSize, never by re-applying a factor to whatever the camera
-// currently is (see src/hooks/useZoomGlide.ts's header comment on why).
+/**
+ * The absolute-target twin of zoomCameraAtPoint: instead of a factor applied
+ * to the camera's own current cellSize, this takes the target cellSize
+ * directly. zoomCameraAtPoint is now expressed through this (factor * cellSize
+ * is the only difference), which is what smooth-zoom-transitions needs --
+ * a glide's per-frame camera is computed from a fixed starting camera and an
+ * eased cellSize, never by re-applying a factor to whatever the camera
+ * currently is (see src/hooks/useZoomGlide.ts's header comment on why).
+ */
 export function zoomCameraToCellSize(camera: Camera, pixelX: number, pixelY: number, cellSize: number): Camera {
   const newCellSize = clampCellSize(cellSize)
   if (newCellSize === camera.cellSize) return camera
@@ -87,12 +91,14 @@ export function zoomPercentage(camera: Camera): number {
   return Math.round((camera.cellSize / DEFAULT_CELL_SIZE) * 100)
 }
 
-// A wheel gesture reduced to plain numbers, so useWheelInput.ts can hand this
-// module the parts of a native WheelEvent it needs without the DOM type
-// crossing the boundary. useWheelInput.ts forwards deltaMode and ctrlKey
-// verbatim rather than interpreting them -- normalizing a line/page delta
-// into pixels in the hook would silently change what deltaX/deltaY mean with
-// nothing in the type recording it, so that interpretation happens here.
+/**
+ * A wheel gesture reduced to plain numbers, so useWheelInput.ts can hand this
+ * module the parts of a native WheelEvent it needs without the DOM type
+ * crossing the boundary. useWheelInput.ts forwards deltaMode and ctrlKey
+ * verbatim rather than interpreting them -- normalizing a line/page delta
+ * into pixels in the hook would silently change what deltaX/deltaY mean with
+ * nothing in the type recording it, so that interpretation happens here.
+ */
 export interface WheelInput {
   pixelX: number
   pixelY: number

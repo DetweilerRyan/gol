@@ -38,15 +38,17 @@ export function glideDurationMs(prefersReducedMotion: boolean): number {
   return prefersReducedMotion ? REDUCED_MOTION_DURATION_MS : GLIDE_DURATION_MS
 }
 
-// The base is the PENDING glide's own target, not the currently-displayed
-// cellSize -- glide?.toCellSize ?? currentCellSize. That's what makes two
-// quick clicks land two rungs up (20 -> 25 -> 31.25) rather than the second
-// click merely re-requesting the rung the first one already asked for. The
-// null-vs-currentCellSize equality check is against the ACTUAL, DISPLAYED
-// cellSize the caller passes in, though, never against the pending glide's
-// own start -- an in-then-out double-click must net zero motion and clear
-// the pending glide entirely, not leave it running (see useZoomGlide.ts's
-// header comment on why returning null has to mean "clear", not "no-op").
+/**
+ * The base is the PENDING glide's own target, not the currently-displayed
+ * cellSize -- glide?.toCellSize ?? currentCellSize. That's what makes two
+ * quick clicks land two rungs up (20 -> 25 -> 31.25) rather than the second
+ * click merely re-requesting the rung the first one already asked for. The
+ * null-vs-currentCellSize equality check is against the ACTUAL, DISPLAYED
+ * cellSize the caller passes in, though, never against the pending glide's
+ * own start -- an in-then-out double-click must net zero motion and clear
+ * the pending glide entirely, not leave it running (see useZoomGlide.ts's
+ * header comment on why returning null has to mean "clear", not "no-op").
+ */
 export function advanceZoomTarget(
   glide: ZoomGlide | null,
   currentCellSize: number,
@@ -110,14 +112,15 @@ function easeOutCubic(t: number): number {
 // ** progress). The two are observably indistinguishable at this app's zoom
 // ratios and glide duration; linear has fewer float traps (no fractional
 // exponent, no risk of a negative or zero base) for no visible cost.
+/**
+ * Exact landing: return toCellSize itself rather than
+ * fromCellSize + (toCellSize - fromCellSize) * 1, which is algebraically
+ * identical but not float-identical -- and this module's callers
+ * (useZoomGlide.ts's fromCamera recompute, in particular) depend on the
+ * completion frame matching an instantaneous zoom bit-for-bit.
+ */
 export function glideCellSizeAt(glide: ZoomGlide, nowMs: number): number {
   const eased = easeOutCubic(progressAt(glide, nowMs))
-  // Exact landing: return toCellSize itself rather than
-  // fromCellSize + (toCellSize - fromCellSize) * 1, which is algebraically
-  // identical but not float-identical -- and this module's callers
-  // (useZoomGlide.ts's fromCamera recompute, in particular) depend on the
-  // completion frame matching an instantaneous zoom bit-for-bit.
-  //
   // KEYED OFF THE EASED VALUE, NOT OFF progress, and that is a correctness
   // fix rather than a tidy-up (hardener found it, architect ruled it,
   // smooth-zoom-transitions ADJUDICATE). easeOutCubic rounds to exactly 1.0
