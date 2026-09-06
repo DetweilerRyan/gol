@@ -12,6 +12,8 @@ import type { RawScenarioSample, RepSample } from './raw-sample.ts'
  * -- this never sorts and never mutates its input, so callers that already
  * hold a sorted array (or want to reuse one across several percentiles)
  * don't pay to re-sort.
+ *
+ * @throws Error if `sortedAscending` is empty, or `p` is outside [0, 100].
  */
 export function percentile(sortedAscending: number[], p: number): number {
   if (sortedAscending.length === 0) {
@@ -29,6 +31,8 @@ export function percentile(sortedAscending: number[], p: number): number {
 
 /**
  * Sorts a copy (never mutates `values`) and delegates to percentile(_, 50).
+ *
+ * @throws Error if `values` is empty.
  */
 export function median(values: number[]): number {
   if (values.length === 0) {

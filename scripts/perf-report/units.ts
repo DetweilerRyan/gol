@@ -4,23 +4,22 @@ import type { RawScenarioSample, RepSample } from './raw-sample.ts'
  * CDP's Performance domain (perf/cdp-metrics.ts's startMetrics) reports its
  * duration/CPU-time counters in *seconds* -- every other duration in this
  * report (frameIntervalsMs, eventDurationsMs, wallClockMs, and everything
- * stats.ts derives from them) is milliseconds. perf/raw-sink.ts records
- * whatever CDP returns exactly as received (see its header comment), so
- * nothing upstream of this module has ever rescaled a metricsDelta value;
- * report time -- here, via convertSampleMetricsToMs, called once from
- * format.ts's buildLatestReport before stats.ts sees a sample -- is the
- * first and only place that may.
+ * stats.ts derives from them) is milliseconds. Report time -- here, via
+ * convertSampleMetricsToMs, called once from format.ts's buildLatestReport
+ * before stats.ts sees a sample -- is the first and only place a
+ * metricsDelta value is ever rescaled.
  *
- * Named explicitly, not "every key in metricsDelta ending up scaled" --
- * LayoutCount, RecalcStyleCount, Nodes, and JSHeapUsedSize (among many
- * other keys CDP reports) are counts and byte totals, not durations, and
- * multiplying those by 1000 would be a new silent corruption replacing the
- * old one. Timestamp and the paint/timing fields (FirstMeaningfulPaint,
- * DomContentLoaded, NavigationStart) are deliberately excluded even though
- * they're also seconds-valued: they're points in time (seconds since epoch
- * / since navigation start), not "how long did this step take" counters,
- * and this report never surfaces them as a duration.
+ * Named explicitly rather than "every key in metricsDelta ending up scaled"
+ * -- LayoutCount, Nodes, and JSHeapUsedSize (among other CDP keys) are
+ * counts/byte totals, not durations, and Timestamp/FirstMeaningfulPaint/
+ * DomContentLoaded are points in time, not duration counters -- none of
+ * them should be multiplied by 1000 just because they're also
+ * seconds-valued.
  */
+// perf/raw-sink.ts records whatever CDP returns exactly as received (see
+// its header comment), so nothing upstream of this module has ever
+// rescaled a metricsDelta value.
+//
 // Discovered empirically while building this slice (invocation D): a single
 // pan-default-empty rep recorded metricsDelta.TaskDuration = 2.02 against a
 // wallClockMs of 2350 -- about 1000x too small for a gesture that keeps the
