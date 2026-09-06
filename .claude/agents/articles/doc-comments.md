@@ -14,7 +14,7 @@ This article is one loop with two halves. Part 1 is how to write an interface co
 | `LSP` hover at a **cross-file call site** | bare signature    | full prose, tags rendered |
 | `tsc --emitDeclarationOnly`               | stripped entirely | preserved verbatim        |
 
-So `nextTileRange` — which carries a 113-line rationale block above it — hovers as a bare signature at its call site in `src/hooks/useCellTiles.ts`, while `isStrictEqual` hovers as its full prose plus its `@see` link. Every role carries `LSP`; none of them could see the first one's reasoning without opening the file.
+**The before-state, measured when this article was authored and named here because the sweep that follows is what closes it:** `nextTileRange` carried a 113-line `//` block (`src/cellTiles.ts:241-353`) and hovered as a bare signature at its cross-file call site in `src/hooks/useCellTiles.ts`, while `isStrictEqual` hovered as its full prose plus its `@see` link. Every role carries `LSP`; none of them could see the first one's reasoning without opening the file. If you are reading this after the sweep and that hover now returns prose, the example has done its job — it is a record of the gap, not a live defect.
 
 The fix is **not** "move it all into JSDoc." Whatever goes into JSDoc is paid for at every hover, at every call site, forever — and hover renders everything, tags included. **There is no truncation lever.** TSDoc's summary/`@remarks` split is a documentation-_generator_ convention that the language server does not honour: `@remarks` was measured rendering inline, exactly like summary prose. Volume is controlled by writing less, not by tagging it differently.
 
@@ -33,7 +33,7 @@ That last line **is** the token argument, stated years before agents existed. So
 - **Interface half → JSDoc above the declaration.** Visible in hover and in the `.d.ts`. What a caller needs in order to use the thing correctly.
 - **Implementation half → stays `//`,** relocated below the signature or into the body. Invisible to hover, which is _correct_: a caller should neither be exposed to internals nor pay tokens for them.
 
-**Partitioning is not the same as being already-JSDoc.** A block can be in the right channel and still be the wrong content at the wrong length — `src/equality/is-deep-equal.ts` carries a 22-line JSDoc whose middle paragraph ("`isDeepEqual` is its own leaf comparator here — `structurallyEqual`'s own initial short-circuit…") is pure implementation rationale sitting on the hover channel. Apply the split test to JSDoc you find, not only to `//` you find.
+**Partitioning is not the same as being already-JSDoc.** A block can be in the right channel and still be the wrong content at the wrong length. When this article was authored, `src/equality/is-deep-equal.ts` carried a 22-line JSDoc whose middle paragraph ("`isDeepEqual` is its own leaf comparator here — `structurallyEqual`'s own initial short-circuit…") was pure implementation rationale sitting on the hover channel, and `Cache.insert` in `src/cache.ts` hovered at roughly 30 rendered lines carrying a misspelled `@remark` that renders as an empty tag, an `@todo` about a future API, and two bare `@param`s that name the parameters and say nothing. **Apply the split test to JSDoc you find, not only to `//` you find** — "it is already JSDoc" is not a reason to skip a file.
 
 ### 1. The split test
 
@@ -99,7 +99,7 @@ That gives a three-tier escalation a reader can walk on demand — **hover for t
 | `` @see `./cellTiles.md` ``       | ``@see —  `./cellTiles.md` `` | clean, with stray backticks and a doubled space |
 | **`@see {@link ./cellTiles.md}`** | **`@see — ./cellTiles.md`**   | **exact — this is the mandated form**           |
 
-All five survive `tsc --emitDeclarationOnly` verbatim, so this is purely a hover-rendering ruling. The plain `@see ./name.md` form was the one predicted to work during planning, and `{@link}` the one predicted to render unresolved for a relative Markdown path. The measurement is the reverse of both. When `{@link}` _can_ resolve a target it links it, which is why `{@link Cache.has}` in `src/cache.ts` renders as a clickable file reference.
+All five survive `tsc --emitDeclarationOnly` verbatim, so this is purely a hover-rendering ruling. The plain `@see ./name.md` form was the one predicted to work during planning, and `{@link}` the one predicted to render unresolved for a relative Markdown path. The measurement is the reverse of both. When `{@link}` _can_ resolve a target it links it, which is why a `{@link Cache.has}` — a declaration reference rather than a path — renders as a clickable file link instead.
 
 **Nothing checks that a sidecar link resolves.** `npm run agent-doc-check` scans `.claude/**/*.md` plus `CLAUDE.md`, not `src/**`, so a `@see {@link ./name.md}` can rot silently after a rename. That gap is filed as a follow-up candidate rather than fixed here; until it closes, a rename that moves a module is also a rename of its sidecar.
 
@@ -117,7 +117,7 @@ interface DocumentedInterface {          hover on it.memberWithoutDoc  → bare 
 
 So a fact about a member, written on the containing interface, is **invisible at the site where the member is used**. Members are legitimate placement targets, and for a callback bag or a store interface they are the _only_ correct target.
 
-**But the unit of work is the existing comment blocks, not the export list.** `src/` (excluding `catalyst/` and tests) has roughly 195 exported declarations and 128 interface/type members; the sweep's actual surface is the ~84 comment blocks that already exist. **Documenting every undocumented export is not this convention** — an export whose signature already says everything gets no JSDoc, because a summary that restates the signature fails rule 5 and costs a hover anyway. Members are where you _may_ put a partitioned fact, not a checklist to fill in.
+**But the unit of work is the existing comment blocks, not the export list.** Measured when this article was authored, `src/` (excluding `catalyst/`, including `test-support/`) held roughly 195 exported declarations and 128 interface/type members, against about 84 existing comment blocks — and it is the blocks that are the surface. **Documenting every undocumented export is not this convention** — an export whose signature already says everything gets no JSDoc, because a summary that restates the signature fails rule 5 and costs a hover anyway. Members are where you _may_ put a partitioned fact, not a checklist to fill in.
 
 ### 9. Syntax hazards, all measured
 
@@ -179,7 +179,7 @@ If you had to open the body to use the thing correctly, the interface comment is
 
 Roles fall back to `Grep`/`Read` **silently** when the language server is absent (see CLAUDE.md's note on the `typescript-lsp` plugin), so a hover returning only a signature is ambiguous: _no JSDoc here_, or _no server at all_.
 
-**The probe:** hover `isStrictEqual` in `src/equality/is-strict-equal.ts`. It must return prose plus an `@see` link. If it returns a bare signature, the server is missing, every other hover this session is worthless, and the thing to report is that — not that the codebase is undocumented.
+**The probe:** hover `isStrictEqual` in `src/equality/is-strict-equal.ts`. It must return prose plus an `@see` link. If it returns a bare signature, the server is missing, every other hover this session is worthless, and the thing to report is that — not that the codebase is undocumented. The probe depends on that one file keeping a JSDoc block with an `@see`; if a later slice ever strips it, re-pin the probe on another documented export in the same pass rather than deleting it.
 
 ### 6. Don't spend a hover on what the type already says
 
