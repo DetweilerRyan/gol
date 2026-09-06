@@ -3,7 +3,8 @@
 // in CLAUDE.md's "Custom quality tooling" section (npm run references
 // resolve, agent frontmatter validates, no stale retired-role references,
 // the cycle string is identical everywhere, every rules/*.yml is named in
-// CLAUDE.md and vice versa). Follows ast-grep-rule-check's shape exactly:
+// the rule documentation file -- see RULE_DOC_PATH below -- and vice versa).
+// Follows ast-grep-rule-check's shape exactly:
 // this file is pure I/O (recursive-ish directory reads, package.json
 // parsing, console.log, process.exit), decide.ts is the pure orchestration,
 // checks.ts is the five checks themselves.
@@ -70,10 +71,10 @@ export function listDocFiles(repoRoot: string): RawFile[] {
 }
 
 // Rule ids are read off the filename, not a parsed `id:` field -- check5
-// asks "is this filename named in CLAUDE.md," which is a question about the
-// file that exists on disk, not about what the rule happens to declare
-// about itself (that agreement is ast-grep-rule-check's checkIdMatchesFilename's
-// job, not this program's).
+// asks "is this filename named in the rule documentation file," which is a
+// question about the file that exists on disk, not about what the rule
+// happens to declare about itself (that agreement is ast-grep-rule-check's
+// checkIdMatchesFilename's job, not this program's).
 export function listRuleIds(repoRoot: string): string[] {
   const dir = path.join(repoRoot, 'rules')
   return readdirSync(dir, { withFileTypes: true })

@@ -1,4 +1,4 @@
-// Extracts rule-id mentions out of CLAUDE.md's prose for check5.
+// Extracts rule-id mentions out of doc prose for check5.
 //
 // extractRulePathMentions reads the one form of a rule reference that is
 // unambiguous in this repo's docs -- an explicit `rules/<id>.yml` path --
@@ -10,8 +10,9 @@
 // candidate rule reference would make the reverse direction as noisy as the
 // generic "role-shaped token" scan rejected in roles.ts.
 //
-// extractMentionedRuleIds is the forward direction instead: does CLAUDE.md
-// mention this real rule id at all. It's deliberately permissive -- every
+// extractMentionedRuleIds is the forward direction instead: does the rule
+// documentation file (run.ts's ruleDocFile) mention this real rule id at
+// all. It's deliberately permissive -- every
 // backticked token counts as a candidate, since a false-positive candidate
 // here only means "counts as mentioned," never "flagged as missing" -- plus
 // this repo's one paired-shorthand convention, "`no-manual-memo-ts` /

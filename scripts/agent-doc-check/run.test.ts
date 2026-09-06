@@ -72,22 +72,29 @@ describe('loadPackageScripts', () => {
 })
 
 const ARTICLE_PATH = '.claude/agents/articles/ast-grep-rules.md'
+const CYCLE = 'product → coder → cleaner → architect → hardener → product'
+
+// Shared setup for the two "fully consistent" cases below, which differ only
+// in whether CLAUDE.md itself also mentions the rule -- that's the one axis
+// the repoint changed the meaning of, so it's the one parameter here.
+function buildConsistentRepo(root: string, { mentionRuleInClaudeMd }: { mentionRuleInClaudeMd: boolean }): void {
+  writeFile(root, 'package.json', JSON.stringify({ scripts: { build: 'vite build' } }))
+  writeFile(root, 'CLAUDE.md', `\`npm run build\`\n${CYCLE}\n${mentionRuleInClaudeMd ? 'the `no-foo` rule.\n' : ''}`)
+  writeFile(root, ARTICLE_PATH, 'the `no-foo` rule.\n')
+  writeFile(root, 'rules/no-foo.yml', 'id: no-foo\n')
+  for (const role of ['product', 'coder', 'cleaner', 'architect', 'hardener']) {
+    writeFile(
+      root,
+      `.claude/agents/${role}.md`,
+      `---\nname: ${role}\ndescription: Does things.\ntools: Read\nmodel: sonnet\n---\n\n${CYCLE}\n`,
+    )
+  }
+}
 
 describe('runCheck', () => {
   it('exits 0 on a fully consistent, minimal repo', () => {
     const root = tempRepo()
-    const cycle = 'product → coder → cleaner → architect → hardener → product'
-    writeFile(root, 'package.json', JSON.stringify({ scripts: { build: 'vite build' } }))
-    writeFile(root, 'CLAUDE.md', `\`npm run build\`\n${cycle}\nthe \`no-foo\` rule.\n`)
-    writeFile(root, ARTICLE_PATH, 'the `no-foo` rule.\n')
-    writeFile(root, 'rules/no-foo.yml', 'id: no-foo\n')
-    for (const role of ['product', 'coder', 'cleaner', 'architect', 'hardener']) {
-      writeFile(
-        root,
-        `.claude/agents/${role}.md`,
-        `---\nname: ${role}\ndescription: Does things.\ntools: Read\nmodel: sonnet\n---\n\n${cycle}\n`,
-      )
-    }
+    buildConsistentRepo(root, { mentionRuleInClaudeMd: true })
     const result = runCheck(root)
     expect(result.exitCode).toBe(0)
   })
@@ -97,18 +104,7 @@ describe('runCheck', () => {
   // forward direction were still reading CLAUDE.md's text.
   it('exits 0 when a rule is documented only in the article, not in CLAUDE.md', () => {
     const root = tempRepo()
-    const cycle = 'product → coder → cleaner → architect → hardener → product'
-    writeFile(root, 'package.json', JSON.stringify({ scripts: { build: 'vite build' } }))
-    writeFile(root, 'CLAUDE.md', `\`npm run build\`\n${cycle}\n`)
-    writeFile(root, ARTICLE_PATH, 'the `no-foo` rule.\n')
-    writeFile(root, 'rules/no-foo.yml', 'id: no-foo\n')
-    for (const role of ['product', 'coder', 'cleaner', 'architect', 'hardener']) {
-      writeFile(
-        root,
-        `.claude/agents/${role}.md`,
-        `---\nname: ${role}\ndescription: Does things.\ntools: Read\nmodel: sonnet\n---\n\n${cycle}\n`,
-      )
-    }
+    buildConsistentRepo(root, { mentionRuleInClaudeMd: false })
     const result = runCheck(root)
     expect(result.exitCode).toBe(0)
   })
