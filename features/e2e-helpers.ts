@@ -69,6 +69,7 @@ export {
   zoomIn,
   zoomOut,
   zoomInTwiceQuickly,
+  clickWhereZoomInIs,
   preferReducedMotion,
   dragScrollbarThumb,
   openGrid,

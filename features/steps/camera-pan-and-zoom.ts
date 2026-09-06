@@ -310,6 +310,26 @@ Then('the camera should have moved left and up over the grid', async ({ page }) 
   expect(moved).toEqual({ x: recall(page, 'panRight'), y: recall(page, 'panDown') })
 })
 
+// THE NEGATIVE TWIN OF THE STEP ABOVE, measured against the same baseline the
+// centered-origin Given records, and defined here rather than beside its
+// borrower because the camera is what it is about -- the same arrangement
+// cell-life-and-death.ts uses for "the game should still be on its first
+// generation".
+//
+// ABSOLUTE ZERO RATHER THAN A TOLERANCE. originDisplacement is a difference of
+// two readings of the SAME ruler label, so a camera that has not moved gives
+// back exactly {0, 0} and there is no sub-pixel drift to allow for; a
+// tolerance here would quietly accept a small pan.
+//
+// READ ONCE RATHER THAN POLLED, unlike the zoom's negative form above. A poll
+// would settle on its first reading anyway -- there is nothing for it to wait
+// FOR when the claim is that nothing happens -- and every borrower reaches this
+// step after a gesture that has already been delivered in full, so a pan that
+// was going to land has landed.
+Then('the camera should not have moved', async ({ page }) => {
+  expect(await originDisplacement(page)).toEqual({ x: 0, y: 0 })
+})
+
 Then('the zoom level should be unchanged', async ({ page }) => {
   await expect.poll(() => zoomPercent(page)).toBe(100)
 })

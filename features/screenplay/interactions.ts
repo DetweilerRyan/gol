@@ -82,6 +82,15 @@ export async function resetView(page: Page) {
 // "the zoom is still 100%" assertion could match the first frame of a glide it
 // was supposed to prove had not started. One definition, three callers.
 //
+// THAT SECOND CALLER IS NOW A SCENARIO. `convert-modal-inertness-to-scenarios`
+// deleted modal-inertness.e2e.spec.ts and restated its zoom claim as
+// while-the-pattern-library-is-open.feature's "the zoom percentage should be
+// 100", which reaches this function through camera-pan-and-zoom.ts's zoomAtRest
+// -- so the settle-then-assert ordering the paragraph above describes crossed
+// the move intact rather than being re-derived. Measured under a probe that
+// neutralized both the dialog's covering and its inertness: 5 runs of 5, every
+// one reporting 125%.
+//
 // Rest is "the readout stopped changing", never a duration: REST_CONFIRMATIONS
 // identical readings in a row. Two failure modes are worth knowing about, and
 // only one is closable. A glide that HOLDS one rounded percentage for longer
@@ -113,8 +122,17 @@ export async function waitForZoomToSettle(page: Page, changedFrom?: number) {
     .toBe(true)
 }
 
+// THE ZOOM IN CONTROL, NAMED ONCE. Three functions in this module reach it now
+// -- the click below, the double click further down, and the raw-mouse aim at
+// its pixels -- and elements.ts's own rule keeps a query with its caller until
+// a SECOND MODULE wants it, which none does. Hoisted to one line here rather
+// than restated three times.
+function zoomInButton(page: Page) {
+  return page.locator('button[aria-label="Zoom in"]')
+}
+
 export async function zoomIn(page: Page) {
-  await page.locator('button[aria-label="Zoom in"]').click()
+  await zoomInButton(page).click()
 }
 
 export async function zoomOut(page: Page) {
@@ -135,7 +153,28 @@ export async function zoomOut(page: Page) {
 // scenarios are load-bearing for each other, so don't delete that one as
 // redundant with this.
 export async function zoomInTwiceQuickly(page: Page) {
-  await page.locator('button[aria-label="Zoom in"]').click({ clickCount: 2 })
+  await zoomInButton(page).click({ clickCount: 2 })
+}
+
+// AIMS A CLICK AT THE ZOOM IN CONTROL'S OWN PIXELS AND LETS IT LAND ON WHATEVER
+// IS TOPMOST THERE -- which is the entire reason this cannot be zoomIn() above.
+//
+// zoomIn() drives the control through a Locator, and Playwright's actionability
+// checks REFUSE to click an element something else is covering: with the
+// pattern library open that call times out instead of delivering a click, and a
+// scenario whose act never happened can say nothing about what followed it. The
+// raw mouse holds no such opinion -- it delivers a real click at a real pixel
+// and the topmost element receives it, which is precisely the situation being
+// described.
+//
+// The box is read while the control is covered, which boundingBox() does
+// happily: covering an element neither moves it nor unrenders it. Null means
+// the control is genuinely not laid out, which is a failure worth naming rather
+// than a pixel worth guessing.
+export async function clickWhereZoomInIs(page: Page) {
+  const box = await zoomInButton(page).boundingBox()
+  if (!box) throw new Error('the zoom in control has no box on screen, so there is no pixel to aim a click at')
+  await page.mouse.click(box.x + box.width / 2, box.y + box.height / 2)
 }
 
 // Set before the app is opened, so it never depends on the app noticing the

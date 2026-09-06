@@ -71,10 +71,13 @@
 // so it was not a mounting-policy guard either.
 //
 // ONE INCIDENTAL FINDING FROM THAT PROBE, recorded because it looks like a
-// defect and is not: modal-inertness.e2e.spec.ts's first test also reds on it,
-// through expectCellState(0, 0, 'dead'). That is an unrelated test genuinely
-// depending on the attribute being present, which is what the outline says it
-// should be.
+// defect and is not: another claim reds on it too, through
+// expectCellState(0, 0, 'dead'). That is an unrelated check genuinely depending
+// on the attribute being present, which is what the contract says it should be.
+// It was modal-inertness.e2e.spec.ts's first test when the probe was run;
+// `convert-modal-inertness-to-scenarios` restated that claim as
+// while-the-pattern-library-is-open.feature's first scenario and deleted the
+// spec, so the same reading is now taken by the generated layer.
 //
 // WHICH ACTIVATION ROUTE THIS SPEC EXERCISES (recorded in the
 // black-box-acceptance-pilot slice's VERIFY pass, because it is easy to

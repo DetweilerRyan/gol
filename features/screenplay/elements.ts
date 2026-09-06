@@ -25,10 +25,10 @@
 // SCOPE OF THAT CLAIM, MEASURED RATHER THAN ASSERTED. No module under
 // features/steps/ builds a locator at all -- it cannot, its import allowlist
 // forbids it -- so for the generated step layer this file really is the only
-// place a selector is named. The seven hand-written *.e2e.spec.ts files still
-// build their own, grep-counted at 28 `page.locator`/`page.getBy` sites. They
-// are not in scope here, and a header claiming "every locator in features/"
-// would be false.
+// place a selector is named. The hand-written *.e2e.spec.ts files still build
+// their own: 7 files, 5 of which build at least one, grep-counted at 18
+// `page.locator`/`page.getBy` sites. They are not in scope here, and a header
+// claiming "every locator in features/" would be false.
 //
 // Both figures moved in `triage-paired-specs` and neither moved because a
 // locator was hoisted: that triage deleted 35 duplicated tests and one whole
@@ -36,8 +36,16 @@
 // locators with them. Recount with
 // `grep -c "page\.locator\|page\.getBy" features/*.e2e.spec.ts` rather than
 // adjusting these by subtraction -- the per-file drop is not uniform, and two
-// of the seven (grid-reference-lines, mouse-wheel-controls) now build no
-// locator of their own at all and reach everything through the barrel.
+// of the seven (grid-reference-lines, mouse-wheel-controls) build no locator of
+// their own at all and reach everything through the barrel.
+//
+// TAKE THAT RECOUNT INSTRUCTION LITERALLY. Both figures above were STALE when
+// `convert-modal-inertness-to-scenarios` checked them -- the tree read 8 files
+// and 20 sites against a header saying seven and 28 -- which is the whole
+// argument for a stated command over a remembered number. That slice deleted
+// modal-inertness.e2e.spec.ts (2 sites), restating its three tests as
+// while-the-pattern-library-is-open.feature, and the figures above are the
+// measurement taken afterwards.
 //
 // NOT HERE: CELL_ALIVE_ATTR / CELL_ALIVE_VALUE / CELL_DEAD_VALUE. Those say how
 // to READ what a cell announces, not how to reach it, so questions.ts and

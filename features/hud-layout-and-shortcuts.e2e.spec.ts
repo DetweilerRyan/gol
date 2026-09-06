@@ -11,7 +11,11 @@ import { clickGridAt, expectCellState } from './e2e-helpers'
 // recur. `triage-paired-specs` cut the hand-written layer to residue only, but
 // it worked file by file through the specs that SHARE A NAME with a .feature
 // -- so this file and modal-inertness.e2e.spec.ts, the two unpaired ones, were
-// never in its scope. The header this replaces licensed its tests as
+// never in its scope. (That second file is gone: all three of its tests turned
+// out to be statable after all, and `convert-modal-inertness-to-scenarios`
+// restated them as while-the-pattern-library-is-open.feature. This file is now
+// the only unpaired spec, which makes the drift below its alone to avoid.) The
+// header this replaces licensed its tests as
 // "DOM/layout/App-wiring concerns with no pure-logic layer to specify in
 // Gherkin", which was true when the Gherkin layer ran in vitest against pure
 // modules and stopped being true the day playwright-bdd landed: a step module

@@ -385,3 +385,16 @@ When('I click the Patterns control again', async ({ page }) => {
 Then('the pattern library should not be open', async ({ page }) => {
   await expect(patternLibraryModal(page)).toHaveCount(0)
 })
+
+// THE LIBRARY MERELY OPEN, WITH NOTHING CHOSEN FROM IT. Every other route into
+// the library in this module goes on to read it or arm from it; the feature
+// that borrows this one is about the app BEHIND the library, so the library
+// being up is the whole of its setup.
+//
+// Defined here rather than beside its borrower because the library is what it
+// is about -- the same reason "an empty grid" lives in cell-life-and-death.ts
+// and is borrowed by five features. openPatternModal's own toHaveCount(1) is
+// what makes this a state and not merely a click.
+Given('the pattern library is open', async ({ page }) => {
+  await openPatternModal(page)
+})
