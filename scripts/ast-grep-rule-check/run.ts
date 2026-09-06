@@ -37,8 +37,10 @@ import { decide, type DecideResult, type RawFile } from './decide.ts'
 const SCRIPT_DIR = path.dirname(fileURLToPath(import.meta.url))
 const REPO_ROOT = path.resolve(SCRIPT_DIR, '../..')
 
-// One `testConfigs[]` entry: the directory its fixtures live in, plus the name
-// of the snapshot subdirectory to leave alone (see SNAPSHOTS_DIR_NAME below).
+/**
+ * One `testConfigs[]` entry: the directory its fixtures live in, plus the name
+ * of the snapshot subdirectory to leave alone (see SNAPSHOTS_DIR_NAME below).
+ */
 export interface TestDirConfig {
   testDir: string
   snapshotDir: string
@@ -77,9 +79,11 @@ function toTestDirConfig(entry: unknown): TestDirConfig | undefined {
   return { testDir, snapshotDir: typeof snapshotDir === 'string' ? snapshotDir : SNAPSHOTS_DIR_NAME }
 }
 
-// Reads `ruleDirs` and `testConfigs[]` off sgconfig.yml rather than assuming
-// the `rules`/`rule-tests` pair this repo happens to have today -- see the
-// module comment above for why a hardcoded pair fails open.
+/**
+ * Reads `ruleDirs` and `testConfigs[]` off sgconfig.yml rather than assuming
+ * the `rules`/`rule-tests` pair this repo happens to have today -- see the
+ * module comment above for why a hardcoded pair fails open.
+ */
 export function loadSgConfig(repoRoot: string): SgConfig {
   const raw = readFileSync(path.join(repoRoot, 'sgconfig.yml'), 'utf8')
   const parsed = (parseYaml(raw) ?? {}) as Record<string, unknown>
@@ -90,12 +94,14 @@ export function loadSgConfig(repoRoot: string): SgConfig {
   return { ruleDirs: toStringArray(parsed.ruleDirs), testConfigs }
 }
 
-// Recurses into subdirectories, matching ast-grep's own scan of `ruleDirs`/
-// `testDir` (see the module comment above) -- a plain, non-recursive
-// `readdirSync` would miss a rule or fixture ast-grep itself still sees.
-// `skipChildDir` names a single *direct* child to leave unread (the snapshot
-// directory, for a testDir); it is deliberately not passed down the recursion,
-// because that is the only depth at which ast-grep gives the name a meaning.
+/**
+ * Recurses into subdirectories, matching ast-grep's own scan of `ruleDirs`/
+ * `testDir` (see the module comment above) -- a plain, non-recursive
+ * `readdirSync` would miss a rule or fixture ast-grep itself still sees.
+ * `skipChildDir` names a single *direct* child to leave unread (the snapshot
+ * directory, for a testDir); it is deliberately not passed down the recursion,
+ * because that is the only depth at which ast-grep gives the name a meaning.
+ */
 export function readYamlFilesRecursive(absoluteDir: string, relativeDir: string, skipChildDir?: string): RawFile[] {
   const files: RawFile[] = []
   for (const entry of readdirSync(absoluteDir, { withFileTypes: true })) {
@@ -112,10 +118,12 @@ export function readYamlFilesRecursive(absoluteDir: string, relativeDir: string,
   return files
 }
 
-// Gathers the real file set off disk and hands it to decide.ts's pure
-// decide() -- the one function in this module a test can call without
-// mocking process.exit, given a repoRoot pointing at a real (or temporary)
-// directory tree.
+/**
+ * Gathers the real file set off disk and hands it to decide.ts's pure
+ * decide() -- the one function in this module a test can call without
+ * mocking process.exit, given a repoRoot pointing at a real (or temporary)
+ * directory tree.
+ */
 export function runCheck(repoRoot: string): DecideResult {
   const { ruleDirs, testConfigs } = loadSgConfig(repoRoot)
   const ruleFiles = ruleDirs.flatMap((dir) => readYamlFilesRecursive(path.join(repoRoot, dir), dir))

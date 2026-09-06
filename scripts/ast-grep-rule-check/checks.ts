@@ -25,11 +25,13 @@ export interface Failure {
   message: string
 }
 
-// Shared across checks 6 and 9 (and decide()'s glob-driven checkAllRules
-// call): whether a `files:` glob pattern currently resolves to a real file.
-// Named so its six call sites don't each spell out the same inline function
-// type -- see rule-file.ts's UnresolvedFilesMarker for the marker it's paired
-// with.
+/**
+ * Shared across checks 6 and 9 (and decide()'s glob-driven checkAllRules
+ * call): whether a `files:` glob pattern currently resolves to a real file.
+ * Named so its six call sites don't each spell out the same inline function
+ * type -- see rule-file.ts's UnresolvedFilesMarker for the marker it's paired
+ * with.
+ */
 export type GlobHasMatch = (pattern: string) => boolean
 
 // Confirmed directly against ast-grep 0.45.1: `severity: bogus` fails to
@@ -40,7 +42,9 @@ export type GlobHasMatch = (pattern: string) => boolean
 // something ast-grep would reject for us.
 const VALID_SEVERITIES = ['hint', 'info', 'warning', 'error', 'off']
 
-// Check 1: every rule has a fixture at rule-tests/<id>-test.yml.
+/**
+ * Check 1: every rule has a fixture at rule-tests/<id>-test.yml.
+ */
 export function checkFixtureExists(rules: RuleFile[], fixtures: FixtureFile[]): Failure[] {
   const fixtureStems = new Set(fixtures.map((fixture) => fixture.filenameStem))
   const failures: Failure[] = []
@@ -65,7 +69,9 @@ export function checkFixtureExists(rules: RuleFile[], fixtures: FixtureFile[]): 
   return failures
 }
 
-// Check 2: a rule's declared id equals its own filename stem.
+/**
+ * Check 2: a rule's declared id equals its own filename stem.
+ */
 export function checkIdMatchesFilename(rules: RuleFile[]): Failure[] {
   return rules
     .filter((rule) => rule.id !== rule.filenameStem)
@@ -90,7 +96,9 @@ function groupRulesById(rules: RuleFile[]): Map<string, RuleFile[]> {
   return filesById
 }
 
-// Check 3: no two rule files declare the same id.
+/**
+ * Check 3: no two rule files declare the same id.
+ */
 export function checkNoDuplicateIds(rules: RuleFile[]): Failure[] {
   const failures: Failure[] = []
   for (const [id, files] of groupRulesById(rules)) {
@@ -107,7 +115,9 @@ export function checkNoDuplicateIds(rules: RuleFile[]): Failure[] {
   return failures
 }
 
-// Check 4: every rule declares a severity, and it's one ast-grep recognizes.
+/**
+ * Check 4: every rule declares a severity, and it's one ast-grep recognizes.
+ */
 export function checkSeverityValid(rules: RuleFile[]): Failure[] {
   const failures: Failure[] = []
   for (const rule of rules) {
@@ -131,8 +141,10 @@ export function checkSeverityValid(rules: RuleFile[]): Failure[] {
   return failures
 }
 
-// Check 5: every fixture has at least one `invalid:` case -- a fixture with
-// only `valid:` entries passes `ast-grep test` while proving nothing.
+/**
+ * Check 5: every fixture has at least one `invalid:` case -- a fixture with
+ * only `valid:` entries passes `ast-grep test` while proving nothing.
+ */
 export function checkFixtureHasInvalidCases(fixtures: FixtureFile[]): Failure[] {
   return fixtures
     .filter((fixture) => !fixture.hasInvalidCases)
@@ -181,24 +193,28 @@ function checkRuleFilesGlobsResolve(rule: RuleFile, globHasMatch: GlobHasMatch):
   return [...markerFailure, ...checkGlobsResolve(rule, globHasMatch)]
 }
 
-// Check 6: every `files:` glob resolves to at least one existing file, unless
-// the rule carries an `allow-unresolved-files` marker with a stated reason.
-// A marker present without a reason does not suppress the check -- it's
-// reported as its own failure instead, since the opt-out requires the reason
-// to actually be written down.
+/**
+ * Check 6: every `files:` glob resolves to at least one existing file, unless
+ * the rule carries an `allow-unresolved-files` marker with a stated reason.
+ * A marker present without a reason does not suppress the check -- it's
+ * reported as its own failure instead, since the opt-out requires the reason
+ * to actually be written down.
+ */
 export function checkFilesGlobsResolve(rules: RuleFile[], globHasMatch: GlobHasMatch): Failure[] {
   return rules.flatMap((rule) => checkRuleFilesGlobsResolve(rule, globHasMatch))
 }
 
-// Check 7: a fixture's declared `id` names the rule its own filename claims
-// to test. ast-grep binds a fixture to a rule by this `id`, not by the
-// filename -- `ast-grep test` happily runs a fixture named `no-bar-test.yml`
-// against `no-foo`'s rule if that's what its `id:` says, exit 0, and reports
-// nothing. checkFixtureExists only checks the forward direction (every rule
-// has a same-stemmed fixture file on disk); this is the missing reverse
-// direction, so renaming a rule without also updating the fixture's `id:`
-// leaves that rule with no working fixture even though a same-named file
-// exists.
+/**
+ * Check 7: a fixture's declared `id` names the rule its own filename claims
+ * to test. ast-grep binds a fixture to a rule by this `id`, not by the
+ * filename -- `ast-grep test` happily runs a fixture named `no-bar-test.yml`
+ * against `no-foo`'s rule if that's what its `id:` says, exit 0, and reports
+ * nothing. checkFixtureExists only checks the forward direction (every rule
+ * has a same-stemmed fixture file on disk); this is the missing reverse
+ * direction, so renaming a rule without also updating the fixture's `id:`
+ * leaves that rule with no working fixture even though a same-named file
+ * exists.
+ */
 export function checkFixtureIdMatchesFilename(fixtures: FixtureFile[]): Failure[] {
   const failures: Failure[] = []
   for (const fixture of fixtures) {
@@ -213,11 +229,13 @@ export function checkFixtureIdMatchesFilename(fixtures: FixtureFile[]): Failure[
   return failures
 }
 
-// Check 8: at least one rule was found at all. An empty (or misconfigured)
-// rules directory would otherwise report "0 rules, 0 fixtures, no failures"
-// and exit 0 -- a checker that checked nothing, reporting nothing, is
-// indistinguishable from a clean repo, which is exactly the failure mode
-// every other check here exists to catch elsewhere.
+/**
+ * Check 8: at least one rule was found at all. An empty (or misconfigured)
+ * rules directory would otherwise report "0 rules, 0 fixtures, no failures"
+ * and exit 0 -- a checker that checked nothing, reporting nothing, is
+ * indistinguishable from a clean repo, which is exactly the failure mode
+ * every other check here exists to catch elsewhere.
+ */
 export function checkAnyRulesFound(rules: RuleFile[]): Failure[] {
   if (rules.length > 0) return []
   return [
@@ -241,13 +259,15 @@ function isStaleOptOut(rule: RuleFile, globHasMatch: GlobHasMatch): boolean {
   return files.every((pattern) => globHasMatch(pattern))
 }
 
-// Check 9: an `allow-unresolved-files` marker whose reason no longer applies.
-// The marker is meant to be temporary (see check 6's reason requirement) --
-// once every `files:` glob it was excusing actually resolves, the marker
-// keeps suppressing check 6 for no reason, which is drift of exactly the kind
-// this program exists to catch. A rule with no `files:` glob at all isn't
-// "stale" in this sense (there was never anything to excuse), so that case is
-// left to check 6 rather than reported here.
+/**
+ * Check 9: an `allow-unresolved-files` marker whose reason no longer applies.
+ * The marker is meant to be temporary (see check 6's reason requirement) --
+ * once every `files:` glob it was excusing actually resolves, the marker
+ * keeps suppressing check 6 for no reason, which is drift of exactly the kind
+ * this program exists to catch. A rule with no `files:` glob at all isn't
+ * "stale" in this sense (there was never anything to excuse), so that case is
+ * left to check 6 rather than reported here.
+ */
 export function checkStaleOptOuts(rules: RuleFile[], globHasMatch: GlobHasMatch): Failure[] {
   const failures: Failure[] = []
   for (const rule of rules) {

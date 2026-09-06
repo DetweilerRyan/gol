@@ -14,8 +14,10 @@ import { checkAllRules, type Failure, type GlobHasMatch } from './checks.ts'
 import { parseFixtureFile, type FixtureFile } from './fixture-file.ts'
 import { parseRuleFile, type RuleFile } from './rule-file.ts'
 
-// A rule or fixture file's path plus its unparsed text -- what run.ts has
-// after reading a file off disk, before either parser has looked at it.
+/**
+ * A rule or fixture file's path plus its unparsed text -- what run.ts has
+ * after reading a file off disk, before either parser has looked at it.
+ */
 export interface RawFile {
   path: string
   text: string

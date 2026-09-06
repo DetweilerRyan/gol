@@ -1,6 +1,3 @@
-// Parses one rule-tests/*.yml fixture into the shape checks.ts needs. See
-// rule-file.ts for why parsing is split from I/O and from the checks.
-
 import { parse } from 'yaml'
 import { filenameStemOf } from './filenames.ts'
 
@@ -11,6 +8,10 @@ export interface FixtureFile {
   hasInvalidCases: boolean
 }
 
+/**
+ * Parses one rule-tests/*.yml fixture into the shape checks.ts needs. See
+ * rule-file.ts for why parsing is split from I/O and from the checks.
+ */
 export function parseFixtureFile(relativePath: string, rawText: string): FixtureFile {
   const parsed = (parse(rawText) ?? {}) as Record<string, unknown>
   const invalid = parsed.invalid

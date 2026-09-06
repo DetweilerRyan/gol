@@ -14,26 +14,32 @@
 // which is precisely why the filename convention has to be checked separately.
 const FIXTURE_SUFFIX = '-test'
 
-// Directories are stripped by slicing at the last `/` rather than by an
-// anchored `/^.*\//` regex. The two agree on every path without a line
-// terminator, which made the `^` unfalsifiable-looking -- but `.` doesn't
-// match a newline, so the anchored regex and its unanchored mutant really do
-// diverge on `a\nb/c.yml` (`a\nb/c` vs `c`), and slicing simply says the last
-// slash wins for every string. The `.ya?ml$` anchor below *is* load-bearing
-// -- see the mid-filename ".yaml" test in filenames.test.ts.
+/**
+ * Directories are stripped by slicing at the last `/` rather than by an
+ * anchored `/^.*\//` regex. The two agree on every path without a line
+ * terminator, which made the `^` unfalsifiable-looking -- but `.` doesn't
+ * match a newline, so the anchored regex and its unanchored mutant really do
+ * diverge on `a\nb/c.yml` (`a\nb/c` vs `c`), and slicing simply says the last
+ * slash wins for every string. The `.ya?ml$` anchor below *is* load-bearing
+ * -- see the mid-filename ".yaml" test in filenames.test.ts.
+ */
 export function filenameStemOf(relativePath: string): string {
   return relativePath.slice(relativePath.lastIndexOf('/') + 1).replace(/\.ya?ml$/, '')
 }
 
-// Rule id -> the filename stem its fixture must have.
+/**
+ * Rule id -> the filename stem its fixture must have.
+ */
 export function fixtureStemForRuleId(ruleId: string): string {
   return `${ruleId}${FIXTURE_SUFFIX}`
 }
 
-// Fixture filename stem -> the rule id that filename claims to test. Written
-// as endsWith/slice rather than a `-test` regex so the strip is anchored to
-// the end by construction: a fixture named `no-test-thing` tests
-// `no-test-thing`, not `no-thing`.
+/**
+ * Fixture filename stem -> the rule id that filename claims to test. Written
+ * as endsWith/slice rather than a `-test` regex so the strip is anchored to
+ * the end by construction: a fixture named `no-test-thing` tests
+ * `no-test-thing`, not `no-thing`.
+ */
 export function ruleIdForFixtureStem(fixtureStem: string): string {
   if (!fixtureStem.endsWith(FIXTURE_SUFFIX)) return fixtureStem
   return fixtureStem.slice(0, -FIXTURE_SUFFIX.length)
