@@ -1,10 +1,11 @@
 import { useEffect, type RefObject } from 'react'
 import { rectRelativePixels, type WheelInput } from '../camera'
 
-// Bridges native wheel events on an element to camera.ts's WheelInput,
-// converting the event's client coordinates into element-relative pixels so
-// callers never see a DOM event at all.
-//
+/**
+ * Bridges native wheel events on an element to camera.ts's WheelInput,
+ * converting the event's client coordinates into element-relative pixels so
+ * callers never see a DOM event at all.
+ */
 // Registered imperatively with { passive: false } rather than as a React
 // onWheel prop: React attaches its own wheel listener passively, which makes
 // preventDefault a no-op, and without preventDefault the browser's own

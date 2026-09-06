@@ -1,9 +1,12 @@
 import { useSyncExternalStore } from 'react'
 
-// Shared useSyncExternalStore plumbing for a boolean matchMedia query --
-// useReducedMotion.ts and useSystemAppearance.ts both compose this rather
-// than each carrying its own identical subscribe/getSnapshot pair (dry4ts
-// flagged that pair as a score-1.00 duplicate once the second hook landed).
+/**
+ * Shared useSyncExternalStore plumbing for a boolean matchMedia query --
+ * useReducedMotion.ts and useSystemAppearance.ts both compose this rather
+ * than each carrying its own identical subscribe/getSnapshot pair.
+ */
+// (dry4ts flagged that pair as a score-1.00 duplicate once the second hook
+// landed.)
 //
 // No `typeof window.matchMedia === 'function'` guard: this repo's jsdom
 // project leaves window.matchMedia undefined, so an unstubbed test throws

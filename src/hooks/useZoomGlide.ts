@@ -4,7 +4,13 @@ import { advanceZoomTarget, glideCellSizeAt, glideDurationMs, isGlideComplete, t
 import { useReducedMotion } from './useReducedMotion'
 
 export interface ZoomGlideController {
+  /**
+   * Starts (or re-targets, if one is already gliding) a toolbar zoom glide
+   * toward `factor`x the camera's current cellSize, anchored at
+   * (`anchorPixelX`, `anchorPixelY`).
+   */
   zoomBy(camera: Camera, factor: number, anchorPixelX: number, anchorPixelY: number): void
+  /** Cancels any in-flight glide, freezing the camera at whatever cellSize it has reached. A no-op when nothing is gliding. */
   cancel(): void
 }
 
@@ -35,13 +41,13 @@ interface GlideState {
   anchorY: number
 }
 
-// Drives the toolbar zoom-in/out glide: reads performance.now() and
-// requestAnimationFrame -- the one thing this module exists to do, so that
-// src/zoomGlide.ts, which owns the actual arithmetic, never has to (see
-// rules/no-ambient-time-in-domain.yml). Only the toolbar route uses this;
-// wheel zoom, drag-pan, scrollbar drag and reset all stay instantaneous and
-// never touch it.
-//
+/**
+ * Drives the toolbar zoom-in/out glide: reads performance.now() and
+ * requestAnimationFrame -- the one thing this module exists to do, so that
+ * src/zoomGlide.ts, which owns the actual arithmetic, never has to. Only the
+ * toolbar route uses this; wheel zoom, drag-pan, scrollbar drag and reset
+ * all stay instantaneous and never touch it.
+ */
 // The rAF lifecycle -- schedule/cancel/replace-on-a-new-call -- mirrors
 // useRafCoalescedPan.ts, this repo's other animation-frame owner, with one
 // deliberate difference at unmount: an unfinished glide is CANCELLED, never

@@ -10,8 +10,13 @@ export interface UseGridFocusResult {
    * Keyboard-driven moves: delegate to gridFocus.ts, then both (a) request
    * real DOM focus follow the new cell and (b) pan the camera if the move
    * carried the cell off computeOnScreenRange -- see panToRevealPx.
+   *
+   * Not identity-stable across renders (closes over `focus`/`camera`), which
+   * is fine here: it only ever reaches a DOM `onKeyDown` prop, not a
+   * memoized child.
    */
   moveFocus: (direction: FocusDirection) => void
+  /** Same shape and the same non-stability as moveFocus above, for Home/End. */
   jumpToEdge: (edge: 'left' | 'right') => void
   /**
    * Pointer-driven: moves the roving-tabindex target AND requests real DOM
@@ -19,6 +24,9 @@ export interface UseGridFocusResult {
    * resolved from on-screen pixels, so its cell is already in view. See this
    * hook's own header for why the DOM-focus half is required rather than
    * optional.
+   *
+   * Identity-stable across renders -- closes over nothing that varies per
+   * render.
    */
   setFocus: (x: number, y: number) => void
 }

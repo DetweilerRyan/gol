@@ -12,6 +12,15 @@ import {
 import { panCameraByScrollbarDrag, type ScrollbarAxis } from '../scrollbars'
 import { useZoomGlide } from './useZoomGlide'
 
+/**
+ * Owns the single Camera the app has, and every write to it. All seven
+ * returned actions are identity-stable across renders (measured,
+ * architect's stable-hook-identities DESIGN pass), so any of them can be
+ * passed to a memoized child. Every write except a toolbar zoom glide's own
+ * tick cancels an in-flight glide (see useZoomGlide.ts) -- starting a
+ * drag-pan, wheel zoom, scrollbar drag, or view reset while a zoom is still
+ * gliding snaps it to a stop rather than fighting it.
+ */
 export function useCamera() {
   const [camera, setCamera] = useState<Camera>({
     offsetX: 0,
@@ -123,8 +132,11 @@ export function useCamera() {
     zoomAtPoint,
     applyWheel,
     centerView,
+    /** Glides toward `factor`x zoom about the viewport's own center point, rather than snapping. */
     zoomInCentered,
+    /** Glides toward `1 / factor`x zoom about the viewport's own center point, rather than snapping. */
     zoomOutCentered,
+    /** `thumbRatio` must be the value from when the drag started, not recomputed mid-drag -- see scrollbars.ts's panCameraByScrollbarDrag. */
     panByScrollbarDrag,
   }
 }

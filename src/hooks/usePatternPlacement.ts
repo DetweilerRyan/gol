@@ -10,13 +10,15 @@ import {
   type PlacementState,
 } from '../patternPlacement'
 
-// Owns the pattern-library/placing state and its one keyboard input, and
-// delegates every transition to the pure functions in patternPlacement.ts --
-// the same split useCamera has with camera.ts. Takes the commit callback
-// (rather than exposing a bare disarm() for a caller to pair with its own
-// placement call) so the armed-pattern check and the disarm that follows it
-// stay in one place: the caller can't stamp without disarming, and can't
-// reach for a pattern that isn't armed.
+/**
+ * Owns the pattern-library/placing state and its one keyboard input, and
+ * delegates every transition to the pure functions in patternPlacement.ts --
+ * the same split useCamera has with camera.ts. Takes the commit callback
+ * (rather than exposing a bare disarm() for a caller to pair with its own
+ * placement call) so the armed-pattern check and the disarm that follows it
+ * stay in one place: the caller can't stamp without disarming, and can't
+ * reach for a pattern that isn't armed.
+ */
 export function usePatternPlacement(onPlacePattern: (pattern: Pattern, x: number, y: number) => void) {
   const [placement, setPlacement] = useState<PlacementState>(INITIAL_PLACEMENT)
 
@@ -67,10 +69,10 @@ export function usePatternPlacement(onPlacePattern: (pattern: Pattern, x: number
 
   // Single-shot: stamping commits the armed pattern and disarms in the same
   // action, rather than leaving it armed for repeat stamps. Reading the armed
-  // pattern here (instead of taking one from the caller) is what makes the
-  // non-null pattern a type-checked fact at the commit point rather than an
-  // invariant asserted across a component boundary; nothing is committed when
-  // nothing is armed.
+  // pattern here (instead of taking one from the caller) is also what makes
+  // the non-null pattern a type-checked fact at the commit point rather than
+  // an invariant asserted across a component boundary; nothing is committed
+  // when nothing is armed.
   function stampArmedPattern(x: number, y: number) {
     const pattern = armedPattern(placementRef.current)
     if (!pattern) return
@@ -84,6 +86,12 @@ export function usePatternPlacement(onPlacePattern: (pattern: Pattern, x: number
     closeLibrary: () => setPlacement(INITIAL_PLACEMENT),
     selectPattern: (pattern: Pattern) => setPlacement(armPattern(pattern)),
     previewAt: (x: number, y: number) => setPlacement((prev) => movePreviewTo(prev, x, y)),
+    /**
+     * Single-shot: commits the armed pattern and disarms in the same
+     * action. Identity-stable across renders while a pattern is being
+     * aimed, so moving the pointer with a pattern armed does not
+     * re-render every mounted cell.
+     */
     stampArmedPattern,
   }
 }

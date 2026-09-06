@@ -1,28 +1,35 @@
 import { useEffect, useRef } from 'react'
 
 export interface CoalescedPan {
+  /**
+   * Accumulates (`dxPixels`, `dyPixels`) and schedules one `onPan` flush per
+   * animation frame, summing however many pushes arrive within it -- the net
+   * camera shift equals the requested delta regardless of how many push()
+   * calls arrived or when flush() runs.
+   */
   push(dxPixels: number, dyPixels: number): void
+  /**
+   * Applies the accumulated sum immediately, rather than waiting for the
+   * queued frame, and clears it -- call synchronously on
+   * pointerup/pointercancel so an assertion right after a drag ends reads a
+   * settled camera rather than one still waiting on a queued frame. A no-op
+   * when nothing is accumulated.
+   */
   flush(): void
 }
 
-// Coalesces however many pan deltas arrive within a single animation frame
-// into one onPan call carrying their sum, so a trackpad or a high-polling-
-// rate mouse delivering several pointermove events per frame triggers one
-// camera update instead of several. A once-per-frame mouse-pan cadence sees
-// no benefit (there's at most one pointermove per frame to coalesce either
-// way -- perf/gestures.ts awaits a requestAnimationFrame round-trip between
-// synthetic moves), so this doesn't move the gated ScriptDuration numbers;
-// it's for trackpad users, not the benchmark.
-//
-// The invariant this exists to preserve: accumulate (dx, dy) in a ref and
-// flush the *sum*, so the net camera shift equals the requested delta
-// regardless of how many push() calls arrived or when flush() runs --
-// e2e/e2e-helpers.ts's dragPan comment documents that property and several
-// specs depend on it. flush() is exposed separately (rather than only ever
-// running on the animation-frame callback) so a caller can force it
-// synchronously on pointerup/pointercancel/unmount, keeping an assertion
-// immediately after the drag ends reading a settled camera rather than one
-// still waiting on a queued frame.
+/**
+ * Coalesces however many pan deltas arrive within a single animation frame
+ * into one onPan call carrying their sum, so a trackpad or a high-polling-
+ * rate mouse delivering several pointermove events per frame triggers one
+ * camera update instead of several.
+ */
+// A once-per-frame mouse-pan cadence sees no benefit (there's at most one
+// pointermove per frame to coalesce either way -- perf/gestures.ts awaits a
+// requestAnimationFrame round-trip between synthetic moves), so this
+// doesn't move the gated ScriptDuration numbers; it's for trackpad users,
+// not the benchmark. e2e/e2e-helpers.ts's dragPan comment documents the
+// push/flush invariant above and several specs depend on it.
 export function useRafCoalescedPan(onPan: (dxPixels: number, dyPixels: number) => void): CoalescedPan {
   const accumulatedRef = useRef({ dx: 0, dy: 0 })
   const rafIdRef = useRef<number | null>(null)
