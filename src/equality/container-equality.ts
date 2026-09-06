@@ -154,13 +154,12 @@ function compareAsContainer(a: object, b: object, compare: LeafComparator): bool
  * values are structurally equal if they are strictly equal (Object.is), or
  * if they are the same kind of container (Date, Set, Map, Array, or plain
  * object) whose corresponding members are equal under `compare`.
- *
- * The initial short-circuit is always isStrictEqual, never `compare` --
- * isDeepEqual's own `compare` argument is isDeepEqual itself, and using it
- * here would recurse on the exact same (a, b) pair forever instead of
- * descending into their members.
  */
 export function structurallyEqual(a: unknown, b: unknown, compare: LeafComparator): boolean {
+  // The initial short-circuit is always isStrictEqual, never `compare` --
+  // isDeepEqual's own `compare` argument is isDeepEqual itself, and using it
+  // here would recurse on the exact same (a, b) pair forever instead of
+  // descending into their members.
   if (isStrictEqual(a, b)) {
     return true
   }
