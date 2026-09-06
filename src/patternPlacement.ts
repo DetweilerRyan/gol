@@ -8,6 +8,8 @@ import { patternCellPositions, type Pattern } from './patternLibrary'
 // with nothing to preview) unrepresentable rather than merely avoided by
 // convention.
 /**
+ * The pattern-library interaction, as one of three modes:
+ *
  * - idle: neither browsing nor placing; clicks toggle single cells.
  * - browsing: the pattern library modal is open.
  * - placing: a pattern is armed and follows the pointer until it's stamped.
@@ -45,8 +47,9 @@ export function toggleLibrary(state: PlacementState): PlacementState {
 }
 
 /**
- * Returns the same state reference when nothing is armed, so callers can pass
- * this straight to a state setter without forcing a no-op re-render.
+ * @returns `state` unchanged, by reference, when nothing is armed, so
+ * callers can pass this straight to a state setter without forcing a no-op
+ * re-render.
  */
 export function cancelPlacing(state: PlacementState): PlacementState {
   return state.mode === 'placing' ? INITIAL_PLACEMENT : state
@@ -54,7 +57,9 @@ export function cancelPlacing(state: PlacementState): PlacementState {
 
 /**
  * Preview tracking is ignored outside placing mode (pointer moves happen
- * constantly, armed or not), again returning the same reference so only a
+ * constantly, armed or not).
+ *
+ * @returns `state` unchanged, by reference, outside placing mode, so only a
  * genuine preview change re-renders.
  */
 export function movePreviewTo(state: PlacementState, x: number, y: number): PlacementState {
@@ -71,10 +76,12 @@ export function armedPattern(state: PlacementState): Pattern | null {
 }
 
 /**
- * World cells the armed pattern would occupy if stamped at the current preview
- * cell -- empty whenever there's nothing to preview. Built on the same
- * patternCellPositions helper placePattern itself uses, so the preview can't
- * drift from where a stamp would actually land.
+ * World cells the armed pattern would occupy if stamped at the current
+ * preview cell. Uses the same anchor convention `placePattern` does, so the
+ * preview can't drift from where a stamp would actually land.
+ *
+ * @returns `[]` whenever there's nothing to preview (idle/browsing, or
+ * placing with no preview cell yet).
  */
 export function previewPositions(state: PlacementState): ReadonlyArray<readonly [number, number]> {
   if (state.mode !== 'placing' || !state.previewCell) return []

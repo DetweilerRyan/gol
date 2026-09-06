@@ -28,6 +28,7 @@ export interface ZoomGlide {
   readonly fromCellSize: number
   readonly toCellSize: number
   readonly startedAtMs: number
+  /** `<= 0` (see REDUCED_MOTION_DURATION_MS) makes the glide already complete, landing on `toCellSize` immediately. */
   readonly durationMs: number
 }
 
@@ -113,11 +114,13 @@ function easeOutCubic(t: number): number {
 // ratios and glide duration; linear has fewer float traps (no fractional
 // exponent, no risk of a negative or zero base) for no visible cost.
 /**
- * Exact landing: return toCellSize itself rather than
- * fromCellSize + (toCellSize - fromCellSize) * 1, which is algebraically
- * identical but not float-identical -- and this module's callers
- * (useZoomGlide.ts's fromCamera recompute, in particular) depend on the
- * completion frame matching an instantaneous zoom bit-for-bit.
+ * The cell size at `nowMs` along `glide`'s eased path from `fromCellSize` to
+ * `toCellSize` -- never overshoots past `toCellSize`, in either direction.
+ *
+ * @returns `toCellSize` itself, exactly (not merely float-close), once the
+ * glide completes -- callers that recompute the camera from the completion
+ * frame (useZoomGlide.ts's fromCamera, in particular) depend on that
+ * bit-for-bit equality, not just closeness.
  */
 export function glideCellSizeAt(glide: ZoomGlide, nowMs: number): number {
   const eased = easeOutCubic(progressAt(glide, nowMs))

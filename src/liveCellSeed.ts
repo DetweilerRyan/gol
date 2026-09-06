@@ -9,8 +9,11 @@ import { cellKey, type LiveCells } from './gameOfLife'
 // string as a plain argument instead.
 
 export interface SeedRequest {
+  /** Number of live cells to place. Must be `<= (2 * spread + 1) ** 2`. */
   count: number
+  /** Half-width, in cells, of the square region cells are scattered within. */
   spread: number
+  /** LCG seed -- the same seed and count always place the same cells. */
   seed: number
 }
 
@@ -83,9 +86,11 @@ function parseNonNegativeInteger(raw: string | null): number | undefined {
 /**
  * Builds exactly `request.count` live cells, deterministically from
  * `request.seed`, placed within the [-spread, spread] square.
- * Because parseSeedRequest already guarantees count <= capacity for every
- * request it can produce, a free slot always exists and this loop is
- * bounded by capacity -- no iteration cap, no unreachable defensive throw.
+ *
+ * @param request Assumes `count <= (2 * spread + 1) ** 2` -- true of every
+ * request parseSeedRequest can produce, but there is no iteration cap here,
+ * so a caller that builds its own `request` and violates it hangs rather
+ * than throwing.
  */
 // Draws a
 // capacity-space index per cell from a Math.imul-based LCG (its high bits,

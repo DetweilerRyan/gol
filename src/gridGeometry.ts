@@ -17,6 +17,11 @@ import type { Camera } from './camera'
 
 const VISIBLE_BUFFER_CELLS = 2
 
+/**
+ * A range of world-cell coordinates. `minX`/`maxX`/`minY`/`maxY` are all
+ * inclusive -- the cell at `maxX`, for instance, is itself part of the
+ * range, not one past it.
+ */
 export interface VisibleRange {
   minX: number
   maxX: number
@@ -24,6 +29,13 @@ export interface VisibleRange {
   maxY: number
 }
 
+/**
+ * The camera-derived range that might need a DOM node, padded by
+ * VISIBLE_BUFFER_CELLS on every side. Used by the ruler, which needs its
+ * label set to match what's actually on screen exactly -- the cell button
+ * layer reads cellTiles.ts's own TileRange instead, so this buffered,
+ * camera-exact range has one caller left.
+ */
 export function computeVisibleRange(camera: Camera, viewportWidthPx: number, viewportHeightPx: number): VisibleRange {
   return {
     minX: Math.floor(camera.offsetX) - VISIBLE_BUFFER_CELLS,
@@ -33,6 +45,11 @@ export function computeVisibleRange(camera: Camera, viewportWidthPx: number, vie
   }
 }
 
+/**
+ * The gridline spacing, in cells, that counts as "major" -- shared by
+ * {@link computeMajorGridlines} and {@link gridLinePhasePx}'s own major
+ * period, and by GridLines.tsx's paint of it.
+ */
 export const MAJOR_GRIDLINE_INTERVAL = 10
 
 // There is deliberately no isMajorGridline(coordinate) predicate here any
@@ -75,25 +92,23 @@ export function computeMajorGridlines(range: VisibleRange): MajorGridlines {
 /**
  * The keyboard focus cursor's own range: which cells render FULLY inside the
  * viewport, no VISIBLE_BUFFER_CELLS margin and no partially-clipped edge
- * cell either. computeVisibleRange answers "what might need a DOM node" (the
- * ruler's use, and the old cell-enumeration use this module's header
- * describes as gone); this answers "what a keyboard user can actually see
- * in full" -- Home/End and the edge-reveal scenarios in
- * keyboard-grid-navigation.feature are stated against that stricter
- * boundary, and computing them from the buffered range would land the
- * focus cursor two cells off from where the scenario expects it.
+ * cell either -- computeVisibleRange answers "what might need a DOM node";
+ * this answers "what a keyboard user can actually see in full," which is
+ * what Home/End and the edge-reveal scenarios in
+ * keyboard-grid-navigation.feature are stated against.
  *
  * Clamped so maxX never falls below minX (an empty range would make
- * centerCell and jumpToRowEdge's "furthest cell" answer undefined) -- the
- * same clamp shape coveringTileRange uses for the pre-measurement 0x0
- * viewport case. That clamp is a deliberate, narrow weakening of this
- * function's own "every cell fully visible" contract: below one cell per
- * axis (viewportWidthPx/viewportHeightPx < cellSize) the returned single
- * cell at minX/minY is NOT fully on screen, only the least-clipped
- * candidate -- a property asserting full visibility over every returned
- * cell must therefore be scoped to viewports of at least one cell per axis,
- * the same scope this function's own callers already assume.
+ * centerCell and jumpToRowEdge's "furthest cell" answer undefined). Below
+ * one cell per axis (viewportWidthPx/viewportHeightPx < cellSize), the
+ * returned single cell at minX/minY is a deliberate weakening of this
+ * function's own "every cell fully visible" contract -- it is the
+ * least-clipped candidate, not actually fully on screen.
  */
+// That clamp is the same shape coveringTileRange uses for its own
+// pre-measurement 0x0 viewport case. A property asserting full visibility
+// over every returned cell must be scoped to viewports of at least one cell
+// per axis, the same scope this function's own callers already assume.
+//
 // A cell x is fully inside the viewport iff worldToScreen(camera, x, y).x is
 // >= 0 and worldToScreen(camera, x + 1, y).x <= widthPx (i.e. neither edge
 // of the cell's own screen box is clipped). Solved for the integer x this

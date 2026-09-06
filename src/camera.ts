@@ -5,8 +5,11 @@
 // scrollbars.ts each build on this module, and none of them on each other.
 
 export interface Camera {
+  /** World-cell x coordinate of the viewport's top-left corner. */
   offsetX: number
+  /** World-cell y coordinate of the viewport's top-left corner. */
   offsetY: number
+  /** Viewport pixels per world cell. */
   cellSize: number
 }
 
@@ -19,6 +22,10 @@ export function clampCellSize(size: number): number {
   return Math.min(MAX_CELL_SIZE, Math.max(MIN_CELL_SIZE, size))
 }
 
+/**
+ * World coordinates -> viewport pixels (see {@link rectRelativePixels} for
+ * how a DOM event's coordinates get into that space in the first place).
+ */
 export function worldToScreen(camera: Camera, worldX: number, worldY: number) {
   return {
     x: (worldX - camera.offsetX) * camera.cellSize,
@@ -26,6 +33,11 @@ export function worldToScreen(camera: Camera, worldX: number, worldY: number) {
   }
 }
 
+/**
+ * Viewport pixels -> the world cell that pixel falls in, floored. The
+ * inverse of {@link worldToScreen}, and `pixelX`/`pixelY` are the same
+ * viewport-relative space that function returns.
+ */
 export function screenToWorld(camera: Camera, pixelX: number, pixelY: number) {
   return {
     x: Math.floor(camera.offsetX + pixelX / camera.cellSize),
@@ -45,6 +57,12 @@ export function rectRelativePixels(rect: { left: number; top: number }, clientX:
   return { pixelX: clientX - rect.left, pixelY: clientY - rect.top }
 }
 
+/**
+ * Pans by a raw pixel delta, following the drag-to-pan sign convention:
+ * content follows the gesture 1:1 (`offsetX -= dxPixels / cellSize`). The
+ * opposite sign from wheel-pan and scrollbar-drag -- see
+ * {@link applyWheelInput} and scrollbars.ts's panCameraByScrollbarDrag.
+ */
 export function panCamera(camera: Camera, dxPixels: number, dyPixels: number): Camera {
   return {
     ...camera,
@@ -53,18 +71,25 @@ export function panCamera(camera: Camera, dxPixels: number, dyPixels: number): C
   }
 }
 
+/**
+ * Zooms so the world point under viewport pixel (`pixelX`, `pixelY`) stays
+ * under that same pixel after the zoom, scaling the current cellSize by
+ * `factor`. `pixelX`/`pixelY` are viewport-relative (see
+ * {@link rectRelativePixels}).
+ */
 export function zoomCameraAtPoint(camera: Camera, pixelX: number, pixelY: number, factor: number): Camera {
   return zoomCameraToCellSize(camera, pixelX, pixelY, camera.cellSize * factor)
 }
 
 /**
- * The absolute-target twin of zoomCameraAtPoint: instead of a factor applied
- * to the camera's own current cellSize, this takes the target cellSize
- * directly. zoomCameraAtPoint is now expressed through this (factor * cellSize
- * is the only difference), which is what smooth-zoom-transitions needs --
- * a glide's per-frame camera is computed from a fixed starting camera and an
- * eased cellSize, never by re-applying a factor to whatever the camera
- * currently is (see src/hooks/useZoomGlide.ts's header comment on why).
+ * The absolute-target twin of {@link zoomCameraAtPoint}: instead of a factor
+ * applied to the camera's own current cellSize, this takes the target
+ * cellSize directly -- what a zoom glide needs, since its per-frame camera
+ * is computed from a fixed starting camera and an eased cellSize, never by
+ * re-applying a factor to whatever the camera currently is.
+ *
+ * @returns `camera` unchanged, by reference, when `cellSize` (after
+ * clamping) equals the camera's current cellSize.
  */
 export function zoomCameraToCellSize(camera: Camera, pixelX: number, pixelY: number, cellSize: number): Camera {
   const newCellSize = clampCellSize(cellSize)
@@ -79,6 +104,7 @@ export function zoomCameraToCellSize(camera: Camera, pixelX: number, pixelY: num
   }
 }
 
+/** The initial camera: default cell size, world origin (0, 0) centered in the viewport. */
 export function centeredCamera(viewportWidthPx: number, viewportHeightPx: number): Camera {
   return {
     cellSize: DEFAULT_CELL_SIZE,
@@ -131,6 +157,13 @@ function wheelZoomFactor(zoomDelta: number, deltaMode: number): number {
   return ZOOM_FACTOR ** -notches
 }
 
+/**
+ * Applies a native wheel gesture: zooms at the pointer when `shiftKey` or
+ * `ctrlKey` is held (trackpad pinch or Ctrl+scroll), otherwise pans
+ * following the "document scroll" sign convention (scroll down/right
+ * reveals further content) -- the opposite sign from {@link panCamera}'s
+ * drag-to-pan convention.
+ */
 export function applyWheelInput(camera: Camera, input: WheelInput): Camera {
   if (input.shiftKey || input.ctrlKey) {
     // Some browser/OS combos (notably Firefox on Windows) convert a

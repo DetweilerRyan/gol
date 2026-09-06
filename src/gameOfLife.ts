@@ -15,10 +15,18 @@ export type LiveCells = Set<CellKey>
  */
 export type ReadonlyLiveCells = ReadonlySet<CellKey>
 
+/**
+ * Encodes a cell's coordinates as the `"x,y"` string key used throughout
+ * `LiveCells`/`ReadonlyLiveCells`.
+ */
 export function cellKey(x: number, y: number): CellKey {
   return `${x},${y}`
 }
 
+/**
+ * Decodes a `CellKey` back into its `[x, y]` coordinates -- the inverse of
+ * {@link cellKey}.
+ */
 // Exported so liveCellWindow.ts's projection never re-splits a CellKey
 // itself -- the "x,y" encoding stays owned by exactly this module (see
 // cellKey's own definition just above), which is what an information-hiding
@@ -145,15 +153,18 @@ export function getNextGeneration(liveCells: ReadonlyLiveCells): LiveCells {
 
 export interface ContentBounds {
   minX: number
+  /** Exclusive -- one past the highest live cell's own x coordinate. */
   maxX: number
   minY: number
+  /** Exclusive -- one past the highest live cell's own y coordinate. */
   maxY: number
 }
 
 /**
- * maxX/maxY are the highest live cell coordinate plus one, so a single live
- * cell yields a full 1x1 footprint (matching how it actually renders) rather
- * than a zero-size point.
+ * The bounding box of every live cell, or `null` when there are none.
+ * `maxX`/`maxY` are the highest live cell coordinate plus one, so a single
+ * live cell yields a full 1x1 footprint (matching how it actually renders)
+ * rather than a zero-size point.
  */
 export function computeContentBounds(liveCells: ReadonlyLiveCells): ContentBounds | null {
   if (liveCells.size === 0) return null

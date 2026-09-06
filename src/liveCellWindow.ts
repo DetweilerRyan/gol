@@ -21,6 +21,7 @@ export interface WindowCell {
   key: CellKey
   x: number
   y: number
+  /** False only for the injected focus-cursor cell; every other entry is live by construction. */
   isAlive: boolean
 }
 
@@ -41,27 +42,23 @@ function byRowMajor(a: WindowCell, b: WindowCell): number {
 
 /**
  * Every live cell within `range`, in row-major order (top-to-bottom,
- * left-to-right within a row -- a stable, predictable order rather than
- * `cells`' own Set insertion order), plus `focus`'s own cell whenever it
- * isn't already one of those -- which covers both ways a focus cell can be
- * missing from the live-in-range set: it sits outside `range` entirely, or
- * it's dead (so it was never a candidate for the live-cell loop in the
- * first place). Either way, `isAlive` is read fresh from `cells`, so a
+ * left-to-right within a row), plus `focus`'s own cell whenever it isn't
+ * already one of those -- whether it sits outside `range` entirely or is
+ * simply dead. Either way `isAlive` is read fresh from `cells`, so a
  * focused-but-dead cell costs exactly one extra WindowCell, never a whole
  * tile's worth.
  *
- * Culls to `range` rather than returning every live cell regardless of
- * camera position, which is what makes an off-screen live cell cost nothing.
- * It does NOT settle what the black-box layers can observe, and the earlier
- * form of this comment claimed it did: the focus +1 above can sit OUTSIDE
- * `range`, so the mounted set is "live cells in the window, plus possibly
- * one anywhere at all" -- not a window. infinite-grid.feature's
- * "toHaveCount(0) on alive cells after panning away" holds because product's
- * own step parks the keyboard cursor off the cells it asserts absent
- * (features/screenplay/tasks.ts's parkKeyboardCursorAt), not because this
- * function bounds the answer. A step that reads a cell count without
- * establishing where the cursor is has a precondition, not a guarantee.
+ * Culls to `range`, which is what makes an off-screen live cell cost
+ * nothing -- but that is NOT the same as bounding what a caller can
+ * observe: the focus cell above can sit OUTSIDE `range`, so an empty result
+ * does not by itself mean nothing renders alive. A caller relying on that
+ * must also establish where the focus cursor is.
  */
+// The earlier form of this comment claimed this function itself settles
+// what the black-box layers can observe; it doesn't. infinite-grid.feature's
+// "toHaveCount(0) on alive cells after panning away" holds because product's
+// own step parks the keyboard cursor off the cells it asserts absent
+// (features/screenplay/tasks.ts's parkKeyboardCursorAt).
 export function liveCellsInRange(
   cells: ReadonlyLiveCells,
   range: TileRange,

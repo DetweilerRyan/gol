@@ -76,12 +76,15 @@ export interface PanReveal {
 /**
  * The pixel pan a caller must apply, via useCamera's panByPixels, to bring
  * `focus` back inside `onScreen` after a keyboard move has carried it past
- * the edge. Returns {0, 0} on an axis that's already satisfied, so a caller
- * can apply the result unconditionally after every focus move.
+ * the edge.
  *
- * SIGN CONVENTION -- checked against useCamera.ts's panByPixels, not derived
- * from intuition (see CLAUDE.md's camera.ts note on the deliberate
- * asymmetry between drag-to-pan and wheel-pan/scrollbar-drag).
+ * Uses `panCamera`'s own sign convention (unnegated), matching
+ * useCamera.ts's panByPixels -- checked against that function, not derived
+ * from intuition (see CLAUDE.md's camera.ts note on the deliberate asymmetry
+ * between drag-to-pan and wheel-pan/scrollbar-drag).
+ *
+ * @returns `{0, 0}` on an axis that's already satisfied, so a caller can
+ * apply the result unconditionally after every focus move.
  */
 // panByPixels
 // calls camera.ts's panCamera(camera, dxPixels, dyPixels) UNCHANGED --

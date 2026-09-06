@@ -46,13 +46,28 @@ import { isShallowEqual } from './equality/is-shallow-equal'
 export type Listener = () => void
 export type Unsubscribe = () => void
 
+/**
+ * The live-cell state as two useSyncExternalStore-compatible subscription
+ * pairs -- bounds and cells -- plus three mutators. See this module's
+ * header for why a third (per-cell) pair used to exist and doesn't now.
+ */
 export interface LiveCellStore {
+  /** Advances one generation and notifies both subscriber channels. */
   advance(): void
+  /** Toggles one cell's aliveness and notifies both subscriber channels. */
   toggle(x: number, y: number): void
+  /** Stamps `pattern` at (`anchorX`, `anchorY`) and notifies both subscriber channels. */
   place(pattern: Pattern, anchorX: number, anchorY: number): void
 
+  /** Notified after any mutator runs; pairs with getBoundsSnapshot below. */
   subscribeBounds(listener: Listener): Unsubscribe
+  /**
+   * A legitimate render source ONLY when paired with subscribeBounds above
+   * (the useSyncExternalStore contract) -- reading it during render with no
+   * matching subscription is still a correctness bug.
+   */
   getBoundsSnapshot(): ContentBounds | null
+  /** Notified after any mutator runs; pairs with getLiveCells below. */
   subscribeCells(listener: Listener): Unsubscribe
 
   /**
@@ -64,6 +79,8 @@ export interface LiveCellStore {
 }
 
 /**
+ * Creates a fresh, independent `LiveCellStore` seeded from `initialLiveCells`.
+ *
  * Ownership is taken here, once: copy the caller's Set rather than adopt
  * it by reference, so a caller mutating their own Set afterward can never
  * reach into this store's published state.
