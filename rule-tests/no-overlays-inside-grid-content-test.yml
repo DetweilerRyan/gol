@@ -1,0 +1,30 @@
+id: no-overlays-inside-grid-content
+valid:
+  # The shipped shape: the slot is invoked after #grid-content closes, inside the same parent.
+  - |
+    <div className="relative h-full w-full">
+      <div id={GRID_CONTENT_ID} {...handlers}>
+        <GridLines camera={camera} />
+      </div>
+      {renderOverlays({ size: containerSize, visibleRange })}
+    </div>
+  # A call to the prop from somewhere that is not a JSX descendant of the div at all.
+  - |
+    const overlays = renderOverlays({ size: containerSize, visibleRange })
+  # Another element's children are not this rule's business.
+  - |
+    <div id={SOME_OTHER_ID}>{renderOverlays({ size: containerSize, visibleRange })}</div>
+invalid:
+  # The inversion itself: the slot as a direct child of #grid-content.
+  - |
+    <div id={GRID_CONTENT_ID} {...handlers}>
+      <GridLines camera={camera} />
+      {renderOverlays({ size: containerSize, visibleRange })}
+    </div>
+  # The same inversion one layer deeper, which is why `inside` carries stopBy: end.
+  - |
+    <div id={GRID_CONTENT_ID}>
+      <div className="absolute inset-0">
+        <span>{renderOverlays({ size: containerSize, visibleRange })}</span>
+      </div>
+    </div>

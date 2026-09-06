@@ -1,0 +1,37 @@
+id: no-overlays-inside-grid-content
+language: Tsx
+severity: warning
+message: The overlay slot must be a sibling of #grid-content, never a descendant of it.
+note: >-
+  #grid-content owns the pan/tap pointer handlers and takes pointer capture on pointerdown, so a
+  press that starts inside it is retargeted to the container and resolved arithmetically as a
+  world cell. Every overlay the caller supplies -- ruler, zoom badge, scrollbars, toolbar, modal
+  -- is therefore invoked as a FOLLOWING SIBLING of that div rather than as a child, which is
+  what lets a control drawn on top of the board be pressed without also toggling the cell it
+  covers, with no stopPropagation and no open-state guard on either side. Move the slot inside
+  and the toolbar stops receiving its own clicks entirely.
+# SCOPE IS A SINGLE FILE PATH, the same fragility no-logic-in-composition-root.yml carries and for
+# the same reason: the invariant is about this one component, which is the only place the overlay
+# slot is invoked. `npm run ast-grep:rules` fails if the path stops resolving, so a rename shows up
+# as a gate failure rather than as silence.
+files:
+  - 'src/components/Grid.tsx'
+# MEASURED, not asserted: with this call moved inside #grid-content, 45 of `npm run test:e2e`'s 126
+# tests red (2026-09-06) -- among them camera-pan-and-zoom.feature's "Pressing a zoom control brings
+# no cell to life underneath it", which reds at its zoom clause because the press never reaches the
+# button at all. So the behavioral guard is real and broad; this rule exists to name the invariant
+# those 45 failures are all symptoms of, and to fail in one line rather than in a suite.
+#
+# `inside` needs stopBy: end -- the call sits several JSX levels below the div, so the default
+# immediate-parent check would never fire. The attribute is matched by its own text rather than by
+# a metavariable, since GRID_CONTENT_ID is an identifier the id expression interpolates.
+rule:
+  pattern: renderOverlays($$$ARGS)
+  inside:
+    kind: jsx_element
+    stopBy: end
+    has:
+      kind: jsx_opening_element
+      has:
+        kind: jsx_attribute
+        regex: '^id=\{GRID_CONTENT_ID\}$'

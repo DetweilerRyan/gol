@@ -1,0 +1,56 @@
+id: no-overlays-inside-grid-content
+snapshots:
+  ? |
+    <div id={GRID_CONTENT_ID} {...handlers}>
+      <GridLines camera={camera} />
+      {renderOverlays({ size: containerSize, visibleRange })}
+    </div>
+  : labels:
+    - source: 'renderOverlays({ size: containerSize, visibleRange })'
+      style: primary
+      start: 76
+      end: 129
+    - source: id={GRID_CONTENT_ID}
+      style: secondary
+      start: 5
+      end: 25
+    - source: <div id={GRID_CONTENT_ID} {...handlers}>
+      style: secondary
+      start: 0
+      end: 40
+    - source: |-
+        <div id={GRID_CONTENT_ID} {...handlers}>
+          <GridLines camera={camera} />
+          {renderOverlays({ size: containerSize, visibleRange })}
+        </div>
+      style: secondary
+      start: 0
+      end: 137
+  ? |
+    <div id={GRID_CONTENT_ID}>
+      <div className="absolute inset-0">
+        <span>{renderOverlays({ size: containerSize, visibleRange })}</span>
+      </div>
+    </div>
+  : labels:
+    - source: 'renderOverlays({ size: containerSize, visibleRange })'
+      style: primary
+      start: 75
+      end: 128
+    - source: id={GRID_CONTENT_ID}
+      style: secondary
+      start: 5
+      end: 25
+    - source: <div id={GRID_CONTENT_ID}>
+      style: secondary
+      start: 0
+      end: 26
+    - source: |-
+        <div id={GRID_CONTENT_ID}>
+          <div className="absolute inset-0">
+            <span>{renderOverlays({ size: containerSize, visibleRange })}</span>
+          </div>
+        </div>
+      style: secondary
+      start: 0
+      end: 152
