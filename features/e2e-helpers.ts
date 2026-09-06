@@ -27,6 +27,7 @@ export {
   patternsButton,
   patternLibraryModal,
   previewCells,
+  previewCellAt,
 } from './screenplay/elements.ts'
 export type { Appearance, AppearancePreference, ScrollbarOrientation } from './screenplay/elements.ts'
 export {

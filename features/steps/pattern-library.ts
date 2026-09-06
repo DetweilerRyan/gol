@@ -39,6 +39,7 @@ import {
   patternCategoryInLibrary,
   patternLibraryModal,
   patternsButton,
+  previewCellAt,
   previewCellPositions,
   previewCells,
   recallText,
@@ -284,6 +285,83 @@ Given('I am aiming it at the cell at \\({int}, {int}\\)', async ({ page }, x: nu
 
 Then('no pattern preview should be shown', async ({ page }) => {
   await expect(previewCells(page)).toHaveCount(0)
+})
+
+// MOVES A LIVE AIM, which is the whole act "the preview follows the aim" is
+// about, and deliberately NOT the "I am aiming it at the cell at" Given above
+// even though the two do the same thing to the browser. playwright-bdd matches
+// a step by its text and never by its keyword, so reusing that text here would
+// put a state-setting phrase in the one position where it is the act under
+// test -- and a reader of the feature file could no longer tell which of the
+// two aims the scenario is about. "instead" follows the arming step's own
+// convention for the same distinction.
+//
+// NO WAIT HERE. The one that matters belongs to the Then below, which is where
+// the transition can actually be named: waiting for "a preview exists" would
+// settle instantly against the preview the Given already established.
+When('I aim it at the cell at \\({int}, {int}\\) instead', async ({ page }, x: number, y: number) => {
+  await hoverCell(page, x, y)
+})
+
+// WHICH CELLS THE PREVIEW COVERS, IN WORLD COORDINATES -- the same channel the
+// shape step above reads all eight patterns through, and the reason this claim
+// is expressible in Gherkin at all. The preview announces its own coordinates,
+// so "the preview moved" is statable as which cells it now covers instead of
+// as two measured bounding boxes, which no scenario may name.
+//
+// A regular expression rather than a Cucumber expression for the shape step's
+// reason: the value is an unquoted list of parenthesised pairs, and `(` is
+// optional-text syntax in a Cucumber expression rather than a literal.
+//
+// THE FIRST LINE IS A WAIT AND THE REST ARE THE ASSERTION, which is the
+// opposite arrangement to the shape step and worth reading before copying
+// either. There the count IS the wait, because arming a pattern takes the
+// preview from nothing to n cells. Here the aim moves between two positions of
+// the SAME pattern, so the count is n before and after, a toHaveCount settles
+// on its first evaluation, and previewCellPositions -- which does not retry --
+// would be free to read the pre-move frame. Anchoring on a cell of the NEW aim
+// is the only assertion here that genuinely transitions.
+//
+// THREE ASSERTIONS, matching the shape step's discipline and for the same
+// reason: named-but-absent catches a preview that moved to the wrong place,
+// shown-but-unnamed catches one that did not move at all (or moved and left a
+// copy behind), and the count catches a list this step could no longer parse.
+// A preview that stayed at the previous aim fails the first two together,
+// because the two aims this scenario uses cover disjoint cells.
+//
+// WHAT THIS STEP WAS SHOWN CATCHING, AND WHAT IT WAS NOT. The fault it exists
+// for is a preview that LATCHES -- movePreviewTo ignoring a move once a
+// preview is up -- and that probe is an edit to src/, which product may not
+// take; it is routed to `architect` and the deletion of the hand-written test
+// this replaces waits on it. What WAS measured here, whole-suite, is the
+// mirror of it inside features/: rewriting the scenario's expected list to the
+// FIRST aim's cells -- (5, 5), (6, 5), (5, 6), (6, 6) -- reds exactly one test
+// of 128, this scenario, reporting `Pattern preview cell 5, 5` resolved to 0
+// elements over 14 retries. So after the move the preview provably covers
+// neither more nor less than the second aim's block, which is the same
+// observation a latched preview would fail from the other side. It is a
+// surrogate and is written down as one: it proves the clause is live and reads
+// the post-move frame, not that the app tracks the pointer continuously.
+//
+// NOTE WHICH ASSERTION REPORTED IT -- the retrying anchor, not either
+// inclusion. That is expected rather than a flaw: the anchor is the first
+// clause to look at the new position, so a preview in the wrong place is
+// always reported there and the inclusions only ever speak about a preview
+// that reached the right anchor with the wrong shape around it. Do not read
+// the anchor as a wait that happens to fail.
+Then(/^the pattern preview should cover exactly (.+)$/, async ({ page }, cellList: string) => {
+  const expected = parseCellList(cellList)
+  const [anchorX, anchorY] = expected[0]
+
+  await expect(previewCellAt(page, anchorX, anchorY)).toHaveCount(1)
+
+  const actual = await previewCellPositions(page)
+  const shown = new Set(actual.map(describeCell))
+  const named = new Set(expected.map(describeCell))
+
+  expect([...named].filter((cell) => !shown.has(cell))).toEqual([]) // every cell the scenario names is on screen
+  expect([...shown].filter((cell) => !named.has(cell))).toEqual([]) // and nothing else is
+  expect(actual.length).toBe(expected.length) // and there are exactly that many
 })
 
 // THE SAME PRESS THE "instead" STEP ABOVE MAKES ON ITS WAY BACK TO THE

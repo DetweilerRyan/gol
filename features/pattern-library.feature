@@ -93,6 +93,27 @@ Feature: Pattern library
     And the cell at (5, 6) should be dead
     And the cell at (6, 6) should be dead
 
+  # WHERE WOULD THIS LAND. The preview is the app's only answer to that
+  # question before a click is made, so it has to track the aim rather than
+  # stay where it was first shown. Block is chosen because its four cells at
+  # (5, 5) and its four at (12, 12) are DISJOINT: a preview that stayed behind
+  # is caught from both directions at once, every cell this scenario names
+  # being absent and every cell on screen being unnamed.
+  #
+  # ONE When, NOT TWO, and the reason is the claim's own shape rather than a
+  # lint accommodation. "Follows the aim" relates two aims, but only the second
+  # is the act -- the first is the state the act has to change, which is what a
+  # Given is for, exactly as the armed pattern is. The split-into-two-scenarios
+  # shape the cancel pair needed is not wanted here: nothing has to be observed
+  # between the two aims, so there is no observation for a Then to make in the
+  # middle.
+  Scenario: Aiming at a different cell moves the preview there rather than leaving it behind
+    Given an empty grid
+    And I have armed the "Block" pattern
+    And I am aiming it at the cell at (5, 5)
+    When I aim it at the cell at (12, 12) instead
+    Then the pattern preview should cover exactly (12, 12), (13, 12), (12, 13), (13, 13)
+
   Scenario: Pressing Escape while aiming a pattern clears its preview
     Given an empty grid
     And I have armed the "Glider" pattern

@@ -103,6 +103,20 @@ export function previewCells(page: Page): Locator {
   return page.locator('[aria-label^="Pattern preview cell"]')
 }
 
+// ONE named preview cell, by the world coordinate it announces. Pairs with
+// previewCells above, and exists for the one thing that locator cannot do: act
+// as a RETRYING ANCHOR when the size of the preview does not change.
+//
+// A step that moves an aim and then reads the shape back has no count to wait
+// on -- the armed pattern has the same number of cells before and after the
+// move -- so `expect(previewCells(page)).toHaveCount(n)` settles on its first
+// evaluation and questions.ts's previewCellPositions, which does not retry, can
+// read the frame before React re-rendered. Waiting for a cell of the NEW aim to
+// exist is the assertion that genuinely transitions.
+export function previewCellAt(page: Page, x: number, y: number): Locator {
+  return page.locator(`[aria-label="Pattern preview cell ${x}, ${y}"]`)
+}
+
 // One axis's ruler, reached through the accessible tree: GridRuler wraps each
 // axis's labels in a role="group" named by rulerGroupLabel(axis), so a column
 // number and a row number -- which render as the same bare digit -- are told
