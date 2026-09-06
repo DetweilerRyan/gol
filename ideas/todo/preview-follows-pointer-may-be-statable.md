@@ -17,10 +17,19 @@ is already the channel `features/steps/pattern-library.ts` reads all eight patte
 _"the preview follows the pointer"_ may be statable as a scenario about **which cells the preview
 covers after the aim moves** — a claim about coordinates rather than about pixels.
 
-**If it lands, it retires the last hand-written test in that file**, which would take
-`hud-layout-and-shortcuts.e2e.spec.ts` from 9 tests at the start of the audit to 0 and delete the
-file. That is not the goal, but it is the consequence, and it is worth knowing before starting: the
-file's whole remaining content is this one claim.
+**CORRECTION, measured 2026-09-05 before this slice started: the file holds THREE tests, not one.**
+This candidate originally claimed converting the preview claim would empty the file and delete it.
+That is false. The three are:
+
+1. the grid fills the entire viewport, edge to edge
+2. the HUD panel renders the title, next-generation button, and generation counter, top-left
+3. the armed pattern preview follows the pointer across the grid ← the one this converts
+
+Tests 1 and 2 are viewport-fill and panel-position **measurements** — rendered pixel geometry,
+category 3, and `architect` ruled them so during `re-audit-hand-written-e2e-residue`. Converting the
+preview claim leaves a two-test file. **The slice was widened at the user's request to also audit
+those two**, on the bar below; if either is genuinely stateable the file could still empty, and if
+neither is, that is the answer and the file stays at two.
 
 ## Why it was not done in the audit slice
 
