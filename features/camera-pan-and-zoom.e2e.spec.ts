@@ -56,33 +56,57 @@ const SAMPLE_WINDOW_MS = 700
 // the paired spec survives in features/** only if this header records it. Two
 // promises live here and nowhere else in the contract:
 //
-//   1. Zooming in keeps the point it is anchored on fixed. The Gherkin clause
-//      said "the point under the cursor should not move", which cannot be
-//      stated without pixel vocabulary and cannot be observed at all from
-//      jsdom. The toolbar's own anchor is the viewport center, so the spec
-//      below asserts the world origin still renders at CENTER after a
-//      zoom-in click.
+//   1. Zooming in keeps the point it is anchored on fixed. The toolbar's own
+//      anchor is the viewport center, so the first test below asserts the
+//      world origin still renders at CENTER after a zoom-in click.
+//      (b) THE CHANNEL THAT DOES NOT CARRY IT: camera-pan-and-zoom.feature
+//      observes a zoom only through the badge, and src/camera.ts's
+//      zoomPercentage is Math.round(cellSize / 20 * 100) -- a readout of how
+//      big a cell is, with no notion of WHERE the grid sits. A zoom that slid
+//      its anchor clear across the viewport still reads 125, so every scenario
+//      in that feature is green on exactly the defect this test exists for.
+//      (c) WHAT WOULD MAKE (b) FALSE: the badge, or any other channel the app
+//      announces, reporting where the view is anchored and not only its scale.
 //   2. Resetting the view puts the origin back at the exact center of the
-//      viewport. The feature now states reset through the ruler instead --
-//      the coordinate labels come back balanced around the origin -- which is
-//      true but only to the ruler's 10-cell resolution. The pixel-exact form
-//      is the last test in this file.
+//      viewport. The feature states reset through the ruler instead -- the
+//      coordinate labels come back balanced around the origin -- and the
+//      pixel-exact form is the third test in this file.
+//      (b) THE CHANNEL THAT DOES NOT CARRY IT: the ruler announces a label
+//      every 10 cells, so "balanced around the origin" resolves only to that
+//      granularity; a reset landing a cell or two off center still balances
+//      them and still reads 100%. Only the origin cell's own measured box sees
+//      the remainder.
+//      (c) WHAT WOULD MAKE (b) FALSE: the ruler announcing labels at a finer
+//      interval, or any control announcing the camera's resting position.
+//
+// NEITHER REASON IS A VOCABULARY ONE, and this header said it was until
+// `correct-hand-written-spec-headers` checked. `.gherkin-lintrc`'s
+// no-restricted-patterns bans ALTITUDE vocabulary -- offsetX, cell size,
+// delta, world coordinate -- and not the word "pixel", which this very feature
+// and grid-scrollbars.feature both use in step text. The jsdom half of that
+// old sentence outlived its subject too: `delete-step-test-layer` removed the
+// last jsdom execution of anything under features/, so no claim here is
+// licensed by what jsdom cannot see.
 //
 // Both are asserted below through the real UI. Neither may be deleted here
 // without restating it in features/**.
 //
 // A THIRD GROUP JOINED THEM IN smooth-zoom-transitions -- the glide's own
 // rendered geometry, three claims, in the describe block at the foot of this
-// file. Same rule: none may be deleted without being restated in features/**,
-// and none CAN be restated there, which is the point of them.
+// file. Same rule: none may be deleted without being restated in features/**.
+// Not "none CAN be", which this paragraph said until
+// `correct-hand-written-spec-headers` checked it against that block's own
+// (b)/(c) -- two of the three become statable the day the app announces a
+// precise resting zoom or where the view is anchored. Read the conditions
+// there rather than treating the group as permanently unreachable.
 //
 // `triage-paired-specs` cut this file from six tests to three. The plain
 // pan test and the two zoom-clamp tests went: the feature states all three
 // claims, and its generated spec drives them through the same browser. What
-// is left is the two promises above -- both pixel-exact, both unstateable in
-// the Gherkin layer's vocabulary -- plus the toolbar hit-testing regression
-// below, which is about stacking order and so has no domain counterpart at
-// all.
+// is left is the two promises above -- both pixel-exact, and both invisible to
+// the badge and the ruler for the reasons each records -- plus the toolbar
+// propagation regression below, whose licence is weaker than this paragraph
+// claimed and is now stated honestly in that test's own note.
 //
 // THE INSTRUMENT, AND WHY THE COMPARISON CARRIES NO TOLERANCE. Both promises
 // are checked by reading where the origin cell RENDERS -- cellScreenPosition,
@@ -129,6 +153,28 @@ test('zooming in via the toolbar keeps the world origin fixed at the viewport ce
   await expect.poll(() => cellScreenPosition(page, 0, 0)).toEqual(CENTER)
 })
 
+// (a) THE CLAIM: pressing a toolbar control never edits the board underneath
+//     it. Nothing else in the repo asserts that the board is still empty after
+//     a press on chrome.
+//
+// (b) IS AN OPEN QUESTION, AND THIS NOTE WILL NOT PRETEND OTHERWISE. The file
+//     header said this claim "has no domain counterpart at all", and its
+//     sibling in grid-scrollbars.e2e.spec.ts said "NO .feature CAN HOLD THIS
+//     CLAIM". Both described the header's own narrative -- a cell that happens
+//     to lie under a control -- rather than what the test asserts, which is
+//     that NO cell is alive after three toolbar clicks. That is sayable at
+//     domain altitude ("Then no cell should be alive"), names nothing
+//     .gherkin-lintrc bans, and would not be FALSE at another viewport, merely
+//     vacuous if the toolbar stopped overlapping the grid. So the honest
+//     status is: currently stated nowhere else, and whether it BELONGS in the
+//     contract is `architect`'s ruling. Reported as a hypothesis by
+//     `correct-hand-written-spec-headers`, which is a comments-only pass and
+//     may not convert it.
+//
+// (c) WHAT WOULD RETIRE IT: a scenario asserting the board is still empty
+//     after a toolbar press. Until one exists this test is the only guard,
+//     which is why the pass that found the flawed reasoning corrected the
+//     reasoning and left the test standing.
 test('toolbar buttons never toggle whatever cell happens to be positioned underneath them', async ({ page }) => {
   // Regression test: the toolbar previously only stopped propagation on
   // pointerdown, not pointerup, so releasing a click over the toolbar could
@@ -163,16 +209,25 @@ test('resetting the view returns to the default centered zoom regardless of prio
 // smooth-zoom-transitions, recorded here because it is the accepted behaviour
 // and this file is where it is written down.
 //
-// WHY THESE THREE CANNOT BE .feature SCENARIOS. Every claim below is a
-// measured pixel box sampled per animation frame: residue category 3, and
-// unstateable in the Gherkin layer's vocabulary at any altitude.
-//
-// The first one is the one that has to exist. camera-pan-and-zoom.feature
+// (b) THE CHANNEL THAT DOES NOT CARRY THESE THREE. camera-pan-and-zoom.feature
 // states the glide through the ZOOM READOUT -- the percentages the badge
 // passes through -- and a readout is not the grid. An implementation that
 // animated the badge over a grid that snapped would satisfy every scenario in
 // that feature and be exactly the defect this slice was opened to remove.
-// Nothing in features/**, and no unit test, is looking at the painted result.
+// Nothing in features/**, and no unit test, looks at the painted result.
+//
+// The badge is blind in a second, narrower way that matters to the last two:
+// src/camera.ts's zoomPercentage is Math.round(cellSize / 20 * 100), so one
+// announced percent is a fifth of a pixel of cellSize. A glide finishing a
+// tenth of a pixel short of 25px, or sliding its anchor while it ran, reads
+// 125 either way. Only the sampled box sees it.
+//
+// (c) WHAT WOULD MAKE (b) FALSE: the app announcing its RESTING zoom precisely
+// rather than rounded (which would reach the second test), or announcing where
+// the view is anchored (the third). Note the first test would survive both --
+// its subject is that intermediate states exist at all, and no announced
+// channel offers a frame-by-frame history. Re-check the other two if a precise
+// readout ever lands; do not read this as a licence to delete any of them now.
 //
 // SHOWN TO FAIL ON THE BEHAVIOUR IT REPLACED, which is the bar this slice set
 // for its own tests. The instantaneous zoom is not gone -- it is what the app

@@ -18,12 +18,36 @@ import {
 } from './e2e-helpers'
 
 // ACCEPTED OUTLINE -- slice `collapse-dead-cell-layer` (product, SPECIFY),
-// ratified by architect CONTRACT as category-3 residue (rendered pixel
-// geometry). No matching .feature file, and that is a ruling rather than a gap:
-// the whole content of this claim lives in a sub-pixel band at a cell boundary,
-// which cannot be stated without pixel vocabulary .gherkin-lintrc bans, and a
-// scenario placed mid-cell would have been green throughout the defect's entire
-// life.
+// ratified by architect CONTRACT as residue. No matching .feature file, and
+// that is a ruling rather than a gap.
+//
+// (a) THE CLAIM EVERY TEST HERE HOLDS: the pointer resolver has exactly one
+//     answer, and the highlight and the click both read it -- at a pixel, not
+//     at a cell.
+//
+// (b) THE CHANNEL THAT DOES NOT CARRY IT, and it is not a vocabulary problem.
+//     This header claimed the band "cannot be stated without pixel vocabulary
+//     .gherkin-lintrc bans"; that config bans ALTITUDE vocabulary -- offsetX,
+//     cell size, delta, world coordinate -- and lets "pixel" through, which
+//     camera-pan-and-zoom.feature and grid-scrollbars.feature both use in step
+//     text. The real reason is that the whole content of the claim lives in a
+//     ~0.9px band at a cell boundary whose position is only known by MEASURING
+//     the cell's rendered corner at runtime and stepping half a pixel back
+//     from it. A scenario naming a cell aims at its middle, where the two
+//     channels agreed throughout the defect's entire life -- so the sample
+//     point is derived from this harness's own geometry, and a clause carrying
+//     it would be pinning the harness rather than promising a player anything.
+//
+// (c) WHAT WOULD MAKE (b) FALSE: the app announcing which cell the pointer is
+//     currently over, on any channel a scenario could read. Then "the cell
+//     under the pointer" becomes a name rather than a measurement, the
+//     boundary case is expressible as a domain claim, and these tests are
+//     redundant. See the note on the indicator below for why that affordance
+//     is deliberately absent today.
+//
+// THE ACCEPTED OUTLINE ITSELF, as written at SPECIFY and kept verbatim -- the
+// (a)/(b)/(c) above are this slice's restatement of why it belongs here, not a
+// replacement for what was accepted:
 //
 //   The pointer resolver has exactly one answer, and the highlight and the
 //   click both read it. Sample points INSIDE the ~0.9px band left of and above
@@ -51,9 +75,20 @@ import {
 // old behaviour and pass now. That measurement is an investigation, not an
 // assertion -- elementFromPoint appears nowhere in this file.
 //
-// The indicator is reached by its paint class. See features/screenplay/
-// elements.ts's hoverIndicator for why that is a missing test handle rather
-// than an ARIA reach-around, and for the deletion trigger it carries.
+// HOW THE INDICATOR IS REACHED, corrected by
+// `correct-hand-written-spec-headers`: by its own id, '#hover-indicator', on
+// the same precedent as #grid-content. This note said "by its paint class" and
+// sent readers to features/screenplay/elements.ts for "the deletion trigger it
+// carries" -- that module says the opposite on both counts. The indicator is
+// aria-hidden by standing ruling, because it is pointer-only decoration whose
+// screen-reader equivalent is the focus cursor, so it owes NO accessible name
+// and NO deletion trigger. An id is the right handle for a thing with no
+// accessible identity, and this is a decision to re-check rather than a debt to
+// clear.
+//
+// (c) FOR THAT HANDLE: if the indicator ever gains an accessible name, it stops
+// being decoration, the perception becomes announced, and both this file's
+// reach and its (b) above want re-deriving.
 
 // Half a pixel inside the band, on both axes at once: at (boundary - 0.5) the
 // arithmetic resolves the LOWER cell on that axis, and the browser hit test
@@ -170,6 +205,17 @@ test('resetting the view leaves the highlight on the cell actually under the poi
 // separate tests rather than one loop because they enter Grid by three
 // different doors -- a wheel event, a pointer drag, and a keyboard reveal-pan --
 // and only the shared exit is meant to be common.
+//
+// (b) THE CHANNEL THAT DOES NOT CARRY THESE THREE: the same absence as the file
+// header's. Plenty is announced while the camera moves -- aria-valuenow on both
+// thumbs, the ruler's own labels -- but nothing anywhere identifies the cell
+// under the pointer, and that is the quantity these three are about. The only
+// observable left is where the indicator is PAINTED relative to the cell a
+// click resolves, which is two measured boxes.
+//
+// (c) WHAT WOULD MAKE (b) FALSE: the same condition -- an announced
+// cell-under-pointer. These three would go with the band tests above, not
+// before them.
 async function expectHighlightAgreesWithPointerAt(
   page: import('@playwright/test').Page,
   at: { x: number; y: number },

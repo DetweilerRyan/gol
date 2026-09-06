@@ -3,9 +3,14 @@ import { clickGridAt, expectCellState } from './e2e-helpers'
 
 // No matching .feature file, and since `re-audit-hand-written-e2e-residue`
 // that is a narrower statement than it used to be. What is left here is
-// residue in the four established senses (see CLAUDE.md's black-box e2e
-// section): hit-testing and stacking, the computed accessibility tree,
-// rendered pixel geometry, and native-event delivery.
+// residue in the four established senses -- hit-testing and stacking, the
+// computed accessibility tree, rendered pixel geometry, and native-event
+// delivery -- enumerated in `.claude/agents/articles/testing-layers.md`'s item
+// 4. (This note sent readers to CLAUDE.md's black-box e2e section until
+// `correct-hand-written-spec-headers` checked; the enumeration moved to that
+// article, and CLAUDE.md now carries only a pointer.) Note a category number
+// licenses nothing on its own -- what licenses each test below is the channel
+// its own note names.
 //
 // WHY THIS FILE NEEDED RE-AUDITING AT ALL, recorded because the same drift can
 // recur. `triage-paired-specs` cut the hand-written layer to residue only, but
@@ -108,9 +113,26 @@ import { clickGridAt, expectCellState } from './e2e-helpers'
 //     an edit to src/, the same routing the cancel-branch figure above records.
 //
 // THE LESSON THAT GENERALISES PAST THIS FILE, since it is what shrank the list
-// twice: "no scenario may name a pixel" is a rule about the ASSERTION, not
-// about the claim underneath it. Ask what a measured box is a proxy for before
-// filing a test as category 3. Two boxes differing is a proxy for "the preview
+// twice. State the rule accurately first, because this paragraph quoted "no
+// scenario may name a pixel" and no such rule exists -- .gherkin-lintrc bans
+// ALTITUDE vocabulary (offsetX, cell size, delta, world coordinate), and
+// THREE features say "pixel" in step text: camera-pan-and-zoom (2 step lines),
+// grid-scrollbars (9) and mouse-wheel-controls (1), 12 step lines and 14
+// occurrences in total.
+//
+// THAT COUNT READ "two" UNTIL `hardener` FALSIFIED IT, which is this slice's
+// own subject landing on this slice for the third time: the sibling that
+// establishes the third file is mouse-wheel-controls.e2e.spec.ts's own note,
+// edited in the same commit. Note the direction -- the old number was an
+// UNDERSTATEMENT, so the verdict it supports (that config does not ban
+// "pixel") is stronger at three than at two, not weaker. Only the number was
+// wrong, and the reasoning around it is deliberately left alone.
+//
+// What is really being asked is whether a
+// clause states a promise to a player or pins this harness's frame, and that
+// is a question about the ASSERTION, not about the claim underneath it. Ask
+// what a measured box is a proxy for before filing a test as residue. Two
+// boxes differing is a proxy for "the preview
 // is somewhere else now", and "somewhere" was nameable all along. What did NOT
 // convert -- the panel within 30px of the corner, the grid reaching the
 // viewport edge -- is where the pixel IS the claim, with nothing behind it to
@@ -125,14 +147,38 @@ import { clickGridAt, expectCellState } from './e2e-helpers'
 // three tests come out of it differently, so read each one's own note:
 //
 //   1. The viewport-fill test STAYS, and the reason is sharper than "it is
-//      pixel geometry". Its Then would have to name the corner cell, and the
-//      corner cell IS the camera's own offset -- (-32, 20) is arithmetically
-//      DEFAULT_OFFSET_X and a function of the viewport height, which
-//      .gherkin-lintrc bans from the contract as `\boffset ?[xy]\b`. A
-//      clause naming it would pass the linter while laundering the exact
-//      quantity the linter exists to keep out, and it would be FALSE at any
-//      other viewport while the product was right. See the test's own note for
-//      why the coordinate-free form is worse rather than better.
+//      pixel geometry" -- but this entry overstated it and
+//      `correct-hand-written-spec-headers` has corrected it in place. It read
+//      "(-32, 20) is arithmetically DEFAULT_OFFSET_X and a function of the
+//      viewport height", which is true of -32 and false of the pair. -32 is
+//      DEFAULT_OFFSET_X only because 1280 divides by 2 x 20; change the
+//      viewport width to 1290 and the corner cell stops coinciding with the
+//      offset while both are still functions of the camera. And 20 is not
+//      DEFAULT_OFFSET_Y at all (that is -22.5): it is
+//      floor(DEFAULT_OFFSET_Y + 850 / 20), a function of the offset and of the
+//      850 THIS TEST chooses to click at, not of the viewport height -- the
+//      viewport-height form would give -22.5 + 45 = 22.5, and even the
+//      bottom-most visible row is 22.
+//      THIS ENTRY FIRST CLAIMED "the test's own note has been exact about this
+//      all along, so the file contradicted itself". That was false and is the
+//      second correction this one sentence needed. The "WHY THIS IS NOT A
+//      SCENARIO" block above the test carried the SAME false arithmetic,
+//      word for word, and was fixed only after the orchestrator spot-checked
+//      the file and found it still standing. There was no exact note to
+//      contradict; there were two wrong ones, and the pass that catalogued the
+//      error corrected one and left the other -- which is the very decay this
+//      slice exists to remove, committed inside the slice removing it.
+//      (Its replacement text was wrong once too, saying "the sum of it and the
+//      viewport height in cells", which is 22.5. Both misses are recorded here
+//      rather than quietly fixed: a slice about header decay that shipped its
+//      own uncorrected instance is the outcome worth writing down.)
+//      What survives, and is enough: BOTH coordinates are functions of the
+//      camera and the viewport, `.gherkin-lintrc` bans `\boffset ?[xy]\b`
+//      from the contract, and a clause naming them would pass the linter while
+//      laundering the exact quantity the linter exists to keep out. It would
+//      also be FALSE at any other viewport while the product was right. See
+//      the test's own note for why the coordinate-free form is worse rather
+//      than better.
 //   2. The HUD panel test STAYS, but its licence is NARROWER than the note
 //      under it used to claim -- corrected in place. Only the measured box is
 //      uniquely held; all three content assertions are held elsewhere, and the
@@ -158,10 +204,25 @@ test('the grid fills the entire viewport, edge to edge', async ({ page }) => {
   // rather than leaving the old boxed-widget's margin.
   //
   // WHY THIS IS NOT A SCENARIO, measured rather than asserted. Any Then that
-  // names the corner cell names the camera: solve worldToScreen for screen
+  // names the corner cell names the camera. Solve worldToScreen for screen
   // x = 0 and the answer is x = offsetX, so the -32 below is arithmetically
-  // DEFAULT_OFFSET_X, and the 20 is the same function of the viewport height
-  // and offsetY. .gherkin-lintrc bans `\boffset ?[xy]\b` from the contract;
+  // DEFAULT_OFFSET_X -- and it stays -32 for any click in [0, 20), which is why
+  // clicking at x = 5 still lands on it.
+  //
+  // THE 20 IS NOT THE SAME KIND OF THING, and this block said it was until
+  // `correct-hand-written-spec-headers` measured it. It read "the 20 is the
+  // same function of the viewport height and offsetY", which is false:
+  // -22.5 + 900 / 20 = 22.5, not 20, and even the bottom-most visible row is
+  // 22. What 20 actually is: floor(DEFAULT_OFFSET_Y + 850 / 20) -- a function
+  // of the offset and of the y = 850 THIS TEST hardcodes, a literal chosen to
+  // sit near the bottom edge while clearing the 10px scrollbar strip at 890 --
+  // not derived from either. Change that literal and the cell changes with the
+  // viewport untouched, which is exactly what a viewport-derived quantity
+  // could not do.
+  //
+  // The conclusion is unchanged and does not need the false half: BOTH
+  // coordinates are functions of the camera, and
+  // .gherkin-lintrc bans `\boffset ?[xy]\b` from the contract;
   // a clause naming these two would pass that linter and carry the banned
   // quantity through anyway, spelled as a coordinate. It would also be FALSE
   // at any viewport other than playwright.config.ts's 1280x900 while the
@@ -177,6 +238,14 @@ test('the grid fills the entire viewport, edge to edge', async ({ page }) => {
   // scenario. A reader cannot see what makes it different, which is how a
   // load-bearing test gets deleted as a duplicate by the next audit.
   //
+  // (c) WHAT WOULD MAKE THAT CHANNEL CARRY IT: nothing short of the app
+  // announcing which cell sits at the edge of the view -- and that would be an
+  // affordance whose only consumer is this test, which this repo has ruled out
+  // twice. The likelier invalidation is the other direction: change
+  // playwright.config.ts's viewport and both literals below are simply wrong,
+  // with no announced channel to re-derive them from. Re-check them, and the
+  // entry above, whenever that config moves.
+  //
   // ASKED BY CLICKING, NOT BY A HIT TEST. This used to read
   // elementAtPoint(...) and match /^Cell /, which is document.elementFromPoint
   // -- a stacking question standing in for "does the grid receive input here",
@@ -185,8 +254,14 @@ test('the grid fills the entire viewport, edge to edge', async ({ page }) => {
   // positive anchor: it drives the resolver the app actually uses
   // (pointer capture -> screenToWorld), it cannot pass vacuously, and it says
   // WHICH cell the corner belongs to rather than merely that some cell is
-  // there. The two coordinates are worked out from the default camera, the
-  // same coordinate -> pixel direction everything else in this suite uses.
+  // there. The two coordinates are worked out from the default camera -- but
+  // PIXEL -> COORDINATE, which is the reverse of the direction the rest of this
+  // suite uses, and this note claimed the forward one until
+  // `correct-hand-written-spec-headers` checked. The pixels are what is chosen
+  // here (they have to be, being the edges of the viewport) and the cells are
+  // derived from them. That is safe where features/screenplay/viewport.ts's
+  // banned inverse is not, because it is arithmetic on the camera rather than
+  // document.elementFromPoint resolving a pixel to an element.
   await clickGridAt(page, { x: 5, y: 850 })
   await expectCellState(page, -32, 20, 'alive')
 
@@ -194,11 +269,21 @@ test('the grid fills the entire viewport, edge to edge', async ({ page }) => {
   await expectCellState(page, 31, -3, 'alive')
 })
 
-// CATEGORY 3, AND ONLY IN ITS LAST TWO LINES. The claim only this test holds
-// is the measured box: the panel drawn within 30px of the viewport's top-left
-// corner. There is no scenario about where a control sits on screen at any
-// altitude the contract permits, and "within 30px" is not a thing a
-// stakeholder-readable clause can say.
+// (a) THE CLAIM, AND IT IS ONLY IN THE LAST TWO LINES: the panel is drawn
+//     within 30px of the viewport's top-left corner. The measurement IS the
+//     claim -- there is nothing behind "within 30px" to name -- which is what
+//     puts it here rather than in the contract.
+//
+// (b) THE CHANNEL THAT DOES NOT CARRY IT: nothing the app announces says where
+//     anything is on screen. Reading order is not position (a panel moved to
+//     the bottom-right announces identically), and no scenario in any feature
+//     observes layout at any altitude the contract permits.
+//
+// (c) WHAT WOULD MAKE (b) FALSE: an announced landmark or region structure that
+//     a clause could read as placement. Failing that, the honest re-check is
+//     whether 30px still discriminates -- it is a harness-frame number, false at
+//     a viewport where the chrome is laid out differently while the product is
+//     right.
 //
 // THE THREE CONTENT ASSERTIONS ARE NOT UNIQUELY HELD, and this note claimed
 // they were until `preview-follows-pointer-may-be-statable` checked. Each is

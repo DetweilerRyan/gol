@@ -1,11 +1,30 @@
 import { test, expect, type Page } from '@playwright/test'
 import { axisLabelValues, CENTER, dragPan } from './e2e-helpers'
 
-// The browser-level counterpart of grid-reference-lines.feature, cut to two
-// tests by `triage-paired-specs`. The feature asks whether ONE coordinate
-// carries a major gridline; these two ask what the WHOLE set of them is for a
-// given camera, which no per-coordinate scenario can state and which is where
-// an off-by-one in the range walk would show.
+// RESIDUE of grid-reference-lines.feature -- NOT its browser-level
+// counterpart, which since playwright-bdd is that feature's own generated
+// spec. Cut to two tests by `triage-paired-specs`.
+//
+// (a) THE CLAIM BOTH TESTS HOLD: for a given camera, the coordinates the two
+//     rulers announce are exactly the multiples of 10 the view covers, per
+//     axis -- the whole SET, where the feature asks only whether ONE
+//     coordinate carries a major gridline. An off-by-one in the range walk
+//     shows here and nowhere else.
+//
+// (b) THE CHANNEL THAT DOES NOT CARRY IT: a ruler label announces its own
+//     number and nothing more, so a per-coordinate clause ("the ruler should
+//     show 10") reads identically on either strip and is blind to an axis
+//     swap. What discriminates is the two axes' sets DIFFERING -- seven
+//     multiples of 10 across, five down -- and that asymmetry is a fact about
+//     playwright.config.ts's 1280x900 viewport rather than a promise to a
+//     player, so a scenario stating it would be false at another viewport
+//     while the product was entirely correct. That is what makes it residue.
+//
+// (c) WHAT WOULD MAKE (b) FALSE: a square viewport. Equal axes make the two
+//     sets coincide, the axis-swap guard measured below evaporates, and what
+//     is left is range arithmetic src/gridGeometry.test.ts already pins. This
+//     is a condition to RE-CHECK the day the viewport changes, not a deletion
+//     trigger -- while the viewport is 1280x900 these two are the only guard.
 function labelSet(page: Page, axis: 'x' | 'y'): Promise<Set<number>> {
   return axisLabelValues(page, axis).then((values) => new Set(values))
 }

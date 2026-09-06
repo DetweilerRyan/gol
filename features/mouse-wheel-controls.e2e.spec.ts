@@ -13,20 +13,42 @@ import {
 // slice, under the acceptance-contract-rulings ruling that a geometric promise
 // moved to the paired spec survives in features/** only if this header records
 // it: a shift-held wheel zoom keeps the point under the cursor fixed. The
-// Gherkin clause saying so was unstateable without pixel vocabulary and
-// unobservable from jsdom; the feature now states only that scrolling up zooms
-// in and scrolling down zooms out. The invariance itself is asserted in a real
-// browser by the first test below, which re-reads the element under the very
-// pixel the wheel was rolled over. It may not be deleted here without being
+// feature now states only that scrolling up zooms in and scrolling down zooms
+// out. The invariance itself is asserted in a real browser by the first test
+// below, which re-reads where a seeded cell's corner renders after the wheel
+// was rolled over that very pixel. It may not be deleted here without being
 // restated in features/**.
+//
+// (b) THE CHANNEL THAT DOES NOT CARRY IT: mouse-wheel-controls.feature sees a
+// zoom only through the badge, and src/camera.ts's zoomPercentage is
+// Math.round(cellSize / 20 * 100) -- how big a cell is, never where the grid
+// sits. A shift-wheel zoom anchored on the wrong point reads 125 exactly as a
+// correct one does, so every scenario in that feature is green on this defect.
+// (c) WHAT WOULD MAKE (b) FALSE: any announced channel reporting where the view
+// is anchored rather than only its scale.
+//
+// NOT A VOCABULARY REASON AND NOT A jsdom ONE, though this header said both
+// until `correct-hand-written-spec-headers` checked. `.gherkin-lintrc` bans
+// ALTITUDE vocabulary -- offsetX, cell size, delta, world coordinate -- not the
+// word "pixel", which this feature's own first step text uses twice; and
+// `delete-step-test-layer` removed the last jsdom execution of anything under
+// features/, so no claim here is licensed by what jsdom cannot see.
 //
 // `triage-paired-specs` cut this file from five tests to two. The
 // no-modifier pan test, the deltaY-only axis row and the zoom-percentage
 // checkpoint walk all went: the feature states each claim and its generated
-// spec drives it through the same browser. The two survivors are the two the
-// generated layer structurally cannot reach -- one needs pixel vocabulary,
-// the other needs a wheel event with both axes populated, which no step
-// sends.
+// spec drives it through the same browser. The two survivors were the two the
+// generated layer structurally cannot reach -- one for the anchor reason above,
+// the other because no SHIFT-HELD step sends both wheel axes.
+//
+// THAT SECOND REASON READ "which no step sends" AND WAS FALSIFIED BY AN EDIT TO
+// ANOTHER FILE. features/steps/mouse-wheel-controls.ts's "I scroll the wheel
+// {int} pixels sideways and {int} pixels down without holding shift" sends
+// page.mouse.wheel(sideways, down) with both axes populated -- but WITHOUT
+// shift, driving the pan path, which never reaches the axis-priority ternary.
+// The distinction is what the claim always depended on and the per-test note
+// below has been precise about it throughout, so the file contradicted itself
+// for as long as the pan step has existed.
 
 // -------------------------------------------------------------------------
 // OUTLINE FOR THIS SLICE'S VERIFY PASS -- wheel-zoom-ignores-magnitude-and-pinch.
@@ -34,8 +56,16 @@ import {
 // Written at SPECIFY, before any implementation, so the accepted behaviour is
 // on record rather than reconstructed later from whatever got built. Two
 // claims belong here and in no .feature, both of them residue in the
-// established sense -- rendered pixel geometry, which no Gherkin scenario may
-// name:
+// established sense -- rendered pixel geometry.
+//
+// THE REASON AS ORIGINALLY WRITTEN, "which no Gherkin scenario may name", is
+// the same misremembered rule the file header corrects, left standing in this
+// block by the first draft of `correct-hand-written-spec-headers` and found by
+// its own sweep afterwards. A scenario may say "pixel" -- this feature's first
+// step text does, twice. The real reason both claims are here is the badge:
+// zoomPercentage rounds to a whole percent, so an anchor that moved and a
+// scale that differed by a fraction both read 125. See each test's own note.
+// The two numbered claims below are the accepted outline and are unchanged:
 //
 //   1. A PINCH HOLDS THE POINT BETWEEN THE FINGERS FIXED, exactly as a
 //      shift-held wheel zoom holds the point under the cursor fixed (the first
@@ -98,8 +128,21 @@ test('scrolling with shift held zooms instead of panning, keeping the cursor poi
 // flipped to `deltaX !== 0 ? deltaX : deltaY`: the full bdd project is 46/46
 // GREEN, and the full e2e project is 61 passed / 1 failed -- this test, the
 // only failure in either. Deleting it would drop the axis-priority contract
-// out of the repo entirely, and no .feature can take it back without naming
-// wheel-event fields no user can observe.
+// out of the repo entirely.
+//
+// (b) THE CHANNEL THAT DOES NOT CARRY IT, stated as narrowly as it is true:
+// what a scenario cannot do is populate deltaX and deltaY together WHILE SHIFT
+// IS HELD. It can populate both -- the no-modifier pan step named in this
+// file's header does exactly that -- but shift-held
+// step text would have to name the two fields to say which is dominant and
+// which sign each carries, and `.gherkin-lintrc` bans `\bdelta` and
+// `\bwheel event\b` from the contract precisely because they are not
+// something a player perceives.
+// (c) WHAT WOULD MAKE (b) FALSE: a shift-held step whose text names the roll
+// at domain altitude while its implementation populates both axes -- "I scroll
+// the wheel up one notch while holding shift on a browser that reports
+// sideways" is the shape. Nothing rules that out; nobody has written it. If one
+// lands, this test is redundant.
 //
 // It sends both axes with deltaY dominant AND opposite in sign, so an
 // inversion does not merely change the magnitude -- it zooms the wrong way,
@@ -120,10 +163,17 @@ test('shift-held zoom resolves direction from deltaY when both axes are populate
 
 // OUTLINE CLAIM 1 -- A PINCH HOLDS THE POINT BETWEEN THE FINGERS FIXED.
 //
-// The claim only this file holds: it is rendered pixel geometry, which no
-// Gherkin scenario may name, so the .feature's pinch scenarios state only the
-// rung a pinch lands on and are deliberately centred on the world origin so
-// this test can measure the anchor without any of them moving.
+// (a) The claim only this file holds: a pinch holds the point between the
+// fingers fixed. The .feature's pinch scenarios state only the rung a pinch
+// lands on, and are deliberately centred on the world origin so this test can
+// measure the anchor without any of them moving.
+// (b) THE CHANNEL THAT DOES NOT CARRY IT: the same badge blindness the file
+// header records -- zoomPercentage is Math.round(cellSize / 20 * 100), so a
+// pinch that reached zoomCameraAtPoint with the wrong pixel still lands the
+// right rung and still reads 125. Only the seeded cell's measured corner sees
+// the anchor at all.
+// (c) WHAT WOULD MAKE (b) FALSE: an announced channel reporting where the view
+// is anchored.
 //
 // Deliberately the same shape as the shift-wheel corner test above rather than
 // a new idea, because the promise is the same promise arriving through a
@@ -168,6 +218,13 @@ test('pinching keeps the point between the fingers fixed', async ({ page }) => {
 // The reload between the two halves is what makes them comparable: it returns
 // the camera to the default and empties the grid, so the second gesture starts
 // from exactly the state the first did rather than from the first's result.
+//
+// (c) WHAT WOULD MAKE THE BLIND SPOT ABOVE FALSE: the app announcing its
+// resting zoom precisely rather than rounded to a whole percent. Then a pair of
+// scenarios reading the same announced value would state this equality outright
+// and the pixel comparison would hold nothing extra. Nothing else retires it --
+// in particular, adding more pinch scenarios does not, since a coincidence of
+// two rounded readings is what this test exists to replace.
 test('a pinch and a shift-wheel roll of the same size land on the same scale', async ({ page }) => {
   const CORNER = { x: 700, y: 310 }
   const CELL_CENTER = { x: CORNER.x + DEFAULT_CELL_SIZE_PX / 2, y: CORNER.y + DEFAULT_CELL_SIZE_PX / 2 }

@@ -31,6 +31,14 @@ test.beforeEach(async ({ page }) => {
 // all -- so nothing else anywhere asks whether the number the app announces
 // matches the pixels it actually paints. Deleting this leaves the whole
 // affordance free to drift away from the thumb it describes.
+//
+// (c) WHAT WOULD MAKE THAT CHANNEL CARRY IT: a step measuring a rendered thumb
+// box again, which is what those steps did before
+// `scrollbar-visible-proportion-affordance` moved them onto the announced
+// integer. Should one ever go back, the announced-versus-painted comparison
+// exists in the contract and this test is redundant. Read the step module, not
+// the feature file, to check -- the Gherkin clause reads the same either way,
+// which is precisely how this went unnoticed once already.
 test('content wider than the viewport shrinks only the horizontal thumb', async ({ page }) => {
   await toggleFarCell(page, 199, 0)
   await clickCell(page, 0, 0)
@@ -67,8 +75,17 @@ test('content wider than the viewport shrinks only the horizontal thumb', async 
 // computeScrollbarMetrics -- which never sees trackLengthPx at all. jsdom is
 // blind for a different reason: with no stylesheet and no layout,
 // Scrollbar.test.tsx pins the subtraction arithmetic but never the Tailwind
-// inset that makes the subtraction necessary. ARITHMETIC MEETING PAINT IS
-// OBSERVABLE ONLY IN A REAL BROWSER, which is what this test is for.
+// inset that makes the subtraction necessary. (That jsdom is the live `dom`
+// vitest project, not the deleted features/ one -- this argument is about a
+// layer that still exists.) ARITHMETIC MEETING PAINT IS OBSERVABLE ONLY IN A
+// REAL BROWSER, which is what this test is for.
+//
+// (c) WHAT WOULD MAKE THAT BLINDNESS FALSE: computeScrollbarMetrics taking the
+// track length as an input, so the announced value derives from the same
+// quantity the paint does. Then a clause reading aria-valuenow or the
+// announced proportion could see an overflow and this test would be a second
+// phrasing of it. As long as those two announcements are computed without ever
+// seeing trackLengthPx, nothing else in the repo can fail on this defect.
 //
 // It is the reinstatement the KNOWING LOSS comment deleted from above this
 // predicted -- "if that overflow is ever worth guarding again, it belongs here,
@@ -94,8 +111,13 @@ test('content wider than the viewport shrinks only the horizontal thumb', async 
 // is the only way to reach it. Keeping the helper local rather than promoting
 // it to features/e2e-helpers.ts is what keeps it scoped to this one check --
 // exported, it would be a traversal every spec could reach for.
-// hud-layout-and-shortcuts.e2e.spec.ts:72 keeps the other one in the repo on
-// its own separate justification.
+// The only other parent-axis traversal in the repo is
+// hud-layout-and-shortcuts.e2e.spec.ts's "the HUD panel renders the title,
+// next-generation button, and generation counter, top-left", on its own
+// separate justification. Cited by test name rather than by line number: this
+// note said ":72" until `correct-hand-written-spec-headers` found nothing of
+// the sort there, that file having been cut to two tests since. A line number
+// is the most rot-prone citation form there is, and it rots silently.
 //
 // TOLERANCE 0.5px, sitting between two MEASURED figures: the defect is 10px,
 // and the tightest correct margin is a trailing edge of 1269.9972 against a
@@ -143,14 +165,32 @@ test('the rendered thumb stays inside its own track on both axes, at rest and pa
   await expectThumbInsideTrack(page, 'vertical', 'panned far past all content')
 })
 
-// NO .feature CAN HOLD THIS CLAIM, which is why it survived the
-// `triage-paired-specs` cut alongside the thumb-length measurement above
-// rather than being handed to the generated layer. It quantifies over whatever cell
-// happens to lie under the thumb at a given pixel -- a stacking and
-// hit-testing coincidence with no domain name at all, unstateable without the
-// pixel vocabulary .gherkin-lintrc's no-restricted-patterns keeps out of the
-// contract. Its sibling in camera-pan-and-zoom.e2e.spec.ts (the toolbar's own
-// propagation regression) says the same of itself, in that file's header.
+// (a) THE CLAIM: dragging a scrollbar thumb never edits the board underneath
+//     it. Nothing else in the repo asserts the board is still empty after a
+//     drag on chrome.
+//
+// (b) IS AN OPEN QUESTION, AND THE OLD REASON HERE WAS WRONG TWICE OVER. This
+//     note said "NO .feature CAN HOLD THIS CLAIM ... unstateable without the
+//     pixel vocabulary .gherkin-lintrc's no-restricted-patterns keeps out of
+//     the contract". Neither half survives checking.
+//     First, that config bans ALTITUDE vocabulary -- offsetX, cell size,
+//     delta, world coordinate -- and not "pixel", which grid-scrollbars.feature
+//     itself uses nine times in its own step text.
+//     Second, the sentence described this note's own narrative -- a cell that
+//     happens to lie under the thumb -- rather than what the test asserts,
+//     which is that NO cell is alive after two thumb drags. That is sayable at
+//     domain altitude and would not be FALSE at another viewport, merely
+//     vacuous if the scrollbars stopped overlapping the grid.
+//     So the honest status is: currently stated nowhere else, and whether it
+//     BELONGS in the contract is `architect`'s ruling, reported as a hypothesis
+//     by `correct-hand-written-spec-headers` rather than settled by it. Its
+//     sibling in camera-pan-and-zoom.e2e.spec.ts (the toolbar's own propagation
+//     regression) is in exactly the same position and says so in its own note.
+//
+// (c) WHAT WOULD RETIRE IT: a scenario asserting the board is still empty after
+//     a thumb drag. Until one exists this test is the only guard, so the pass
+//     that found the flawed reasoning corrected the reasoning and left the test
+//     standing.
 test('dragging a scrollbar thumb never toggles whatever cell happens to be positioned underneath it', async ({
   page,
 }) => {
@@ -173,9 +213,18 @@ test('dragging a scrollbar thumb never toggles whatever cell happens to be posit
 // that a browser's accname/accdescription computation actually delivers it as
 // a DESCRIPTION. These three tests are that second half, and they are the
 // only place in the repo it is checked: the RTL tests next to Scrollbar.tsx
-// run in jsdom, whose accessible-name/description support is a
-// reimplementation rather than the browser's own, which is exactly why the
-// design was ruled on in a real browser in the first place.
+// run in jsdom -- the live `dom` vitest project, not the deleted features/ one
+// -- whose accessible-name/description support is a reimplementation rather
+// than the browser's own, which is exactly why the design was ruled on in a
+// real browser in the first place.
+//
+// (c) WHAT WOULD MAKE THAT CHANNEL CARRY IT: questions.ts's
+// visibleProportionPercent reading toHaveAccessibleDescription instead of
+// resolving aria-describedby and fetching the node's text by hand. That one
+// change moves the contract onto the browser's own computation and makes both
+// description reads below redundant -- though not the accessible-NAME halves,
+// which are a separate claim about what the description must NOT be folded
+// into.
 //
 // The wording is deliberately NOT restated here. Each test asks
 // visibleProportionPercent for the number the app announces and then checks
@@ -208,10 +257,31 @@ test('the visible proportion is announced as a description, and the accessible n
 // ADDITIVE, NOT SUPERSEDING. aria-valuetext was rejected for this affordance
 // precisely because it supersedes aria-valuenow, and the two quantities are
 // different things: where the thumb sits versus how much of the grid is in
-// view. This pins them apart at a moment when they are different NUMBERS --
-// panned far past all content, the thumb is at the very end of its track
-// (position 100) while only a sliver of the grid is in view. A design that
-// let proportion overwrite position would collapse the two and fail here.
+// view. This reads them at a moment when they are different NUMBERS -- panned
+// far past all content, the thumb is at the very end of its track (position
+// 100) while only a sliver of the grid is in view.
+//
+// (a) BUT THE APARTNESS IS NOT WHAT THIS TEST UNIQUELY HOLDS, and this note
+//     claimed it was until `correct-hand-written-spec-headers` checked.
+//     grid-scrollbars.feature's "Panning far past all content still leaves the
+//     thumb inside its track" already asserts both quantities in one scenario
+//     at that same moment -- "should sit at the end of its track" reads
+//     aria-valuenow, "should be shorter than its track" reads the announced
+//     proportion -- so a design collapsing the two reds there too. What is left
+//     to this test is the last two lines: that a BROWSER computes that number
+//     as the thumb's accessible DESCRIPTION, and that computing it leaves the
+//     accessible NAME alone.
+//
+// (b) THE CHANNEL THAT DOES NOT CARRY IT: the contract reaches the proportion
+//     by resolving aria-describedby by hand and reading the referenced node's
+//     text, which proves the markup is present and proves nothing about what
+//     accdescription delivers -- and it never reads the name here at all, so
+//     folding the visually-hidden span into the name would leave that scenario
+//     green.
+//
+// (c) WHAT WOULD MAKE (b) FALSE: visibleProportionPercent moving onto
+//     toHaveAccessibleDescription, plus any clause asserting the name is
+//     unchanged. Both halves have to move before this test is redundant.
 test('position and proportion are announced as separate quantities on the same thumb', async ({ page }) => {
   await clickCell(page, 0, 0)
   // Same pan as the far-pan test above: offsetX' = -32 + 582 = 550.
@@ -233,6 +303,21 @@ test('position and proportion are announced as separate quantities on the same t
 // the span winning would read back as null rather than as the scrollbar.
 // Probed at the corner as well as the centre because the centre alone cannot
 // see this.
+//
+// (b) THE CHANNEL THAT DOES NOT CARRY IT: nothing the app announces says which
+// of two overlapping elements a pointer reaches. Every drag clause in
+// grid-scrollbars.feature goes through interactions.ts's dragScrollbarThumb,
+// which measures the thumb's box and aims page.mouse at its geometric CENTRE --
+// and the span is a 1x1 rect at the thumb's top-left CORNER, which that centre
+// never touches. So the span could own the corner outright and every one of
+// those scenarios would still pass. Which element occupies a given point is the
+// claim itself here, with nothing behind it to name.
+//
+// (c) WHAT WOULD MAKE (b) FALSE: the description moving out of the thumb's own
+// box -- rendered as a sibling, or through an attribute rather than a child
+// element -- at which point there is no overlap left to arbitrate and this
+// test asserts nothing. Re-check it if Scrollbar.tsx stops rendering the span
+// inside the thumb.
 test('the visually-hidden description does not become a hit target on either thumb', async ({ page }) => {
   for (const [orientation, accessibleName] of [
     ['horizontal', 'Horizontal scroll'],

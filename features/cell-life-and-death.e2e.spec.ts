@@ -1,7 +1,10 @@
 // ACCEPTED OUTLINE -- slice `aria-pressed-cell-state` (product, SPECIFY),
 // narrowed by `triage-paired-specs` to the three tests that survive it.
 //
-// This spec is the browser-level counterpart of cell-life-and-death.feature.
+// This spec is RESIDUE of cell-life-and-death.feature, not its browser-level
+// counterpart -- that role belongs to the feature's own generated spec, and
+// reading a hand-written file the other way is the mistake `triage-paired-
+// specs` existed to correct.
 // The .feature states WHAT is true of a cell (alive / dead); this outline
 // states HOW a user -- including a user who cannot see the grid -- perceives
 // it. The domain fact is already contracted there ("Then the cell at (2, 3)
@@ -44,10 +47,29 @@
 // before deleting: each of the eight neighbour-count rows has exactly one
 // Examples row that reddens when that row's own rule is inverted, and the three
 // pattern tests all redden when the birth rule is changed from 3 to 2. What is
-// left is the part the generated layer cannot reach -- it reads aria-pressed as
-// an ATTRIBUTE through a CSS selector, and both toggle tests below read it as
-// ACCESSIBILITY-TREE state through getByRole. That is category 2, the computed
-// accessibility tree, and it is the whole of this file's licence.
+// left is the part the generated layer cannot reach.
+//
+// (b) THE CHANNEL THAT DOES NOT CARRY IT, named exactly rather than by
+// category number. Every contract assertion of aliveness goes through
+// features/screenplay/expectations.ts's expectCellState, and BOTH its branches
+// read the ATTRIBUTE STRING off a locator built from a CSS selector: alive is
+// `toHaveAttribute(aria-pressed, "true")` directly, dead polls questions.ts's
+// cellState, which reaches the same attribute through getAttribute. (This note
+// named only the alive branch until `hardener` read the other one -- imprecise
+// rather than false, since the channel is the same either way, and corrected
+// because a channel argument that names one of two branches invites the reader
+// to check the wrong one.) Both tests below ask
+// getByRole('button', { pressed }) instead, which is the value a browser's own
+// ARIA processing resolves. An attribute read cannot tell an announced toggle
+// button from an element carrying a stray aria-pressed it is not allowed to
+// have, and it is the announcement, not the attribute, that a screen-reader
+// user actually receives.
+//
+// (c) WHAT WOULD MAKE (b) FALSE: expectCellState, or questions.ts's cellState
+// underneath it, switching to a role-and-pressed query. The moment the
+// contract reads the computed tree for itself, these two hold nothing the
+// generated layer does not, and this file has no licence left. Re-check that
+// pair of functions before assuming this file still earns its place.
 //
 // A THIRD TEST WAS HERE AND IS NOT, deleted by
 // `re-audit-hand-written-e2e-residue` on a DEMONSTRATION rather than on
