@@ -22,7 +22,7 @@ Eight are topic articles, read on the trigger each one names in its own header:
 - **`.claude/agents/articles/state-flow.md`** — where state lives, the sixteen hooks, the hook-identity contract, and the composition roots. Read before touching a hook or a composition root.
 - **`.claude/agents/articles/testing-layers.md`** — the test layers, the Gherkin contract, playwright-bdd, `.features-gen/`, the step registry, and the `features/screenplay/` decomposition. Read when authoring a `.feature`, a step module, or an e2e spec.
 - **`.claude/agents/articles/mutation-testing.md`** — Stryker's incremental cache, the four ways a run reports a confident number about nothing, the `:full` triggers, the seed-pinning account, and the sandbox exclusion. Read before ruling a survivor equivalent, and at `hardener`'s mutation stage.
-- **`.claude/agents/articles/ast-grep-rules.md`** — what each of the twenty-eight rules below actually checks, how each was verified, and the fixture mandate. Read before authoring or narrowing a rule.
+- **`.claude/agents/articles/ast-grep-rules.md`** — what each of the twenty-nine rules below actually checks, how each was verified, and the fixture mandate. Read before authoring or narrowing a rule.
 - **`.claude/agents/articles/acceptance-mutation.md`** — the Gherkin Examples-table mutation runner, its guards, and its two mutation classes. Read before the first `npm run acceptance-mutation` in a slice.
 - **`.claude/agents/articles/quality-tooling.md`** — the crap4ts patch, the advisory `scripts/` programs, and `.gherkin-lintrc`. Read on an unexpected crap4ts number or when touching the lint config.
 - **`.claude/agents/articles/archive.md`** — layers that no longer exist, kept for their method. No role has a trigger for this one; it is research material.
@@ -117,36 +117,37 @@ All six run via `tsx` (`npm run halstead4ts`/`acceptance-mutation`/`gherkin-dry`
 
 **The index below is the routing surface, and it is also what `npm run agent-doc-check`'s check 5 reads** — that check requires every `rules/*.yml` to be named in **CLAUDE.md specifically**, never in an article, so a rule added to `rules/` without a line here reds the gate. What each rule actually matches, how it was verified, and the measured arguments behind its scope all live in **`.claude/agents/articles/ast-grep-rules.md`**. Rule files themselves belong to `architect` alone.
 
-| Rule                                                       | Scope                                      | Bans                                                             |
-| ---------------------------------------------------------- | ------------------------------------------ | ---------------------------------------------------------------- |
-| `rules/no-react-in-domain.yml`                             | `src/*.ts`                                 | a domain module importing React                                  |
-| `rules/no-dom-in-domain.yml`                               | `src/*.ts`                                 | a domain module touching the DOM, bare `location.*` included     |
-| `rules/no-build-env-in-domain.yml`                         | `src/*.ts`                                 | a domain module reading the build/process environment            |
-| `rules/no-ambient-time-in-domain.yml`                      | `src/*.ts`                                 | a domain module reading a clock or scheduling work               |
-| `rules/no-module-state-in-domain.yml`                      | `src/*.ts`                                 | module-level mutable state in a domain module                    |
-| `rules/domain-imports-upward.yml`                          | `src/**`                                   | imports pointing the wrong way through module → hook → component |
-| `rules/no-manual-memo-ts.yml`                              | `*.ts`                                     | manual `useMemo`/`useCallback` under React Compiler              |
-| `rules/no-manual-memo-tsx.yml`                             | `*.tsx`                                    | the same, for the TSX parser                                     |
-| `rules/no-logic-in-composition-root.yml`                   | `LifeBoard.tsx`                            | logic of any kind in the composition root                        |
-| `rules/no-camera-in-cell-leaf.yml`                         | `Cell.tsx`                                 | a `Camera` import, value or type, in the per-cell leaf           |
-| `rules/no-tile-policy-in-components.yml`                   | `src/components/*.tsx`                     | a component importing the tile mounting policy                   |
-| `rules/no-store-in-cell-components.yml`                    | `Cell.tsx`, `GridCells.tsx`                | the cell layer reaching the live-cell store                      |
-| `rules/no-dom-surgery-in-components.yml`                   | `src/components/*.tsx`                     | a component reparenting a node React is rendering                |
-| `rules/no-unbraced-accessible-name.yml`                    | `src/components/*.tsx`                     | an accessible name left as a bare JSX attribute string           |
-| `rules/no-unbraced-name-from-contents.yml`                 | `src/components/*.tsx`                     | a name-from-contents element's bare text child                   |
-| `rules/no-test-support-in-product-ts.yml`                  | `src/*.ts`                                 | product code importing `src/test-support/`                       |
-| `rules/no-test-support-in-product-tsx.yml`                 | `src/*.tsx`                                | the same, for the TSX parser                                     |
-| `rules/no-fast-check-outside-property-file-ts.yml`         | `src/**/*.test.ts`                         | a `@fast-check/vitest` property outside a `*.property.test.ts`   |
-| `rules/no-fast-check-outside-property-file-tsx.yml`        | `src/**/*.test.tsx`                        | the same, for the TSX parser                                     |
-| `rules/no-aliveness-by-paint-class.yml`                    | `features/*.ts`, `perf/*.ts`               | reading aliveness off a Tailwind `bg-` class                     |
-| `rules/no-ruler-axis-by-paint-class.yml`                   | `features/*.ts`, `perf/*.ts`               | resolving a ruler's axis off its edge class                      |
-| `rules/no-domain-imports-in-bdd-steps.yml`                 | `features/steps/*.ts`                      | a step module importing anything off its allowlist               |
-| `rules/no-domain-imports-in-e2e-specs.yml`                 | `features/*.e2e.spec.ts`                   | a hand-written spec importing anything off its allowlist         |
-| `rules/no-barrel-import-in-screenplay.yml`                 | `features/screenplay/*.ts`                 | a screenplay module importing the barrel back                    |
-| `rules/no-expect-in-screenplay-questions.yml`              | `features/screenplay/questions.ts`         | a question asserting instead of reading                          |
-| `rules/no-value-import-across-perf-boundary.yml`           | `perf/`, `scripts/perf-report/`            | a value import across that boundary; `import type` is fine       |
-| `rules/no-cucumber-parser-outside-adapter.yml`             | `scripts/acceptance-mutation/`             | a `@cucumber/*` import outside the one parser adapter            |
-| `rules/no-playwright-config-import-in-mutation-config.yml` | `playwright.acceptance-mutation.config.ts` | importing the e2e Playwright config                              |
+| Rule                                                       | Scope                                      | Bans                                                              |
+| ---------------------------------------------------------- | ------------------------------------------ | ----------------------------------------------------------------- |
+| `rules/no-react-in-domain.yml`                             | `src/*.ts`                                 | a domain module importing React                                   |
+| `rules/no-dom-in-domain.yml`                               | `src/*.ts`                                 | a domain module touching the DOM, bare `location.*` included      |
+| `rules/no-build-env-in-domain.yml`                         | `src/*.ts`                                 | a domain module reading the build/process environment             |
+| `rules/no-ambient-time-in-domain.yml`                      | `src/*.ts`                                 | a domain module reading a clock or scheduling work                |
+| `rules/no-module-state-in-domain.yml`                      | `src/*.ts`                                 | module-level mutable state in a domain module                     |
+| `rules/domain-imports-upward.yml`                          | `src/**`                                   | imports pointing the wrong way through module → hook → component  |
+| `rules/no-manual-memo-ts.yml`                              | `*.ts`                                     | manual `useMemo`/`useCallback` under React Compiler               |
+| `rules/no-manual-memo-tsx.yml`                             | `*.tsx`                                    | the same, for the TSX parser                                      |
+| `rules/no-logic-in-composition-root.yml`                   | `LifeBoard.tsx`                            | logic of any kind in the composition root                         |
+| `rules/no-overlays-inside-grid-content.yml`                | `Grid.tsx`                                 | the overlay slot invoked inside `#grid-content` instead of beside |
+| `rules/no-camera-in-cell-leaf.yml`                         | `Cell.tsx`                                 | a `Camera` import, value or type, in the per-cell leaf            |
+| `rules/no-tile-policy-in-components.yml`                   | `src/components/*.tsx`                     | a component importing the tile mounting policy                    |
+| `rules/no-store-in-cell-components.yml`                    | `Cell.tsx`, `GridCells.tsx`                | the cell layer reaching the live-cell store                       |
+| `rules/no-dom-surgery-in-components.yml`                   | `src/components/*.tsx`                     | a component reparenting a node React is rendering                 |
+| `rules/no-unbraced-accessible-name.yml`                    | `src/components/*.tsx`                     | an accessible name left as a bare JSX attribute string            |
+| `rules/no-unbraced-name-from-contents.yml`                 | `src/components/*.tsx`                     | a name-from-contents element's bare text child                    |
+| `rules/no-test-support-in-product-ts.yml`                  | `src/*.ts`                                 | product code importing `src/test-support/`                        |
+| `rules/no-test-support-in-product-tsx.yml`                 | `src/*.tsx`                                | the same, for the TSX parser                                      |
+| `rules/no-fast-check-outside-property-file-ts.yml`         | `src/**/*.test.ts`                         | a `@fast-check/vitest` property outside a `*.property.test.ts`    |
+| `rules/no-fast-check-outside-property-file-tsx.yml`        | `src/**/*.test.tsx`                        | the same, for the TSX parser                                      |
+| `rules/no-aliveness-by-paint-class.yml`                    | `features/*.ts`, `perf/*.ts`               | reading aliveness off a Tailwind `bg-` class                      |
+| `rules/no-ruler-axis-by-paint-class.yml`                   | `features/*.ts`, `perf/*.ts`               | resolving a ruler's axis off its edge class                       |
+| `rules/no-domain-imports-in-bdd-steps.yml`                 | `features/steps/*.ts`                      | a step module importing anything off its allowlist                |
+| `rules/no-domain-imports-in-e2e-specs.yml`                 | `features/*.e2e.spec.ts`                   | a hand-written spec importing anything off its allowlist          |
+| `rules/no-barrel-import-in-screenplay.yml`                 | `features/screenplay/*.ts`                 | a screenplay module importing the barrel back                     |
+| `rules/no-expect-in-screenplay-questions.yml`              | `features/screenplay/questions.ts`         | a question asserting instead of reading                           |
+| `rules/no-value-import-across-perf-boundary.yml`           | `perf/`, `scripts/perf-report/`            | a value import across that boundary; `import type` is fine        |
+| `rules/no-cucumber-parser-outside-adapter.yml`             | `scripts/acceptance-mutation/`             | a `@cucumber/*` import outside the one parser adapter             |
+| `rules/no-playwright-config-import-in-mutation-config.yml` | `playwright.acceptance-mutation.config.ts` | importing the e2e Playwright config                               |
 
 Note which of these fire on ordinary feature work rather than only on structural change: the two `no-manual-memo` rules are unscoped by path, `no-logic-in-composition-root` covers exactly the kind of UI wiring a slice normally adds, and the two accessible-name rules both fire on ordinary feature work rather than on restructuring — `no-unbraced-accessible-name` the moment a component grows a new `aria-label`, `role`, `title` or `aria-valuetext`, and `no-unbraced-name-from-contents` the moment one grows a heading or a button whose own text is its name, which is if anything the commoner of the two. That's why `coder` runs `npm run ast-grep` in its own workflow rather than waiting for `architect` — see "Structural rules (ast-grep)" in `.claude/agents/articles/engineering.md` for the shared convention on reading a report-only checker, and note that rule files themselves belong to `architect` alone.
 
