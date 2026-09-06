@@ -75,6 +75,14 @@ Default posture is minimal. Each tag has a trigger that earns it:
 
 One measured limit on `@param`'s value here: the `LSP` tool's operation set is `goToDefinition`, `findReferences`, `hover`, `documentSymbol`, `workspaceSymbol`, `goToImplementation`, `prepareCallHierarchy`, `incomingCalls`, `outgoingCalls` — **there is no `signatureHelp`**, so `@param`'s editor payoff (per-parameter hints while typing) does not reach an agent in this repo. For us it is one more hover line whose value is disambiguation, not a second surface.
 
+**The table is closed, and it is closed for _block_ tags.** Those five are the entire permitted block-tag vocabulary in `src/` and `scripts/`. `@remarks`, `@todo`, `@deprecated`, `@internal`, `@defaultValue` and the rest of TSDoc are not written here. This is a ruling rather than an omission, and it follows from the information test one level up: **a block tag's hover payload is its own label**, and a label earns its rendered line only when it tells a caller something the prose alone could not. The five do — an error contract, a binding to a named parameter, the returned value's conditional meaning, a pointer out of the file, a call protocol. `@remarks` does not: measured, it renders inline as `*@remarks* — <text>`, so the only thing the tag adds over writing the same words as a second paragraph is a label meaning "detail rather than summary" — a distinction a documentation _generator_ honours and a hover does not. **A tag's content can pass the information test while the tag fails it**; when it does, keep the content and drop the tag word.
+
+**`{@link}` is an _inline_ tag and is sanctioned** — mandated, in fact, by rule 7, and used throughout `src/cache.ts` and `src/cellTiles.ts`. The closure above governs the tags that open a line, not the ones written inside prose.
+
+**Prose paragraphs go _before_ the first block tag.** Measured: a paragraph written after a `@throws` (`Cache.remove`'s "Removing mid-iteration invalidates that iteration…") renders inside that tag's block, below its text — TS reads everything up to the next tag as the tag's own comment text. It still reads as its own paragraph, so this is attribution drift rather than a hazard, but a fact about the whole function sitting under `@throws` looks like a fact about the throw. Summary, then prose, then tags.
+
+**Amending the table is an `architect` ruling with a measured rendering attached.** Propose a row; do not read the list as illustrative and interpret your way onto it. (`@deprecated` is the likeliest future candidate, because it has real language-server semantics — a strikethrough at the call site — rather than a generator convention behind it. It still needs the measurement and the ruling.)
+
 **`architect` is the arbiter.** DESIGN sets the target vocabulary for a slice; REVIEW rules per export on whether hover is _necessary and sufficient_ to use the thing without opening the body. That is an interface-surface judgment, which is already that role's job and no one else's.
 
 ### 6. A hover budget: roughly 15 rendered lines, `@example` included
@@ -121,7 +129,7 @@ So a fact about a member, written on the containing interface, is **invisible at
 
 ### 9. Syntax hazards, all measured
 
-**A JSDoc tag is recognized wherever `@` is preceded by whitespace** — including the block's own leading `*` — regardless of what follows it, and **regardless of being inside a fenced code block.** It is _not_ recognized when `@` is preceded by any non-whitespace character. Every case measured on this tree is explained by that one rule:
+**A JSDoc tag is recognized wherever `@` is preceded by whitespace** — including the block's own leading `*` — regardless of what follows it, and **regardless of being inside a fenced code block.** It is _not_ recognized when `@` is preceded by any non-whitespace character. Every case measured on this tree is explained by that one rule, **with one measured exception — the token position immediately after `@throws`, in the `@throws` table below**:
 
 | in a JSDoc block                                                     | parsed as a tag?                                        |
 | -------------------------------------------------------------------- | ------------------------------------------------------- |
@@ -135,7 +143,18 @@ So a fact about a member, written on the containing interface, is **invisible at
 
 **So: backtick any `@`-prefixed token, always. Never rely on a code fence to protect one.** The practical consequence for an `@example` is that a package import written with quotes is safe, while a bare `@`-token at the start of an example line is not.
 
-Two more, both fatal rather than cosmetic:
+**`@throws` is the one tag whose first token TypeScript tries to read as a _type_, and braces are the trap.** Measured cross-file, on a probe file the language server had not previously read:
+
+| written                                                   | rendered in hover                                                  |
+| --------------------------------------------------------- | ------------------------------------------------------------------ |
+| `@throws {CacheError} …`                                  | `{CacheError}` **literally, braces and all, no link** — do not use |
+| **`@throws CacheError …`**                                | **`CacheError`, clean — this is the mandated form**                |
+| `@throws {@link CacheError} …`                            | **broken**: a stray `{`, then `@link` parsed as its own tag        |
+| `@throws CacheError … guard with {@link Cache.has} first` | the mid-text `{@link}` resolves to a clickable link                |
+
+The third row is the one worth knowing, because it is exactly what a reader deduces from the first two and it is wrong. TS attempts a braced type immediately after `@throws`; `{@link …}` is not one, so the `{` is emitted literally and the `@link` behind it is picked up as a block tag **despite being brace-preceded** — the one position where the whitespace rule above does not hold. Put the link in the tag's prose instead, where it resolves and where it belongs.
+
+Three more. The first is fatal; the second is silent, which is worse; the third is a coexistence ruling rather than a hazard:
 
 - **A `*/` inside prose terminates the block early**, leaving a syntax error. Lines mentioning a glob like `**/run.ts` are the usual source. Reword such a line _before_ moving it into JSDoc, as its own commit — see the commit discipline below.
 - **A blank line does not detach a JSDoc block from the declaration below it.** Measured: a `/** … */` block, then a blank line, then `export function afterBlankLine` — the block still reaches that function's hover at a cross-file call site. So a file-leading block that _looks_ like a module header is silently documenting the first declaration under it, whatever the author intended. Before treating any leading block as a module header, hover the first export and see whether it comes back; if it does, that block is already an interface comment and gets partitioned like one. A true module header — one that should reach nobody's hover — must be `//`.
@@ -145,7 +164,7 @@ Two more, both fatal rather than cosmetic:
 
 - **LSP/token-reduction guidance for agents** — searched; what exists is about _retrieval strategy_ (which files to open, how to chunk) and carries no authoring guidance. **No established precedent** for JSDoc conventions aimed at agents navigating via LSP. Rejected as a source.
 - **Ousterhout, _A Philosophy of Software Design_** — the interface/implementation comment split. **Adopted** as the governing rule; it is older than the problem and states the token argument exactly.
-- **TSDoc's `@remarks`** — a core standard tag, and the obvious candidate for a summary/detail split. **Rejected as a truncation lever**: measured rendering inline in hover, identical to summary prose. Kept as a follow-up candidate, since a _generated_ docs pipeline is the only thing that would make the distinction pay.
+- **TSDoc's `@remarks`** — a core standard tag, and the obvious candidate for a summary/detail split. **Rejected as a truncation lever**, and now **rejected as a tag at all** under rule 5's closed table. Measured twice: it renders inline in hover as `*@remarks* — <text>`, i.e. the same words as prose plus a label whose only meaning is "detail rather than summary" — which a documentation _generator_ honours and a hover does not. So it is not quite free either: prose renders the same content one label cheaper. Kept as a follow-up candidate (`hover-carries-detail-no-reader-asked-for`), since a generated docs pipeline is the only thing that would make the distinction pay.
 - **Contract-style docstring guidance for agent tools** (preconditions, invariants, error contracts) — **adopted**, as rule 3.
 - **`{@link}` for sidecar references** — predicted to render unresolved, **measured to render exactly**, and adopted for that reason. See rule 7's table.
 
@@ -188,6 +207,8 @@ The signature comes back either way. A hover earns its round-trip when there is 
 ### 7. Writing is verified by reading
 
 After adding or changing an exported declaration, **hover it from a different file** and ask whether what came back would let you use it without opening the body. Same operation as the reading habit, run as the authoring acceptance test — and the cross-file position matters, because that is where a caller actually stands.
+
+**One harness caveat, measured this pass: the language server serves hover from its own copy of a file, which can be stale after an on-disk edit.** Editing a JSDoc block in `src/cache.ts` and immediately re-hovering its cross-file call site returned the _pre-edit_ rendering; a sentinel word added to the summary is what distinguished staleness from the edit having failed. So a hover taken right after your own edit can verify the old comment. When a rendering has to be **measured** rather than recalled, put the variants in a **new** file the server has not read yet — that is how the `@throws` table in rule 9 was taken.
 
 ## Commit discipline for a partition sweep
 
