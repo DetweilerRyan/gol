@@ -4,13 +4,6 @@
 // own hardcoded list that goes stale the moment a feature is added, renamed,
 // or removed -- both programs used to carry an independent copy of exactly
 // that list.
-//
-// listFeatureFiles returns paths *relative to featuresDir*, using '/' as the
-// separator (measured on darwin; this repo is darwin-only) -- while the
-// tree is flat these are bare basenames, and every call site's
-// `path.join(FEATURES_DIR, file)` keeps working unchanged once a file lives
-// in a subdirectory, since path.join accepts a relative path with
-// separators in it just as readily as a bare filename.
 import { existsSync, globSync } from 'node:fs'
 
 // Pure filter+sort+validate over an already-read directory listing, so the
@@ -27,6 +20,14 @@ export function selectFeatureFiles(names: string[], featuresDir: string): string
   return files
 }
 
+/**
+ * listFeatureFiles returns paths *relative to featuresDir*, using '/' as the
+ * separator (measured on darwin; this repo is darwin-only) -- while the
+ * tree is flat these are bare basenames, and every call site's
+ * `path.join(FEATURES_DIR, file)` keeps working unchanged once a file lives
+ * in a subdirectory, since path.join accepts a relative path with
+ * separators in it just as readily as a bare filename.
+ */
 // Throws rather than returning an empty array on a features directory with
 // no .feature files in it -- the silent-empty-glob hazard vite.config.ts's
 // `dom` project comment warns about: a wrong path here would otherwise look

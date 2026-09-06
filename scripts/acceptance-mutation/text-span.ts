@@ -10,27 +10,30 @@
 // rules/no-cucumber-parser-outside-adapter.yml, which scopes to
 // gherkin-document.ts and would not even reach this file).
 
-// A half-open range within one line of a FeatureDocument's `lines` array:
-// `line` is the same 0-based index gherkin-document.ts's own convention uses
-// (AST locations are 1-based; callers subtract 1 once, at the adapter
-// boundary, and hand this module 0-based numbers throughout), and
-// [startColumn, endColumn) is 0-based and exclusive on the end, so a
-// zero-width span (startColumn === endColumn) is a valid insertion point
-// rather than a special case.
+/**
+ * A half-open range within one line of a FeatureDocument's `lines` array:
+ * `line` is the same 0-based index gherkin-document.ts's own convention uses
+ * (AST locations are 1-based; callers subtract 1 once, at the adapter
+ * boundary, and hand this module 0-based numbers throughout), and
+ * [startColumn, endColumn) is 0-based and exclusive on the end, so a
+ * zero-width span (startColumn === endColumn) is a valid insertion point
+ * rather than a special case.
+ */
 export interface TextSpan {
   line: number
   startColumn: number
   endColumn: number
 }
 
-// Replaces exactly the bytes covered by `span` with `replacement`, leaving
-// every other byte of `text` -- including every other line, and the
-// untouched portion of the mutated line itself -- byte-identical, *for LF
-// input*. This is the whole reason a site abstraction is worth having: a
-// renderer that only ever calls this needs no knowledge of the table (or
-// step, or DocString) the span came from, and can never accidentally touch
-// a sibling cell's column padding.
-//
+/**
+ * Replaces exactly the bytes covered by `span` with `replacement`, leaving
+ * every other byte of `text` -- including every other line, and the
+ * untouched portion of the mutated line itself -- byte-identical, *for LF
+ * input*. This is the whole reason a site abstraction is worth having: a
+ * renderer that only ever calls this needs no knowledge of the table (or
+ * step, or DocString) the span came from, and can never accidentally touch
+ * a sibling cell's column padding.
+ */
 // That byte-identical claim does not extend to CRLF input, and the next
 // paragraph is why: every line's terminator is normalized to LF on the way
 // through, not just the mutated line's. This is pre-existing, intended
@@ -55,14 +58,15 @@ export function spliceSpan(text: string, span: TextSpan, replacement: string): s
   return lines.join('\n')
 }
 
-// Locates the raw (still-escaped) span of one table cell's content, given the
-// 0-based column its *unescaped* value starts at -- exactly what
-// TableCell.location reports (see gherkin-document.ts's re-exported
-// `Location`), converted to 0-based by the caller. Gherkin escapes `|` inside
-// a cell as `\|` and a literal backslash as `\\`; both consume two raw
-// characters and must never be mistaken for the cell boundary, which is why
-// this scans rather than just searching for the next `|`.
-//
+/**
+ * Locates the raw (still-escaped) span of one table cell's content, given the
+ * 0-based column its *unescaped* value starts at -- exactly what
+ * TableCell.location reports (see gherkin-document.ts's re-exported
+ * `Location`), converted to 0-based by the caller. Gherkin escapes `|` inside
+ * a cell as `\|` and a literal backslash as `\\`; both consume two raw
+ * characters and must never be mistaken for the cell boundary, which is why
+ * this scans rather than just searching for the next `|`.
+ */
 // The scan stops at the first *unescaped* `|` (or end of line, for a
 // malformed table no caller here is expected to hand this), then trims
 // trailing whitespace -- `@cucumber/gherkin`'s own location already points past

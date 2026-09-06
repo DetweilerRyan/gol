@@ -54,46 +54,31 @@ export type {
 // `@cucumber/gherkin` itself.
 export const { CompositeParserException, GherkinException, ParserException } = Errors
 
-// A parsed feature file: the original text (so a caller can re-render without
-// re-reading the file), the same text split into lines (matching the
-// 0-based-`lineIndex` convention the rest of this program already uses,
-// derived once here rather than by every caller), and the raw AST.
+/**
+ * A parsed feature file: the original text (so a caller can re-render without
+ * re-reading the file), the same text split into lines (matching the
+ * 0-based-`lineIndex` convention the rest of this program already uses,
+ * derived once here rather than by every caller), and the raw AST.
+ */
 export interface FeatureDocument {
   text: string
   lines: string[]
   doc: messages.GherkinDocument
 }
 
-// Parses one feature file's text into its AST. Throws (an `@cucumber/gherkin`
-// GherkinException, most commonly CompositeParserException) on malformed
-// Gherkin -- deliberately not caught here. This module locates spans, it does
-// not decide what to do when a file can't be parsed at all; that decision
-// belongs to the caller, which has the target name to attach to the error
-// (see run.ts).
+/**
+ * Parses one feature file's text into its AST. Throws (an `@cucumber/gherkin`
+ * GherkinException, most commonly CompositeParserException) on malformed
+ * Gherkin -- deliberately not caught here. This module locates spans, it does
+ * not decide what to do when a file can't be parsed at all; that decision
+ * belongs to the caller, which has the target name to attach to the error
+ * (see run.ts).
+ */
 export function parseFeature(text: string): FeatureDocument {
   const newId = IdGenerator.incrementing()
   const parser = new Parser(new AstBuilder(newId), new GherkinClassicTokenMatcher())
   const doc = parser.parse(text)
   return { text, lines: text.split(/\r?\n/), doc }
-}
-
-// Every Scenario node reachable from a feature -- both directly under the
-// Feature and nested inside a Rule -- with its own steps, examples, and
-// location intact. Returned as the real AST nodes rather than a
-// cells-only projection: a future mutator over step text or a DocString
-// needs the same steps a cell mutator needs the same Examples tables for, and
-// a projection down to just cells here would mean re-parsing to get anything
-// else back out.
-//
-// A Rule's own children live one level deeper than a Feature's -- split out
-// so listScenarios' own cyclomatic complexity stays low without changing
-// what either function does.
-function scenariosInRule(rule: messages.Rule): messages.Scenario[] {
-  const scenarios: messages.Scenario[] = []
-  for (const ruleChild of rule.children) {
-    if (ruleChild.scenario) scenarios.push(ruleChild.scenario)
-  }
-  return scenarios
 }
 
 // A Background carries no Scenario of its own and contributes nothing here.
@@ -102,6 +87,26 @@ function scenariosInRule(rule: messages.Rule): messages.Scenario[] {
 // (it never looked for the keyword at all) -- recursing into
 // `child.rule.children` (via scenariosInRule above) is the deliberate
 // replacement for that accident.
+function scenariosInRule(rule: messages.Rule): messages.Scenario[] {
+  const scenarios: messages.Scenario[] = []
+  for (const ruleChild of rule.children) {
+    if (ruleChild.scenario) scenarios.push(ruleChild.scenario)
+  }
+  return scenarios
+}
+
+/**
+ * Every Scenario node reachable from a feature -- both directly under the
+ * Feature and nested inside a Rule -- with its own steps, examples, and
+ * location intact. Returned as the real AST nodes rather than a
+ * cells-only projection: a future mutator over step text or a DocString
+ * needs the same steps a cell mutator needs the same Examples tables for, and
+ * a projection down to just cells here would mean re-parsing to get anything
+ * else back out.
+ */
+// A Rule's own children live one level deeper than a Feature's -- split out
+// so listScenarios' own cyclomatic complexity stays low without changing
+// what either function does.
 export function listScenarios(doc: messages.GherkinDocument): messages.Scenario[] {
   const scenarios: messages.Scenario[] = []
   for (const child of doc.feature?.children ?? []) {

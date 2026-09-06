@@ -20,12 +20,6 @@ import type { TextSpan } from './text-span.ts'
 
 export type SiteKind = 'examples-cell'
 
-// `seedKey` is the whole address: reproducible across runs, unique across
-// every site in every target (today, `${featureFileName}:${rowIndex}:${columnName}` --
-// see examples-cell-sites.ts), and self-contained, so mutant-plan.ts never
-// has to know how a `kind` builds one. `value` is the original, unmutated
-// text the site covers; `span` is where in the feature file it lives.
-//
 // Uniqueness *within* one target is checked, not merely assumed --
 // listMutationSites's own assertUniqueSeedKeys, below, throws on any
 // collision across every finder's combined output before returning.
@@ -37,8 +31,20 @@ export type SiteKind = 'examples-cell'
 // something this file can check on its own.
 export interface MutationSite {
   kind: SiteKind
+  /**
+   * `seedKey` is the whole address: reproducible across runs, unique across
+   * every site in every target (today, `${featureFileName}:${rowIndex}:${columnName}` --
+   * see examples-cell-sites.ts), and self-contained, so mutant-plan.ts never
+   * has to know how a `kind` builds one.
+   */
   seedKey: string
+  /**
+   * `value` is the original, unmutated text the site covers;
+   */
   value: string
+  /**
+   * `span` is where in the feature file it lives.
+   */
   span: TextSpan
 }
 
@@ -111,10 +117,12 @@ function assertUniqueSeedKeys(sites: MutationSite[]): void {
   )
 }
 
-// Every SiteKind's finders run over the same parsed document, in
-// registration order -- there is only one kind today, so order is not yet
-// observable, but a future second finder inherits this rather than needing
-// its own iteration policy.
+/**
+ * Every SiteKind's finders run over the same parsed document, in
+ * registration order -- there is only one kind today, so order is not yet
+ * observable, but a future second finder inherits this rather than needing
+ * its own iteration policy.
+ */
 export function listMutationSites(featureText: string, featureFileName: string): MutationSite[] {
   const { doc, lines } = parseFeature(featureText)
   const sites = (Object.keys(SITE_FINDERS) as SiteKind[]).flatMap((kind) =>

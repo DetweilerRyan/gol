@@ -27,9 +27,11 @@ function hashString(input: string): number {
   return h >>> 0
 }
 
-// A seeded [0, 1) generator. Every mutation rule draws from one of these
-// rather than Math.random so a given (seedKey, value) pair always produces the
-// same mutant.
+/**
+ * A seeded [0, 1) generator. Every mutation rule draws from one of these
+ * rather than Math.random so a given (seedKey, value) pair always produces the
+ * same mutant.
+ */
 export type RandomFn = () => number
 
 // mulberry32

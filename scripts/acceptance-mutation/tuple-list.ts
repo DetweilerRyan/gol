@@ -28,11 +28,13 @@
 // container-equality.ts precedent. Only the seeded stream's TYPE is imported.
 import type { RandomFn } from './seeded-random.ts'
 
-// The component mutator mutateTupleList is handed. In production this is
-// mutation-rules.ts's own mutateValue -- so a component's mutation is
-// literally recursion through VALUE_RULES, the same thing mutateCommaList
-// does with its own fragments, rather than a direct mutateInteger call that
-// merely happens to agree with it today.
+/**
+ * The component mutator mutateTupleList is handed. In production this is
+ * mutation-rules.ts's own mutateValue -- so a component's mutation is
+ * literally recursion through VALUE_RULES, the same thing mutateCommaList
+ * does with its own fragments, rather than a direct mutateInteger call that
+ * merely happens to agree with it today.
+ */
 export type ValueMutator = (value: string, seedKey: string) => string
 
 interface TupleComponent {
@@ -107,10 +109,12 @@ function parseTupleList(value: string): TupleMatch[] | null {
   return tuples.every((tuple) => tuple.components.length === arity) ? tuples : null
 }
 
-// Whether `value` is wholly a delimited list of fixed-arity numeric tuples.
-// Never draws from `rand` -- ValueRule's contract (see mutation-rules.ts):
-// which rule fires must not perturb the random stream the winning rule's own
-// `mutate` then draws from.
+/**
+ * Whether `value` is wholly a delimited list of fixed-arity numeric tuples.
+ * Never draws from `rand` -- ValueRule's contract (see mutation-rules.ts):
+ * which rule fires must not perturb the random stream the winning rule's own
+ * `mutate` then draws from.
+ */
 export function isTupleList(value: string): boolean {
   return parseTupleList(value) !== null
 }
@@ -160,15 +164,17 @@ function mutateComponent(
   return value.slice(0, target.start) + mutated + value.slice(target.end)
 }
 
-// The rule's mutate, plus the injected component mutator -- so the
-// VALUE_RULES entry wraps it in an arrow rather than naming it directly. Two
-// strategies: component-change (above, today's behaviour) and swap-x-y
-// (transpose a tuple's two components). The class draw is always the FIRST
-// draw, regardless of arity or of whether any tuple is actually swappable --
-// so this rule's draw sequence never depends on data shape, only which
-// branch the first draw's outcome (plus the data-dependent, non-drawing
-// swappable-candidate check) sends it down. Everything after the first draw
-// is branch-local.
+/**
+ * The rule's mutate, plus the injected component mutator -- so the
+ * VALUE_RULES entry wraps it in an arrow rather than naming it directly. Two
+ * strategies: component-change (above, today's behaviour) and swap-x-y
+ * (transpose a tuple's two components). The class draw is always the FIRST
+ * draw, regardless of arity or of whether any tuple is actually swappable --
+ * so this rule's draw sequence never depends on data shape, only which
+ * branch the first draw's outcome (plus the data-dependent, non-drawing
+ * swappable-candidate check) sends it down. Everything after the first draw
+ * is branch-local.
+ */
 export function mutateTupleList(value: string, rand: RandomFn, seedKey: string, mutate: ValueMutator): string {
   const tuples = parseTupleList(value)
   if (!tuples) throw new Error(`mutateTupleList called on a value that is not a tuple-list: ${JSON.stringify(value)}`)

@@ -29,15 +29,17 @@ export function discoverTargets(featuresDir: string): MutationTarget[] {
   return listFeatureFiles(featuresDir).map((feature) => ({ feature }))
 }
 
-// `--feature` narrows a run to one target, accepting the bare slice name,
-// the bare `.feature` filename, or (once a target is nested) its full
-// relative path -- a match on either the target's whole `feature` or just
-// its basename. An unrecognized name throws rather than silently matching
-// nothing -- the same silent-empty-glob hazard listFeatureFiles guards
-// against, one level up -- and more than one match (two nested targets
-// sharing a basename) throws naming every candidate rather than silently
-// picking the first, since a match this ambiguous is exactly the kind of
-// "confident number about nothing" this program guards against elsewhere.
+/**
+ * `--feature` narrows a run to one target, accepting the bare slice name,
+ * the bare `.feature` filename, or (once a target is nested) its full
+ * relative path -- a match on either the target's whole `feature` or just
+ * its basename. An unrecognized name throws rather than silently matching
+ * nothing -- the same silent-empty-glob hazard listFeatureFiles guards
+ * against, one level up -- and more than one match (two nested targets
+ * sharing a basename) throws naming every candidate rather than silently
+ * picking the first, since a match this ambiguous is exactly the kind of
+ * "confident number about nothing" this program guards against elsewhere.
+ */
 export function filterTargets(targets: MutationTarget[], featureArg: string | undefined): MutationTarget[] {
   if (featureArg === undefined) return targets
   const normalized = featureArg.endsWith('.feature') ? featureArg : `${featureArg}.feature`

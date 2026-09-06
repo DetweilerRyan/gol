@@ -89,17 +89,19 @@ export function findExamplesCellSites(doc: GherkinDocument, lines: string[], fea
   return sites
 }
 
-// Splices the mutated value directly into the site's own span, escaping it
-// first the same way Gherkin itself escapes a table cell on the way in (see
-// text-span.ts's findCellSpan for the read side of the same convention).
-// This touches exactly the bytes the span covers -- never a sibling cell,
-// never the row's column padding, never a second line -- which is the whole
-// point of carrying a byte-precise span on the site instead of a row index:
-// a full-table AST re-render would re-pad every cell to the new widest
-// value (measured by architect: more than one line changes for every one of
-// the 55 real mutants, one as high as 10, wherever Pulsar's own row is
-// touched), where this changes exactly the one line the span lives on, and
-// nothing else on it beyond the span itself.
+/**
+ * Splices the mutated value directly into the site's own span, escaping it
+ * first the same way Gherkin itself escapes a table cell on the way in (see
+ * text-span.ts's findCellSpan for the read side of the same convention).
+ * This touches exactly the bytes the span covers -- never a sibling cell,
+ * never the row's column padding, never a second line -- which is the whole
+ * point of carrying a byte-precise span on the site instead of a row index:
+ * a full-table AST re-render would re-pad every cell to the new widest
+ * value (measured by architect: more than one line changes for every one of
+ * the 55 real mutants, one as high as 10, wherever Pulsar's own row is
+ * touched), where this changes exactly the one line the span lives on, and
+ * nothing else on it beyond the span itself.
+ */
 export function renderExamplesCellSite(featureText: string, site: MutationSite, mutatedValue: string): string {
   return spliceSpan(featureText, site.span, escapeTableCell(mutatedValue))
 }

@@ -1,25 +1,9 @@
-// The pure half of "what mutants does this run consist of": given each active
-// target's feature text and its mutation sites, produce one record per
-// mutant -- the mutated value, the filename it will be written under, and the
-// mutated feature text itself.
-//
 // Split out of run.ts rather than left there, for the reason
 // crap4ts.scripts.config.ts states about every `run.ts` (matched at any depth): those files are
 // excluded from crap4ts and Stryker as I/O shells, so a pure function left in
 // one is invisible to both gates. This is the same relocation the
 // acceptance-mutation-on-playwright cleanup made for playwright-runner.ts's
 // sumSkipped, applied to the larger sibling it left behind.
-//
-// What is worth gating here is the ordinal-to-site correspondence.
-// `buildMutantRecords` is the one place a mutant's filename and its mutated
-// text are decided, and classification later looks a result up *by that
-// filename* (run.ts -> specFileName -> summary.bySpecFile). A record whose
-// name and text came from different sites would misattribute a real kill or
-// a real survivor and there would be nothing in the output to notice it by --
-// exactly the "confident number about nothing" class this program guards
-// against everywhere else. Building both from the same `site` in one
-// expression is what makes that drift unrepresentable, and it is a property
-// a test can pin.
 //
 // This module knows nothing about what kind of site it is mutating --
 // mutation-sites.ts's registries own that dispatch. A future site kind
@@ -49,6 +33,23 @@ export interface MutantRecord {
   text: string
 }
 
+/**
+ * The pure half of "what mutants does this run consist of": given each active
+ * target's feature text and its mutation sites, produce one record per
+ * mutant -- the mutated value, the filename it will be written under, and the
+ * mutated feature text itself.
+ */
+// What is worth gating here is the ordinal-to-site correspondence.
+// `buildMutantRecords` is the one place a mutant's filename and its mutated
+// text are decided, and classification later looks a result up *by that
+// filename* (run.ts -> specFileName -> summary.bySpecFile). A record whose
+// name and text came from different sites would misattribute a real kill or
+// a real survivor and there would be nothing in the output to notice it by --
+// exactly the "confident number about nothing" class this program guards
+// against everywhere else. Building both from the same `site` in one
+// expression is what makes that drift unrepresentable, and it is a property
+// a test can pin.
+//
 // Ordinals restart at 0 per target, which is safe only because
 // mutantFeatureFileName prefixes the target's own base name (see mutant-tree.ts):
 // every mutant across every target shares one `features/` directory in the

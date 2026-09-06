@@ -38,11 +38,13 @@ function baseName(targetFeatureFileName: string): string {
   return withoutSuffix.replaceAll('/', '__')
 }
 
-// One shared `features/` directory holds every target's mutants and
-// baseline (the batched design architect measured end to end), so a name
-// has to be unique *across* targets, not just within one -- prefixing with
-// the target's own base name is what keeps "infinite-grid" and
-// "camera-pan-and-zoom" from colliding on "mutant-0.feature".
+/**
+ * One shared `features/` directory holds every target's mutants and
+ * baseline (the batched design architect measured end to end), so a name
+ * has to be unique *across* targets, not just within one -- prefixing with
+ * the target's own base name is what keeps "infinite-grid" and
+ * "camera-pan-and-zoom" from colliding on "mutant-0.feature".
+ */
 export function mutantFeatureFileName(targetFeatureFileName: string, ordinal: number): string {
   return `${baseName(targetFeatureFileName)}.mutant-${ordinal}.feature`
 }
@@ -51,10 +53,13 @@ export function baselineFeatureFileName(targetFeatureFileName: string): string {
   return `${baseName(targetFeatureFileName)}.baseline.feature`
 }
 
-// bddgen's generated spec filename for one input feature file, with
-// featuresRoot pointed at the shared temp `features/` directory: flat, one
-// spec per feature, named by appending `.spec.js` to the feature's own
-// filename. Measured directly against playwright-bdd 9.2.0 by running bddgen
+/**
+ * bddgen's generated spec filename for one input feature file, with
+ * featuresRoot pointed at the shared temp `features/` directory: flat, one
+ * spec per feature, named by appending `.spec.js` to the feature's own
+ * filename.
+ */
+// Measured directly against playwright-bdd 9.2.0 by running bddgen
 // against a single planted feature file with featuresRoot/outputDir
 // overridden the same way playwright.acceptance-mutation.config.ts overrides
 // them -- infinite-grid.mutant-0.feature produced exactly
