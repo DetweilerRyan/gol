@@ -7,8 +7,9 @@
 // before a trailing flag (as in "npm run crap4ts -- --verbose") or at
 // whatever punctuation/backtick markdown wraps the reference in.
 //
-// This has no notion of "just an example" -- any `npm run <word>` in
-// .claude/**/*.md or CLAUDE.md prose is read as a real reference, so a
+// This has no notion of "just an example" -- any `npm run <word>` in a
+// Markdown file under `.claude/` (at any depth) or in CLAUDE.md prose is
+// read as a real reference, so a
 // bare kebab-case placeholder (e.g. "npm run some-script", with no
 // brackets) reads exactly like a real one and check1 will flag it as
 // unresolved. Caught during this program's own development: an early draft
