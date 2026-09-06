@@ -31,21 +31,31 @@ channel over.
 
 Measured, and it matters — the two consumer groups differ:
 
-| locator               | step module          | hand-written spec                      |
-| --------------------- | -------------------- | -------------------------------------- |
-| `cellLocator`         | `infinite-grid.ts`   | `modal-inertness.e2e.spec.ts`          |
-| `patternsButton`      | `pattern-library.ts` | `hud-layout-and-shortcuts.e2e.spec.ts` |
-| `patternLibraryModal` | `pattern-library.ts` | `hud-layout-and-shortcuts.e2e.spec.ts` |
-| `previewCells`        | `pattern-library.ts` | `hud-layout-and-shortcuts.e2e.spec.ts` |
+| locator               | step module          | hand-written spec |
+| --------------------- | -------------------- | ----------------- |
+| `cellLocator`         | `infinite-grid.ts`   | — none            |
+| `patternsButton`      | `pattern-library.ts` | — none            |
+| `patternLibraryModal` | `pattern-library.ts` | — none            |
+| `previewCells`        | `pattern-library.ts` | — none            |
 
-Every one has a **hand-written-spec** consumer, and three of the four are consumed by the _same_
-spec. That is the sharpest form of the question: the specs legitimately need a `Locator` — they make
-rendered-geometry claims (category 3), which is _precisely_ what a raw locator is for and what a
-question deliberately abstracts away. The **step modules** are the ones that arguably should not have
-them.
+**The right-hand column emptied while this candidate sat on the board, and that inverts the
+argument it was filed with.** As written, this table gave every locator a hand-written-spec consumer,
+three of them the same spec, and drew the conclusion that _the specs legitimately need a `Locator`_
+— they make rendered-geometry claims, which is precisely what a raw locator is for — so that **the
+step modules are the ones that arguably should not have them**. The file then warned, correctly,
+that `hud-layout-and-shortcuts.e2e.spec.ts` had just shrunk 9 → 5 tests in
+`re-audit-hand-written-e2e-residue` and that the consumer set might have moved.
 
-Note `hud-layout-and-shortcuts.e2e.spec.ts` just shrank 9 → 5 tests in
-`re-audit-hand-written-e2e-residue`, so re-measure before designing: the consumer set may have moved.
+It moved further than that note anticipated. `re-audit-hand-written-e2e-residue` took
+`patternsButton`, `patternLibraryModal` and `previewCells` with it — `hud-layout-and-shortcuts.e2e.spec.ts`
+now imports `clickGridAt` and `expectCellState` and nothing else — and
+`convert-modal-inertness-to-scenarios` deleted `modal-inertness.e2e.spec.ts` outright, taking
+`cellLocator`'s. **All four are now published solely for step modules**, which is exactly the
+consumer group the original conclusion said should not have them.
+
+Re-measure again before designing rather than trusting this table in its turn; the command is a
+grep for each name across `features/steps/*.ts` and `features/*.e2e.spec.ts`, counting no comment
+mention as a use.
 
 ## Sketch
 
@@ -54,25 +64,38 @@ The obvious shape, and the reason it is not obviously right:
 **Publish zero locators from the barrel**, and give each of the four a question/interaction wrapper
 that returns what its callers actually need. Step modules then cannot hold a `Locator` at all.
 
-Against it: the hand-written specs would then need a _second_ route to the same locators, which
-either reintroduces a direct `../screenplay/elements` import for that layer — an allowlist change in
+**The argument that stood against it no longer has a referent.** It ran: the hand-written specs
+would then need a _second_ route to the same locators, which either reintroduces a direct
+`../screenplay/elements` import for that layer — an allowlist change in
 `rules/no-domain-imports-in-e2e-specs.yml` — or forces geometry claims through a question layer built
-to hide exactly the thing they assert. **That may be worse than the partial curation it fixes.**
+to hide exactly the thing they assert, and that may be worse than the partial curation it fixes.
+**No hand-written spec imports any of the four**, so there is no second route to provide and no
+allowlist change implied.
 
-So the honest framing is a **two-consumer** question, and it is the same shape
-`barrel-mandatory-for-step-modules` measured and rejected in the opposite direction: it found step
-modules import from a median of 5 of 7 screenplay roles against the specs' 4, so the specs are the
-_narrower_ consumer. Check whether that asymmetry holds for locators specifically before assuming
-the split is clean.
+That also collapses the **two-consumer** framing this file reached for. The comparison it wanted —
+`barrel-mandatory-for-step-modules` found step modules importing from a median of 5 of 7 screenplay
+roles against the specs' 4 — does not arise for locators specifically, because for locators there is
+only one consumer group left. What remains is a one-consumer question, and a much simpler one:
+should the layer that is _mandated_ to name no selector of its own be able to hold a `Locator` at
+all?
+
+**This makes the candidate stronger, not weaker, and it is worth being suspicious of that.** An idea
+whose only counterargument evaporates deserves a check that the counterargument was not merely
+relocated: the geometry claims those specs made did not vanish, they were either restated as
+scenarios or deleted as unstatable, and either way the step modules now reach the locators the specs
+used to. Confirm that before treating the objection as answered.
 
 ## Touches
 
-`features/e2e-helpers.ts`, `features/screenplay/elements.ts` and probably `questions.ts`,
-`features/steps/*.ts` (two modules), `features/*.e2e.spec.ts` (two specs), and possibly
-`rules/no-domain-imports-in-e2e-specs.yml` — **`architect` only** for that last one.
+`features/e2e-helpers.ts`, `features/screenplay/elements.ts` and probably `questions.ts`, and
+`features/steps/*.ts` (two modules: `infinite-grid.ts` and `pattern-library.ts`). **No
+`features/*.e2e.spec.ts` is touched and `rules/no-domain-imports-in-e2e-specs.yml` needs no
+change** — both were consequences of the spec-consumer column that has since emptied.
 
-CLAUDE.md's testing-structure section describes the barrel and the screenplay layering and would go
-stale.
+`.claude/agents/articles/testing-layers.md` describes the barrel and the screenplay layering,
+including the 92-exports/80-published curation figures and the withheld-locator list, and would go
+stale. (CLAUDE.md itself no longer carries that account — `split-claude-md` moved it to the
+article.)
 
 ## Open questions
 
