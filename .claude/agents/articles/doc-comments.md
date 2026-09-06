@@ -129,7 +129,7 @@ So a fact about a member, written on the containing interface, is **invisible at
 
 ### 9. Syntax hazards, all measured
 
-**A JSDoc tag is recognized wherever `@` is preceded by whitespace** — including the block's own leading `*` — regardless of what follows it, and **regardless of being inside a fenced code block.** It is _not_ recognized when `@` is preceded by any non-whitespace character. Every case measured on this tree is explained by that one rule, **with one measured exception — the token position immediately after `@throws`, in the `@throws` table below**:
+**A JSDoc tag is recognized wherever `@` is preceded by whitespace** — including the block's own leading `*` — regardless of what follows it, and **regardless of being inside a fenced code block.** It is _not_ recognized when `@` is preceded by any non-whitespace character. Every case measured on this tree is explained by that one rule, **with one measured class of exception — a `{@link …}` written in a block tag's leading _type slot_, where the brace-preceded `@` is parsed as a tag anyway. See the type-slot table below**:
 
 | in a JSDoc block                                                     | parsed as a tag?                                        |
 | -------------------------------------------------------------------- | ------------------------------------------------------- |
@@ -143,16 +143,24 @@ So a fact about a member, written on the containing interface, is **invisible at
 
 **So: backtick any `@`-prefixed token, always. Never rely on a code fence to protect one.** The practical consequence for an `@example` is that a package import written with quotes is safe, while a bare `@`-token at the start of an example line is not.
 
-**`@throws` is the one tag whose first token TypeScript tries to read as a _type_, and braces are the trap.** Measured cross-file, on a probe file the language server had not previously read:
+**A brace in a block tag's leading position is read as a _type slot_, and the tags disagree about what happens next.** Measured cross-file on a probe file the language server had not previously read:
 
-| written                                                   | rendered in hover                                                  |
-| --------------------------------------------------------- | ------------------------------------------------------------------ |
-| `@throws {CacheError} …`                                  | `{CacheError}` **literally, braces and all, no link** — do not use |
-| **`@throws CacheError …`**                                | **`CacheError`, clean — this is the mandated form**                |
-| `@throws {@link CacheError} …`                            | **broken**: a stray `{`, then `@link` parsed as its own tag        |
-| `@throws CacheError … guard with {@link Cache.has} first` | the mid-text `{@link}` resolves to a clickable link                |
+| written                                                                     | rendered in hover                                                  |
+| --------------------------------------------------------------------------- | ------------------------------------------------------------------ |
+| `@param {number} value …`                                                   | type **stripped**, renders clean                                   |
+| `@returns {TileRange} …`                                                    | type **stripped**, renders clean                                   |
+| `@throws {CacheError} …`                                                    | `{CacheError}` **literally, braces and all, no link** — do not use |
+| `@see {CacheError}`                                                         | `{CacheError}` literally, same leak as `@throws`                   |
+| **`@throws CacheError …`**                                                  | **`CacheError`, clean — this is the mandated form**                |
+| `@throws {@link CacheError} …`                                              | **broken** — a stray `{`, then `@link` parsed as its own tag       |
+| `@returns {@link CacheError} …`                                             | **broken** — worse: the `@returns` text is lost entirely           |
+| `@param value {@link CacheError} …` (after the name, outside the type slot) | the link resolves                                                  |
+| `@throws CacheError … guard with {@link Cache.has} first` (mid-prose)       | the link resolves                                                  |
+| `@see {@link ./cellTiles.md}`                                               | resolves — rule 7's mandated form, and `@see`'s own special case   |
 
-The third row is the one worth knowing, because it is exactly what a reader deduces from the first two and it is wrong. TS attempts a braced type immediately after `@throws`; `{@link …}` is not one, so the `{` is emitted literally and the `@link` behind it is picked up as a block tag **despite being brace-preceded** — the one position where the whitespace rule above does not hold. Put the link in the tag's prose instead, where it resolves and where it belongs.
+Read across it: **`@param` and `@returns` strip a well-formed braced type; `@throws` and `@see` print it verbatim** — so a `@throws` gets its exception type written **bare**. And the rows that matter most are the two broken ones, because a leading `{@link}` is exactly what a reader deduces from "braces leak, but `{@link}` resolves". It does not: TS tries the type slot first, `{@link …}` is not a type, and the `@link` behind the brace is picked up as a block tag despite being brace-preceded — the one measured place the whitespace rule above does not hold. `@see` is the exception to the exception, special-casing `{@link}` while still leaking a plain `{Type}`. Put every other link in the tag's **prose**, where it resolves and where it belongs.
+
+**Not measured, so do not assume either way:** a `{@link}` inside `@param`'s own type slot (`@param {@link X} value`), and `@example`.
 
 Three more. The first is fatal; the second is silent, which is worse; the third is a coexistence ruling rather than a hazard:
 
