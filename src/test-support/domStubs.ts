@@ -28,8 +28,10 @@ class ResizeObserverStub {
 export interface ResizeObserverController {
   instances: ResizeObserverStub[]
   latest(): ResizeObserverStub
-  // Pushes a controlled contentRect through the observer callback, exactly
-  // the way a real observation would deliver one.
+  /**
+   * Pushes a controlled contentRect through the observer callback, exactly
+   * the way a real observation would deliver one.
+   */
   resize(width: number, height: number): void
 }
 
@@ -67,10 +69,12 @@ export function stubResizeObserver(): ResizeObserverController {
   }
 }
 
-// Typed to the exact Element.prototype.getBoundingClientRect signature
-// (`(): DOMRect`) rather than a bare vi.fn(): a loosely-typed spy assigned to
-// a prototype method can pass `npm run test:unit` while still failing
-// `npm run build`, since vitest doesn't typecheck.
+/**
+ * Typed to the exact Element.prototype.getBoundingClientRect signature
+ * (`(): DOMRect`) rather than a bare vi.fn(): a loosely-typed spy assigned to
+ * a prototype method can pass `npm run test:unit` while still failing
+ * `npm run build`, since vitest doesn't typecheck.
+ */
 export function stubBoundingClientRect(rect: {
   left: number
   top: number
@@ -93,23 +97,27 @@ export function stubBoundingClientRect(rect: {
 }
 
 export interface AnimationFrameController {
-  // Advances the stubbed performance.now() clock by the given amount and
-  // then runs every frame callback scheduled so far, in the order they were
-  // scheduled -- mirroring a real rAF batch, where every callback in a frame
-  // sees the same timestamp.
+  /**
+   * Advances the stubbed performance.now() clock by the given amount and
+   * then runs every frame callback scheduled so far, in the order they were
+   * scheduled -- mirroring a real rAF batch, where every callback in a frame
+   * sees the same timestamp.
+   */
   advance(ms: number): void
   pendingCount(): number
   cancelCallCount(): number
   now(): number
 }
 
-// requestAnimationFrame/cancelAnimationFrame plus a controllable
-// performance.now(), so a test can step a glide frame-by-frame and assert on
-// intermediate values instead of only the settled end state. Distinct from
-// useRafCoalescedPan.test.ts's own local stubRaf (which this module now
-// replaces the caller of, see that file's history) in the one respect that
-// matters here: that stub's runFrame() always calls back with 0, with no
-// notion of elapsed time, which useZoomGlide.ts's easing needs.
+/**
+ * requestAnimationFrame/cancelAnimationFrame plus a controllable
+ * performance.now(), so a test can step a glide frame-by-frame and assert on
+ * intermediate values instead of only the settled end state. Distinct from
+ * useRafCoalescedPan.test.ts's own local stubRaf (which this module now
+ * replaces the caller of, see that file's history) in the one respect that
+ * matters here: that stub's runFrame() always calls back with 0, with no
+ * notion of elapsed time, which useZoomGlide.ts's easing needs.
+ */
 export function stubAnimationFrames(): AnimationFrameController {
   let nextId = 1
   let nowMs = 0
@@ -146,27 +154,31 @@ export function stubAnimationFrames(): AnimationFrameController {
   }
 }
 
-// window.matchMedia is undefined in this repo's jsdom project (unlike
-// requestAnimationFrame/performance.now, which jsdom does implement) -- see
-// useReducedMotion.ts's own comment on why that means no defensive
-// typeof-guard belongs in product code. `matches` is fixed for the stub's
-// lifetime; useReducedMotion.test.ts drives a change by firing a `change`
-// event on the returned MediaQueryList instead, the same way a real one
-// would notify a listener.
+/**
+ * window.matchMedia is undefined in this repo's jsdom project (unlike
+ * requestAnimationFrame/performance.now, which jsdom does implement) -- see
+ * useReducedMotion.ts's own comment on why that means no defensive
+ * typeof-guard belongs in product code. `matches` is fixed for the stub's
+ * lifetime; useReducedMotion.test.ts drives a change by firing a `change`
+ * event on the returned MediaQueryList instead, the same way a real one
+ * would notify a listener.
+ */
 export interface MatchMediaController {
   changeTo(nextMatches: boolean): void
   listenerCount(): number
-  // CALL counts, deliberately alongside listenerCount()'s NET count rather
-  // than replacing it: the two answer different questions and only these can
-  // see a resubscribe. A useSyncExternalStore resubscribe is a
-  // removeEventListener immediately followed by an addEventListener, so it
-  // leaves listenerCount() at 1 throughout and is invisible to it -- which is
-  // exactly the churn useMatchMedia.test.ts's identity-stability pair exists
-  // to pin. Counts never decrease; they count calls, not listeners, and
-  // deliberately count them across every event type rather than per type --
-  // listenerCount('change') above is what covers registering under the wrong
-  // type, and splitting these by type too would only make an assertion about
-  // resubscribe count read as one about type correctness.
+  /**
+   * CALL counts, deliberately alongside listenerCount()'s NET count rather
+   * than replacing it: the two answer different questions and only these can
+   * see a resubscribe. A useSyncExternalStore resubscribe is a
+   * removeEventListener immediately followed by an addEventListener, so it
+   * leaves listenerCount() at 1 throughout and is invisible to it -- which is
+   * exactly the churn useMatchMedia.test.ts's identity-stability pair exists
+   * to pin. Counts never decrease; they count calls, not listeners, and
+   * deliberately count them across every event type rather than per type --
+   * listenerCount('change') above is what covers registering under the wrong
+   * type, and splitting these by type too would only make an assertion about
+   * resubscribe count read as one about type correctness.
+   */
   addCallCount(): number
   removeCallCount(): number
 }
@@ -248,9 +260,11 @@ export interface PointerCaptureStubs {
   releasePointerCapture: Mock<(pointerId: number) => void>
 }
 
-// hasPointerCapture defaults to true, matching the state a real element is in
-// between setPointerCapture and release; tests that need the "capture was
-// already lost" path override it with mockReturnValue(false).
+/**
+ * hasPointerCapture defaults to true, matching the state a real element is in
+ * between setPointerCapture and release; tests that need the "capture was
+ * already lost" path override it with mockReturnValue(false).
+ */
 export function stubPointerCapture(): PointerCaptureStubs {
   const stubs: PointerCaptureStubs = {
     setPointerCapture: vi.fn<(pointerId: number) => void>(),

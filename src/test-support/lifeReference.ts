@@ -51,12 +51,14 @@ export function referenceChangedCells(previous: ReadonlyLiveCells, next: Readonl
   return new Set([...onlyInPrevious, ...onlyInNext])
 }
 
-// The empty-step assertion, shared because the unit and property layers both
-// have to make it: the property file pins the empty grid as a degenerate value
-// (see engineering.md's "Writing a property test"), and the unit file needs it
-// on coder's `npm run test:unit` fast path, which skips property tests
-// entirely. Two identical copies is what dry4ts flags -- one named assertion is
-// what keeps both layers covered without them.
+/**
+ * The empty-step assertion, shared because the unit and property layers both
+ * have to make it: the property file pins the empty grid as a degenerate value
+ * (see engineering.md's "Writing a property test"), and the unit file needs it
+ * on coder's `npm run test:unit` fast path, which skips property tests
+ * entirely. Two identical copies is what dry4ts flags -- one named assertion is
+ * what keeps both layers covered without them.
+ */
 export function expectNoChangeFromEmptyGrid(step: GenerationStep): void {
   expect(step.next.size).toBe(0)
   expect(step.changed).toEqual([])
