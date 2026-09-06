@@ -36,7 +36,7 @@ const { Given } = createBdd()
 // The assertion is a precondition rather than the accepted behaviour: if the
 // focus never landed, the Enter that follows would reach nothing and the
 // scenario would fail on the generation count with no hint as to why.
-Given('the Next Generation control has keyboard focus', async ({ page }) => {
+Given('the Next generation control has keyboard focus', async ({ page }) => {
   await openGrid(page)
   await focusNextGeneration(page)
   await expect(nextGenerationControl(page)).toBeFocused()

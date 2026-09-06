@@ -80,8 +80,19 @@ export function aliveCells(page: Page): Locator {
 // reaches it twice over: interactions.ts drives it from two functions, and the
 // barrel publishes it so generation-control.ts can assert the keyboard really
 // landed on it.
+//
+// exact: true for the reason patternLibraryModal's comment sets out at length
+// -- getByRole's default name matching is case-insensitive AND substring, so
+// without it this locator resolves the button under any capitalisation and any
+// name that merely CONTAINS this one. That is not a hypothetical here: this
+// name shipped as 'Next Generation' until
+// `sentence-case-the-next-generation-button`, in violation of CLAUDE.md's
+// sentence-case convention, and the default matcher is precisely what let a
+// wrong-case name pass unnoticed for the control's whole life. The accessible
+// name is this repo's black-box contract, so it is matched as the whole string
+// a screen reader would announce.
 export function nextGenerationControl(page: Page): Locator {
-  return page.getByRole('button', { name: 'Next Generation' })
+  return page.getByRole('button', { name: 'Next generation', exact: true })
 }
 
 export function patternsButton(page: Page): Locator {

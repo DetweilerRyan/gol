@@ -46,7 +46,7 @@ import { clickGridAt, expectCellState } from './e2e-helpers'
 // count of the subset, which is how the first draft of this list
 // under-reported one of them and over-reported another.
 //
-//   - The Next Generation button advancing the real app's state is
+//   - The Next generation button advancing the real app's state is
 //     cell-life-and-death.feature's blinker scenarios. Its "the next
 //     generation is computed" step clicks this very button and asserts the
 //     counter moved. No-oping the store's advance reds 7 bdd scenarios and no
@@ -294,8 +294,31 @@ test('the grid fills the entire viewport, edge to edge', async ({ page }) => {
 //   - the heading, by role and name, in src/components/GenerationHud.test.tsx.
 //   - the button's accessible name, by every bdd scenario that presses it:
 //     features/screenplay/elements.ts's nextGenerationControl reaches it as
-//     getByRole('button', { name: 'Next Generation' }), so a renamed control
-//     reds the generation-control and cell-life-and-death scenarios outright.
+//     getByRole('button', { name: 'Next generation', exact: true }), so a
+//     renamed control reds the generation-control and cell-life-and-death
+//     scenarios outright.
+//
+//     THAT CLAIM WAS FALSE WHEN IT WAS WRITTEN, and the exact: true is what
+//     made it true. getByRole's default name matching is case-insensitive AND
+//     substring, so before `sentence-case-the-next-generation-button` a rename
+//     differing only in case -- or one merely CONTAINING the old name -- redded
+//     none of those scenarios. The one test that redded was the toHaveText
+//     below, in this file, which is exactly the coverage this entry was citing
+//     OTHER layers for in order to license itself away.
+//
+//     THE COUNT IS DELIBERATELY NOT WRITTEN HERE. That slice's SPECIFY pass
+//     could not run the Playwright suite at all -- `npm run test:e2e` failed
+//     loading playwright.config.ts, @playwright/test being required twice,
+//     once from the slice worktree's node_modules and once from the primary
+//     checkout's -- so how many scenarios this locator now guards is
+//     UNMEASURED. Whoever next runs the suite against a mismatched name should
+//     measure it and write it in. A predicted count recorded as a measured one
+//     is the exact decay this file's header is about.
+//
+//     THE GENERAL FORM: a note claiming some OTHER layer holds a claim is a
+//     claim about a MATCHER'S SEMANTICS, not about a line's text. Read the
+//     matcher before writing the note. This entry survived an audit that
+//     re-derived the whole file precisely because it LOOKED like a citation.
 //   - the counter's format AND its boot value, by generation-control.feature's
 //     "the game should still be on its first generation" -- questions.ts's
 //     generationCount parses "Generation: " out of that same text, so a
@@ -309,7 +332,7 @@ test('the grid fills the entire viewport, edge to edge', async ({ page }) => {
 // assertions -- keep them, and do not read them as what this test is for.
 test('the HUD panel renders the title, next-generation button, and generation counter, top-left', async ({ page }) => {
   await expect(page.getByRole('heading', { name: "Conway's Game of Life" })).toBeVisible()
-  await expect(page.locator('#next-generation-button')).toHaveText('Next Generation')
+  await expect(page.locator('#next-generation-button')).toHaveText('Next generation')
   await expect(page.getByText(/^Generation: \d+$/)).toHaveText('Generation: 0')
 
   const panelBox = await page.getByRole('heading', { name: "Conway's Game of Life" }).locator('..').boundingBox()
