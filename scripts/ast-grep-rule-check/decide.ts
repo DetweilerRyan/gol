@@ -1,10 +1,3 @@
-// The whole program's decision as one pure function: parse every rule/fixture
-// file (catching parse errors rather than throwing), run every check in
-// checks.ts over what parsed, and turn the result into an exit code plus the
-// exact lines to print. run.ts's job shrinks to gathering RawFile[] off disk
-// (recursively, per sgconfig.yml) and handing them to decide() here -- which
-// is what lets a test pin the exit code without touching the filesystem.
-//
 // Split out of checks.ts: this file is the orchestration (parsing, batching
 // parse failures, formatting output) around the nine checks, not a check
 // itself -- keeping it separate keeps checks.ts a flat list of the checks
@@ -83,6 +76,17 @@ function formatLines(rules: RuleFile[], fixtures: FixtureFile[], failures: Failu
   ]
 }
 
+/**
+ * The whole program's decision as one pure function: parse every rule/fixture
+ * file (catching parse errors rather than throwing), run every check in
+ * checks.ts over what parsed, and turn the result into an exit code plus the
+ * exact lines to print. run.ts's job shrinks to gathering RawFile[] off disk
+ * (recursively, per sgconfig.yml) and handing them to decide() here -- which
+ * is what lets a test pin the exit code without touching the filesystem.
+ *
+ * @param globHasMatch must resolve a pattern against the repo root, which is
+ * the base every rule's `files:` glob is written relative to.
+ */
 export function decide(ruleFiles: RawFile[], fixtureFiles: RawFile[], globHasMatch: GlobHasMatch): DecideResult {
   const { parsed: rules, failures: ruleParseFailures } = partitionParsed(ruleFiles, parseRuleFile)
   const { parsed: fixtures, failures: fixtureParseFailures } = partitionParsed(fixtureFiles, parseFixtureFile)

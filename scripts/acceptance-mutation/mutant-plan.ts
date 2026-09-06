@@ -17,8 +17,10 @@ import { renderMutantText, type MutationSite } from './mutation-sites.ts'
 import { mutantFeatureFileName } from './mutant-tree.ts'
 import { mutateValue } from './mutation-rules.ts'
 
-// One target, already read off disk: which feature it is, its unmutated text,
-// and every mutation site in it.
+/**
+ * One target, already read off disk: which feature it is, its unmutated text,
+ * and every mutation site in it.
+ */
 export interface TargetPlan {
   target: MutationTarget
   featureText: string
