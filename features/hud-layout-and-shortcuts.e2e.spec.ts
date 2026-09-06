@@ -85,9 +85,29 @@ import { CENTER, clickGridAt, expectCellState, previewCells, selectPattern } fro
 //
 // WHAT REMAINS, and the claim each test uniquely holds -- stated per test
 // below as well, since a file-level list is not what licenses a test to exist,
-// which is the whole lesson above. All three are clean category members now:
-// two rendered-pixel-geometry claims and one that is geometry plus a computed
-// accessible name. The honest residual is gone.
+// which is the whole lesson above.
+//
+// RE-AUDITED AGAIN by `preview-follows-pointer-may-be-statable`, which was
+// asked to find out whether this file can empty. The answer is no, and the
+// three tests come out of it differently, so read each one's own note:
+//
+//   1. The viewport-fill test STAYS, and the reason is sharper than "it is
+//      pixel geometry". Its Then would have to name the corner cell, and the
+//      corner cell IS the camera's own offset -- (-32, 20) is arithmetically
+//      DEFAULT_OFFSET_X and a function of the viewport height, which
+//      .gherkin-lintrc bans from the contract as `\boffset ?[xy]\b`. A
+//      clause naming it would pass the linter while laundering the exact
+//      quantity the linter exists to keep out, and it would be FALSE at any
+//      other viewport while the product was right. See the test's own note for
+//      why the coordinate-free form is worse rather than better.
+//   2. The HUD panel test STAYS, but its licence is NARROWER than the note
+//      under it used to claim -- corrected in place. Only the measured box is
+//      uniquely held; all three content assertions are held elsewhere, and the
+//      note now says where. Restating them in Gherkin would manufacture the
+//      duplication `triage-paired-specs` deletes, and would not retire the
+//      test anyway, because the box would remain.
+//   3. The preview test is the one that CONVERTED, and it is still here only
+//      because its successor has not been probed yet. See its own note.
 
 test.beforeEach(async ({ page }) => {
   await page.goto('/')
@@ -99,6 +119,26 @@ test('the grid fills the entire viewport, edge to edge', async ({ page }) => {
   // strips (bottom edge, right edge) -- those are legitimate UI chrome,
   // not grid cells, so this checks the grid reaches right up to them
   // rather than leaving the old boxed-widget's margin.
+  //
+  // WHY THIS IS NOT A SCENARIO, measured rather than asserted. Any Then that
+  // names the corner cell names the camera: solve worldToScreen for screen
+  // x = 0 and the answer is x = offsetX, so the -32 below is arithmetically
+  // DEFAULT_OFFSET_X, and the 20 is the same function of the viewport height
+  // and offsetY. .gherkin-lintrc bans `\boffset ?[xy]\b` from the contract;
+  // a clause naming these two would pass that linter and carry the banned
+  // quantity through anyway, spelled as a coordinate. It would also be FALSE
+  // at any viewport other than playwright.config.ts's 1280x900 while the
+  // product was entirely correct, which is the test for whether a clause is
+  // contract or harness geometry.
+  //
+  // THE COORDINATE-FREE FORM IS WORSE, NOT BETTER, and it is the obvious next
+  // idea so it is written down. "When I toggle the cell in the corner of the
+  // window / Then that cell should be alive" states no pixel -- but the step
+  // still computes the cell from the same two constants, so the geometry has
+  // moved out of sight rather than out of the claim, and what is left on the
+  // page reads as a restatement of cell-life-and-death.feature's central
+  // scenario. A reader cannot see what makes it different, which is how a
+  // load-bearing test gets deleted as a duplicate by the next audit.
   //
   // ASKED BY CLICKING, NOT BY A HIT TEST. This used to read
   // elementAtPoint(...) and match /^Cell /, which is document.elementFromPoint
@@ -117,14 +157,34 @@ test('the grid fills the entire viewport, edge to edge', async ({ page }) => {
   await expectCellState(page, 31, -3, 'alive')
 })
 
-// CATEGORY 3, AND CATEGORY 2 IN ITS FIRST LINE. The claim only this test
-// holds is that the panel is drawn where the layout says it is -- a measured
-// box within 30px of the viewport's top-left corner -- and that the three
-// things inside it are the title, the control and the count. The heading is
-// reached BY ROLE, so what is pinned is the accessible heading a screen reader
-// lands on rather than an h1 tag. No .feature states any of it: the panel's
-// position is pixel geometry, and there is no scenario about where a control
-// sits on screen at any altitude the contract permits.
+// CATEGORY 3, AND ONLY IN ITS LAST TWO LINES. The claim only this test holds
+// is the measured box: the panel drawn within 30px of the viewport's top-left
+// corner. There is no scenario about where a control sits on screen at any
+// altitude the contract permits, and "within 30px" is not a thing a
+// stakeholder-readable clause can say.
+//
+// THE THREE CONTENT ASSERTIONS ARE NOT UNIQUELY HELD, and this note claimed
+// they were until `preview-follows-pointer-may-be-statable` checked. Each is
+// already guarded, so none of them licenses this test and none of them is
+// worth restating in Gherkin -- doing so would manufacture exactly the
+// duplication `triage-paired-specs` deletes:
+//
+//   - the heading, by role and name, in src/components/GenerationHud.test.tsx.
+//   - the button's accessible name, by every bdd scenario that presses it:
+//     features/screenplay/elements.ts's nextGenerationControl reaches it as
+//     getByRole('button', { name: 'Next Generation' }), so a renamed control
+//     reds the generation-control and cell-life-and-death scenarios outright.
+//   - the counter's format AND its boot value, by generation-control.feature's
+//     "the game should still be on its first generation" -- questions.ts's
+//     generationCount parses "Generation: " out of that same text, so a
+//     reworded counter yields NaN there.
+//
+// THEY STAY ANYWAY, AS THE ANCHOR RATHER THAN AS THE CLAIM. The box below is
+// read off the heading's parent, so the heading has to be resolved before
+// there is a box to measure; boundingBox() on an unresolved locator returns
+// null and the non-null assertions would throw somewhere less legible. Same
+// distinction the new preview step draws between its anchor and its
+// assertions -- keep them, and do not read them as what this test is for.
 test('the HUD panel renders the title, next-generation button, and generation counter, top-left', async ({ page }) => {
   await expect(page.getByRole('heading', { name: "Conway's Game of Life" })).toBeVisible()
   await expect(page.locator('#next-generation-button')).toHaveText('Next Generation')
@@ -149,14 +209,37 @@ test('the HUD panel renders the title, next-generation button, and generation co
 // to designate this test the sole holder of that claim was repointed in the
 // same commit that wrote the scenario, and repointed again at the pair.
 //
-// AN OPEN QUESTION THIS PASS DID NOT ACT ON, filed in the handoff rather than
-// resolved here. Preview cells announce their own world coordinates -- that is
-// how features/steps/pattern-library.ts reads all eight pattern shapes -- so
-// "the preview follows the pointer" may well be statable through the accessible
-// tree as a scenario about which cells the preview covers after the aim moves,
-// which would retire this test entirely. `architect` ruled it category 3 for
-// this slice; converting it is a contract question for a slice of its own, not
-// a deletion to take while auditing.
+// THAT OPEN QUESTION HAS BEEN ANSWERED AND THE CLAIM HAS MOVED. Preview cells
+// announce their own world coordinates -- the channel
+// features/steps/pattern-library.ts reads all eight pattern shapes through --
+// so this IS statable, and it is now stated:
+// pattern-library.feature's "Aiming at a different cell moves the preview
+// there rather than leaving it behind". Given an aim at (5, 5), When the aim
+// moves to (12, 12), Then the preview covers exactly the Block's four cells
+// there. One When, because only the second aim is the act; the first is prior
+// state, which is why this did not need the cancel pair's split.
+//
+// THIS TEST IS STILL HERE BECAUSE THE PROBE HAS NOT BEEN TAKEN, and the order
+// is the standing one: restate, probe, then delete. The fault that licenses
+// the deletion is a LATCHING preview -- movePreviewTo ignoring a move once a
+// preview is up -- which is an edit to src/ and therefore `architect`'s to
+// take, not product's. A total no-op is the WRONG probe: it reds every "I am
+// aiming it at the cell at" Given in the feature and says nothing about the
+// new Then. An offset fault is also wrong: the shape outline already catches
+// that, aiming once at (0, 0) and reading absolute coordinates back.
+//
+// PREDICTED SIGNATURE, so a run that differs is a finding: 2 failed of 128 --
+// the new scenario at its anchor (`Pattern preview cell 12, 12` resolving to
+// 0 elements) and this test at its first not.toBe. Nothing else in the suite
+// aims twice.
+//
+// WHAT IS ALREADY MEASURED, and it is a surrogate rather than the probe.
+// Rewriting the scenario's expected list to the FIRST aim's cells reds exactly
+// one test of 128, that scenario, at the anchor over 14 retries. So the
+// preview provably covers the second aim's block and not the first's after the
+// move -- which is the same observation a latched preview fails from the other
+// side. It proves the clause is live and reads the post-move frame; it does
+// not prove the app tracks the pointer, which is what the src probe is for.
 test('the armed pattern preview follows the pointer across the grid', async ({ page }) => {
   await selectPattern(page, 'Glider')
 
