@@ -48,6 +48,22 @@ describe('toggleLibrary', () => {
   it('reopens the library after a pattern was armed and then cancelled', () => {
     expect(isLibraryOpen(toggleLibrary(toggleLibrary(placing)))).toBe(true)
   })
+
+  // The degenerate pair the property in patternPlacement.property.test.ts
+  // quantifies over, pinned by name so neither depends on a draw: pressing the
+  // Patterns button while the library is already up hands back the very state
+  // it was given. That reference is what makes the missing open-state guard on
+  // LifeBoard's onPatterns a no-op rather than merely harmless -- see the
+  // comment on toggleLibrary itself.
+  it('is idempotent on browsing, down to the reference', () => {
+    expect(toggleLibrary(browsing)).toBe(browsing)
+    expect(isLibraryOpen(toggleLibrary(browsing))).toBe(true)
+  })
+
+  it('leaves idle alone only by opening it, so identity is not confused with inertness', () => {
+    expect(toggleLibrary(INITIAL_PLACEMENT)).not.toBe(INITIAL_PLACEMENT)
+    expect(isLibraryOpen(toggleLibrary(INITIAL_PLACEMENT))).toBe(true)
+  })
 })
 
 describe('armPattern', () => {

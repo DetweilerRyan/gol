@@ -1,6 +1,7 @@
 import { it } from '@fast-check/vitest'
 import fc from 'fast-check'
 import { describe, expect } from 'vitest'
+import { isDeepEqual } from './equality/is-deep-equal'
 import { cellKey, createEmptyLiveCells } from './gameOfLife'
 import { PATTERNS, placePattern, type Pattern } from './patternLibrary'
 import {
@@ -67,6 +68,35 @@ describe('placement state machine (property)', () => {
       state = apply(state, next)
       if (previewPositions(state).length > 0) expect(armedPattern(state)).not.toBeNull()
     }
+  })
+
+  // THE IDENTITY HALF OF THIS MODULE'S CONTRACT, stated once over every state a
+  // sequence can reach: a transition that changes nothing must hand back the
+  // very object it was given, not a deep-equal copy. A copy is invisible to
+  // every assertion about state and re-renders every subscriber for nothing,
+  // which is the cost the comments on those functions exist to avoid.
+  //
+  // Two of the three were already pinned by name in patternPlacement.test.ts
+  // (cancelPlacing and movePreviewTo, each "returns the exact same state
+  // reference when nothing is armed"); toggleLibrary's was NOT, and this slice
+  // measured that gap -- returning a fresh `{ mode: 'browsing' }` instead of the
+  // BROWSING constant left all 950 tests `npm test` then collected green. It
+  // now has a named twin too.
+  //
+  // Deliberately scoped to the three functions whose no-op branch IS a
+  // `return state`/shared constant. armPattern and a same-cell movePreviewTo
+  // both build a fresh object that can be deep-equal to what came before, so a
+  // blanket "no-op preserves identity" over every action would be false.
+  it.prop([actions])('hands back the same object, not an equal copy, when a transition changes nothing', (sequence) => {
+    let state = INITIAL_PLACEMENT
+    for (const next of sequence) {
+      state = apply(state, next)
+    }
+
+    for (const settled of [toggleLibrary(state), cancelPlacing(state)]) {
+      if (isDeepEqual(settled, state)) expect(settled).toBe(state)
+    }
+    if (state.mode !== 'placing') expect(movePreviewTo(state, 0, 0)).toBe(state)
   })
 
   it.prop([actions])('always reaches a state a single further action can return to idle from', (sequence) => {

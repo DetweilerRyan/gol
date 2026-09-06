@@ -55,12 +55,25 @@ export default function LifeBoard({ store, appearancePreference, onAppearanceCha
           onDrag={panByScrollbarDrag}
         />
 
-        {/* Overlay order is load-bearing: all of these are position:absolute
-            with auto z-index, so the later sibling wins hit-testing wherever
-            two overlap. GridToolbar (top-2 right-2) overlaps the vertical
-            scrollbar track (right-0 w-2.5), so it must stay after
-            GridScrollbars here. e2e/camera-pan-and-zoom.e2e.spec.ts is what
-            proves it. */}
+        {/* ORDER HERE IS RENDERING INTENT, NOT A CHECKED INVARIANT, and this
+            comment used to say the opposite. These overlays are
+            position:absolute siblings with auto z-index, so the later one
+            wins hit-testing wherever two overlap -- and measured at 1280x900
+            exactly one pair does: the toolbar's right edge lands at x=1272
+            while the vertical scrollbar track spans 1270..1280, leaving a 2px
+            sliver down the side of the Patterns button contested. The toolbar
+            takes it as ordered here (document.elementFromPoint(1271, 9)
+            returns that button). NOTHING TESTS THAT: swapping this element
+            with GridScrollbars leaves npm test (953) and npm run test:e2e
+            (126) entirely green, measured 2026-09-06 on this tree.
+
+            What IS checked is the LAYERING these overlays sit in, which is a
+            different claim -- they are siblings of #grid-content, never
+            descendants of it. See Grid.tsx's overlay-slot comment,
+            rules/no-overlays-inside-grid-content.yml, and
+            camera-pan-and-zoom.feature's "Pressing a zoom control brings no
+            cell to life underneath it"; inverting the slot into #grid-content
+            reds 45 of those 126 tests. */}
         <GridToolbar
           onZoomIn={() => zoomInCentered(size.width, size.height)}
           onZoomOut={() => zoomOutCentered(size.width, size.height)}
@@ -70,10 +83,28 @@ export default function LifeBoard({ store, appearancePreference, onAppearanceCha
           onAppearanceChange={onAppearanceChange}
         />
 
-        {/* No open-state guard on onPatterns: Headless UI's Dialog makes the
-            rest of the page (including the toolbar) inert while the library
-            is open, so that handler can't fire in the browsing state at all.
-            Covered by e2e/modal-inertness.e2e.spec.ts. */}
+        {/* NO OPEN-STATE GUARD ON onPatterns, and THREE independent things
+            make that safe. This comment used to name only the last of them,
+            which is the one most likely to change under you.
+
+            (1) The reducer already handles it. toggleLibrary maps `browsing`
+            to the BROWSING constant the state already IS, so a handler that
+            did fire is a no-op that does not even re-render -- pinned by
+            patternPlacement.test.ts's "is idempotent on browsing, down to the
+            reference" and by the identity property beside it, neither of which
+            existed before this comment leaned on the fact.
+            (2) The dialog physically covers the button's pixel.
+            (3) Headless UI marks #root inert and aria-hidden while it is up.
+
+            (2) AND (3) ARE REDUNDANT, NOT A CHAIN. Measured at rest -- after
+            the open transition settles -- neutralising either one alone
+            leaves all three acts in
+            features/while-the-pattern-library-is-open.feature inert; only
+            neutralising both lets them land, and then all three do (a grid
+            click brings a cell to life, a zoom press moves the badge
+            100 -> 125, a drag moves the ruler). So a Headless UI upgrade that
+            changed one mechanism would not on its own break anything here,
+            and (1) holds even if both go. */}
         <PatternLibraryModal open={isLibraryOpen(placement)} onSelectPattern={selectPattern} onClose={closeLibrary} />
       </>
     )

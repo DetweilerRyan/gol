@@ -26,8 +26,15 @@ export function armPattern(pattern: Pattern): PlacementState {
 
 // The Patterns button's rule: while a pattern is armed it disarms instead of
 // reopening the library, so the button doubles as the cancel affordance.
-// There's no browsing case to handle -- the modal makes the rest of the page
-// inert while open, so the button can't be pressed in that state.
+//
+// THE BROWSING CASE IS HANDLED BY THE ELSE BRANCH RATHER THAN BEING
+// UNREACHABLE, which is what this comment used to claim. `browsing` falls to
+// `: BROWSING` and gets back the very constant it already is, so a press that
+// did arrive while the library is up is a no-op that does not even re-render
+// -- and that, not the dialog's inertness, is what makes the missing
+// open-state guard on LifeBoard's onPatterns safe. See that file's own
+// comment there for the two DOM mechanisms that stop the press arriving at
+// all, and for the measurement showing they are redundant with each other.
 export function toggleLibrary(state: PlacementState): PlacementState {
   return state.mode === 'placing' ? INITIAL_PLACEMENT : BROWSING
 }
