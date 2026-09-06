@@ -40,11 +40,31 @@ Feature: Grid scrollbars
     Then the horizontal thumb should sit at the end of its track
     And the horizontal thumb should be shorter than its track
 
+  # THE LAST CLAUSE IS A SECOND PROMISE FOLDED INTO THIS SCENARIO, not
+  # decoration on the first. A scrollbar is drawn on the board rather than
+  # beside it, so a drag along one is always also a drag across some run of
+  # cells; the clause says that pulling the view around never edits the board
+  # while doing it. Which cells lie under the thumb depends on the size of the
+  # window and is deliberately not named -- the promise is about the board,
+  # not about any one cell of it.
+  #
+  # FOLDED RATHER THAN GIVEN ITS OWN SCENARIO because a dedicated one would
+  # repeat this Given, this When and this first Then word for word to reach
+  # the same moment. It sits here beside the other clauses saying nothing else
+  # changed, which is what it is.
+  #
+  # IF THE SCROLLBARS EVER MOVED OFF THE BOARD the clause would go on passing
+  # while guarding nothing, accepted for the same reason the toolbar scenario
+  # in camera-pan-and-zoom.feature records: the move that empties it is the
+  # move that ends the defect it guards. That scenario is the STATED guard for
+  # the grid overlay's layering; this clause is the same promise for a drag
+  # rather than a press.
   Scenario: Dragging the vertical scrollbar thumb down reveals content further down
     Given a camera centered on the origin at the default zoom
     When I drag the vertical scrollbar thumb down by 50 pixels while it fills its track
     Then the camera should have moved 50 pixels down the grid
     And the zoom level should be unchanged
+    And no cell should be alive
 
   Scenario: Dragging a thumb covering a quarter of its track pans four times as far
     Given a camera centered on the origin at the default zoom
