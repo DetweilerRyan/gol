@@ -6,26 +6,31 @@ import type { ElementSize } from './useElementSize'
 
 export interface UseGridFocusResult {
   focus: FocusCell
-  // Keyboard-driven moves: delegate to gridFocus.ts, then both (a) request
-  // real DOM focus follow the new cell and (b) pan the camera if the move
-  // carried the cell off computeOnScreenRange -- see panToRevealPx.
+  /**
+   * Keyboard-driven moves: delegate to gridFocus.ts, then both (a) request
+   * real DOM focus follow the new cell and (b) pan the camera if the move
+   * carried the cell off computeOnScreenRange -- see panToRevealPx.
+   */
   moveFocus: (direction: FocusDirection) => void
   jumpToEdge: (edge: 'left' | 'right') => void
-  // Pointer-driven: moves the roving-tabindex target AND requests real DOM
-  // focus onto the clicked cell, but never a reveal-pan -- a click is
-  // resolved from on-screen pixels, so its cell is already in view. See this
-  // hook's own header for why the DOM-focus half is required rather than
-  // optional.
+  /**
+   * Pointer-driven: moves the roving-tabindex target AND requests real DOM
+   * focus onto the clicked cell, but never a reveal-pan -- a click is
+   * resolved from on-screen pixels, so its cell is already in view. See this
+   * hook's own header for why the DOM-focus half is required rather than
+   * optional.
+   */
   setFocus: (x: number, y: number) => void
 }
 
-// Owns the keyboard focus cursor as local state, delegating every
-// transition to gridFocus.ts (this slice's step 1). Thin adapter, per this
-// repo's hook convention: the only logic that lives HERE rather than in that
-// pure module is the two things that are genuinely React's job --
-// synchronizing real DOM focus onto whichever cell is logically current, and
-// the one-shot initial centering.
-//
+/**
+ * Owns the keyboard focus cursor as local state, delegating every
+ * transition to gridFocus.ts (this slice's step 1). Thin adapter, per this
+ * repo's hook convention: the only logic that lives HERE rather than in that
+ * pure module is the two things that are genuinely React's job --
+ * synchronizing real DOM focus onto whichever cell is logically current, and
+ * the one-shot initial centering.
+ */
 // WHY REAL DOM FOCUS NEEDS AN EXPLICIT NUDGE. Changing a button's `tabIndex`
 // from 0 to -1 does NOT move real browser focus away from it -- the browser
 // only consults tabIndex for sequential (Tab) navigation, not for whichever

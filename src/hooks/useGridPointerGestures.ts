@@ -2,42 +2,45 @@ import { useRef, useState, type PointerEvent as ReactPointerEvent } from 'react'
 import { rectRelativePixels } from '../camera'
 import { advanceDrag, beginDrag, type DragGesture } from '../dragGesture'
 
-// The grid's pointer-drag gesture, adapted to the DOM: capture, drag-vs-tap
-// resolution, and the isPanning cursor flag. Reports rect-relative pixels
-// only -- it never imports Camera or screenToWorld, mirroring why
-// dragGesture.ts (which this hook wraps) stands alone. Callers resolve
-// pixels to world cells themselves, in onTap/onHover.
 export interface GridPointerGestureCallbacks {
-  // Whether onHover should actually be computed and called on pointermove.
-  // Kept as a plain boolean input (rather than the hook inferring it) since
-  // it mirrors a condition the caller already evaluates for other reasons
-  // (see the trackHover prop's own comment at the call site).
+  /**
+   * Whether onHover should actually be computed and called on pointermove.
+   * Kept as a plain boolean input (rather than the hook inferring it) since
+   * it mirrors a condition the caller already evaluates for other reasons
+   * (see the trackHover prop's own comment at the call site).
+   */
   trackHover: boolean
   onPan: (dxPixels: number, dyPixels: number) => void
-  // Called at the start of both handlePointerUp and handlePointerCancel,
-  // before anything else in either handler runs -- the hook has no opinion
-  // on why a caller needs this (useRafCoalescedPan's flush is the current
-  // reason: a pan mid-frame at release must settle synchronously rather than
-  // waiting on a queued animation frame), only that the drag is ending.
+  /**
+   * Called at the start of both handlePointerUp and handlePointerCancel,
+   * before anything else in either handler runs -- the hook has no opinion
+   * on why a caller needs this (useRafCoalescedPan's flush is the current
+   * reason: a pan mid-frame at release must settle synchronously rather than
+   * waiting on a queued animation frame), only that the drag is ending.
+   */
   onPanEnd: () => void
   onTap: (pixelX: number, pixelY: number) => void
-  // Fires on a plain hover move -- pointer down or not, but never once a
-  // drag has crossed the pan threshold (see handlePointerMove). This is the
-  // FULL hover contract: the caller uses it to drive both the hover
-  // indicator and the armed-pattern preview.
+  /**
+   * Fires on a plain hover move -- pointer down or not, but never once a
+   * drag has crossed the pan threshold (see handlePointerMove). This is the
+   * FULL hover contract: the caller uses it to drive both the hover
+   * indicator and the armed-pattern preview.
+   */
   onHover: (pixelX: number, pixelY: number) => void
-  // Fires on EVERY pointermove once a drag IS panning (including the exact
-  // move that crosses the threshold), reporting the SAME rect-relative pixel
-  // shape onHover does, from the rect cached at pointerdown rather than a
-  // fresh getBoundingClientRect() call -- see handlePointerMove's own
-  // comment for why that's safe and why this is a separate callback from
-  // onHover rather than onHover with an extra flag: a caller must not treat
-  // this as "the pointer is hovering" and must not drive a placement
-  // preview from it (collapse-dead-cell-layer's hover/click-agreement
-  // corrective is explicit that preview-during-pan stays out of scope). Its
-  // only sanctioned use is keeping a LAST-KNOWN pointer position current for
-  // later re-resolution once the camera itself updates -- see Grid.tsx's own
-  // comment at its call site.
+  /**
+   * Fires on EVERY pointermove once a drag IS panning (including the exact
+   * move that crosses the threshold), reporting the SAME rect-relative pixel
+   * shape onHover does, from the rect cached at pointerdown rather than a
+   * fresh getBoundingClientRect() call -- see handlePointerMove's own
+   * comment for why that's safe and why this is a separate callback from
+   * onHover rather than onHover with an extra flag: a caller must not treat
+   * this as "the pointer is hovering" and must not drive a placement
+   * preview from it (collapse-dead-cell-layer's hover/click-agreement
+   * corrective is explicit that preview-during-pan stays out of scope). Its
+   * only sanctioned use is keeping a LAST-KNOWN pointer position current for
+   * later re-resolution once the camera itself updates -- see Grid.tsx's own
+   * comment at its call site.
+   */
   onPointerPosition: (pixelX: number, pixelY: number) => void
 }
 
@@ -51,6 +54,13 @@ export interface GridPointerGestures {
   }
 }
 
+/**
+ * The grid's pointer-drag gesture, adapted to the DOM: capture, drag-vs-tap
+ * resolution, and the isPanning cursor flag. Reports rect-relative pixels
+ * only -- it never imports Camera or screenToWorld, mirroring why
+ * dragGesture.ts (which this hook wraps) stands alone. Callers resolve
+ * pixels to world cells themselves, in onTap/onHover.
+ */
 export function useGridPointerGestures({
   trackHover,
   onPan,

@@ -5,11 +5,13 @@ export interface ElementSize {
   height: number
 }
 
-// Tracks an element's content-box size via ResizeObserver, isolating that
-// browser API (and its observe/disconnect lifecycle) from the components that
-// need a measured size. Starts at 0x0: the first observation only arrives
-// after layout, so callers must treat zero as "not measured yet" rather than
-// as a real size.
+/**
+ * Tracks an element's content-box size via ResizeObserver, isolating that
+ * browser API (and its observe/disconnect lifecycle) from the components that
+ * need a measured size. Starts at 0x0: the first observation only arrives
+ * after layout, so callers must treat zero as "not measured yet" rather than
+ * as a real size.
+ */
 export function useElementSize(ref: RefObject<HTMLElement | null>): ElementSize {
   const [size, setSize] = useState<ElementSize>({ width: 0, height: 0 })
 
