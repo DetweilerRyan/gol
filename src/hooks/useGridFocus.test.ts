@@ -10,6 +10,14 @@ import type { ElementSize } from './useElementSize'
 const CAMERA: Camera = { offsetX: -32, offsetY: -22.5, cellSize: 20 }
 const SIZE: ElementSize = { width: 1280, height: 900 }
 
+// Gates the identity-stability assertion in the last describe, on
+// useCamera.test.ts's and useZoomGlide.test.ts's precedent: Stryker's
+// per-expression instrumentation defeats React Compiler's memoization, so an
+// ungated identity assertion reds the dry run and npm run test:mutation never
+// starts. globalThis.__stryker__ is set at module load by any instrumented
+// file's own bootstrap, before test collection.
+const underStryker = '__stryker__' in globalThis
+
 // A real, focusable DOM node matching the aria-label useGridFocus's DOM-sync
 // effect queries for -- the hook uses document.querySelector directly (see
 // its own header), so mounting this via RTL's render() into the same jsdom
@@ -210,5 +218,56 @@ describe('useGridFocus', () => {
     // Neither mounting the hook nor its own automatic recentering should
     // have moved real DOM focus away from wherever it already was.
     expect(document.activeElement).toBe(activeBefore)
+  })
+})
+
+// UseGridFocusResult publishes setFocus as "Identity-stable across renders --
+// closes over nothing that varies per render", and moveFocus/jumpToEdge as
+// deliberately NOT stable (useGridFocus.ts's own exemption comment says where
+// that churn lands and why it is acceptable). Nothing pinned either half:
+// architect's REVIEW fault battery rewrote setFocus to close over the
+// per-render `onScreen` and the whole suite stayed green. The jsdoc-in-src
+// sweep promoted that note from a private `//` line to a published,
+// caller-facing contract, which is what makes an untested guarantee a new
+// claim rather than a new fact.
+describe('returned action identity', () => {
+  // The discriminating render moves BOTH per-render inputs -- `camera`, which
+  // `onScreen` is derived from, and `focus`. A no-op rerender separates
+  // nothing: React Compiler memoizes `onScreen` on [camera, size], so a
+  // setFocus wrongly closing over it would keep its identity anyway and the
+  // assertion would pass against the broken program too.
+  //
+  // Verified by injection rather than assumed: making setFocus genuinely read
+  // `onScreen.minX` reds this test alone (16 of 17 still green), and so does
+  // making it read `focus.x`, so both halves of "closes over nothing that
+  // varies per render" are pinned. One artifact worth knowing before
+  // re-deriving that -- a `void onScreen` statement is NOT enough to
+  // reproduce it: React Compiler drops the discarded read and setFocus keeps
+  // its cache slot, so that probe passes against what looks like the broken
+  // program.
+  //
+  // Skipped under Stryker for the reason underStryker's own comment gives.
+  // The unskipped companion below holds with or without memoization, so it
+  // still exercises this describe's setup under mutation testing.
+  it.skipIf(underStryker)('setFocus survives a camera change and a focus change with its identity intact', () => {
+    const { result, rerender } = setupHook(CAMERA, SIZE)
+    const before = result.current.setFocus
+
+    act(() => result.current.moveFocus('right'))
+    rerender({ camera: panCamera(CAMERA, 40, 25), size: SIZE })
+
+    expect(result.current.focus).toEqual({ x: 1, y: 0 })
+    expect(result.current.setFocus).toBe(before)
+  })
+
+  it('moveFocus and jumpToEdge DO churn across those same renders -- the guard above is not vacuous', () => {
+    const { result, rerender } = setupHook(CAMERA, SIZE)
+    const { moveFocus, jumpToEdge } = result.current
+
+    act(() => result.current.moveFocus('right'))
+    rerender({ camera: panCamera(CAMERA, 40, 25), size: SIZE })
+
+    expect(result.current.moveFocus).not.toBe(moveFocus)
+    expect(result.current.jumpToEdge).not.toBe(jumpToEdge)
   })
 })
