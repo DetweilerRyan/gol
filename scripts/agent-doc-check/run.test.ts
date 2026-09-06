@@ -121,12 +121,18 @@ describe('runCheck', () => {
     expect(result.lines.some((line) => line.includes('.claude/agents/coder.md'))).toBe(true)
   })
 
+  // Asserts the guard's OWN message text, not just the path: readFileSync's
+  // bare ENOENT names the absolute path, of which ARTICLE_PATH is a substring,
+  // so a path-only assertion passes with the existsSync guard deleted outright
+  // (measured -- all 85 tests stayed green under that fault). This test is the
+  // guard's only guard: stryker.scripts.config.json excludes `**/run.ts`, so
+  // the branch carries no mutant either.
   it('throws naming the missing path when the rule documentation article is absent', () => {
     const root = tempRepo()
     writeFile(root, 'package.json', JSON.stringify({ scripts: {} }))
     writeFile(root, 'CLAUDE.md', 'nothing relevant\n')
     mkdirSync(path.join(root, 'rules'), { recursive: true })
     writeFile(root, '.claude/agents/coder.md', GOOD_AGENT)
-    expect(() => runCheck(root)).toThrow(ARTICLE_PATH)
+    expect(() => runCheck(root)).toThrow(`Rule documentation file not found: ${ARTICLE_PATH}`)
   })
 })
