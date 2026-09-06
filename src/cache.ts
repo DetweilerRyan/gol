@@ -74,6 +74,12 @@ type NonNullNode<T> = PathNode<T> | EntryNode<T>
 
 type NullableNode<T> = NullNode | NonNullNode<T>
 
+/**
+ * Thrown by a {@link Cache} operation that fails against a key path -- a
+ * missing entry, an entry that already exists, or a stale iterator. The
+ * key path accumulates as the error unwinds through nested containers, so
+ * `message` names the full path from the root, not just where it surfaced.
+ */
 export class CacheError extends Error {
   constructor(message: string, keyPath: KeyPath = []) {
     super()
@@ -338,6 +344,12 @@ function _remove<T>(node: NullableNode<T>, keyPath: KeyPath): NullableNode<T> {
 export interface ReadonlyCache<TKeyPath extends unknown[], T> extends Iterable<[TKeyPath, T]> {
   has(keyPath: TKeyPath): boolean
 
+  /**
+   * Retrieves the value stored at the key path.
+   *
+   * @throws CacheError if no entry exists at the key path -- guard with
+   * {@link ReadonlyCache.has} first.
+   */
   retrieve(keyPath: TKeyPath): T
 
   readonly size: number
@@ -383,9 +395,22 @@ export interface Cache<TKeyPath extends unknown[], T> extends ReadonlyCache<TKey
    * while iterating.
    */
   remove(keyPath: TKeyPath): void
+
+  /**
+   * Updates the value already stored at the key path.
+   *
+   * @throws CacheError if no entry exists at the key path -- guard with
+   * {@link Cache.has} first.
+   */
   update(keyPath: TKeyPath, value: T): void
 }
 
+/**
+ * Creates a new, empty {@link Cache}, optionally seeded with entries.
+ *
+ * @throws CacheError if `initialEntries` contains two entries at the same
+ * key path -- seeding inserts them one at a time.
+ */
 export function createCache<TKeyPath extends unknown[], T>(
   initialEntries?: Iterable<[TKeyPath, T]>,
 ): Cache<TKeyPath, T> {
