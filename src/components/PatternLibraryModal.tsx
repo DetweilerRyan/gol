@@ -9,11 +9,12 @@ interface PatternLibraryModalProps {
   onClose: () => void
 }
 
-// Headless UI's Dialog owns its own mount/unmount (based on `open`), portal,
-// focus trap, and outside-click/Escape-to-close -- so unlike the previous
-// hand-rolled version, this component no longer needs its own
-// stopPropagation/onClick-to-close wiring. It still unmounts when closed
-// (Headless's default), so the toHaveCount(0) test assertions still hold.
+/**
+ * Headless UI's Dialog owns its own mount/unmount (based on `open`), portal,
+ * focus trap, and outside-click/Escape-to-close -- a caller needs no
+ * stopPropagation or onClick-to-close wiring of its own. It unmounts
+ * entirely when closed (Headless's default), rather than hiding in place.
+ */
 export default function PatternLibraryModal({ open, onSelectPattern, onClose }: PatternLibraryModalProps) {
   return (
     <Dialog open={open} onClose={onClose} size="sm">

@@ -48,31 +48,32 @@ function lineImage(direction: 'to right' | 'to bottom', color: string, widthPx: 
   return `linear-gradient(${direction}, ${color} 0, ${color} ${widthPx}px, transparent ${widthPx}px, transparent 100%)`
 }
 
-// The single-node, untransformed, camera-exact host the collapse-dead-cell-layer
-// design ratified over the idea file's original "gradient on the transformed
-// layer" sketch: that layer's own translate reaches +-245,760px at
-// MAX_CELL_SIZE once cellAnchor.ts's ANCHOR_DRIFT_CELLS margin is spent (see
-// cellAnchor.ts's own header), which carries a `background-image` off the
-// viewport entirely -- a bug invisible until a long pan. This component sits
-// outside that layer, sized to the viewport itself (absolute inset-0, no
-// transform), and recomputes its background-position every render straight
-// from `camera` via gridGeometry.ts's gridLinePhasePx -- the same shape
-// PatternPreview.tsx already uses for "camera-exact, bounded cost, outside
-// the transformed layer" (see that component's own header). Cost here is one
-// style recompute per render, not per line -- there is exactly one DOM node.
+/**
+ * The single gridline + board-background layer for the whole viewport --
+ * paints a 1px line per cell boundary, widened to 2px every
+ * MAJOR_GRIDLINE_INTERVAL cells, over a solid board fill. This is the only
+ * gridline source in the app; nothing else paints one.
+ *
+ * Render as `#grid-content`'s FIRST child, before the transformed cell layer
+ * -- later-in-DOM wins at equal stacking level, so this must paint furthest
+ * back for a mounted, alive Cell's own background to occlude it correctly
+ * (see Grid.tsx's render site for the one case, a dead focused cell, that
+ * deliberately does not occlude it). Untransformed and camera-exact
+ * (recomputes its own background-position from `camera` every render)
+ * rather than living inside the pan-transformed layer, so a long pan never
+ * carries its background off-screen.
+ */
+// This is the host the collapse-dead-cell-layer design ratified over the
+// idea file's original "gradient on the transformed layer" sketch: that
+// layer's own translate reaches +-245,760px at MAX_CELL_SIZE once
+// cellAnchor.ts's ANCHOR_DRIFT_CELLS margin is spent (see cellAnchor.ts's
+// own header), which carries a `background-image` off the viewport entirely
+// -- a bug invisible until a long pan. Cost here is one style recompute per
+// render, not per line -- there is exactly one DOM node.
 //
 // pointer-events-none (this is decoration, never a hit target) and
 // aria-hidden (nothing here is content -- it's purely presentational, the
 // same status a CSS background always had before this component existed).
-//
-// Rendered as #grid-content's FIRST child, before the transformed layer div
-// wrapping GridCells -- "first" is load bearing for CSS painting order
-// (later-in-DOM wins for equal-stacking-level boxes, the same rule
-// PatternPreview's own header cites), so this paints furthest back and every
-// mounted, alive Cell's own opaque background paints over it wherever the
-// two overlap -- see Grid.tsx's own comment at the render site for the full
-// occlusion picture, including the one case (a dead, focused cell) that
-// deliberately does NOT occlude it.
 export default function GridLines({ camera }: GridLinesProps) {
   const { minorXPx, minorYPx, majorXPx, majorYPx } = gridLinePhasePx(camera)
   const minorPeriodPx = camera.cellSize

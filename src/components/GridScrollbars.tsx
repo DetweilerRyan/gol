@@ -13,14 +13,16 @@ interface GridScrollbarsProps {
   onDrag: (axis: ScrollbarAxis, deltaTrackPx: number, thumbRatio: number) => void
 }
 
-// Renders both scrollbars, computing their metrics itself from camera +
-// contentBounds + size. Subscribes to the store's content bounds directly
-// (rather than taking contentBounds as a prop) so this is the one overlay
-// that re-renders on a generation tick that moves the bounding box --
-// LifeBoard itself stays wiring-only and never touches live-cell data. Owns
-// the measured gate below: size starts at 0x0 (useElementSize hasn't
-// observed yet), and rendering a scrollbar against that would show a
-// nonsense thumb for one paint before the first real measurement arrives.
+/**
+ * Renders both scrollbars, computing their metrics itself from camera +
+ * contentBounds + size. Subscribes to the store's content bounds directly
+ * (rather than taking contentBounds as a prop), so this is the one overlay
+ * that re-renders on a generation tick that moves the bounding box.
+ *
+ * @returns `null` until `size` is measured (starts at 0x0) -- rendering a
+ * scrollbar against that would show a nonsense thumb for one paint before
+ * the first real measurement arrives.
+ */
 export default function GridScrollbars({ camera, store, size, contentId, onDrag }: GridScrollbarsProps) {
   const contentBounds = useContentBounds(store)
 

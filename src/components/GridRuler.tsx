@@ -7,11 +7,21 @@ interface GridRulerProps {
   camera: Camera
 }
 
-// Coordinate ruler: one RulerLabel per axis per major gridline, each axis's
-// labels wrapped in a role="group" so the accessible tree can tell a column
-// number apart from a row number -- both axes otherwise render the same bare
-// digit. Not aria-label on RulerLabel itself: its <span> has the implicit
-// role "generic", which prohibits naming per the ARIA spec (aria-query's
+/**
+ * The coordinate ruler: one RulerLabel per axis per major gridline, each
+ * axis's labels grouped under `role="group"` so the accessible tree can
+ * tell a column number from a row number -- both axes otherwise render the
+ * same bare digit.
+ *
+ * `gridlines.x`, rendered along the top edge (see RulerLabel.tsx), groups
+ * under "Column ruler" -- the FIRST coordinate of `Cell x, y`. `gridlines.y`,
+ * along the left edge, groups under "Row ruler" -- the SECOND coordinate.
+ * Deliberately not "Horizontal ruler"/"Vertical ruler" to match
+ * Scrollbar.tsx's naming -- see CLAUDE.md's Conventions section for why this
+ * mismatch is not a consistency defect to fix.
+ */
+// Not aria-label on RulerLabel itself: its <span> has the implicit role
+// "generic", which prohibits naming per the ARIA spec (aria-query's
 // prohibitedProps), so per-label naming would rest on a name no conformant
 // AT can compute. Group membership by ancestry instead.
 //
@@ -36,11 +46,6 @@ interface GridRulerProps {
 // contact details, a disclosure widget, a heading cluster and a <select>
 // group respectively. Disabled per line rather than per file in
 // .oxlintrc.json, so a future third role= in here still gets checked.
-//
-// The names are 'Column ruler'/'Row ruler' and NOT 'Horizontal ruler'/
-// 'Vertical ruler', which would match Scrollbar.tsx's 'Horizontal scroll'/
-// 'Vertical scroll'. That mismatch is deliberate -- see CLAUDE.md's
-// Conventions section -- and is not a consistency defect to fix.
 export default function GridRuler({ gridlines, camera }: GridRulerProps) {
   return (
     <>

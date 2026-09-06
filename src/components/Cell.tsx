@@ -44,19 +44,29 @@ function cellPaintClasses(isAlive: boolean): string {
 }
 
 interface CellProps {
-  x: number // world coordinate: aria-label, store key
+  /** World coordinate: used for the aria-label and the store key. */
+  x: number
+  /** World coordinate: used for the aria-label and the store key. */
   y: number
   cellSize: number
-  transform: string // finished CSS transform placing this cell -- see GridCells
+  /** The finished CSS transform placing this cell -- see GridCells. */
+  transform: string
   isAlive: boolean
   onActivate: (x: number, y: number) => void
-  // Whether THIS cell is the roving-tabindex keyboard cursor -- see
-  // GridCells.tsx's comment on why this is a plain boolean rather than the
-  // whole FocusCell, and useGridFocus.ts for where it's decided.
+  /**
+   * Whether THIS cell is the roving-tabindex keyboard cursor -- see
+   * GridCells.tsx's comment on why this is a plain boolean rather than the
+   * whole FocusCell, and useGridFocus.ts for where it's decided.
+   */
   isFocused: boolean
 }
 
-// One cell button. Takes its own aliveness as a plain prop now rather than
+/**
+ * One cell button: renders solid when alive, transparent when dead, so
+ * GridLines' own gridlines show through an unmounted -- or
+ * mounted-but-dead-focused -- cell.
+ */
+// Takes its own aliveness as a plain prop now rather than
 // subscribing to the store itself (the useLiveCell hook this used to hold
 // was retired at step 4, and liveCellStore's whole subscribeCell channel
 // with it at the REVIEW pass -- see that module's header):

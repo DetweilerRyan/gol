@@ -21,6 +21,11 @@ interface ScrollbarDragState {
 // they're the same fact.
 const SCROLLBAR_THICKNESS_PX = 10
 
+/**
+ * One scrollbar track + thumb for `axis`. `onDrag` reports `thumbRatio`
+ * frozen at pointer-down, matching the precondition
+ * `panCameraByScrollbarDrag` depends on -- see scrollbars.ts.
+ */
 export default function Scrollbar({ axis, metrics, viewportLengthPx, onDrag, contentId }: ScrollbarProps) {
   const dragStateRef = useRef<ScrollbarDragState | null>(null)
 

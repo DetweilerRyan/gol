@@ -28,11 +28,13 @@ const ARROW_KEY_DIRECTIONS: Readonly<Record<string, FocusDirection>> = {
   ArrowDown: 'down',
 }
 
+/** What `renderOverlays` needs to lay itself out: the measured viewport and the exact camera-derived range on screen. */
 export interface GridOverlayContext {
   size: ElementSize
   visibleRange: VisibleRange
 }
 
+/** The DOM id of the pointer/keyboard-handling element -- pass as an overlay's `aria-controls` (see Scrollbar.tsx). */
 export const GRID_CONTENT_ID = 'grid-content'
 
 interface GridProps {
@@ -40,15 +42,27 @@ interface GridProps {
   store: LiveCellStore
   previewPositions: ReadonlyArray<readonly [number, number]>
   isPatternArmed: boolean
+  /** Called on a click/tap when `isPatternArmed` is false. */
   onToggleCell: (x: number, y: number) => void
+  /** Called on a click/tap when `isPatternArmed` is true, instead of `onToggleCell`. */
   onStampPattern: (x: number, y: number) => void
   onPan: (dxPixels: number, dyPixels: number) => void
+  /** Called on every hover move, whether or not a pattern is armed -- safe to route straight through to usePatternPlacement's previewAt, which is a no-op while idle/browsing. */
   onPreviewCell: (x: number, y: number) => void
   onWheelInput: (input: WheelInput) => void
+  /** Called once, the first time the container's size is measured (never 0x0). */
   onFirstMeasure: (widthPx: number, heightPx: number) => void
+  /** Renders overlay content as a sibling of the pointer/keyboard-handling element, never an ancestor -- so an overlay's own pointer events never bubble into Grid's handlers. */
   renderOverlays: (context: GridOverlayContext) => ReactNode
 }
 
+/**
+ * The pannable/zoomable cell surface: owns pointer/wheel/keyboard gesture
+ * handling and renders the live cells, gridlines, hover indicator and
+ * pattern preview for the given `camera`. Overlay content (ruler, toolbar,
+ * scrollbars, modal, ...) is supplied by the caller through `renderOverlays`
+ * rather than composed in here.
+ */
 export default function Grid({
   camera,
   store,
