@@ -146,7 +146,7 @@ export interface TileRange {
 /**
  * The tile index containing a world coordinate.
  *
- * @remarks Rounds toward negative infinity, not toward zero: tile -1 covers
+ * Rounds toward negative infinity, not toward zero: tile -1 covers
  * world cells [-spanCells, -1], not [-spanCells + 1, 0].
  */
 export function tileIndexOf(worldCoordinate: number, spanCells: number): number {
@@ -177,7 +177,7 @@ export function tileKey(tileX: number, tileY: number): string {
  * The exact minimal set of tiles needed to fully cover the viewport under
  * the given camera -- no admission margin (see {@link EVICT_LAG_TILES}).
  *
- * @remarks The trailing edge is clamped to never fall short of the leading
+ * The trailing edge is clamped to never fall short of the leading
  * edge, so a zero-size viewport still returns a valid single-tile range
  * rather than an inverted or empty one.
  */
@@ -226,7 +226,7 @@ function axisHolds(
  * viewport), and it must not exceed `required` by more than `evictLagTiles`
  * tiles on any one of the four sides.
  *
- * @remarks Asymmetric: tolerates `previous` being wider than `required`, and
+ * Asymmetric: tolerates `previous` being wider than `required`, and
  * never narrower -- a narrower range would leave an unrendered gap at the
  * viewport's leading edge.
  */
@@ -276,16 +276,16 @@ function axisRetained(
  * viewport, retaining as much of `previous` as {@link EVICT_LAG_TILES}
  * allows rather than replacing it outright.
  *
+ * The one-tile lag only bounds a wobble whose realized tile indices
+ * swing by one tile; a swing of two or more (real panning, or float
+ * rounding at exactly one span) rebuilds on every reversal.
+ *
  * @returns `previous` itself, by reference, when it already covers the
  * viewport within {@link EVICT_LAG_TILES} tiles per side -- the identity
  * `useCellTiles`'s render loop depends on to stop re-rendering. Otherwise a
  * new range that always contains the required covering set and never drifts
  * from it by more than {@link EVICT_LAG_TILES} tiles per side. Idempotent:
  * applying it again to its own result returns that same result.
- *
- * @remarks The one-tile lag only bounds a wobble whose realized tile indices
- * swing by one tile; a swing of two or more (real panning, or float
- * rounding at exactly one span) rebuilds on every reversal.
  */
 export function nextTileRange(previous: TileRange, camera: Camera, widthPx: number, heightPx: number): TileRange {
   // That last property is what makes this retention, not admission
