@@ -46,6 +46,26 @@ warns about when it says the two errors are asymmetric: wrongly granting is
 silent and permanent, wrongly refusing costs one run. A reasoned-about-in-the-
 moment exemption is a blocklist wearing an allowlist's clothes.
 
+**Second measured instance, `oxlint-native-jsdoc-tier`, 2026-09-07.** A four-path diff —
+`CLAUDE.md`, two `.claude/agents/articles/*.md`, and **`.oxlintrc.json`** — with **zero TypeScript
+changed**. Three of the four are allowlisted; the fourth disqualified the diff, so
+`npm run test:mutation:full` ran for **9m58s** to produce 98.65% over 1,706 mutants, every one of
+them byte-identical to `main`'s because no mutated file was touched. `hardener` said so in its own
+report: "the 23 survivors are `main`'s, by construction, not this slice's."
+
+A lint config is sound on the same three-point argument as `rules/**`: Stryker's `mutate` list is
+`src/**` so it is never mutated; no vitest project reads it, so it cannot change which tests exist
+to kill anything; and while it _is_ copied into the sandbox, nothing there consults it. **That is
+now two slices in two days paying a full mutation run for a provably unmoved score**, which is the
+frequency argument the first instance could not make alone.
+
+Note the shape both instances share, because it is what a future entry should be tested against:
+each is a **gate's own configuration**. `rules/*.yml` configures ast-grep, `.oxlintrc.json`
+configures oxlint. Neither tool runs inside Stryker's sandbox at all. That may be a cleaner
+predicate than enumerating paths one at a time — though it cuts against the "one soundness argument
+at a time" preference in the open questions below, and `stryker.config.json` is the obvious
+counterexample that must stay absent.
+
 ## Sketch
 
 Add `rules/**` and `rule-tests/**` to the predicate in `CLAUDE.md`'s
