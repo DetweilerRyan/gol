@@ -37,12 +37,51 @@ valid:
         alpha: 1,
       }
     }
-  # An annotated `function_expression`'s inferred twin: the util's four kinds each need a
-  # negative as well as a positive, or a branch could be firing for the wrong reason.
+  # An annotated `function_expression`'s inferred twin. Each of the util's six kinds carries a
+  # negative here as well as a positive below, or a branch could be firing for the wrong
+  # reason: this is the third (function_declaration and arrow are the first two cases above).
   - |
     export const build = function () {
       return {
         /** Reaches -- no annotation. */
+        alpha: 1,
+      }
+    }
+  # A class `method_definition`'s unannotated twin, completing the negative side: the util's
+  # six kinds each need a negative as well as a positive, or a branch could be firing for the
+  # wrong reason and a `valid:` case cannot tell you which.
+  - |
+    export class Thing {
+      build() {
+        return {
+          /** Reaches -- no annotation. */
+          alpha: 1,
+        }
+      }
+    }
+  # The two generator kinds' unannotated twins. `function*` is generator_function_declaration
+  # and `const f = function*` is generator_function -- distinct kinds, both added to the util
+  # after they were measured to produce no finding at all while annotated (fail-open).
+  - |
+    export function* build() {
+      return {
+        /** Reaches -- unannotated generator_function_declaration. */
+        alpha: 1,
+      }
+    }
+  - |
+    export const build = function* () {
+      return {
+        /** Reaches -- unannotated generator_function. */
+        alpha: 1,
+      }
+    }
+  # Async without an annotation. Measured, not assumed: `await` at a destructured call site
+  # does NOT sever a property doc on its own -- only the annotation does.
+  - |
+    export async function useThing() {
+      return {
+        /** Reaches -- inferred async return. */
         alpha: 1,
       }
     }
@@ -77,9 +116,9 @@ invalid:
       /** Severed. */
       alpha: 1,
     })
-  # The remaining two kinds the `annotated-function` util names. Fixtured rather than
-  # inferred: a `has:` that is wrong for a node shape makes its branch silently inert, and
-  # ast-grep test passes identically whether a branch works or is dead.
+  # Two more kinds the `annotated-function` util names. Fixtured rather than inferred: a
+  # `has:` that is wrong for a node shape makes its branch silently inert, and ast-grep test
+  # passes identically whether a `valid:` branch works or is dead.
   - |
     export const build = function (): View {
       return {
@@ -104,4 +143,40 @@ invalid:
           alpha: 1,
         }
       },
+    }
+  # Annotated async. Measured through `await` at a destructured call site, in the same round
+  # as the unannotated async negative above: the property doc is SEVERED and the doc on
+  # `View`'s own member reaches. The rule fires on ordinary async feature work, so this shape
+  # is pinned rather than left to the reader.
+  - |
+    export async function useThing(): Promise<View> {
+      return {
+        /** Severed -- the annotation severs it through the Promise too. */
+        alpha: 1,
+      }
+    }
+  # The two generator kinds. Both produced NO finding before they were added to the util --
+  # the fail-open direction, where a rule checking nothing reads like a rule finding nothing.
+  - |
+    export function* build(): Generator<View> {
+      return {
+        /** Severed -- generator_function_declaration. */
+        alpha: 1,
+      }
+    }
+  - |
+    export const build = function* (): Generator<View> {
+      return {
+        /** Severed -- generator_function. */
+        alpha: 1,
+      }
+    }
+  # `async function*` is the same generator_function_declaration kind rather than a kind of
+  # its own -- pinned so a later reader does not go looking for an async generator branch.
+  - |
+    export async function* build(): AsyncGenerator<View> {
+      return {
+        /** Severed -- async generator, still generator_function_declaration. */
+        alpha: 1,
+      }
     }

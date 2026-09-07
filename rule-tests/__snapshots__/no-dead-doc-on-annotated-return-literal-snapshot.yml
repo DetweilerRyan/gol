@@ -1,6 +1,110 @@
 id: no-dead-doc-on-annotated-return-literal
 snapshots:
   ? |
+    export async function useThing(): Promise<View> {
+      return {
+        /** Severed -- the annotation severs it through the Promise too. */
+        alpha: 1,
+      }
+    }
+  : labels:
+    - source: /** Severed -- the annotation severs it through the Promise too. */
+      style: primary
+      start: 65
+      end: 132
+    - source: ': Promise<View>'
+      style: secondary
+      start: 32
+      end: 47
+    - source: |-
+        async function useThing(): Promise<View> {
+          return {
+            /** Severed -- the annotation severs it through the Promise too. */
+            alpha: 1,
+          }
+        }
+      style: secondary
+      start: 7
+      end: 152
+    - source: |-
+        {
+          return {
+            /** Severed -- the annotation severs it through the Promise too. */
+            alpha: 1,
+          }
+        }
+      style: secondary
+      start: 48
+      end: 152
+    - source: |-
+        return {
+            /** Severed -- the annotation severs it through the Promise too. */
+            alpha: 1,
+          }
+      style: secondary
+      start: 52
+      end: 150
+    - source: |-
+        {
+            /** Severed -- the annotation severs it through the Promise too. */
+            alpha: 1,
+          }
+      style: secondary
+      start: 59
+      end: 150
+  ? |
+    export async function* build(): AsyncGenerator<View> {
+      return {
+        /** Severed -- async generator, still generator_function_declaration. */
+        alpha: 1,
+      }
+    }
+  : labels:
+    - source: /** Severed -- async generator, still generator_function_declaration. */
+      style: primary
+      start: 70
+      end: 142
+    - source: ': AsyncGenerator<View>'
+      style: secondary
+      start: 30
+      end: 52
+    - source: |-
+        async function* build(): AsyncGenerator<View> {
+          return {
+            /** Severed -- async generator, still generator_function_declaration. */
+            alpha: 1,
+          }
+        }
+      style: secondary
+      start: 7
+      end: 162
+    - source: |-
+        {
+          return {
+            /** Severed -- async generator, still generator_function_declaration. */
+            alpha: 1,
+          }
+        }
+      style: secondary
+      start: 53
+      end: 162
+    - source: |-
+        return {
+            /** Severed -- async generator, still generator_function_declaration. */
+            alpha: 1,
+          }
+      style: secondary
+      start: 57
+      end: 160
+    - source: |-
+        {
+            /** Severed -- async generator, still generator_function_declaration. */
+            alpha: 1,
+          }
+      style: secondary
+      start: 64
+      end: 160
+  ? |
     export class Thing {
       build(): View {
         return {
@@ -160,6 +264,58 @@ snapshots:
       style: secondary
       start: 50
       end: 112
+  ? |
+    export const build = function* (): Generator<View> {
+      return {
+        /** Severed -- generator_function. */
+        alpha: 1,
+      }
+    }
+  : labels:
+    - source: /** Severed -- generator_function. */
+      style: primary
+      start: 68
+      end: 105
+    - source: ': Generator<View>'
+      style: secondary
+      start: 33
+      end: 50
+    - source: |-
+        function* (): Generator<View> {
+          return {
+            /** Severed -- generator_function. */
+            alpha: 1,
+          }
+        }
+      style: secondary
+      start: 21
+      end: 125
+    - source: |-
+        {
+          return {
+            /** Severed -- generator_function. */
+            alpha: 1,
+          }
+        }
+      style: secondary
+      start: 51
+      end: 125
+    - source: |-
+        return {
+            /** Severed -- generator_function. */
+            alpha: 1,
+          }
+      style: secondary
+      start: 55
+      end: 123
+    - source: |-
+        {
+            /** Severed -- generator_function. */
+            alpha: 1,
+          }
+      style: secondary
+      start: 62
+      end: 123
   ? |
     export const useThing = (): View => ({
       /** Severed. */
@@ -354,3 +510,55 @@ snapshots:
       style: secondary
       start: 57
       end: 155
+  ? |
+    export function* build(): Generator<View> {
+      return {
+        /** Severed -- generator_function_declaration. */
+        alpha: 1,
+      }
+    }
+  : labels:
+    - source: /** Severed -- generator_function_declaration. */
+      style: primary
+      start: 59
+      end: 108
+    - source: ': Generator<View>'
+      style: secondary
+      start: 24
+      end: 41
+    - source: |-
+        function* build(): Generator<View> {
+          return {
+            /** Severed -- generator_function_declaration. */
+            alpha: 1,
+          }
+        }
+      style: secondary
+      start: 7
+      end: 128
+    - source: |-
+        {
+          return {
+            /** Severed -- generator_function_declaration. */
+            alpha: 1,
+          }
+        }
+      style: secondary
+      start: 42
+      end: 128
+    - source: |-
+        return {
+            /** Severed -- generator_function_declaration. */
+            alpha: 1,
+          }
+      style: secondary
+      start: 46
+      end: 126
+    - source: |-
+        {
+            /** Severed -- generator_function_declaration. */
+            alpha: 1,
+          }
+      style: secondary
+      start: 53
+      end: 126

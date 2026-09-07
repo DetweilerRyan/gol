@@ -9,7 +9,8 @@ note: >-
   the DECLARED type, so a /** */ block written on a property of the returned object literal
   is never rendered anywhere, at any call site. Move it to the member of the annotated type
   (an interface member for `(): CellTilesView`), or -- if the type is inline and has no
-  member to carry it -- drop the annotation or document the declaration instead.
+  member to carry it -- drop the annotation or document the declaration instead. This holds
+  under `async`/`Promise<T>` too, measured through `await` at a destructured call site.
   See .claude/agents/articles/doc-comments.md rule 8 for the measured table.
 # WHY A RULE RATHER THAN PROSE. Nothing else in the toolchain can see this. It type-checks,
 # it lints, it formats, every test stays green, and the reader who wrote the doc has no
@@ -38,7 +39,41 @@ note: >-
 # So the severing condition is a return type annotation, not a NAMED one, and the rule is
 # named for what it checks. Unmeasured, deliberately left so rather than assumed: where the
 # doc should go instead when the annotation is an inline type literal (a doc on the type
-# literal's own member was not measured), and anything involving `Promise<T>`/async.
+# literal's own member was not measured).
+#
+# ASYNC WAS THE ONE REACHABLE SHAPE LEFT UNMEASURED, AND IT IS NOW MEASURED RATHER THAN
+# HEDGED. The hedge was not harmless: this rule is unscoped, so it fires on
+# `async function f(): Promise<T>` during ordinary feature work, and "unmeasured" meant the
+# rule was asserting SEVERED for a shape nobody had hovered. Measured the same way -- one
+# probe module and one caller, both fresh files the server had not read, all readings taken
+# in one round, hovering a DESTRUCTURED `const { alpha } = await f()`:
+#
+#   async f(): Promise<View>     annotated async declaration      -> property doc SEVERED
+#   async f()  no annotation     inferred async return            -> property doc REACHES
+#   f()        no annotation     inferred sync return, CONTROL    -> property doc REACHES
+#   /** */ on View's own member, read through the same `await`    -> REACHES
+#
+# Row 3 is the control that makes row 1 evidence rather than silence; row 2 is its own new
+# cell (nobody had measured whether `await` alone severs a property doc -- it does not).
+# Row 1 additionally came back typed as `View.alpha` rather than `any`, a second independent
+# sign the import had resolved. Row 4 is the remedy this rule's own message prescribes, so
+# the message needs no async caveat: putting the doc on the annotated type's member reaches
+# through `await` exactly as it does synchronously. The rule is therefore RIGHT to fire on
+# async, and no async exclusion is added -- `async` is a modifier token rather than a node
+# kind, which is also why no async kind appears in the util below.
+#
+# GENERATORS ARE TWO MORE KINDS, NOT A MODIFIER, AND OMITTING THEM FAILED OPEN. tree-sitter
+# gives `function* f(): Generator<T>` the kind generator_function_declaration and
+# `const f = function* (): Generator<T>` the kind generator_function -- distinct kinds that
+# each carry their own `return_type` field, so a util naming only function_declaration and
+# function_expression saw neither, and a rule that silently checks nothing reads exactly like
+# a rule that found nothing. Measured by scanning a five-form probe file kind by kind:
+# `async function*` is the SAME generator_function_declaration, and a generator METHOD
+# `*m(): Generator<T>` is an ordinary method_definition that was already covered -- so the
+# gap was exactly two kinds. src/cache.ts's
+# `function* _entries<...>(...): Generator<[TKeyPath, T]>` is a live instance of the first
+# shape, in a mutate-scoped module; it yields rather than returning a documented literal, so
+# nothing was being missed today -- the shape the rule could not see was already in the tree.
 #
 # NO `files:` GLOB, ON PURPOSE. The invariant is a fact about TypeScript, not about a layer:
 # a dead doc is dead in src/, in scripts/, and in features/ alike. Leaving the rule unscoped
@@ -64,12 +99,13 @@ note: >-
 # `has: {field: return_type, kind: type_annotation}` needs the `kind:` -- a `has:` carrying
 # only a field is rejected by ast-grep as having no positive matcher (measured, 0.45.1).
 #
-# ALL FOUR KINDS IN THE UTIL ARE FIXTURE-EXERCISED, and that is not ceremony either. The
-# LSP measurement above covered the declaration and arrow forms only; function_expression
-# and method_definition (class and object-literal alike) were left resting on the belief
-# that `return_type` is spelled the same for them. It is -- confirmed by scanning a probe
-# file, then pinned by rule-tests, because a `has:` that is wrong for one node shape makes
-# that branch silently inert and `npm run ast-grep:test` passes identically either way.
+# ALL SIX KINDS IN THE UTIL ARE FIXTURE-EXERCISED, and that is not ceremony either. The
+# LSP measurement above covered the declaration and arrow forms only; function_expression,
+# method_definition (class and object-literal alike) and the two generator kinds were left
+# resting on the belief that `return_type` is spelled the same for them. It is -- confirmed
+# by scanning a probe file, then pinned by rule-tests, because a `has:` that is wrong for one
+# node shape makes that branch silently inert and `npm run ast-grep:test` passes identically
+# either way for a `valid:` case. Each kind carries a positive AND a negative for that reason.
 utils:
   annotated-function:
     any:
@@ -80,6 +116,12 @@ utils:
       - kind: arrow_function
         has: { field: return_type, kind: type_annotation }
       - kind: method_definition
+        has: { field: return_type, kind: type_annotation }
+      # Generators are their own kinds rather than a flag on the two above; see the block
+      # comment. `async function*` is the declaration kind too, so both are covered here.
+      - kind: generator_function_declaration
+        has: { field: return_type, kind: type_annotation }
+      - kind: generator_function
         has: { field: return_type, kind: type_annotation }
 rule:
   kind: comment
