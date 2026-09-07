@@ -302,18 +302,31 @@ test('the grid fills the entire viewport, edge to edge', async ({ page }) => {
 //     made it true. getByRole's default name matching is case-insensitive AND
 //     substring, so before `sentence-case-the-next-generation-button` a rename
 //     differing only in case -- or one merely CONTAINING the old name -- redded
-//     none of those scenarios. The one test that redded was the toHaveText
-//     below, in this file, which is exactly the coverage this entry was citing
-//     OTHER layers for in order to license itself away.
+//     none of those scenarios -- by construction rather than by measurement,
+//     that being what a case-insensitive matcher MEANS. The one test that
+//     redded was the toHaveText below, in this file, which is exactly the
+//     coverage this entry was citing OTHER layers for in order to license
+//     itself away.
 //
-//     THE COUNT IS DELIBERATELY NOT WRITTEN HERE. That slice's SPECIFY pass
-//     could not run the Playwright suite at all -- `npm run test:e2e` failed
-//     loading playwright.config.ts, @playwright/test being required twice,
-//     once from the slice worktree's node_modules and once from the primary
-//     checkout's -- so how many scenarios this locator now guards is
-//     UNMEASURED. Whoever next runs the suite against a mismatched name should
-//     measure it and write it in. A predicted count recorded as a measured one
-//     is the exact decay this file's header is about.
+//     MEASURED ON THAT SLICE'S SPIKE, contract renamed and src/ untouched, so
+//     the app still announced the old name: 14 failed of 126 in the whole
+//     Playwright run. THIRTEEN are bdd scenarios, all one signature -- a 30s
+//     timeout `waiting for getByRole('button', { name: 'Next generation',
+//     exact: true })`, twelve of them at interactions.ts's nextGeneration
+//     click and one at its focus. The fourteenth is the toHaveText below.
+//
+//     THE SCOPE IN THIS ENTRY IS STILL SHORT BY ONE FEATURE, and it is left
+//     named rather than silently widened, because which features borrow a step
+//     is not a fact this file can see. The thirteen are cell-life-and-death
+//     (11), generation-control (1) and INFINITE-GRID (1) -- that last one
+//     borrows cell-life-and-death.ts's "the next generation is computed", and
+//     a borrower is invisible to a reader of either feature file.
+//
+//     THE DISCRIMINATOR, worth more than the count: generation-control's OTHER
+//     scenario, "Enter advances nothing while the keyboard is on nothing",
+//     stayed GREEN through all of it. It reads the generation counter and
+//     never the button, so its staying green is what says the red was a name
+//     mismatch on this one control and not a broken app.
 //
 //     THE GENERAL FORM: a note claiming some OTHER layer holds a claim is a
 //     claim about a MATCHER'S SEMANTICS, not about a line's text. Read the
