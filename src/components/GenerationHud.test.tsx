@@ -6,7 +6,7 @@ import GenerationHud from './GenerationHud'
 describe('GenerationHud', () => {
   it('renders the next-generation button and starts at generation 0', () => {
     render(<GenerationHud onAdvance={vi.fn()} />)
-    expect(screen.getByRole('button', { name: 'Next Generation' })).toHaveAttribute('id', 'next-generation-button')
+    expect(screen.getByRole('button', { name: 'Next generation' })).toHaveAttribute('id', 'next-generation-button')
     expect(screen.getByText('Generation: 0')).toBeInTheDocument()
   })
 
@@ -25,7 +25,7 @@ describe('GenerationHud', () => {
     const onAdvance = vi.fn()
     render(<GenerationHud onAdvance={onAdvance} />)
 
-    await user.click(screen.getByRole('button', { name: 'Next Generation' }))
+    await user.click(screen.getByRole('button', { name: 'Next generation' }))
 
     expect(onAdvance).toHaveBeenCalledTimes(1)
     expect(screen.getByText('Generation: 1')).toBeInTheDocument()
@@ -36,7 +36,7 @@ describe('GenerationHud', () => {
     const onAdvance = vi.fn()
     render(<GenerationHud onAdvance={onAdvance} />)
 
-    const button = screen.getByRole('button', { name: 'Next Generation' })
+    const button = screen.getByRole('button', { name: 'Next generation' })
     await user.click(button)
     await user.click(button)
     await user.click(button)
