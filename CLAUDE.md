@@ -10,13 +10,15 @@ Conway's Game of Life, built as an infinite, pannable/zoomable grid (React 19 + 
 
 `CLAUDE.md` is a **routing index**, not the whole account. It carries the command list, a compact module map, the orchestrating session's own procedures, the conventions, and one pointer per article. The detail lives in `.claude/agents/articles/`, which is **not** auto-loaded — a role reads an article when its own file tells it to.
 
-Three articles are house rules every role reads unconditionally — **and the orchestrating session reads them too**, plus its own article below. They were labelled per-role because the seat that invokes the roles has no role file; the content was never role-specific.
-
-- **`.claude/agents/articles/orchestration.md`** — the invocation contracts roles expect the prompt to satisfy, the state only this seat carries between stateless invocations, the escalation lanes that end here, and what this seat runs that no role does. Read at session start and before composing any role invocation.
+Three articles are house rules every role reads unconditionally — **and the orchestrating session reads them too.** They were labelled per-role because the seat that invokes the roles has no role file; the content was never role-specific.
 
 - **`.claude/agents/articles/engineering.md`** — design, test-layer placement, property tests, equivalence rulings, gate scoping, claim discipline.
 - **`.claude/agents/articles/workflow.md`** — lint/format, role boundaries, commit messages, worktrees and branches.
 - **`.claude/agents/articles/handoffs.md`** — handoff shape, concurrent slices, defect adjudication, when blocked.
+
+One article belongs to nobody in `.claude/agents/` at all, because its audience runs the roles rather than being one:
+
+- **`.claude/agents/articles/orchestration.md`** — the invocation contracts roles expect the prompt to satisfy, the state only that seat carries between stateless invocations, the escalation lanes that end there, and what it runs that no role does. Read at session start and before composing any role invocation.
 
 Nine are topic articles, read on the trigger each one names in its own header:
 
@@ -147,7 +149,7 @@ Nothing enforces any of this. `ideas/` has no gate, no checker, and no test; Pre
 
 ## Subagent pipeline
 
-`.claude/agents/` defines a five-role pipeline adapted from unclebob/swarm-forge's six-pack branch, scoped to this repo's actual commands (Gherkin features, `crap4ts`, `halstead4ts`, `dry4ts`, Stryker, `acceptance-mutation`, Playwright) rather than swarm-forge's tmux/file-based-handoff orchestration. (Worktrees are used, but per _slice_ rather than per _role_ — see "Running slices concurrently" below.) Each role's full instructions and boundaries live in its own file — read the relevant one before invoking it rather than relying on this summary. Shared house rules ported from swarm-forge's `main`-branch constitution live in `.claude/agents/articles/` (`engineering.md`, `workflow.md`, `handoffs.md`) — every role reads those three unconditionally. The same directory also holds eight **topic** articles, which a role reads only when its own file names the trigger; see the Documentation map above for the list and what each one is for.
+`.claude/agents/` defines a five-role pipeline adapted from unclebob/swarm-forge's six-pack branch, scoped to this repo's actual commands (Gherkin features, `crap4ts`, `halstead4ts`, `dry4ts`, Stryker, `acceptance-mutation`, Playwright) rather than swarm-forge's tmux/file-based-handoff orchestration. (Worktrees are used, but per _slice_ rather than per _role_ — see "Running slices concurrently" below.) Each role's full instructions and boundaries live in its own file — read the relevant one before invoking it rather than relying on this summary. Shared house rules ported from swarm-forge's `main`-branch constitution live in `.claude/agents/articles/` (`engineering.md`, `workflow.md`, `handoffs.md`) — every role reads those three unconditionally. The same directory also holds nine **topic** articles, which a role reads only when its own file names the trigger, plus `orchestration.md`, addressed to the session that invokes the roles rather than to any role; see the Documentation map above for the list and what each one is for.
 
 Cycle order for a feature: **product → coder → cleaner → architect → hardener → product** — `product` opens and closes every slice, in its SPECIFY and VERIFY modes respectively.
 

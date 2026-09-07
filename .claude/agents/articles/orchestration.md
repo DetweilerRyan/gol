@@ -4,13 +4,15 @@
 
 The five roles have files. The seat that invokes them does not, and until this article it had no reading list either — which is the gap it exists to close. **Everything here is either a duty no role can perform, or a contract a role expects the invoking prompt to satisfy and that was documented only on the receiving end.** Nothing here restates a role's own work.
 
+**Why this is an article and not a sixth file in `.claude/agents/`.** That directory's direct `*.md` children are agent files by definition — `scripts/agent-doc-check/run.ts`'s `listAgentFiles` hands every one of them to check 2, which requires frontmatter naming a `tools` allowlist and a `model`. This seat is never invoked as an agent and has neither, so a role file here could only pass the gate by asserting something untrue. `articles/` is excluded from that scan for exactly this reason, and `mutation-testing.md` already names this seat on its Audience line.
+
 ## Read these three, unconditionally, the way every role does
 
 `engineering.md`, `workflow.md`, `handoffs.md`. They are labelled "house rules every role reads unconditionally" and this seat is not a role, so nothing used to route it there — but their content is not role-specific and the omission was an accident of the file layout, not a decision.
 
 **`engineering.md`'s two claim-discipline sections are the ones this seat most needs**: "The scope of a claim is the scope of the command that produced it" and "A conclusion from a plausible mechanism outlives a measurement." Both were written after roles published false conclusions, and they apply here identically. This seat published four in a single five-slice run — see "Prose discipline" below.
 
-Topic articles keep their own triggers. Two already name this seat: **`mutation-testing.md`** (Audience line, and its exemption trigger) and, by subject rather than by Audience, the shell-exit-code trap at `mutation-testing.md:17` — which is the one place that trap is written down, and its triggers route nobody here before a `npm run test:perf` run, the command it actually bit.
+Topic articles keep their own triggers, and exactly one names this seat: **`mutation-testing.md`**, on its Audience line and again in its exemption trigger. Read it for a second thing its triggers do _not_ route you to — its fourth failure mode, the shell pipeline that eats the exit status of the thing being measured, which is the one place that trap is written down and which bit this seat on a `npm run test:perf` run rather than on anything to do with mutants.
 
 ## The invocation contracts
 
@@ -20,13 +22,13 @@ Each of these is something a role expects to be told. Nothing on the role's side
 - **`architect` requires a mode, and omitting it does _not_ hard-fail.** Its file says the prompt will name one and that absent a name **you are reviewing**. A DESIGN, CONTRACT or ADJUDICATE request sent without its mode comes back as a REVIEW pass that looks entirely successful. This is the most dangerous contract in the set, because the failure is silent and the output is plausible.
 - **The mutation-invariant exemption exists only as a thing you say.** `hardener` runs stage 4 absent an instruction not to — "full stop", in its own words. It may check the predicate and must run the stage anyway if it can falsify it; a verification that comes back "invariant" grants nothing. Compute the predicate, name the diff it was computed over, and put both in the prompt. See the merge protocol in CLAUDE.md for the predicate itself; **that is the source of truth, and this article defers to it if the two ever disagree**.
 - **`cleaner`'s scope is `coder`'s handoff manifest.** Cleaner cannot see the previous invocation. Carry the manifest forward into its prompt, or its mutation scan and its cleanup both aim at nothing in particular.
-- **The slice name must be re-injected into every downstream prompt.** `product` invents it in SPECIFY; `cleaner`, `architect` and `hardener` each expect it. It is also the branch, the worktree directory, and the `slice/<name>` tag.
+- **The slice name must be re-injected into every downstream prompt.** `product` invents it in SPECIFY (`product.md`'s handoff section); `coder`, `cleaner`, `architect` and `hardener` each close their own handoff with it. It is also the branch, the worktree directory, and the `slice/<name>` tag.
 
 ## State only this seat can carry
 
 Subagents are stateless between invocations. Two counters therefore belong here and nowhere else.
 
-- **Two round trips per finding, then stop.** A third appearance means the roles disagree about what _correct_ means — a product decision rather than an engineering one — so escalate to the user with both positions written up. New findings surfaced by a re-verify get their own budget. Nothing but this seat can count to two.
+- **The two-round-trip budget on an adjudicated finding.** `handoffs.md` states the rule and `architect.md` repeats it; what neither can do is apply it, because **nothing but this seat can count to two** — the roles are stateless between invocations and a third appearance looks like a first to both of them. Hold the count, and escalate to the user when it is reached.
 - **Whether an acceptance spike ran.** `hardener` is told to check that a spike left nothing behind _if the slice ran one_, and only this seat knows. The spike also leaves a throwaway implementation that this seat discards.
 
 ## The escalation lanes that end here
@@ -47,7 +49,7 @@ Four lanes terminate in this seat, and each is described only as an outbound pro
 
 ## What this seat runs that no role does
 
-- **`npm run test:perf`, followed by `npm run perf-report`.** Skipping the second leaves the previous run's `reports/perf/latest.md` in place, which reads exactly like a successful run of the current tree. Regenerate the `main` baseline first whenever `src/` or `perf/` has moved since the report's own commit — it names the commit it came from. A role may _recommend_ a run; none runs it.
+- **`npm run test:perf`, followed by `npm run perf-report`.** A role may _recommend_ a run; none runs it. The procedure — when a slice is perf-relevant, why the second command is not optional, and when the `main` baseline has to be regenerated first — is CLAUDE.md's, at the end of the merge-protocol section, and that is the source of truth rather than this bullet.
 - **The merge protocol**, end to end. `main` is written by nothing else.
 - **Rebase-conflict resolution is the slice session's, not this seat's** — the slice has the context. `main` never enters a conflicted state.
 

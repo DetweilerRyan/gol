@@ -2,15 +2,15 @@
 
 **Audience:** coder, cleaner, architect - **Read when:** before touching a hook or a composition root, before relocating state, and at the start of every architect REVIEW or DESIGN pass.
 
-> Extracted verbatim from CLAUDE.md @ b5e333e, lines 143-166. No prose was edited in the extracting commit; only the common leading indent of a fragment lifted out of a nested list was removed.
-
 ### The standing preference for frequently-changing state
 
-**Prop-drill the store, not the state.** For state that changes often — anything driven by a pointer drag or a scroll — a leaf subscribes to a small **projection** of a store rather than receiving the state as a prop and re-rendering the whole tree on every commit. The store reference is stable and propagates no renders; the caller maps or filters the root state into the piece a component actually needs, and the component re-renders only when that projection changes.
+**Prop-drill the store, not the state.** For state that changes often — anything driven by a pointer drag or a scroll — a leaf subscribes to a small **projection** of a store rather than receiving the state as a prop and re-rendering the whole tree on every commit. The store reference is stable and propagates no renders; the caller maps or filters the root state into the piece a component actually needs, and the component re-renders only when that projection changes. **This is a preference, not a description of the landed tree** — the per-cell subscription it describes was deliberately retired in `collapse-dead-cell-layer`, and the section below records why; read the exception with the rule.
 
 **Projections must be cached**: compare with a shallow-equality check and return the **prior reference** when equal, so identity stability is a property of the store rather than something each consumer re-establishes with a `useMemo` the compiler may or may not keep. Prefer primitive projections where the shape allows — a `boolean` compares by value, so the `Object.is` bail-out is free and no cache is involved; reach for the shallow-equality cache only for object projections.
 
-Two rulings that come with it. **Dependency injection through React context is dispreferred here** because it complicates component unit tests; prop-drilling a store is preferred precisely because a test constructs a real store and passes it. And `isShallowEqual` is contracted for **small, known-shallow** projected state only — its `Set` branch is O(n²) by construction, so it is not a general-purpose comparator.
+Two rulings that come with it. **Dependency injection through React context is dispreferred here** because it complicates component unit tests; prop-drilling a store is preferred precisely because a test constructs a real store and passes it. And `isShallowEqual` is contracted for **small, known-shallow** projected state only, per the scope contract in its own JSDoc: it never descends into nested containers, and every call allocates — a same-size copy of the second `Set`, plus a key array per side for the object path. Never reach for it to compare two `liveCells` Sets (~10k members); write a dedicated comparison instead. **It is the allocation that bounds it, not the asymptotics** — `container-equality.ts`'s `consumeEquivalent` matches Set members through `Set.delete` (SameValueZero) and, under `isStrictEqual`, can never succeed on the fallback linear scan where that lookup failed, so the shallow Set path is O(n). The O(n²) fallback belongs to `isDeepEqual`, whose comparator can match a structurally-equal member the lookup misses.
+
+> Extracted verbatim from CLAUDE.md @ b5e333e, lines 143-166. No prose was edited in the extracting commit; only the common leading indent of a fragment lifted out of a nested list was removed.
 
 ### State flow
 
