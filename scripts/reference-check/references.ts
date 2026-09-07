@@ -49,9 +49,12 @@ export function basenameOf(token: string): string {
 // false-positive case measured against this tree (see the ratified design)
 // -- does neither. This is deliberately permissive about *which* of the
 // four shapes it is: the false-positive cost is in matching "job", not in
-// conflating "Grid" with "GridLines".
+// conflating "Grid" with "GridLines". No bare-shape check
+// (`/^[A-Za-z_][A-Za-z0-9_]*$/`) is needed here: `word` always comes from
+// CITATION_PATTERN's own second capture group below, which already
+// requires exactly that character class, so a differently-shaped `word`
+// can never reach this function from its only caller.
 function isIdentifierShaped(word: string): boolean {
-  if (!/^[A-Za-z_][A-Za-z0-9_]*$/.test(word)) return false
   return word.includes('_') || (/[a-z]/.test(word) && /[A-Z]/.test(word))
 }
 

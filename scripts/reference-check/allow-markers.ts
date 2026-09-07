@@ -66,6 +66,22 @@ export function isAllowMarkerLine(line: string): boolean {
   return ALLOW_MARKER.test(line)
 }
 
+// One line's contribution to extractAllowMarkers below, split out per
+// crap4ts's per-item-helper-plus-flatMap precedent (agent-doc-check's
+// checkOneAgentFrontmatter) -- carries the line's own branching instead of
+// compounding it into the loop below.
+function allowMarkerOnLine(raw: string, lineNumber: number, surface: 'source' | 'doc'): AllowMarker | null {
+  if (surface === 'source' && !isCommentLine(raw)) return null
+  const match = raw.match(ALLOW_MARKER)
+  if (!match) return null
+  const rawReason = match[2] ? stripTrailingCommentCloser(match[2]) : ''
+  return {
+    token: match[1],
+    reason: rawReason.length > 0 ? rawReason : null,
+    line: lineNumber,
+  }
+}
+
 /**
  * Every `reference-check:` then `allow <token> -- <reason>` marker found in
  * `text`, one per matching line, in line order. For `surface: 'source'`,
@@ -76,19 +92,8 @@ export function isAllowMarkerLine(line: string): boolean {
  * every line, matching scannableLinesOf's own rule for prose.
  */
 export function extractAllowMarkers(text: string, surface: 'source' | 'doc'): AllowMarker[] {
-  const markers: AllowMarker[] = []
-  const lines = text.split('\n')
-  for (let index = 0; index < lines.length; index++) {
-    const raw = lines[index]
-    if (surface === 'source' && !isCommentLine(raw)) continue
-    const match = raw.match(ALLOW_MARKER)
-    if (!match) continue
-    const rawReason = match[2] ? stripTrailingCommentCloser(match[2]) : ''
-    markers.push({
-      token: match[1],
-      reason: rawReason.length > 0 ? rawReason : null,
-      line: index + 1,
-    })
-  }
-  return markers
+  return text
+    .split('\n')
+    .map((raw, index) => allowMarkerOnLine(raw, index + 1, surface))
+    .filter((marker): marker is AllowMarker => marker !== null)
 }

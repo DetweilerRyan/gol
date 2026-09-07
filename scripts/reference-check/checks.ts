@@ -18,8 +18,15 @@
 // converts this into typo detection: "was this ever a real name," not "is
 // it one now."
 
+import { checkNonEmpty } from '../gate-report.ts'
 import { extractAllowMarkers, type AllowMarker } from './allow-markers.ts'
-import { basenameOf, extractFileTokens, extractLineReferences, extractSymbolCitations } from './references.ts'
+import {
+  basenameOf,
+  extractFileTokens,
+  extractLineReferences,
+  extractSymbolCitations,
+  type Citation,
+} from './references.ts'
 import { scannableLinesOf } from './scannable-lines.ts'
 
 /**
@@ -92,6 +99,19 @@ export function checkFileReferenceResolves(files: ScannedFile[], index: FileInde
 }
 
 /**
+ * One citation's contribution to checkCitedSymbolExists below -- split out
+ * per crap4ts's per-item-helper precedent (agent-doc-check's
+ * checkFrontmatterName), so the citation's own three-way branching doesn't
+ * compound with the triple loop that finds it.
+ */
+function isCitationExcusedOrValid(citation: Citation, index: FileIndex, excused: ReadonlySet<string>): boolean {
+  const basename = basenameOf(citation.file)
+  if (excused.has(basename)) return true
+  if (!index.hasBasename(basename)) return true // file-reference-resolves already reports this basename
+  return index.containsSymbol(basename, citation.symbol)
+}
+
+/**
  * Check `cited-symbol-exists`: every `<file>'s <symbol>` citation names a
  * symbol that actually appears in the cited file, unless excused by a
  * same-file allow marker naming that file.
@@ -102,14 +122,11 @@ export function checkCitedSymbolExists(files: ScannedFile[], index: FileIndex): 
     const excused = excusedBasenames(extractAllowMarkers(file.text, file.surface))
     for (const line of scannableLinesOf(file.text, file.surface)) {
       for (const citation of extractSymbolCitations(line.text, line.lineNumber)) {
-        const basename = basenameOf(citation.file)
-        if (excused.has(basename)) continue
-        if (!index.hasBasename(basename)) continue // file-reference-resolves already reports this basename
-        if (index.containsSymbol(basename, citation.symbol)) continue
+        if (isCitationExcusedOrValid(citation, index, excused)) continue
         failures.push({
           check: 'cited-symbol-exists',
           file: file.path,
-          message: `line ${citation.line} cites \`${citation.file}\`'s \`${citation.symbol}\`, which does not appear in ${basename}`,
+          message: `line ${citation.line} cites \`${citation.file}\`'s \`${citation.symbol}\`, which does not appear in ${basenameOf(citation.file)}`,
         })
       }
     }
@@ -187,18 +204,18 @@ export function checkStaleAllowMarker(files: ScannedFile[], index: FileIndex): F
 /**
  * Guard 1 of `reference-check-inert`: zero files scanned is a failure, not
  * a clean run -- catches a broken scope predicate, a failed `git ls-files`,
- * or an empty universe. Direct analogue of ast-grep-rule-check's
- * checkAnyRulesFound.
+ * or an empty universe. The guard itself is gate-report.ts's checkNonEmpty,
+ * shared with ast-grep-rule-check's checkAnyRulesFound -- the two used to
+ * carry independent copies of this function until dry4ts:scripts flagged
+ * them as a duplicate.
  */
 export function checkAnyFilesScanned(files: ScannedFile[]): Failure[] {
-  if (files.length > 0) return []
-  return [
-    {
-      check: 'reference-check-inert',
-      file: '(none)',
-      message: 'no files were scanned -- check scan-scope.ts and the resolution universe run.ts built it from',
-    },
-  ]
+  return checkNonEmpty(
+    files,
+    'reference-check-inert',
+    '(none)',
+    'no files were scanned -- check scan-scope.ts and the resolution universe run.ts built it from',
+  )
 }
 
 /**

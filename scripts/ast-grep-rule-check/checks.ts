@@ -15,6 +15,7 @@
 // decide.ts instead, which imports checkAllRules from here. See decide.ts's
 // module comment for why that's a separate file rather than living here too.
 
+import { checkNonEmpty } from '../gate-report.ts'
 import { fixtureStemForRuleId, ruleIdForFixtureStem } from './filenames.ts'
 import type { FixtureFile } from './fixture-file.ts'
 import type { RuleFile } from './rule-file.ts'
@@ -234,17 +235,18 @@ export function checkFixtureIdMatchesFilename(fixtures: FixtureFile[]): Failure[
  * rules directory would otherwise report "0 rules, 0 fixtures, no failures"
  * and exit 0 -- a checker that checked nothing, reporting nothing, is
  * indistinguishable from a clean repo, which is exactly the failure mode
- * every other check here exists to catch elsewhere.
+ * every other check here exists to catch elsewhere. The guard itself is
+ * gate-report.ts's checkNonEmpty, shared with reference-check's
+ * checkAnyFilesScanned -- the two used to carry independent copies of this
+ * function until dry4ts:scripts flagged them as a duplicate.
  */
 export function checkAnyRulesFound(rules: RuleFile[]): Failure[] {
-  if (rules.length > 0) return []
-  return [
-    {
-      check: 'rules-found',
-      file: '(none)',
-      message: 'no rule files were found -- check ruleDirs in sgconfig.yml and the directories it points at',
-    },
-  ]
+  return checkNonEmpty(
+    rules,
+    'rules-found',
+    '(none)',
+    'no rule files were found -- check ruleDirs in sgconfig.yml and the directories it points at',
+  )
 }
 
 // One rule's contribution to check 9, kept separate from the loop in

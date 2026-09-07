@@ -37,11 +37,8 @@ describe('extractFileTokens', () => {
 })
 
 describe('basenameOf', () => {
-  it('returns the last path segment', () => {
+  it('returns the last path segment, or the token itself when it has no path separator', () => {
     expect(basenameOf('src/hooks/useCellTiles.ts')).toBe('useCellTiles.ts')
-  })
-
-  it('returns the token itself when it has no path separator', () => {
     expect(basenameOf('cellLattice.ts')).toBe('cellLattice.ts')
   })
 })
@@ -81,11 +78,8 @@ describe('extractLineReferences', () => {
     ])
   })
 
-  it('returns nothing when there is no line number suffix', () => {
+  it('returns nothing when there is no line number suffix, or when the match is a glob fragment', () => {
     expect(extractLineReferences('see features/steps/pattern-library.ts for the wiring')).toEqual([])
-  })
-
-  it('drops a glob-fragment match', () => {
     expect(extractLineReferences('matches *.test.ts:12')).toEqual([])
   })
 })
