@@ -156,6 +156,34 @@ Sequence: enable the native tier first, then evaluate the alpha tier separately.
 checks 1–4: every rule above operates **inside a JSDoc block**, and the 19 dead references are
 overwhelmingly in `//` comments.
 
+### 4. Three slices, in this order
+
+**No `product` pass.** Precedent measured on the three most recent tooling slices
+(`jsdoc-standing-rule`, `honest-scripts-cache-deletion`, `document-the-orchestrating-seat`): each
+touches **zero** `features/` files and each is attributed to `orchestrator`/`architect`/`hardener`
+only. There is no user-facing behaviour here and no `.feature` to write, so the cycle enters at
+`architect` or `coder` and `product` is not in it.
+
+| #   | Slice                          | Entry              | Why separable                                                                                                                                                                                                      |
+| --- | ------------------------------ | ------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| A   | `oxlint-native-jsdoc-tier`     | `coder`            | One config line. `.oxlintrc.json` gains `jsdoc` to `plugins` plus `check-tag-names`. **Measured clean on the real tree today**, so it lands green and independently of everything below                            |
+| B   | `comment-reference-checks`     | `architect` DESIGN | The four checks, plus fixing the 19 + 4 sites they flag. Needs a design pass on CLAUDE.md's own triggers: it creates new modules and its home is undecided                                                         |
+| C   | `no-undated-cross-file-claims` | `architect`        | The convention into `doc-comments.md`, then the prose prune. **After B**, not before — the convention mandates the `<file>'s <symbol>` form, and shipping a mandate nothing checks is what produced this candidate |
+
+**Slice A also has to decide `warning` vs `error`.** Every `rules/*.yml` is `warning` and
+`npm run ast-grep` is report-only, but oxlint rules here gate — `npm run lint` is a real exit code.
+Clean baseline means `error` is available at no migration cost; that is a choice, not a default.
+
+**Slice B's open decision, for its DESIGN pass to rule on: sixth check of `agent-doc-check`, or a
+sibling program?** The recommendation is **sibling**, on two grounds — `agent-doc-check`'s name and
+all five of its checks are about `.claude/**` docs, whereas checks 1–4 scan `src/**`/`scripts/**`
+**source**; and `ast-grep-rule-check`/`agent-doc-check` are already a pair that deliberately mirror
+each other's shape, so a third is the established pattern rather than a new one. The counter, which
+is real: check 1 must _also_ scan the docs surface (705 mentions, 16 unresolved), so the check
+genuinely spans both charters, and a new program pays full `scripts/` gate freight — own vitest
+suite, CRAP ≤ 6, `dry4ts:scripts`, `test:mutation:scripts`. **That freight is most of slice B's
+cost, not the four checks.**
+
 ### Prior art — searched, per `orchestration.md`'s "before building a checker, search for one"
 
 Nothing off-the-shelf validates code-comment→code references in TypeScript.
@@ -172,26 +200,32 @@ Nothing off-the-shelf validates code-comment→code references in TypeScript.
 
 ## Touches
 
-`.oxlintrc.json` (native tier), `scripts/` (new checks, their tests, and CLAUDE.md's checker prose
-— it counts the checks by number), `doc-comments.md` for the convention. Cleanup of the 19 + 4
-sites rides along; the ~175 convention-shaped sites do not.
+**A** `.oxlintrc.json`, plus CLAUDE.md/`quality-tooling.md` prose.
+
+**B** `scripts/` — a new program or a sixth check, its tests, and CLAUDE.md's checker prose, which
+counts the checks by number and says "Five binary facts". The 19 + 4 flagged sites are fixed here,
+spanning `src/`, `scripts/`, `features/` and `rules/`.
+
+**C** `doc-comments.md`, plus whatever backfill the open question below settles on.
 
 ## Open questions
 
-- **Premature? No, once widened — and that is the argument for widening.** The sidecar half is
-  premature: zero instances (`ls src/*.md` → nothing). The filename and symbol halves have 20 live
-  defects. Building only the sidecar check gates a convention with no instances while a measured
-  class goes unchecked beside it.
-- **Scope: widen. Measured.** 19 dead tokens + 1 dead symbol (2 sites) + 1 phantom title (3
-  sites), at 0% FP. The severity question the original framing left open is answered by the sweep:
-  4 commits over `src/cellTiles.ts`, both dead refs survived.
+- **The sidecar half stays out of scope until a sidecar exists.** Zero instances today
+  (`ls src/*.md` → nothing), so slice B checks filenames, symbols and test titles and leaves the
+  `@see {@link ./name.md}` form alone. Reopen when the first sidecar lands; the extractor will
+  already be there.
 - **Does the reverse orphan check have an opt-out problem?** Unchanged from the original filing — a
   sidecar written ahead of its code is a real workflow, the same shape as `allow-unresolved-files`.
-- **Where do rosters and "this slice" go?** Counts are already
-  `measured-figures-should-name-their-tree`'s, and this audit answers its open question ("is the
-  population actually large?") at ~55 in `src/`. Rosters (83 sites) and slice refs (39) are
-  homeless. Fold them into the `doc-comments.md` ruling above, or file one small separate
-  candidate. **Not here** — this candidate is about what a checker can verify.
+- **How far does slice C's prune go?** The _rule_ covers rosters and slice refs — slice C's
+  convention says so in as many words. What is undecided is the **backfill**: 83 roster sites and
+  39 `"this slice"` refs, each a judgment call, on top of C's own convention edit. Options: prune
+  in C; prune in a fourth slice; or write the rule and let the sites drain as files are touched.
+  The third is cheapest and slowest, and is the one that risks the rule reading as advisory.
+- **Counts are not this todo's.** `measured-figures-should-name-their-tree` owns them, and this
+  audit answers its own open question ("is the population actually large?") at ~55 in `src/` —
+  including two `all NNN tests green` figures that contradict each other, so at least one is
+  already wrong. Slice C's "cite the command, not the number" bullet overlaps it; reconcile the two
+  before C is written rather than shipping the same rule in two homes.
 - **Cleanup will move `crap4ts`.** Per `crap4ts-scores-a-tree-that-no-longer-exists`, a
   comment-only slice already produced a false FAIL (16 functions over threshold) because Istanbul
   keys by source location. Run `npm run test:coverage` first, and apply `doc-comments.md`'s sweep
