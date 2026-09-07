@@ -30,6 +30,22 @@ describe('scanScopeOf', () => {
     expect(scanScopeOf(['coverage/index.ts', 'ideas/todo/foo.ts']).sourceFiles).toEqual([])
   })
 
+  // Mutation regression: an included prefix alone isn't enough -- the
+  // extension still has to be one of SOURCE_EXTENSIONS. Every other fixture
+  // that varies the extension is root-level, where exclusion falls out of
+  // the prefix check instead and never touches this branch.
+  it('excludes a disallowed extension even under an included source prefix', () => {
+    expect(scanScopeOf(['src/foo.js']).sourceFiles).toEqual([])
+  })
+
+  // Mutation regression: isRootLevelTsFile's regex is anchored (`$`) to the
+  // true end of the path -- a path that merely *contains* ".ts" earlier,
+  // while actually ending in a different allowed extension, is not a
+  // root-level .ts file.
+  it('does not treat a path that merely contains ".ts" as a root-level .ts file', () => {
+    expect(scanScopeOf(['foo.ts.yml']).sourceFiles).toEqual([])
+  })
+
   it('includes CLAUDE.md and README.md, and every .claude/**/*.md, for the doc surface', () => {
     const paths = ['CLAUDE.md', 'README.md', '.claude/agents/coder.md', '.claude/agents/articles/engineering.md']
     expect(scanScopeOf(paths).docFiles).toEqual([...paths].sort())

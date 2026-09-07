@@ -64,6 +64,46 @@ describe('extractAllowMarkers', () => {
     expect(markers[0].reason).toBe('hypothetical path')
   })
 
+  // Mutation regression: stripTrailingCommentCloser's two regexes are
+  // `\s*$` (zero-or-more *whitespace*), not `\S*$` (non-whitespace) --
+  // easy to conflate, and every other fixture here happens to have the
+  // closer sitting at the true end of the raw line, where the two read
+  // identically. Whitespace trailing the closer itself is what tells them
+  // apart.
+  it('strips a trailing HTML/block comment closer even when whitespace trails it', () => {
+    expect(
+      extractAllowMarkers('<!-- reference-check: allow src/a.ts -- hypothetical path -->  \n', 'doc')[0].reason,
+    ).toBe('hypothetical path')
+    expect(
+      extractAllowMarkers('/* reference-check: allow src/a.ts -- hypothetical path */  \n', 'source')[0].reason,
+    ).toBe('hypothetical path')
+  })
+
+  // Mutation regression: both regexes are anchored to the end of the
+  // reason (`$`) so only the *real* trailing closer is stripped -- a
+  // reason that itself mentions the closer's punctuation earlier (a
+  // renamed-to arrow, a stray `*/`) must survive.
+  it('strips only the real trailing closer, not an earlier occurrence inside the reason', () => {
+    expect(extractAllowMarkers('<!-- reference-check: allow src/a.ts -- renamed A --> B -->\n', 'doc')[0].reason).toBe(
+      'renamed A --> B',
+    )
+    expect(extractAllowMarkers('/* reference-check: allow src/a.ts -- see A */ B */\n', 'source')[0].reason).toBe(
+      'see A */ B',
+    )
+  })
+
+  // Mutation regression: every other fixture here uses exactly one space
+  // at each of the marker grammar's four whitespace positions (after the
+  // `:`, before the token, and on both sides of `--`), which reads
+  // identically whether the regex requires "one" (`\s`) or "one or more"
+  // (`\s+`/`\s*`) at that spot. Doubling the whitespace everywhere at once
+  // is what actually exercises the `+`/`*` quantifiers rather than the
+  // literal characters around them.
+  it('tolerates extra whitespace at every position in the marker grammar', () => {
+    const markers = extractAllowMarkers('// reference-check:  allow  foo.ts  --  reason with extra spacing\n', 'source')
+    expect(markers).toEqual([{ token: 'foo.ts', reason: 'reason with extra spacing', line: 1 }])
+  })
+
   it('reports a null reason when the marker carries none', () => {
     const markers = extractAllowMarkers('// reference-check: allow cellLattice.ts\n', 'source')
     expect(markers[0].reason).toBeNull()

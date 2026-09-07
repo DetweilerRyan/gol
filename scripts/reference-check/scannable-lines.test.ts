@@ -34,6 +34,14 @@ describe('scannableLinesOf (source surface)', () => {
     expect(lines[0].text).not.toContain('mapset.ts')
   })
 
+  // Mutation regression: URL_PATTERN's `s` is optional (`https?`) -- a
+  // plain, unencrypted `http://` link is still a URL and must still be
+  // stripped, not just the `https://` form every other fixture here uses.
+  it('strips a plain http:// URL, not only https://', () => {
+    const lines = scannableLinesOf('// see http://example.com/mapset.ts for context', 'source')
+    expect(lines[0].text).not.toContain('mapset.ts')
+  })
+
   it('drops an allow-marker line entirely, not merely exempting its token', () => {
     const text = [
       '// reference-check: allow cellLattice.ts -- deleted, kept as a search key',

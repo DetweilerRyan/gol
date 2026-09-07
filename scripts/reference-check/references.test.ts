@@ -82,4 +82,13 @@ describe('extractLineReferences', () => {
     expect(extractLineReferences('see features/steps/pattern-library.ts for the wiring')).toEqual([])
     expect(extractLineReferences('matches *.test.ts:12')).toEqual([])
   })
+
+  // Mutation regression: LINE_REFERENCE_PATTERN carries a `g` flag, and
+  // every other fixture here has exactly one match per line -- which reads
+  // identically with or without `g`, since a non-global `.match` still
+  // returns the first match. Two references on one line is what the flag
+  // is actually for.
+  it('finds every reference on a line, not only the first', () => {
+    expect(extractLineReferences('see a.ts:10 and b.ts:20')).toEqual(['a.ts:10', 'b.ts:20'])
+  })
 })

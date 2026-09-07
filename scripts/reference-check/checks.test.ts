@@ -115,6 +115,7 @@ describe('checkNoFileLineReferences', () => {
     const failures = checkNoFileLineReferences([sourceFile('a.ts', '// see features/steps/pattern-library.ts:58')])
     expect(failures).toHaveLength(1)
     expect(failures[0].check).toBe('no-file-line-references')
+    expect(failures[0].message).toContain('pattern-library.ts:58')
   })
 
   it('does not scan a doc file at all', () => {
@@ -148,6 +149,7 @@ describe('checkStaleAllowMarker', () => {
     ].join('\n')
     const failures = checkStaleAllowMarker([sourceFile('a.ts', text)], index)
     expect(failures).toHaveLength(1)
+    expect(failures[0].check).toBe('stale-allow-marker')
     expect(failures[0].message).toContain('now resolves')
   })
 
@@ -190,11 +192,32 @@ describe('checkAnyReferencesFound', () => {
   it('fails when no file carries a candidate token', () => {
     const failures = checkAnyReferencesFound([sourceFile('a.ts', '// nothing referenceable here')])
     expect(failures).toHaveLength(1)
+    expect(failures[0].check).toBe('reference-check-inert')
+    expect(failures[0].file).toBe('(none)')
     expect(failures[0].message).toContain('no candidate file-reference tokens')
   })
 
   it('passes when at least one candidate token exists', () => {
     expect(checkAnyReferencesFound([sourceFile('a.ts', '// see cellLattice.ts')])).toEqual([])
+  })
+
+  // Mutation regression: the outer scan is "some file has a token", not
+  // "every file has one" -- a second, token-free file must not turn a
+  // passing scan into a failure.
+  it('passes when only one of several files carries a candidate token', () => {
+    const failures = checkAnyReferencesFound([
+      sourceFile('a.ts', '// see cellLattice.ts'),
+      sourceFile('b.ts', '// nothing referenceable here'),
+    ])
+    expect(failures).toEqual([])
+  })
+
+  // Mutation regression: the inner scan is "some line in the file has a
+  // token", not "every line does" -- a file whose token-bearing line isn't
+  // its only line must still count as satisfied.
+  it('passes when only one line of a file carries a candidate token', () => {
+    const text = ['// nothing on this line', '// see cellLattice.ts'].join('\n')
+    expect(checkAnyReferencesFound([sourceFile('a.ts', text)])).toEqual([])
   })
 })
 
