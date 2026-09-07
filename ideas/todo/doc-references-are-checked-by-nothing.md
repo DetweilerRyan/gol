@@ -164,15 +164,24 @@ touches **zero** `features/` files and each is attributed to `orchestrator`/`arc
 only. There is no user-facing behaviour here and no `.feature` to write, so the cycle enters at
 `architect` or `coder` and `product` is not in it.
 
-| #   | Slice                          | Entry              | Why separable                                                                                                                                                                                                      |
-| --- | ------------------------------ | ------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| A   | `oxlint-native-jsdoc-tier`     | `coder`            | One config line. `.oxlintrc.json` gains `jsdoc` to `plugins` plus `check-tag-names`. **Measured clean on the real tree today**, so it lands green and independently of everything below                            |
-| B   | `comment-reference-checks`     | `architect` DESIGN | The four checks, plus fixing the 19 + 4 sites they flag. Needs a design pass on CLAUDE.md's own triggers: it creates new modules and its home is undecided                                                         |
-| C   | `no-undated-cross-file-claims` | `architect`        | The convention into `doc-comments.md`, then the prose prune. **After B**, not before — the convention mandates the `<file>'s <symbol>` form, and shipping a mandate nothing checks is what produced this candidate |
+| #   | Slice                          | Entry                                       | Why separable                                                                                                                                                                                                      |
+| --- | ------------------------------ | ------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| A   | `oxlint-native-jsdoc-tier`     | **LANDED** `slice/oxlint-native-jsdoc-tier` | One config line. `.oxlintrc.json` gains `jsdoc` to `plugins` plus `check-tag-names`. **Measured clean on the real tree today**, so it lands green and independently of everything below                            |
+| B   | `comment-reference-checks`     | `architect` DESIGN                          | The four checks, plus fixing the 19 + 4 sites they flag. Needs a design pass on CLAUDE.md's own triggers: it creates new modules and its home is undecided                                                         |
+| C   | `no-undated-cross-file-claims` | `architect`                                 | The convention into `doc-comments.md`, then the prose prune. **After B**, not before — the convention mandates the `<file>'s <symbol>` form, and shipping a mandate nothing checks is what produced this candidate |
 
-**Slice A also has to decide `warning` vs `error`.** Every `rules/*.yml` is `warning` and
-`npm run ast-grep` is report-only, but oxlint rules here gate — `npm run lint` is a real exit code.
-Clean baseline means `error` is available at no migration cost; that is a choice, not a default.
+**Slice A landed 2026-09-07** as `slice/oxlint-native-jsdoc-tier`, ruled by `architect` rather than
+`coder` — every decision in it was a "what gates" decision. Six of 23 rules at **`error`**; 17
+declined with written reasons in `quality-tooling.md`, five of them because they contradict
+`doc-comments.md` rules 5, 8 or 9. Two results worth carrying into B and C:
+
+- **The closed tag table is now 5-of-5 enforced**, not the 2-of-5 this file predicted.
+  `settings.jsdoc.tagNamePreference` accepts `false` as a ban, which covers `@deprecated`,
+  `@internal` and `@todo`; `typed: true` covers the rest. Verified independently.
+- **oxlint recognises a tag only at the start of a JSDoc line.** A mid-line `@` — the class that
+  cost `jsdoc-in-scripts` three rewording commits — passes `npm run lint` silently. **A clean lint
+  is not evidence a block hovers as written**, and closing that half is the concrete case for
+  evaluating the alpha-tier `escape-inline-tags`.
 
 **Slice B's open decision, for its DESIGN pass to rule on: sixth check of `agent-doc-check`, or a
 sibling program?** The recommendation is **sibling**, on two grounds — `agent-doc-check`'s name and
