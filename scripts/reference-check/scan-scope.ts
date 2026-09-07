@@ -41,11 +41,23 @@ function isRootLevelTsFile(path: string): boolean {
   return /^[^/]+\.ts$/.test(path)
 }
 
+// Both prefix lists deliberately share one quantifier rather than each
+// writing its own `.some`. SOURCE_EXCLUDED_PREFIXES holds exactly one entry
+// today, and over a one-element array `.some` and `.every` agree -- so an
+// inline `.some` there is an unkillable mutant whose equivalence rests on
+// the array's current length rather than on anything structural, and it
+// becomes a live bug the day a second excluded prefix is added. Routed
+// through here, the quantifier exists once and is pinned by the
+// six-element SOURCE_INCLUDED_PREFIXES call site below.
+function startsWithAny(path: string, prefixes: string[]): boolean {
+  return prefixes.some((prefix) => path.startsWith(prefix))
+}
+
 function isSourceFile(path: string): boolean {
   if (!SOURCE_EXTENSIONS.some((extension) => path.endsWith(extension))) return false
-  if (SOURCE_EXCLUDED_PREFIXES.some((prefix) => path.startsWith(prefix))) return false
+  if (startsWithAny(path, SOURCE_EXCLUDED_PREFIXES)) return false
   if (isRootLevelTsFile(path)) return true
-  return SOURCE_INCLUDED_PREFIXES.some((prefix) => path.startsWith(prefix))
+  return startsWithAny(path, SOURCE_INCLUDED_PREFIXES)
 }
 
 const DOC_EXACT_FILES = new Set(['CLAUDE.md', 'README.md'])

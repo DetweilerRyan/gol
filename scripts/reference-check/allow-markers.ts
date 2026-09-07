@@ -84,13 +84,15 @@ function allowMarkerOnLine(raw: string, lineNumber: number, surface: 'source' | 
 
 /**
  * Every `reference-check:` then `allow <token> -- <reason>` marker found in
- * `text`, one per matching line, in line order. For `surface: 'source'`,
- * only a comment line (per isCommentLine) can carry a marker -- without
- * this restriction, a `.test.ts` file whose test *data* happens to be a
- * string literal shaped like a marker (this program's own fixtures are
- * exactly that) would be read as a real opt-out. `surface: 'doc'` scans
- * every line, matching scannableLinesOf's own rule for prose.
+ * `text`, one per matching line, in line order. For `surface: 'source'`
+ * only a comment line can carry a marker; `surface: 'doc'` scans every
+ * line, matching scannableLinesOf's own rule for prose.
  */
+// The source-surface restriction is load-bearing rather than tidy, and it
+// was measured: a .test.ts file whose test *data* is a string literal
+// shaped like a marker (this program's own fixtures are exactly that)
+// reads as a real opt-out without it -- 22 false stale-allow-marker
+// findings against this slice's own test files, 0 with it.
 export function extractAllowMarkers(text: string, surface: 'source' | 'doc'): AllowMarker[] {
   return text
     .split('\n')

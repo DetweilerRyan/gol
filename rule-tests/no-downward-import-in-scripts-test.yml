@@ -1,0 +1,15 @@
+id: no-downward-import-in-scripts
+valid:
+  - import { listFeatureFiles } from './feature-files.ts'
+  - import { checkNonEmpty } from '../gate-report.ts'
+  - import { writeFile } from '../test-support.ts'
+  - import crap4tsConfig from '../../crap4ts.config.ts'
+  - import { globSync } from 'node:fs'
+  # Not an import: a bare string naming a nested path is not a finding, which is what the
+  # rule's kind: constraint buys. A regex-only matcher would flag this line.
+  - const CHECKS = './reference-check/checks.ts'
+invalid:
+  - import { checkFileReferenceResolves } from './reference-check/checks.ts'
+  - import type { RuleFile } from './ast-grep-rule-check/rule-file.ts'
+  - export { decide } from './agent-doc-check/decide.ts'
+  - import { parseTupleList } from './helpers/tuple-list.ts'

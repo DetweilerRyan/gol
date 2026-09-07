@@ -1,0 +1,26 @@
+id: no-downward-import-in-scripts
+snapshots:
+  export { decide } from './agent-doc-check/decide.ts':
+    labels:
+    - source: export { decide } from './agent-doc-check/decide.ts'
+      style: primary
+      start: 0
+      end: 52
+  import type { RuleFile } from './ast-grep-rule-check/rule-file.ts':
+    labels:
+    - source: import type { RuleFile } from './ast-grep-rule-check/rule-file.ts'
+      style: primary
+      start: 0
+      end: 66
+  import { checkFileReferenceResolves } from './reference-check/checks.ts':
+    labels:
+    - source: import { checkFileReferenceResolves } from './reference-check/checks.ts'
+      style: primary
+      start: 0
+      end: 72
+  import { parseTupleList } from './helpers/tuple-list.ts':
+    labels:
+    - source: import { parseTupleList } from './helpers/tuple-list.ts'
+      style: primary
+      start: 0
+      end: 56

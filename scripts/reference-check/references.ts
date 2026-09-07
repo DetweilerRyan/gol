@@ -31,7 +31,8 @@ function isDiscardedToken(token: string): boolean {
 
 /**
  * Every `<name>.ts`/`.tsx`/`.yml`/`.yaml`-shaped token on `line`, minus glob
- * fragments and dotted-relative noise -- see isDiscardedToken.
+ * fragments (any token containing `*`) and dotted-relative noise (any token
+ * starting with `.`).
  */
 export function extractFileTokens(line: string): string[] {
   const matches = line.match(new RegExp(FILE_TOKEN_SOURCE, 'g')) ?? []

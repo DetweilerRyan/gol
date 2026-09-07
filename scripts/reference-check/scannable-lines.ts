@@ -27,7 +27,11 @@ export interface ScannableLine {
 
 const URL_PATTERN = /https?:\/\/\S+/g
 
-/** The scannable lines of `text`, 1-indexed, URL-stripped, with allow-marker lines removed. */
+/**
+ * The scannable lines of `text`, 1-indexed, URL-stripped, with allow-marker
+ * lines removed: every line for `surface: 'doc'`, comment lines only for
+ * `surface: 'source'`.
+ */
 export function scannableLinesOf(text: string, surface: 'source' | 'doc'): ScannableLine[] {
   const lines = text.split('\n')
   const result: ScannableLine[] = []

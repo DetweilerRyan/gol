@@ -36,10 +36,11 @@ function formatLines(input: CheckInput, failures: Failure[]): string[] {
 /**
  * The whole program's decision as one pure function: run every check.ts
  * check over the files run.ts read off disk and the FileIndex it built, and
- * turn the result into an exit code plus the exact lines to print. Mirrors
- * agent-doc-check's/ast-grep-rule-check's decide.ts split for the same
- * reason -- a test can pin the exit code without touching the filesystem.
+ * turn the result into an exit code plus the exact lines to print -- which
+ * is what lets a test pin the exit code without touching the filesystem.
  */
+// Mirrors agent-doc-check's/ast-grep-rule-check's decide.ts split for the
+// same reason.
 export function decide(input: CheckInput, index: FileIndex): DecideResult {
   const failures = checkAll(input, index)
   return {

@@ -1,0 +1,38 @@
+id: no-downward-import-in-scripts
+language: TypeScript
+severity: warning
+message: A file under scripts/ must not import downward through a directory -- imports run program -> shared, never the reverse.
+note: >-
+  scripts/ is two levels and no more: scripts/<program>/ holds one program's own modules, and a
+  file at scripts/ root (feature-files.ts, gate-report.ts, test-support.ts) is shared by two or
+  more programs. A relative import that descends through a directory is the one shape neither
+  level may write. From a root module it is the reverse import -- scripts/gate-report.ts
+  reaching into scripts/reference-check/ would couple every other program to that program's
+  internals, and the shared file stops being safe to change. From inside a program directory it
+  is a third level, which the layout does not have. The fix in both directions is the same one
+  that produced gate-report.ts: move the shared thing to scripts/ root and import it upward as
+  '../name.ts'.
+# Scoped by glob rather than by name so a new shared root module, or a new program, is covered
+# the day it lands. ast-grep's `*` crosses `/` (measured against 0.45.1 with a throwaway probe
+# in each position), so this one glob reaches scripts/ root AND every program directory -- both
+# halves of the layout above, which is why the rule is named for the import shape rather than
+# for one of the two invariants it enforces. Note the checker behind `npm run ast-grep:rules`
+# resolves this glob with node:fs's globSync, whose `*` does NOT cross `/`; it still resolves
+# (the three root modules), so it reads as live there, stricter than the scanner rather than
+# broken.
+files:
+  - 'scripts/*.ts'
+# Metavariables do not interpolate inside string literals, so an import PATH is matched with
+# kind: + regex: rather than with a pattern -- two of this repo's rules were silently inert for
+# exactly that mistake. `[^'"/]+/` after the `./` is what distinguishes a descent
+# (`./program/mod.ts`) from an ordinary sibling import (`./mod.ts`); a bare string naming a
+# nested path is not an import and is not a finding, which the fixture pins. `../` is
+# deliberately NOT matched: an upward import is the sanctioned direction, and the only
+# `../<dir>/` shape available is a program reaching sideways into another program, which is
+# left as prose for now rather than legislated here -- see .claude/agents/articles/quality-tooling.md.
+rule:
+  any:
+    - kind: import_statement
+      regex: 'from [''"]\./[^''"/]+/'
+    - kind: export_statement
+      regex: 'from [''"]\./[^''"/]+/'
