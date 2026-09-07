@@ -1,0 +1,196 @@
+id: no-dead-doc-on-annotated-return-literal
+snapshots:
+  ? |
+    export const useThing = (): View => ({
+      /** Severed. */
+      alpha: 1,
+    })
+  : labels:
+    - source: /** Severed. */
+      style: primary
+      start: 41
+      end: 56
+    - source: ': View'
+      style: secondary
+      start: 26
+      end: 32
+    - source: |-
+        (): View => ({
+          /** Severed. */
+          alpha: 1,
+        })
+      style: secondary
+      start: 24
+      end: 71
+    - source: |-
+        ({
+          /** Severed. */
+          alpha: 1,
+        })
+      style: secondary
+      start: 36
+      end: 71
+    - source: |-
+        {
+          /** Severed. */
+          alpha: 1,
+        }
+      style: secondary
+      start: 37
+      end: 70
+  ? |
+    export const useThing = (): View => {
+      return {
+        /** Severed. */
+        alpha: 1,
+      }
+    }
+  : labels:
+    - source: /** Severed. */
+      style: primary
+      start: 53
+      end: 68
+    - source: ': View'
+      style: secondary
+      start: 26
+      end: 32
+    - source: |-
+        (): View => {
+          return {
+            /** Severed. */
+            alpha: 1,
+          }
+        }
+      style: secondary
+      start: 24
+      end: 88
+    - source: |-
+        {
+          return {
+            /** Severed. */
+            alpha: 1,
+          }
+        }
+      style: secondary
+      start: 36
+      end: 88
+    - source: |-
+        return {
+            /** Severed. */
+            alpha: 1,
+          }
+      style: secondary
+      start: 40
+      end: 86
+    - source: |-
+        {
+            /** Severed. */
+            alpha: 1,
+          }
+      style: secondary
+      start: 47
+      end: 86
+  ? |
+    export function useThing(): View {
+      return {
+        /** Severed -- `View`'s member is the only site that reaches a caller. */
+        alpha: 1,
+      }
+    }
+  : labels:
+    - source: /** Severed -- `View`'s member is the only site that reaches a caller. */
+      style: primary
+      start: 50
+      end: 123
+    - source: ': View'
+      style: secondary
+      start: 26
+      end: 32
+    - source: |-
+        function useThing(): View {
+          return {
+            /** Severed -- `View`'s member is the only site that reaches a caller. */
+            alpha: 1,
+          }
+        }
+      style: secondary
+      start: 7
+      end: 143
+    - source: |-
+        {
+          return {
+            /** Severed -- `View`'s member is the only site that reaches a caller. */
+            alpha: 1,
+          }
+        }
+      style: secondary
+      start: 33
+      end: 143
+    - source: |-
+        return {
+            /** Severed -- `View`'s member is the only site that reaches a caller. */
+            alpha: 1,
+          }
+      style: secondary
+      start: 37
+      end: 141
+    - source: |-
+        {
+            /** Severed -- `View`'s member is the only site that reaches a caller. */
+            alpha: 1,
+          }
+      style: secondary
+      start: 44
+      end: 141
+  ? |
+    export function useThing(): { alpha: number } {
+      return {
+        /** Severed -- the annotation need not be named for the doc to go dark. */
+        alpha: 1,
+      }
+    }
+  : labels:
+    - source: /** Severed -- the annotation need not be named for the doc to go dark. */
+      style: primary
+      start: 63
+      end: 137
+    - source: ': { alpha: number }'
+      style: secondary
+      start: 26
+      end: 45
+    - source: |-
+        function useThing(): { alpha: number } {
+          return {
+            /** Severed -- the annotation need not be named for the doc to go dark. */
+            alpha: 1,
+          }
+        }
+      style: secondary
+      start: 7
+      end: 157
+    - source: |-
+        {
+          return {
+            /** Severed -- the annotation need not be named for the doc to go dark. */
+            alpha: 1,
+          }
+        }
+      style: secondary
+      start: 46
+      end: 157
+    - source: |-
+        return {
+            /** Severed -- the annotation need not be named for the doc to go dark. */
+            alpha: 1,
+          }
+      style: secondary
+      start: 50
+      end: 155
+    - source: |-
+        {
+            /** Severed -- the annotation need not be named for the doc to go dark. */
+            alpha: 1,
+          }
+      style: secondary
+      start: 57
+      end: 155

@@ -1,0 +1,70 @@
+id: no-dead-doc-on-annotated-return-literal
+valid:
+  # Inferred return: the property doc is the one that reaches a destructured caller. Measured.
+  - |
+    export function useThing() {
+      return {
+        /** Reaches -- nothing declares a return type, so the literal is the shape. */
+        alpha: 1,
+      }
+    }
+  - |
+    export const useThing = () => {
+      return {
+        /** Reaches -- same, in arrow form. */
+        alpha: 1,
+      }
+    }
+  # Nested: the ANNOTATED function is the outer one, but the literal belongs to the inner
+  # arrow, whose return is inferred. This pins the neighbor-scoped `inside` chain -- a
+  # `stopBy: end` anywhere in the rule reports this line and would be wrong.
+  - |
+    export function useThing(): View {
+      const build = () => {
+        return {
+          /** Reaches -- `build`'s own return is inferred. */
+          alpha: 1,
+        }
+      }
+      return build()
+    }
+  # An implementation comment inside an annotated return literal is correct placement, not a
+  # violation: it was never trying to reach a hover. The rule targets JSDoc only.
+  - |
+    export function useThing(): View {
+      return {
+        // stays // -- an implementation note, on the channel that costs a caller nothing
+        alpha: 1,
+      }
+    }
+invalid:
+  # Named interface return -- doc-comments.md rule 8's measured row.
+  - |
+    export function useThing(): View {
+      return {
+        /** Severed -- `View`'s member is the only site that reaches a caller. */
+        alpha: 1,
+      }
+    }
+  # Inline type-literal annotation -- measured while authoring this rule.
+  - |
+    export function useThing(): { alpha: number } {
+      return {
+        /** Severed -- the annotation need not be named for the doc to go dark. */
+        alpha: 1,
+      }
+    }
+  # Annotated arrow, block body.
+  - |
+    export const useThing = (): View => {
+      return {
+        /** Severed. */
+        alpha: 1,
+      }
+    }
+  # Annotated arrow, expression body -- the one shape with no return_statement to hang off.
+  - |
+    export const useThing = (): View => ({
+      /** Severed. */
+      alpha: 1,
+    })

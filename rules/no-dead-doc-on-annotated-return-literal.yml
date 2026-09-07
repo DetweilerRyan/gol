@@ -1,0 +1,94 @@
+id: no-dead-doc-on-annotated-return-literal
+language: TypeScript
+severity: warning
+message: This JSDoc reaches no caller -- the function's return type annotation severs it. Put it on the annotated type's member.
+note: >-
+  Measured, and the failure is silent in the worst way: the hover comes back as a bare
+  signature, which is indistinguishable from no doc having been written. When a function
+  annotates its return type, TypeScript resolves a destructured caller's property against
+  the DECLARED type, so a /** */ block written on a property of the returned object literal
+  is never rendered anywhere, at any call site. Move it to the member of the annotated type
+  (an interface member for `(): CellTilesView`), or -- if the type is inline and has no
+  member to carry it -- drop the annotation or document the declaration instead.
+  See .claude/agents/articles/doc-comments.md rule 8 for the measured table.
+# WHY A RULE RATHER THAN PROSE. Nothing else in the toolchain can see this. It type-checks,
+# it lints, it formats, every test stays green, and the reader who wrote the doc has no
+# feedback channel at all -- the only way to notice is to hover the symbol from another file
+# and observe an absence. That is precisely the shape of defect a structural rule is for.
+# It is also the ONE mechanisable claim in doc-comments.md: a presence-only "every export has
+# a doc" rule was rejected in the same pass, because it cannot tell whether a summary says
+# anything and is satisfied by an empty /** */ block. This rule never judges prose. It only
+# says the prose is standing somewhere it cannot be read from.
+#
+# WHAT "ANNOTATED" MEANS, AND WHY IT IS BROADER THAN THE NAME THE DESIGN PASS PROPOSED. The
+# rule was proposed as no-dead-doc-on-NAMED-return-literal, from doc-comments.md rule 8's
+# table, which measured `(): CellTilesView`. Measured again while authoring this rule, on
+# fresh files the language server had not read, hovering a DESTRUCTURED cross-file call site:
+#
+#   (): { alpha: number }        inline type literal annotation   -> property doc SEVERED
+#   (): { gamma: number } => {}  annotated arrow function         -> property doc SEVERED
+#   no annotation at all         inferred return                  -> property doc REACHES
+#
+# The third row is the control, and it is what makes the first two trustworthy rather than
+# an artifact of the server not having read the file: all three hovers were taken from one
+# file in one round, and the inferred one came back carrying its sentinel prose. (An earlier
+# round returned `any` for all three -- the server had not resolved the import yet -- which
+# is exactly the false negative the control exists to catch.)
+#
+# So the severing condition is a return type annotation, not a NAMED one, and the rule is
+# named for what it checks. Unmeasured, deliberately left so rather than assumed: where the
+# doc should go instead when the annotation is an inline type literal (a doc on the type
+# literal's own member was not measured), and anything involving `Promise<T>`/async.
+#
+# NO `files:` GLOB, ON PURPOSE. The invariant is a fact about TypeScript, not about a layer:
+# a dead doc is dead in src/, in scripts/, and in features/ alike. Leaving the rule unscoped
+# is also the form that cannot rot -- CLAUDE.md records that a `files:` glob is invalidated by
+# a rename in the code rather than by any edit to rules/, and nothing checks that automatically
+# between architect passes.
+#
+# TypeScript ONLY, no Tsx twin, and this is a stated limit rather than an oversight. All
+# sixteen hooks -- the live surface for this shape -- are src/hooks/*.ts, and the repo holds
+# no annotated function returning a documented object literal in a .tsx file. If a hook ever
+# lands in a component file, the twin is a one-file follow-on (the no-manual-memo-ts/tsx pair
+# is the precedent for how that is done).
+#
+# THE MATCHER, AND WHY THE `inside` CHAIN IS SPELLED OUT NODE BY NODE. Comments are ordinary
+# tree-sitter nodes here, so the JSDoc block sits INSIDE the object literal, as a sibling of
+# its properties -- which is what makes this matchable at all. Every `inside` below uses the
+# default stopBy (neighbor), so the chain is exact: object -> return_statement ->
+# statement_block -> the function itself. Do NOT relax any of them to `stopBy: end`. A return
+# inside an UNANNOTATED inner arrow, nested in an annotated outer function, is a live doc
+# (the inner function's inferred return is what the caller sees), and `stopBy: end` would walk
+# past the inner function to the outer one and report it. rule-tests pins that case as valid.
+#
+# `has: {field: return_type, kind: type_annotation}` needs the `kind:` -- a `has:` carrying
+# only a field is rejected by ast-grep as having no positive matcher (measured, 0.45.1).
+utils:
+  annotated-function:
+    any:
+      - kind: function_declaration
+        has: { field: return_type, kind: type_annotation }
+      - kind: function_expression
+        has: { field: return_type, kind: type_annotation }
+      - kind: arrow_function
+        has: { field: return_type, kind: type_annotation }
+      - kind: method_definition
+        has: { field: return_type, kind: type_annotation }
+rule:
+  kind: comment
+  regex: '^/\*\*'
+  inside:
+    kind: object
+    any:
+      # block body:  function f(): T { return { /** ... */ a } }
+      - inside:
+          kind: return_statement
+          inside:
+            kind: statement_block
+            inside:
+              matches: annotated-function
+      # arrow expression body:  const f = (): T => ({ /** ... */ a })
+      - inside:
+          kind: parenthesized_expression
+          inside:
+            matches: annotated-function

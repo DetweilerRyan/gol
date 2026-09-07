@@ -4,6 +4,14 @@
 
 This article is one loop with two halves. Part 1 is how to write an interface comment; Part 2 is how to read one instead of reading a body. They only pay off together: the writing rule is worth obeying because roles consume hover, and the reading habit is worth forming because comments are written to the split rule.
 
+## Scope: who this binds, and who carries a read trigger
+
+Three roles name this article in their own files — `coder`, `cleaner`, `architect` — because authoring interface prose, or ruling on it, is part of their normal pass. **That is the trigger list, not the binding list**, and the difference has been ruled on twice. Both rulings are dated 2026-09-06 and were made in the `jsdoc-standing-rule` DESIGN pass, on the user's direction that the standing duty be split across those three roles.
+
+- **`hardener` gets no read trigger of its own, deliberately.** It reaches the governing rule through `engineering.md`'s "Where a comment goes is a design decision too" line, which every role reads unconditionally and which points here — so nothing is blind; what it lacks is a second, redundant pointer. It is nonetheless **bound**: a remediation of its own that adds or changes an export under `src/` or `scripts/` is governed by rules 1-9 exactly as `coder`'s work is. The asymmetry is that its pass is a _gate_ rather than an authoring pass, so Part 2 SS4's disposition applies to it as it does to `coder` — an insufficient hover is a finding to report, not a thing to fix inside the gate. A previous `hardener` flagged the audience line as arguably naming it and correctly declined to edit its own scope; this paragraph is the answer, so the next one finds a ruling rather than a gap.
+
+- **`features/**` TypeScript: every mechanical fact here reaches it; the _duty_ is not codified, and that is not an oversight.** The seven `features/screenplay/*.ts` modules export 97 symbols that the step modules import — genuine cross-file call sites, the exact position this article is written for — and `coder`'s workflow step 2 has it _reading_ `features/steps/*.ts` to learn what the contract asserts, which is the read hover exists to replace. So Part 1's placement rules and Part 2's reading habit are as true there as in `src/`. What this slice does **not** do is write a duty into `product.md` or backfill `features/`: role files change only on explicit user direction, and the direction behind this slice named three roles, none of them `product`. Recorded here rather than left silent, and carried into the handoff as a follow-on. Note that `rules/no-dead-doc-on-annotated-return-literal.yml` is unscoped by path and so already fires in `features/` — consistent with the ruling rather than in tension with it, since a doc that reaches no caller is a defect wherever it stands, independently of whose prose assigns the duty to write a live one.
+
 ## The problem this exists to fix
 
 **A `//` comment is invisible on both channels a consumer has.** Measured on this tree:
@@ -142,8 +150,22 @@ Read the **named** row: the moment a hook annotates a named return type, **the i
 
 So the placement rule has two arms and no third:
 
-- **Named return type** — `useCellTiles`'s `CellTilesView`, `useZoomGlide`'s `ZoomGlideController`, and every hook in `src/hooks/` except the two below — the doc goes on the **interface member**. This section's opening measurement says an interface's own block does not reach its members; the table says the _implementation's_ block does not reach them either.
+- **Named return type** (and, per the widening below, _any_ return type annotation) — `useCellTiles`'s `CellTilesView`, `useZoomGlide`'s `ZoomGlideController`, and every hook in `src/hooks/` except the two below — the doc goes on the **interface member**. This section's opening measurement says an interface's own block does not reach its members; the table says the _implementation's_ block does not reach them either.
 - **Inferred return** — today exactly `useCamera` and `usePatternPlacement` — the doc goes on the **shorthand property in the `return { … }` literal**. That literal is the analogue of an interface member: the one contiguous place a hook's public surface is listed. It is also the only site available for a property whose value is an inline arrow (`openOrCancelLibrary: () => setPlacement(toggleLibrary)`), so one arm covers the whole literal rather than splitting it by how each entry happens to be written.
+
+**The severing condition is _an_ annotation, not a _named_ one.** Measured a slice later, while authoring the rule below, and it widens the table's **named** row rather than adding a case beside it — taken the same way, cross-file at a **destructured** call site, on a fresh file pair the language server had not read:
+
+| the function's return type                    | doc on the `return { … }` property |
+| --------------------------------------------- | ---------------------------------- |
+| `(): { alpha: number }` — inline type literal | **severed**                        |
+| `(): View =>` — annotated arrow               | **severed**                        |
+| none — inferred (**the control**)             | **reaches**                        |
+
+The third row is the control rather than a bonus data point. An earlier round of the same three probes returned `any` for all three, because the server had not yet resolved the import — a bare-signature answer that reads exactly like "severed", which is the false negative any measurement in this direction is exposed to. All three hovers in the table were taken from one file in one round, and the inferred one came back carrying its sentinel prose; that is what makes the two severed readings evidence rather than silence.
+
+**Unmeasured, and deliberately left that way:** where the doc should go instead when the annotation is an inline type literal (the type literal has a member position, but nothing here says a doc on it reaches), and anything involving `async` or a `Promise<T>` return. Same posture as the longhand-property caveat below — do not assume either way.
+
+**This is the one claim in this article a machine can check, and it now is.** `rules/no-dead-doc-on-annotated-return-literal.yml` matches a JSDoc block standing inside an annotated function's return literal, in every one of the four shapes above and in the arrow's parenthesised expression-body form. It never judges prose: a presence-only "every export carries a doc" rule was proposed in the same pass and rejected, because it cannot tell whether a summary says anything and is satisfied by an empty `/** */`. See `.claude/agents/articles/ast-grep-rules.md` for its matcher and the `stopBy` precision it depends on.
 
 **Two docs on one action means one of them is dead.** Both precedence facts in the table are silent — the loser is never rendered anywhere, at any call site. If you find a pair, delete the one that does not reach rather than leaving a reader to guess which of the two they are looking at. (The declaration-beats-property row was measured for **shorthand** properties, at module scope and inside the hook body alike. A longhand `name: fn` property was not measured; do not assume either way.)
 
