@@ -1,7 +1,11 @@
 {
   "$schema": "./node_modules/oxlint/configuration_schema.json",
   "ignorePatterns": [".claude/worktrees/**", ".features-gen/**"],
-  "plugins": ["react", "typescript", "oxc", "import", "unicorn", "jsx-a11y"],
+  // "jsdoc" below is LOAD-BEARING. Remove it and every jsdoc/* rule in "rules" stays configured and goes
+  // INERT -- exit 0, zero findings, no warning of any kind (measured). Severity is likewise load-bearing:
+  // an oxlint "warn" exits 0, so a jsdoc rule at "warn" gates nothing. See quality-tooling.md's JSDoc tier.
+  "plugins": ["react", "typescript", "oxc", "import", "unicorn", "jsx-a11y", "jsdoc"],
+  "settings": { "jsdoc": { "tagNamePreference": { "deprecated": false, "internal": false, "todo": false } } },
   "rules": {
     "react/rules-of-hooks": "error",
     "react/only-export-components": ["warn", { "allowConstantExport": true }],
@@ -14,7 +18,13 @@
     "import/no-mutable-exports": "error",
     "import/no-named-as-default": "error",
     "import/no-cycle": "error",
-    "import/no-named-as-default-member": "off"
+    "import/no-named-as-default-member": "off",
+    "jsdoc/check-tag-names": ["error", { "typed": true }],
+    "jsdoc/no-blank-blocks": "error",
+    "jsdoc/no-defaults": "error",
+    "jsdoc/require-param-description": "error",
+    "jsdoc/require-returns-description": "error",
+    "jsdoc/require-throws-description": "error"
   },
   "overrides": [
     {

@@ -91,6 +91,8 @@ One measured limit on `@param`'s value here: the `LSP` tool's operation set is `
 
 **Prose paragraphs go _before_ the first block tag.** Measured: a paragraph written after a `@throws` (`Cache.remove`'s "Removing mid-iteration invalidates that iteration…") renders inside that tag's block, below its text — TS reads everything up to the next tag as the tag's own comment text. It still reads as its own paragraph, so this is attribution drift rather than a hazard, but a fact about the whole function sitting under `@throws` looks like a fact about the throw. Summary, then prose, then tags.
 
+**Part of this is now mechanised, and the part that is not is the larger part.** `.oxlintrc.json`'s `jsdoc/check-tag-names` gates a misspelled tag, a non-JSDoc tag, the TypeScript-redundant family, and the five tags named above as not written here — `@remarks` and `@defaultValue` because they are not JSDoc vocabulary at all, `@deprecated`/`@internal`/`@todo` through an explicit ban. **What it cannot do is enforce the table**, which is an allowlist of five against a ~65-tag vocabulary, and oxlint offers only an additive `definedTags`. So the rest of standard JSDoc still passes the gate and is still forbidden here by this ruling. See `quality-tooling.md`'s JSDoc-tier section for the rule set and its measurements.
+
 **Amending the table is an `architect` ruling with a measured rendering attached.** Propose a row; do not read the list as illustrative and interpret your way onto it. (`@deprecated` is the likeliest future candidate, because it has real language-server semantics — a strikethrough at the call site — rather than a generator convention behind it. It still needs the measurement and the ruling.)
 
 **`architect` is the arbiter.** DESIGN sets the target vocabulary for a slice; REVIEW rules per export on whether hover is _necessary and sufficient_ to use the thing without opening the body. That is an interface-surface judgment, which is already that role's job and no one else's.
@@ -211,6 +213,8 @@ The last row is **not** the longhand caveat left open above. That one is about _
 | `reachable at foo@bar.com` (letter-preceded)                         | no                                                      |
 | `import { thing } from '@scope/package'` inside an `@example`        | no — the quote precedes the `@`                         |
 | `the \@fast-check/vitest package` (backslash-preceded)               | no, but the `\` renders literally — **do not use this** |
+
+**The linter closes only half of this, and not the surprising half — so a clean `npm run lint` is no evidence a block hovers as written.** Measured: oxlint's JSDoc parser recognises a tag **only at the start of a JSDoc line** (leading whitespace tolerated) and is blind to a mid-line one, while the whitespace rule above is TypeScript's and holds anywhere in the block. `jsdoc/check-tag-names` therefore catches a line-leading `@fast-check/vitest`, including one inside an `@example` fence, and lets row 1 and row 2 of the table above through in silence. The discipline below stays human.
 
 **So: backtick any `@`-prefixed token, always. Never rely on a code fence to protect one.** The practical consequence for an `@example` is that a package import written with quotes is safe, while a bare `@`-token at the start of an example line is not.
 

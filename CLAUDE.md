@@ -29,7 +29,7 @@ Nine are topic articles, read on the trigger each one names in its own header:
 - **`.claude/agents/articles/ast-grep-rules.md`** — every rule and its scope, what each one actually checks, how each was verified, and the fixture mandate. Read before authoring or narrowing a rule.
 - **`.claude/agents/articles/acceptance-mutation.md`** — the Gherkin Examples-table mutation runner, its guards, and its two mutation classes. Read before the first `npm run acceptance-mutation` in a slice.
 - **`.claude/agents/articles/doc-comments.md`** — the interface/implementation comment split, what belongs in JSDoc versus `//`, the hover budget and the sidecar `<module>.md` tier, the measured JSDoc syntax hazards, and the hover-before-Read reading habit. Read before writing or moving a comment block in `src/` or `scripts/`.
-- **`.claude/agents/articles/quality-tooling.md`** — the crap4ts patch, the advisory `scripts/` programs, and `.gherkin-lintrc`. Read on an unexpected crap4ts number or when touching the lint config.
+- **`.claude/agents/articles/quality-tooling.md`** — the crap4ts patch, the advisory `scripts/` programs, `.gherkin-lintrc`, and `.oxlintrc.json`'s `jsdoc/*` tier. Read on an unexpected crap4ts number, on a `jsdoc/*` lint finding, or when touching the lint config.
 - **`.claude/agents/articles/archive.md`** — layers that no longer exist, kept for their method. No role has a trigger for this one; it is research material.
 
 **Where new documentation goes.** CLAUDE.md is auto-loaded into every session and every subagent, so its size is a tax on all six audiences. Route new prose by this test, in order:
@@ -47,7 +47,7 @@ A new topic gets a new article, never a new CLAUDE.md section. When you add one,
 ```bash
 npm run dev              # start dev server (vite; http://localhost:5173 in the primary checkout, a per-worktree port elsewhere -- see dev-port.ts)
 npm run build             # tsc -b && vite build
-npm run lint               # oxlint
+npm run lint               # gate (nonzero on any error-severity finding): oxlint, whole tree. Includes the jsdoc/* tier -- see quality-tooling.md
 npm run format             # prettier --write . (covers .feature Examples-table alignment too, via prettier-plugin-gherkin)
 npm run format:check       # prettier --check .
 
@@ -88,7 +88,7 @@ npm run dry4ts:scripts        # gate, same `.dry4tsrc.json` and the same failOnF
 npm run test:mutation:scripts # stryker mutation testing, scripts/ only
 ```
 
-There is no separate typecheck script — `npm run build` runs `tsc -b` as its first step. Lint (oxlint) has type-aware rules disabled by default; see README.md if enabling `oxlint-tsgolint`.
+There is no separate typecheck script — `npm run build` runs `tsc -b` as its first step. Lint (oxlint) has type-aware rules disabled by default; see README.md if enabling `oxlint-tsgolint`. An oxlint `warn` exits 0, so only an `error`-severity rule gates anything — measured, and the reason `.oxlintrc.json`'s jsdoc tier is `error` throughout.
 
 ## Architecture
 
