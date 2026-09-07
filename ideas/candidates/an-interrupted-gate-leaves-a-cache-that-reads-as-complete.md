@@ -20,6 +20,17 @@ It was only distrusted because the same session had watched it die, and the
 remedy was to delete it and force a cold `test:mutation:full` so the provenance
 was known. **That is not a mechanism. It is a person remembering.**
 
+**Confirmed at source, and it is deliberate rather than a crash artefact.**
+`architect` read `node_modules/@stryker-mutator/core/dist/src/reporters/mutation-test-report-helper.js`
+while verifying an unrelated claim in the same slice: the handler registered on
+`unexpectedExitHandler` (line 41) writes the incremental report on an
+unexpected exit by design, and logs `'Saved a partial incremental report to
+"%s" after an unexpected interrupt.'` So the artefact is intentional, is known
+by the tool to be partial — and is written to the same path, in the same
+format, as a complete one. The tool holds the fact that would resolve this at
+the moment it writes the file, and drops it in a log line the next run never
+reads.
+
 This is the family `.claude/agents/articles/mutation-testing.md` already
 enumerates — the ways a run reports a confident number about nothing — applied
 one layer down, to the artifact that makes the _next_ run confident. It is the
