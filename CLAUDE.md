@@ -10,7 +10,9 @@ Conway's Game of Life, built as an infinite, pannable/zoomable grid (React 19 + 
 
 `CLAUDE.md` is a **routing index**, not the whole account. It carries the command list, a compact module map, the orchestrating session's own procedures, the conventions, and one pointer per article. The detail lives in `.claude/agents/articles/`, which is **not** auto-loaded — a role reads an article when its own file tells it to.
 
-Three articles are house rules every role reads unconditionally:
+Three articles are house rules every role reads unconditionally — **and the orchestrating session reads them too**, plus its own article below. They were labelled per-role because the seat that invokes the roles has no role file; the content was never role-specific.
+
+- **`.claude/agents/articles/orchestration.md`** — the invocation contracts roles expect the prompt to satisfy, the state only this seat carries between stateless invocations, the escalation lanes that end here, and what this seat runs that no role does. Read at session start and before composing any role invocation.
 
 - **`.claude/agents/articles/engineering.md`** — design, test-layer placement, property tests, equivalence rulings, gate scoping, claim discipline.
 - **`.claude/agents/articles/workflow.md`** — lint/format, role boundaries, commit messages, worktrees and branches.
@@ -30,7 +32,7 @@ Nine are topic articles, read on the trigger each one names in its own header:
 
 **Where new documentation goes.** CLAUDE.md is auto-loaded into every session and every subagent, so its size is a tax on all six audiences. Route new prose by this test, in order:
 
-1. Is it a **procedure the orchestrating session executes**, or a **predicate that gates** (a path allowlist a checker or a protocol step reads)? → CLAUDE.md. It has no other instruction surface.
+1. Is it a **procedure the orchestrating session executes**, or a **predicate that gates** (a path allowlist a checker or a protocol step reads)? → CLAUDE.md, which is auto-loaded and so is the only surface guaranteed to be read before anything else happens. **Conduct and rationale for that seat go to `orchestration.md` instead** — this clause used to read "it has no other instruction surface", which `document-the-orchestrating-seat` made false by giving it one.
 2. Is it a **measured fact, a rationale, or a discovery record** about a topic that already has an article? → that article. CLAUDE.md gets **at most one pointer sentence**, and only if a reader would otherwise not know the article covers it.
 3. Is it **conduct guidance that applies to more than one role**? → `engineering.md`, `workflow.md`, or `handoffs.md`.
 4. Is it **depth about one module's own interface** — extended examples, use cases, best-practice notes that overflow a JSDoc hover? → a sidecar `<module>.md` **beside the source** (`src/cellTiles.md` next to `src/cellTiles.ts`), referenced from the JSDoc as `@see {@link ./cellTiles.md}`. This is the one documentation surface that lives outside `.claude/**`, because its audience is whoever is holding a call site rather than whoever is running a role — and note nothing checks that those links resolve, since `npm run agent-doc-check` scans `.claude/**` and `CLAUDE.md` only. See `.claude/agents/articles/doc-comments.md`.
@@ -153,7 +155,7 @@ Cycle order for a feature: **product → coder → cleaner → architect → har
 2. `coder` — implements one approved slice via TDD; never writes anything under `features/` and never runs the quality-gate tools.
 3. `cleaner` — structure-preserving cleanup only (CRAP/DRY/scoped mutation scan on touched files); no new functionality. This is the four-pack's old `refactorer`, narrowed: it no longer runs a full mutation suite, only the scoped scan.
 4. `architect` — **four modes: REVIEW, DESIGN, CONTRACT, ADJUDICATE.** In its normal slot it reviews module boundaries/dependency direction and property-test coverage, also reading `halstead4ts`'s Halstead report as an advisory (no-threshold) complexity signal alongside that review. Unlike the old four-pack architect, it does **not** run the full quality gate itself — that moved to `hardener`.
-5. `hardener` — owns the full final verification sequence (`test:mutation` → `crap4ts` → `dry4ts`, in that order), fixing whatever each stage surfaces before moving to the next. It does **not** run `acceptance-mutation` — that belongs to `product`.
+5. `hardener` — owns the full final verification sequence, **seven stages**: `build` → `test:property` → `test:browser`/`test:scripts` → `test:mutation` → `crap4ts` → `dry4ts` → `agent-doc-check`, in that order, fixing whatever each stage surfaces before moving to the next. It does **not** run `acceptance-mutation` — that belongs to `product`.
 6. `product` (**VERIFY** mode) — builds and runs `features/*.e2e.spec.ts` (Playwright) from its own outline as the final independent, black-box check through the real UI, runs the full `acceptance-mutation`, and re-confirms `crap4ts`/`dry4ts` clean before declaring the feature done. It **reports** `src/` defects to `architect` rather than fixing them; `architect` rules on whether the code or the contract is wrong (its ADJUDICATE mode). See `.claude/agents/articles/handoffs.md`'s "Defect adjudication".
 
 There's no daemon or persistent process wiring these together — the orchestrating session invokes each role in turn via the `Agent` tool and sequences the handoffs itself.

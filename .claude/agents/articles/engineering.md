@@ -52,7 +52,11 @@ A hand-written test that survives all three carries a header saying so, and what
 
 Property tests (`@fast-check/vitest`, `*.property.test.ts`) cover every framework-free module, and **`architect` writes them** — `coder` writes focused unit tests and never property tests (note `cleaner.md`'s Owns list also grants property tests, which this sentence and `coder.md` both contradict; the inconsistency is filed as `cleaner-property-tests-and-layer-overlap` and is not settled here), which is why its fast path (`npm run test:unit`) skips that layer entirely. `hardener` and `product` confirm the results but don't author them. Two rules apply whenever `architect` adds or changes one.
 
-### Which layer states which claim
+#**A green property run is weak evidence about edge cases — pin the degenerate values with deterministic unit tests as well.** A property over a broad arbitrary (`fc.anything()`, `fc.date()`) finds an edge case only when the generator happens to draw it. Measured: `datesEqual` used `a.getTime() === b.getTime()`, so two **Invalid Dates** compared unequal — the one container the shared equality walker reported as unequal to its own `structuredClone`. `coder`, `cleaner` and `architect` all ran the property suite green; it surfaced at `hardener` only when `fc.date()` finally drew one, on roughly a 0.2% draw. Reflexivity passed through a same-reference short-circuit and symmetry saw `false` in both directions, so the clone property was the only one that _could_ catch it.
+
+So when a module branches on container kinds or value classes, enumerate the degenerate member of each and assert it directly: Invalid Date, `NaN`, `±0`, empty `Set`/`Map`/array/object, and one- versus two-element collections in **both** directions — a one-directional size check lets `if (a.size !== b.size)` → `if (false)` survive mutation. **Fix the module rather than narrowing the arbitrary**: adding a `noInvalidDate` filter would have been the weaken-the-check-to-silence-the-finding move.
+
+## Which layer states which claim
 
 **A property states a law that a whole family of implementations satisfies. A unit test names one member of that family.** Neither does the other's job, and the choice follows from which kind of claim you have.
 
@@ -193,6 +197,14 @@ What to do about it, in order of cost:
 - **When you can't check it, say the claim is unverified.** An unverified claim a later role can check is worth more than a confident one it has to refute, and it costs one clause. This is the same instruction the `architect` role carries about reachability claims, generalized: it applies to any mechanism, not just to what calls what.
 - **Write down the mechanism you actually verified, not the one you set out to verify.** When a check comes back confirming the verdict by a different route than you expected, the route is the finding. `smooth-zoom-transitions`' `clamp01` note is the worked example: the equivalence claim was right, the "measured equivalent mutant" heading was not, and the heading is what sent the next role hunting for a survivor that no mutator generates.
 - **Re-measure the premise you were handed, not just the conclusion.** This is the habit that caught all six, and it is the reason the pipeline's cost is worth paying. A role that only re-checks the previous role's _answer_ will agree with it; the errors live one level down, in why.
+
+## Ask whether a gate still encodes its invariant
+
+When restructuring makes an existing gate inconvenient, the reflex is to preserve the gate and shape the work around it. **Ask first whether the check still encodes the invariant it was written for** — a refactor can move the thing being protected while the check goes on guarding the old location.
+
+Measured, in `split-claude-md`: `agent-doc-check`'s check 5 required every `rules/*.yml` to be named in `CLAUDE.md`. The invariant behind it was _a rule must be documented where roles will read_. Before the split those were the same sentence; the split moved the prose to `ast-grep-rules.md` and pulled them apart. The check was treated as fixed, a 28-row index was kept in `CLAUDE.md` to satisfy it, and four doc lines were then written hardening the wrong version into place. That index cost auto-loaded budget for every role and every subagent, had a row that diverged from its rule file on day one, and left the real gap — nothing required a rule to have article prose at all — wide open.
+
+When a constraint forces an awkward artifact (a hand-maintained index, a duplicated list, a shim), state the invariant the constraint exists to protect, then check whether the constraint still tracks it. If it doesn't, **changing the check is the cheaper fix and usually the smaller diff**. The warning sign is writing new prose that explains _why_ the awkward artifact must stay — that is the moment to stop and re-derive.
 
 ## Verification before handoff
 
