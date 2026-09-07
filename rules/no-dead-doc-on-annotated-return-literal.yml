@@ -63,6 +63,13 @@ note: >-
 #
 # `has: {field: return_type, kind: type_annotation}` needs the `kind:` -- a `has:` carrying
 # only a field is rejected by ast-grep as having no positive matcher (measured, 0.45.1).
+#
+# ALL FOUR KINDS IN THE UTIL ARE FIXTURE-EXERCISED, and that is not ceremony either. The
+# LSP measurement above covered the declaration and arrow forms only; function_expression
+# and method_definition (class and object-literal alike) were left resting on the belief
+# that `return_type` is spelled the same for them. It is -- confirmed by scanning a probe
+# file, then pinned by rule-tests, because a `has:` that is wrong for one node shape makes
+# that branch silently inert and `npm run ast-grep:test` passes identically either way.
 utils:
   annotated-function:
     any:

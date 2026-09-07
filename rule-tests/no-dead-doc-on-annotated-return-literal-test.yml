@@ -37,6 +37,15 @@ valid:
         alpha: 1,
       }
     }
+  # An annotated `function_expression`'s inferred twin: the util's four kinds each need a
+  # negative as well as a positive, or a branch could be firing for the wrong reason.
+  - |
+    export const build = function () {
+      return {
+        /** Reaches -- no annotation. */
+        alpha: 1,
+      }
+    }
 invalid:
   # Named interface return -- doc-comments.md rule 8's measured row.
   - |
@@ -68,3 +77,31 @@ invalid:
       /** Severed. */
       alpha: 1,
     })
+  # The remaining two kinds the `annotated-function` util names. Fixtured rather than
+  # inferred: a `has:` that is wrong for a node shape makes its branch silently inert, and
+  # ast-grep test passes identically whether a branch works or is dead.
+  - |
+    export const build = function (): View {
+      return {
+        /** Severed -- function_expression. */
+        alpha: 1,
+      }
+    }
+  - |
+    export class Thing {
+      build(): View {
+        return {
+          /** Severed -- class method_definition. */
+          alpha: 1,
+        }
+      }
+    }
+  - |
+    export const bag = {
+      build(): View {
+        return {
+          /** Severed -- object-literal method, the same method_definition kind. */
+          alpha: 1,
+        }
+      },
+    }
