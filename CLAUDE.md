@@ -210,10 +210,12 @@ If you use the native `EnterWorktree({ name })` or `Agent({ isolation: 'worktree
 5. **Run the full gate on `main`.** Mandatory, even though step 3 just passed on an identical tree — step 3 ran against a different Stryker cache and a different `coverage/`. This run is what rebuilds `main`'s own caches into a state the next merge can trust — **unless this is a mutation-invariant merge, in which case skip this deletion entirely; read the clause below before running it**:
 
    ```bash
-   rm -f reports/stryker-incremental.json reports/stryker-incremental-scripts.json
+   rm -f reports/stryker-incremental.json
    ```
 
-   then invoke `hardener` on `main` with the whole tree as its scope. Deleting the caches is the honest expression of intent: they aren't stale, they're describing a tree that no longer exists — the situation `.claude/agents/articles/mutation-testing.md` already names.
+   then invoke `hardener` on `main` with the whole tree as its scope. Deleting the cache is the honest expression of intent: it isn't stale, it's describing a tree that no longer exists — the situation `.claude/agents/articles/mutation-testing.md` already names.
+
+   **One path, not two, and that is deliberate.** `npm run test:mutation:scripts` is `stryker run stryker.scripts.config.json` with **no** `--incremental` flag, so the `scripts/` side always pays full cost and **never writes `reports/stryker-incremental-scripts.json` at all** — measured by an `ls` after a full run. This line named both files until `honest-scripts-cache-deletion`, which was long enough for `.claude/agents/articles/mutation-testing.md` to have to write a sentence warning readers not to treat the deletion as evidence the file exists. That config still declares its own `incrementalFile`, and earns the line — it is what would make adding the flag safe. Adding the flag is what re-arms this deletion, so a slice that adds it must put the second path back.
 
    **Mutation-invariant merges — the one exemption, and it is stage 4 only.** Steps 3 and 5 both mandate `npm run test:mutation:full`, and for some diffs that is two full runs measuring a quantity that provably did not move. `stryker.config.json`'s `mutate` list covers only `src/**`, and its `ignorePatterns` keeps `features/` out of the sandbox entirely, so for a diff confined to the paths below neither a mutant nor a test that could kill one is reachable. Left unaddressed this is not merely a cost — it is a standing incentive to bundle unrelated features into one slice to pay the bill once, which is the opposite of what the serial-landing rule is for.
 
