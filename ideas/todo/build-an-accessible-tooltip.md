@@ -115,11 +115,13 @@ new config exclusions.)
 
 Shape, to be ratified by a design pass rather than settled here:
 
-- **A trigger + panel pair**, the panel referenced by `aria-describedby` from the
-  trigger. The tooltip is a **description, never a name** — the button keeps its
-  braced sentence-case `aria-label`, so the accessible name is unchanged and
+- **A trigger + panel pair.** The button keeps its braced sentence-case
+  `aria-label` either way, so the accessible name is unchanged and
   `rules/no-unbraced-accessible-name.yml` still applies to the label rather than
-  to the tooltip text.
+  to the tooltip text. **How the panel reaches AT — `aria-describedby`, or
+  `aria-hidden` and nothing at all — is settled under "Decided at promotion"
+  below**, and depends on the copy: text that repeats the name has no
+  description to contribute.
 - **The open/close machine may want to be a framework-free module** — hover
   intent, the show/hide delays, `Escape`, and the pointer-moved-onto-the-panel
   grace period are all arithmetic over elapsed time and events, which is the
@@ -158,6 +160,72 @@ it first gives that slice a primitive to consume; landing it after means that
 slice ships tooltips twice. It is also perfectly viable **on its own** — the two
 toolbar glyph buttons justify it without the playback work existing at all.
 
+## Decided at promotion
+
+Settled 2026-09-08 so `product` can write Gherkin without guessing. Everything
+not listed here is still open, below.
+
+**The copy is the control's own name, with no shortcut language.**
+
+| Control    | Accessible name (unchanged) | Tooltip text           |
+| ---------- | --------------------------- | ---------------------- |
+| `+`        | `Zoom in`                   | `Zoom in`              |
+| `−`        | `Zoom out`                  | `Zoom out`             |
+| `Reset`    | `Reset view`                | `Reset view`           |
+| `Patterns` | `Open pattern library`      | `Open pattern library` |
+
+**Shortcut language was drafted and rejected, on a factual error worth
+recording.** The draft read `Zoom in — or scroll up over the grid`, which is
+wrong about this app: per `features/mouse-wheel-controls.feature`, a plain wheel
+**pans**, and zooming needs shift+wheel or a pinch. A tooltip is exactly the
+surface where a confidently-wrong hint does damage, since it is read as
+authoritative. If shortcut hints are wanted later they are their own slice, with
+the modifiers checked against that feature file.
+
+**This makes the tooltip repeat the name rather than describe — and that has a
+consequence `product` must rule on.** With `aria-describedby` pointing at text
+identical to the accessible name, a screen reader announces the same words
+twice ("Zoom in, Zoom in"). Three ways out, and the choice is a CONTRACT
+question rather than an implementation one:
+
+1. Mark the panel `aria-hidden` — it becomes a purely visual affordance for
+   sighted mouse users, and AT keeps the single `aria-label` it already had.
+2. Keep `aria-describedby` and accept the duplication.
+3. Drop the `aria-label` and let the tooltip _be_ the name via `aria-labelledby`
+   — which breaks whenever the tooltip is not rendered, so it is listed to be
+   rejected explicitly rather than considered.
+
+Option 1 is nominated. With this copy the tooltip is neither a description nor a
+name — it is a **visual reveal of a name AT already has**, which is a third
+thing the earlier framing did not have a word for. That is a coherent thing for
+a tooltip to be, and it is what the toolbar actually needs; it is recorded as a
+nomination rather than a ruling because it is `product`'s to make.
+
+**Touch: long-press reveals the tooltip.** Chosen over showing nothing. Two
+hazards to design against, neither a blocker: a long press on a button raises
+the OS callout (text-selection / context menu) on iOS and Android unless
+suppressed, and the press timer is a second timed transition in the state
+machine, which strengthens the case for splitting that machine into a
+framework-free module. It must remain **supplementary** either way —
+`aria-describedby` (or the `aria-label` under option 1) already reaches AT with
+no gesture at all.
+
+**Defaults, tunable at the visual sign-off rather than settled here:** show on
+hover after a delay, show on focus **immediately** — that split is measured from
+upstream, whose trigger binds `showTooltip(Immediate)` to `onFocus` and
+`showTooltip(Delayed)` to `onMouseEnter`. Upstream's own numbers are 750ms show
+/ 300ms hide. **No fade**, which also disposes of the reduced-motion question:
+a tooltip that appears instantly needs no motion preference honoured.
+
+**Escape already has an owner, and this adds a second.** `usePatternPlacement`
+registers a window-level `keydown` listener that cancels a placing pattern on
+Escape. The dismissible clause puts a second Escape consumer in the same event
+space, so Escape pressed with a tooltip visible **while a pattern is armed**
+would do both — disarm the pattern and dismiss the tooltip. Probably acceptable,
+but it is a scenario `product` should write deliberately rather than discover,
+and it is the reason the tooltip's own Escape handling should be specified as to
+whether it stops propagation.
+
 ## Touches
 
 `src/components/Tooltip.tsx` (new), possibly `src/tooltip.ts` (new, if the state
@@ -171,8 +239,11 @@ the framework-free → component layering. Run `architect` DESIGN before `coder`
 
 ## Open questions
 
-- **Does this app need positioning logic at all?** The consumers sit in
-  fixed overlay corners with no overflow clipping, so plain absolute positioning
+**For `architect`'s DESIGN pass** — implementation shape, none of which blocks
+`product` from writing the contract:
+
+- **Does this app need positioning logic at all?** The consumers sit in fixed
+  overlay corners with no overflow clipping, so plain absolute positioning
   relative to the trigger may be sufficient and collision/flip logic may be
   imaginary work. Check the actual corners before reaching for anything.
 - **Popover API, or a plain absolutely-positioned element?** The popover top
@@ -185,18 +256,29 @@ the framework-free → component layering. Run `architect` DESIGN before `coder`
   precedent — Headless UI is a general-purpose library that must survive
   arbitrary host layouts, and this app is one page whose overlay corners are
   known.
-- **Show and hide delay values**, and whether hover intent needs a movement
-  threshold or just a timer.
+- **Does the open/close machine split into a framework-free module?** Long-press
+  makes this a third timed transition alongside the show and hide delays, which
+  strengthens the case but does not settle it.
 - **The hoverable clause's geometry.** If there is a visual gap between trigger
   and panel, the pointer crosses dead space and the tooltip closes under it.
   Bridge with an invisible padding region, or leave no gap.
-- **Touch.** There is no hover on touch, and a tooltip must therefore stay
-  strictly supplementary — `aria-describedby` already reaches AT without any
-  hover occurring. Decide whether touch shows it at all, or nothing.
-- **Reduced motion** on the fade — `useReducedMotion` exists and `zoomGlide`
-  honours it; a tooltip that appears instantly is arguably better for everyone.
-- **How does `product` assert "persistent" black-box** without a wall-clock
-  wait? Same flake concern the playback candidate raises.
-- **Does the keybinding badge belong in the tooltip text too?** The playback
-  buttons carry an `aria-hidden` key badge; repeating it in the description is
-  either helpful redundancy or noise.
+- **Does the tooltip's Escape handler stop propagation?** See the collision with
+  `usePatternPlacement`'s listener, above.
+
+**For `product`'s SPECIFY pass** — answerable inside the acceptance spike rather
+than before it:
+
+- **How to assert "persistent" and the show delay black-box** without a
+  wall-clock wait that flakes under load. This is what the spike is for; if it
+  proves impossible at the Playwright layer, that finding is itself the reason
+  to push the timing assertions down to a unit test over the pure state machine
+  and keep the `.feature` to the observable clauses.
+- **Which of the three `aria-describedby` resolutions** the contract takes — see
+  "Decided at promotion" above, where option 1 is nominated but not imposed.
+
+**Deferred to whoever consumes this next:**
+
+- **Do the playback buttons' key badges belong in their tooltip text too?** Moot
+  for the four toolbar controls decided above, since none has a keybinding.
+  Belongs to `ideas/candidates/pause-and-play-at-three-speeds.md`, whose buttons
+  do.

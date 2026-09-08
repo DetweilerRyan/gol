@@ -68,10 +68,13 @@ explicit that the buttons carry an icon and a key and no words. A small `kbd`-is
 element in the corner of each button, `aria-hidden` so the name stays
 `Play at medium speed` rather than `Play at medium speed 2`.
 
-**Tooltips describe; they never name.** `aria-describedby` to a rendered element,
-so the accessible _name_ stays the sentence-case label and the tooltip text is the
-description. No Catalyst or Headless UI tooltip primitive exists in this tree
-(checked 2026-09-08) — see the open question.
+**Whether a tooltip describes or merely reveals the name is the tooltip slice's
+call, not this one's.** No Catalyst or Headless UI tooltip primitive exists in
+this tree (checked 2026-09-08), so this slice consumes whatever
+`ideas/todo/build-an-accessible-tooltip.md` settles — including how the panel
+relates to the button's own `aria-label`, which that file nominates resolving by
+marking the panel `aria-hidden` rather than by wiring `aria-describedby` to text
+that merely repeats the name.
 
 **Ryan signs off the visuals before implementation.** Icon choice, badge
 treatment, active-speed styling and placement are his call, taken on a rendered
@@ -116,7 +119,7 @@ orchestrator-run `npm run test:perf` + `npm run perf-report`.
 - **What does `Next generation` do mid-play?** Step-and-pause is the conventional
   answer; a no-op and a step-without-pausing are both defensible.
 - **Tooltip mechanism — now its own candidate**, since nothing exists to consume:
-  see `ideas/candidates/build-an-accessible-tooltip.md`, which found that neither
+  see `ideas/todo/build-an-accessible-tooltip.md`, which found that neither
   Catalyst nor any released Headless UI ships one. Native `title` is _exempt_
   from WCAG 1.4.13 rather than compliant with it — but it still fails on its own
   demerits, since it does not show on keyboard focus, shows nothing on touch, and
