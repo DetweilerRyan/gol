@@ -223,8 +223,13 @@ mechanism wins, because none of them makes the hazard legible to a reader on its
 
 **Neutral / deferred**
 
-- The prototype lives in a new top-level `spikes/` directory, which is a repo-shape
-  decision not settled by this ADR.
+- The prototype lives in a new top-level `spikes/` directory. That was **ruled acceptable
+  provisionally**, on the understanding that `ideas/todo/intent-driven-layout.md` is where
+  it gets folded into a permanent layout; that file now carries the open question of where
+  it should end up, including the possibility that the directory disappears and a spike's
+  findings survive only in its ADR. Recorded here because it means this ADR's own
+  supporting artifact may move or be deleted — the reasoning above has to stand without
+  it.
 - Whether this belongs in this repo at all is open: it fixes a harness-wide problem, not a
   Game-of-Life one, so upstream may be the better home. Promoting it to `scripts/` would
   pay full gate freight (CRAP ≤ 6, its own vitest suite, `dry4ts:scripts`, mutation

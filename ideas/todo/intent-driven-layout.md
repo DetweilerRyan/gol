@@ -39,9 +39,13 @@ hand-authored source. They are executed 1:1 and hardened by
 Target layout:
 
 ```
-adr/
+adr/                         # PARTLY LANDED -- see below
+  README.md
   TEMPLATE.md
   0001-adopt-intent-driven-layout.md
+  0002-lsp-proxy-for-out-of-band-writes.md
+spikes/                      # NEW top-level dir, provisional -- fold in, see below
+  lsp-fs-sync/
 openspec/
   backlog/                   # was ideas/candidates/
   changes/
@@ -55,6 +59,21 @@ openspec/
     <capability>/            # .feature + .steps.test.ts(x) + .e2e.spec.ts
     _shared/                 # harness/ (board.tsx + one per feature), e2e-helpers.ts
 ```
+
+**Two parts of this landed early, and this slice inherits them rather than creating
+them.** Both arrived with the `only-harness-writes-reach-the-language-server` work, which
+needed a decision record before this slice was anywhere near ready:
+
+- **`adr/` already exists**, with `README.md`, `TEMPLATE.md` in the MADR shape this file
+  specifies, and `0002-lsp-proxy-for-out-of-band-writes.md`. So **step 3 below is now
+  partly done**: the scaffolding is there and only `0001` remains to be written. `0001`
+  was deliberately left unwritten and reserved for this slice — `adr/README.md` records
+  that the gap is intentional so a reader does not read it as a lost file.
+- **`spikes/` is a new top-level directory**, holding prototype work that is deliberately
+  outside every gate (no CRAP threshold, no vitest suite, no `dry4ts`, no mutation
+  testing). Ruled acceptable **provisionally**, on the understanding that this slice is
+  the natural place to fold it in. It has no home in the target layout above yet, and
+  choosing one is part of this slice's work — see the open question.
 
 Decisions already taken:
 
@@ -103,9 +122,12 @@ Ordered steps, each its own commit:
    green, and testing nothing. Change the acceptance glob and the `unit` exclude
    in the **same commit**, and rewrite that comment block for the nested shape.
 
-3. **`adr/` scaffolding** — `TEMPLATE.md` plus `0001`, whose Options-considered
-   section is the rejections in the table above. Self-demonstrating: the
-   restructure's own decision becomes the first record.
+3. **`adr/` scaffolding — mostly landed already.** `README.md` and `TEMPLATE.md`
+   exist, so what remains is `0001`, whose Options-considered section is the
+   rejections in the table above. Self-demonstrating: the restructure's own
+   decision becomes the first record — and it now slots into a directory that
+   already proved the format on a real decision (`0002`), which is a stronger
+   position than scaffolding a format nothing has used yet.
 4. **Prose** — comments in `scripts/feature-files.ts`, `src/patternLibrary.ts`,
    `src/components/Cell.test.tsx`, `src/test-support/cellQuery.ts`.
 5. **Docs** — CLAUDE.md and the four role files. Rewrite the Idea board section
@@ -119,10 +141,13 @@ Ordered steps, each its own commit:
 
 ## Touches
 
-`features/**` and `ideas/**` (moved); `vite.config.ts`, `playwright.config.ts`,
-`package.json`, `tsconfig.app.json`; `rules/no-aliveness-by-paint-class.yml`,
-`-tsx.yml`, `no-domain-imports-in-black-box-steps.yml`; the two `FEATURES_DIR`
-constants; CLAUDE.md and `.claude/agents/{architect,coder,cleaner,product}.md`.
+`features/**` and `ideas/**` (moved); `spikes/**` (a home to be decided, see the open
+question); `vite.config.ts`, `playwright.config.ts`, `package.json`,
+`tsconfig.app.json`; `rules/no-aliveness-by-paint-class.yml`, `-tsx.yml`,
+`no-domain-imports-in-black-box-steps.yml`; the two `FEATURES_DIR` constants; CLAUDE.md
+and `.claude/agents/{architect,coder,cleaner,product}.md`.
+
+`adr/` is **not** in that list any more — it already exists and only needs `0001` added.
 
 No `src/` logic and no `scripts/` logic — only comments and path strings.
 
@@ -136,6 +161,19 @@ glob: `assertBaselineGreen` throws on zero tests before scoring a mutant.
 
 ## Open questions
 
+- **Where does `spikes/` go, and does it survive?** It exists now, provisionally, and
+  this slice is where it gets folded in. Three shapes are plausible and none is obviously
+  right: leave it top-level beside `openspec/` (simplest, but it is neither spec nor
+  decision, so the layout stops being self-describing); move it under
+  `openspec/changes/<slice>/` as per-change scratch (matches intent-driven's
+  change-scoped thinking, but a spike often outlives the change that prompted it and
+  `lsp-fs-sync` already has); or keep the artifact and drop the directory, folding a
+  spike's findings into its ADR and deleting the code once the decision is recorded.
+  **The third is worth taking seriously rather than treated as the lazy option** — an
+  ADR is meant to carry the reasoning forward, and a prototype nobody runs is a
+  maintenance liability that looks like an asset. The counter is that `spikes/lsp-fs-sync`
+  is a working proof someone will want to re-run before trusting `0002`, which is exactly
+  what its Verification section calls for.
 - **Is nesting worth it at all?** Colocation already works by filename prefix.
   Making it structural matches `intent-driven` and groups a capability's three
   files, but buys no behavior -- the honest case is legibility, not capability.

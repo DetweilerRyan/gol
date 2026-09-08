@@ -5,6 +5,11 @@ rather than `scripts/`, because `scripts/` carries CRAP ≤ 6, its own vitest su
 `dry4ts:scripts` and mutation testing, and none of that is paid here. Promoting it means
 paying that freight — see "If this graduates" below.
 
+**`spikes/` itself is provisional.** It was ruled an acceptable top-level directory for
+now, with `ideas/todo/intent-driven-layout.md` expected to fold it into a permanent
+layout — possibly by dropping the directory entirely and letting a spike's findings
+survive in its ADR. Do not build anything that assumes this path is stable.
+
 ## The problem
 
 Measured 2026-09-08 (see
