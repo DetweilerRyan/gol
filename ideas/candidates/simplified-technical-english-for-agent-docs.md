@@ -4,27 +4,87 @@ title: Adopt ASD-STE100's sentence-shape rules on the instruction surfaces of CL
 created: 2026-09-08
 ---
 
-## Context
+> Written as Situation / Complication / Question / Answer rather than the Context / Sketch shape in
+> `ideas/TEMPLATE.md`. The Answer section carries what Sketch would have; Touches and Open questions
+> are unchanged.
 
-**Situation.** Every role and this session read `CLAUDE.md` plus some subset of `.claude/agents/**`
-before doing any work. That corpus is the repo's largest unexecuted artifact and its only reviewer is
-`hardener` — the gap `orchestrator-prose-has-no-reviewer` already files.
+## Situation
 
-**Complication.** That candidate is about whether a prose claim is _true_. This one is about whether a
-prose sentence is _parseable_. The repo has a written convention for the first (`engineering.md`'s "A
-comment may state why; it may not state an undated present-tense fact about another file", and
-`orchestration.md`'s "Prose discipline") and **no convention at all for the second**. Measured on
-`bac96c4` (2026-09-08), the corpus averages **38.0 words per sentence**, with **65%** of sentences over
-25 words and **36%** over 40.
+Every role and this session read `CLAUDE.md` plus some subset of `.claude/agents/**` before doing any
+work. That corpus is the repo's largest unexecuted artifact, and it is where this repo deliberately
+puts the reasoning nothing else can check — `engineering.md` says so outright. A false `.feature` step
+reds a gate; a false or unparseable sentence never does. Its only reviewer is `hardener`, which is the
+gap `orchestrator-prose-has-no-reviewer` files.
 
-**Question.** ASD-STE100 (Simplified Technical English) is a published standard for exactly this
-failure — technical prose read by someone who cannot ask the author a follow-up question. Does it fit
-a corpus whose readers are agents rather than technicians?
+**That corpus has grown 28-fold in three weeks.** Measured over every commit touching `CLAUDE.md` or
+`.claude/agents/**`, end-of-day state, `git ls-tree -r --long` bytes (227 commits, 2026-08-18 through
+`bac96c4` on 2026-09-08):
 
-**Answer.** Partly, and the corpus itself says which part. Compliance already tracks register: the most
-instruction-shaped file is nearest the standard and the most rationale-shaped file is furthest, with
-nobody having tried. That is the finding, and it is what makes this a scoped slice rather than a
-rewrite of 83k words.
+| date           |   CLAUDE.md | house rules | unconditional | whole corpus | uncond. share |
+| -------------- | ----------: | ----------: | ------------: | -----------: | ------------: |
+| 2026-08-18     |       8,513 |           0 |         8,513 |       19,982 |           43% |
+| 2026-08-22     |      66,281 |      32,989 |        99,270 |      145,438 |           68% |
+| 2026-08-27     |     194,616 |      47,492 |       242,108 |      323,908 |           75% |
+| 2026-09-01     |     201,687 |      47,492 |       249,179 |      330,979 |           75% |
+| **2026-09-05** | **255,770** |      55,409 |   **311,179** |      395,366 |           79% |
+| 2026-09-06     |      58,592 |      63,612 |       122,204 |      518,894 |           24% |
+| 2026-09-08     |      62,649 |      73,541 |       136,190 |  **556,528** |           24% |
+
+"House rules" is `engineering.md` + `workflow.md` + `handoffs.md`, the three articles every role **and**
+this seat read unconditionally. "Unconditional" is those three plus `CLAUDE.md`, which is auto-loaded
+into every session and every subagent — so it is the floor every participant pays before doing
+anything. The remaining `.claude/agents/articles/` bytes (324,536 on `bac96c4`) are read on trigger.
+
+The 2026-09-05 row is the peak `CLAUDE.md` ever reached: **255,770 bytes**, which is the "it grew to
+256KB, roughly 64k tokens" that `engineering.md` records. The next row is the routing-index split that
+answered it.
+
+## Complication
+
+**The repo already diagnosed size creep and already applied the structural fix. Measured, that fix
+moved the tax rather than reducing it.** On 2026-09-06 the routing-index split took `CLAUDE.md` from
+255,770 to 58,592 bytes and grew `.claude/agents/articles/` from 3 files to 13. Judged on its own
+terms it worked: `CLAUDE.md` fell **76%** and the unconditional load fell **56%**. Judged on the
+corpus, three measurements complicate it:
+
+- **The split day added prose rather than only relocating it.** The corpus went 395,366 → 518,894
+  bytes in one day, **+123,528**, which is the largest single-day increase in the whole series — the
+  next largest is +48,150 on 2026-08-20. Nothing outside the measured paths can account for it:
+  `README.md` is 1,278 bytes and untouched since 2026-08-17.
+- **The unconditional floor started climbing again immediately.** 122,204 → 136,190 bytes in the two
+  days after the split, **+11%**, entirely in the house-rules articles (63,612 → 73,541). Two days is a
+  thin base for a rate, so read this as a direction and not a slope.
+- **`engineering.md` is becoming the new `CLAUDE.md`.** On `bac96c4` it is **62,217** bytes against
+  `CLAUDE.md`'s **62,649** — within 432 bytes — and it is read unconditionally by all five roles and by
+  this seat. The routing test sends measured facts and rationale to the articles, and the article most
+  often on the receiving end is one of the three nobody may skip.
+
+Structural fixes are finite. The split was the big one available, it has been spent, and the growth
+rate did not change. What has never been tried is a constraint on the prose itself.
+
+**And there is no such constraint.** The repo governs what a sentence may _assert_ and how long the
+assertion stays true — `engineering.md`'s "A comment may state why; it may not state an undated
+present-tense fact about another file" and "A conclusion from a plausible mechanism outlives a
+measurement", plus `orchestration.md`'s "Prose discipline". **Nothing governs how a sentence is
+shaped.** Measured on `bac96c4`, the corpus averages **38.0 words per sentence**, with **65%** of
+sentences over 25 words and **36%** over 40. The longest is 409 words.
+
+So the two problems compound: the corpus is growing fastest in the files nobody may skip, and the
+sentences in it are on average 50% longer than the only published standard for this kind of writing
+permits.
+
+## Question
+
+ASD-STE100 (Simplified Technical English) is a published standard for exactly this failure — technical
+prose read by someone who cannot ask the author a follow-up question. Does it fit a corpus whose
+readers are agents rather than technicians?
+
+## Answer
+
+**Partly, and the corpus itself says which part.** Compliance already tracks register, with nobody
+having tried: the most instruction-shaped file is nearest the standard and the most rationale-shaped
+file is furthest. That is the finding, and it is what makes this a scoped slice rather than a rewrite
+of 83k words.
 
 ### What ASD-STE100 actually is
 
@@ -45,7 +105,7 @@ The rules relevant here: active voice for instructions; restricted tenses (no pr
 only as a technical noun, never as a verb form; no omitted articles, subjects or verbs; lists instead
 of prose for sequences and conditions; one topic per paragraph.
 
-### The measured corpus
+### What the corpus measures against it
 
 Reproduce by splitting each file on sentence boundaries with fenced blocks and inline code spans
 collapsed, table rows and headings dropped, and units under 3 words discarded. On `bac96c4`:
@@ -80,6 +140,12 @@ anything under `src/` or `scripts/`, in either mode"), and `state-flow.md` is mo
 rationale. **The 409-word maximum is one real sentence**, not a splitter artifact: it is the second
 sentence of the hooks bullet in `state-flow.md`, and it runs from that bullet's zoom-glide clause
 through `useAppearance.ts` on semicolons alone.
+
+Note the two tables disagree about `engineering.md`, and the disagreement is the point. It is the
+_second largest_ file in the corpus and only the _thirteenth longest-sentenced_ — it is growing by
+volume, not by density. Shape rules would not have prevented its growth, which is why this candidate
+claims to address parseability and does not claim to address size. Size is
+`orchestrator-prose-has-no-reviewer`'s and the routing test's problem.
 
 Construct counts over the same corpus with code spans collapsed (81,673 words), each of which STE
 restricts or forbids:
@@ -149,7 +215,7 @@ The last clause is the whole argument: not "follow this rule" but "care cannot s
 would split it into two sentences and drop the causal link, or keep the link and break the tense rule.
 This paragraph is doing work that the standard has no register for.
 
-## Sketch
+### What the slice would do
 
 **Partial adoption, split by the cut the corpus already shows.** Do not touch the articles' rationale.
 
@@ -158,8 +224,10 @@ This paragraph is doing work that the standard has no register for.
    **instruction surfaces**: role-file bullets, `CLAUDE.md`'s command list and routing test, the
    articles' read-triggers and procedure steps. Name the exempt surface just as explicitly — rationale,
    discovery records, and the dated past-tense measurements the claim-discipline sections mandate.
-2. **Start with the four rules the measurement supports and the dictionary is not needed for**:
-   one instruction per sentence; 25 words for an instruction; active voice for an instruction; a list
+   Note the irony and accept it: this adds bytes to the file the Complication just named as the fastest
+   growing thing nobody may skip. It is a section, not an article, precisely to keep that cost small.
+2. **Start with the four rules the measurement supports and the dictionary is not needed for**: one
+   instruction per sentence; 25 words for an instruction; active voice for an instruction; a list
    rather than a prose chain for a sequence or a set of conditions. Leave the ~900-word dictionary, the
    tense restrictions and the `-ing` rule out of scope — those are where the collision is.
 3. **Fix the two measured outliers as the worked demonstration**: the 409-word `state-flow.md` bullet
@@ -173,14 +241,14 @@ Nothing needs to be written, and the search has one structural finding that outr
 tool. **ASD's approved-word dictionary is copyrighted, so no open tool ships it.** Open
 implementations either state the omission and substitute plain English — `Syntaf/vale-llm-slop` does
 exactly that — or rebuild a wordset independently. That is an external reason for the same scope the
-sketch above already argues on internal grounds: **the shape half of STE is enforceable here off the
+Answer above already argues on internal grounds: **the shape half of STE is enforceable here off the
 shelf, and the vocabulary half is not.**
 
 The mainstream route, and the one to prefer:
 
 | tool                                                                                                                                                     | what it is                                                                                       | fit                                                                                                                                                                                                                                                                        |
 | -------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------ | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| [Vale](https://vale.sh) + [`Syntaf/vale-llm-slop`](https://github.com/Syntaf/vale-llm-slop)                                                              | Mature Go prose linter with a package system; the package adds an `STE` style and a `Slop` style | **Best gate candidate.** One binary, no runtime added, Markdown-aware, configured by `.vale.ini` with styles scoped per file glob — which is exactly the instruction-surface/rationale split the sketch needs. Package read 2026-09-08 at 25 stars, 6 commits: early-stage |
+| [Vale](https://vale.sh) + [`Syntaf/vale-llm-slop`](https://github.com/Syntaf/vale-llm-slop)                                                              | Mature Go prose linter with a package system; the package adds an `STE` style and a `Slop` style | **Best gate candidate.** One binary, no runtime added, Markdown-aware, configured by `.vale.ini` with styles scoped per file glob — which is exactly the instruction-surface/rationale split the Answer needs. Package read 2026-09-08 at 25 stars, 6 commits: early-stage |
 | [`jyooi/agent-simple-english`](https://github.com/jyooi/agent-simple-english/)                                                                           | TypeScript + Effect STE linter, 13 rules, Claude Code plugin + CLI                               | Explicitly aimed at coding-agent instructions and ships as a plugin, so it pays no `scripts/` gate freight. Needs Bun, which is a new runtime. Read 2026-09-08 at 9 stars, 58 commits                                                                                      |
 | [`stuffbucket/vale`](https://github.com/stuffbucket/vale/tree/main/)                                                                                     | Unrelated pure-Go STE linter and MCP server that reuses the Vale name                            | **Name collision — this is not vale.sh.** Configurable 20/25-word caps, `.vale-ste.yml`. Read 2026-09-08 at 6 stars, 38 commits. The MCP server is a second integration path                                                                                               |
 | [`danyuchn/asd-ste100-skill`](https://github.com/danyuchn/asd-ste100-skill), [`1fc0nfig/ste-writing`](https://github.com/1fc0nfig/ste-writing/tree/main) | STE rules as Claude Code skills, the second with a deterministic Python linter                   | Rewriting aids rather than gates; useful while doing step 3                                                                                                                                                                                                                |
@@ -247,11 +315,18 @@ filename reds the gate. No design pass triggers fire.
   carrying disambiguation that shortening discards, in which case compliance goes _down_. Spike it —
   rewrite one article's instruction surface, run a slice against each version, compare where roles
   needed a round trip. Decide after that, not before.
-- **Is the token cost a benefit or a cost?** `CLAUDE.md` is auto-loaded into every session and every
-  subagent, so its size is a tax — `agent-output-verbosity` frames the same cost for gate stdout. But
-  STE forbids omitting articles and prefers a repeated noun to a pronoun, so it may well make the
-  corpus _longer_. Unmeasured in both directions; measure on the step-3 demonstration before claiming
-  either.
+- **Is the token cost a benefit or a cost?** The Situation measures the tax precisely — 136,190 bytes
+  paid unconditionally by every participant on `bac96c4`, and `agent-output-verbosity` frames the same
+  cost for gate stdout. But STE forbids omitting articles and prefers a repeated noun to a pronoun, so
+  it may well make the corpus _longer_. Unmeasured in both directions; measure byte delta on the step-3
+  demonstration before claiming either. **If it comes back longer, this candidate trades size for
+  parseability and should say so rather than claiming both.**
+- **Does this address the growth rate at all, or only the symptom?** The Complication shows a
+  structural fix that cut the unconditional load 56% and left the rate untouched. A shape rule is a
+  second intervention on the same problem from a different angle, and it has the same weakness: nothing
+  enforces it, so it decays exactly as the routing test's "at most one pointer sentence" has. Worth
+  asking whether the honest answer is a budget — a byte ceiling on the unconditional set, checked by
+  `agent-doc-check` — rather than a style rule.
 - **Who reviews the rewrite?** A shape rewrite of a rationale paragraph is the highest-risk edit this
   repo has — it changes prose whose only reviewer is `hardener`, and the sweep behind
   `slice/comment-reference-checks` measured a careful text-preserving sweep _creating_ two dead
