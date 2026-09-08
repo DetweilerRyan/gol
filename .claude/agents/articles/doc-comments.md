@@ -378,12 +378,18 @@ where a caller actually stands.
 
 Three hover hazards defeat that test, and each has a rule:
 
-- **A hover taken right after your own edit can serve the pre-edit text.**
+- **A hover can serve pre-edit text after a write the harness did not make.**
 - **A hover that reveals a defect is not a defect until you have read the source.**
 - **Pass `LSP` an absolute path, always.**
 
-On the first: a rendering that must be **measured** rather than recalled goes in a **new** file, one the
-server has not read yet.
+On the first: only `Edit` and `Write` update the server's copy of a file. A shell write does not reach
+it. Neither does `git checkout`, `git rebase`, or `npm run format`. That copy then answers every later
+hover on the file, for the whole session.
+
+Refresh the file with any trivial `Edit` before you trust a hover on it. The refresh replaces the whole
+copy, so it need not touch the lines you care about. A `Read` does not enrol a file, so a file you have
+only read still hovers fresh. A rendering that must be **measured** rather than recalled goes in a
+**new** file, one the server has not read yet.
 
 On the second: staleness is not bounded by your own session's edits. A server can answer from a copy
 predating a rebase, producing text that exists in no tree on disk. Confirm against the file before

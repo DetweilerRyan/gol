@@ -193,6 +193,24 @@ Read the consequence carefully, because it inverts the usual advice: the same-tr
 
 **Why `Bad line number` is not the diagnostic for a misroute.** Measured on the same pass, on a correct **absolute** path: a path naming a 128-line `src/components/LifeBoard.tsx` failed at line 120 with `lineStarts.length: 98`, and failed identically on retry — the server answering from a 98-line map for a file that is not 98 lines, a stale server copy rather than a misrouted path. A misroute between two copies of similar length raises it not at all.
 
+### The write path is the variable, not recency — measured 2026-09-08
+
+Measured by the `only-harness-writes-reach-the-language-server` spike, on macOS with Claude Code 2.1.231 and `typescript-lsp@1.0.0`. Untracked probe modules carrying a nonce sentinel in a JSDoc summary; every hover took an **absolute** path. The probes were deleted afterwards.
+
+**What does not clear a stale hover.** A probe **inside the server's own project root**, edited with `sed`, hovered stale at t = 0s, 45s, 117s and 265s, and never converged. `cat`, the `Read` tool, and `EnterWorktree` each left it stale as well. So neither elapsed time nor the project root is the variable — the in-root arm is the one that kills the missing-watcher explanation, because a watcher is supposed to exist there.
+
+**What does clear it.** The harness's `Edit` tool made the same file hover fresh **immediately**, and `Write` behaved identically. A `sed` to that same file seconds later staled it again. The pair, run in that order on one file, is what isolates the write path from every other candidate.
+
+**The re-sync is whole-file, which is what makes the refresh idiom work.** A trivial `Edit` adding a trailing newline at the **end** of a `sed`-staled file made the server pick up a `sed`-authored change to the **comment block** as well. So a harness write replaces the server's copy from disk wholesale rather than patching the edited range. That is why Part 2 §7 can tell you to refresh with an edit that does not touch the lines you are about to hover.
+
+**The cross-file arm, which is the case Part 2 §7's test actually describes.** A caller module hovering an imported symbol from a declaration module: an `Edit` to the declaration's JSDoc showed at the caller's call site immediately, and a later `sed` to the same block did not. So the finding holds where a caller stands, not only in the file being edited. Note the namespace-import form (`m.probeA`) was needed to get a doc-carrying hover at all — a plain named import hovers as `import probeA` with no prose, which is worth knowing before concluding a doc is missing.
+
+**Reconciling the same-tree record above.** The `jsdoc-in-src` measurement recorded a pre-edit rendering after an immediate re-hover, and the `Edit` arm here does not reproduce that. That record does not say which tool performed the write, so the two are consistent if the edit went through a shell command rather than `Edit`. Nothing here contradicts the observation; what changed is the mechanism assigned to it. This is the same correction shape as the entry above under "A correction, kept because the mechanism is what a later reader reasons from" — the verdict survived and the reason did not.
+
+**The stale set is bounded.** A probe created, opened with the `Read` tool, `sed`-ed, and then hovered for the first time returned the **new** bytes. So a `Read` does not enrol a file with the server, and exposure is limited to files that have had an LSP operation run against them. Bounded is not the same as visible: nothing exposes which files a session has enrolled, and the set only grows.
+
+**Why no server-side setting can fix this.** LSP 3.17 states that after `textDocument/didOpen` "the document's truth is now managed by the client and the server must not try to read the document's truth using the document's Uri". A conforming server is therefore required to ignore the disk for an open document, and the protocol's own remedies — `workspace/didChangeWatchedFiles` for closed files, a buffer reload for open ones — both live in the client. The same failure class is open against other clients, for example `zed-industries/zed#48439`. Remedies beyond the refresh idiom, including a proxy that resyncs open documents from disk, were weighed in that spike's decision record rather than here.
+
 ## Illustrations the shape passes dropped from the article
 
 `ste-shape-rules-on-doc-comments` shortened the article six times. Each pass removed examples rather than
