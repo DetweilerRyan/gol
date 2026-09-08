@@ -300,9 +300,14 @@ ruling:
   as nothing, so settle that one from content instead. Ask whether the block describes the file's exports
   **jointly**, or is a multi-concern block that happens to sit above the first one.
 
-- **`// prettier-ignore` and JSDoc coexist, in either order.** Write JSDoc, then `// prettier-ignore`,
-  then the declaration, so the directive stays adjacent to the thing whose formatting it suppresses. The
-  other ordering reads as suppressing the comment's formatting, which it does not do.
+- **`// prettier-ignore` and JSDoc coexist, in either order.** Write the three in this order, so the
+  directive stays adjacent to the thing whose formatting it suppresses:
+
+  1. the JSDoc block
+  2. `// prettier-ignore`
+  3. the declaration
+
+  The other ordering reads as suppressing the comment's formatting, which it does not do.
 
 ## Part 2 — Reading
 
@@ -388,7 +393,7 @@ Separate the mechanical move from the judgment, so each is reviewable on its own
    next commit preserves.
 1. **Partition, text-preserving.** Split each block into its interface and implementation halves and
    relocate them. No line's wording changes, only its location and its comment marker. Verify it: strip
-   the markers from both sides of the diff, then assert the union of the halves equals the commit-0
+   the markers from both sides of the diff. Then assert that the union of the halves equals the commit-0
    baseline.
 2. **Author the summaries and any tags.** The judgment half, separated so it cannot hide inside the
    relocation.
