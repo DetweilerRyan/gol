@@ -24,6 +24,39 @@ longest single sentence is 409 words. And compliance already tracks register wit
 it. That correlation is the whole reason the pilot comes first: it materialises the register split into
 files, so these rules apply to whole files instead of to surfaces within them.
 
+## Measured evidence from the pilot: separating registers does not fix verbosity
+
+`rationale-sidecar-pilot` landed the split and Ryan signed it off at acceptance 7 on 2026-09-08 with one
+reservation, in his words: **"still a little verbose but it's a lot better."** That reservation is this
+candidate's strongest evidence, because it is a judgement about the file _after_ the rationale had
+already been removed. Measured on the signed-off `doc-comments.md`:
+
+| measure                                       | before split | after split |
+| --------------------------------------------- | -----------: | ----------: |
+| bytes                                         |       49,532 |      23,602 |
+| `STE.SentenceLength` warnings                 |           85 |          29 |
+| prose lines opening with a **bolded lead-in** |            — |    51 of 90 |
+| em-dashes                                     |            — |          54 |
+
+**Read the second row against the third.** Sentence-length findings fell 66% as a side effect of moving
+evidence out — nobody was shortening sentences — and then stopped. What remains is not argument that
+escaped the split; it is **emphasis scaffolding**: a bolded lead-in on 57% of prose lines, an em-dash
+aside roughly every other line, and the "X rather than Y" construction the corpus reaches for whenever a
+rule needs distinguishing from a near-miss.
+
+**That is the case for this candidate stated more precisely than the parent research could state it.**
+The split addresses _what a file contains_. It cannot address _how a sentence is built_, and the pilot
+demonstrates the two are independent: a file can be 100% instruction and still cost a reader more than
+it needs to. So the shape rules are not a second attempt at the same problem — they are the only
+instrument aimed at the residue the split provably leaves behind.
+
+**One caution the pilot also supplies.** The verbosity was fixed by _nobody_, deliberately: tightening it
+by feel at sign-off time was offered and declined in favour of filing it here, on the reasoning that a
+by-taste pass sets no precedent the next article can follow. That is the standard this candidate has to
+meet — a stated rule a second author can apply to a second file and get a comparable result, not a
+sensibility. If the rules cannot do that, the honest outcome is to leave the corpus verbose rather than
+to hand-tune it article by article.
+
 ## What ASD-STE100 actually is
 
 Issue 9, January 2025, per [asd-ste100.org](https://www.asd-ste100.org/about_STE.html), which states
