@@ -1,11 +1,12 @@
 import { mkdirSync, writeFileSync } from 'node:fs'
 import path from 'node:path'
 
-// Shared by the gate programs' run.test.ts files (currently
-// ast-grep-rule-check and agent-doc-check) that build a throwaway repo tree
-// under a temp directory to exercise their own I/O-reading exports
-// (listRuleIds/listAgentFiles/etc.) end to end. Extracted once a second
-// program produced a byte-identical copy -- dry4ts caught it.
+// For a test that builds a throwaway repo tree under a temp directory in
+// order to exercise a program's I/O-reading exports (listRuleIds /
+// listAgentFiles and the like) end to end. Extracted once a second program
+// produced a byte-identical copy -- dry4ts caught it. `git grep -l
+// "test-support" scripts` answers which tests use it, which a list here
+// cannot do without rotting.
 //
 // Excluded from crap4ts/Stryker's scripts/ scope the same way
 // scripts/perf-report/test-support.ts already is -- see

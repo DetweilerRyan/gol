@@ -1,9 +1,9 @@
 import { defineConfig } from 'crap4ts'
 
 // The scripts/-scoped twin of crap4ts.config.ts. scripts/ holds this repo's
-// own quality tooling -- the Gherkin acceptance mutator, the Gherkin DRY
-// checker, the Halstead reporter, the perf reporter, the ast-grep rule
-// checker, and the agent-doc checker -- which sits underneath every other
+// own quality tooling -- one directory per program, enumerated in CLAUDE.md's
+// "Custom quality tooling in scripts/" section rather than here, where a
+// second copy of the list would rot -- which sits underneath every other
 // role's quality gate and so gets held to the same bar as src/ rather than
 // being exempt from it.
 //
@@ -28,11 +28,10 @@ import { defineConfig } from 'crap4ts'
 //
 // **/test-support.ts is excluded for the same reason src/test-support/** is
 // excluded from crap4ts.config.ts: it's shared test infrastructure for the
-// test files that import it, not product code -- currently
-// scripts/perf-report/test-support.ts's fixture builders (used by that
-// program's own format.test.ts/stats.test.ts/units.test.ts) and the
-// scripts-root scripts/test-support.ts's writeFile helper (used by
-// agent-doc-check/run.test.ts and ast-grep-rule-check/run.test.ts).
+// test files that import it, not product code. The exclusion is by filename at
+// any depth, so it covers a per-program helper (scripts/perf-report's fixture
+// builders) and the scripts-root one (its writeFile helper) alike, and covers
+// a new one the day it lands rather than when someone remembers to list it.
 export default defineConfig({
   threshold: 6,
   coverageMetric: 'line',

@@ -96,11 +96,12 @@ export function useGridPointerGestures({
     // advanceDrag runs FIRST, before either hover branch below, so both
     // branches see the POST-advance isPanning -- including on the exact
     // move that crosses the drag threshold this call. Checking pre-advance
-    // state here was the corrective's own root cause: the crossing move
-    // would take the "plain hover" branch below (correct only for the
-    // instant before the pan it itself triggers lands), and no later event
-    // ever re-resolved it once the camera actually moved -- see
-    // Grid.tsx's camera-change effect for the other half of that fix.
+    // state here was the root cause collapse-dead-cell-layer's hover-indicator
+    // corrective fixed: the crossing move would take the "plain hover" branch
+    // below (correct only for the instant before the pan it itself triggers
+    // lands), and no later event ever re-resolved it once the camera actually
+    // moved -- see Grid.tsx's camera-change effect for the other half of that
+    // fix.
     const drag = dragStateRef.current
     if (drag) {
       const advance = advanceDrag(drag, e.clientX, e.clientY)

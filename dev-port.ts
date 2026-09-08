@@ -62,10 +62,11 @@ export function browserApiPort(): number {
   return BROWSER_API_BASE_PORT + slot()
 }
 
-// vite preview (npm run preview:perf), used by playwright.perf.config.ts to
-// serve a production perf build rather than dev's unminified one. A third
-// disjoint range from the dev (5173+) and browser-api (21000+) ports above,
-// for the same reason: two live worktrees must never be able to collide.
+// vite preview (npm run preview:perf), which serves a production perf build
+// rather than dev's unminified one -- the perf harness measures a build no dev
+// server produces. A third disjoint range from the dev (5173+) and browser-api
+// (21000+) ports above, for the same reason: two live worktrees must never be
+// able to collide.
 export function previewPort(): number {
   return PREVIEW_BASE_PORT + slot()
 }

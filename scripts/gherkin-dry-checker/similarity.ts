@@ -73,10 +73,12 @@ export function tokenize(text: string): string[] {
       .toLowerCase()
       // The `+` is mutation-equivalent: dropping it splits on each separator
       // character singly, so a run of separators yields empty strings between
-      // them -- which the next line's `token.length > 0` then drops. Measured:
-      // `/[^a-z0-9]/` leaves all 654 of `npm run test:scripts` green, while
-      // dropping the `^` instead reds 16, so the guard absorbs the quantifier
-      // and nothing else about this regex.
+      // them -- which the next line's `token.length > 0` then drops. Measured
+      // on scripts-mutation-survivors-untriaged's tree: `/[^a-z0-9]/` left all
+      // 654 of `npm run test:scripts` green, while dropping the `^` instead
+      // redded 16, so the guard absorbs the quantifier and nothing else about
+      // this regex. Re-derive both counts by hand-applying each mutant; the
+      // suite has grown since.
       .split(/[^a-z0-9]+/)
       .filter((token) => token.length > 0 && !STOPWORDS.has(token))
   )

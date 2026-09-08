@@ -43,7 +43,8 @@ const sharedExclude = [
   // vitest's `unit` project inherits the unrooted default include
   // (**/*.{test,spec}.?(c|m)[jt]s?(x)) and nothing else subtracts it, so
   // without this entry those generated specs are collected into `unit` --
-  // measured: 63 files instead of 61. The leading dot on the directory name
+  // measured by adopt-playwright-bdd, which read 63 collected files against
+  // that tree's usual 61. The leading dot on the directory name
   // protects nothing (a non-dot directory was collected identically in the
   // same probe); this is the same hazard CLAUDE.md documents for
   // ideas/__probe.test.ts. Belongs in sharedExclude, not `unit`'s own list,
@@ -103,8 +104,9 @@ export default defineConfig({
     // exit, so any aborted mutation run (a failed dry run aborts before a
     // single mutant executes) leaves one behind -- and the `unit` and
     // `property` projects below inherit configDefaults.include, which is
-    // unrooted and matches straight into it. Measured: `npm test` collected
-    // 3,299 tests instead of 861 against a leftover src/ sandbox. The `dom`
+    // unrooted and matches straight into it. Measured by
+    // render-perf-improvements: `npm test` collected 3,299 tests against a
+    // leftover src/ sandbox, where that tree's whole suite was 861. The `dom`
     // project is immune only incidentally, because its include list happens
     // to be rooted at src/. The glob covers .stryker-tmp-scripts too (see
     // stryker.scripts.config.json's tempDirName).
@@ -129,12 +131,14 @@ export default defineConfig({
     // THE ONE THING THAT CAN GO SILENTLY DEAD: `dom`'s include list names the
     // directories src/components/ and src/hooks/ by path. A vitest project
     // whose glob matches nothing exits 0 with no warning -- measured on
-    // 4.1.10. Rename either directory and `dom` silently stops running its
-    // 23 test files while `npm test` stays green (measured on this tree: `dom`
-    // collects 23 files, 175 tests). It stays green only at that
-    // granularity, though: the next quality gate fails loudly, because the
-    // hook/component coverage those 15 files provide is exactly what keeps
-    // crap4ts under its threshold and Stryker above its break score. Renaming
+    // 4.1.10. Rename either directory and `dom` silently stops running every
+    // test file it collects while `npm test` stays green -- measured by
+    // delete-step-test-layer at 23 files / 175 tests, a figure that moves with
+    // the suite, so re-derive it with `npx vitest list --project dom` rather
+    // than reading it forward. It stays green only at that granularity,
+    // though: the next quality gate fails loudly, because the hook/component
+    // coverage those files provide is exactly what keeps crap4ts under its
+    // threshold and Stryker above its break score. Renaming
     // either directory means updating this list, plus every other place those
     // two directory names are hardcoded: crap4ts.config.ts and
     // stryker.config.json (their src/components/LifeBoard.tsx exclusion), the

@@ -5,10 +5,10 @@
 // an *empty* grid -- nothing else in this harness would notice, since an
 // empty-grid pan is a legitimate scenario in its own right (see
 // pan-default-empty). Calling one of these before a scenario's rep loop
-// starts is also the only thing in this repo that exercises App.tsx's
-// initialLiveCells prop end to end -- that prop has no unit test, since
-// App.tsx is composition-root code outside the unit-test gates (see
-// CLAUDE.md's Architecture section).
+// starts also exercises App.tsx's initialLiveCells prop end to end, which no
+// unit test can: App.tsx is composition-root code deliberately outside the
+// unit-test gates (see CLAUDE.md's Architecture section), so a regression in
+// that prop's wiring surfaces here or nowhere.
 import { expect, type Page } from '@playwright/test'
 import { centeredCamera } from '../src/camera.ts'
 import { computeVisibleRange } from '../src/gridGeometry.ts'

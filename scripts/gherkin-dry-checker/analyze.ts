@@ -208,8 +208,9 @@ function findPlaceholderVariants(byText: StepsByText, dedupePairs: Set<string>):
       for (const b of texts) {
         // Mutation-equivalent to `true` now that pairKey is injective: a
         // self-pair key can only ever equal another self-pair's, and every
-        // lookup key is built from two distinct byText keys. Measured --
-        // forcing the branch leaves all 649 of `npm run test:scripts` green.
+        // lookup key is built from two distinct byText keys. Measured on
+        // scripts-mutation-survivors-untriaged's tree -- forcing the branch
+        // left all 649 of `npm run test:scripts` green.
         // It is a real guard against a non-injective key, though: see
         // pairKey's comment and the collision cases in analyze.test.ts.
         if (a !== b) dedupePairs.add(pairKey(a, b))

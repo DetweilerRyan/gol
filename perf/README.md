@@ -1,7 +1,7 @@
 # perf/ -- the render-performance harness
 
 Playwright specs that measure render cost against a real Chromium, real
-DOM, real CDP metrics -- not a substitute for `e2e/*.e2e.spec.ts` (which
+DOM, real CDP metrics -- not a substitute for `features/*.e2e.spec.ts` (which
 proves correctness) and not covered by `crap4ts`/Stryker/`dry4ts` (see
 `vite.config.ts`'s exclude and `crap4ts.config.ts`'s glob). Run it with:
 
@@ -126,11 +126,11 @@ Every scenario that seeds live cells (`?cells=...` via
 `App.tsx`'s `initialLiveCells` prop wiring regressing -- produces a
 perfectly plausible-looking measurement of what is actually an _empty_
 grid, and nothing else in this harness would notice (an empty-grid pan is
-a legitimate scenario in its own right). This is also the only place in
-the whole repository that exercises `App.tsx`'s `initialLiveCells` prop
-end to end: that prop has no unit test, since `App.tsx` is
+a legitimate scenario in its own right). It also exercises `App.tsx`'s
+`initialLiveCells` prop end to end, which no unit test can: `App.tsx` is
 composition-root code deliberately outside the unit-test gates (see
-`CLAUDE.md`'s Architecture section).
+`CLAUDE.md`'s Architecture section), so a regression in that prop's
+wiring surfaces here or nowhere.
 
 In-view scenarios (small `spread`, e.g. `spread=30`) count alive cell
 buttons directly in the DOM against an analytically-expected fraction.
