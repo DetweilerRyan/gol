@@ -94,7 +94,7 @@ Two of these apply mechanically. Two are prompts to look. Know which you are hol
 
 ### `STE.Contractions` — act on every finding except a quotation
 
-Expand it. "Do not" also carries more weight than "Don't" at the head of an instruction, so this rule
+Expand it. At the head of an instruction, "Do not" also carries more weight than "Don't". So this rule
 tends to improve a heading rather than merely conform it.
 
 **One exempt class, and it is the use/mention distinction: a contraction that is quoted or discussed
@@ -105,6 +105,11 @@ it misquotes that file. A contraction named as an example — "'Do not' carries 
 This article is the live example, and carries three such findings that stand unfixed on purpose: two
 quoting `engineering.md`, one naming the word itself. **An article about a rule will trip that rule**, so
 expect this wherever prose-linting guidance discusses the token it governs.
+
+### `STE.ParagraphLength` — act on every finding
+
+Six sentences per paragraph. Split it. Purely structural — it counts sentence terminators and consults
+no part-of-speech tagger, which is why it is one of the three here that need no judgement.
 
 ### `STE.ProcedureLength` — act only on genuine steps
 
@@ -153,6 +158,25 @@ actionable. "The between-position is sanctioned" becomes "Use the between-positi
 4. **A passive that already names its agent.** "Staleness is not bounded _by your own session's edits_"
    is reported with the message "name the agent", which the sentence does.
 5. **A deliberate aphorism, usually a heading.** "Writing is verified by reading."
+
+## The six rules that are off
+
+All twelve rules in the style have been tried or ruled on. Six are off, and each has a reason in
+`prose-linting.rationale.md` rather than an omission:
+
+| rule           | why it is off                                                                    |
+| -------------- | -------------------------------------------------------------------------------- |
+| `Dictionary`   | not ASD's approved-word list; it substitutes plain-language advice               |
+| `Modals`       | blind-swaps may/should/might and would flatten this repo's obligation vocabulary |
+| `Ambiguity`    | its slash token flags compound technical terms and a GitHub org path             |
+| `NounClusters` | fails to fire on the example in its own header while flagging non-clusters       |
+| `Articles`     | its verb list is aerospace-specific; every finding here was the JavaScript `Set` |
+| `Gerunds`      | ~941 corpus-wide, almost all idiomatic prepositional gerunds                     |
+
+**Three of the six were rejected because a part-of-speech tagger drove them.** `NounClusters`,
+`Gerunds` and `Articles` all depend on tagging, and two of those rules say so in their own headers:
+imperative-heavy technical prose is outside the tagger's training data. Treat a POS-driven rule as
+guilty until measured on this corpus.
 
 ## Enabling, disabling or re-levelling a rule
 

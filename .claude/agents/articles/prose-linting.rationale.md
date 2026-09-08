@@ -26,14 +26,14 @@ correction.
 | `ProcedureLength` | yes |                        12 → 6 | ~2 of 12 genuine; the rest are its declared over-count |
 | `OneInstruction`  | yes |                         2 → 0 | ~50% precision corpus-wide; one class is dangerous     |
 | `PassiveVoice`    | yes |                       26 → 22 | ~4 of 26 genuine; five exempt classes are enumerable   |
-| `Gerunds`         | no  |                            65 | volume; 941 corpus-wide, unread                        |
+| `Gerunds`         | no  |                            65 | idiomatic prepositional gerunds — see below            |
 | `Dictionary`      | no  |                             7 | not ASD's wordset — see below                          |
 | `Modals`          | no  |                             4 | would do damage — see below                            |
 | `NounClusters`    | no  |                             2 | fails its own example — see below                      |
 | `Contractions`    | yes |                         3 → 1 | mechanical; the 1 left is a quotation                  |
 | `Ambiguity`       | no  |                             2 | slash token false-positives — see below                |
-| `Articles`        | no  |                             0 | nothing to learn here                                  |
-| `ParagraphLength` | no  |                             0 | nothing to learn here                                  |
+| `Articles`        | no  |                             0 | aerospace verb list; 0 of 4 corpus-wide — see below    |
+| `ParagraphLength` | yes |                             0 | mechanical, no tagger; 41 corpus-wide are all real     |
 
 Corpus-wide counts across the 14 articles at the time of measurement: Gerunds 941, SentenceLength 799,
 PassiveVoice 592, ProcedureLength 166, Contractions 135, Dictionary 129, Modals 96, NounClusters 59,
@@ -59,6 +59,38 @@ same file — so the file was genuinely linted and the silence is the rule's ans
 A rule that misses its own documented classic case while flagging sequences that are not clusters has
 inverted precision. Its four-consecutive-noun-tag matcher depends entirely on the POS tagger, which reads
 "landing" as a verb form and "reads" as a plural noun. Nothing about this corpus makes it work better.
+
+## The three tried last, completing the sweep
+
+**`STE.ParagraphLength` — adopted.** Zero findings on both worked files, 41 corpus-wide on paragraphs of
+7 to 13 sentences. It counts sentence terminators and consults no tagger, so there is no precision
+question to answer: a paragraph either has more than six sentences or it does not. Enabling it costs the
+worked files nothing and catches regression in them.
+
+**`STE.Articles` — rejected.** Its matcher is a closed list of 34 aerospace procedural verbs — Remove,
+Install, Tighten, Lubricate, Drain — and none of this repo's procedural verbs (`Run`, `Read`, `Commit`,
+`Split`) appears in it. All four corpus-wide findings were false: three were the JavaScript `Set` type
+read as the imperative "Set" (`Set multiset`, `Set members`, `Set path`) and one was "Push new". Zero of
+four. Salvaging it means replacing the verb list with this repo's own, which is authoring a variant
+rule — and the defect it exists to catch, telegraphic style with dropped articles, is not one this
+corpus has.
+
+**`STE.Gerunds` — rejected on cost rather than on correctness.** 65 findings on `doc-comments.md` and
+941 corpus-wide. Sampled, they are overwhelmingly gerunds after a preposition: "before writing or moving
+a comment block", "instead of reading a body", "worth obeying", "when you are changing a rule". Those are
+STE violations by the letter, and a few would genuinely improve ("before writing" → "before you write").
+Most would not. "including" was also flagged, where the word is a preposition rather than a verb form.
+
+The deciding argument is triage cost against benefit: 941 findings, each needing a judgement, to gain
+prose an agent already parses without difficulty. The rule's own header concedes the mechanism —
+"imperative-heavy technical prose is out of the tagger's training distribution; expect misses and false
+hits".
+
+**A pattern across the six rejections.** Three of them — `NounClusters`, `Gerunds`, `Articles` — are
+driven by the part-of-speech tagger, and two say in their own headers that it is unreliable on this kind
+of prose. `Articles` is the sharpest case: its header explains that it abandoned a POS implementation for
+exactly this reason, and the closed list it fell back on is domain-specific in a way that does not
+transfer. The generalisation worth carrying: **a POS-driven rule is guilty until measured here.**
 
 ## The three rejected on measurement
 
