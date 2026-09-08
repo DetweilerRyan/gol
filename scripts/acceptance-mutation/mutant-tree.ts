@@ -7,7 +7,8 @@
 //
 // No filesystem access here -- isolating the naming from the writing is
 // what makes both this module and (later) the result classifier testable
-// without a real temp directory, mirroring discovery.ts's pairTargets split.
+// without a real temp directory, mirroring discovery.ts's
+// discoverTargets/filterTargets split.
 
 const FEATURE_SUFFIX = '.feature'
 

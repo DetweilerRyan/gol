@@ -29,7 +29,7 @@ interface GridCellsProps {
  * costs nothing here at all unless it happens to be the focus cursor.
  */
 // Replaces collapse-dead-cell-layer's pre-step-4 "CellTile per tile in
-// range, dead or alive" renderer. CellTile.tsx is deleted along with the
+// range, dead or alive" renderer. The CellTile component is deleted along with the
 // tile-slot loop it used to wrap; the intra-tile pixel math (cellOffsetPx)
 // it owned moves down into this component instead, since there is no longer
 // a tile-sized unit to own it.

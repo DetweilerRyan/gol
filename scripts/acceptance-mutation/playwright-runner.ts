@@ -1,6 +1,7 @@
 // Spawn args/env and JSON-reporter reading for the batched Playwright design
 // (see playwright.acceptance-mutation.config.ts's header comment). This
-// replaces scripts/acceptance-mutation/vitest-runner.ts's role -- spawning
+// replaces the vitest-runner module's role, retired by
+// `acceptance-mutation-on-playwright` -- spawning
 // the test process and reading back a trustworthy collected/failed count --
 // but for one batched `playwright test` invocation covering every mutant's
 // generated spec at once, rather than one vitest spawn per mutant.
@@ -13,8 +14,9 @@
 // output (see CLAUDE.md's Commands section on the _OUTPUT_FILE resolution
 // order, verified against node_modules/playwright/lib/runner/index.js).
 //
-// Never a regex over console text, mirroring classify.ts's/vitest-runner.ts's
-// existing contract: a summary is read from the JSON reporter's own output,
+// Never a regex over console text, mirroring classify.ts's existing contract
+// (and the retired vitest-runner module's before it): a summary is read
+// from the JSON reporter's own output,
 // or it's null and callers treat that as an infrastructure error rather than
 // guessing from exit code and stdout chrome.
 // NOT SPLIT, deliberately -- read this before reaching for the seam again.
@@ -61,8 +63,8 @@ export interface GenSpawn {
 
 /**
  * Nothing here decides *which* mutants exist -- writing ${dir}/features/*
- * before calling this is the caller's job, same division vitest-runner.ts
- * had with its own temp feature-file path.
+ * before calling this is the caller's job, same division the retired
+ * vitest-runner module had with its own temp feature-file path.
  */
 export function bddgenSpawn(dir: string): GenSpawn {
   return {
@@ -236,7 +238,7 @@ function summarize(statuses: string[]): SpecSummary {
 
 // Covers both "the reporter never wrote a file" (a crash before Playwright
 // could start reporting) and "the file exists but isn't valid JSON" -- same
-// treatment as vitest-runner.ts's readSummary. Its sole caller's `!parsed`
+// treatment as the retired vitest-runner module's readSummary. Its sole caller's `!parsed`
 // guard treats a thrown-then-caught read the same as any other falsy
 // result, so this function's own null-vs-undefined distinction is
 // unobservable from outside the module -- a mutation scan emptying this

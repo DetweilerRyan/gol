@@ -9,8 +9,9 @@ interface GridLinesProps {
 // of collapse-dead-cell-layer, invisible until step 4 deleted that border --
 // this is now the ONLY gridline source in the app: a 1px line for every cell
 // boundary, widened to 2px every MAJOR_GRIDLINE_INTERVAL cells (the same
-// convention Cell.tsx's isMajorGridline used to draw one cell's own edge at
-// a time). Both widths' colours are read through the --color-board-line-minor
+// convention the now-retired isMajorGridline predicate, formerly on
+// Cell.tsx, used to draw one cell's own edge at a time -- see
+// gridGeometry.ts's note on its retirement). Both widths' colours are read through the --color-board-line-minor
 // / -major custom properties below (light mode: gray-200/gray-400, the same
 // values this always painted; dark mode: zinc-800/zinc-700) rather than
 // restated as literals -- see the third paragraph below and src/index.css's

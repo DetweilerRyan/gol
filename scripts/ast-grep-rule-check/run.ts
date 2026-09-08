@@ -19,9 +19,10 @@
 // what keeps this checker's file set equal to the one ast-grep actually uses --
 // a hardcoded top-level-only pair would fail open on both a nested rule and a
 // second `ruleDirs` entry, silently.
+// reference-check: allow no-qux.yml -- illustrative hypothetical filename, not a real file
 //
 // Everything that can be pure lives in decide.ts's decide(): parsing (with
-// parse-error handling), running every check.ts check, and formatting the
+// parse-error handling), running every checks.ts check, and formatting the
 // exit code/output lines. What's left here is genuinely I/O -- recursive
 // directory reads, sgconfig.yml parsing, console.log, process.exit -- so a
 // test can pin decide()'s exit code without touching the filesystem, and
@@ -67,6 +68,8 @@ interface SgConfig {
 // has no special meaning to ast-grep anywhere else. A rule at
 // `rules/__snapshots__/no-foo.yml` is live in `ast-grep scan` (measured), so
 // skipping it here would exempt a real rule from every check in this program.
+// reference-check: allow x-test.yml -- illustrative hypothetical fixture filename, not a real file
+// reference-check: allow no-foo.yml -- illustrative hypothetical rule filename, not a real file
 const SNAPSHOTS_DIR_NAME = '__snapshots__'
 
 function toStringArray(value: unknown): string[] {

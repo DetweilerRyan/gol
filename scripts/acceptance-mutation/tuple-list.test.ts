@@ -8,8 +8,8 @@ import { isTupleList, mutateTupleList } from './tuple-list.ts'
 // one.
 import { mutateValue } from './mutation-rules.ts'
 
-// Byte-identical mirror of features/steps/pattern-library.ts:58's own
-// parseCellList regex, not tuple-list.ts's own parser -- see
+// Byte-identical mirror of pattern-library.ts's parseCellList regex,
+// not tuple-list.ts's own parser -- see
 // tuple-list.property.test.ts's identical constant for why the oracle has to
 // stay independent of the thing under test. Keep this in sync by hand.
 const PAIR = /\((-?\d+),\s*(-?\d+)\)/g

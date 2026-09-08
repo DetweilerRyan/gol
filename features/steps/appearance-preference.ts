@@ -67,6 +67,8 @@
 // erase the distinction the third scenario exists to make, and would leave a
 // When reading "the system appearance is dark", which states no act at all.
 //
+// reference-check: allow appearance-preference.e2e.spec.ts -- negative-existence claim: this paragraph's whole point is that the file was promised and never written
+//
 // THERE IS NO RESIDUE HERE, AND NO HAND-WRITTEN SPEC. The SPECIFY draft of
 // this paragraph promised an appearance-preference.e2e.spec.ts stating what
 // the dark palette actually IS -- the board's own fill, a live cell painted

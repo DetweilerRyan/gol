@@ -259,8 +259,8 @@ describe('design table: TILE_SPAN_CELLS = 4 mounted/tile/entering counts', () =>
   // rebuilt) range can get before it would be rebuilt instead, per
   // tileRangeHolds's "exceeds by at most EVICT_LAG_TILES on every side"
   // tolerance. Both stay under today's measured 35,856 mounted cells at
-  // min-zoom/1920x1080 (see cellLattice.ts's header for that figure's
-  // provenance).
+  // min-zoom/1920x1080 (see the retired cellLattice module's header, before
+  // `tile-virtualized-cells`, for that figure's provenance).
   //
   // A note on the design document's own label for the first of these: it
   // calls 35,712 the "single-axis-pan" transient. That label doesn't survive

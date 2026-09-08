@@ -1,20 +1,24 @@
 // Per-line extraction of the three reference shapes this checker cares
 // about: a bare filename token (extractFileTokens), a `<file>'s <symbol>`
-// citation (extractSymbolCitations), and a banned `file.ts:NN` line
+// citation (extractSymbolCitations), and a banned `<file>:NN` line
 // reference (extractLineReferences). All three share one filename-token
 // grammar, FILE_TOKEN_SOURCE.
 //
 // Matching everywhere in this program is by *basename*, never full path
 // (basenameOf) -- deliberately under-reports, so a false negative on a
 // same-named file living in a different directory is the safe direction. It
-// also repairs a real extraction artifact: `classify.ts's/vitest-runner.ts's`
-// yields a raw token of `s/vitest-runner.ts` (the greedy token grammar eats
-// straight through the `'s/` joiner between the two real filenames), whose
-// *basename* -- `vitest-runner.ts` -- is the file actually being cited.
+// also repairs a real extraction artifact, measured against this repo's own
+// history: `classify.ts's/vitest-runner.ts's` yielded a raw token of
+// `s/vitest-runner.ts` (the greedy token grammar eats straight through the
+// `'s/` joiner between the two real filenames), whose *basename* --
+// `vitest-runner.ts` -- was the file actually being cited (vitest-runner.ts
+// has since been retired by `acceptance-mutation-on-playwright`).
+// reference-check: allow vitest-runner.ts -- retired by acceptance-mutation-on-playwright; the worked example above is grounded in a real, now-historical extraction artifact
 
 // `tsx` before `ts`: a regex alternation tries alternatives left to right,
 // and `ts` is a literal prefix of `tsx`, so the longer form has to come
-// first or `app.tsx` would report a truncated `.ts` match.
+// first or a hypothetical `app.tsx` would report a truncated `.ts` match.
+// reference-check: allow app.tsx -- illustrative hypothetical filename, not a real file
 const EXTENSION_ALTERNATION = 'tsx|ts|yaml|yml'
 // The trailing negative lookahead keeps `.tsconfig` (or any other longer
 // word starting with a real extension) from reporting a truncated token.
@@ -26,6 +30,8 @@ function isDiscardedToken(token: string): boolean {
   // wildcards elsewhere), and a token starting with `.` is dotted-relative
   // noise with no filename of its own (a bare `.ts` matched with a
   // zero-length prefix).
+  // reference-check: allow test.ts -- illustrative glob-fragment example, not a real file
+  // reference-check: allow e2e.spec.ts -- illustrative glob-fragment example, not a real file
   return token.includes('*') || token.startsWith('.')
 }
 
@@ -88,7 +94,7 @@ export function extractSymbolCitations(line: string, lineNumber: number): Citati
 
 const LINE_REFERENCE_PATTERN = new RegExp(`${FILE_TOKEN_SOURCE}:\\d+`, 'g')
 
-/** Every banned `file.ts:NN`-shaped reference on `line`. */
+/** Every banned `<file>:NN`-shaped reference on `line`. */
 export function extractLineReferences(line: string): string[] {
   const matches = line.match(LINE_REFERENCE_PATTERN) ?? []
   return matches.filter((token) => !isDiscardedToken(token))

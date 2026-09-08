@@ -33,6 +33,8 @@
 // strength of that accident; the pan is now an explicit step in the contract
 // instead, and the step asserts it really did unmount both cells rather than
 // assuming it.
+//
+// reference-check: allow features/infinite-grid.e2e.spec.ts -- negative-existence claim: the paragraph above is precisely about that file having been deleted
 import { createBdd } from 'playwright-bdd'
 import { expect } from '@playwright/test'
 import {

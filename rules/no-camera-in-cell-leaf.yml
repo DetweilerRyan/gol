@@ -18,7 +18,7 @@ note: >-
 # ignore its output. `npm run ast-grep:rules` fails if the path stops resolving, so a rename
 # surfaces as a gate failure rather than as silence.
 #
-# CellTile.tsx WAS THE SECOND PATH HERE and was dropped by collapse-dead-cell-layer's DESIGN
+# The CellTile component (src/components/, since deleted) WAS THE SECOND PATH HERE and was dropped by collapse-dead-cell-layer's DESIGN
 # pass, deliberately ahead of the deletion rather than after it. That slice removes the
 # per-dead-cell mount, which makes the tile wrapper redundant and deletes the file; a `files:`
 # entry naming a deleted path fails this repo's rule gate, and `coder` cannot edit rules/ to

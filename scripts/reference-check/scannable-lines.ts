@@ -10,7 +10,9 @@
 // order: strip URLs, then drop allow-marker lines. URLs first, because
 // `src/cache.ts` cites an immer permalink containing `mapset.ts`, and that
 // substring must never reach the tokenizer as a claim about a file in this
-// repo. Allow-marker lines are dropped entirely (not merely exempted) from
+// repo.
+// reference-check: allow mapset.ts -- immer's own vendored file, cited via URL in src/cache.ts; not a path in this repo
+// Allow-marker lines are dropped entirely (not merely exempted) from
 // the *live-reference* scan, so the marker comment a fix adds does not
 // itself read as a fresh, unresolved reference to the very token it is
 // excusing -- checks.ts reads the raw, unfiltered text separately wherever

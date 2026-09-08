@@ -14,6 +14,8 @@ note: >-
   registry is global across this directory, so the sharing is already in effect and an import
   would dress a registry fact up as a module dependency (see the ownership convention in
   CLAUDE.md's testing-structure section).
+# reference-check: allow no-domain-imports-in-black-box-steps.yml -- retired rule; the point of this paragraph is to `git show` it for the full argument
+#
 # AN ALLOWLIST, NOT A BLOCKLIST ON 'src/', for the reason the now-retired
 # rules/no-domain-imports-in-black-box-steps.yml carried (deleted by delete-step-test-layer with
 # the .steps.test.tsx layer it scoped; git show it for the full argument, and see the live sibling

@@ -84,7 +84,7 @@ export async function resetView(page: Page) {
 // was supposed to prove had not started. One definition, three callers.
 //
 // THAT SECOND CALLER IS NOW A SCENARIO. `convert-modal-inertness-to-scenarios`
-// deleted modal-inertness.e2e.spec.ts and restated its zoom claim as
+// deleted the hand-written modal-inertness spec and restated its zoom claim as
 // while-the-pattern-library-is-open.feature's "the zoom percentage should be
 // 100", which reaches this function through camera-pan-and-zoom.ts's zoomAtRest
 // -- so the settle-then-assert ordering the paragraph above describes crossed

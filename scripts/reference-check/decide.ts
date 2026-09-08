@@ -34,7 +34,7 @@ function formatLines(input: CheckInput, failures: Failure[]): string[] {
 }
 
 /**
- * The whole program's decision as one pure function: run every check.ts
+ * The whole program's decision as one pure function: run every checks.ts
  * check over the files run.ts read off disk and the FileIndex it built, and
  * turn the result into an exit code plus the exact lines to print -- which
  * is what lets a test pin the exit code without touching the filesystem.

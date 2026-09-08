@@ -14,6 +14,8 @@ note: >-
   it is the single encoding of how a cell's aliveness is expressed in the DOM, and
   rules/no-aliveness-by-paint-class.yml exists precisely to push this layer through it rather than
   through the bg-gray-900/bg-white paint class.
+# reference-check: allow no-domain-imports-in-black-box-steps.yml -- retired rule; the point of these paragraphs is to `git show` it as the ancestor of the two live siblings
+#
 # WHY THIS RULE, AND WHAT IT IS NOT. It is NOT the successor to the retired
 # no-domain-imports-in-black-box-steps.yml -- that rule guarded features/*.steps.test.tsx, and the
 # successor to the layer it watched is rules/no-domain-imports-in-bdd-steps.yml over
@@ -44,7 +46,8 @@ note: >-
 # DESIGN pass: the fixture's 9 valid cases produce no finding (including the multi-line brace form
 # two specs actually use, and both extension spellings) while all 10 invalid cases fire; a scan of
 # the real tree is clean; and a planted `import { toggleCell } from '../src/gameOfLife'` in
-# features/infinite-grid.e2e.spec.ts produced exactly one finding. The fixture proves the matcher,
+# the hand-written infinite-grid spec (since deleted by triage-paired-specs) produced exactly one
+# finding. The fixture proves the matcher,
 # the live probe proves the files: glob -- the standing bargain in CLAUDE.md for a new rule.
 #
 # IF THE SPECS ARE EVER REPOINTED AT features/screenplay/, this is a ONE-LINE WIDENING: add

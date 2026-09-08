@@ -44,7 +44,8 @@ export type GlobHasMatch = (pattern: string) => boolean
 const VALID_SEVERITIES = ['hint', 'info', 'warning', 'error', 'off']
 
 /**
- * Check 1: every rule has a fixture at rule-tests/<id>-test.yml.
+ * Check 1: every rule has a fixture named `<id>-test` (with the `.yml`
+ * extension) inside rule-tests/.
  */
 export function checkFixtureExists(rules: RuleFile[], fixtures: FixtureFile[]): Failure[] {
   const fixtureStems = new Set(fixtures.map((fixture) => fixture.filenameStem))
@@ -216,6 +217,7 @@ export function checkFilesGlobsResolve(rules: RuleFile[], globHasMatch: GlobHasM
  * leaves that rule with no working fixture even though a same-named file
  * exists.
  */
+// reference-check: allow no-bar-test.yml -- illustrative hypothetical filename, not a real file
 export function checkFixtureIdMatchesFilename(fixtures: FixtureFile[]): Failure[] {
   const failures: Failure[] = []
   for (const fixture of fixtures) {

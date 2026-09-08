@@ -96,8 +96,8 @@
 // defect and is not: another claim reds on it too, through
 // expectCellState(0, 0, 'dead'). That is an unrelated check genuinely depending
 // on the attribute being present, which is what the contract says it should be.
-// It was modal-inertness.e2e.spec.ts's first test when the probe was run;
-// `convert-modal-inertness-to-scenarios` restated that claim as
+// It was the hand-written modal-inertness spec's first test when the probe
+// was run; `convert-modal-inertness-to-scenarios` restated that claim as
 // while-the-pattern-library-is-open.feature's first scenario and deleted the
 // spec, so the same reading is now taken by the generated layer.
 //

@@ -1,5 +1,6 @@
 // The naming convention that binds a rule to its fixture, in one place: a rule
-// at `<ruleDir>/<id>.yml` is tested by a fixture at `<testDir>/<id>-test.yml`.
+// at `<ruleDir>/<id>.yml` is tested by a fixture named `<id>-test` (with the
+// `.yml` extension) inside `<testDir>`.
 // Both directions of that mapping are used -- checks.ts's checkFixtureExists
 // goes rule id -> fixture stem, checkFixtureIdMatchesFilename goes fixture stem
 // -> rule id -- so they live next to each other here, where a change to the
@@ -23,6 +24,7 @@ const FIXTURE_SUFFIX = '-test'
  * slash wins for every string. The `.ya?ml$` anchor below *is* load-bearing
  * -- see the mid-filename ".yaml" test in filenames.test.ts.
  */
+// reference-check: allow nb/c.yml -- an escaped-newline test string (`a\nb/c.yml`) above, not a real path
 export function filenameStemOf(relativePath: string): string {
   return relativePath.slice(relativePath.lastIndexOf('/') + 1).replace(/\.ya?ml$/, '')
 }

@@ -65,8 +65,8 @@ import { fc, test } from '@fast-check/vitest'
 import { describe, expect, it } from 'vitest'
 import { mutateValue } from './mutation-rules.ts'
 
-// Byte-identical mirror of features/steps/pattern-library.ts:58's own
-// parseCellList regex -- deliberately, not tuple-list.ts's own parser. The
+// Byte-identical mirror of pattern-library.ts's parseCellList regex --
+// deliberately, not tuple-list.ts's own parser. The
 // oracle for these properties has to be independent of the thing under test,
 // and it has to be independent in the direction that matters: the step is
 // what the acceptance suite actually reads a pattern's shape against, so

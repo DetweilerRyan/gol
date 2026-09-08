@@ -7,7 +7,8 @@
 // The `.property.test.ts` suffix carries no project meaning in scripts/ --
 // there is no `property` vitest project here; vitest.scripts.config.ts's
 // `scripts/**/*.test.ts` include collects this file into the ordinary
-// `npm run test:scripts` run. Same note as mutation-rules.property.test.ts.
+// `npm run test:scripts` run. Same note as
+// scripts/acceptance-mutation/tuple-list.property.test.ts's.
 //
 // Why a property rather than more fixtures: analyze.test.ts already carries
 // four hand-built collision corpora, and the fourth of them exists because

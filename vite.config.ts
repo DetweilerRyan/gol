@@ -10,6 +10,8 @@ const sharedExclude = [
   '**/*.perf.spec.ts',
   '**/*.browser.test.ts?(x)',
   'scripts/**',
+  // reference-check: allow ideas/__probe.test.ts -- a throwaway measurement probe, never committed to git, so it can never resolve
+  //
   // Both entries below exist because vitest's `unit` project inherits the
   // unrooted default include (**/*.{test,spec}.?(c|m)[jt]s?(x)) and nothing
   // above subtracts it -- any directory in the repo is reachable unless

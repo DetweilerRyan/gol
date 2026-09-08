@@ -18,7 +18,8 @@ import { cameraArbitrary as camera } from './test-support/arbitraries'
 // The first two properties (reference identity, idempotence) landed with the
 // module in step 1 -- they are the no-infinite-loop guarantee behind
 // useCellTiles' setState-during-render pattern, and were ported forward from
-// cellLattice.property.test.ts's 'nextLattice (property)' block. Most of the
+// the retired cellLattice property-test module's 'nextLattice (property)'
+// block. Most of the
 // rest was added at the architect review pass; the 'retention, not
 // admission' and 'bounded wobble' describes near the bottom were specified
 // at that same review but landed with the fix-tile-hysteresis policy change
@@ -684,7 +685,7 @@ describe('eviction hysteresis (deterministic -- the wobble cases the generator w
   })
 
   // The zoom contract, which nextTileRange deliberately drops from what
-  // cellLattice.ts guaranteed: the lattice ALWAYS rebased on a cellSize
+  // the retired cellLattice module guaranteed: the lattice ALWAYS rebased on a cellSize
   // change (slot pixel positions were cellSize-scaled), whereas a TileRange
   // stores no cellSize at all, so a small zoom-in that shrinks the covering
   // set inside the eviction tolerance keeps the range untouched. That is

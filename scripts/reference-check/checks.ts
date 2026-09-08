@@ -10,7 +10,7 @@
 // checkAll, which runs them all.
 //
 // Resolving a token against git *history* rather than the live tree was
-// considered and rejected. It would spare the `cellLattice.ts` family of
+// considered and rejected. It would spare the `cellLattice` family of
 // dead references automatically (they were deleted, and git remembers
 // that), but it would just as happily spare a genuinely stale present-tense
 // claim about a file that was deleted yesterday for the wrong reason --
@@ -135,7 +135,7 @@ export function checkCitedSymbolExists(files: ScannedFile[], index: FileIndex): 
 }
 
 /**
- * Check `no-file-line-references`: a `foo.ts:NN` line reference is banned
+ * Check `no-file-line-references`: a `<file>:NN` line reference is banned
  * outright in source comments, whether or not it currently resolves --
  * `<file>'s <symbol>` is the form that survives a line being added above
  * it, this doesn't. Source only, per the ratified design; docs are exempt

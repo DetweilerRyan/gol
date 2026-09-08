@@ -36,20 +36,20 @@ export interface CellTilesView {
  * use them as memo dependencies directly.
  */
 // WHY `range` IS AN OBJECT rather than the flattened scalars
-// useCellLattice.ts returned: that flattening existed so Grid held no object
+// the retired useCellLattice hook returned: that flattening existed so Grid held no object
 // identity from the hook. Here reference stability is a property-tested
 // contract of nextTileRange itself (the same guarantee this hook's own
 // loop-freedom rests on), so the returned TileRange is exactly as memo-stable
 // as a scalar would be, and bundling its four bounds together stops a caller
 // reconstructing an inconsistent range from separately-drawn fields.
 //
-// This hook replaced useCellLattice.ts once mounting coverage and precision
+// This hook replaced the retired useCellLattice hook (by `tile-virtualized-cells`) once mounting coverage and precision
 // bounding became two independent concerns (see cellAnchor.ts's header)
 // instead of one lattice origin doing both jobs. It holds two sticky anchors
 // -- a TileRange and an Anchor, each via its own useState -- and decides
 // nothing about tiling or precision itself.
 // Both coverage checks run during render, not in a useEffect, for the same
-// reason useCellLattice.ts's did: nextTileRange/nextAnchor each return either
+// reason the retired useCellLattice hook's did: nextTileRange/nextAnchor each return either
 // the stored value (by reference, if it still holds) or a freshly computed
 // one, and whichever it is gets stored back with the matching setState *and*
 // is the same value the returned offset/range are derived from. Calling
@@ -63,7 +63,7 @@ export interface CellTilesView {
 //
 // Neither check can loop, and both guarantees belong to the pure modules
 // rather than to this hook -- there are now two independent loop-freedom
-// guarantees where useCellLattice.ts's header only had to argue one, since
+// guarantees where the retired useCellLattice hook's header only had to argue one, since
 // coverage and precision bounding no longer share a single origin:
 //
 //   - nextTileRange applied to its own result returns that same object by

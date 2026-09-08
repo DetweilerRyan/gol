@@ -23,8 +23,8 @@ import * as fc from 'fast-check'
 //
 // isRunningUnderStryker's `'__stryker__' in globalThis` check is the
 // existing house idiom (see .claude/agents/articles/engineering.md and
-// src/hooks/useLiveCell.test.ts / src/components/Grid.test.tsx for prior
-// use). It reads true in BOTH phases this pin needs to agree across, and
+// src/components/Grid.test.tsx for prior use). It reads true in BOTH
+// phases this pin needs to agree across, and
 // crucially, *before* this module's own setupFiles side effect below even
 // runs -- not just before some later test body executes. Verified against
 // @stryker-mutator/vitest-runner@10.0.0's own source rather than assumed:

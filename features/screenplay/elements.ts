@@ -43,7 +43,7 @@
 // `convert-modal-inertness-to-scenarios` checked them -- the tree read 8 files
 // and 20 sites against a header saying seven and 28 -- which is the whole
 // argument for a stated command over a remembered number. That slice deleted
-// modal-inertness.e2e.spec.ts (2 sites), restating its three tests as
+// the hand-written modal-inertness spec (2 sites), restating its three tests as
 // while-the-pattern-library-is-open.feature, and the figures above are the
 // measurement taken afterwards.
 //

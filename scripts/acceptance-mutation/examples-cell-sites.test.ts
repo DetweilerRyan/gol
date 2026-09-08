@@ -118,8 +118,9 @@ describe('findExamplesCellSites', () => {
     // Exactly three of the seven .feature files carry an Examples table
     // today -- cell-life-and-death (two outlines), grid-reference-lines, and
     // pattern-library. infinite-grid and camera-pan-and-zoom both had one at
-    // some point and lost it (see gherkin-examples.test.ts's history, before
-    // this file replaced it) -- asserting the absence explicitly is the
+    // some point and lost it (see `gherkin-ast-mutation`'s history for the
+    // gherkin-examples test module this file replaced) -- asserting the
+    // absence explicitly is the
     // point, since a target with zero mutable sites is exactly the case
     // run.ts's zero-mutant reporting path exists to handle instead of
     // silently losing.
@@ -151,10 +152,10 @@ describe('findExamplesCellSites', () => {
   })
 })
 
-// Golden tests for the splice-based renderer, replacing
-// mutant-parity-jig.test.ts (retired here -- see this module's own history
-// for the row-rewrite renderer these superseded, which the jig existed to
-// pin byte-parity against while it still existed). A splice needs no
+// Golden tests for the splice-based renderer, replacing the mutant-parity-jig
+// test module (retired here by `gherkin-ast-mutation` -- see that slice's
+// history for the row-rewrite renderer these superseded, which the jig
+// existed to pin byte-parity against while it still existed). A splice needs no
 // checked-in .feature fixture to prove itself against: the whole point of
 // carrying a byte-precise span is that its correctness is a property of the
 // span and the surrounding bytes, provable from a small inline sample the

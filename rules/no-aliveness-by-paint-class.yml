@@ -55,7 +55,7 @@ note: >-
 #
 # THE TSX TWIN IS RETIRED, AND THE FIRST SLICE TO REOPEN THE HOLE RE-ADDS IT. Note the glob below
 # does NOT cover a .tsx path -- 'features/*.ts' must match the whole path and '.tsx' does not end
-# in '.ts' -- which is why rules/no-aliveness-by-paint-class-tsx.yml existed at all. It was added
+# in '.ts' -- which is why a rules/no-aliveness-by-paint-class-tsx twin existed at all. It was added
 # by black-box-acceptance-pilot, which first put .tsx files in features/, and deleted by
 # delete-step-test-layer, which deleted the last of them: measured on that slice's tree, nothing
 # .tsx remains anywhere under features/ or perf/, so the twin's files: glob resolved to nothing and

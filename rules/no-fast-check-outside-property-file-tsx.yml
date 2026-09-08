@@ -10,6 +10,8 @@ note: >-
   rule is bound to one of them, so a single rule listing both globs would silently match nothing in
   .tsx -- the same necessity that makes no-manual-memo-ts/-tsx and no-test-support-in-product-ts/-tsx
   near-duplicates.
+# reference-check: allow Foo.property.test.tsx -- explicit hypothetical filename, not a real file
+#
 # NO `ignores` ENTRY, DELIBERATELY. The -ts twin excuses *.property.test.ts because that suffix is
 # what vite.config.ts's `property` project includes. That include is `**/*.property.test.ts` and does
 # not match .tsx at all, so a hypothetical src/components/Foo.property.test.tsx would be collected by

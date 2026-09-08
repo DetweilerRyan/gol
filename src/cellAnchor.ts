@@ -10,7 +10,7 @@ import { worldToScreen, type Camera } from './camera'
 // two stay independent -- the ratified DAG is cellTiles.ts -> camera.ts and
 // cellAnchor.ts -> camera.ts, neither importing the other.
 //
-// Under cellLattice.ts (the module this design replaces), the lattice origin
+// Under cellLattice (the module `tile-virtualized-cells` replaced with this design), the lattice origin
 // did double duty: it was both the coverage anchor (rebased whenever the
 // viewport threatened to outgrow it) AND the precision anchor (kept every
 // on-screen pixel position small). Splitting coverage out to cellTiles.ts's
@@ -92,8 +92,8 @@ export function anchorHolds(anchor: Anchor, camera: Camera): boolean {
  * structural equality.
  */
 // Pure, and deliberately here rather than inline in useCellTiles (step 3),
-// for the same reason cellLattice.ts's nextLattice -- and cellTiles.ts's
-// nextTileRange -- are pure and stand alone: the two properties documented
+// for the same reason the retired cellLattice module's nextLattice -- and
+// cellTiles.ts's nextTileRange -- are pure and stand alone: the two properties documented
 // above are properties of this function alone rather than of React (see
 // cellAnchor.property.test.ts).
 //

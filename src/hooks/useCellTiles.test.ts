@@ -232,8 +232,8 @@ describe('useCellTiles', () => {
     // inside useCellTiles: the *return value* of the render that re-quantises
     // is unaffected by that mutant (currentAnchor is used directly, never
     // anchor), so this needs a second render to observe -- the same shape as
-    // the sticky-range regression test above, and the same shape
-    // useCellLattice.test.ts used for its own sticky-anchor regression.
+    // the sticky-range regression test above, and the same shape the
+    // retired useCellLattice hook's own test used for its sticky-anchor regression.
     // Without the state update, useCellTiles's `anchor` state is stuck at
     // the pre-rebase anchor forever, so every later render re-fails
     // anchorHolds against that stale anchor and recomputes computeAnchor

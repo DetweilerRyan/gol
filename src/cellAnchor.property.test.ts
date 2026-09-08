@@ -7,7 +7,7 @@ import { EVICT_LAG_TILES, TILE_SPAN_CELLS } from './cellTiles'
 import { cameraArbitrary as camera } from './test-support/arbitraries'
 
 // The first three properties (the worldToScreen round trip, ported from
-// cellLattice.property.test.ts's "slot placement" block, and nextAnchor's
+// the retired cellLattice property-test module's "slot placement" block, and nextAnchor's
 // reference-identity and idempotence contracts) landed with the module in
 // step 2. The precision bound below -- the reason this module exists at all
 // -- was added at the architect review pass.
@@ -21,7 +21,7 @@ const spanCells = fc.integer({ min: 1, max: 16 })
 // the entire domain cameraArbitrary can reach. Reusing it here would make
 // nextAnchor's rebuild branch -- and the requantize-then-reapply half of
 // idempotence -- untestable by construction, the same trap
-// cellLattice.property.test.ts's header warns cellSizeArbitrary would fall
+// the retired cellLattice property-test module's header warns cellSizeArbitrary would fall
 // into for this module's neighbour. A wide-offset camera, spanning well past
 // the drift bound on both sides, is defined locally instead.
 const wideOffset = fc.integer({ min: -3 * ANCHOR_DRIFT_CELLS, max: 3 * ANCHOR_DRIFT_CELLS })
@@ -33,7 +33,7 @@ const wideCamera: fc.Arbitrary<Camera> = fc.record({
 
 describe('anchorOffsetPx / cellOffsetPx (property)', () => {
   // THE invariant the whole anchor design rests on, carried over verbatim
-  // from cellLattice.property.test.ts's "a slot painted at latticeOffsetPx +
+  // from the retired cellLattice property-test module's "a slot painted at latticeOffsetPx +
   // slotPixelPosition lands exactly where worldToScreen puts its world
   // coordinate": if this identity fails, a click lands on a different cell
   // than the one under the cursor, because taps are resolved via

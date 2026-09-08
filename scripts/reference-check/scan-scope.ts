@@ -35,8 +35,9 @@ const SOURCE_EXCLUDED_PREFIXES = ['src/catalyst/']
 
 const SOURCE_INCLUDED_PREFIXES = ['src/', 'scripts/', 'features/', 'perf/', 'rules/', 'rule-tests/']
 
-// Root-level *.ts files earn scope too -- vite.config.ts names a dead
-// `__probe.test.ts`, and that class of file lives nowhere else.
+// Root-level *.ts files earn scope too -- vite.config.ts names a throwaway
+// `__probe.test.ts` measurement probe, and that class of file lives nowhere else.
+// reference-check: allow __probe.test.ts -- the same never-committed measurement probe vite.config.ts names
 function isRootLevelTsFile(path: string): boolean {
   return /^[^/]+\.ts$/.test(path)
 }

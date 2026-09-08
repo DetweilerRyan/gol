@@ -14,7 +14,7 @@ import { existsSync, globSync } from 'node:fs'
 // Pure filter+sort+validate over an already-read directory listing, so the
 // sorting behavior is testable without depending on a filesystem's own
 // (unspecified, and on some platforms already-alphabetical) readdir order --
-// mirrors discovery.ts's pairTargets/discoverTargets split, and the same
+// mirrors discovery.ts's discoverTargets/filterTargets split, and the same
 // rationale: a test against the real filesystem can pass by directory-order
 // coincidence even when the sort itself is missing.
 export function selectFeatureFiles(names: string[], featuresDir: string): string[] {

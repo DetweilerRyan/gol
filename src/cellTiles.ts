@@ -1,11 +1,11 @@
 import type { Camera } from './camera'
 
 // The tile-virtualized mounting policy: which world tiles are mounted, and
-// when that set changes. Replaces cellLattice.ts's coverage half -- the
-// lattice rebased a fixed-size window of render *slots* under a moving
-// camera; a tile range instead mounts world-anchored tiles directly, so a
+// when that set changes. Replaces the retired cellLattice module's coverage
+// half -- the lattice rebased a fixed-size window of render *slots* under a
+// moving camera; a tile range instead mounts world-anchored tiles directly, so a
 // retained tile survives a pan untouched (world coordinates never change for
-// a tile that stays mounted -- see CellTile.tsx's header for the resulting
+// a tile that stays mounted -- see Cell.tsx's header for the resulting
 // "no prop may change per pan tick" invariant).
 // Precision bounding (the float32 concern the lattice's origin also used to
 // carry) moves to the sibling module cellAnchor.ts (step 2), which is why
@@ -323,7 +323,7 @@ export function nextTileRange(previous: TileRange, camera: Camera, widthPx: numb
   // cellTiles.property.test.ts's 'eviction hysteresis' block.
   //
   // Pure, and deliberately here rather than inline in useCellTiles, for the
-  // same reason cellLattice.ts's nextLattice was -- the by-reference and
+  // same reason the retired cellLattice module's nextLattice was -- the by-reference and
   // idempotence guarantees documented above are properties of this function
   // alone rather than of React (see cellTiles.property.test.ts). The hook's
   // second render re-runs this against the range the first render just

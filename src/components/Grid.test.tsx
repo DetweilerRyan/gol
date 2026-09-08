@@ -51,8 +51,9 @@ vi.mock('./Cell', { spy: true })
 // see that site's own comment for why. globalThis.__stryker__ is set at module load
 // by any instrumented file's own bootstrap, before test collection, so it
 // reliably distinguishes a mutation-testing run from a normal one -- the
-// same pattern useLiveCell.test.ts's own resubscription test used, before
-// this slice's step 5 retired that file along with useLiveCell.ts itself.
+// same pattern the retired useLiveCell hook's own test used for its
+// resubscription test, before `collapse-dead-cell-layer`'s step 5 retired
+// both that test and the hook itself.
 const underStryker = '__stryker__' in globalThis
 
 let resizeObserver: ResizeObserverController
@@ -532,7 +533,7 @@ describe('hover indicator wiring', () => {
 // pre-step-4 renderer's O(entering) proof (144/192/48 tile-slot counts) and
 // its companion subscription-leak test pinned per-tile-slot mounting and
 // per-cell subscribeCell -- both mechanisms this slice deletes outright
-// (CellTile.tsx is gone; Cell no longer subscribes). Their successor
+// (the CellTile component is gone; Cell no longer subscribes). Their successor
 // property is the mounted-count guard in GridCells.test.tsx (|live ∩
 // window| + focus, exercised through the real liveCellsInRange pipeline) plus
 // liveCellWindow.test.ts's own culling pins (lines 32/46 there exclude a
@@ -541,8 +542,8 @@ describe('hover indicator wiring', () => {
 // all, since mounting no longer has a tile-shaped unit to cross a boundary
 // of.
 describe('tile pan-stability', () => {
-  // Skipped under Stryker for the same reason useLiveCell.test.ts used to
-  // skip its resubscription test: Stryker's per-expression instrumentation
+  // Skipped under Stryker for the same reason the retired useLiveCell
+  // hook's own test used to skip its resubscription test: Stryker's per-expression instrumentation
   // of Grid.tsx/GridCells.tsx defeats React Compiler's memoization, so a
   // mutated build re-renders Cell on every pan and this assertion fails in
   // Stryker's dry run, before a single mutant executes -- npm run

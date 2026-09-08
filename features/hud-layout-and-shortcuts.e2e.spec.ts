@@ -18,9 +18,10 @@ import { clickGridAt, expectCellState } from './e2e-helpers'
 // -- so the unpaired specs were never in its scope, and this file is one of
 // them. (It named "the two unpaired ones" until
 // `convert-modal-inertness-to-scenarios` counted them; there were three --
-// this file, hover-click-agreement.e2e.spec.ts and modal-inertness.e2e.spec.ts
-// -- which is the very drift this paragraph is about, committed inside the
-// paragraph. That slice deleted the third: all three of its tests turned out to
+// this file, hover-click-agreement.e2e.spec.ts and the hand-written
+// modal-inertness spec -- which is the very drift this paragraph is about,
+// committed inside the paragraph. That slice deleted the third: all three
+// of its tests turned out to
 // be statable after all and are now
 // while-the-pattern-library-is-open.feature's scenarios, so two are left. Take
 // the count from `comm` over the two file lists, never from here.) The

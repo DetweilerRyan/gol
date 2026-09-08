@@ -47,8 +47,9 @@ export interface TextSpan {
 //
 // Re-splits `text` on the same \r?\n gherkin-document.ts's own FeatureDocument
 // uses, and re-joins with a bare '\n' -- matching the old line-based
-// applyMutation's own behavior (see mutant-parity-jig.test.ts), not a new
-// choice made here. Under CRLF input this rewrites every line's terminator
+// applyMutation's own behavior (see the retired mutant-parity-jig test
+// module, from before `gherkin-ast-mutation`), not a new choice made here.
+// Under CRLF input this rewrites every line's terminator
 // to LF, not just the mutated line's -- a real deviation from "every other
 // byte... byte-identical" above, deliberately left in place: normalizing is
 // harmless today because `npm run format`/`format:check` run Prettier over
