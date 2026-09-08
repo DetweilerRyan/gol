@@ -20,7 +20,7 @@ One article belongs to nobody in `.claude/agents/` at all, because its audience 
 
 - **`.claude/agents/articles/orchestration.md`** — the invocation contracts roles expect the prompt to satisfy, the state only that seat carries between stateless invocations, the escalation lanes that end there, and what it runs that no role does. Read at session start and before composing any role invocation.
 
-Nine are topic articles, read on the trigger each one names in its own header:
+Ten are topic articles, read on the trigger each one names in its own header:
 
 - **`.claude/agents/articles/architecture.md`** — the twenty framework-free modules, one bullet each, and the acyclic dependency graph. Read before adding, moving, or splitting a module.
 - **`.claude/agents/articles/state-flow.md`** — where state lives, the sixteen hooks, the hook-identity contract, and the composition roots. Read before touching a hook or a composition root.
@@ -29,6 +29,7 @@ Nine are topic articles, read on the trigger each one names in its own header:
 - **`.claude/agents/articles/ast-grep-rules.md`** — every rule and its scope, what each one actually checks, how each was verified, and the fixture mandate. Read before authoring or narrowing a rule.
 - **`.claude/agents/articles/acceptance-mutation.md`** — the Gherkin Examples-table mutation runner, its guards, and its two mutation classes. Read before the first `npm run acceptance-mutation` in a slice.
 - **`.claude/agents/articles/doc-comments.md`** — the interface/implementation comment split, what belongs in JSDoc versus `//`, the hover budget and the sidecar `<module>.md` tier, the measured JSDoc syntax hazards, and the hover-before-Read reading habit. Read before writing or moving a comment block in `src/` or `scripts/`.
+- **`.claude/agents/articles/prose-linting.md`** — running Vale over the agent docs: which of the four enabled rules apply mechanically and which are prompts to look, the exempt classes for each, and the three ways a run reports a confident zero. Read before acting on a Vale finding, and before enabling or re-levelling a rule.
 - **`.claude/agents/articles/quality-tooling.md`** — the crap4ts patch, the advisory `scripts/` programs, `.gherkin-lintrc`, and `.oxlintrc.json`'s `jsdoc/*` tier. Read on an unexpected crap4ts number, on a `jsdoc/*` lint finding, or when touching the lint config.
 - **`.claude/agents/articles/archive.md`** — layers that no longer exist, kept for their method. No role has a trigger for this one; it is research material.
 
@@ -38,7 +39,8 @@ Nine are topic articles, read on the trigger each one names in its own header:
 2. Is it a **measured fact, a rationale, or a discovery record** about a topic that already has an article? → that article. CLAUDE.md gets **at most one pointer sentence**, and only if a reader would otherwise not know the article covers it.
 3. Is it **conduct guidance that applies to more than one role**? → `engineering.md`, `workflow.md`, or `handoffs.md`.
 4. Is it **depth about one module's own interface** — extended examples, use cases, best-practice notes that overflow a JSDoc hover? → a sidecar `<module>.md` **beside the source** (`src/cellTiles.md` next to `src/cellTiles.ts`), referenced from the JSDoc as `@see {@link ./cellTiles.md}`. This is the one documentation surface that lives outside `.claude/**`, because its audience is whoever is holding a call site rather than whoever is running a role — and note nothing checks that those links resolve, since `npm run agent-doc-check` scans `.claude/**` and `CLAUDE.md` only. See `.claude/agents/articles/doc-comments.md`.
-5. Is it specific to one role's own responsibilities? → that role's file.
+5. Is it **the evidence behind a rule in an article** — a measurement, a probe method, a rejected alternative, a correction — rather than the rule itself? → a sidecar `<article>.rationale.md` **beside the article** (`doc-comments.rationale.md` next to `doc-comments.md`). No role carries a read trigger for one, and that is the point: it is read when a rule is being changed, never in order to follow it. The test is **does this constrain an action** — a caveat, an unmeasured warning and a closed decision all constrain, so they stay in the article, and only the evidence moves. `archive.md` is the same tier predating the convention.
+6. Is it specific to one role's own responsibilities? → that role's file.
 
 A new topic gets a new article, never a new CLAUDE.md section. When you add one, add its pointer line here **and** the read trigger to every role file that needs it — an article nobody is told to read is worse than no article, because the fact is now invisible rather than merely long.
 
