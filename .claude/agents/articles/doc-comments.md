@@ -10,7 +10,7 @@ This article is one loop with two halves. Part 1 is how to write an interface co
 
 ## Scope: who this binds, and who carries a read trigger
 
-Three roles name this article in their own files — `coder`, `cleaner`, `architect`. **That is the trigger list, not the binding list.**
+Three roles name this article in their own files — `coder`, `cleaner`, `architect`. **That is the trigger list, not the binding list.** Both rulings below were made in the `jsdoc-standing-rule` DESIGN pass on 2026-09-06, on the user's direction that the standing duty be split across those three roles; the account is in `doc-comments.rationale.md`.
 
 - **`hardener` is bound but carries no read trigger, deliberately.** It reaches the governing rule through `engineering.md`'s "Where a comment goes is a design decision too" line, which every role reads unconditionally. A remediation of its own that adds or changes an export under `src/` or `scripts/` is governed by rules 1–9 exactly as `coder`'s work is. Because its pass is a _gate_ rather than an authoring pass, Part 2 §4's disposition applies to it as it does to `coder`: an insufficient hover is a finding to report, not a thing to fix inside the gate.
 - **`features/**` TypeScript: every mechanical fact here applies to it; the _duty_ is not codified.** Part 1's placement rules and Part 2's reading habit are as true in `features/screenplay/*.ts` as in `src/`. No role file assigns the duty there, and that is a recorded gap rather than an oversight. Note `rules/no-dead-doc-on-annotated-return-literal.yml` is unscoped by path and so already fires in `features/`.
@@ -76,7 +76,9 @@ Default posture is minimal. Each tag has a trigger that earns it:
 | `@throws`  | there is an error contract                                                                                           |
 | `@see`     | an external reference, or the sidecar file in rule 7                                                                 |
 
-**The table is closed, and it is closed for _block_ tags.** Those five are the entire permitted block-tag vocabulary in `src/` and `scripts/`. `@remarks`, `@todo`, `@deprecated`, `@internal`, `@defaultValue` and the rest of TSDoc are not written here. **A tag's content can pass the information test while the tag fails it**; when it does, keep the content and drop the tag word.
+**The table is closed, and it is closed for _block_ tags.** Those five are the entire permitted block-tag vocabulary in `src/` and `scripts/`. `@remarks`, `@todo`, `@deprecated`, `@internal`, `@defaultValue` and the rest of TSDoc are not written here. **A tag's content can pass the information test while the tag fails it**; when it does, keep the content and drop the tag word, moving it into the prose above the block tags.
+
+> **The closure is a ruling with an argument behind it, not a preference** — a block tag's hover payload is its own label, and a label earns its rendered line only when it says something the prose could not. Read `doc-comments.rationale.md` before proposing a sixth row; `@deprecated` is the likeliest candidate and still needs its measurement.
 
 **`{@link}` is an _inline_ tag and is sanctioned** — mandated by rule 7, and used throughout `src/cache.ts` and `src/cellTiles.ts`. The closure governs tags that open a line, not ones written inside prose.
 
@@ -112,12 +114,18 @@ Both. **An interface's own JSDoc does not reach a member hover**, so a fact abou
 
 **The unit of work is the existing comment blocks, not the export list.** **Documenting every undocumented export is not this convention** — an export whose signature already says everything gets no JSDoc, because a summary that restates the signature fails rule 5 and costs a hover anyway.
 
-**And "comment block" means every block in the file, not only the ones next to an export.** Sizing a sweep by "blocks directly above an exported declaration" undercounts it by about 3x. Module headers, blocks above non-exported helpers, blocks above module-private constants and in-body blocks each still have to be read and ruled on, even when the ruling is "stays `//`". Budget the whole comment surface.
+**And "comment block" means every block in the file, not only the ones next to an export.** Sizing a sweep by "blocks directly above an exported declaration" undercounts it by roughly 3x (measured over the 45 files `jsdoc-in-scripts` touched; the counts are in `doc-comments.rationale.md`). Module headers, blocks above non-exported helpers, blocks above module-private constants and in-body blocks each still have to be read and ruled on, even when the ruling is "stays `//`". Budget the whole comment surface.
 
-**A hook that returns an object — the placement rule has two arms and no third:**
+**A hook that returns an object.** Two facts, and keep them apart — the first says what breaks, the second says where to write instead, and they are not scoped alike.
 
-- **Any return type annotation** (named or inline, `async` or sync) — the doc goes on the **interface member**. A doc above the implementing declaration and a doc on the `return { … }` property are both **severed**: the hover comes back as a bare signature, indistinguishable from no doc having been written.
-- **Inferred return** — today exactly `useCamera` and `usePatternPlacement` — the doc goes on the **shorthand property in the `return { … }` literal**.
+**What severs: _any_ return type annotation** — named, inline type literal, `async` or sync. Under one, a doc above the implementing declaration and a doc on the `return { … }` property are **both severed**: the hover comes back as a bare signature, indistinguishable from no doc having been written.
+
+**Where the doc goes, and there are two arms and no third:**
+
+- **Named return type** — `useCellTiles`'s `CellTilesView`, `useZoomGlide`'s `ZoomGlideController` — the doc goes on the **interface member**, which is then the only site that reaches a caller at all.
+- **Inferred return** — a hook that annotates nothing — the doc goes on the **property in the `return { … }` literal**. That literal is the analogue of an interface member: the one contiguous place a hook's public surface is listed. **This arm covers the whole literal, shorthand and longhand alike** — it is the only site available for a property whose value is an inline arrow (`openOrCancelLibrary: () => setPlacement(toggleLibrary)`), so the arm is not split by how each entry happens to be written.
+
+**An inline type literal annotation severs, and where the doc should go instead is unmeasured** — the type literal has a member position, but nothing measured says a doc on it reaches. Do not reason from the named-return arm onto it.
 
 **Ruling: never add a named return interface to a hook in order to create a documentation site.** A hook's return type is part of its public API, so changing one is an API change rather than comment work. An annotation added for hover reasons blanks every doc already written on the implementing declarations _and_ on the return literal, at every call site, with no error and no lint finding. A named return type earns its place when the _type_ is what wants naming — reuse across modules, a controller or a store handed around — and then its members are where the docs go.
 
@@ -127,7 +135,9 @@ Both. **An interface's own JSDoc does not reach a member hover**, so a fact abou
 
 **This is the one claim in this article a machine can check, and it now is.** `rules/no-dead-doc-on-annotated-return-literal.yml` matches a JSDoc block standing inside an annotated function's return literal, in all six function kinds and in the arrow's parenthesised expression-body form. It never judges prose. See `ast-grep-rules.md` for its matcher.
 
-> **Two placements are deliberately unmeasured — an inline type literal's member position, and a longhand `name: fn` property's precedence. Do not assume either way; see `doc-comments.rationale.md`.**
+> **Four things here are deliberately unmeasured. Do not assume either way, in either direction:** an inline type literal's member position; a longhand `name: fn` property's _precedence_ against a declaration doc (distinct from the placement arm above, which covers longhand); `{@link}` inside `@param`'s own type slot (`@param {@link X} value`); and `@example` in every respect. The probe methods are in `doc-comments.rationale.md`, but the constraint is here because it binds what you may write.
+
+> **A presence-only rule — "every export carries a doc" — was proposed alongside the ast-grep rule above and rejected**, because it cannot tell whether a summary says anything and is satisfied by an empty `/** */`. See `doc-comments.rationale.md` before re-proposing it.
 
 ### 9. Syntax hazards
 
