@@ -474,54 +474,107 @@ What does exist, in descending order of usefulness here:
   style guide rather than a controlled allowlist, and a style guide fails **open** on a word nobody
   listed. Note also that `vale-llm-slop` is **not** in this registry; it installs by direct URL.
 
-###### The process for adding a term
+###### The guards for accepting or rejecting a term
 
-**The mechanism, verified against Vale's own documentation.** A vocabulary is a directory at
-`<StylesPath>/config/vocabularies/<name>/` holding two files. Entries are one per line, **case-sensitive
-regular expressions**, with `# ` starting a comment. `accept.txt` does two things at once: it adds the
-term to the exception list of every style in `BasedOnStyles`, **and** it populates a `Vale.Terms`
-substitution rule that forces every occurrence to match the entry's exact casing. `reject.txt`
-populates `Vale.Avoid`, an existence rule that flags **all** occurrences as errors.
+**The headline guard, and it is the one this repo already states in another form: never add a term to
+silence a finding you disagree with.** `architect.md` says of the equivalent move — "Reject an arbitrary
+that was narrowed to clear a finding. Filtering the failing case out of a generator leaves the defect in
+the module and removes the only thing that could find it — the same move as weakening an ast-grep rule
+to clear a violation." Adding a word to `accept.txt` because Vale flagged it is that move exactly. The
+default response to a finding is to reword the prose; the vocabulary changes only when the prose was
+right and the tool was wrong.
 
-**That casing behaviour is a free win this repo has explicitly asked for.** CLAUDE.md's accessible-name
-convention lists the shipped control labels and says of them, in its own words, that the rule "is not
-machine-checked, and it has carried a false universal twice" — `Appearance` was omitted outright and
-`Next Generation` shipped in title case. Those names in `accept.txt` make a casing drift a Vale finding.
-It is not a complete check of the convention, since Vale sees the docs rather than `src/`, but it is the
-first mechanical grip anything has had on it.
+**`accept.txt` — every guard must hold.**
 
-**Four rules for adding a term, each chosen so the entry is checkable rather than a matter of taste:**
+| #   | guard                                                                                                                                                                                                                                                                                                               | how it is settled       |
+| --- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------- |
+| 1   | **It resolves against the tree.** The term names a real file, npm script, role, config key, tool, or authored accessible name. This is STE's Technical Names licence, and the test is the one `reference-check` already applies to filename-shaped tokens.                                                          | mechanical              |
+| 2   | **It already appears in the corpus.** Never speculative — a term added ahead of the prose that needs it has no way to be found stale later, because it was never live.                                                                                                                                              | mechanical (`grep`)     |
+| 3   | **It has one casing in the corpus, or the entry is an explicit `(?i)` regex.** Entries are case-sensitive regexes and populate `Vale.Terms`, so a careless entry enforces one spelling everywhere. Grep the variants **before** adding, not after.                                                                  | mechanical              |
+| 4   | **It is not an ordinary English word used ordinarily.** `slice` and `gate` are ordinary words this corpus uses constantly; pinning their casing would fire at every sentence start. The proxy: if the word appears in a general STE wordset such as OpenSTE's, it is not a technical name and does not belong here. | judgement, with a proxy |
+| 5   | **It is a name, not a synonym.** STE exempts technical names and technical verbs; it does not exempt a fancier word for an approved one. "Utilise" fails this guard, `useSyncExternalStore` passes it.                                                                                                              | judgement               |
 
-1. **`accept.txt` takes technical names that exist in the tree** — a filename, an npm script, a role, a
-   config key, a tool, or an authored accessible name. STE's Technical Names rule is the licence, and
-   "does it resolve against the repo" is the test. This deliberately mirrors `reference-check`, which
-   already resolves filename-shaped tokens against `git ls-files`.
-2. **`reject.txt` takes a term only once it has actually appeared, and only with a replacement.**
-   Never speculatively: `Vale.Avoid` fires at error severity on every occurrence, so a guessed entry
-   reds the gate against prose nobody has written. This is the blocklist direction, and it is bounded
-   here precisely because the allowlist carries the general case.
-3. **The entry lands in the same commit as the prose that first needs it**, with the justification in
-   the commit body. The repo's existing habit for `reference-check` and `ast-grep-rule-check` opt-outs
-   is a reason required at the site; this is the same discipline one file over.
-4. **A stale entry is a failure, not a pass** — an `accept.txt` term matching nothing live in the corpus
-   is removed. This is not a new idea to invent: `reference-check` already implements exactly it as
-   `stale-allow-marker`, where a marker whose token appears nowhere else live fails in its own right.
-   The check belongs in `agent-doc-check`, which already parses `.claude/**`, rather than in a new
-   `scripts/` program paying full gate freight.
+**`reject.txt` — every guard must hold, and the bar is deliberately higher.** `Vale.Avoid` flags **all**
+occurrences at error severity, so a bad entry here reds the gate rather than merely under-reporting.
 
-**Two hazards that follow from entries being case-sensitive regexes.** A bare common word must never be
-added — `slice` in `accept.txt` would force lowercase at sentence start, across a corpus that uses the
-word constantly. Where casing genuinely varies, write the entry as a regex (`(?i)…`) deliberately rather
-than adding two entries and discovering later that only one of them was enforcing anything.
+| #   | guard                                                                                                                                                                                                                                                                      | how it is settled            |
+| --- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------- |
+| 1   | **The term has actually appeared.** Same rule as `accept.txt` guard 2, and it bites harder: a speculative rejection reds prose nobody has written yet.                                                                                                                     | mechanical (`grep`)          |
+| 2   | **A specific replacement is named in the entry's comment.** A rejection with no replacement tells a writer that a word is wrong and not what to write, which is the failure mode STE's own 1,200-word non-approved list avoids by pairing every entry with an alternative. | mechanical (comment present) |
+| 3   | **The replacement is not itself in `reject.txt`, and does not collide with an `accept.txt` entry.** Otherwise the two files disagree and the writer cannot satisfy both.                                                                                                   | mechanical                   |
+| 4   | **The term is not a technical name.** Rejecting a real domain noun forces circumlocution, which is longer and less precise — the opposite of the point. If it names a thing in the tree it belongs in `accept.txt` or nowhere.                                             | judgement                    |
+
+**Removal guards, which are guards in their own right rather than tidying.**
+
+- **An `accept.txt` entry matching nothing live is stale and is removed.** This is the direction
+  `reference-check`'s `stale-allow-marker` already establishes: an opt-out whose token no longer appears
+  is a failure, not a pass. The same reasoning applies unchanged, and the check belongs in
+  `agent-doc-check`.
+- **A `reject.txt` entry whose named replacement has since been renamed or itself rejected is removed or
+  updated**, for the same reason: it now points somewhere that does not exist.
+
+**Process.** The entry lands **in the same commit as the prose that first needs it**, with the guard it
+satisfies named in the commit body — the repo's existing reason-required-at-the-site discipline, one file
+over. `architect` owns both files, for the reasons under "Ownership" below. A writer who is not
+`architect` and hits a finding either rewords the prose (the default) or reports the term, exactly as
+they would report a `src/` defect rather than fixing it out of scope.
 
 **Ownership: `architect`.** It already owns `rules/`, the repo's other surface where a mechanical
-invariant is authored and paired with a fixture, and it is the role whose charter already includes
-narrowing or widening such a rule. The alternative — the orchestrating seat, which authors most of this
-prose — is rejected on the record for the reason `orchestrator-prose-has-no-reviewer` gives: that seat
-has no reviewer, and handing it one more unreviewed surface repeats a gap this repo has already
-measured. `product` keeps the **ubiquitous language** unchanged; that vocabulary is the product's domain
-and is authoritative over `features/**`, whereas this one is the toolchain's and governs `.claude/**`.
-Two vocabularies, two owners, two surfaces, and they do not overlap.
+invariant is authored and paired with a fixture, and its charter already covers narrowing or widening
+such a rule. The alternative — the orchestrating seat, which authors most of this prose — is rejected on
+the record for the reason `orchestrator-prose-has-no-reviewer` gives: that seat has no reviewer, and
+handing it one more unreviewed surface repeats a gap this repo has already measured. `product` keeps the
+**ubiquitous language** unchanged; that vocabulary is the product's domain and is authoritative over
+`features/**`, whereas this one is the toolchain's and governs `.claude/**`. Two vocabularies, two
+owners, two surfaces, and they do not overlap.
+
+###### Where the Vale procedure gets documented
+
+**Yes — a new article, and CLAUDE.md's own routing test is what says so.** Walking its five branches
+against "how to run Vale over a document, and how the vocabulary is governed":
+
+1. **A procedure the orchestrating seat executes, or a gating predicate?** No. Roles run it, and it is
+   report-only. Not CLAUDE.md.
+2. **A fact about a topic that already has an article?** The nearest is `quality-tooling.md`, and it does
+   not fit: its declared subject is the crap4ts patch, the advisory `scripts/` programs, `.gherkin-lintrc`
+   and the `jsdoc/*` tier, and its read triggers are all code-facing — an unexpected crap4ts number, a
+   `jsdoc/*` finding, touching the lint config. A prose linter over `.claude/**` matches none of them, and
+   a reader hitting a Vale finding has no reason to open that file.
+3. **Conduct across roles?** Partly — but that routes to `engineering.md`, which is **62,217 bytes, the
+   second-largest file in the repo, unconditionally read, and the Complication's own worked example of
+   where the growth is now going**. Putting a tool procedure there taxes five roles and this seat on every
+   invocation for something most of them never touch. This candidate would be arguing against itself.
+4. **Depth about one module's own interface, overflowing a JSDoc hover?** No — that branch routes to a
+   `<module>.md` beside the source, and its audience is whoever holds a call site in `src/`. This has no
+   call site.
+5. **Specific to one role?** The vocabulary ownership is `architect`'s, but "how do I run this over a
+   file I am editing" belongs to anyone who edits docs.
+
+So it is a new topic, and the rule is explicit: "A new topic gets a new article, never a new CLAUDE.md
+section." **The precedent is already in the tree** — `scripts/acceptance-mutation/` is an advisory program
+that outgrew `quality-tooling.md`'s remit and got `acceptance-mutation.md` to itself. Same shape.
+
+**An article is also the cheap option, which is the part worth being explicit about.** Articles are read
+on trigger, so a new one costs nothing to any role that never opens it. That is the whole point of the
+routing test, and it means "write a new article" and "do not grow the corpus" are not in tension here —
+growing `engineering.md` would be.
+
+**Three conditions on it, and the first is the one most likely to be skipped:**
+
+- **It ships with its pointer line in CLAUDE.md and a read trigger in every role file that needs one.**
+  CLAUDE.md's rule is blunt about the failure: "an article nobody is told to read is worse than no
+  article, because the fact is now invisible rather than merely long."
+- **It is authored when Answer 2 lands, not before.** An article describing a convention nothing yet
+  follows documents an intention, and this repo has measured what undated present-tense claims about the
+  tree cost it.
+- **It ships as `<name>.md` plus `<name>.rationale.md`** — the first artifact written under Answer 1's
+  tier. That is deliberate: the cheapest available test of whether the split is workable is to write
+  something new in it, where there is no entangled prose to rewrite and nothing to lose if the answer is
+  no.
+
+A working name is `prose-linting.md`. Note **not** `prose-discipline.md`: `orchestration.md` already has a
+"Prose discipline" section about claim accuracy, and two surfaces a role could confuse is the thing the
+routing test exists to prevent.
 
 **The seed for a project list already exists in this repo and is not hypothetical.** `product` owns
 "the ubiquitous language", `.gherkin-lintrc`'s `no-restricted-patterns` is a hand-maintained
@@ -553,7 +606,10 @@ holding the vendored `STE` style and `config/vocabularies/<name>/{accept,reject}
 vendored style is third-party text this repo does not author, the same status `src/catalyst/` already
 has. Vale itself is a Go binary, not an npm dependency, so it does not reproduce from `npm ci` — the
 same footgun CLAUDE.md already documents for the `typescript-language-server` install. If the
-vocabulary staleness check is built, `scripts/agent-doc-check/`. If the alternative route is taken and
+vocabulary staleness check is built, `scripts/agent-doc-check/`. It also adds a **new article** —
+working name `prose-linting.md`, shipped as an instruction file plus its own `.rationale.md` sidecar —
+together with its pointer line in CLAUDE.md and a read trigger in each role file that needs one, which
+is what CLAUDE.md's rule for a new article requires and is the half most easily forgotten. If the alternative route is taken and
 `jyooi/agent-simple-english` is adopted as a Claude Code plugin instead of Vale as a binary, that is
 `.claude/settings.json` rather than any of the above — a different integration surface, which is part
 of why the choice is worth making deliberately rather than drifting into.
