@@ -104,6 +104,21 @@ it is opt-in only.
 /plugin install typescript-lsp-fs-sync@gol-local-plugins
 ```
 
+**Prefer the session-scoped form for a trial.** `--plugin-dir` loads a plugin for one
+session only, and `--settings` can disable the official server for that session alone, so
+nothing global changes and no other session is affected. This is how the live-harness
+verification in `adr/0002-lsp-proxy-for-out-of-band-writes.md` was run, and it needs a
+plugin directory carrying `.claude-plugin/plugin.json` with the `lspServers` block rather
+than the marketplace layout below:
+
+```bash
+claude --plugin-dir <dir-with-.claude-plugin/plugin.json> \
+       --settings '{"enabledPlugins":{"typescript-lsp@claude-plugins-official":false}}'
+```
+
+The marketplace install below is the persistent form. It is **still untried** — the
+verification used `--plugin-dir` — so treat these instructions as unverified:
+
 Two things to know before doing that:
 
 - **Disable the official `typescript-lsp` plugin first.** Per the plugin docs, when more

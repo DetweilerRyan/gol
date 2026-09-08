@@ -6,8 +6,12 @@
 **Proposed, not Accepted, for one specific reason:** every measurement supporting the
 chosen option came from a conforming LSP client written for the spike, not from the
 Claude Code harness itself. That proves the language server sees the write; it does not
-prove the harness's own client tolerates a proxy end to end. This ADR is promoted to
-Accepted only after that run. See Verification.
+prove the harness's own client tolerates a proxy end to end.
+
+**That run has since been done, and it passed** — see "Live-harness verification" at the
+end of Verification. **The status is nevertheless left at Proposed deliberately**, for
+review rather than for want of evidence: the author of this ADR is not the right party to
+mark its own decision Accepted. Promotion is Ryan's.
 
 ## Context and problem statement
 
@@ -237,16 +241,54 @@ mechanism wins, because none of them makes the hazard legible to a reader on its
 
 ## Verification
 
-**Promotion to Accepted requires one measurement:** install the proxy via the local
-marketplace in `spikes/lsp-fs-sync/marketplace/`, with the official `typescript-lsp`
-plugin disabled, and confirm in a real session that (a) hover, `goToDefinition` and
-`findReferences` all still work, and (b) a `sed` edit followed by a hover returns the new
-bytes.
+**Promotion to Accepted required one measurement:** install the proxy with the official
+`typescript-lsp` plugin disabled, and confirm in a real session that (a) hover,
+`goToDefinition` and `findReferences` all still work, and (b) a `sed` edit followed by a
+hover returns the new bytes.
 
-**What would falsify this decision:**
+### Live-harness verification — done 2026-09-08, passed
+
+Run without touching global configuration. `claude --plugin-dir` loads a plugin for one
+session only, and `--settings '{"enabledPlugins":{"typescript-lsp@claude-plugins-official":false}}'`
+disables the official server for that session alone — so this needed no
+`extraKnownMarketplaces` entry and no change that could reach another session. Verified
+afterwards that `~/.claude/settings.json` still has the official plugin enabled and no
+marketplace added.
+
+Each arm was a real `claude -p` session driving the real LSP tool, told to hover a probe,
+`sed` it, and hover again:
+
+| arm                       | first hover    | after `sed`        |
+| ------------------------- | -------------- | ------------------ |
+| control (official server) | `VERIFY-ALPHA` | `VERIFY-ALPHA`     |
+| through the proxy         | `VERIFY-ALPHA` | **`VERIFY-BRAVO`** |
+
+The proxy arm was run twice with the same result. **(b) holds.**
+
+For (a), all three operations were run against `is-strict-equal.ts` through the proxy and
+against the official server, and the results were **identical** — `HOVER=ok`,
+`REFS=1`, `DEF=ok` in both arms. The proxy degrades no operation. Note the value of
+`REFS` is not itself interesting and was not checked against ground truth; what the
+comparison establishes is only that proxied and unproxied agree, which is the claim (a)
+actually makes.
+
+**This also reproduced the original bug through the real client for the first time.**
+Every earlier control had been taken with the spike's own LSP client; the control arm
+above shows a genuine Claude Code session reading its own pre-`sed` bytes.
+
+**What is still not covered.** A one-shot `claude -p` session is short-lived and
+single-threaded through one file. It does not exercise a long session, many open
+documents, concurrent worktrees, or a `git rebase` under a live server — and the
+`spikes/lsp-fs-sync/marketplace/` install path (as opposed to `--plugin-dir`) is still
+untried, so the documented install instructions remain unverified even though the proxy
+itself is not.
+
+### What would falsify this decision
 
 - The harness's own LSP client rejecting the proxy, or the injected `didChange` frames,
-  in a way that cannot be fixed within the proxy.
+  in a way that cannot be fixed within the proxy. **Tested and not observed** in a
+  one-shot session; still open for the longer-lived, many-document case the run above
+  does not reach.
 - The harness gaining unsaved buffers, which invalidates the safety argument outright.
 - The maintenance cost exceeding the hazard — for instance if the harness upstream fixes
   this by sending `didChangeWatchedFiles` or by reloading buffers, at which point this ADR
