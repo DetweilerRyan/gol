@@ -60,6 +60,20 @@ A rule that misses its own documented classic case while flagging sequences that
 inverted precision. Its four-consecutive-noun-tag matcher depends entirely on the POS tagger, which reads
 "landing" as a verb form and "reads" as a plural noun. Nothing about this corpus makes it work better.
 
+## The two mechanical rules interact, measured on this article
+
+Recorded 2026-09-08, during the corrective pass that followed `architect`'s REVIEW of
+`ste-shape-rules-on-doc-comments`. A 35-word sentence in `prose-linting.md` was split to clear
+`STE.SentenceLength`; the paragraph it sat in then reported **7 sentences** against
+`STE.ParagraphLength`'s cap of six. Splitting the paragraph cleared both, and no wording was reverted.
+
+**One instance, not two.** Commit `7bc35fa`'s message says the trade happened twice in that pass. It
+happened once. The second apparent instance was the same finding surviving a failed edit, not a new one.
+
+The interaction is why `prose-linting.md` states an order — sentences first, then paragraphs — and why it
+says to re-run rather than trusting a single pass. Two rules that are individually mechanical are not
+jointly mechanical, which is a narrower claim than "three rules apply mechanically" makes on its own.
+
 ## The three tried last, completing the sweep
 
 **`STE.ParagraphLength` — adopted.** Zero findings on both worked files, 41 corpus-wide on paragraphs of

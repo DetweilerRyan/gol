@@ -172,6 +172,29 @@ actionable. "The between-position is sanctioned" becomes "Use the between-positi
 `doc-comments.md` deliberately, as genuinely arguable. If you hit one, either act on it or say in the
 commit why you did not — do not widen a class to cover it.
 
+## `SentenceLength` and `ParagraphLength` trade against each other
+
+Both are mechanical, so the article tells you to act on every finding of either. Acting on one can create
+the other, and the trade runs in a predictable direction:
+
+- **Splitting a sentence adds a sentence to its paragraph**, which can push the paragraph past six.
+- **Merging sentences to clear a paragraph re-creates the long sentence** you just split.
+
+**Resolve it by splitting the paragraph, never by rejoining the sentences.** The paragraph break is
+almost always the better edit anyway. A paragraph that has grown past six sentences is usually two
+paragraphs that were never separated. Rejoining sentences trades a real improvement for a formatting
+number.
+
+**So there is an order.** Settle `SentenceLength` first, then `ParagraphLength`, and treat a paragraph
+break or moving content out as the only legal moves for the second. Moving content out is the section
+below.
+
+**And re-run after acting.** One pass is not enough, because a fix can create a finding the same pass
+already scanned past.
+
+This is not hypothetical. It happened while writing this very section: a 35-word sentence was split into
+short ones, and the paragraph came back at seven.
+
 ## Acting on a finding removes content. Decide where it goes.
 
 Every mechanical rule here is satisfied by making prose shorter, and shorter prose is reached by moving
