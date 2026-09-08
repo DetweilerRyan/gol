@@ -35,9 +35,36 @@ It is nonetheless **unreachable**. Measured on the installed 2.2.10:
 | Latest published version                  | 2.2.10, dated 2026-04-07 — the one installed |
 
 So there is no import path, no deep-import escape hatch, and no announced
-release. **"Wait for upstream" is a rejected option, not a deferred one** — but
-it is worth watching: when it ships, Catalyst will presumably wrap it, and
-whatever this slice builds should expect to be replaced rather than entrenched.
+release. The suppression is also **explicit rather than accidental** — line 26
+of the package's own `src/index.ts` is, in full:
+
+```ts
+// export * from './components/tooltip/tooltip'
+```
+
+Someone wrote that export and commented it out. It arrived commented out in
+`2.0.0 Alpha prep` (#2887, merged 2023-12-20) and has never been uncommented in
+the years since; that PR's body enumerates every component the alpha added —
+Checkbox, Radio, Button, Input, Textarea, Select, Field, Fieldset — and does not
+mention Tooltip at all. Since then the file has been touched only by sweeping
+changes that touched everything (a typo pass, a `React.JSX` rename, an
+`anchor`-prop change), never by work on the tooltip itself. It is also not
+exported by the `alpha` (`2.0.0-alpha.4`) or `insiders` channels — checked
+2026-09-08 — so there is no prerelease route either.
+
+**Upstream demand is not the blocker.** Discussion #436, "Tooltip component",
+has been open since 2021-04-23 with ~113 upvotes and ~44 comments; the
+commented-out export was found and raised there by a user in April 2025, and no
+maintainer has answered the question in the thread. The most recent comment
+(2026-02-10) recommends a different library. Release cadence is slow in the same
+period: 2.2.9 landed 2025-09-25 and 2.2.10 on 2026-04-07, with no push to the
+repository since 2026-04-13.
+
+**So "wait for upstream" is a rejected option, not a deferred one** — nothing
+has moved in nearly three years and no maintainer has stated an intent. It
+remains worth watching rather than tracking: if it ships, Catalyst will
+presumably wrap it, so whatever this slice builds should expect eventual
+replacement rather than entrenchment.
 
 **3. Do not build on CSS anchor positioning.** A pile of 2026 blog posts declare
 it "Baseline 2026" with 91% coverage and pronounce Floating UI obsolete. The
