@@ -33,6 +33,8 @@ where the misroute was the thing being tested.
 | control — re-read | `cat`, then the harness `Read` tool, on the stale file                    | no effect.                                                           |
 | control — Edit    | the harness `Edit` tool on the worktree probe                             | **fresh immediately.**                                               |
 | control — `sed`   | `sed` again on that same file, right after the Edit succeeded             | stale again.                                                         |
+| control — Write   | the harness `Write` tool over a `sed`-staled probe                        | **fresh immediately**, same as `Edit`.                               |
+| control — refresh | trivial `Edit` **elsewhere** in a `sed`-staled file (a trailing newline)  | **whole file re-synced** — the unrelated `sed` change showed up too. |
 
 **The cache is whole-file, not comment-only.** Changing `(a: number): number` to
 `(a: string): string` alongside the summary left the reported **signature** stale too, so
@@ -46,7 +48,16 @@ file transmits its then-current content; after that, only a write made **through
 harness's own `Edit`/`Write` tool** updates that snapshot. A write that bypasses the
 harness leaves it frozen indefinitely — `sed`, `cat >`, a heredoc, and by extension
 `git rebase`, `git checkout`, and anything that rewrites files underneath the session
-such as `npm run format`.
+such as `npm run format`. `Edit` and `Write` were each measured to re-sync; the
+out-of-band forms above were measured only for `sed`, `cat >` and heredocs, and the
+`git`/Prettier cases are inference from the same write path rather than separate
+measurements.
+
+**The re-sync is whole-file, and that is what makes a refresh idiom possible.** A
+trivial `Edit` to an unrelated part of a staled file — a trailing newline at the end —
+made the server pick up a `sed`-authored change to the comment block as well. So the
+snapshot is replaced wholesale from disk on any harness write, not patched at the edited
+range.
 
 That explains the original `toggleLibrary` failure exactly: the correction was rebased
 away, and a rebase is an out-of-band write, so the pre-rebase snapshot was served
@@ -109,7 +120,11 @@ Candidate responses, cheapest first:
    is trustworthy only if every write to that file this session went through
    `Edit`/`Write`. After a `git` operation or a Bash-authored edit, hover is unsafe until
    the file is re-touched through the harness.
-2. **Give roles a forced-refresh recipe** — currently unknown; see open questions.
+2. **Give roles a forced-refresh recipe.** Measured and available: make any trivial
+   `Edit` to the file — it replaces the server's snapshot from disk wholesale, so the
+   edit need not touch the region you care about. Adding and removing a trailing newline
+   is a net-zero form of it. This is what a role should do after a rebase, a branch
+   switch, a `npm run format`, or its own Bash-authored edit, before trusting a hover.
 3. **Reconsider the auto-mode "prefer Bash for edits" guidance** for this repo, since it
    is what converts the hazard from rare to routine.
 
@@ -128,12 +143,12 @@ Docs-only, so the merge-protocol mutation-invariance allowlist covers it.
   identity end to end, and this one says "for every worktree" when the finding is not
   about worktrees. Renaming a candidate ahead of widening it is precedented on this board
   and is done as its own commit. Ryan's call.
-- **What forces a refresh short of a new session?** Measured to _not_ work: elapsed time
-  (5 min), `cat`, the `Read` tool, and `EnterWorktree`. Measured to work: a write through
-  `Edit`. Untested: a no-op `Edit` (write a character and revert it) as a deliberate
-  refresh idiom, and whether `Write` behaves like `Edit`. Worth measuring before any
-  recipe is written into an article, because a recipe that does not actually refresh is
-  worse than none.
+- **What forces a refresh short of a new session? — answered.** Measured to _not_ work:
+  elapsed time (5 min), `cat`, the `Read` tool, and `EnterWorktree`. Measured to work:
+  `Edit`, `Write`, and a trivial `Edit` to an unrelated part of the file. What remains
+  open is not the mechanism but the ergonomics: a refresh a role must _remember_ to
+  perform protects only the hovers it remembers to protect, which is the same weakness
+  this file already flags for the misroute.
 - **How far does the staleness reach?** The signature went stale alongside the comment,
   so the whole buffer is frozen; whether `findReferences` and `goToDefinition` return
   stale _results_ across files was inferred from that, not measured directly.
