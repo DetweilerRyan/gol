@@ -218,11 +218,13 @@ hover comes back as a bare signature, indistinguishable from no doc having been 
 - **Named return type** — `useCellTiles`'s `CellTilesView`, `useZoomGlide`'s `ZoomGlideController`. The
   doc goes on the **interface member**, which is then the only site that reaches a caller at all.
 - **Inferred return** — a hook that annotates nothing. The doc goes on the **property in the
-  `return { … }` literal**. That literal is the analogue of an interface member: the one contiguous place
-  a hook's public surface is listed. This arm covers the whole literal, shorthand and longhand alike.
-  It is the only site available for a property whose value is an inline arrow, such as
-  `openOrCancelLibrary: () => setPlacement(toggleLibrary)`. How an entry happens to be written does not
-  split the arm.
+  `return { … }` literal**.
+
+**The inferred arm covers the whole literal, shorthand and longhand alike.** That literal is the analogue
+of an interface member: the one contiguous place a hook's public surface is listed. It is the only site
+available for a property whose value is an inline arrow, such as
+`openOrCancelLibrary: () => setPlacement(toggleLibrary)`. How an entry happens to be written does not
+split the arm.
 
 **An inline type literal annotation severs, and the remedy is unmeasured.** The type literal has a member
 position, but nothing measured says a doc on it reaches. Do not reason from the named-return arm onto it.
@@ -287,18 +289,10 @@ text entirely. Put every other link in the tag's **prose**, where it resolves. R
 Three more. The first is fatal, the second is silent and therefore worse, the third is a coexistence
 ruling:
 
-- **A `*/` inside prose terminates the block early** and leaves a syntax error. Lines mentioning a glob
-  like `**/run.ts` are the usual source. Reword such a line _before_ moving it into JSDoc, as its own
-  commit. See the commit discipline below.
+- **A `*/` inside prose terminates the block early** and leaves a syntax error. Reword such a line
+  _before_ moving it into JSDoc, as its own commit.
 - **Neither a blank line nor an intervening `//` block detaches a JSDoc block from the declaration below
-  it.** So a file-leading JSDoc block that _looks_ like a module header is silently documenting the first
-  declaration under it. Before treating any leading block as a module header, hover the first export. If
-  prose comes back, that block is already an interface comment, so partition it like one. A true module
-  header must be `//`.
-
-  That hover test decides only a leading block that is already JSDoc. A leading `//` block always hovers
-  as nothing, so settle that one from content instead. Ask whether the block describes the file's exports
-  **jointly**, or is a multi-concern block that happens to sit above the first one.
+  it.** Before treating any leading block as a module header, hover the first export.
 
 - **`// prettier-ignore` and JSDoc coexist, in either order.** Write the three in this order, so the
   directive stays adjacent to the thing whose formatting it suppresses:
@@ -308,6 +302,17 @@ ruling:
   3. the declaration
 
   The other ordering reads as suppressing the comment's formatting, which it does not do.
+
+**Why the blank-line hazard needs the hover test.** A file-leading JSDoc block that _looks_ like a module
+header is silently documenting the first declaration under it. If prose comes back from that hover, the
+block is already an interface comment, so partition it like one. A true module header must be `//`.
+
+That hover test decides only a leading block that is already JSDoc. A leading `//` block always hovers as
+nothing, so settle that one from content instead. Ask whether the block describes the file's exports
+**jointly**, or is a multi-concern block that happens to sit above the first one.
+
+**Where the `*/` hazard usually comes from.** Lines mentioning a glob like `**/run.ts` are the usual
+source. See the commit discipline below.
 
 ## Part 2 — Reading
 
@@ -368,16 +373,21 @@ where a caller actually stands.
 
 Three hover hazards defeat that test, and each has a rule:
 
-- **A hover taken right after your own edit can serve the pre-edit text.** When a rendering has to be
-  **measured** rather than recalled, put the variants in a **new** file the server has not read yet.
-- **A hover that reveals a defect is not a defect until you have read the source.** Staleness is not bounded by your own
-  session's edits. A server can answer from a copy predating a rebase, producing text that exists in no
-  tree on disk. Confirm against the file before reporting, always. One `sed -n` costs
-  nothing next to a false finding filed against another role's work.
-- **Pass `LSP` an absolute path, always.** A relative path resolves against the session's working
-  directory, which under the one-slice-one-worktree protocol is not the tree you are editing. A path that
-  exists in **both** trees silently answers about the wrong one. The two copies agree everywhere the
-  slice has not touched, so that wrong answer is right most of the time.
+- **A hover taken right after your own edit can serve the pre-edit text.**
+- **A hover that reveals a defect is not a defect until you have read the source.**
+- **Pass `LSP` an absolute path, always.**
+
+On the first: a rendering that must be **measured** rather than recalled goes in a **new** file, one the
+server has not read yet.
+
+On the second: staleness is not bounded by your own session's edits. A server can answer from a copy
+predating a rebase, producing text that exists in no tree on disk. Confirm against the file before
+reporting, always. One `sed -n` costs nothing next to a false finding filed against another role's work.
+
+On the third: a relative path resolves against the session's working directory, which under the
+one-slice-one-worktree protocol is not the tree you are editing. A path that exists in **both** trees
+silently answers about the wrong one. The two copies agree everywhere the slice has not touched, so that
+wrong answer is right most of the time.
 
 **Do not use `Bad line number` as the diagnostic for a misroute.** The tsserver
 `Debug Failure. Bad line number` error reports only that the server's line map disagrees with the
@@ -388,15 +398,17 @@ relative_.
 
 Separate the mechanical move from the judgment, so each is reviewable on its own:
 
-0. **Reword the syntax hazards first.** The `*/` lines and any whitespace-preceded `@` token, still as
-   `//` comments, with no relocation. Small, individually reviewable, and it establishes the baseline the
-   next commit preserves.
-1. **Partition, text-preserving.** Split each block into its interface and implementation halves and
-   relocate them. No line's wording changes, only its location and its comment marker. Verify it: strip
-   the markers from both sides of the diff. Then assert that the union of the halves equals the commit-0
-   baseline.
-2. **Author the summaries and any tags.** The judgment half, separated so it cannot hide inside the
-   relocation.
+0. **Reword the syntax hazards first**, still as `//` comments, with no relocation.
+1. **Partition each block into its interface and implementation halves**, and relocate them.
+2. **Author the summaries and any tags.**
+
+Step 0 covers the `*/` lines and any whitespace-preceded `@` token. It is small, individually reviewable,
+and it establishes the baseline step 1 preserves.
+
+Step 1 changes no line's wording, only its location and its comment marker. Verify it: strip the markers
+from both sides of the diff. Then assert that the union of the halves equals the commit-0 baseline.
+
+Step 2 is the judgment half, separated so it cannot hide inside the relocation.
 
 Run `npm run format:check` and `npm run build` per commit, plus `npm test` after any `src/` batch.
 
