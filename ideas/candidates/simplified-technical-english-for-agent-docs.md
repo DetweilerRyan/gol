@@ -189,10 +189,11 @@ and `architecture.md` (the two demonstration paragraphs), `CLAUDE.md`'s conventi
 sentence, per the routing test). If a plugin is adopted, `.claude/settings.json`.
 
 **Sizing.** Docs only, no `src/`, no `scripts/`. Every path is inside the mutation-invariant allowlist,
-so a landing diff confined to them skips stage 5 — but `npm run agent-doc-check` and
-`npm run reference-check` both move on it, and `reference-check` scans every line of `.claude/**/*.md`
-and `CLAUDE.md`, so a rewritten paragraph that drops or garbles a filename reds the gate. No design
-pass triggers fire.
+so a landing diff confined to them is eligible to skip stage 5 — eligible only, since that skip exists
+solely as an instruction the orchestrating session hands down and `hardener` runs the stage absent one.
+Two gates do move on such a diff: `npm run agent-doc-check`, and `npm run reference-check`, which scans
+every line of `.claude/**/*.md` and `CLAUDE.md` — so a rewritten paragraph that drops or garbles a
+filename reds the gate. No design pass triggers fire.
 
 ## Open questions
 
