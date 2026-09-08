@@ -8,58 +8,57 @@ created: 2026-09-08
 
 `rationale-sidecar-pilot` proved the tier on one file and Ryan signed it off. `doc-comments.md` is split,
 `prose-linting.md` and its own sidecar were then written under the tier from scratch, and CLAUDE.md's
-routing test carries a branch for it. Two of the sixteen files in `.claude/agents/articles/` are done.
+routing test carries a branch for it. `.claude/agents/articles/` holds fourteen articles and two sidecars;
+two of the fourteen are done.
 
 The tier is no longer a proposal. What is missing is an order for the other twelve articles, and a
 decision about the four that should probably never be split at all.
 
 ## Complication
 
-**The obvious ordering and `architect`'s ordering disagree, and neither is obviously right.**
+**Rank by absolute rationale, not by share.** Share is a ratio, and reading it as value is the mistake
+this section originally made. Multiplying each article's measured rationale share by its current size —
+excluding the four ruled out below:
 
-Ranking by measured rationale share says take the biggest wins first. `architect` ranked by shape
-instead — "measurement-dense with a thin instruction core" — after its cold read of the pilot. Those
-give different answers:
+| article                  | share |  bytes | ~rationale bytes | `architect`'s pick |
+| ------------------------ | ----: | -----: | ---------------: | ------------------ |
+| `testing-layers.md`      |   30% | 44,353 |           13,306 | —                  |
+| `mutation-testing.md`    |   28% | 45,362 |           12,701 | **first**          |
+| `quality-tooling.md`     |   32% | 30,206 |            9,666 | —                  |
+| `architecture.md`        |   20% | 36,810 |            7,362 | —                  |
+| `ast-grep-rules.md`      |   16% | 42,467 |            6,795 | **second**         |
+| `state-flow.md`          |   15% | 27,298 |            4,095 | —                  |
+| `acceptance-mutation.md` |   11% | 26,554 |            2,921 | —                  |
+| `archive.md`             |   26% | 10,044 |            2,611 | —                  |
 
-| article                  | rationale bytes | entanglement | slice-slug mentions | rank by share | `architect`'s pick |
-| ------------------------ | --------------: | -----------: | ------------------: | ------------: | ------------------ |
-| `handoffs.md`            |             51% |          67% |                   0 |             1 | **leave alone**    |
-| `orchestration.md`       |             45% |          94% |                   0 |             2 | **leave alone**    |
-| `quality-tooling.md`     |             32% |         100% |                  46 |             3 | —                  |
-| `testing-layers.md`      |             30% |         100% |                  50 |             4 | —                  |
-| `engineering.md`         |             29% |          82% |                  30 |             5 | **leave alone**    |
-| `workflow.md`            |             29% |          64% |                   0 |             6 | **leave alone**    |
-| `mutation-testing.md`    |             28% |          92% |                  22 |             7 | **next**           |
-| `archive.md`             |             26% |          71% |                   8 |             8 | —                  |
-| `architecture.md`        |             20% |         100% |                  10 |             9 | —                  |
-| `ast-grep-rules.md`      |             16% |         100% |              **84** |            10 | **next**           |
-| `state-flow.md`          |             15% |          92% |                  11 |            11 | —                  |
-| `acceptance-mutation.md` |             11% |         100% |                  14 |            12 | —                  |
-
-Measured on `bac96c4` by the block classifier described in `rationale-sidecar-pilot`; read the shares as
+Shares measured on `bac96c4` by the block classifier described in `rationale-sidecar-pilot`; read them as
 upper bounds, since the classifier agrees with hand labels about two times in three and errs toward
-over-reporting rationale.
+over-reporting rationale. Byte counts are current.
 
-**`architect`'s picks rank 7th and 10th by share.** Its reasoning was that a thin instruction core makes
-the split cheap and the result legible, not that the saving is largest. The slug counts support it:
-`ast-grep-rules.md` carries **84** backticked slice slugs, the most in the corpus and three times the
-next article, so it is dense in exactly the history a sidecar is for even though its rationale _share_
-is low.
+**`architect`'s picks rank second and fifth by absolute saving.** An earlier draft of this candidate said
+seventh and tenth, ranked by share, and framed the two criteria as disagreeing enough to need settling
+empirically. `architect` refuted that in REVIEW: most of the apparent disagreement was the ratio. Its
+stated criterion — measurement-dense with a thin instruction core — and the byte ranking mostly agree,
+and where they differ, its picks are cheaper splits rather than smaller ones. `ast-grep-rules.md` also
+carries **84** backticked slice slugs, the most in the corpus by a factor of three, so it is dense in
+exactly the history a sidecar is for.
 
 **Four files are ruled out, and applying the reason properly is what makes it four rather than two.**
-`architect` named `engineering.md` and `workflow.md`: both are read **unconditionally**, so splitting
-them moves argument out of the one place everyone already sees. The tier relieves _triggered_ reading,
-and there is no trigger to relieve on a file nobody may skip.
+`architect` named `engineering.md` and `workflow.md`. That reason reaches two more it did not name:
+`handoffs.md` is the third house-rules article — CLAUDE.md: "Three articles are house rules every role
+reads unconditionally" — and `orchestration.md` is read at session start by the seat that runs the roles.
 
-That reason reaches two more files `architect` did not name. **`handoffs.md` is the third house-rules
-article** — CLAUDE.md: "Three articles are house rules every role reads unconditionally" — and
-**`orchestration.md` is read at session start** by the seat that runs the roles. Both are unconditional
-by the same test.
+**But the reason is weaker than it first looks, and the weakness is worth carrying.** The stated case is
+that splitting an unconditionally-read file moves argument out of the one place everyone sees. CLAUDE.md's
+own routing preamble argues the opposite: auto-loading is "a cost, not a distribution channel", and
+CLAUDE.md itself was shrunk on exactly that logic. On that reading, the unconditional files are the ones
+to split **hardest**. The two positions are not reconciled here, and `engineering.md` — 18,043 bytes of
+rationale, the largest mass in the corpus — is what hangs on it.
 
-**This matters more than it sounds, because `handoffs.md` ranks first by share.** A reader taking the
-obvious ordering would split the highest-value file in the corpus and get the tier's worst case: less
-argument in front of the only readers who never chose to open it. The structural rule beats the
-measurement here, and the measurement is what points the wrong way.
+Two of the four have a second, independent defence that does not depend on the argument above:
+`workflow.md` (1,486 rationale bytes) and `handoffs.md` (3,161) are simply too small to be worth a second
+file. `orchestration.md`'s real defence is that it is 94% entangled, so its split is expensive rather than
+that it has many readers — it has exactly one.
 
 ## Question
 
@@ -71,12 +70,13 @@ split?
 **Take `architect`'s ordering, and treat the disagreement as the thing to resolve empirically rather
 than by argument.**
 
-Split `mutation-testing.md` first and `ast-grep-rules.md` second. Then measure both against
-`doc-comments.md`'s result and decide whether share or shape is the better predictor before continuing.
-Two data points against one is enough to tell whether the ranking matters at all.
+Split `mutation-testing.md` first and `ast-grep-rules.md` second — second and fifth by absolute saving,
+and the two `architect` judged cheapest to split well. `testing-layers.md` is the largest available
+target and is a reasonable substitute for either if effort is the constraint rather than legibility.
 
-**Do not split `engineering.md` or `workflow.md`** without a separate decision. The argument against is
-in the Complication and it is structural, not a preference.
+**Do not split any of the four** without a separate decision, and treat `engineering.md` as the one that
+genuinely needs one: it holds the largest rationale mass in the corpus, and the argument protecting it is
+the one the Complication shows is contested.
 
 **`CLAUDE.md` is out of scope here** and needs its own slice if it is ever split. It is not an article,
 it is auto-loaded rather than triggered, and its 48% rationale share is the largest single number in the
@@ -105,12 +105,15 @@ Per slice: one `.claude/agents/articles/<name>.md`, a new `<name>.rationale.md` 
 
 **Sizing.** One article per slice, and that is a real constraint rather than caution: entanglement runs
 64–100% across these files, so each split is a rewrite of the mixed blocks rather than a move. All paths
-are inside the mutation-invariant allowlist.
+are inside the mutation-invariant allowlist, including `.vale.ini` and `.vale/**`, which
+`rationale-sidecar-pilot` added to it. Check CLAUDE.md's predicate rather than recalling it — a REVIEW of
+this candidate read the pre-amendment list and called the claim false.
 
 ## Open questions
 
-- **Does the ordering criterion matter at all?** The Answer above assumes it might. Two splits will say.
-  If share and shape predict the same effort, rank by share and stop thinking about it.
+- **Is the unconditional-read argument sound?** It is what protects four files, and CLAUDE.md's own
+  routing preamble argues the reverse. Settle this before anyone proposes splitting `engineering.md`,
+  which is where the disagreement has real money on it.
 - **Is there a floor below which a split is not worth it?** `acceptance-mutation.md` at 11% and
   `state-flow.md` at 15% may not have enough rationale to be worth a second file. The pilot's file was
   57%, so nothing measured yet speaks to the low end.

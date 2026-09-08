@@ -18,7 +18,7 @@ The guidance lived as 140 lines of comment inside `.vale.ini` before this articl
 file that was 86% prose. That was the wrong home by CLAUDE.md's routing test, and the move here is the
 correction.
 
-## The style ships twelve rules. Four are on.
+## The style ships twelve rules. Six are on.
 
 | rule              | on? | findings on `doc-comments.md` | why                                                    |
 | ----------------- | --- | ----------------------------: | ------------------------------------------------------ |
@@ -30,7 +30,7 @@ correction.
 | `Dictionary`      | no  |                             7 | not ASD's wordset — see below                          |
 | `Modals`          | no  |                             4 | would do damage — see below                            |
 | `NounClusters`    | no  |                             2 | fails its own example — see below                      |
-| `Contractions`    | yes |                         3 → 1 | mechanical; the 1 left is a quotation                  |
+| `Contractions`    | yes |                         2 → 0 | mechanical; the residue is in `prose-linting.md`       |
 | `Ambiguity`       | no  |                             2 | slash token false-positives — see below                |
 | `Articles`        | no  |                             0 | aerospace verb list; 0 of 4 corpus-wide — see below    |
 | `ParagraphLength` | yes |                             0 | mechanical, no tagger; 41 corpus-wide are all real     |
@@ -126,7 +126,8 @@ The other ten were definitions, hazard statements, a numbered-list lead-in and `
 disposition, all bulleted and therefore counted as procedures. Worked down to 6 by restructuring the
 genuinely procedural lists; the remaining 6 sit at 21–30 words and were left deliberately.
 
-**`OneInstruction`.** 12 findings corpus-wide across 8 files, 2 on `doc-comments.md`. Six were read by
+**`OneInstruction`.** 12 findings corpus-wide across 8 files when first measured, 2 of them on
+`doc-comments.md`. Six were read by
 hand: three genuine, three not. The two on this file were one of each, which is the useful pair — a real
 two-step chain in the commit discipline, and the `// prettier-ignore` ordering where `, then` is not two
 actions but one instruction whose content is the order.
@@ -182,9 +183,26 @@ clause rather than the sentence around it, is untested.
 ## The standard this article holds itself to
 
 `ste-shape-rules-for-instruction-files` sets the bar: a stated rule a second author can apply to a second
-file and get a comparable result, not a sensibility. Measured against it, only `SentenceLength` clears
-the bar. The other three enabled rules are prompts a person reads, and they are documented as such rather
-than promoted.
+file and get a comparable result, not a sensibility. Measured against it after all twelve rules were
+tried, **three of the six enabled rules clear it** — `SentenceLength`, `ParagraphLength` and
+`Contractions`. The other three are prompts a person reads, and they are documented as such rather than
+promoted.
 
-That is the finding this whole exercise produced, and it is narrower than the candidate assumed: **the
-mechanically enforceable subset of STE on this corpus is one rule.** Everything else needs a reader.
+**An earlier version of this section said the mechanically enforceable subset was one rule.** That was
+written when `SentenceLength` was the only rule enabled, and it was left standing while `Contractions`
+and `ParagraphLength` were adopted — so the article and this file spent several commits asserting
+opposite headline findings, in the pilot pair for a convention whose whole premise is that a pair stays
+consistent. `architect` found it in REVIEW. Recorded rather than quietly corrected, because the failure
+is the interesting part: a conclusion drawn from a measurement goes stale when the measurement is
+extended, and nothing rereads a conclusion.
+
+**What actually separates the two columns, which is the finding the stale version was groping at.** A
+rule is mechanical when **its trigger is the defect**: a sentence over 25 words, a paragraph over six
+sentences, a contraction. A rule is a prompt when its trigger is a **proxy** for the defect: a list item
+standing in for a procedure, a `, then` standing in for two actions, a be-verb plus participle standing
+in for a rule that hides its actor. Counting is not the distinction — `ProcedureLength` counts and is
+still a prompt, because the unit it counts is a stand-in.
+
+That test predicts the six rejections too. Every one of them fires on a proxy that does not hold here:
+three on part-of-speech tags, one on a slash that usually joins a compound term, one on an approved-word
+list that is not ASD's, and one on modal verbs whose force this repo deliberately varies.

@@ -76,17 +76,26 @@ is ast-grep's behaviour, not `globSync`'s — the asymmetry CLAUDE.md documents 
 `ast-grep-rule-check`. A glob written on the `globSync` intuition **fails open**: it silently lints
 files nobody scoped it to.
 
-## The four enabled rules, and what to do with each
+## The six enabled rules, and what to do with each
 
-Two of these apply mechanically. Two are prompts to look. Know which you are holding.
+Three apply mechanically. Three are prompts to look. Know which you are holding.
 
-| rule                  | treat it as | act on a finding?                       |
-| --------------------- | ----------- | --------------------------------------- |
-| `STE.SentenceLength`  | mechanical  | yes — split the sentence                |
-| `STE.Contractions`    | mechanical  | yes, unless the text is a **quotation** |
-| `STE.ProcedureLength` | a prompt    | only if the list item is a **step**     |
-| `STE.OneInstruction`  | a prompt    | only if it chains two **actions**       |
-| `STE.PassiveVoice`    | a prompt    | only if a **rule** hides its actor      |
+| rule                  | treat it as | act on a finding?                           |
+| --------------------- | ----------- | ------------------------------------------- |
+| `STE.SentenceLength`  | mechanical  | yes — split the sentence                    |
+| `STE.ParagraphLength` | mechanical  | yes — split the paragraph                   |
+| `STE.Contractions`    | mechanical  | yes, unless the text is **quoted or named** |
+| `STE.ProcedureLength` | a prompt    | only if the list item is a **step**         |
+| `STE.OneInstruction`  | a prompt    | only if it chains two **actions**           |
+| `STE.PassiveVoice`    | a prompt    | only if a **rule** hides its actor          |
+
+**What puts a rule in one column or the other is whether its trigger _is_ the defect.** A sentence over
+25 words is exactly the thing `SentenceLength` claims to find, and a contraction is exactly what
+`Contractions` matches. The three prompts all fire on a **proxy**. A list item is not a procedure. A
+`, then` is not always two actions. A be-verb plus a participle is not always a rule hiding its actor.
+
+Counting is not what separates the columns. `ProcedureLength` counts too, and is still a prompt, because
+the unit it counts is a stand-in.
 
 ### `STE.SentenceLength` — act on every finding
 
@@ -102,14 +111,14 @@ rather than used.** A contraction inside quoted prose belongs to the file you ar
 it misquotes that file. A contraction named as an example — "'Do not' carries more weight than 'Don't'"
 — is the subject of the sentence, not its voice.
 
-This article is the live example, and carries three such findings that stand unfixed on purpose: two
-quoting `engineering.md`, one naming the word itself. **An article about a rule will trip that rule**, so
+This article is the live example, and carries three such findings that stand unfixed on purpose: **two
+naming the word itself, one quoting `engineering.md`.** **An article about a rule will trip that rule**, so
 expect this wherever prose-linting guidance discusses the token it governs.
 
 ### `STE.ParagraphLength` — act on every finding
 
 Six sentences per paragraph. Split it. Purely structural — it counts sentence terminators and consults
-no part-of-speech tagger, which is why it is one of the three here that need no judgement.
+no part-of-speech tagger.
 
 ### `STE.ProcedureLength` — act only on genuine steps
 
@@ -132,7 +141,7 @@ Three false-positive classes, and the second is dangerous rather than noisy:
 1. **A specified order, not two actions.** "Write JSDoc, then `// prettier-ignore`, then the
    declaration" is one instruction whose content **is** the ordering. Splitting it destroys the rule.
    Where it fires like this, reach for the other rule — state the sequence as a numbered list.
-2. **A prohibition on concurrency.** "Don't run `test:mutation` and `npx playwright test` at the same
+2. **A prohibition on concurrency.** "Don't run `npm run test:mutation` and `npx playwright test` at the same
    time" trips the token, and this rule's advice would turn one prohibition into two instructions,
    **inverting it**. Following the tool here is worse than ignoring it.
 3. **Descriptive prose in a bullet.** The rule's scope is list items, not instructions, so a `while
@@ -159,6 +168,10 @@ actionable. "The between-position is sanctioned" becomes "Use the between-positi
    is reported with the message "name the agent", which the sentence does.
 5. **A deliberate aphorism, usually a heading.** "Writing is verified by reading."
 
+**A residual that fits none of the five is not automatically exempt.** Four such cases were left in
+`doc-comments.md` deliberately, as genuinely arguable. If you hit one, either act on it or say in the
+commit why you did not — do not widen a class to cover it.
+
 ## Acting on a finding removes content. Decide where it goes.
 
 Every mechanical rule here is satisfied by making prose shorter, and shorter prose is reached by moving
@@ -176,7 +189,8 @@ deletion:
 `doc-comments.md` dropped fifteen illustrations and pointers **out of the pair entirely**, rather than
 moving them to the sidecar. Among them: React's `useState` as the model for the sidecar tier, what
 `documentSymbol` actually returns, and the signature behind an identity guarantee. No rule was lost. The
-examples that made the rules legible were. `doc-comments.rationale.md` records the full list.
+examples that made the rules legible were. `doc-comments.rationale.md` records them, five under a heading of their own and four folded back into
+the sections they belong to.
 
 **Nothing catches this.** `reference-check` and `agent-doc-check` both stay green, because every
 filename still resolves — what changed is that prose went missing, and no checker reads for absence. So

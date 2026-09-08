@@ -272,6 +272,11 @@ form. It never judges prose. See `ast-grep-rules.md` for its matcher.
 leading `*`, it holds regardless of what follows the `@`, and it holds inside a fenced code block. It
 does not apply when a non-whitespace character precedes the `@`.
 
+**One measured exception.** A `{@link …}` in a block tag's leading type slot is parsed as a tag even
+though a brace precedes the `@`. That is why the type-slot rule below is stated separately rather than
+derived from this one. Do not reason from the universal above to conclude a leading `{@link}` is
+safe.
+
 **So backtick any `@`-prefixed token, always. Never rely on a code fence to protect one.** A backslash
 escape renders literally, so do not use it. Inside an `@example`, quotes make a package import safe; a
 bare `@`-token starting an example line is not safe.
