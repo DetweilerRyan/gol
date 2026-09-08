@@ -10,6 +10,25 @@ created: 2026-09-08
 > rationale has been split out of one. If the pilot fails its reading test, reopen this from the
 > Situation rather than the Sketch.
 
+## What has landed since this was filed, and what is left
+
+**Filed before the pilot ran. Three of its four parts are now done, and this file has not been rewritten
+around that — read the sections below with the following corrections in front of them.**
+
+| part                               | status                                                                                  |
+| ---------------------------------- | --------------------------------------------------------------------------------------- |
+| the shape rules themselves         | **applied** to `doc-comments.md` by `ste-shape-rules-on-doc-comments`                   |
+| the tool question                  | **settled** — Vale, four rules on, six off, all twelve tried or ruled on                |
+| the `prose-linting.md` article     | **landed**, with its own sidecar, plus a CLAUDE.md pointer and routing branch           |
+| the sidecar rollout to other files | **moved out** to `roll-the-rationale-sidecar-out`, which carries `architect`'s ordering |
+| the accept/reject vocabulary       | **still open** — the guards below stand, and nothing has been built                     |
+
+**So what remains here is the vocabulary, and the question of whether a shape rule can be stated well
+enough for a second author to apply.** On the second, the sweep returned a narrower answer than this
+file assumes: of twelve rules, exactly three apply mechanically and three more need a reader. That is
+recorded in `prose-linting.rationale.md` and it is the strongest evidence against this candidate's own
+premise, so read it before promoting any part of this.
+
 ## Context
 
 The pilot answers whether rationale can be separated from instruction. This candidate answers what to
@@ -430,9 +449,9 @@ CLAUDE.md and a read trigger in each role file that needs one. If the vocabulary
 built, `scripts/agent-doc-check/`. If `jyooi/agent-simple-english` is adopted as a Claude Code plugin
 instead, `.claude/settings.json` rather than the Vale paths.
 
-**Sizing.** This is several slices, not one — the shape-rules section, the sidecar rollout to the
-remaining files, the vocabulary, and the article are each separable. Split it before promoting any part
-of it to `todo/`.
+**Sizing.** This is several slices, not one, and three of them have since landed or moved out — see the
+status table at the top. What is left that is genuinely this file's is the accept/reject vocabulary and
+its ownership question. Split that out before promoting any part of this.
 
 ## Open questions
 
