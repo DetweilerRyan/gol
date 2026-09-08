@@ -90,19 +90,34 @@ The pilot established these, and they are not optional:
 1. **A closed-decision marker** stays in the instruction file wherever rationale that records a settled
    question moves out. One line per closed decision, naming the question and pointing at the sidecar,
    carrying the fact and never the argument.
-2. **The sidecar is exempt in `.vale.ini`**, and exemption means both an empty `BasedOnStyles` **and**
-   every enabled rule switched off by name in that section. See `prose-linting.md`; the pairing failed
-   silently once already.
+2. **Verify the sidecar is exempt — do not edit `.vale.ini`.** The exemption is glob-scoped to
+   `.claude/agents/articles/**/*.rationale.md`, so it already covers every future sidecar on creation.
+   Confirm it with one command: `vale <new>.rationale.md` must report zero. **An earlier version of this
+   mandate said to edit that file, which is wrong** — `split-mutation-testing-article` correctly diverged
+   from it, and a second author following it literally would either make a no-op edit or, reading "in
+   that section" as licence, author a redundant per-file section. The two-part pairing it described is
+   real but belongs to enabling a _rule_, not to adding a sidecar; `prose-linting.md` carries it.
 3. **An audit of the pair afterwards**, by hand, against the article as it stood before. Nothing checks
    this — `reference-check` and `agent-doc-check` both stay green while a pair drifts, because every
    filename still resolves. Six passes on the pilot dropped fifteen illustrations out of the pair before
    an audit caught them.
-4. **A before/after measurement** recorded in the sidecar, so the next split has a comparison.
+4. **A before/after measurement recorded in the sidecar's own intro**, so the next split has a
+   comparison. Name the unit: article bytes before, article and sidecar bytes after, rationale-only
+   bytes, entanglement, backticked slice-slug counts, and Vale findings on the article. **State the
+   absolute rationale figure, not the share** — the share is a ratio and moves the wrong way, which is
+   recorded in `prose-linting.rationale.md`. This is the mandate the first split skipped, because it
+   named an obligation without naming the measurement or where it goes.
+5. **Re-derive every sentence that enumerates or quantifies over another file's contents**, from that
+   file, during the split. Do not carry it across. Mandate 3's audit compares the pair against the
+   article as it stood before, so it is structurally blind to a claim that was **already false** — and
+   both substantive findings on the first split were exactly that shape: "every entry on the allowlist"
+   naming five of seven, and "the exposure is bidirectional" describing one direction. An audit preserves
+   those faithfully because they were preserved faithfully.
 
 ## Touches
 
-Per slice: one `.claude/agents/articles/<name>.md`, a new `<name>.rationale.md` beside it, and
-`.vale.ini`'s sidecar section. CLAUDE.md only if the article's pointer line needs rewording.
+Per slice: one `.claude/agents/articles/<name>.md` and a new `<name>.rationale.md` beside it. **Not
+`.vale.ini`** — see mandate 2. CLAUDE.md only if the article's pointer line needs rewording.
 
 **Sizing.** One article per slice, and that is a real constraint rather than caution: entanglement runs
 64–100% across these files, so each split is a rewrite of the mixed blocks rather than a move. All paths

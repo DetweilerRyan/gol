@@ -97,15 +97,27 @@ Whenever the cache's file-level assumptions break:
 - test files were moved or deleted rather than edited in place
 - **a module changed that other mutated files import, even when neither those files nor their tests
   changed**
+- **a test file changed and the mutant in question is static** — cached results are reused across that
+  edit, which is misreporting mode 2 above
 
 Prefer it whenever genuinely unsure: a false-clean score is worse than a slow one.
 
+**No current run-cost figure is recorded in either file.** `hardener`'s next
+`npm run test:mutation:full` is the thing that produces one; the figures in the sidecar describe trees
+that no longer exist.
+
 **That last trigger is the one nothing announces, and it is why the cache does not simply fail safe.**
-`IncrementalDiffer` decides reuse per mutant from three things and no others, and **there is no
-dependency-graph analysis anywhere in it.** So when a module changes, every cached result for its
-importers is reused wholesale, because none of their own bytes moved. **The exposure is bidirectional,
+`IncrementalDiffer` decides reuse per mutant from three things and no others:
+
+- whether the mutant still exists after a text diff of its own file;
+- whether its killing test still exists unchanged after a text diff of _that test's_ file;
+- for an unkilled mutant, whether it gained a new covering test.
+
+**There is no dependency-graph analysis anywhere in it.** So when a module changes, every cached result
+for its importers is reused wholesale, because none of their own bytes moved. **The exposure is bidirectional,
 and one direction is dangerous.** A cached `Killed` is reused even if the dependency change made that
-test stop killing, which reports the score too _high_.
+test stop killing, which reports the score too _high_. A cached `Survived` is reused even if the change
+made some test start killing, which reports it too _low_.
 
 ## The seed pin, and what it does not license
 
@@ -205,7 +217,8 @@ counts files that actually got mutants, so a count above the number of non-test 
 this footgun.
 
 When a scoped scan reports a cluster of `NoCoverage` in one file, suspect this before believing the gap —
-an unscoped full run would never see it.
+an unscoped full run would never see it. **`cleaner`'s workflow step 3 is where both footguns bite**,
+since that is the scoped scan this repo actually runs.
 
 ## A `Timeout` counts toward the score as a kill
 
@@ -232,14 +245,18 @@ It does **not** reach two cases:
 
 ## The mutation-invariant merge allowlist is structurally safe
 
-Every entry on CLAUDE.md's merge-protocol step 5 allowlist is safe. But **not all for the same kind of
-reason, and the difference is what you have to protect**:
+The allowlist has **seven** entries, and each is safe. But **not all for the same kind of reason, and the
+difference is what you have to protect**:
 
-- **`CLAUDE.md` and `README.md`** — safe as a matter of **fact**: a fixed filename cannot match a test
-  glob.
+- **`CLAUDE.md`, `README.md` and `.vale.ini`** — safe as a matter of **fact**: a fixed filename cannot
+  match a test glob.
 - **`features/**`** — safe by `stryker.config.json`'s `ignorePatterns` keeping it out of the sandbox.
-- **`ideas/**` and `.claude/**`** — safe by `vite.config.ts`'s `sharedExclude` naming both directories,
-  so a test file placed in either is collected by no vitest project and can kill nothing.
+- **`ideas/**`, `.claude/**` and `.vale/**`** — safe by `vite.config.ts`'s `sharedExclude` naming all
+  three. A test file placed in any of them is collected by no vitest project, so it can kill nothing.
+
+**Re-derive that list from CLAUDE.md rather than from here.** This enumeration is a claim about another
+file and it has been wrong once. `.vale/**` sat on the allowlist for a slice with no `sharedExclude`
+entry behind it — the precondition below skipped rather than met.
 
 **Those three config entries are load-bearing for this exemption specifically**, not just for a tidy test
 run:

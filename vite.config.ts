@@ -51,6 +51,18 @@ const sharedExclude = [
   // for the same reason .stryker-tmp*/** is here rather than scoped to one
   // project.
   '.features-gen/**',
+  // .vale/ holds Vale's synced style package -- a downloaded artifact, gitignored,
+  // and third-party YAML this repo does not author. It needs this entry for the same
+  // reason ideas/** and .claude/** do, and for one more that makes it sharper: the
+  // mutation-invariant merge allowlist in CLAUDE.md's step 5 names `.vale/**`, added
+  // by rationale-sidecar-pilot. Without this exclusion a `git add -f`'d test file
+  // under .vale/ would be tracked, MATCH that allowlist so stage 5 is skipped, and
+  // still be collected here and run inside Stryker's sandbox -- the hole
+  // shared-exclude-covers-docs-dirs closed for the other two directories, re-opened
+  // by an allowlist entry added without this precondition. Measured 2026-09-08 by
+  // split-mutation-testing-article: `npx vitest list` collected
+  // `[unit] .vale/__probe.test.ts` before this entry existed.
+  '.vale/**',
 ]
 
 const domTests = ['src/components/**/*.{test,spec}.?(c|m)[jt]s?(x)', 'src/hooks/**/*.{test,spec}.?(c|m)[jt]s?(x)']

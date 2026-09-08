@@ -15,6 +15,24 @@ number forward from this file without re-deriving it.**
 > a fragment lifted out of a nested list was removed. It was split into an instruction file and this
 > sidecar by `split-mutation-testing-article`.
 
+## The split itself, measured
+
+`split-mutation-testing-article`, 2026-09-08, the first split performed by following
+`roll-the-rationale-sidecar-out`'s rules rather than inventing them.
+
+| measure                        | before | after                            |
+| ------------------------------ | -----: | -------------------------------- |
+| article bytes                  | 45,362 | 15,365 instruction, ~28k sidecar |
+| rationale-only bytes (article) | 12,680 | 9,836                            |
+| entanglement                   |    92% | 71%                              |
+| backticked slice-slug mentions |     22 | 2 in the article, 18 here        |
+| Vale findings (article)        |    231 | 32                               |
+
+**The slug count is the cleanest signal.** A backticked slice name is history by definition, and 20 of
+the 22 moved to this file. The rationale _share_ went up rather than down, which is the ratio artifact
+recorded in `prose-linting.rationale.md`: removing rationale removes total bytes too, so only the
+absolute figure moves in the direction the split intends.
+
 ## The three misreporting modes, and where each was measured
 
 1. **Per-test attribution.** Measured in `live-cell-store`; the note lives above `getBoundsSnapshot` in
