@@ -1,6 +1,6 @@
 ---
-name: one-language-server-answers-for-every-worktree
-title: Stale LSP hovers come from the write path, not the worktree — decide what to do about it
+name: only-harness-writes-reach-the-language-server
+title: Only harness writes reach the language server — decide which remedy closes the gap
 created: 2026-09-06
 ---
 
@@ -241,10 +241,12 @@ account.
 
 ## Open questions
 
-- **Is this file still named for a refuted framing?** `name` is the branch and tag
-  identity end to end, and this one says "for every worktree" when the finding is not
-  about worktrees. Renaming a candidate ahead of widening it is precedented on this board
-  and is done as its own commit. Ryan's call.
+- **Was this file named for a refuted framing? — settled.** It was:
+  `one-language-server-answers-for-every-worktree` named the worktree explanation the
+  spike disproved. Renamed for the measured mechanism instead, move-only so
+  `git log --follow` reads across it. The old name is worth knowing when reading commits
+  before that point, since `name` is the identity end to end — file, branch, and the
+  eventual `slice/<name>` tag.
 - **What forces a refresh short of a new session? — answered.** Measured to _not_ work:
   elapsed time (5 min), `cat`, the `Read` tool, and `EnterWorktree`. Measured to work:
   `Edit`, `Write`, a trivial `Edit` to an unrelated part of the file, and killing the
