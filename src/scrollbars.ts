@@ -36,7 +36,8 @@ function computeAxisScrollbarMetrics(offset: number, cellSize: number, viewportS
   // no-content case already produces via extentPxWidth === viewportSizePx --
   // at every viewportSizePx, including 0 and negative. When the bounds ARE
   // defined, both branches are identical anyway. Each hand-applied on its
-  // own: the whole unfiltered suite stays green (909/909).
+  // own: every test `npm test` collects stays green (re-demonstrated on
+  // no-undated-cross-file-claims's tree, 2026-09-07).
   //
   // The `-> true` mutant on contentPxLeft is NOT equivalent and IS killed --
   // two assertions in scrollbars.test.ts, in under a second. Only the

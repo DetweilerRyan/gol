@@ -537,8 +537,8 @@ describe('hover indicator wiring', () => {
 // (the CellTile component is gone; Cell no longer subscribes). Their successor
 // property is the mounted-count guard in GridCells.test.tsx (|live ∩
 // window| + focus, exercised through the real liveCellsInRange pipeline) plus
-// liveCellWindow.test.ts's own culling pins (lines 32/46 there exclude a
-// live cell on either axis outside the window) -- both already prove "only
+// liveCellWindow.test.ts's own culling pin (a live cell past either axis'
+// bound of the range is excluded) -- both already prove "only
 // what should mount, mounts" without needing a tile-boundary crossing at
 // all, since mounting no longer has a tile-shaped unit to cross a boundary
 // of.

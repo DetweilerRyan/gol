@@ -50,12 +50,13 @@ const VISIBLE_PROPORTION_PATTERN = /(\d+) percent of the grid is in view/
 // worse to read), so the two can in principle drift. What catches that was
 // measured rather than assumed, at the scope of the command: replacing this
 // literal's "in view" with "in sight" and leaving everything else alone fails
-// 7 of the 105 tests in npm run test:e2e -- the whole grid-scrollbars bdd
-// feature -- each reporting visibleProportionPercent's own named parse throw
-// rather than a poll timeout. The builder's other end is pinned one layer in,
-// by Scrollbar.test.tsx asserting the component's rendered description equals
-// visibleProportionText(). No round-trip test is added here: src/test-support/
-// is deliberately ungated test infrastructure and no module in it carries one.
+// every scenario in the grid-scrollbars bdd feature and nothing else in
+// npm run test:e2e, each reporting visibleProportionPercent's own named
+// parse throw rather than a poll timeout. The builder's other end is pinned
+// one layer in, by Scrollbar.test.tsx asserting the component's rendered
+// description equals visibleProportionText(). No round-trip test is added
+// here: src/test-support/ is deliberately ungated test infrastructure and no
+// module in it carries one.
 export function parseVisibleProportionText(text: string): number | null {
   const match = VISIBLE_PROPORTION_PATTERN.exec(text)
   return match ? Number(match[1]) : null

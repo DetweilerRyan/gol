@@ -286,9 +286,10 @@ describe('nextTileRange retention, not admission (property)', () => {
 //   is 4 + 5e-324, genuinely MORE than one span, so it lands in the
 //   >= 2-boundary residual cellTiles.ts already discloses. The TEST was the
 //   thing asserting more than the design guarantees, and it failed ~13% of
-//   runs of this file (measured: 9 of 60) because fc.float biases hard
-//   toward both subnormals and range extremes and so hits that conjunction
-//   often. A single green run is what let it through.
+//   runs of this file (measured: 9 of 60, on fix-tile-hysteresis's tree,
+//   2026-08-23) because fc.float biases hard toward both subnormals and
+//   range extremes and so hits that conjunction often. A single green run
+//   is what let it through.
 //
 // So the precondition is now stated where it can be checked EXACTLY -- on
 // the realized covering sets, which are integers -- rather than on a float
@@ -314,8 +315,9 @@ describe('nextTileRange bounded wobble (property)', () => {
   // camB FIRST, and that ordering is load-bearing rather than incidental --
   // see the reverse direction in the property's comment below. Flipping it
   // to camA-first makes the reverse direction false at steps = 2 and this
-  // property flaky again in a brand new way (measured: 8,158 of 32,632
-  // band cases drop to a single rebuild under camA-first).
+  // property flaky again in a brand new way (measured: 8,158 of 32,632 band
+  // cases drop to a single rebuild under camA-first, on fix-tile-hysteresis's
+  // tree, 2026-08-23).
   const oscillationRebuilds = (camA: Camera, camB: Camera, width: number, height: number, steps: number) => {
     let range = coveringTileRange(camA, width, height, TILE_SPAN_CELLS)
     let rebuilds = 0
