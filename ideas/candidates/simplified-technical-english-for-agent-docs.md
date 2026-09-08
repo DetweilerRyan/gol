@@ -188,7 +188,11 @@ split, and unlike that split they do not relocate the cost to another file every
 **What it would cost, measured, and this is the part that decides whether it is a slice or a project.**
 Entanglement is **81%**, and five files sit at 100%. The split is therefore **a rewrite of the mixed
 blocks, not a move of them** — for each one, the directive has to be restated so it stands alone once
-its surrounding argument is gone. Only the 381 rationale-only blocks move as-is.
+its surrounding argument is gone. Only the 381 rationale-only blocks move as-is, and of those, the
+ones recording a closed decision leave a marker line behind — so the saving is the measured rationale
+share minus one line per closed question, not the full share. That deduction is small enough not to
+change the ranking below and large enough that a slice reporting the raw share as its result would be
+overstating what it delivered.
 
 **Sequencing that follows from that number**, cheapest and most valuable first:
 
@@ -200,16 +204,21 @@ its surrounding argument is gone. Only the 381 rationale-only blocks move as-is.
    skip) — the largest absolute win and the highest risk, so it goes after the pattern is proven.
 4. **Leave `coder.md` alone** — 9% rationale, already almost pure instruction. Nothing to gain.
 
-**One divergence from the proposal as stated, offered rather than assumed.** Some of this repo's
-rationale exists specifically to stop a decision being re-litigated — "X was tried and rejected, here
-is why". An agent that never reads it can propose exactly the rejected thing, and would do so in good
-faith. The mitigation is cheap and keeps the split intact: **the instruction file retains a one-line
-marker naming the closed decision and pointing at the sidecar** — "the blocklist direction was
-considered and rejected; see `<file>.rationale.md`" — carrying the _fact_ of the closed question
-without the argument. That is a pointer, not rationale, so it belongs on the instruction side. Whether
-that is worth the bytes is a judgement call, not a measurement.
+**A closed decision leaves a one-line marker behind. This is part of the split, not an optional
+extra.** Some of this repo's rationale exists specifically to stop a decision being re-litigated — "X
+was tried and rejected, here is why". An agent that never reads it can propose exactly the rejected
+thing, and would do so in good faith, which is the one way this split can actively make the corpus
+worse rather than merely lighter. So a block moved to a sidecar because it records a **closed
+question** leaves a marker in the instruction file naming that question and pointing at the sidecar:
 
-**Spelling: `.rationale.md`, not `.rational.md`.** Different word — "rational" is the adjective.
+> The blocklist direction was considered and rejected — see `<file>.rationale.md`.
+
+**The marker carries the fact of the closed question and never the argument for it.** That keeps it a
+pointer rather than rationale, so it belongs on the instruction side by the same test everything else
+here is sorted by, and it is bounded: one line per closed decision, not one per moved block. Most
+rationale records no closed question and leaves nothing behind.
+
+**Naming: `<file>.rationale.md`.** "Rational" is the adjective; the noun is "rationale".
 
 ### Answer 2 — shape rules on what remains
 
@@ -460,9 +469,12 @@ so it is a multi-slice programme rather than one slice, and the pilot should lan
 
 - **Does an agent that never reads the rationale re-litigate settled decisions?** This is the sidecar's
   main risk and it is unmeasured. Several passages in this repo exist precisely to record that
-  something was tried and rejected. The proposed mitigation is a one-line pointer left behind in the
-  instruction file, but whether a pointer is enough — or whether an agent needs the argument to be
-  persuaded — is exactly the kind of question the spike below should answer rather than assume.
+  something was tried and rejected. Answer 1 adopts the closed-decision marker to cover it, but the
+  marker is a mitigation with no evidence behind it yet: whether a bare pointer stops an agent
+  re-proposing a rejected design, or whether an agent needs the argument itself to be persuaded, is
+  exactly what the pilot should measure rather than assume. If the marker turns out to be insufficient,
+  the fallback is not abandoning the split — it is widening the marker to a one-line summary of _why_,
+  which is a different and larger claim on the instruction file's bytes.
 - **How does an agent know it is "renegotiating" and should read the sidecar?** The trigger for the
   topic articles is a stated condition in a role file. A sidecar needs the same, and the condition
   "you are changing this instruction rather than following it" is harder to state crisply than
