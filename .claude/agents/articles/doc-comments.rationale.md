@@ -8,6 +8,8 @@ Everything below is history: what was measured, when, by what method, and what w
 
 ## Why the split rule exists at all
 
+**The identity example in rule 3, written out.** `nextTileRange` returns `previous` _by reference_, and the signature it hides behind is `(previous: TileRange, …) => TileRange` — which states none of it. That signature is why the rule names identity guarantees first.
+
 **The channel table, measured when the article was authored:**
 
 |                                           | `//` block        | JSDoc block               |
@@ -28,7 +30,7 @@ That last line **is** the token argument, stated years before agents existed.
 
 **The between-position was measured rather than assumed.** `/** … */`, then a `//` block, then the declaration: the JSDoc still reaches a cross-file hover, tags and all. This is what the repo's sweep actually landed in 36 places. The failure mode had it severed would have been the silent one — a bare signature, indistinguishable from no doc having been written — which is why it was measured before being sanctioned.
 
-**Why "already JSDoc" is not a reason to skip a file.** When the article was authored, `src/equality/is-deep-equal.ts` carried a 22-line JSDoc whose middle paragraph was pure implementation rationale sitting on the hover channel, and `Cache.insert` in `src/cache.ts` hovered at roughly 30 rendered lines carrying a misspelled `@remark` that renders as an empty tag, an `@todo` about a future API, and two bare `@param`s that name the parameters and say nothing.
+**Why "already JSDoc" is not a reason to skip a file.** When the article was authored, `src/equality/is-deep-equal.ts` carried a 22-line JSDoc whose middle paragraph was pure implementation rationale sitting on the hover channel — "`isDeepEqual` is its own leaf comparator here — `structurallyEqual`'s own initial short-circuit…" — and `Cache.insert` in `src/cache.ts` hovered at roughly 30 rendered lines carrying a misspelled `@remark` that renders as an empty tag, an `@todo` about a future API, and two bare `@param`s that name the parameters and say nothing.
 
 ## The scope rulings, and who made them
 
@@ -80,7 +82,7 @@ interface DocumentedInterface {          hover on it.memberWithoutDoc  → bare 
 
 **Sizing the surface.** Measured when the article was authored, `src/` (excluding `catalyst/`, including `test-support/`) held roughly 195 exported declarations and 128 interface/type members, against about 84 existing comment blocks.
 
-**Why "every block, not the exported slice".** Sizing a sweep by "blocks directly above an exported declaration" undercounts it by about 3x — which happened three times running while surveying `scripts/`: `acceptance-mutation/` was billed 12 files / 253 comment lines and came in at 14 / 950, `agent-doc-check/` 3 / 67 against 8 / 222, `ast-grep-rule-check/` 4 / 66 against 6 / 211. Measured over the 45 files `jsdoc-in-scripts` touched: **94 of 217 pre-sweep comment blocks, and 712 of 1838 comment lines (39%), sat directly above an `export`.**
+**Why "every block, not the exported slice".** Sizing a sweep by "blocks directly above an exported declaration" undercounts it by about 3x — which happened three times running while surveying `scripts/`: `acceptance-mutation/` was billed 12 files / 253 comment lines and came in at 14 / 950, `agent-doc-check/` 3 / 67 against 8 / 222, `ast-grep-rule-check/` 4 / 66 against 6 / 211. Measured over the 45 files `jsdoc-in-scripts` touched: **94 of 217 pre-sweep comment blocks, and 712 of 1838 comment lines (39%), sat directly above an `export`.** The other 61% were module headers, blocks above non-exported helpers, blocks above module-private constants, and in-body blocks — each of which still had to be read and ruled on.
 
 **The hook return-type table.** Measured cross-file on four probe pairs (eight files) the server had not read, hovering each action at a **destructured** call site:
 
@@ -133,7 +135,7 @@ Where the original is third-party there is no site at all, which is why `scripts
 
 ### Why the machine-checkable rule is narrow
 
-A presence-only "every export carries a doc" rule was proposed in the same pass and **rejected**, because it cannot tell whether a summary says anything and is satisfied by an empty `/** */`.
+A presence-only "every export carries a doc" rule was proposed in the same pass and **rejected**, because it cannot tell whether a summary says anything and is satisfied by an empty `/** */`. The rule that did land depends on `stopBy` for its precision; `ast-grep-rules.md` carries the matcher.
 
 ### A correction, kept because the mechanism is what a later reader reasons from
 
@@ -190,6 +192,36 @@ Read the consequence carefully, because it inverts the usual advice: the same-tr
 **Cross-tree misrouting.** Measured from a slice worktree: `hover` on the **relative** path `src/hooks/useCamera.ts` at 25:9 returned `const glide: ZoomGlideController` — which is what stands at that position in the **main checkout's** copy, and is not what stands there in the worktree's (a `[` inside a destructuring pattern, which the same position under an absolute path correctly reports as no symbol). A relative path that exists in **neither** tree errors cleanly (`File does not exist`, measured); a path that exists in **both** silently answers about the wrong one, and since the two copies agree everywhere the slice has not touched, that wrong answer is right most of the time.
 
 **Why `Bad line number` is not the diagnostic for a misroute.** Measured on the same pass, on a correct **absolute** path: a path naming a 128-line `src/components/LifeBoard.tsx` failed at line 120 with `lineStarts.length: 98`, and failed identically on retry — the server answering from a 98-line map for a file that is not 98 lines, a stale server copy rather than a misrouted path. A misroute between two copies of similar length raises it not at all.
+
+## Illustrations the shape passes dropped from the article
+
+`ste-shape-rules-on-doc-comments` shortened the article six times. Each pass removed examples rather than
+rules, and these were dropped without being moved here at the time. They are recorded now because an
+illustration is evidence, and evidence belongs on this side.
+
+**What `documentSymbol` actually returns.** Run on `src/scrollbars.ts` it returned
+`computeAxisScrollbarMetrics` along with `contentPxLeft`, `extentPxRight`, `thumbRatio` and the rest of
+that function's locals — which is the concrete form of the article's claim that it returns every
+top-level declaration plus the constants nested inside each one.
+
+**The model for rule 7's sidecar tier.** React's `useState` is it: terse type-level docs, with the
+best-practice material living elsewhere. That is what "keep a lighter overview in the JSDoc and move the
+depth into a Markdown file" was drawn from.
+
+**Where the silent-fallback trap is documented.** CLAUDE.md's note on the `typescript-lsp` plugin is the
+pointer Part 2 §5 used to carry: the plugin needs a global `npm install -g typescript-language-server
+typescript`, so `npm ci` alone does not reproduce it, which is why a role can fall back to `Grep`/`Read`
+without saying so.
+
+**Why `npm run build` belongs in the per-commit list.** `tsc -b` catches a broken comment block
+immediately — a `*/` terminated early inside prose is a syntax error, and the build is the fastest thing
+that reports it.
+
+**The named-return arm used to be an exhaustive roster.** It read "every hook in `src/hooks/` except the
+two below", naming `useCamera` and `usePatternPlacement` as the inferred pair. The shape pass replaced it
+with two examples. That is a strict improvement rather than a loss: an exhaustive present-tense roster of
+another directory's files is the form `engineering.md`'s claim discipline forbids, and it would have gone
+stale on the next hook added.
 
 ## The research record, rejections included
 
