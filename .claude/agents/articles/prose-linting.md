@@ -80,16 +80,31 @@ files nobody scoped it to.
 
 Two of these apply mechanically. Two are prompts to look. Know which you are holding.
 
-| rule                  | treat it as | act on a finding?                   |
-| --------------------- | ----------- | ----------------------------------- |
-| `STE.SentenceLength`  | mechanical  | yes — split the sentence            |
-| `STE.ProcedureLength` | a prompt    | only if the list item is a **step** |
-| `STE.OneInstruction`  | a prompt    | only if it chains two **actions**   |
-| `STE.PassiveVoice`    | a prompt    | only if a **rule** hides its actor  |
+| rule                  | treat it as | act on a finding?                       |
+| --------------------- | ----------- | --------------------------------------- |
+| `STE.SentenceLength`  | mechanical  | yes — split the sentence                |
+| `STE.Contractions`    | mechanical  | yes, unless the text is a **quotation** |
+| `STE.ProcedureLength` | a prompt    | only if the list item is a **step**     |
+| `STE.OneInstruction`  | a prompt    | only if it chains two **actions**       |
+| `STE.PassiveVoice`    | a prompt    | only if a **rule** hides its actor      |
 
 ### `STE.SentenceLength` — act on every finding
 
 25-word cap on a sentence. Split it. This is the one rule here a sweep can follow without judgement.
+
+### `STE.Contractions` — act on every finding except a quotation
+
+Expand it. "Do not" also carries more weight than "Don't" at the head of an instruction, so this rule
+tends to improve a heading rather than merely conform it.
+
+**One exempt class, and it is the use/mention distinction: a contraction that is quoted or discussed
+rather than used.** A contraction inside quoted prose belongs to the file you are quoting, and expanding
+it misquotes that file. A contraction named as an example — "'Do not' carries more weight than 'Don't'"
+— is the subject of the sentence, not its voice.
+
+This article is the live example, and carries three such findings that stand unfixed on purpose: two
+quoting `engineering.md`, one naming the word itself. **An article about a rule will trip that rule**, so
+expect this wherever prose-linting guidance discusses the token it governs.
 
 ### `STE.ProcedureLength` — act only on genuine steps
 

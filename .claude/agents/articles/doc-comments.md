@@ -339,7 +339,7 @@ Reach for `Read` when you must _change_ a module, not when you must _call_ one.
 Hover → the sidecar `.md` if the JSDoc points at one → the implementation. An agent that opens the body
 first has paid for all three.
 
-### 4. A hover that doesn't suffice is a finding, not an inconvenience
+### 4. A hover that does not suffice is a finding, not an inconvenience
 
 If you had to open the body to use the thing correctly, the interface comment is incomplete. Each role
 does something different with that:
@@ -360,7 +360,7 @@ only a signature is ambiguous: _no JSDoc here_, or _no server at all_.
 worthless. Report that, not that the codebase is undocumented. If a later slice ever strips that block,
 re-pin the probe on another documented export in the same pass rather than deleting it.
 
-### 6. Don't spend a hover on what the type already says
+### 6. Do not spend a hover on what the type already says
 
 The signature comes back either way. A hover earns its round-trip when there is prose behind it, so
 hovering a two-line predicate whose name is its contract is pure cost.

@@ -29,8 +29,8 @@ correction.
 | `Gerunds`         | no  |                            65 | volume; 941 corpus-wide, unread                        |
 | `Dictionary`      | no  |                             7 | not ASD's wordset — see below                          |
 | `Modals`          | no  |                             4 | would do damage — see below                            |
-| `NounClusters`    | no  |                             2 | untried                                                |
-| `Contractions`    | no  |                             2 | untried                                                |
+| `NounClusters`    | no  |                             2 | fails its own example — see below                      |
+| `Contractions`    | yes |                         3 → 1 | mechanical; the 1 left is a quotation                  |
 | `Ambiguity`       | no  |                             2 | slash token false-positives — see below                |
 | `Articles`        | no  |                             0 | nothing to learn here                                  |
 | `ParagraphLength` | no  |                             0 | nothing to learn here                                  |
@@ -38,6 +38,27 @@ correction.
 Corpus-wide counts across the 14 articles at the time of measurement: Gerunds 941, SentenceLength 799,
 PassiveVoice 592, ProcedureLength 166, Contractions 135, Dictionary 129, Modals 96, NounClusters 59,
 Ambiguity 58, ParagraphLength 41, OneInstruction 10, Articles 4.
+
+## The two tried on 2026-09-08 after the article landed
+
+**`STE.Contractions` — adopted.** Three findings across `doc-comments.md` and `prose-linting.md`. Two
+were headings and both improved on expansion: "A hover that doesn't suffice" and "Don't spend a hover"
+became "does not" and "Do not", which reads as more weight rather than more words at the head of an
+instruction. The third is a **quotation** of `engineering.md`'s text, where expanding would misquote the
+source; it stands unfixed and is written up as the rule's one exempt class. Note this is the same
+false-positive class that sank `STE.Modals` — a rule firing on prose this repo is citing rather than
+authoring.
+
+**`STE.NounClusters` — rejected, and the evidence is unusually clean.** It fired twice on
+`doc-comments.md`, on "Interface half → JSDoc above the declaration" and "TypeScript reads a JSDoc tag",
+neither of which contains a noun cluster a reader would stumble over. It then **failed to fire on the
+example in its own header**: a probe file containing "Replace the main landing gear door actuator before
+flight" produced no `NounClusters` finding, while `SentenceLength` and `PassiveVoice` both fired on the
+same file — so the file was genuinely linted and the silence is the rule's answer, not a skipped run.
+
+A rule that misses its own documented classic case while flagging sequences that are not clusters has
+inverted precision. Its four-consecutive-noun-tag matcher depends entirely on the POS tagger, which reads
+"landing" as a verb form and "reads" as a plural noun. Nothing about this corpus makes it work better.
 
 ## The three rejected on measurement
 
