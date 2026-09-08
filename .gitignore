@@ -54,3 +54,7 @@ stryker.log
 *.njsproj
 *.sln
 *.sw?
+
+# Vale's synced style package -- a downloaded artifact, not authored source.
+# `vale sync` refetches it, and .vale.ini pins the version so a refetch cannot drift.
+/.vale/

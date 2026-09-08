@@ -18,3 +18,7 @@ package-lock.json
 
 # ast-grep regenerates these; formatting them would churn on every `npm run ast-grep:test`
 rule-tests/__snapshots__/
+
+# Vale's synced style package: third-party YAML this repo does not author.
+# Gitignoring is not sufficient -- Prettier does not consult .gitignore.
+.vale
