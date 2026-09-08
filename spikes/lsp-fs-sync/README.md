@@ -19,7 +19,13 @@ tree, for the life of the session. Elapsed time, `cat`, the `Read` tool and
 document's truth is now managed by the client and the server must not try to read the
 document's truth using the document's Uri." A correct server is _required_ to ignore the
 disk. So the remedy has to come from the client side — and since we cannot modify the
-client, it comes from a shim wearing the server's clothes.
+client, it comes from a shim wearing the server's clothes. The protocol's own remedies —
+`workspace/didChangeWatchedFiles` for closed files, a buffer reload for open ones — both
+live in the client too, and the same failure class is open against other clients
+(`zed-industries/zed#48439`).
+
+The full ruling, including the arms that refuted the two earlier explanations, is in
+`ideas/candidates/one-language-server-answers-for-every-worktree.md`.
 
 ## The design
 
@@ -122,6 +128,40 @@ Moving to `scripts/lsp-fs-sync/` means a `run.ts` shell over pure modules, unit 
 under `npm run test:scripts`, CRAP ≤ 6, `dry4ts:scripts`, and mutation testing — the
 standard freight. The framing decision first, though, is whether this belongs in this
 repo at all: it fixes a harness-wide problem, not a Game-of-Life one, so the natural home
-may be upstream rather than here. The alternative already measured and available is
-purely conventional — a trivial `Edit` re-syncs the whole file from disk, so a role can
-refresh deliberately — which costs nothing to adopt and nothing to maintain.
+may be upstream rather than here.
+
+## The two alternatives, and why the cheap one is not as cheap as it looks
+
+**A trivial `Edit` re-syncs the file** — measured, and it re-syncs the whole file from
+disk, so the edit need not touch the region being hovered. An earlier draft of this file
+called that free to adopt. **That is withdrawn.** Applying it correctly requires knowing
+which files are stale, and only half of that set is knowable: `git diff --name-only`
+gives what changed on disk, while nothing exposes which files the session has enrolled
+with the server. It is bounded — measured, a `Read` does **not** enrol a file, so the set
+is only files that have had an LSP operation — but it is invisible and accumulates
+silently all session. And **a hook cannot close the gap**, because the refresh has to go
+through `Edit`/`Write` and hooks run shell commands with no tool access. Its failure is
+silent and the wrong answer is usually right, which is the bug's own worst property.
+
+**Killing the session's server** clears every snapshot and needs no knowledge of the
+stale set at all. Measured: a file staled at `BRAVO` against a disk holding `CHARLIE`
+returned `CHARLIE` on the first hover after the kill, and the harness restarted the
+server transparently. A server is a child of its own session's `claude` (confirmed by
+`ppid`), so a `PostToolUse` hook can scope the kill to its own session.
+
+|                           | needs the stale set?         | hook-automatable?               | cost                                       |
+| ------------------------- | ---------------------------- | ------------------------------- | ------------------------------------------ |
+| trivial `Edit` per file   | **yes**, and it is invisible | **no** — hooks lack tool access | free, but silent whenever a file is missed |
+| kill the session's server | no                           | yes, scoped by `ppid`           | discards the project index; cold start     |
+| this proxy                | no                           | n/a — always on                 | a permanent moving part                    |
+
+Restarting is the canonical first-class remedy in every editor (VS Code's
+`TypeScript: Restart TS Server`, Neovim's `:lsp restart` per `neovim/neovim#13946`), and
+Microsoft tracks this exact failure class (`microsoft/vscode#7790`,
+`microsoft/TypeScript#44066`). But **automating** it has essentially no precedent — the
+one auto-restart extension, `rbuckton/tsserver-live-reload`, watches `tsserver.js` itself
+rather than project state — and the documented restart cost (`microsoft/vscode#206297`
+asks for a syntax-server-only restart to avoid a full one's downtime) is why it stays
+manual. One asymmetry is worth keeping in view: in VS Code the staleness self-heals in
+about two minutes, so restarting there is impatience; here it never self-heals, so the
+same action is correctness.
