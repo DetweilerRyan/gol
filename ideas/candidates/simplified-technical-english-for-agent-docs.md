@@ -394,7 +394,61 @@ The mainstream route, and the one to prefer:
 | [Vale](https://vale.sh) + [`Syntaf/vale-llm-slop`](https://github.com/Syntaf/vale-llm-slop)                                                              | Mature Go prose linter with a package system; the package adds an `STE` style and a `Slop` style | **Best gate candidate.** One binary, no runtime added, Markdown-aware, configured by `.vale.ini` with styles scoped per file glob — which is exactly the instruction-surface/rationale split the Answer needs. Package read 2026-09-08 at 25 stars, 6 commits: early-stage |
 | [`jyooi/agent-simple-english`](https://github.com/jyooi/agent-simple-english/)                                                                           | TypeScript + Effect STE linter, 13 rules, Claude Code plugin + CLI                               | Explicitly aimed at coding-agent instructions and ships as a plugin, so it pays no `scripts/` gate freight. Needs Bun, which is a new runtime. Read 2026-09-08 at 9 stars, 58 commits                                                                                      |
 | [`stuffbucket/vale`](https://github.com/stuffbucket/vale/tree/main/)                                                                                     | Unrelated pure-Go STE linter and MCP server that reuses the Vale name                            | **Name collision — this is not vale.sh.** Configurable 20/25-word caps, `.vale-ste.yml`. Read 2026-09-08 at 6 stars, 38 commits. The MCP server is a second integration path                                                                                               |
-| [`danyuchn/asd-ste100-skill`](https://github.com/danyuchn/asd-ste100-skill), [`1fc0nfig/ste-writing`](https://github.com/1fc0nfig/ste-writing/tree/main) | STE rules as Claude Code skills, the second with a deterministic Python linter                   | Rewriting aids rather than gates; useful while doing step 3                                                                                                                                                                                                                |
+| [`danyuchn/asd-ste100-skill`](https://github.com/danyuchn/asd-ste100-skill), [`1fc0nfig/ste-writing`](https://github.com/1fc0nfig/ste-writing/tree/main) | STE rules as Claude Code skills, the second with a deterministic Python linter                   | Rewriting aids used while performing the rewrite, not gates                                                                                                                                                                                                                |
+
+##### Which tool applies the shape rules, and when
+
+**Answer 1's pilot uses no STE tool at all.** Separating rationale from instruction is a judgement about
+register made by reading, and the classifier that ranked the files is explicitly not good enough to
+decide which blocks move (see the Situation's validation note). No linter helps there.
+
+**Answer 2's pilot uses Vale, one rule, report-only, scoped to instruction files.** Concretely: the
+`STE` style from `Syntaf/vale-llm-slop`, with every rule disabled except sentence length. Four reasons,
+in descending weight:
+
+1. **Report-only is an existing concept here, so this adds no new one.** `ast-grep`, `gherkin-dry` and
+   `halstead4ts` are all report-only, and `engineering.md` already carries the shared convention for
+   reading such a checker — read the output, not the exit code. A gate is a later decision.
+2. **Vale parses Markdown into an AST and lints prose nodes only**, skipping code blocks, inline code
+   and URLs. That is not a nicety on this corpus: the sentence measurement in this candidate had to
+   collapse code spans by hand first, and a line-based tool would score the command list as prose.
+3. **One rule is what keeps the first run actionable.** 65% of sentences already exceed 25 words, so
+   enabling the full style produces roughly 1,300 findings on day one — the "checker whose findings
+   nobody has budgeted to fix" this candidate warns about, delivered against itself.
+4. **`.vale.ini` can express the instruction/sidecar split directly**, which no other candidate tool
+   was shown to do.
+
+**The configuration sketch, and the two facts about it worth knowing before writing one.** Sections
+**stack in the order written**, and a file applies every section whose glob matches it, with the later
+section winning per key — except `BasedOnStyles`, which **replaces rather than adjusts**. That pair is
+what makes the sidecar exemption a two-line config change rather than a maintained file list:
+
+```ini
+StylesPath = .vale
+MinAlertLevel = suggestion
+
+[.claude/agents/**/*.md]
+BasedOnStyles = Vale, STE
+
+[**/*.rationale.md]
+BasedOnStyles = Vale
+```
+
+The second section strips the `STE` style back off the sidecars, so rationale keeps the register STE has
+no vocabulary for. **Read the rule names out of the package rather than from this sketch** — they are
+not verified here, and only the sentence-length rule should be left on for the pilot.
+
+**One glob hazard, and this repo has already met it from the other side.** Vale's `*` **crosses `/`**:
+its own documentation gives `docs/*.md` matching `docs/sub/nested.md`. That is ast-grep's behaviour, not
+`globSync`'s — the exact asymmetry CLAUDE.md documents under `ast-grep-rule-check`, where `globSync`'s
+`*` stops at a separator and ast-grep's does not. A glob written on the `globSync` intuition
+over-matches here rather than under-matching, so it fails **open**: it silently lints files nobody
+scoped it to, which on this corpus means the sidecars.
+
+**The skills stay, in a different job.** `danyuchn/asd-ste100-skill` and `1fc0nfig/ste-writing` are
+rewriting aids used _while_ performing Answer 2's rewrite. That is not the same thing as a gate, and
+neither replaces the other: the skill shapes prose as it is written, the linter reports on prose after
+it lands.
 
 ##### The dictionary question, asked specifically
 
@@ -420,6 +474,55 @@ What does exist, in descending order of usefulness here:
   style guide rather than a controlled allowlist, and a style guide fails **open** on a word nobody
   listed. Note also that `vale-llm-slop` is **not** in this registry; it installs by direct URL.
 
+###### The process for adding a term
+
+**The mechanism, verified against Vale's own documentation.** A vocabulary is a directory at
+`<StylesPath>/config/vocabularies/<name>/` holding two files. Entries are one per line, **case-sensitive
+regular expressions**, with `# ` starting a comment. `accept.txt` does two things at once: it adds the
+term to the exception list of every style in `BasedOnStyles`, **and** it populates a `Vale.Terms`
+substitution rule that forces every occurrence to match the entry's exact casing. `reject.txt`
+populates `Vale.Avoid`, an existence rule that flags **all** occurrences as errors.
+
+**That casing behaviour is a free win this repo has explicitly asked for.** CLAUDE.md's accessible-name
+convention lists the shipped control labels and says of them, in its own words, that the rule "is not
+machine-checked, and it has carried a false universal twice" — `Appearance` was omitted outright and
+`Next Generation` shipped in title case. Those names in `accept.txt` make a casing drift a Vale finding.
+It is not a complete check of the convention, since Vale sees the docs rather than `src/`, but it is the
+first mechanical grip anything has had on it.
+
+**Four rules for adding a term, each chosen so the entry is checkable rather than a matter of taste:**
+
+1. **`accept.txt` takes technical names that exist in the tree** — a filename, an npm script, a role, a
+   config key, a tool, or an authored accessible name. STE's Technical Names rule is the licence, and
+   "does it resolve against the repo" is the test. This deliberately mirrors `reference-check`, which
+   already resolves filename-shaped tokens against `git ls-files`.
+2. **`reject.txt` takes a term only once it has actually appeared, and only with a replacement.**
+   Never speculatively: `Vale.Avoid` fires at error severity on every occurrence, so a guessed entry
+   reds the gate against prose nobody has written. This is the blocklist direction, and it is bounded
+   here precisely because the allowlist carries the general case.
+3. **The entry lands in the same commit as the prose that first needs it**, with the justification in
+   the commit body. The repo's existing habit for `reference-check` and `ast-grep-rule-check` opt-outs
+   is a reason required at the site; this is the same discipline one file over.
+4. **A stale entry is a failure, not a pass** — an `accept.txt` term matching nothing live in the corpus
+   is removed. This is not a new idea to invent: `reference-check` already implements exactly it as
+   `stale-allow-marker`, where a marker whose token appears nowhere else live fails in its own right.
+   The check belongs in `agent-doc-check`, which already parses `.claude/**`, rather than in a new
+   `scripts/` program paying full gate freight.
+
+**Two hazards that follow from entries being case-sensitive regexes.** A bare common word must never be
+added — `slice` in `accept.txt` would force lowercase at sentence start, across a corpus that uses the
+word constantly. Where casing genuinely varies, write the entry as a regex (`(?i)…`) deliberately rather
+than adding two entries and discovering later that only one of them was enforcing anything.
+
+**Ownership: `architect`.** It already owns `rules/`, the repo's other surface where a mechanical
+invariant is authored and paired with a fixture, and it is the role whose charter already includes
+narrowing or widening such a rule. The alternative — the orchestrating seat, which authors most of this
+prose — is rejected on the record for the reason `orchestrator-prose-has-no-reviewer` gives: that seat
+has no reviewer, and handing it one more unreviewed surface repeats a gap this repo has already
+measured. `product` keeps the **ubiquitous language** unchanged; that vocabulary is the product's domain
+and is authoritative over `features/**`, whereas this one is the toolchain's and governs `.claude/**`.
+Two vocabularies, two owners, two surfaces, and they do not overlap.
+
 **The seed for a project list already exists in this repo and is not hypothetical.** `product` owns
 "the ubiquitous language", `.gherkin-lintrc`'s `no-restricted-patterns` is a hand-maintained
 vocabulary control over `features/**`, and `CLAUDE.md`'s compact module map names the domain nouns.
@@ -432,10 +535,7 @@ and the Boeing Simplified English Checker. They are the only tier that licenses 
 Out of scope for a docs slice on a hobby repo, recorded so the rejection is on the record rather than
 an oversight.
 
-Every open tool above states it approximates ASD-STE100 and is not ASD-certified. **The lightest first
-step is a skill, not a gate**: it makes the rules available while writing, which is where this repo's
-own evidence says prose defects are actually caught, without adding a checker whose findings nobody has
-budgeted to fix. Vale is the thing to reach for _if_ the step-3 spike shows the rules earn their keep.
+Every open tool above states it approximates ASD-STE100 and is not ASD-certified.
 
 ## Touches
 
@@ -447,7 +547,16 @@ routing test that does not name it will keep sending rationale back into the ins
 
 **Answer 2 (the shape rules)** touches `.claude/agents/articles/engineering.md` (new shape-rules
 section), `state-flow.md` and `architecture.md` (the two demonstration paragraphs), and `CLAUDE.md`'s
-conventions list (one pointer sentence). If a linter is adopted, `.vale.ini` and `.claude/settings.json`.
+conventions list (one pointer sentence). Its pilot adds `.vale.ini` and a `.vale/` styles directory
+holding the vendored `STE` style and `config/vocabularies/<name>/{accept,reject}.txt` — plus a
+`.prettierignore` and `.gitignore` decision for whatever Vale downloads into that directory, since a
+vendored style is third-party text this repo does not author, the same status `src/catalyst/` already
+has. Vale itself is a Go binary, not an npm dependency, so it does not reproduce from `npm ci` — the
+same footgun CLAUDE.md already documents for the `typescript-language-server` install. If the
+vocabulary staleness check is built, `scripts/agent-doc-check/`. If the alternative route is taken and
+`jyooi/agent-simple-english` is adopted as a Claude Code plugin instead of Vale as a binary, that is
+`.claude/settings.json` rather than any of the above — a different integration surface, which is part
+of why the choice is worth making deliberately rather than drifting into.
 
 **Gate implications, and one of them is a real constraint on Answer 1.** `npm run agent-doc-check`'s
 check 5 requires every `rules/*.yml` to be named in `ast-grep-rules.md` specifically — the path is
@@ -494,8 +603,8 @@ so it is a multi-slice programme rather than one slice, and the pilot should lan
 - **Is the token cost a benefit or a cost?** The Situation measures the tax precisely — 136,190 bytes
   paid unconditionally by every participant on `bac96c4`, and `agent-output-verbosity` frames the same
   cost for gate stdout. But STE forbids omitting articles and prefers a repeated noun to a pronoun, so
-  it may well make the corpus _longer_. Unmeasured in both directions; measure byte delta on the step-3
-  demonstration before claiming either. **If it comes back longer, this candidate trades size for
+  it may well make the corpus _longer_. Unmeasured in both directions; measure byte delta on Answer 2's
+  pilot before claiming either. **If it comes back longer, this candidate trades size for
   parseability and should say so rather than claiming both.**
 - **Does the split hold, or does rationale grow back into the instruction files?** The routing-index
   split is the cautionary precedent measured in the Complication: it worked, and the corpus resumed
