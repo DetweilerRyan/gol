@@ -1,82 +1,266 @@
 # Article: Mutation Testing (Stryker)
 
-**Audience:** cleaner, hardener, the orchestrating session - **Read when:** before ruling any survivor equivalent, at hardener stage 5, or when granting a mutation-invariant merge exemption.
+**Audience:** cleaner, hardener, the orchestrating session
 
-> Extracted verbatim from CLAUDE.md @ b5e333e, lines 57-99, 128, 178, 180, 182, 183, 392-399. No prose was edited in the extracting commit; only the common leading indent of a fragment lifted out of a nested list was removed.
+**Read when:**
 
-**Mutation testing runs incrementally.** `npm run test:mutation` still covers the whole `mutate` list, but Stryker caches results and re-tests only the mutants whose source _or covering tests_ changed — a full run over `src/` took ~10 minutes when that was measured — with `features/` still in the sandbox, which it no longer is (see the sandbox paragraph below); no replacement figure is recorded here, since `hardener`'s next `npm run test:mutation:full` is the thing that produces a current one. An incremental run tracks the size of the diff — it used to do so only **above a structural floor the next paragraph describes**, and that floor is gone as of `pin-stryker-seed-to-unblind-the-mutation-gate`. This matters because Stryker kills a mutant when _any_ test fails, so a mutant in one module is often killed by a test in another; scoping a run to changed source files alone would be blind to "a test moved, and now a mutant in an untouched file survives," whereas incremental mode accounts for it. **Stryker misreports a mutant's fate in three distinct, measured ways, and every one of them needs a human to resolve.** They share a direction — each makes the tool report a mutant as _not killed_ when it is, so the score falls and someone investigates; none has ever inflated a score — and they share a remedy: hand-apply the mutant and run the unfiltered suite, which is the only verdict this repo treats as authoritative. Read a survivor list as a list of candidates.
+- before ruling any survivor equivalent
+- at `hardener` stage 5
+- when granting a mutation-invariant merge exemption
 
-1. **Per-test attribution.** A non-equivalent mutant is reported `Survived` with its actual killers listed as having run (measured in `live-cell-store`; the note lives above `getBoundsSnapshot` in `src/liveCellStore.ts`). Its mirror image is the first-kill-wins `killedBy` attribution described below, which is a different anomaly with the same root: what Stryker says about _which_ test did the work is not a coverage fact.
-2. **Incremental reuse of a static mutant.** Measured by `hardener` in `collapse-dead-cell-layer`: five hand-verified-dead **static** mutants came back `Survived` because `IncrementalDiffer` reused cached results even though the covering test file had changed. So **an incremental run is not authoritative for a static mutant after a test-side-only edit** — a `:full` trigger this file did not previously list, and the case where "evidence about the diff, not about the tree" is widest.
-3. **A mutant that crashes the reporter.** Measured by `cleaner` in the same slice: mutating `useGridPointerGestures.ts`'s `handlers: {...}` to `handlers: false` breaks Stryker's own error serialization (`Cannot convert object to primitive value`) and scores **RuntimeError**; hand-applied, it fails **33 tests**. **A second site was measured in `wheel-zoom-ignores-magnitude-and-pinch`, so read this as a class rather than as one known mutant**: `Scrollbar.tsx:47`'s `!drag` → `false` scores `RuntimeError` with the identical reason string, and hand-applying it reds `Scrollbar.test.tsx` with a real `TypeError` — a genuine kill mis-scored, which Stryker then excludes from the denominator. The `useGridPointerGestures.ts` one did **not** recur on that run, so do not expect a fixed site list; expect the reason string. A `RuntimeError` row is not evidence about the code at all — expect this one to recur on the next `test:mutation:full` and resolve it the same way rather than treating it as new.
+> The measurements behind every rule here are in `mutation-testing.rationale.md`: the slices each was
+> found in, the figures, the source files read, and the readings later corrected. Read it when you are
+> **changing** a rule below, never in order to follow one.
 
-**A `NoCoverage` mutant cannot be ruled equivalent, and this repo got that wrong five times in one slice before measuring it.** The demonstration rule in `.claude/agents/cleaner.md` says to hand-apply a survivor and run the unfiltered suite; green means equivalent. **That inference is only valid for a mutant the suite actually reaches.** For a `NoCoverage` mutant the suite is green because nothing drives the code at all, so the run distinguishes "this mutation cannot change behaviour" from "nothing exercises this yet" — and those need opposite responses. Measured in `collapse-dead-cell-layer`: `Grid.tsx`'s `updateHovered` carried five survivors recorded as hand-verified equivalent and re-confirmed by three roles across four trees. **Four of the five were `NoCoverage`, and four were not equivalent** — with `prev.x === x` forced true, a move changing x but not y returns `prev` and renders prev's stale x. Two died to a later test that panned only in y; two needed an x-axis case written for them. One genuine equivalent remains. So: **read the `NoCoverage` column before ruling on a survivor. If a mutant is uncovered, the finding is the coverage gap, and equivalence is not yet a question that can be asked.** This is also why a scoped scan is a weaker instrument than it looks — `NoCoverage` is reported per run, so a mutant uncovered in a narrow scan may be covered in a full one, and the mid-slice figure a role hands forward is not the figure the gate will produce.
+## Read a survivor list as a list of candidates
 
-**Reaching a mutant is necessary but not sufficient, and the second half of that has its own measured instance: a _covered_ mutant can still be undiscriminated.** The paragraph above corrects the demonstration rule for the mutant nothing runs; this one corrects it for the mutant every test runs and no test distinguishes. Coverage reports that the line executed; equivalence needs a test that executes it **in a state where the mutated and original programs disagree**, and nothing in Stryker's output reports whether the suite ever builds such a state. Measured in `stable-hook-identities`: `useCamera.ts`'s `cameraRef` sync effect emptied to `useEffect(() => {})` is covered, and hand-applied it left the whole unfiltered suite **green at 908** — because no test in the repo panned the camera before calling `zoomInCentered`, and a live ref and one frozen at mount can only disagree once the camera has actually moved. `cleaner` wrote the missing case instead of recording an equivalence; on the landed tree the same hand-applied mutant reds **exactly 1 of 909** (re-measured by `architect` at REVIEW, whole suite, no filter), that one case. So before ruling a **covered** survivor equivalent, name the input or state at which the two programs would differ, then ask whether any test constructs it — if you can name one and no test builds it, the finding is a missing case, not an equivalence, and the honest report is "unverified" rather than "equivalent". Two practical notes from that instance. The discriminating case usually belongs as another row on the test that already covers the line rather than as a new test — a standalone version of this one tripped `dry4ts` at 0.83 similarity, and it landed as a second `it.each` row. And the mutants that genuinely _are_ equivalent tend to come with a mechanism rather than only a green run: the survivor this same slice ruled equivalent (`usePatternPlacement.ts`'s `}, [])` replaced by a single-element literal) is argued from React comparing deps by per-index `Object.is`, which is checkable without running anything, and the green run merely agrees with it.
+`npm run test:mutation` covers the whole `mutate` list, but Stryker caches results and re-tests only the
+mutants whose source _or covering tests_ changed. A mutant in one module is often killed by a test in
+another. That is why incremental mode accounts for a moved test, and a source-file-scoped run would
+not.
 
-**The three above are a tool lying about a mutant. There is a fourth failure with the same signature and no tool involved at all: a shell pipeline eating the exit status of the thing being measured.** `cmd | tail` exits with `tail`'s status, `cmd || echo ...` exits 0 by construction, and `set -o pipefail` is not on by default in a non-interactive shell — so the wrapper reports success and the answer you got is about the wrapper. Three measured instances in this repo, all in the same direction, **all of them making a red gate or a failed run read as green**: `hardener` reported `npm run dry4ts` passing through a `| tail` (it was exiting **3** on 11 findings, and had been for the length of a slice — `.dry4tsrc.json` carries `failOnFound: true`, which is why that command is now labelled a gate in CLAUDE.md's Commands list); an orchestrating session's `npm run test:perf` had its nonzero exit swallowed by a trailing `|| echo`, leaving the **previous** run's `reports/perf/latest.md` in place, which reads exactly like a fresh successful run of the current tree; and a `grep | sed || echo` chain did the same thing earlier in the project's history.
+**Stryker misreports a mutant's fate in three measured ways, and every one needs a human to resolve.**
+They share a direction: each reports a mutant as _not killed_ when it is. The score falls and someone
+investigates. None has ever inflated a score. They share a remedy: **hand-apply the mutant and run the
+unfiltered suite. That is the only verdict this repo treats as authoritative.**
 
-**The remedy is to measure the tool, not the pipeline**: redirect to a file and read `$?` on the very next line (`npm run dry4ts > out.log 2>&1; echo "EXIT=$?"`), then inspect the file. Anything you add after the command — a pipe, an `||`, a `&&` — is a second program whose exit status is the one you will end up quoting. This matters most for exactly the commands whose whole purpose is to fail: `dry4ts`, `ast-grep:rules`, `agent-doc-check`, `gherkin-lint`, `build`. And note what the class shares with the three Stryker modes above — **the command reported success and the thing you asked about never ran** — which is why the same standing instruction answers all four: a green line is a claim, and a claim is worth what the command that produced it measured.
+1. **Per-test attribution.** A non-equivalent mutant is reported `Survived` with its actual killers
+   listed as having run. What Stryker says about _which_ test did the work is not a coverage fact.
+2. **Incremental reuse of a static mutant.** An incremental run **is not authoritative for a static
+   mutant after a test-side-only edit** — cached results are reused even though the covering test file
+   changed. This is a `:full` trigger.
+3. **A mutant that crashes the reporter.** It scores `RuntimeError`, which is not evidence about the code
+   at all. **Expect the reason string `Cannot convert object to primitive value`, not a fixed site
+   list.** Resolve it the same way each time rather than treating it as new.
 
-Reach for `npm run test:mutation:full` whenever the cache's file-level assumptions break — `stryker.config.json` changed in either of the two keys that decide what the run sees (`mutate`, which picks the files to mutate, **or `ignorePatterns`, which picks the files that reach the sandbox at all** and therefore which tests exist to kill anything), a module was split or renamed, or test files were moved/deleted rather than edited in place — **or a module changed that other mutated files import, even when neither those files nor their tests changed** — and prefer it when genuinely unsure, since a false-clean score is worse than a slow one.
+### A `NoCoverage` mutant cannot be ruled equivalent
 
-**That last trigger is the one nothing announces, and it is the reason the cache does _not_ simply fail safe.** `IncrementalDiffer` decides reuse per mutant from three things and no others (`node_modules/@stryker-mutator/core/dist/src/mutants/incremental-differ.js`, `mutantCanBeReused`, read on 10.0.0): whether the mutant still exists after a text diff of its own file, whether the test that killed it still exists unchanged after a text diff of _that test's_ file (`testsDiff.get(killingTest) === 'same'`), and — for a mutant that was not killed — whether it gained a new covering test. **There is no dependency-graph analysis anywhere in the class**; the only imports it has are `path`, `diff-match-patch` and its own reporting helpers. So when `zoomGlide.ts` changes, every cached result for `useZoomGlide.ts` — which imports it — is reused wholesale, because neither `useZoomGlide.ts` nor `useZoomGlide.test.ts` has a byte different in it. **The exposure is bidirectional, and one direction is the dangerous one**: a cached `Killed` is reused even if the dependency change made that test stop killing, reporting the score too _high_; a cached `Survived` is reused even if the change made some test start killing, reporting it too _low_. (Note also the `!testCoverage.hasCoverage` early return above all of that, which reuses everything — inapplicable here, since this repo runs `coverageAnalysis: "perTest"`, but it bounds the claim.)
+`cleaner.md`'s demonstration rule says to hand-apply a survivor and run the unfiltered suite; green means
+equivalent. **That inference is only valid for a mutant the suite actually reaches.** For a `NoCoverage`
+mutant the suite is green because nothing drives the code. So the run cannot distinguish "this mutation
+cannot change behaviour" from "nothing exercises this yet", and those need opposite responses.
 
-Found the way this file keeps insisting things be found: `hardener` **overrode an orchestrator instruction to run incrementally** on `smooth-zoom-transitions`' adjudicate fix, which changed exactly one function in `zoomGlide.ts`. Its full run then came back byte-identical to the pre-fix one, survivor identities included — so on that particular diff the cache _would_ have been right, because the behaviour change sat in a window no test reaches. Read that as the sharpest possible statement of the problem rather than as a reprieve: being right is something the full run **verified**, and an incremental run would have **asserted**. The two are indistinguishable from the output.
+**Read the `NoCoverage` column before ruling on a survivor.** If a mutant is uncovered, the finding is
+the coverage gap, and equivalence is not yet a question that can be asked.
 
-**The `@fast-check/vitest` seed-in-the-title problem was a correctness bug in the mutation gate first and a cache cost second. `pin-stryker-seed-to-unblind-the-mutation-gate` fixed both.** This paragraph is kept rather than deleted because the mechanism is the only written account of how a property test could be green in `npm run test:property` and invisible to Stryker at the same time. The plugin interpolates the run's seed into the test _title_ (`… (with seed=2041793899)`), unconditionally and with no option to suppress it (measured in `node_modules/@fast-check/vitest/lib/vitest-fast-check.js` — the only way to stabilize the title is to pin the seed), while `@stryker-mutator/vitest-runner` filters each mutant run with a `testNamePattern` built from the **dry run's** test names, and Stryker's `IncrementalDiffer` matches cached results by test name too. One cause, two consequences. **Correctness**: the two titles are drawn in different processes, so they never matched, every property test was filtered out of every mutant run, and a filtered test produces no result at all (`vitest-test-runner.js`'s `.filter((test) => test.result)`) — the property body never executed against a single mutant, and the outcome read as `Survived` rather than as an error. **Cache**: every property test also looked brand-new on every run and invalidated the ~135 mutants they covered regardless of the diff.
+This is also why a scoped scan is weaker than it looks. `NoCoverage` is reported per run, so a mutant
+uncovered in a narrow scan may be covered in a full one. A mid-slice figure is not the figure the gate
+will produce.
 
-`fast-check-stryker-seed.ts` pins the seed to `424242` when and only when `'__stryker__' in globalThis`, through two `setupFiles` entries (`vite.config.ts`'s `property` project and `vitest.scripts.config.ts`, which share no setup path) — `rules/no-fast-check-outside-property-file-ts.yml` / `-tsx` is what keeps a property from being declared where neither entry reaches. **The correctness half needed a metric nobody had, and the obvious one is a trap: count kills whose _killer's own title carries a seed marker_, not kills whose killer's _filename_ ends in `.property.test.ts`.** The filename count reports 32 kills even in the unpinned control, because a `*.property.test.ts` file also holds deterministic `it.each` twins whose titles are stable and which were killing all along. By the title filter, on a 10-file control: killed+timeout is **607 in both arms** while seed-bearing kills go **0 → 215**. Over the whole pinned run there are **420** seed-bearing kills across 14 property files (`cache.property` 106, `patternLibrary.property` 99, `liveCellSeed.property` 48, `is-deep-equal.property` 42, `liveCellStore.property` 41, `gameOfLife.property` 24, …), against **0** unpinned. Engagement is separately checkable without any diff at all, which is worth doing because a null survivor diff cannot distinguish "nothing was wrong" from "the pin never fired": `reports/stryker-incremental.json` carries 103 seed markers, all `424242` with no second seed, and `reports/mutation/scripts.html`'s 654 test titles carry 5, likewise all `424242`.
+### Reaching a mutant is necessary but not sufficient
 
-**The survivor set did not move, and that is a result rather than a disappointment.** Byte-identical at mutant granularity on both scopes — `src/` 98.71% / 17 survivors, `scripts/` 98.83% / 23, all 19 entries of the 10-file control including both RuntimeErrors. So there were **no false survivors**: every prior equivalence ruling was correct, but each had been correct while resting on a gate that could not see the property layer, and they are now confirmed on a sound basis. No re-audit slice is owed. Two things this does **not** license. First, the 420 are entirely **first-kill-wins re-attribution** — the unpinned arm _is_ the "property layer absent from the gate" arm, and it killed the same mutants, so **on this tree the property layer contributes zero mutants to either mutation score**. That is a statement about redundancy on one tree at one seed, not about the layer's worth: property tests earn their place by finding defects while a module is being written, and `architecture.md`'s `scrollbars.ts` lesson is that a green, correct property can coexist with a real bug in what a caller passes it — neither of which a mutation score measures. Second, the comparison is a **lower bound**: a pinned run sees one frozen draw, so "no mutant changed fate at seed 424242" is not "no mutant could".
+A **covered** mutant can still be undiscriminated. Coverage reports that the line executed. Equivalence
+needs a test that executes it **in a state where the mutated and original programs disagree**. Nothing in
+Stryker's output says whether the suite ever builds one.
 
-**The cache floor collapsed completely, as the side effect it was designed to be rather than the purpose.** A warm `npm run test:mutation` on an unchanged tree, immediately after a full run, now reports **`1323 of 1323 mutant result(s) are reused`, 0 re-tested, 24s** (26s wall) — against the pre-pin `1171 of 1306` and ~3m45s. **Those totals are the tree that run was taken on, not this one.** 1,323 was the mutant count when the cache-floor figure was measured and 1,306 when the older one was; the current tree is **1,658** (measured by `hardener`'s `npm run test:mutation:full` at `slice/stable-hook-identities`, 98.61%, 0 NoCoverage). The growth is intervening slices adding modules, not a configuration change. **The 24s warm-reuse figure above has not been re-measured against 1,658** — do not quote it forward as a current cost; only a suspiciously _small_ mutant count would signal something wrong. The older test-side figures (310 of 383 invalidated cached tests carrying a `with seed=` marker) were additionally measured with `features/` still in Stryker's sandbox, and are left as the history they are rather than adjusted to a number nobody ran. As a _cache_ effect the old behaviour failed **safe** — it re-tested more than needed and never falsely reused a stale result, and three runs on an identical tree gave byte-identical totals — which is exactly why it survived as long as it did while the correctness half never announced itself at all. **Read that fails-safe clause as a statement about the seed churn and nothing wider.** It says the churn only ever over-invalidated; it is _not_ a property of incremental mode, which does falsely reuse stale results across a dependency edge — see the trigger list above, where the mechanism and the `:full` trigger it implies are written out.
+**Before ruling a covered survivor equivalent, name the input or state at which the two programs would
+differ, then ask whether any test constructs it.** If you can name one and no test builds it, the finding
+is a missing case rather than an equivalence. The honest report is then "unverified".
 
-**How the correctness half above was found, and why it is written down twice.** This paragraph and the two below it are `scripts-mutation-survivors-untriaged`'s discovery record, kept in their own right: they are the evidence that made the fix a priority, and two of their findings (the execution trace, and `coverageAnalysis: off` being inert with this runner) are about Stryker rather than about the seed and outlive it. Until that slice, the paragraph above stopped at the cache reasoning and closed on a sentence — "this is a cost, not a correctness problem, and no reported score has ever been wrong because of it" — that **was false, in the dangerous direction**. The cache reasoning itself was unaffected and stands; what that slice found was a _second, independent_ consequence of the same seed-in-the-title fact. **The seed instability manufactured false survivors**, by the mechanism the paragraph above now describes in full — so until the pin landed, a mutant whose only killer was a property test was reported `Survived` no matter how reliably hand-applying it redded that property. (The eventual full-run measurement found no such mutant on this tree: every one the property layer could kill was already being killed by a unit test. That was not knowable in advance, and it does not make the blindness benign — it makes every equivalence ruling taken under it lucky rather than sound.)
+Two practical notes:
 
-Measured three ways, all agreeing. Two are about `analyze.ts`'s `.sort()` mutant itself: `hardener`'s A/B on that one mutant scoped alone, same config both arms — **seed free → Survived (50.00%); seed pinned via `fc.configureGlobal` → Killed (100.00%)** — and hand-applying it, which reds the property **30 runs out of 30**, so "the suite kills it" and "the gate cannot" are simultaneously true. The third is a throwaway **replica** of that shape rather than the mutant itself: a two-line module, one seed-blind unit test, one property that is its only real killer. It reproduced the survival and added the execution trace — instrumenting the property body to append the active mutant id shows **100 executions in the dry run and zero against any mutant**, while the unit test runs against every one. (Trace it in the body, not at module scope: vitest evaluates a module once per worker rather than once per run, so a module-scope marker reads as "never ran" whatever happens. That artifact cost a measurement here.)
+- **The discriminating case usually belongs as another row on the test that already covers the line.**
+  A standalone version risks tripping `dry4ts`.
+- **A genuine equivalence tends to come with a mechanism, not only a green run.** If you can argue it
+  from the language or the framework's own semantics, the green run merely agrees with you.
 
-**`coverageAnalysis: off` does not escape it, and the reason is worth knowing before anyone reaches for that lever.** The replica probe's mutant survived in every arm tried — `perTest`, `off` and `all`, plus `perTest` and `off` again with `vitest.related` false — and `Ran 1.00 tests per mutant` was read off four of those five, every arm where that line was captured (not the `all` arm, where only the survivor status was). `off` is **inert with this runner**: `vitest-test-runner.js`'s `dryRun` calls `readMutantCoverage()` unconditionally (the string `coverageAnalysis` does not appear in that file at all), and core's `TestCoverage.hasCoverage` is just `!!staticCoverage`, so `MutantTestPlanner.planMutant` always takes the has-coverage branch and always filters by `coveredBy`. So there is **one** mechanism here, not two — an earlier reading that treated the `off` result as an unexplained residual was reasoning about a config option the runner ignores.
+### The fourth failure has no tool in it: a shell pipeline eating the exit status
 
-**What to do about it, until the remedy slice below lands.** Treat "its only plausible killer is a property test" as a disqualifying answer when ruling a survivor equivalent: give the invariant a **deterministic twin** — an `it.each` over pinned inputs, whose titles are stable — and re-run the gate before ruling. That is what `analyze.ts`'s sort contract now has, and it moved `scripts/` from 24 survivors to 23. **`src/`'s own score is suspect the same way and nobody has checked it**: any of its survivors whose sole killer lives in one of the 14 `*.property.test.ts` files may be a false survivor, and the two figures move in opposite directions — a false survivor understates the score, so the risk here is a _pessimistic_ gate hiding _optimistic_ individual rulings.
+`cmd | tail` exits with `tail`'s status, `cmd || echo …` exits 0 by construction, and `set -o pipefail`
+is not on by default in a non-interactive shell. The wrapper reports success and the answer you got is
+about the wrapper. Every measured instance in this repo ran the same direction: **a red gate or a failed
+run reading as green.**
 
-**Don't buy the floor back by pinning the seed globally** — that warning stands and is the reason the landed fix is shaped the way it is: the exploration is the whole point of that layer, and this repo separately requires repeated property runs when a slice edits a property file. Pinning only under Stryker, leaving `npm run test:property` exploratory, is the one variant that isn't self-defeating, and `pin-stryker-seed-to-unblind-the-mutation-gate` landed exactly that: a `setupFiles` module guarded on `'__stryker__' in globalThis`, wired into the two vitest scopes that hold property tests and no others. The demonstration it was asked for was a _changed survivor set_; what it produced was a null survivor diff plus 420 property kills where there had been none, which is the same finding read one level down — see the paragraph above for why that is the stronger outcome and not a weaker one. Note the trade it accepts, which does not expire: pinning makes each mutant run see one fixed sample of the input space, so a property that only _sometimes_ catches a mutant becomes deterministic about a mutant it may not catch. **That is why the deterministic `it.each` twin is not made redundant by the pin**, and the point is measured rather than argued — on `analyze.ts`'s `pairKey` mutant the property now beats the twin to the report under first-kill-wins, while the unpinned control shows the twin killing it alone. A twin states which inputs matter; a pinned seed just freezes an arbitrary draw.
+**Measure the tool, not the pipeline.** Redirect to a file and read `$?` on the very next line, then
+inspect the file:
 
-**`features/` is not in Stryker's sandbox — and as of `delete-step-test-layer` that entry is belt-and-braces rather than load-bearing.** `stryker.config.json` carries `"ignorePatterns": ["/features"]`, so the whole directory is never copied into `.stryker-tmp/` and nothing in it can run, kill, or be attributed a kill. What it excluded when it landed was a real vitest layer, the seven `*.steps.test.*` files; those are gone, and **`features/` now contributes zero tests to `npm test`**. So the entry subtracts nothing from the run today. Keep it anyway: its remaining job is to stop a _future_ test file placed under `features/` from silently entering the mutation run, and in that role it fails **safe** — such a file would stay out, so the score would drop and `hardener` would investigate, never rise. The measurement below is kept as history, because it is the argument for the entry and the only written account of why a `killedBy` naming a step test never meant what it looked like. On the tree it was taken from, the two scopes genuinely differed: `npx vitest run features/` collected **180** tests from those 7 files (of 837 across 61 files on `ebba2f5`), while the `bd7c388` baseline showed Stryker itself collecting only **151** from the same 7 (of 805 across the same 61 files) — same tree, same files, 32 fewer tests seen by Stryker, because its runner drops any test that finishes without a result (`vitest-test-runner.js` filters on exactly that, with `bail: 1` set). Neither figure describes any tree that exists now; don't quote them forward. What the `stryker-excludes-gherkin` slice removed was a duplicate measurement that was also wrong, not a gate. **Excluded from Stryker is still not unmutated** — `features/` keeps its own mutation signal in `npm run acceptance-mutation`, which mutates the Examples tables and asks whether the steps notice. That runner never touches any of this machinery: it spawns `bddgen` and `playwright test` against a dedicated config (`playwright.acceptance-mutation.config.ts`, via `scripts/acceptance-mutation/playwright-runner.ts`), against the real tree, so Stryker's sandbox and its `ignorePatterns` are not in the picture at all. Three things about the entry are still easy to trip over. **The leading `/` is load-bearing** — it anchors the pattern to the project root (gitignore semantics, per the option's own schema description), so it matches `features/` and not some nested `src/features/`. **`ignorePatterns` has no effect whatsoever under `--inPlace`**, which the schema states outright ("with `true` the `ignorePatterns` has no effect any more") because in-place mode mutates the real tree instead of a sandbox copy; no npm script passes that flag today. **A rename of `features/` breaks this entry silently** — an `ignorePatterns` glob that matches nothing is not an error. That silence is measured, not assumed: a probe config carrying `ignorePatterns: ["/no-such-dir-xyz"]` emits no warning of any kind and collects the identical test count as `ignorePatterns: []` (267, scoped to `is-strict-equal.ts`). Today a silent break here would readmit no test at all, which is why the entry has dropped to belt-and-braces; the consequence was severe only while the layer existed. `npm run gherkin-lint` and `playwright.config.ts`'s `testDir` also hardcode that directory name — `vite.config.ts` no longer does, the `acceptanceTests` glob having gone with the layer.
+```bash
+npm run dry4ts > out.log 2>&1; echo "EXIT=$?"
+```
 
-**The repo's first split between what `crap4ts` sees and what Stryker sees has now closed, and the closing was measured.** While the step layer existed, `npm run test:coverage` ran it through `vite.config.ts` — both step-file forms included — so a line reachable _only_ from a step test read as covered in `npm run crap4ts` while its mutants were killable only by a non-`features/` test, and the two tools could legitimately disagree about the same line. `delete-step-test-layer` removed the layer, so `features/` contributes to neither tool and both again score the same test set. Measured on that slice's probe tree: `npm run crap4ts`'s per-function table is **byte-identical** before and after the deletion — 111 functions, 0 above threshold, worst 6.0 — so the layer was contributing no gated coverage at all. Exactly two `src/` files moved, and **both sit outside `crap4ts.config.ts` and `stryker.config.json` already**: `src/App.tsx` drops out of `coverage/coverage-final.json` entirely (the `acceptance` project was the only vitest project that mounted `<App />`, so its coverage is now Playwright-only — which is what this file already said it was), and `src/test-support/cellQuery.ts` goes 8/8 → 7/8 as `cellSelector` loses its only _instrumented_ caller, its live one being `features/screenplay/elements.ts` on the Playwright side. Neither is a gap to chase. The remedy if the two tools ever disagree again is unchanged and is the same as for the browser-required layer: close it with a jsdom or unit test under `src/`, never by reaching back into `features/`.
+Anything you add after the command — a pipe, an `||`, an `&&` — is a second program whose exit status is
+the one you will end up quoting. This matters most for the commands whose whole purpose is to fail:
+`dry4ts`, `ast-grep:rules`, `agent-doc-check`, `gherkin-lint`, `build`.
 
-The two Stryker configs keep **separate** caches (`incrementalFile`: `reports/stryker-incremental.json` for `src/`, `reports/stryker-incremental-scripts.json` for `scripts/`), the same way they already separate `tempDirName` and their HTML reports — one shared cache across two different `mutate` lists would corrupt both. For the same reason, a `--mutate`-scoped run (as in `cleaner`'s workflow step 3) must never pass `--incremental`: it would record that subset as if it were the whole project and make the next full-scope run report a false-clean score. Both cache paths are gitignored, so a fresh clone or CI pays full cost on the first run — that's the safe default, not a misconfiguration. Note the `scripts/` cache is currently declared rather than used: `npm run test:mutation:scripts` runs `stryker run stryker.scripts.config.json` with **no** `--incremental` flag, so that side always pays full cost and never writes `reports/stryker-incremental-scripts.json` at all. **That is a fact about Stryker's source, not a single observation, and the difference matters** — an `ls` after one run only tells you that run wrote nothing. `node_modules/@stryker-mutator/core/dist/src/reporters/mutation-test-report-helper.js` writes the file at exactly two sites, `reportAll` and the handler it registers on `unexpectedExitHandler`, and **both are gated on `this.options.incremental`** (read on 10.0.0); the schema defaults that option to `false` and neither config sets it. So even an aborted scripts-side run writes nothing. The separate path still earns its line in the config — it is what makes adding the flag safe. **Turning the flag on is not a one-line change, though:** `honest-scripts-cache-deletion` reduced merge-protocol step 5's `rm -f` to the `src/` path alone, so a slice that adds `--incremental` there has to put the second path back and restore the plural in the stage-4-skip clause beside it. And note the `--mutate` prohibition above does **not** reach `test:mutation:scripts`: that is a config-scoped run with its own `mutate` list and its own `incrementalFile`, not a scoped run writing the `src/` cache, so the prohibition is not an argument against ever adding the flag.
+Note what this shares with the three Stryker modes above: **the command reported success and the thing
+you asked about never ran.** A green line is a claim, and a claim is worth what the command that produced
+it measured.
 
-**The `--mutate` CLI flag is last-wins, not accumulating, and it is silent about it.** `npx stryker run --mutate 'src/a.ts' --mutate 'src/b.ts'` mutates **only `src/b.ts`** and reports `Found 1 of 197 file(s) to be mutated` — no error, no warning. The correct form for several targets is one comma-separated flag: `--mutate 'src/a.ts,src/b.ts'`. The mechanism is in the CLI rather than in the config: `stryker-cli.js` declares `-m, --mutate <filesToMutate>` with the coercion `createSplitter(',')`, whose `(val) => val.split(sep).filter(Boolean)` ignores commander's `previous` argument, so a repeated flag overwrites rather than accumulates (read on 10.0.0, not inferred). The `Found N of M file(s) to be mutated` line is `fs/project.js`'s, at `info` level. This produces a false-clean score, which is the exact failure class the rest of this article exists to prevent: a scoped scan that silently covered one file of five looks identical to one that covered all five and found nothing. **Sanity-check the `Found N of M` line against the number of files you intended — `N` is the real assertion that the scoping worked.** `cleaner`'s workflow step 3 is where this bites; `engineering.md` has cross-referenced this trap to this article for some time, and until `document-the-orchestrating-seat` the trap was written down nowhere in these docs — verified with `git grep last-wins cbe9faf -- .claude CLAUDE.md`, which returns that cross-reference and nothing else. **The ref is pinned to `slice/document-the-orchestrating-seat`'s base on purpose:** this paragraph uses the word twice, so the same command against `main` returns this paragraph too, now that that slice has landed, and a claim written against a moving ref stops reproducing exactly when someone tries to check it.
+## When to reach for `npm run test:mutation:full`
+
+Whenever the cache's file-level assumptions break:
+
+- `stryker.config.json` changed in either key that decides what the run sees. `mutate` picks the files
+  to mutate; **`ignorePatterns`** picks the files that reach the sandbox at all, and therefore which
+  tests exist to kill anything
+- a module was split or renamed
+- test files were moved or deleted rather than edited in place
+- **a module changed that other mutated files import, even when neither those files nor their tests
+  changed**
+
+Prefer it whenever genuinely unsure: a false-clean score is worse than a slow one.
+
+**That last trigger is the one nothing announces, and it is why the cache does not simply fail safe.**
+`IncrementalDiffer` decides reuse per mutant from three things and no others, and **there is no
+dependency-graph analysis anywhere in it.** So when a module changes, every cached result for its
+importers is reused wholesale, because none of their own bytes moved. **The exposure is bidirectional,
+and one direction is dangerous.** A cached `Killed` is reused even if the dependency change made that
+test stop killing, which reports the score too _high_.
+
+## The seed pin, and what it does not license
+
+`fast-check-stryker-seed.ts` pins fast-check's seed to `424242` when and only when `'__stryker__' in
+globalThis`, through two `setupFiles` entries. `rules/no-fast-check-outside-property-file-ts.yml` and its
+`-tsx` twin keep a property test from being declared where neither entry reaches.
+
+**Do not pin the seed globally.** Exploration is the whole point of that layer, and this repo separately
+requires repeated property runs when a slice edits a property file. Pinning only under Stryker, leaving
+`npm run test:property` exploratory, is the one variant that is not self-defeating.
+
+**A pinned seed does not make the deterministic `it.each` twin redundant.** Pinning makes each mutant run
+see one fixed sample of the input space. So a property that only _sometimes_ catches a mutant becomes
+deterministic about a mutant it may not catch. A twin states which inputs matter; a pinned seed freezes
+an arbitrary draw.
+
+**When ruling a survivor equivalent, treat "its only plausible killer is a property test" as a
+disqualifying answer.** Give the invariant a deterministic twin — an `it.each` over pinned inputs, whose
+titles are stable — and re-run the gate before ruling.
+
+## `features/` is not in Stryker's sandbox
+
+`stryker.config.json` carries `"ignorePatterns": ["/features"]`, so the whole directory is never copied
+into `.stryker-tmp/` and nothing in it can run, kill, or be attributed a kill.
+
+**Keep the entry even though it now subtracts nothing.** Its remaining job is to stop a _future_ test file
+placed under `features/` from silently entering the mutation run, and in that role it fails **safe**.
+
+Three things about it are easy to trip over:
+
+- **The leading `/` is load-bearing.** It anchors the pattern to the project root, so it matches
+  `features/` and not some nested `src/features/`.
+- **`ignorePatterns` has no effect whatsoever under `--inPlace`**, which mutates the real tree instead of
+  a sandbox copy. No npm script passes that flag today.
+- **A rename of `features/` breaks this entry silently.** An `ignorePatterns` glob that matches nothing is
+  not an error and emits no warning.
+
+**Excluded from Stryker is still not unmutated.** `features/` keeps its own mutation signal in
+`npm run acceptance-mutation`, which mutates the Examples tables and asks whether the steps notice. That
+runner never touches this machinery — it spawns `bddgen` and `playwright test` against the real tree, so
+the sandbox and its `ignorePatterns` are not in the picture.
+
+**If `crap4ts` and Stryker ever disagree about a line, close the gap with a jsdom or unit test under
+`src/`, never by reaching back into `features/`.**
+
+## The two caches
+
+The two Stryker configs keep **separate** caches — `reports/stryker-incremental.json` for `src/`,
+`reports/stryker-incremental-scripts.json` for `scripts/`. One shared cache across two different `mutate`
+lists would corrupt both.
+
+**A `--mutate`-scoped run must never pass `--incremental`.** It would record that subset as if it were
+the whole project and make the next full-scope run report a false-clean score.
+
+Both cache paths are gitignored, so a fresh clone or CI pays full cost on the first run. That is the safe
+default, not a misconfiguration.
+
+**The `scripts/` cache is declared rather than used.** `npm run test:mutation:scripts` passes no
+`--incremental` flag, so that side always pays full cost and never writes its file at all — not even on
+an aborted run. The separate path still earns its line, because it is what makes adding the flag safe.
+
+> **Turning that flag on is not a one-line change.** `honest-scripts-cache-deletion` reduced merge-protocol
+> step 5's `rm -f` to the `src/` path alone. A slice that adds `--incremental` there has to put the second
+> path back and restore the plural in the clause beside it. Note the `--mutate` prohibition above
+> does **not** reach `test:mutation:scripts`: that is a config-scoped run with its own `mutate` list and
+> its own `incrementalFile`.
+
+## Two footguns on the `--mutate` CLI flag
+
+**It is last-wins, not accumulating, and it is silent about it.** `--mutate 'src/a.ts' --mutate 'src/b.ts'`
+mutates **only `src/b.ts`** — no error, no warning. The correct form for several targets is one
+comma-separated flag: `--mutate 'src/a.ts,src/b.ts'`.
+
+**Sanity-check the `Found N of M file(s) to be mutated` line against the number of files you intended.**
+`N` is the real assertion that the scoping worked. A scoped scan that silently covered one file of five
+looks identical to one that covered all five and found nothing.
 
 <!-- reference-check: allow src/a.ts -- illustrative hypothetical CLI example, not a real file -->
 <!-- reference-check: allow src/b.ts -- illustrative hypothetical CLI example, not a real file -->
 
-**Second footgun, same flag: a CLI `--mutate` overrides the config's own `mutate` exclusions.** `stryker.scripts.config.json` excludes `!scripts/**/run.ts` repo-wide — the I/O shells are deliberately unmeasured — but `npx stryker run stryker.scripts.config.json --mutate 'scripts/halstead4ts/report.ts,scripts/halstead4ts/run.ts'` mutates `run.ts` anyway, producing a pile of `NoCoverage` mutants and a badly depressed score (measured **58.82%** against a true 100%) that reads as a genuine coverage gap. The mechanism is `ConfigReader.readConfig`'s `deepMerge(options, cliOptions)`: `@stryker-mutator/util`'s `deepMerge` assigns straight through when the existing value `Array.isArray`, so a CLI `mutate` **replaces** the config's array whole rather than merging into it, negations included (read on 10.0.0). The 58.82% is one measurement on one command against `scripts/halstead4ts` and is not re-derived here; the mechanism above is. Check the config's exclusions before composing the flag, and when a scoped scan reports a cluster of `NoCoverage` in one file, suspect this before believing the gap: `hardener`'s unscoped full run would never see it. **Second measured instance, and a worked incantation, from `comment-reference-checks`'s cleanup pass:** the dropped negation there was `!scripts/**/*.test.ts`, so the scan mutated the test files themselves — a different symptom from the `run.ts` one above and a nastier one, since a mutated assertion can be killed by its own neighbours and the score stays plausible. Measured with `--dryRunOnly`, which instruments and then stops, so the whole question costs one initial test run rather than a full scan: `npx stryker run stryker.scripts.config.json --mutate 'scripts/reference-check/*.ts' --dryRunOnly` reports **`Instrumented 14 source file(s) with 1216 mutant(s)`** — seven modules plus their seven test files — while re-appending the config's own negations, `--mutate 'scripts/reference-check/*.ts,!scripts/**/*.test.ts,!scripts/**/run.ts,!scripts/**/test-support.ts'`, reports **`Instrumented 6 source file(s) with 327 mutant(s)`**. That second form is the one to copy for a scoped scan under `scripts/`: **carry every negation from the config's `mutate` array through onto the flag**, since the flag replaces the array rather than adding to it. The `Instrumented N source file(s)` line is `Instrumenter`'s, at `info` level, and is a second sanity check alongside the `Found N of M` line above — it counts files that actually got mutants, so a count above the number of non-test modules you scoped is this footgun.
+**A CLI `--mutate` overrides the config's own `mutate` exclusions.** It **replaces** the config's array
+whole rather than merging into it, negations included. So a scoped scan can mutate the very files the
+config excludes: `run.ts` shells, or worse, the test files themselves. There a mutated assertion can be
+killed by its neighbours and the score stays plausible.
 
-**A `Timeout` counts toward the score as a kill, so a timed-out mutant never appears among survivors.** `mutation-testing-metrics`' `calculateMetrics.js` computes `totalDetected = timeout + killed` and `mutationScore = totalDetected / totalValid`, which is why the tallies above read `killed+timeout` as one figure. Two consequences worth holding together: a timeout is not evidence a test discriminates — it is a wall-clock artifact, and the survivor set at the margin moves between runs because of it — and **contamination therefore masks survivors rather than inventing them**. A run whose timeouts spike is not a stricter run; it is a run whose survivor list you cannot trust to be complete.
+**Carry every negation from the config's `mutate` array through onto the flag.** For `scripts/`:
 
-**Why `Scrollbar.tsx`'s `Math.max(0, …)` clamp (described in `architecture.md`'s `src/scrollbars.ts` bullet) has no removal mutant, and why a bare `foo()` statement does — read this before concluding a 100% score left something unmeasured.** Stryker 10.0.0 **does** have a statement-removal mutator: `emptyExpressionMutator` (reported under the name `CallExpression`) turns a bare call **statement** into `;`. Measured with a scoped, non-incremental run over `src/hooks/useCamera.ts`: `glide.cancel()` — the single unconditional call the whole zoom-glide cancel invariant rests on — carries exactly that mutant, replacement `";"`, status **Killed**, so that file's 100% score did answer the question it looked unable to answer. What the mutator does **not** do is remove a call in **expression** position: there it yields `void 0` instead, which is why `Scrollbar.tsx`'s `Math.max(0, …)` clamp — the paragraph above this one in `architecture.md`, under `scrollbars.ts` — genuinely has no removal mutant. And there is a second, easily-missed suppression — the mutator declares `filter(mutantsInScope) { return mutantsInScope.length === 1 }`, applied in `babel-transformer.js`'s `applyMutantFilters` with **scope = the node plus its descendants**, so the removal mutant is dropped whenever the statement's own subtree contributes any other mutant. Both readings were verified against `node_modules/@stryker-mutator/instrumenter/dist/src/`, not inferred. The standing lesson survives the correction and is the reason this paragraph exists: `cleaner` believed no such mutator existed, hand-removed the line and found 5 of 872 tests red — the right instinct, reaching an answer the score had already given. **Hand-breaking the line is still one command and still the only way to be sure**; just don't record "there is no mutator for this" as the reason, because for a bare statement there is one.
+```bash
+npx stryker run stryker.scripts.config.json \
+  --mutate 'scripts/<program>/*.ts,!scripts/**/*.test.ts,!scripts/**/run.ts,!scripts/**/test-support.ts' \
+  --dryRunOnly
+```
 
-**Four cautions about reading a run's own numbers, kept from the removal-experiment record whose framing and remaining bullets are in `archive.md`:**
+`--dryRunOnly` instruments and then stops, so the check costs one initial test run rather than a full
+scan. **The `Instrumented N source file(s)` line is a second sanity check** alongside `Found N of M`. It
+counts files that actually got mutants, so a count above the number of non-test modules you scoped is
+this footgun.
 
-- **A `--mutate`-scoped probe's dry run does not collect the whole suite, and its test counts are not the full run's.** `@stryker-mutator/vitest-runner`'s `vitest.related` option defaults to **true** (its own `dist/schema/vitest-runner-options.json`), so `dryRun` hands the mutated files to vitest's `--related` and only test files importing them are collected. Measured **before the step layer was deleted**, on 10.0.0 / vitest 4.1.10, scoped to `src/equality/is-strict-equal.ts`: 267 tests collected with `ignorePatterns: []` against 219 with the landed `["/features"]` — on today's tree both arms collect 219, which is the whole point of the inert-experiment note in `archive.md` — a 48-test delta that is exactly `cell-life-and-death.steps.test.tsx` (it boots `<App />`, so it is related to almost everything), while the six direct-call `.steps.test.ts` files never entered either arm because they don't import `equality/`. Read those numbers as related-scoped to one file. A full-scope run passes every mutated `src/` file as related, which is why the whole layer is in it.
+When a scoped scan reports a cluster of `NoCoverage` in one file, suspect this before believing the gap —
+an unscoped full run would never see it.
 
-- **`killedBy` is first-kill-wins, so an attribution count is not a coverage count.** The runner sets `bail: this.options.disableBail ? 0 : 1` (`vitest-test-runner.js:81`), so vitest stops at the first failing test and Stryker records that one — measured on the `bd7c388` baseline, all 1,278 killed mutants carry **exactly one** `killedBy` entry, never more. So "324 of 1,278 kills were attributed to a `features/**` test" means _a Gherkin step got there first_, not _only a Gherkin step could kill it_. That is the whole reason removing all 324 attributions cost so few real kills: the other tests that would have killed those mutants were simply never reached. **The fact that no mutant was killed by a mix of Gherkin and non-Gherkin tests is an artifact of first-kill-wins, not corroborating evidence** — under `bail: 1` a mixed attribution is unrepresentable. The baseline's attribution table, for the record: 292 of the 324 went to `cell-life-and-death.steps.test.tsx` alone; the largest non-`features/` attributions were `src/cache.test.ts` (173), `src/hooks/useCamera.test.ts` (62), `src/liveCellSeed.test.ts` (57), and `src/components/LifeBoard.test.tsx` (55), with 104 kills carrying an id that resolves to no test file in the report.
+## A `Timeout` counts toward the score as a kill
 
-- Per-test attribution is unreliable in the other direction too, and that was recorded first: see the mutation-scan note above `getBoundsSnapshot` in `src/liveCellStore.ts`, where a non-equivalent mutant is reported `Survived` with its actual killers listed as having run.
+So a timed-out mutant never appears among survivors. Two consequences to hold together:
 
-- One caution from the same measurement: a kill reported as `Timeout` rather than an assertion failure is not coverage anyone should rely on. The scoring mechanism and what it does to a survivor list are in the `Timeout` paragraph above, which is the account; this bullet is here to keep the four-caution record whole.
+- **A timeout is not evidence a test discriminates.** It is a wall-clock artifact, and the survivor set
+  at the margin moves between runs because of it.
+- **Contamination therefore masks survivors rather than inventing them.** A run whose timeouts spike is
+  not a stricter run; it is a run whose survivor list you cannot trust to be complete.
 
-<!-- reference-check: allow cell-life-and-death.steps.test.tsx -- measured against the now-deleted jsdom step file, before delete-step-test-layer; the figures above are historical measurements, not a live claim -->
+## Statement removal: there is a mutator, and it has two blind spots
 
-**Every entry on the mutation-invariant merge allowlist — CLAUDE.md's merge protocol, step 5 — is structurally safe, and two of them became so only in the `shared-exclude-covers-docs-dirs` slice.** `features/**` is unreachable because `stryker.config.json`'s `ignorePatterns` keeps it out of the sandbox; `CLAUDE.md` and `README.md` because a fixed filename cannot match a test glob; `ideas/**` and `.claude/**` because `vite.config.ts`'s `sharedExclude` now names both directories, so a test file placed in either is collected by no vitest project and can therefore kill nothing. Note what secures each: the two filenames are safe as a matter of fact, the other three as a matter of configuration — and **those three config entries are load-bearing for this exemption specifically**, not just for a tidy test run. Deleting `sharedExclude`'s `'ideas/**'` or `'.claude/**'` re-opens the hole described next, and the predicate would have to grow its second conjunct back; `vite.config.ts`'s comment on those two entries says the same thing from the other side. Deleting `ignorePatterns`' `/features` breaks the allowlist a different way — no conjunct would help, because the Gherkin layer would simply be back in the sandbox — and that failure is silent and moves the score _up_, which is why the Commands section warns about it separately.
+Stryker **does** have one — `emptyExpressionMutator`, reported as `CallExpression` — which turns a bare
+call **statement** into `;`. Do not record "there is no mutator for this" as a reason.
 
-**The hole those two entries closed, for the record — it is that clause's soundness argument, not decoration.** `vite.config.ts`'s `unit` project inherits the **unrooted** `**/*.{test,spec}.?(c|m)[jt]s?(x)` include, and until that slice `sharedExclude` covered `scripts/**` and `.claude/worktrees/**` but neither `ideas/` nor `.claude/` as a whole. Measured twice with throwaway probes, `npx vitest list` collected `[unit] .claude/__probe.test.ts` **and** `[unit] ideas/__probe.test.ts` — and the second imported `src/gameOfLife`, so it would have run inside Stryker's sandbox and changed mutant fates while the path check still answered "invariant". The predicate therefore carried a second conjunct — the diff must name no `*.test.*`/`*.spec.*` path under either directory — from the pass that found the hole until the pass that cured it. **That conjunct is retired.** The invariant now lives in `sharedExclude`, where a config entry holds it rather than a per-merge grep nobody can be relied on to run.
+It does **not** reach two cases:
 
-<!-- reference-check: allow ideas/__probe.test.ts -- a throwaway measurement probe, never committed to git, so it can never resolve -->
+- **A call in expression position**, where it yields `void 0` instead. A clamp like `Math.max(0, …)`
+  genuinely has no removal mutant.
+- **A statement whose own subtree contributes any other mutant.** The mutator drops its removal mutant
+  whenever that happens.
 
-**Making a path structurally safe is a precondition for putting it on the allowlist, not a follow-up.** The unrooted include reaches every directory in the checkout that `sharedExclude` doesn't name, and measurably still does: probes dropped into `perf/`, `rules/`, `rule-tests/`, `patches/` and `public/` are all collected into `unit` on the landed tree (66 files against the usual 61). None of those five is on the allowlist, which is exactly why they need no exclusion — a diff touching one fails the path check and the gate runs — and exactly why adding any of them to the allowlist would first mean excluding it from vitest.
+**Hand-breaking the line is still one command and still the only way to be sure.**
 
-**Gitignored paths cannot reach this predicate at all**, which is a different fact from being excluded from vitest, and it is why `.stryker-tmp*/**` and `.features-gen/**` need `sharedExclude` entries yet want no allowlist entry: they never appear in `git diff --name-only main...HEAD`. (A `git add -f` would put one there — at which point it is tracked, fails the allowlist, and the gate runs. Fails safe.) Don't invert that into "gitignored, therefore safe from collection": those two entries exist precisely because it isn't.
+## The mutation-invariant merge allowlist is structurally safe
+
+Every entry on CLAUDE.md's merge-protocol step 5 allowlist is safe. But **not all for the same kind of
+reason, and the difference is what you have to protect**:
+
+- **`CLAUDE.md` and `README.md`** — safe as a matter of **fact**: a fixed filename cannot match a test
+  glob.
+- **`features/**`** — safe by `stryker.config.json`'s `ignorePatterns` keeping it out of the sandbox.
+- **`ideas/**` and `.claude/**`** — safe by `vite.config.ts`'s `sharedExclude` naming both directories,
+  so a test file placed in either is collected by no vitest project and can kill nothing.
+
+**Those three config entries are load-bearing for this exemption specifically**, not just for a tidy test
+run:
+
+- Deleting `sharedExclude`'s `'ideas/**'` or `'.claude/**'` re-opens a hole that a per-merge grep would
+  otherwise have to cover.
+- Deleting `ignorePatterns`' `/features` breaks the allowlist a different way. No extra check would
+  help, because the Gherkin layer would simply be back in the sandbox. **That failure is silent, and it
+  moves the score up.**
+
+**Making a path structurally safe is a precondition for putting it on the allowlist, not a follow-up.**
+`vite.config.ts`'s `unit` project inherits an **unrooted** include, so it reaches every directory
+`sharedExclude` does not name. `perf/`, `rules/`, `rule-tests/`, `patches/` and `public/` are all
+collected today. None is on the allowlist, which is exactly why they need no exclusion: a diff touching
+one fails the path check and the gate runs. It is also exactly why **adding any of them to the allowlist
+would first mean excluding it from vitest.**
+
+**Gitignored paths cannot reach this predicate at all**, which is a different fact from being excluded
+from vitest. `.stryker-tmp*/**` and `.features-gen/**` need `sharedExclude` entries yet want no allowlist
+entry, because they never appear in `git diff --name-only main...HEAD`. A `git add -f` would put one
+there — at which point it is tracked, fails the allowlist, and the gate runs. Fails safe.
+
+**Do not invert that into "gitignored, therefore safe from collection".** Those two entries exist
+precisely because it is not.
