@@ -117,10 +117,12 @@ orchestrator-run `npm run test:perf` + `npm run perf-report`.
   answer; a no-op and a step-without-pausing are both defensible.
 - **Tooltip mechanism — now its own candidate**, since nothing exists to consume:
   see `ideas/candidates/build-an-accessible-tooltip.md`, which found that neither
-  Catalyst nor any released Headless UI ships one. The decisive argument against
-  native `title` turned out not to be styling but WCAG 1.4.13, which it fails on
-  all three clauses. Landing that candidate first gives this slice a primitive;
-  landing it after means building tooltips twice.
+  Catalyst nor any released Headless UI ships one. Native `title` is _exempt_
+  from WCAG 1.4.13 rather than compliant with it — but it still fails on its own
+  demerits, since it does not show on keyboard focus, shows nothing on touch, and
+  cannot be styled, so it cannot carry the key badges. Landing that candidate
+  first gives this slice a primitive; landing it after means building tooltips
+  twice.
 - **Where do four more buttons live?** The HUD already overlaps the row ruler —
   see `ideas/candidates/hud-panel-occludes-the-row-ruler.md` — and widening it makes that worse;
   the toolbar is the other corner and has its own ghosting problem recorded in

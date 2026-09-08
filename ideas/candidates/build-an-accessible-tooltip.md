@@ -65,10 +65,18 @@ scenario:
 - **Persistent** — it stays until dismissed, until the trigger is left, or until
   it stops being valid.
 
-**Native `title` fails all three** — the UA controls it, so it cannot be
-dismissed, cannot be hovered, and vanishes on its own timer. That is the real
-argument against `title`, stronger than the styling one
-`ideas/candidates/pause-and-play-at-three-speeds.md` currently makes.
+**Native `title` escapes 1.4.13 rather than satisfying it**, and getting this
+backwards is easy: the SC explicitly exempts content controlled by the user
+agent, and browser-built-in tooltips are its own named example. That is not a
+defence of `title` — it still fails as a tooltip on its own demerits. It does
+not appear on keyboard focus in most browsers, shows nothing on touch, times
+out on the UA's schedule, and cannot be styled, so it cannot carry the
+keybinding badges the playback buttons need.
+
+**The clauses bind the moment the app draws its own hover content instead.**
+That is what makes them this candidate's acceptance contract rather than a
+stick to beat `title` with: choosing to build a tooltip is choosing to be in
+scope for 1.4.13, where `title` never was.
 
 ## Sketch
 
