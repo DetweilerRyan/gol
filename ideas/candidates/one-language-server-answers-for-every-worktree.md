@@ -1,80 +1,146 @@
 ---
 name: one-language-server-answers-for-every-worktree
-title: Give each worktree its own TypeScript language server, the way dev-port.ts already gives it its own ports
+title: Stale LSP hovers come from the write path, not the worktree — decide what to do about it
 created: 2026-09-06
 ---
 
 ## Context
 
-`jsdoc-in-src` made `LSP` hover load-bearing — `doc-comments.md` Part 2 tells
-every implementing role to hover a symbol at its call site instead of opening
-the defining file. That slice then hit two failures in the same session, both
-of which end with a role reading a confident answer about the wrong bytes.
+This candidate was filed after `jsdoc-in-src` hit two LSP failures, and it asserted a
+mechanism for the second one: _a server rooted at the primary checkout has no file
+watcher on files in another worktree, so it reads such a file once and nothing ever
+invalidates that read._ Its own text conceded this was "inference from observed
+behaviour, not a measurement", and its Sketch proposed per-worktree servers derived the
+way `dev-port.ts` derives a port.
 
-**The misroute.** A path passed to `LSP` **relative** to a worktree resolves
-against the session cwd — the primary checkout — not the worktree. Measured:
-`src/hooks/useCamera.ts` at 25:9 returned `const glide: ZoomGlideController`,
-which is what stands at that position in the primary checkout's copy; the
-worktree's own copy has `[` there. A path present in **neither** tree errors
-cleanly. A path present in **both** — which is every file in `src/` — answers
-about the wrong copy in silence, and since the copies agree everywhere the
-slice has not touched, the wrong answer is right most of the time.
+**A spike on 2026-09-08 measured it. The mechanism was wrong, and so was the competing
+guess that the server was merely lagging behind the agent's writes. The variable is
+neither the worktree nor elapsed time — it is _which tool performed the write_.**
 
-**The staleness.** Hovering `toggleLibrary` from
-`src/hooks/usePatternPlacement.ts` returned a claim that had been corrected on
-`main` and rebased away — text in neither tree and, by grep, nowhere on disk
-outside `.git/`. The server answered from a copy predating the rebase.
+### The measurement
 
-The mechanism links the two: a server rooted at the primary checkout has **no
-file watcher on files in another worktree**, because they sit outside its
-project root. It reads such a file once, on demand, and nothing ever
-invalidates that read. Staleness inside the rooted project is ordinary and
-self-corrects; staleness outside it does not.
+Spike conditions: macOS, Claude Code 2.1.231, `typescript-lsp@1.0.0`,
+`typescript-language-server` from the global nvm install, one throwaway worktree, and
+untracked probe files carrying a nonce sentinel in a JSDoc summary. Probe files were
+deleted afterwards; both trees ended clean. Every hover used an **absolute** path except
+where the misroute was the thing being tested.
 
-**This is a shape this repo has already solved once.** `dev-port.ts` exists
-because a worktree separates every fixed relative path for free and does
-**not** separate a TCP port — so `playwright.config.ts`'s `reuseExistingServer`
-would find another worktree's dev server, attach, and report "a green e2e suite
-against the wrong build." A single language server answering hover for three
-checkouts is the same failure with a different transport.
+| Arm               | Setup                                                                     | Result                                                               |
+| ----------------- | ------------------------------------------------------------------------- | -------------------------------------------------------------------- |
+| 1 — in-root       | probe inside the server's **own** root, edited with `sed`                 | stale at t = 0s, 45s, 117s, 265s. Never converged.                   |
+| 2 — cross-tree    | probe in a worktree, absolute path, server rooted at the primary checkout | **first** read fresh; after a `sed` edit, stale at t = 0s and ~220s. |
+| 3 — native root   | same file after `EnterWorktree` into that worktree                        | same stale answer; no new server spawned, pid and cwd unchanged.     |
+| control — re-read | `cat`, then the harness `Read` tool, on the stale file                    | no effect.                                                           |
+| control — Edit    | the harness `Edit` tool on the worktree probe                             | **fresh immediately.**                                               |
+| control — `sed`   | `sed` again on that same file, right after the Edit succeeded             | stale again.                                                         |
+
+**The cache is whole-file, not comment-only.** Changing `(a: number): number` to
+`(a: string): string` alongside the summary left the reported **signature** stale too, so
+every LSP operation is served from the frozen buffer — `findReferences` and
+`goToDefinition` included, not just `hover`.
+
+### The mechanism, as measured
+
+The server answers from a snapshot the **harness** sends it. The first LSP touch of a
+file transmits its then-current content; after that, only a write made **through the
+harness's own `Edit`/`Write` tool** updates that snapshot. A write that bypasses the
+harness leaves it frozen indefinitely — `sed`, `cat >`, a heredoc, and by extension
+`git rebase`, `git checkout`, and anything that rewrites files underneath the session
+such as `npm run format`.
+
+That explains the original `toggleLibrary` failure exactly: the correction was rebased
+away, and a rebase is an out-of-band write, so the pre-rebase snapshot was served
+forever. It also explains why the failure looked worktree-shaped — the worktree work was
+simply where out-of-band writes were happening.
+
+**Both prior explanations are refuted.** Not the missing watcher: the in-root arm, where
+a watcher is supposed to exist, never converged either, so the project root is not the
+variable. Not lag: five minutes produced no movement, and the same file went fresh
+instantly under an `Edit`, so it is not latency.
+
+### Facts about the servers, same date
+
+- **Per-session, not one global**, spawned **lazily on the session's first LSP call**,
+  rooted at the session's cwd **at spawn**. Verified with `pgrep` + `lsof -a -p <pid> -d cwd`.
+- **`EnterWorktree` does not re-root or restart one.** After entering, the session's
+  server kept both its pid and its original cwd.
+- **≈85MB resident each** (~78MB `tsserver.js` + a 5–8MB wrapper), via `ps` — so the
+  candidate's "if it is a gigabyte each" worry does not hold.
+- **One observed server had been alive since Aug 25** — a fortnight of frozen snapshots.
+- **No LSP plugin exposes a root/cwd knob.** The union of `lspServers[*]` keys across
+  every plugin in the official marketplace manifest is `command`, `args`,
+  `extensionToLanguage`, `startupTimeout`; the installed `typescript-lsp@1.0.0` payload
+  is a LICENSE and a README with no `plugin.json`. This shows no plugin _uses_ such a
+  key, not that the schema forbids one.
+
+### What survives unchanged
+
+**The misroute half, reconfirmed on the same date.** With the two trees' probes carrying
+different sentinels, a **relative** path returned the primary checkout's sentinel — it
+resolves against the session's cwd, not the tree being edited. This is client-side path
+resolution, independent of everything above, and absolute paths stay mandatory under
+every outcome. `workflow.md`'s worktree bullet and `doc-comments.md` Part 2 §7's
+misroute paragraph both stand as written.
+
+`doc-comments.md` §7's staleness paragraph also stands — it says the server "serves
+hover from its own copy of a file, which can be stale after an on-disk edit", which is
+correct and is now explained rather than corrected. Note the edit it recorded was made
+during a sweep, and the "on-disk edit" phrasing turns out to be the operative detail.
+No article states the no-watcher mechanism; it lived only in this file, and is gone from
+it as of this rewrite.
 
 ## Sketch
 
-Establish whether the `typescript-lsp` plugin can be pointed at a per-checkout
-root at all, and what it costs. `tsserver` on a project this size is not free,
-and the ceiling is two or three concurrent slices, so the question is whether
-three servers are affordable rather than whether one is wrong.
+The original sketch — per-worktree servers — **would not have fixed either failure** and
+is withdrawn. What the measurement leaves is a different and wider problem:
 
-If it is configurable, derive the root the way `dev-port.ts` derives a port —
-from the checkout directory — so a new worktree is covered with no config edit.
-If it is not configurable, the fallback is what the article already mandates
-(absolute paths, and read the source before believing a hover that reveals a
-defect), and this idea closes as measured-and-rejected rather than staying open.
+> Any role that edits a file with a Bash command and then hovers it reads its own
+> pre-edit bytes, in **any** tree, for the rest of the session.
+
+That is not a worktree hazard, and this repo actively steers into it: `doc-comments.md`
+Part 2 makes hover load-bearing ("if the hover answers your question, stop; do not open
+the defining file"), while sessions running under auto mode are told to prefer Bash for
+file edits. The two instructions compose into a role confidently reading a stale answer.
+
+Candidate responses, cheapest first:
+
+1. **Write the mechanism down** in `doc-comments.md` Part 2 §7, replacing the
+   suspected-cause framing with the measured one, and state the rule it implies: a hover
+   is trustworthy only if every write to that file this session went through
+   `Edit`/`Write`. After a `git` operation or a Bash-authored edit, hover is unsafe until
+   the file is re-touched through the harness.
+2. **Give roles a forced-refresh recipe** — currently unknown; see open questions.
+3. **Reconsider the auto-mode "prefer Bash for edits" guidance** for this repo, since it
+   is what converts the hazard from rare to routine.
 
 ## Touches
 
-`.claude/settings.json` and whatever the plugin exposes; possibly `dev-port.ts`
-if the derivation is worth sharing. `doc-comments.md` Part 2 §7 and
-`workflow.md`'s worktree section both carry the current mitigations and would
-need rescoping if the cause is removed.
+`.claude/agents/articles/doc-comments.md` (Part 2 §7, the staleness paragraph and the
+hover-before-Read habit in Part 3). Possibly `workflow.md` if the rule is judged to
+belong beside the misroute bullet rather than in the doc-comments article. No `src/`, no
+`scripts/`, no `.claude/settings.json` — the plugin-config approach is withdrawn.
 
-Note the two halves are **not** fixed by the same change: a per-worktree server
-addresses staleness, and the misroute is a client-side path-resolution problem that
-happens before any server is chosen. Absolute paths remain mandatory either way.
+Docs-only, so the merge-protocol mutation-invariance allowlist covers it.
 
 ## Open questions
 
-- **Is it configurable at all?** Unknown, and the whole idea rests on it. Worth
-  ten minutes with `claude --debug`, which names any LSP server it skipped and
-  why, before anything else here is designed.
-- **What does three `tsserver` instances cost on this machine?** If it is a
-  gigabyte each, the honest answer may be to keep one server and rely on the
-  documented discipline — which is already written and already caught both
-  failures.
-- **Would it actually fix the staleness, or move it?** The mechanism argument
-  (no watcher outside the project root) is inference from observed behaviour,
-  not a measurement. It should be measured before being designed against.
-- **Does the misroute deserve its own guard?** Nothing stops a role passing a
-  relative path; the mitigation is prose in an article. The failure is silent
-  and the wrong answer is usually right, which is the worst combination for a
-  convention held by discipline alone.
+- **Is this file still named for a refuted framing?** `name` is the branch and tag
+  identity end to end, and this one says "for every worktree" when the finding is not
+  about worktrees. Renaming a candidate ahead of widening it is precedented on this board
+  and is done as its own commit. Ryan's call.
+- **What forces a refresh short of a new session?** Measured to _not_ work: elapsed time
+  (5 min), `cat`, the `Read` tool, and `EnterWorktree`. Measured to work: a write through
+  `Edit`. Untested: a no-op `Edit` (write a character and revert it) as a deliberate
+  refresh idiom, and whether `Write` behaves like `Edit`. Worth measuring before any
+  recipe is written into an article, because a recipe that does not actually refresh is
+  worse than none.
+- **How far does the staleness reach?** The signature went stale alongside the comment,
+  so the whole buffer is frozen; whether `findReferences` and `goToDefinition` return
+  stale _results_ across files was inferred from that, not measured directly.
+- **Does this warrant a mechanical guard, or is prose enough?** The failure is silent and
+  the wrong answer is usually right — the same combination the original file flagged for
+  the misroute. Nothing can check a hover, so a guard would have to act on the write path
+  instead, which is a much larger change than the problem may justify.
+- **Is the two-week-old server a separate concern?** A session's server outliving many
+  branch switches means its frozen snapshots can predate work that has since landed and
+  been rebased away — which is the original `toggleLibrary` failure's exact shape.
