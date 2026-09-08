@@ -6,11 +6,13 @@
 // everything here is genuinely I/O (a git subprocess, readFileSync,
 // console.log, process.exit).
 //
-// NOT WIRED INTO ANY GATE YET, deliberately -- this is step 1 of a
-// four-step slice (`comment-reference-checks`). `npm run reference-check`
-// runs by hand only; nothing in package.json's other scripts, no CI
-// equivalent, and no doc mentions it. Steps 2-4 remediate the sites it
-// flags and then wire the gate in.
+// Wired in as `hardener`'s stage 2, immediately after `npm run build` --
+// see CLAUDE.md's hardener stage list and the reference-check entry in its
+// programs section for why it sits there rather than last, where
+// `agent-doc-check` sits: this checker's own remediation edits comment
+// lines in `src/`/`scripts/`, which moves both `crap4ts` (coverage is keyed
+// by source location) and Stryker's incremental cache, so its fixes need
+// to land before mutation and CRAP run rather than after.
 
 import { execFileSync } from 'node:child_process'
 import { readFileSync } from 'node:fs'

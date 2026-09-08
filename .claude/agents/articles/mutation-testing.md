@@ -1,6 +1,6 @@
 # Article: Mutation Testing (Stryker)
 
-**Audience:** cleaner, hardener, the orchestrating session - **Read when:** before ruling any survivor equivalent, at hardener stage 4, or when granting a mutation-invariant merge exemption.
+**Audience:** cleaner, hardener, the orchestrating session - **Read when:** before ruling any survivor equivalent, at hardener stage 5, or when granting a mutation-invariant merge exemption.
 
 > Extracted verbatim from CLAUDE.md @ b5e333e, lines 57-99, 128, 178, 180, 182, 183, 392-399. No prose was edited in the extracting commit; only the common leading indent of a fragment lifted out of a nested list was removed.
 
