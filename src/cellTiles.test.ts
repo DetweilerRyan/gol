@@ -49,8 +49,9 @@ describe('coveringTileRange', () => {
     const range = coveringTileRange({ offsetX: 0, offsetY: 0, cellSize: 20 }, 0, 0, TILE_SPAN_CELLS)
     expect(range.minTileX).toBeLessThanOrEqual(range.maxTileX)
     expect(range.minTileY).toBeLessThanOrEqual(range.maxTileY)
-    // Cell (0, 0) must be inside the covering range, matching
-    // Grid.test.tsx's "renders a small cell grid immediately on mount".
+    // Cell (0, 0) must be inside the covering range: Grid's pre-measurement
+    // render sees a 0x0 viewport and still needs a valid, non-inverted
+    // range covering the camera origin.
     expect(range.minTileX).toBeLessThanOrEqual(tileIndexOf(0, TILE_SPAN_CELLS))
     expect(range.maxTileX).toBeGreaterThanOrEqual(tileIndexOf(0, TILE_SPAN_CELLS))
   })

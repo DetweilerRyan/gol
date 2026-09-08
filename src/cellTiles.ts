@@ -184,9 +184,8 @@ export function coveringTileRange(camera: Camera, widthPx: number, heightPx: num
   // Mirrors computeLattice's floor/ceil edge convention (gridGeometry.ts's
   // computeVisibleRange uses the same pair). The clamp above exists because
   // a 0-width/0-height viewport (Grid's pre-measurement render) would
-  // otherwise invert into an empty or negative range, and Grid.test.tsx's
-  // "renders a small cell grid immediately on mount" test depends on cell
-  // (0, 0) existing at size {0, 0}.
+  // otherwise invert into an empty or negative range -- pinned directly by
+  // cellTiles.test.ts's "never inverts for a 0x0 pre-measurement viewport".
   const leftCell = Math.floor(camera.offsetX)
   const topCell = Math.floor(camera.offsetY)
   const rightCell = Math.max(leftCell, Math.ceil(camera.offsetX + widthPx / camera.cellSize) - 1)

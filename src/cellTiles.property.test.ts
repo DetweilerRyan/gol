@@ -562,8 +562,9 @@ describe('coveringTileRange (property)', () => {
   // Degenerate viewport, pinned rather than left to the generator: Grid
   // renders once at containerSize {0, 0} before its ResizeObserver fires, and
   // coveringTileRange's Math.max clamp is the only thing stopping that render
-  // from inverting into an empty (or negative-extent) range. Grid.test.tsx's
-  // "renders a small cell grid immediately on mount" depends on this.
+  // from inverting into an empty (or negative-extent) range -- the same
+  // invariant cellTiles.test.ts's "never inverts for a 0x0 pre-measurement
+  // viewport" pins at the unit layer.
   it('a 0x0 viewport still mounts exactly the one tile containing the camera origin', () => {
     const range = coveringTileRange({ offsetX: 0, offsetY: 0, cellSize: 20 }, 0, 0, TILE_SPAN_CELLS)
 
