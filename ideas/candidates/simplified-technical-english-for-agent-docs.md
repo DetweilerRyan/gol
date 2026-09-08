@@ -1,6 +1,6 @@
 ---
 name: simplified-technical-english-for-agent-docs
-title: Adopt ASD-STE100's sentence-shape rules on the instruction surfaces of CLAUDE.md and .claude/agents
+title: Split rationale out of the agent docs into sidecar files, then shape-rule the instructions that remain
 created: 2026-09-08
 ---
 
@@ -39,6 +39,52 @@ The 2026-09-05 row is the peak `CLAUDE.md` ever reached: **255,770 bytes**, whic
 256KB, roughly 64k tokens" that `engineering.md` records. The next row is the routing-index split that
 answered it.
 
+**And most of that corpus is not instructions.** Same tree, classified at the block level — a
+paragraph or a list item — by whether the block carries a directive (a normative marker: must, never,
+do not, should, is owned by, belongs in, refuses; or an imperative head verb, including one after a
+short leading clause) or does not:
+
+| file                              | blocks | rationale-only blocks | rationale bytes | entanglement | slice-slug mentions |
+| --------------------------------- | -----: | --------------------: | --------------: | -----------: | ------------------: |
+| `articles/doc-comments.md`        |    103 |                    69 |         **57%** |          94% |                  11 |
+| `articles/handoffs.md`            |     19 |                    10 |             51% |          67% |                   0 |
+| `CLAUDE.md`                       |    116 |                    66 |             48% |          78% |                  24 |
+| `articles/orchestration.md`       |     39 |                    21 |             45% |          94% |                   0 |
+| `architect.md`                    |     54 |                    24 |             35% |          77% |                  10 |
+| `product.md`                      |     55 |                    21 |             33% |          68% |                   6 |
+| `articles/quality-tooling.md`     |     35 |                    19 |             32% |     **100%** |                  46 |
+| `articles/testing-layers.md`      |     32 |                    16 |             30% |     **100%** |                  50 |
+| `articles/engineering.md`         |    119 |                    47 |             29% |          82% |                  30 |
+| `articles/workflow.md`            |     16 |                     5 |             29% |          64% |                   0 |
+| `articles/mutation-testing.md`    |     41 |                    16 |             28% |          92% |                  22 |
+| `hardener.md`                     |     41 |                    14 |             27% |          59% |                   9 |
+| `articles/archive.md`             |     12 |                     5 |             26% |          71% |                   8 |
+| `cleaner.md`                      |     30 |                    13 |             25% |          71% |                   4 |
+| `articles/architecture.md`        |     25 |                    10 |             20% |     **100%** |                  10 |
+| `articles/ast-grep-rules.md`      |     16 |                     9 |             16% |     **100%** |              **84** |
+| `articles/state-flow.md`          |     18 |                     6 |             15% |          92% |                  11 |
+| `articles/acceptance-mutation.md` |     20 |                     5 |             11% |     **100%** |                  14 |
+| `coder.md`                        |     30 |                     5 |          **9%** |          60% |                   2 |
+| **TOTAL**                         |    821 |               **381** |         **30%** |      **81%** |             **341** |
+
+**381 of 821 blocks — 46% — carry no directive at all**, and they are **158,114 bytes, 30% of the
+corpus's prose.** Separately and needing no classifier judgment: **341 backticked slice-slug mentions**,
+every one of which names repo history rather than anything a normal-workflow agent must do.
+
+**What this is and is not.** It is not a measurement of "clarity", which is not measurable. It is a
+proxy for **how much prose a normal-workflow agent must sift to reach its directives**, and the marker
+lists above are published so the number is re-derivable rather than taken on trust.
+
+**Validated by hand, and it is a rough instrument.** Two stratified samples of 36 blocks each (role
+files, house-rules articles, topic articles, `CLAUDE.md`), labels checked by reading: **24/36 and
+25/36 strict agreement — about 2 in 3.** The second sample was drawn after the marker lists were
+corrected, so it scores the shipped classifier rather than the one it was tuned on. **The errors are
+not symmetric**, which is what makes the numbers usable: in both samples the dominant failure was a
+_missed_ directive — an imperative buried after a long subordinate clause, or a verb absent from the
+list. Missed directives move blocks from mixed into rationale-only. So read **30% as an upper bound on
+what could move cleanly**, and **81% entanglement as a lower bound**. Both bounds fail in the safe
+direction: they make the split look easier than it is.
+
 ## Complication
 
 **The repo already diagnosed size creep and already applied the structural fix. Measured, that fix
@@ -69,24 +115,112 @@ measurement", plus `orchestration.md`'s "Prose discipline". **Nothing governs ho
 shaped.** Measured on `bac96c4`, the corpus averages **38.0 words per sentence**, with **65%** of
 sentences over 25 words and **36%** over 40. The longest is 409 words.
 
-So the two problems compound: the corpus is growing fastest in the files nobody may skip, and the
-sentences in it are on average 50% longer than the only published standard for this kind of writing
-permits.
+**And the rationale is not sitting in separable chunks — it is woven through the instructions.** Of
+the 440 blocks that carry a directive at all, **357 also carry non-directive prose: 81% entanglement.**
+Five files are at **100%** — `acceptance-mutation.md`, `architecture.md`, `ast-grep-rules.md`,
+`quality-tooling.md` and `testing-layers.md` — meaning every single directive-bearing block in them is
+mixed. Not one is a clean instruction.
+
+That is the blur stated as a number, and it cuts twice. A normal-workflow agent cannot skip the
+rationale by skipping blocks, because four out of five blocks containing something it must do also
+contain something it does not need. And any fix that separates the two is a **rewrite of those blocks,
+not a move of them** — which is the single most important input to sizing the Answer below.
+
+So three problems compound: the corpus is growing fastest in the files nobody may skip; 30% of its
+prose issues no instruction at all; and 81% of the blocks that do issue one bury it in prose that does
+something else.
 
 ## Question
 
-ASD-STE100 (Simplified Technical English) is a published standard for exactly this failure — technical
-prose read by someone who cannot ask the author a follow-up question. Does it fit a corpus whose
-readers are agents rather than technicians?
+Two questions, and the second is the one the measurements above actually pose.
+
+1. ASD-STE100 (Simplified Technical English) is a published standard for exactly this failure —
+   technical prose read by someone who cannot ask the author a follow-up question. Does it fit a corpus
+   whose readers are agents rather than technicians?
+2. Given that 30% of the prose issues no instruction and 81% of instruction-bearing blocks are mixed:
+   **can the rationale be separated from the instructions entirely, rather than merely shortened?**
 
 ## Answer
 
-**Partly, and the corpus itself says which part.** Compliance already tracks register, with nobody
-having tried: the most instruction-shaped file is nearest the standard and the most rationale-shaped
-file is furthest. That is the finding, and it is what makes this a scoped slice rather than a rewrite
-of 83k words.
+**Two answers that compose, and the order matters. Separate the registers into different files first;
+apply shape rules to what remains second.**
 
-### What ASD-STE100 actually is
+The first answer is the user's, and it is the larger of the two: **move rationale into a sidecar
+`<file>.rationale.md` beside each instruction file, read only when the instruction is being
+renegotiated or updated, and never under a normal workflow.** The second is this candidate's original
+proposal, and it becomes much more tractable afterwards — once register maps to whole files, STE's
+procedural/descriptive split maps to whole files too, instead of to surfaces within a file that a
+reader has to identify sentence by sentence.
+
+The finding that connects them: **compliance already tracks register, with nobody having tried.** The
+most instruction-shaped file is nearest the standard and the most rationale-shaped file is furthest.
+The sidecar split materialises that correlation into the filesystem; the shape rules then apply to one
+side of it.
+
+### Answer 1 — the rationale sidecar
+
+**This extends an existing architecture rather than inventing a tier.** Two precedents are already in
+the tree:
+
+- **`archive.md` is already exactly this file**, and it is the proof the pattern works. It holds
+  "layers that no longer exist, kept for their method", and CLAUDE.md says of it: "No role has a
+  trigger for this one; it is research material." A rationale-only article that no role reads under a
+  normal workflow already exists, is already documented, and has already been accepted.
+- **The routing test's rule 4 already puts a sidecar beside its subject** — `<module>.md` next to
+  `<module>.ts`, referenced from JSDoc via `@see`. The proposal is that same move applied one directory
+  over, to `.claude/` instead of `src/`.
+
+**How "never read" is enforced, honestly: the same way it already is for nine articles.** Nothing
+auto-loads a sidecar, and no role file names a trigger for one. That is precisely the mechanism holding
+the topic articles at arm's length today, and CLAUDE.md already states its failure mode in the same
+breath — "an article nobody is told to read is worse than no article" — which is a feature here rather
+than a bug, because being unread under normal workflow **is the requirement**. Nothing mechanically
+prevents an agent reading a sidecar, and nothing needs to: the cost being removed is the unconditional
+load, not the possibility of a curious reader.
+
+**What it would buy, measured.** The corpus's rationale-only blocks are 158,114 bytes, 30% of prose. On
+the unconditional set specifically — `CLAUDE.md` plus the three house-rules articles, 136,190 bytes on
+`bac96c4` — the classified rationale shares are `CLAUDE.md` 48%, `handoffs.md` 51%, `engineering.md`
+29%, `workflow.md` 29%. **Read those as upper bounds** (see the validation note in the Situation), but
+even halved they are the largest reduction available to the unconditional load since the routing-index
+split, and unlike that split they do not relocate the cost to another file everyone reads.
+
+**What it would cost, measured, and this is the part that decides whether it is a slice or a project.**
+Entanglement is **81%**, and five files sit at 100%. The split is therefore **a rewrite of the mixed
+blocks, not a move of them** — for each one, the directive has to be restated so it stands alone once
+its surrounding argument is gone. Only the 381 rationale-only blocks move as-is.
+
+**Sequencing that follows from that number**, cheapest and most valuable first:
+
+1. **`doc-comments.md`** — 57% rationale bytes, the highest in the corpus, and a topic article rather
+   than an unconditional one, so a mistake there is cheap. The pilot.
+2. **`CLAUDE.md`** (48%) and **`handoffs.md`** (51%) — highest rationale share _inside_ the
+   unconditional set, so the biggest real saving.
+3. **`engineering.md`** (29%, but 62,217 bytes, the second-largest file in the repo and one nobody may
+   skip) — the largest absolute win and the highest risk, so it goes after the pattern is proven.
+4. **Leave `coder.md` alone** — 9% rationale, already almost pure instruction. Nothing to gain.
+
+**One divergence from the proposal as stated, offered rather than assumed.** Some of this repo's
+rationale exists specifically to stop a decision being re-litigated — "X was tried and rejected, here
+is why". An agent that never reads it can propose exactly the rejected thing, and would do so in good
+faith. The mitigation is cheap and keeps the split intact: **the instruction file retains a one-line
+marker naming the closed decision and pointing at the sidecar** — "the blocklist direction was
+considered and rejected; see `<file>.rationale.md`" — carrying the _fact_ of the closed question
+without the argument. That is a pointer, not rationale, so it belongs on the instruction side. Whether
+that is worth the bytes is a judgement call, not a measurement.
+
+**Spelling: `.rationale.md`, not `.rational.md`.** Different word — "rational" is the adjective.
+
+### Answer 2 — shape rules on what remains
+
+Everything below was this candidate's original and only answer. It survives the sidecar proposal
+unchanged in substance, but its scope moves: instead of "instruction surfaces within a file", which a
+reader must identify sentence by sentence, the rules apply to **the instruction files themselves** once
+Answer 1 has separated them. The sidecars then keep the register STE has no vocabulary for — which is
+the collision documented under "Where STE composes ... and where it collides" below, resolved by
+putting the two registers in different files rather than by asking one register to do both jobs.
+
+#### What ASD-STE100 actually is
 
 Issue 9, January 2025, per [asd-ste100.org](https://www.asd-ste100.org/about_STE.html), which states
 **53 writing rules in 9 sections**, a dictionary of **approximately 900 approved words** each with one
@@ -105,7 +239,7 @@ The rules relevant here: active voice for instructions; restricted tenses (no pr
 only as a technical noun, never as a verb form; no omitted articles, subjects or verbs; lists instead
 of prose for sequences and conditions; one topic per paragraph.
 
-### What the corpus measures against it
+#### What the corpus measures against it
 
 Reproduce by splitting each file on sentence boundaries with fenced blocks and inline code spans
 collapsed, table rows and headings dropped, and units under 3 words discarded. On `bac96c4`:
@@ -164,7 +298,7 @@ The `-ing`, em-dash and semicolon counts are the interesting ones: those three a
 subordinates, and subordination is what STE removes. That is the cost side stated plainly, before the
 benefit side is argued.
 
-### Where STE composes with what the repo already has, and where it collides
+#### Where STE composes with what the repo already has, and where it collides
 
 - **Composes with `engineering.md`'s claim discipline.** That section governs what a sentence may
   _assert_ and how long the assertion stays true. STE governs how a sentence is _shaped_. Orthogonal
@@ -185,7 +319,7 @@ benefit side is argued.
   Technical Names and Technical Verbs rules exempt _domain nouns_, so `mutant` and `worktree` are fine
   — but they do not exempt argument connectives, and connectives are what this corpus is made of.
 
-### Worked before/after, so the register loss is judgeable rather than asserted
+#### Worked before/after, so the register loss is judgeable rather than asserted
 
 **Where STE clearly helps.** `CLAUDE.md`'s merge protocol, on the exemption asymmetry — one 60-word
 sentence carrying four clauses and two em-dash asides:
@@ -215,7 +349,7 @@ The last clause is the whole argument: not "follow this rule" but "care cannot s
 would split it into two sentences and drop the causal link, or keep the link and break the tense rule.
 This paragraph is doing work that the standard has no register for.
 
-### What the slice would do
+#### What the slice would do
 
 **Partial adoption, split by the cut the corpus already shows.** Do not touch the articles' rationale.
 
@@ -235,7 +369,7 @@ This paragraph is doing work that the standard has no register for.
    which is a shape change with no register loss — the cheapest possible proof of the idea.
 4. **Do not build a checker in this slice.** See the tool search below.
 
-### Tool search, per `orchestration.md`'s "Before building a checker, search for one"
+#### Tool search, per `orchestration.md`'s "Before building a checker, search for one"
 
 Nothing needs to be written, and the search has one structural finding that outranks any individual
 tool. **ASD's approved-word dictionary is copyrighted, so no open tool ships it.** Open
@@ -253,7 +387,7 @@ The mainstream route, and the one to prefer:
 | [`stuffbucket/vale`](https://github.com/stuffbucket/vale/tree/main/)                                                                                     | Unrelated pure-Go STE linter and MCP server that reuses the Vale name                            | **Name collision — this is not vale.sh.** Configurable 20/25-word caps, `.vale-ste.yml`. Read 2026-09-08 at 6 stars, 38 commits. The MCP server is a second integration path                                                                                               |
 | [`danyuchn/asd-ste100-skill`](https://github.com/danyuchn/asd-ste100-skill), [`1fc0nfig/ste-writing`](https://github.com/1fc0nfig/ste-writing/tree/main) | STE rules as Claude Code skills, the second with a deterministic Python linter                   | Rewriting aids rather than gates; useful while doing step 3                                                                                                                                                                                                                |
 
-#### The dictionary question, asked specifically
+##### The dictionary question, asked specifically
 
 Searched 2026-09-08 for an open STE dictionary covering this stack or web development generally.
 **There is none, and the standard's own design says there would not be.** STE's Technical Names and
@@ -296,19 +430,49 @@ budgeted to fix. Vale is the thing to reach for _if_ the step-3 spike shows the 
 
 ## Touches
 
-`.claude/agents/articles/engineering.md` (new shape-rules section), `.claude/agents/articles/state-flow.md`
-and `architecture.md` (the two demonstration paragraphs), `CLAUDE.md`'s conventions list (one pointer
-sentence, per the routing test). If a plugin is adopted, `.claude/settings.json`.
+**Answer 1 (the sidecar split)** touches every file it splits, plus a new `<file>.rationale.md` beside
+each. Pilot scope is `.claude/agents/articles/doc-comments.md`; the unconditional set (`CLAUDE.md`,
+`handoffs.md`, `engineering.md`) follows only once the pattern is proven. CLAUDE.md's "Where new
+documentation goes" routing test gains a fifth branch, since a sidecar is a new destination and a
+routing test that does not name it will keep sending rationale back into the instruction files.
+
+**Answer 2 (the shape rules)** touches `.claude/agents/articles/engineering.md` (new shape-rules
+section), `state-flow.md` and `architecture.md` (the two demonstration paragraphs), and `CLAUDE.md`'s
+conventions list (one pointer sentence). If a linter is adopted, `.vale.ini` and `.claude/settings.json`.
+
+**Gate implications, and one of them is a real constraint on Answer 1.** `npm run agent-doc-check`'s
+check 5 requires every `rules/*.yml` to be named in `ast-grep-rules.md` specifically — the path is
+hardcoded as `RULE_DOC_PATH` behind an `existsSync` guard. **That article is 100% entangled and carries
+84 slice-slug mentions, so it is a prime split candidate — but the rule enumeration must stay in the
+instruction file**, or the gate reds. Check 2 validates `.claude/agents/*.md` frontmatter by filename,
+so a sidecar must not land in that directory under a name that reads as a role file.
+`npm run reference-check` scans every line of `.claude/**/*.md`, so sidecars are covered by it for free
+— and a split that drops or garbles a filename mid-move reds that gate, which is the desired behaviour.
 
 **Sizing.** Docs only, no `src/`, no `scripts/`. Every path is inside the mutation-invariant allowlist,
 so a landing diff confined to them is eligible to skip stage 5 — eligible only, since that skip exists
 solely as an instruction the orchestrating session hands down and `hardener` runs the stage absent one.
-Two gates do move on such a diff: `npm run agent-doc-check`, and `npm run reference-check`, which scans
-every line of `.claude/**/*.md` and `CLAUDE.md` — so a rewritten paragraph that drops or garbles a
-filename reds the gate. No design pass triggers fire.
+Two gates do move on such a diff: `npm run agent-doc-check`, and `npm run reference-check`. No design
+pass triggers fire — but note the 81% entanglement means Answer 1 is a **rewrite** of the mixed blocks,
+so it is a multi-slice programme rather than one slice, and the pilot should land alone.
 
 ## Open questions
 
+- **Does an agent that never reads the rationale re-litigate settled decisions?** This is the sidecar's
+  main risk and it is unmeasured. Several passages in this repo exist precisely to record that
+  something was tried and rejected. The proposed mitigation is a one-line pointer left behind in the
+  instruction file, but whether a pointer is enough — or whether an agent needs the argument to be
+  persuaded — is exactly the kind of question the spike below should answer rather than assume.
+- **How does an agent know it is "renegotiating" and should read the sidecar?** The trigger for the
+  topic articles is a stated condition in a role file. A sidecar needs the same, and the condition
+  "you are changing this instruction rather than following it" is harder to state crisply than
+  "before authoring a `.feature`". If that trigger is vague, the sidecars are either never read when
+  they should be or read always, and the second outcome restores the cost the split removed.
+- **Is the classifier good enough to scope with?** It agrees with hand labels about 2 in 3 times, and
+  errs toward over-reporting rationale. That is fine for the direction of the argument and **not** fine
+  for deciding which specific blocks move — the split itself must be done by reading, with the
+  classifier used only to rank files. Re-running it after the pilot, on the pilot's own diff, is the
+  cheap way to find out whether it tracked reality.
 - **The mechanism is inferred, not measured.** "Shorter sentences make agents follow instructions
   better" is exactly the shape of claim `engineering.md`'s "A conclusion from a plausible mechanism
   outlives a measurement" warns about, and the competing explanation is real: the long sentences may be
@@ -321,6 +485,13 @@ filename reds the gate. No design pass triggers fire.
   it may well make the corpus _longer_. Unmeasured in both directions; measure byte delta on the step-3
   demonstration before claiming either. **If it comes back longer, this candidate trades size for
   parseability and should say so rather than claiming both.**
+- **Does the split hold, or does rationale grow back into the instruction files?** The routing-index
+  split is the cautionary precedent measured in the Complication: it worked, and the corpus resumed
+  growing immediately. A sidecar tier has the same weakness — nothing enforces which side a new
+  paragraph lands on, exactly as nothing enforces the routing test's "at most one pointer sentence".
+  Worth asking whether `agent-doc-check` should grow a mechanical check here (a directive-density floor
+  on instruction files, say), since it already parses `.claude/**` and this candidate otherwise adds a
+  third unenforced convention to a repo that has measured two of them decaying.
 - **Does this address the growth rate at all, or only the symptom?** The Complication shows a
   structural fix that cut the unconditional load 56% and left the rate untouched. A shape rule is a
   second intervention on the same problem from a different angle, and it has the same weakness: nothing
