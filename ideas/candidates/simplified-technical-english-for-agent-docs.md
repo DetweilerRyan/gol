@@ -169,18 +169,31 @@ This paragraph is doing work that the standard has no register for.
 
 ### Tool search, per `orchestration.md`'s "Before building a checker, search for one"
 
-Nothing needs to be written. Three existing implementations, none adopted here yet:
+Nothing needs to be written, and the search has one structural finding that outranks any individual
+tool. **No open tool implements STE's controlled dictionary.** ASD's ~900-word approved list is
+copyrighted, so every open implementation ships plain-English substitutions instead and says so —
+`Syntaf/vale-llm-slop` states it outright. That is an external reason for the same scope the sketch
+above already argues on internal grounds: **the shape half of STE is enforceable here and the
+vocabulary half is not**, by anybody, at any price short of a commercial licence.
 
-| tool                                                                           | what it is                                                         | fit                                                                                                                                                                                       |
-| ------------------------------------------------------------------------------ | ------------------------------------------------------------------ | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| [`jyooi/agent-simple-english`](https://github.com/jyooi/agent-simple-english/) | TypeScript + Effect STE linter, 13 rules, Claude Code plugin + CLI | Closest fit — explicitly aimed at coding-agent instructions, ships as a plugin so it pays no `scripts/` gate freight. Needs Bun. Small project (9 stars, 58 commits when read 2026-09-08) |
-| [`stuffbucket/vale`](https://github.com/stuffbucket/vale/tree/main/)           | pure-Go STE linter + MCP server, configurable 20/25-word caps      | No runtime to add; MCP server is a second integration path                                                                                                                                |
-| [`danyuchn/asd-ste100-skill`](https://github.com/danyuchn/asd-ste100-skill)    | STE rules as a Claude Code skill                                   | Rewriting aid rather than a gate; useful while doing step 3                                                                                                                               |
+The mainstream route, and the one to prefer:
 
-All three state they approximate ASD-STE100 and are not ASD-certified. **The lightest first step is the
-skill, not the linter**: it makes the rules available while writing, which is where the repo's own
-evidence says prose defects are actually caught, without adding a gate whose findings nobody has
-budgeted to fix.
+| tool                                                                                                                                                     | what it is                                                                                       | fit                                                                                                                                                                                                                                                                        |
+| -------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------ | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| [Vale](https://vale.sh) + [`Syntaf/vale-llm-slop`](https://github.com/Syntaf/vale-llm-slop)                                                              | Mature Go prose linter with a package system; the package adds an `STE` style and a `Slop` style | **Best gate candidate.** One binary, no runtime added, Markdown-aware, configured by `.vale.ini` with styles scoped per file glob — which is exactly the instruction-surface/rationale split the sketch needs. Package read 2026-09-08 at 25 stars, 6 commits: early-stage |
+| [`jyooi/agent-simple-english`](https://github.com/jyooi/agent-simple-english/)                                                                           | TypeScript + Effect STE linter, 13 rules, Claude Code plugin + CLI                               | Explicitly aimed at coding-agent instructions and ships as a plugin, so it pays no `scripts/` gate freight. Needs Bun, which is a new runtime. Read 2026-09-08 at 9 stars, 58 commits                                                                                      |
+| [`stuffbucket/vale`](https://github.com/stuffbucket/vale/tree/main/)                                                                                     | Unrelated pure-Go STE linter and MCP server that reuses the Vale name                            | **Name collision — this is not vale.sh.** Configurable 20/25-word caps, `.vale-ste.yml`. Read 2026-09-08 at 6 stars, 38 commits. The MCP server is a second integration path                                                                                               |
+| [`danyuchn/asd-ste100-skill`](https://github.com/danyuchn/asd-ste100-skill), [`1fc0nfig/ste-writing`](https://github.com/1fc0nfig/ste-writing/tree/main) | STE rules as Claude Code skills, the second with a deterministic Python linter                   | Rewriting aids rather than gates; useful while doing step 3                                                                                                                                                                                                                |
+
+Commercial checkers exist and are the incumbents in aerospace — HyperSTE (Etteplan), Congree, Acrolinx,
+and the Boeing Simplified English Checker. They are the only tier that licenses the real dictionary.
+Out of scope for a docs slice on a hobby repo, recorded so the rejection is on the record rather than
+an oversight.
+
+Every open tool above states it approximates ASD-STE100 and is not ASD-certified. **The lightest first
+step is a skill, not a gate**: it makes the rules available while writing, which is where this repo's
+own evidence says prose defects are actually caught, without adding a checker whose findings nobody has
+budgeted to fix. Vale is the thing to reach for _if_ the step-3 spike shows the rules earn their keep.
 
 ## Touches
 
