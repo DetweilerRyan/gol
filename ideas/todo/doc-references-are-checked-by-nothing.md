@@ -167,7 +167,7 @@ only. There is no user-facing behaviour here and no `.feature` to write, so the 
 | #   | Slice                          | Entry                                       | Why separable                                                                                                                                                                                                      |
 | --- | ------------------------------ | ------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
 | A   | `oxlint-native-jsdoc-tier`     | **LANDED** `slice/oxlint-native-jsdoc-tier` | One config line. `.oxlintrc.json` gains `jsdoc` to `plugins` plus `check-tag-names`. **Measured clean on the real tree today**, so it lands green and independently of everything below                            |
-| B   | `comment-reference-checks`     | `architect` DESIGN                          | The four checks, plus fixing the 19 + 4 sites they flag. Needs a design pass on CLAUDE.md's own triggers: it creates new modules and its home is undecided                                                         |
+| B   | `comment-reference-checks`     | **LANDED** `slice/comment-reference-checks` | The four checks, plus fixing the 19 + 4 sites they flag. Needs a design pass on CLAUDE.md's own triggers: it creates new modules and its home is undecided                                                         |
 | C   | `no-undated-cross-file-claims` | `architect`                                 | The convention into `doc-comments.md`, then the prose prune. **After B**, not before — the convention mandates the `<file>'s <symbol>` form, and shipping a mandate nothing checks is what produced this candidate |
 
 **Slice A landed 2026-09-07** as `slice/oxlint-native-jsdoc-tier`, ruled by `architect` rather than
@@ -220,7 +220,7 @@ spanning `src/`, `scripts/`, `features/` and `rules/`.
 ## Open questions
 
 - **The sidecar half stays out of scope until a sidecar exists.** Zero instances today
-  (`ls src/*.md` → nothing), so slice B checks filenames, symbols and test titles and leaves the
+  (`ls src/*.md` → nothing), so slice B checks filenames, symbols and line references and leaves the
   `@see {@link ./name.md}` form alone. Reopen when the first sidecar lands; the extractor will
   already be there.
 - **Does the reverse orphan check have an opt-out problem?** Unchanged from the original filing — a
