@@ -31,7 +31,7 @@ rule:
   any:
     # Bare `performance` rather than `performance.now()`, so every reading of that
     # object is caught (now(), timeOrigin, mark()) rather than only the one spelling
-    # this slice happened to be tempted by.
+    # smooth-zoom-transitions happened to be tempted by.
     - pattern: performance.$$$REST
     - pattern: Date.now()
     - pattern: new Date($$$REST)

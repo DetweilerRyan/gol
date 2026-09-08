@@ -4,7 +4,7 @@ severity: warning
 message: Product code must not import from src/test-support/ -- that directory is outside every gate.
 note: >-
   The TSX half of no-test-support-in-product-ts, and the half that guards the specific import
-  this slice made tempting: Cell.tsx pulling cellLabel() out of src/test-support/cellQuery.ts
+  aria-pressed-cell-state made tempting: Cell.tsx pulling cellLabel() out of src/test-support/cellQuery.ts
   to remove the deliberate duplicate of its own aria-label format. cellQuery.ts is excluded
   from crap4ts and Stryker (see crap4ts.config.ts / stryker.config.json), so that import would
   move the label format out of mutation testing without anything failing, and put test

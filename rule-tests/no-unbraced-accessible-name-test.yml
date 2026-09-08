@@ -24,7 +24,8 @@ invalid:
   - <button aria-label="Zoom in" />
   - <div aria-valuetext="42 percent" />
   - <abbr title="Game of Life" />
-  # The exact form PatternLibraryModal.tsx carried before this slice deleted it, and the form
+  # The exact form PatternLibraryModal.tsx carried before mutate-accessible-names deleted it,
+  # and the form
   # GridRuler.tsx carried before it was braced -- both attributes on one element.
   - <Dialog aria-label="Pattern library" />
   - <div role="group" aria-label="Row ruler" />

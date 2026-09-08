@@ -68,7 +68,8 @@ note: >-
 # phrasing: the DIALOG'S NAME IS GUARDED -- features/e2e-helpers.ts's patternCategoryInLibrary
 # throws when its locator matches nothing, and all 8 pattern-library Examples rows reach it -- what
 # was unguarded is nothing, because the deleted attribute was superseded rather than unobserved.
-# "Nothing guards this name" is the wrong test for deletion and was, on this slice, the wrong claim.
+# "Nothing guards this name" is the wrong test for deletion and was, on mutate-accessible-names,
+# the wrong claim.
 #
 # SCOPE. The four attribute names are the strings an assistive-technology user actually receives:
 # aria-label, aria-valuetext, role, title. className is deliberately absent -- this repo has

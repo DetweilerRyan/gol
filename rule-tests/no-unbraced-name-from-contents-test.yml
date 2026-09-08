@@ -1,6 +1,7 @@
 id: no-unbraced-name-from-contents
 valid:
-  # The three braced forms this slice landed. The child is a jsx_expression, not a jsx_text.
+  # The three braced forms jsx-text-children-carry-no-mutants landed. The child is a
+  # jsx_expression, not a jsx_text.
   - <h1 className="text-xl font-semibold">{"Conway's Game of Life"}</h1>
   - <button type="button">{'Next Generation'}</button>
   - <DialogTitle>{'Pattern Library'}</DialogTitle>
@@ -29,7 +30,7 @@ valid:
   # neighbor, so the h2 does not answer for the span's text.
   - <h2><span>Nested</span></h2>
 invalid:
-  # The three sites this slice braced, in the form they carried before it.
+  # The three sites jsx-text-children-carry-no-mutants braced, in the form they carried before it.
   - <h1 className="text-xl font-semibold">Conway's Game of Life</h1>
   - <button type="button">Next Generation</button>
   - <DialogTitle>Pattern Library</DialogTitle>

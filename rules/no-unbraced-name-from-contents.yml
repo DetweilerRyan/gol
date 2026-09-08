@@ -99,7 +99,8 @@ note: >-
 # SWAPS two strings -- so a clean mutation run over these three sites is not evidence that
 # exchanging two names would be caught. Do not read a green score as covering it. That check
 # remains a hand-written membership test, of the kind GridRuler.test.tsx carries for the two ruler
-# groups. This is an argument against MORE mechanism, not for it: the answer on this slice was one
+# groups. This is an argument against MORE mechanism, not for it: the answer on
+# jsx-text-children-carry-no-mutants was one
 # small companion rule plus one hand-written assertion, and the residual is why it stopped there.
 #
 # PROMOTION TRIGGER: if an unbraced name-from-contents element ever reaches hardener -- i.e. this
