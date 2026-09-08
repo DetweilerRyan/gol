@@ -78,10 +78,10 @@ export function useCamera() {
   }
 
   // PRODUCTION-DEAD SINCE smooth-zoom-transitions, AND KEPT ON PURPOSE -- do
-  // not delete it as an unused export. The toolbar was its only caller and
-  // zoomInCentered/zoomOutCentered took that over when zooming started to
-  // glide; LifeBoard has never destructured it, so today only
-  // useCamera.test.ts calls it.
+  // not delete it as an unused export. The toolbar's zoom controls moved onto
+  // zoomInCentered/zoomOutCentered once zooming started to glide, and this
+  // export has had no production call site since; its own test is what keeps
+  // it alive.
   //
   // It stays because the FIVE-ROW CANCEL TABLE in that test file is the only
   // thing holding the commit() invariant, and the table is documentation as

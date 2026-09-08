@@ -190,7 +190,7 @@ describe('useGridFocus', () => {
     expect(document.activeElement).toBe(rightButton)
   })
 
-  // The pointer route's own DOM-focus half, added as this slice's step-4
+  // The pointer route's own DOM-focus half, added as collapse-dead-cell-layer's step-4
   // ADJUDICATE corrective. Before the dead-cell layer collapsed, the browser
   // supplied this for free (a click lands on a mounted <button>, which
   // Chromium focuses itself); with only live cells mounted, a click on a dead

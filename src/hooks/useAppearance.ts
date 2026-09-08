@@ -22,8 +22,8 @@ export interface UseAppearanceResult {
  * desync). Delegates every rule to appearance.ts; this hook owns only
  * what's genuinely React/browser: the persisted preference as state, and
  * the one effect that pushes the resolved appearance onto `<html>` for
- * Tailwind's `dark:` variant (and this slice's `@custom-variant` override
- * in src/index.css) to key off.
+ * Tailwind's `dark:` variant (and dark-mode-following-system-appearance's
+ * `@custom-variant` override in src/index.css) to key off.
  */
 export function useAppearance(): UseAppearanceResult {
   const [preference, setPreference] = useState<AppearancePreference>(() =>

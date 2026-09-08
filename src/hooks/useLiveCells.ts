@@ -12,7 +12,7 @@ import type { LiveCellStore } from '../liveCellStore'
  */
 // See liveCellStore.ts's module header for why a whole-set subscriber is a
 // legitimate render source now, not the during-render-with-no-subscription
-// bug that comment used to warn against, and this slice's step-4 handoff
+// bug that comment used to warn against, and collapse-dead-cell-layer's step-4 handoff
 // for the two perf scenarios that show the regression and why it isn't
 // fixed here.
 export function useLiveCells(store: LiveCellStore): ReadonlyLiveCells {

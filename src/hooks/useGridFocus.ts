@@ -33,7 +33,7 @@ export interface UseGridFocusResult {
 
 /**
  * Owns the keyboard focus cursor as local state, delegating every
- * transition to gridFocus.ts (this slice's step 1). Thin adapter, per this
+ * transition to gridFocus.ts (collapse-dead-cell-layer's step 1). Thin adapter, per this
  * repo's hook convention: the only logic that lives HERE rather than in that
  * pure module is the two things that are genuinely React's job --
  * synchronizing real DOM focus onto whichever cell is logically current, and
@@ -50,7 +50,7 @@ export interface UseGridFocusResult {
 // is the standard WAI-ARIA APG roving-tabindex pattern: update tabindex,
 // then move DOM focus programmatically.
 //
-// WHY THE POINTER ROUTE NEEDS THE SAME NUDGE, since step 4 of this slice.
+// WHY THE POINTER ROUTE NEEDS THE SAME NUDGE, since step 4 of collapse-dead-cell-layer.
 // It used not to: Chromium focuses a <button> it is clicked on by itself, so
 // while every cell in range had an element the clicked cell held real DOM
 // focus for free and setFocus only had to move the roving-tabindex target.
