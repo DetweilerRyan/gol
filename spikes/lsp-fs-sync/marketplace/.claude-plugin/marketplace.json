@@ -1,0 +1,33 @@
+{
+  "$schema": "https://anthropic.com/claude-code/marketplace.schema.json",
+  "name": "gol-local-plugins",
+  "description": "Local plugins for this repo's toolchain experiments",
+  "owner": { "name": "Ryan Detweiler" },
+  "plugins": [
+    {
+      "name": "typescript-lsp-fs-sync",
+      "description": "typescript-language-server behind a proxy that resyncs open documents from disk after out-of-band writes",
+      "version": "0.1.0",
+      "author": { "name": "gol-claude spike" },
+      "source": "./plugins/typescript-lsp-fs-sync",
+      "category": "development",
+      "strict": false,
+      "lspServers": {
+        "typescript": {
+          "command": "node",
+          "args": ["/Users/ryandetweiler/Documents/projects/gol-claude/spikes/lsp-fs-sync/proxy.mjs"],
+          "extensionToLanguage": {
+            ".ts": "typescript",
+            ".tsx": "typescriptreact",
+            ".js": "javascript",
+            ".jsx": "javascriptreact",
+            ".mts": "typescript",
+            ".cts": "typescript",
+            ".mjs": "javascript",
+            ".cjs": "javascript"
+          }
+        }
+      }
+    }
+  ]
+}
