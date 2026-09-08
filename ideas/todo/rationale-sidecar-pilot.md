@@ -202,6 +202,12 @@ this slice's diff is exactly the kind that gap was filed about. `architect` is t
 already owns `rules/`, and it would own the vocabulary in the follow-on. This does not resolve that
 candidate, it just declines to be its first casualty.
 
+**Ryan is the final reviewer, after `hardener` and after `architect`'s cold read.** See acceptance 7 —
+it is a blocking gate on landing, not a courtesy notification, and the orchestrating seat carries it
+because no role can reach him. This mirrors the stop `product` SPECIFY already makes for explicit user
+sign-off; the difference is only that `product` does not run on this slice, so the stop has nowhere else
+to live.
+
 **`hardener` runs `reference-check` and `agent-doc-check` as the gate that matters here.** Stages 3–7
 have nothing to act on: no `src/` changed, so property, browser, mutation, crap4ts and dry4ts cannot
 move. Stage 1 (`build`) still runs.
@@ -224,11 +230,34 @@ Stated as numbers so "done" is not a judgement call. Measure before and after on
 6. **The reading test, which is the point and is not mechanical:** `architect` reads the stripped
    `doc-comments.md` cold and reports whether any instruction became ambiguous once its argument left.
    A yes here outweighs every number above.
+7. **Ryan signs off, and this gate is last.** Nothing merges without it: the gate sits between
+   `hardener`'s re-run on the rebased branch (merge protocol step 3) and the fast-forward of `main`
+   (step 4), so a refusal costs a revert of the slice branch and never a revert of `main`. It comes
+   **after** 1–6 because `architect`'s cold read is an input to the decision rather than a substitute
+   for it, and because a number is cheap to produce and worthless to sign off on its own.
+
+**What is put in front of him, and what he is being asked.** Four artifacts: the stripped
+`doc-comments.md`, the `doc-comments.rationale.md` sidecar, the before/after figures for acceptance 1–5,
+and `architect`'s cold-read report verbatim rather than summarised. The question is not "did the gates
+pass" — that is acceptance 1–5 and it is already answered. It is **"is the instruction file still the
+thing you would want a role to read, and is anything in the sidecar something you would have wanted left
+behind?"** That is a judgement about whether the tier is worth having, and it is the only question this
+slice actually exists to answer.
+
+**Three outcomes, and only one of them is a merge.** Approve, and the merge protocol proceeds. Ask for
+changes, and the slice iterates — the sign-off is re-sought, not assumed carried over. Reject, and the
+Rollback below applies: revert rather than patch, because a rejection here is a finding about the tier,
+which is worth more than the split.
+
+**Only the orchestrating seat can reach him**, per CLAUDE.md's escalation lanes, so this gate lives in
+that seat's hands and in no role's. `hardener` finishing is not the end of the slice, and a handoff that
+reads as "all gates green, ready to land" is wrong on this slice unless it also says the sign-off is
+outstanding.
 
 ## Rollback
 
 One `git revert` of the slice's commits. The split touches one article, its new sidecar, and two config
-files; nothing else depends on them, and no gate is newly armed. **If acceptance 6 fails, revert rather
+files; nothing else depends on them, and no gate is newly armed. **If acceptance 6 fails, or Ryan rejects at acceptance 7, revert rather
 than patch** — an instruction that needed its rationale is evidence about the tier, not a wording bug,
 and the finding is worth more than the split.
 
@@ -259,6 +288,10 @@ about `src/`.
 - **Does `.vale/` belong in the repo or in a machine-global install?** Vendoring makes the run
   reproducible and adds third-party text to the tree; not vendoring makes a fresh clone silently skip.
   The `src/catalyst/` precedent favours vendoring behind an explicit gate exclusion.
+- **Does the sign-off gate generalise past the pilot?** It is scoped to this slice deliberately. If the
+  tier is adopted and the rollout runs across `CLAUDE.md`, `handoffs.md` and `engineering.md`, asking for
+  a human read of each is either the right level of care for the unconditional set or a bottleneck that
+  turns three slices into three waits. Worth deciding before the rollout is scoped, not during it.
 - **Is the classifier good enough to score acceptance 1?** It agrees with hand labels about 2 in 3
   times. It is fine for ranking files and **not** fine for deciding individual blocks — so the split
   is done by reading, and the classifier is used only for the before/after number. If that number and
