@@ -67,6 +67,8 @@ These are the things the type cannot state, and this repo is dense with them:
 
 Measured findings and their numbers; rejected alternatives and why; why a constant has the value it has; "three things follow by construction" derivations; cross-references into another module's internals. All of it is real and worth keeping — it just does not belong on a channel every caller pays for.
 
+**This rule settles the channel, not the shelf life** — the two are separate decisions and this one answers only the first. A measured finding and a cross-reference into another module are both permitted on the `//` channel, and both are still governed by `engineering.md`'s "A comment may state why; it may not state an undated present-tense fact about another file": cite the command rather than the number, cite `<file>'s <symbol>` rather than a line, name the slice rather than writing "this slice", and state the contract callers must honour rather than listing who calls. That rule lives in `engineering.md` rather than here because it binds `.md` prose as hard as it binds a comment, and every role reads that article unconditionally while this one carries a read trigger.
+
 ### 5. The tag rule is an information test, not an allowlist
 
 **Does this line say something the signature cannot?** Keep it. **Does it restate the signature?** Delete it — tag or prose alike.
