@@ -31,9 +31,9 @@ or `scripts/`, exactly as they govern `coder`'s work. Its pass is a _gate_ rathe
 applies to it as it does to `coder`. Report an insufficient hover as a finding. Do not fix it inside the
 gate.
 
-**`features/**` TypeScript: every mechanical fact here applies to it. The _duty_ is not codified.**
-Part 1's placement rules and Part 2's reading habit hold in `features/screenplay/*.ts` exactly as in
-`src/`. No role file assigns the duty there. That is a recorded gap rather than an oversight. Note that
+**`features/**` TypeScript: every mechanical fact here applies to it, but no role file assigns the
+_duty_.** Part 1's placement rules and Part 2's reading habit hold in `features/screenplay/*.ts` exactly
+as in `src/`. That silence is a recorded gap rather than an oversight. Note that
 `rules/no-dead-doc-on-annotated-return-literal.yml` is unscoped by path, so it already fires in
 `features/`.
 
@@ -61,7 +61,7 @@ there is no abstraction." So this is a **partition, not a fold**:
 - **Implementation half → stays `//`.** Relocate it below the signature, into the body, or between the
   JSDoc block and the declaration.
 
-**The between-position is sanctioned.** Write `/** … */`, then a `//` block, then the declaration: the
+**Use the between-position freely.** Write `/** … */`, then a `//` block, then the declaration: the
 JSDoc still reaches a cross-file hover, tags and all. Do not "fix" a file into the below-the-signature
 form on the belief that the between form is broken. It is not.
 
@@ -142,8 +142,8 @@ content and drop the tag word, moving it into the prose above the block tags.
 > Read `doc-comments.rationale.md` before proposing a sixth row. `@deprecated` is the likeliest
 > candidate and still needs its measurement.
 
-**`{@link}` is an _inline_ tag and is sanctioned.** Rule 7 mandates it, and `src/cache.ts` and
-`src/cellTiles.ts` use it throughout. The closure governs tags that open a line, not ones written inside
+**`{@link}` is an _inline_ tag, and rule 7 mandates it.** `src/cache.ts` and `src/cellTiles.ts` use it
+throughout. The closure governs tags that open a line, not ones written inside
 prose.
 
 **Prose paragraphs go _before_ the first block tag.** Summary, then prose, then tags. A paragraph written
@@ -196,8 +196,8 @@ export is not this convention. An export whose signature already says everything
 summary that restates the signature fails rule 5 and costs a hover anyway.
 
 **"Comment block" means every block in the file, not only the ones next to an export.** Sizing a sweep by
-"blocks directly above an exported declaration" undercounts it by roughly 3x. Four kinds of block still
-have to be read and ruled on, even when the ruling is "stays `//`":
+"blocks directly above an exported declaration" undercounts it by roughly 3x. You still have to read and rule on four
+kinds of block, even when the ruling is "stays `//`":
 
 - module headers
 - blocks above non-exported helpers
