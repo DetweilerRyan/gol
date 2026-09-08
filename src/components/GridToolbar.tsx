@@ -35,7 +35,8 @@ export default function GridToolbar({
     <div className="absolute top-2 right-2 flex items-center gap-1">
       {/* A native <select> (Headless.Select, via src/catalyst/select.tsx) --
           getByRole('combobox') resolves it directly, and it already carries
-          the dark: variants dark-mode-following-system-appearance's @custom-variant makes work. Wrapped
+          the dark: variants that dark-mode-following-system-appearance's
+          @custom-variant makes work. Wrapped
           in a div rather than a w-* override on the Select's own className:
           that className lands on the same element as the component's own
           `block w-full`, and which of the two wins is a

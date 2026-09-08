@@ -31,10 +31,10 @@ export interface VisibleRange {
 
 /**
  * The camera-derived range that might need a DOM node, padded by
- * VISIBLE_BUFFER_CELLS on every side. Used by the ruler, which needs its
- * label set to match what's actually on screen exactly -- the cell button
- * layer reads cellTiles.ts's own TileRange instead, so this buffered,
- * camera-exact range has one caller left.
+ * VISIBLE_BUFFER_CELLS on every side. Stays camera-exact rather than
+ * world-anchored -- correct for a label set that must match what's actually
+ * on screen, which is what a ruler needs, but not a stable key for mounting
+ * cell DOM nodes across a pan. Use cellTiles.ts's own TileRange for that.
  */
 export function computeVisibleRange(camera: Camera, viewportWidthPx: number, viewportHeightPx: number): VisibleRange {
   return {
@@ -144,10 +144,9 @@ export interface GridLinePhase {
  * The pixel offset a CSS repeating background pattern needs (as its own
  * background-position) to align a grid line to world coordinate 0, at both
  * the per-cell (minor) and every-MAJOR_GRIDLINE_INTERVAL-cells (major)
- * period -- the phase Cell.tsx's own per-button border classes currently
- * encode implicitly, and this module's future caller draws as a background
- * instead once dead cells no longer carry an element of their own to put a
- * border on.
+ * period -- what a repeating-background gridline paint positions itself
+ * against, so the lattice stays aligned to world coordinate 0 as the camera
+ * pans and zooms rather than to the viewport's own top-left corner.
  */
 // worldToScreen(camera, 0, y).x is exactly -offsetX * cellSize -- the
 // screen-space position world x=0 currently sits at -- so that is the raw

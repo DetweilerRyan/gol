@@ -179,11 +179,13 @@ describe('useCamera', () => {
 // every one of useCamera's returned actions churn identity on every render
 // -- which in turn made Grid's props differ on every render and defeated its
 // own memoization (measured: every mounted Cell re-rendered on every pan
-// frame at min zoom). See useZoomGlide.test.ts's "controller identity"
-// describe for the producer-side half of this fix.
+// frame at min zoom). See useZoomGlide.test.ts for the producer-side half of
+// this fix: the glide controller itself must keep referential identity
+// across a no-op re-render, the same guarantee asserted here for
+// useCamera's own returned actions.
 describe('returned action identity', () => {
-  // Skipped under Stryker for the same reason useZoomGlide.test.ts's
-  // "controller identity" test is: Stryker's instrumentation defeats React
+  // Skipped under Stryker for the same reason useZoomGlide.test.ts's own
+  // controller-identity assertion is: Stryker's instrumentation defeats React
   // Compiler's memoization, so a mutated build returns a fresh action set on
   // every render and this assertion fails in Stryker's dry run, before a
   // single mutant executes. The unskipped companion at the end of this

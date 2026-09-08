@@ -308,11 +308,12 @@ describe('toolbar zoom glide reaches the on-screen badge', () => {
 })
 
 // zoom-glide-regressed-the-pan-path: the cost that slice's identity fix
-// actually removes -- see useZoomGlide.test.ts's "controller identity" and
-// useCamera.test.ts's "returned action identity" for the identity guards
-// themselves. #grid-content's non-passive wheel listener (useWheelInput.ts)
-// is registered with effect deps [ref, onWheelInput], and pre-fix
-// onWheelInput (useCamera's applyWheel, routed through commit()) churned
+// actually removes -- see useZoomGlide.test.ts and useCamera.test.ts for the
+// identity guards themselves: the glide controller keeping referential
+// identity across a no-op re-render, and useCamera's own returned actions
+// doing the same across a pan. #grid-content's non-passive wheel listener
+// (useWheelInput.ts) is registered with effect deps [ref, onWheelInput], and
+// pre-fix onWheelInput (useCamera's applyWheel, routed through commit()) churned
 // identity on every render -- so it was torn down and re-added on every
 // camera commit during a drag pan (measured by architect's DESIGN pass: 6
 // re-registrations over a 6-frame paced pan, 0 after the fix). Whether that
