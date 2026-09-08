@@ -44,6 +44,15 @@ Adapted from unclebob/swarm-forge's `main`-branch constitution (`swarmforge/cons
 - **Pass `LSP` an absolute path, always.** A relative one resolves against the session's working directory rather than your worktree, and because the same relative path exists in both trees it answers about the wrong copy silently, with no error — measured. See `.claude/agents/articles/doc-comments.md`'s Part 2 §7.
 - **Never `git checkout`, `rebase`, `merge`, or `push`.** Those are the orchestrating session's, for the same reason: you can only see your own slice.
 
+## Language server
+
+- **A hover can serve pre-edit text after a write the harness did not make.**
+- **Refresh the file with any trivial `Edit` before you trust a hover on it.**
+
+`Edit` and `Write` reach the language server. A shell write does not, and neither does `git checkout`, `git rebase`, or `npm run format`. The stale copy otherwise answers every later hover on that file, for the whole session. The refresh replaces the whole copy, so it need not touch the lines you care about. See `.claude/agents/articles/doc-comments.md`'s Part 2 §7.
+
+This hazard is not worktree-specific. It bites in a single checkout too. The misroute hazard under "Worktrees and branches" _is_ worktree-specific. Keep the two apart.
+
 ## Dropped from the source article (not applicable here)
 
 - `.worktrees/<role>` directories and the prohibition on running `./swarm` from an agent worktree. This repo's worktrees are per-slice, not per-role: all six roles run in the same worktree, one after another, and it's the slices that run in parallel.
