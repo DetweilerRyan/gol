@@ -170,11 +170,11 @@ This paragraph is doing work that the standard has no register for.
 ### Tool search, per `orchestration.md`'s "Before building a checker, search for one"
 
 Nothing needs to be written, and the search has one structural finding that outranks any individual
-tool. **No open tool implements STE's controlled dictionary.** ASD's ~900-word approved list is
-copyrighted, so every open implementation ships plain-English substitutions instead and says so —
-`Syntaf/vale-llm-slop` states it outright. That is an external reason for the same scope the sketch
-above already argues on internal grounds: **the shape half of STE is enforceable here and the
-vocabulary half is not**, by anybody, at any price short of a commercial licence.
+tool. **ASD's approved-word dictionary is copyrighted, so no open tool ships it.** Open
+implementations either state the omission and substitute plain English — `Syntaf/vale-llm-slop` does
+exactly that — or rebuild a wordset independently. That is an external reason for the same scope the
+sketch above already argues on internal grounds: **the shape half of STE is enforceable here off the
+shelf, and the vocabulary half is not.**
 
 The mainstream route, and the one to prefer:
 
@@ -184,6 +184,37 @@ The mainstream route, and the one to prefer:
 | [`jyooi/agent-simple-english`](https://github.com/jyooi/agent-simple-english/)                                                                           | TypeScript + Effect STE linter, 13 rules, Claude Code plugin + CLI                               | Explicitly aimed at coding-agent instructions and ships as a plugin, so it pays no `scripts/` gate freight. Needs Bun, which is a new runtime. Read 2026-09-08 at 9 stars, 58 commits                                                                                      |
 | [`stuffbucket/vale`](https://github.com/stuffbucket/vale/tree/main/)                                                                                     | Unrelated pure-Go STE linter and MCP server that reuses the Vale name                            | **Name collision — this is not vale.sh.** Configurable 20/25-word caps, `.vale-ste.yml`. Read 2026-09-08 at 6 stars, 38 commits. The MCP server is a second integration path                                                                                               |
 | [`danyuchn/asd-ste100-skill`](https://github.com/danyuchn/asd-ste100-skill), [`1fc0nfig/ste-writing`](https://github.com/1fc0nfig/ste-writing/tree/main) | STE rules as Claude Code skills, the second with a deterministic Python linter                   | Rewriting aids rather than gates; useful while doing step 3                                                                                                                                                                                                                |
+
+#### The dictionary question, asked specifically
+
+Searched 2026-09-08 for an open STE dictionary covering this stack or web development generally.
+**There is none, and the standard's own design says there would not be.** STE's Technical Names and
+Technical Verbs rules exist precisely so a project supplements the core dictionary with its own domain
+list — ASD never published a per-industry vocabulary, so this is authoring work by construction rather
+than a gap somebody has failed to fill.
+
+What does exist, in descending order of usefulness here:
+
+- **[OpenSTE](https://www.openste.org/)** ([`openste/openste`](https://github.com/openste/openste)) —
+  an MIT-licensed open wordset for STE-style validation, and the closest thing to a free dictionary.
+  It is deliberately **general-purpose**: its own roadmap lists per-industry examples as future work.
+  Read 2026-09-08 at 5 stars, 11 commits, so treat it as a starting corpus rather than a standard.
+- **Vale's `Vocab` mechanism** — a directory holding `accept.txt` and `reject.txt`, layered over
+  whatever styles are active. This is the mechanism a project-specific technical-names list would use,
+  and it is the reason Vale is the right host: the list lives in the repo and is reviewed like any
+  other file.
+- **The Vale package registry has 20 packages and not one is STE or stack-specific** (enumerated from
+  `vale-cli/packages`'s `library.json`, 2026-09-08). Its software-documentation entries — Google,
+  Microsoft, RedHat, Elastic, Salesforce — ship preferred spellings and capitalisations, which is a
+  style guide rather than a controlled allowlist, and a style guide fails **open** on a word nobody
+  listed. Note also that `vale-llm-slop` is **not** in this registry; it installs by direct URL.
+
+**The seed for a project list already exists in this repo and is not hypothetical.** `product` owns
+"the ubiquitous language", `.gherkin-lintrc`'s `no-restricted-patterns` is a hand-maintained
+vocabulary control over `features/**`, and `CLAUDE.md`'s compact module map names the domain nouns.
+A technical-names list would start from those three rather than from nothing — which makes the
+vocabulary half **reachable by authoring, but not by installing**, and therefore a slice of its own
+rather than part of this one.
 
 Commercial checkers exist and are the incumbents in aerospace — HyperSTE (Etteplan), Congree, Acrolinx,
 and the Boeing Simplified English Checker. They are the only tier that licenses the real dictionary.
