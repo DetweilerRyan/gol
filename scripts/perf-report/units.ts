@@ -20,7 +20,7 @@ import type { RawScenarioSample, RepSample } from './raw-sample.ts'
 // its header comment), so nothing upstream of this module has ever
 // rescaled a metricsDelta value.
 //
-// Discovered empirically while building this slice (invocation D): a single
+// Discovered empirically while building render-perf-harness (invocation D): a single
 // pan-default-empty rep recorded metricsDelta.TaskDuration = 2.02 against a
 // wallClockMs of 2350 -- about 1000x too small for a gesture that keeps the
 // main thread essentially fully busy. format.ts's

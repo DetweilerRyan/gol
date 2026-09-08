@@ -59,8 +59,7 @@ export function basenameOf(token: string): string {
 // conflating "Grid" with "GridLines". No bare-shape check
 // (`/^[A-Za-z_][A-Za-z0-9_]*$/`) is needed here: `word` always comes from
 // CITATION_PATTERN's own second capture group below, which already
-// requires exactly that character class, so a differently-shaped `word`
-// can never reach this function from its only caller.
+// requires exactly that character class.
 function isIdentifierShaped(word: string): boolean {
   return word.includes('_') || (/[a-z]/.test(word) && /[A-Z]/.test(word))
 }

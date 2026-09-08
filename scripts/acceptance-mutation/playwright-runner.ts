@@ -238,12 +238,12 @@ function summarize(statuses: string[]): SpecSummary {
 
 // Covers both "the reporter never wrote a file" (a crash before Playwright
 // could start reporting) and "the file exists but isn't valid JSON" -- same
-// treatment as the retired vitest-runner module's readSummary. Its sole caller's `!parsed`
-// guard treats a thrown-then-caught read the same as any other falsy
-// result, so this function's own null-vs-undefined distinction is
-// unobservable from outside the module -- a mutation scan emptying this
-// catch block (dropping the explicit `return null`, leaving an implicit
-// `return undefined`) is therefore an equivalent mutant, not a gap.
+// treatment as the retired vitest-runner module's readSummary. A `!parsed`-style
+// falsy check on the calling side treats a thrown-then-caught read the same
+// as any other falsy result, so this function's own null-vs-undefined
+// distinction is unobservable from outside the module -- a mutation scan
+// emptying this catch block (dropping the explicit `return null`, leaving
+// an implicit `return undefined`) is therefore an equivalent mutant, not a gap.
 function parseRawReport(jsonOutputPath: string): RawReport | null {
   try {
     return JSON.parse(readFileSync(jsonOutputPath, 'utf8')) as RawReport

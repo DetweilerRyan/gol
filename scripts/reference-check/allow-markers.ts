@@ -92,7 +92,8 @@ function allowMarkerOnLine(raw: string, lineNumber: number, surface: 'source' | 
 // was measured: a .test.ts file whose test *data* is a string literal
 // shaped like a marker (this program's own fixtures are exactly that)
 // reads as a real opt-out without it -- 22 false stale-allow-marker
-// findings against this slice's own test files, 0 with it.
+// findings against comment-reference-checks's own test files (measured
+// 2026-09-07, on that slice's tree), 0 with it.
 export function extractAllowMarkers(text: string, surface: 'source' | 'doc'): AllowMarker[] {
   return text
     .split('\n')

@@ -124,9 +124,10 @@ describe('runCheck', () => {
   // Asserts the guard's OWN message text, not just the path: readFileSync's
   // bare ENOENT names the absolute path, of which ARTICLE_PATH is a substring,
   // so a path-only assertion passes with the existsSync guard deleted outright
-  // (measured -- all 85 tests stayed green under that fault). This test is the
-  // guard's only guard: stryker.scripts.config.json excludes `**/run.ts`, so
-  // the branch carries no mutant either.
+  // (measured -- every test `npm run test:scripts` collects stayed green
+  // under that fault). This test is the guard's only guard:
+  // stryker.scripts.config.json excludes `**/run.ts`, so the branch carries
+  // no mutant either.
   it('throws naming the missing path when the rule documentation article is absent', () => {
     const root = tempRepo()
     writeFile(root, 'package.json', JSON.stringify({ scripts: {} }))

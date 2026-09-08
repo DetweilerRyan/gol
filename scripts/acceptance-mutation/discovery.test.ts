@@ -39,7 +39,7 @@ describe('discoverTargets', () => {
     expect(() => discoverTargets(featuresDir)).toThrow(/no \.feature files/i)
   })
 
-  // The whole reason this slice exists: a target nested one directory deep
+  // The whole reason nested-spec-discovery exists: a target nested one directory deep
   // is discovered, and its `feature` carries the path relative to
   // featuresDir -- not just the basename -- so downstream readers (run.ts's
   // loadTargetPlans) can path.join it straight back onto featuresDir.
@@ -69,7 +69,7 @@ describe('filterTargets', () => {
     expect(() => filterTargets(targets, 'nonexistent')).toThrow(/nonexistent/)
   })
 
-  // Measured broken before this slice: a nested target's `feature` is a
+  // Measured broken before nested-spec-discovery: a nested target's `feature` is a
   // relative path ('cell-life/cell-life.feature'), but --feature is given
   // as the bare slice name -- normalizing that to 'cell-life.feature' never
   // equalled the full path, so a nested target could not be selected by

@@ -123,10 +123,10 @@ export function isTupleList(value: string): boolean {
 // discipline mutateCommaList already followed (see its own comment on why
 // String#replace's $&-interpolating overload is avoided): only the two spans
 // themselves move, every other byte -- including the ", " between them --
-// is untouched. `first` must precede `second` in `value`; the only caller,
-// below, always passes a tuple's own components[0] then components[1], which
-// matchAll guarantees are already in left-to-right document order, so there
-// is no reordering to do here.
+// is untouched. `first` must precede `second` in `value`; a parsed tuple's
+// own components[0] then components[1] are always already in that order,
+// since matchAll guarantees left-to-right document order, so there is no
+// reordering to do here.
 function spliceSwap(value: string, first: TupleComponent, second: TupleComponent): string {
   return (
     value.slice(0, first.start) +
