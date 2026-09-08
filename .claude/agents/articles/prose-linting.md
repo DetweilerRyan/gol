@@ -159,6 +159,39 @@ actionable. "The between-position is sanctioned" becomes "Use the between-positi
    is reported with the message "name the agent", which the sentence does.
 5. **A deliberate aphorism, usually a heading.** "Writing is verified by reading."
 
+## Acting on a finding removes content. Decide where it goes.
+
+Every mechanical rule here is satisfied by making prose shorter, and shorter prose is reached by moving
+something out. **Name its destination before you cut.** There are three, and only one of them is a
+deletion:
+
+- **A rule, a caveat, a closed decision** — stays in the article. It constrains an action, which is the
+  test CLAUDE.md's routing branch 5 states.
+- **An illustration, a measurement, a probe method, a worked example** — goes to the article's
+  `.rationale.md` sidecar. It is evidence, and evidence has a home.
+- **A restatement of something said better nearby** — delete it. This is the only legitimate deletion,
+  and it is rarer than it feels mid-edit.
+
+**This is written down because it went wrong, measurably.** Six shortening passes over
+`doc-comments.md` dropped fifteen illustrations and pointers **out of the pair entirely**, rather than
+moving them to the sidecar. Among them: React's `useState` as the model for the sidecar tier, what
+`documentSymbol` actually returns, and the signature behind an identity guarantee. No rule was lost. The
+examples that made the rules legible were. `doc-comments.rationale.md` records the full list.
+
+**Nothing catches this.** `reference-check` and `agent-doc-check` both stay green, because every
+filename still resolves — what changed is that prose went missing, and no checker reads for absence. So
+audit the pair by hand after a shortening pass, comparing against the article as it stood before.
+
+## Read a big number as unworked, not as broken
+
+Measured 2026-09-08: `vale .claude/agents/articles/` reports roughly 1,700 findings across 16 files, and
+**only two of those files have been worked** — `doc-comments.md` and this one. Every other article
+carries its findings untriaged.
+
+So a large count over the whole directory says nothing about the corpus and nothing about the rules. It
+says twelve articles have not been read yet. **Lint the file you are editing**, not the directory,
+until a rollout has been through the rest.
+
 ## The six rules that are off
 
 All twelve rules in the style have been tried or ruled on. Six are off, and each has a reason in
