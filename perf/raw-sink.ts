@@ -17,8 +17,8 @@ import type { RawScenarioSample } from '../scripts/perf-report/raw-sample.ts'
 const PERF_DIR = path.dirname(fileURLToPath(import.meta.url))
 const RAW_DIR = path.resolve(PERF_DIR, '../reports/perf/raw')
 
-// One file per scenario x project, not per scenario alone: this slice wires
-// two Playwright projects and, left to Playwright's default, both run the
+// One file per scenario x project, not per scenario alone: render-perf-harness
+// wires two Playwright projects and, left to Playwright's default, both run the
 // same scenario -- a filename keyed on scenario alone would have the
 // second project's run silently overwrite the first's, and run.ts/format.ts
 // both expect one row per (scenario, project) pair to survive.

@@ -67,8 +67,8 @@ function runLoadScenario(
 
       // Population is checked once settled, on every rep -- a seed that
       // silently fails on, say, only the 3rd navigation (a flaky
-      // App.tsx-mount race, not something this slice has evidence for but
-      // also has not ruled out) would otherwise only be caught by luck.
+      // App.tsx-mount race, not something render-perf-harness has evidence
+      // for but also has not ruled out) would otherwise only be caught by luck.
       if (assertPopulation) {
         await assertPopulation(page, viewport)
       }
@@ -111,7 +111,7 @@ runLoadScenario('initial-load-50k-offscreen', '?cells=50000&spread=200', (page, 
 // only faithful way to drive this today is the same clickPaced loop
 // generation.perf.spec.ts already uses, just for many more iterations --
 // which is also exactly why this is test.skip rather than live: nothing in
-// this slice has established what "sustained" should mean (how many
+// render-perf-harness has established what "sustained" should mean (how many
 // generations, over what wall-clock budget) or measured whether a run this
 // long makes perf/'s own suite duration unacceptable. A later slice should
 // pick those numbers with real data in hand (this scenario's own draft

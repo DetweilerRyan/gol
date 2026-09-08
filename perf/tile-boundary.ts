@@ -65,8 +65,8 @@ export interface MeasuredGrid {
   // that argument, not a second source of truth for it (see readGridGeometry).
   // The caller already asserts the app's zoom READOUT separately; this is the
   // second, independent route, confirming that what is painted agrees with
-  // what the camera says. Worth keeping precisely because this slice changed
-  // rendering: a camera/render divergence is what it would catch.
+  // what the camera says. Worth keeping precisely because restore-perf-harness
+  // changed rendering: a camera/render divergence is what it would catch.
   measuredCellSizePx: number
 }
 

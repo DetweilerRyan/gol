@@ -1,6 +1,6 @@
 // Scenarios 1-5 of the render-perf harness -- all a 400px horizontal drag,
 // varying only the live-cell population and the starting zoom level. Each
-// isolates a different hot spot (see the table in this slice's handoff):
+// isolates a different hot spot (see the table in render-perf-harness's handoff):
 //
 //   1 pan-default-empty        baseline, 0 live cells, default zoom
 //   2 pan-default-1k-inview    per-live-cell class-flip cost, against #1
@@ -89,7 +89,7 @@ interface PanScenarioSpec {
   beforeMeasuring?: (page: Page) => Promise<void>
   // Overrides playwright.perf.config.ts's default 120s per-test timeout.
   // The min-zoom scenarios (#4/#5) render ~19.3k buttons at 1280x900 and
-  // ~34k at 1920x1080 -- discovered empirically while building this slice:
+  // ~34k at 1920x1080 -- discovered empirically while building render-perf-harness:
   // 1280x900 comfortably fits 5 reps of 40 paced moves each in ~65s, but
   // 1920x1080's ~1.75x larger button count pushed the same rep count past
   // 120s and the test was killed mid-gesture. This is the scenario's own

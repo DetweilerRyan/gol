@@ -31,7 +31,7 @@ import { assertInViewAlivePopulation, assertOffscreenSeedTookEffect } from './po
 import type { RepSample } from '../scripts/perf-report/raw-sample.ts'
 
 // Higher than pan/zoom's REP_COUNT=5 -- discovered empirically while
-// building this slice: this scenario's own wall clock is short enough
+// building render-perf-harness: this scenario's own wall clock is short enough
 // (sub-second) that OS scheduling jitter dominates the median at 5 reps, and
 // a second full run showed a measured rep's median moving >30% between runs.
 // The pan/zoom scenarios don't need this: their multi-second gestures

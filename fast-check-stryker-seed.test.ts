@@ -102,11 +102,12 @@ describe('pinFastCheckSeedUnderStryker', () => {
   })
 })
 
-// The demonstration this slice actually has to produce: not that the seed
-// value is pinned (the suites above already show that), but that the
-// *generated test title* -- the exact string @fast-check/vitest's
-// testNamePattern has to match between a dry run and a mutant run -- stops
-// varying once the pin is in effect, and still varies when it isn't.
+// The demonstration pin-stryker-seed-to-unblind-the-mutation-gate actually
+// has to produce: not that the seed value is pinned (the suites above
+// already show that), but that the *generated test title* -- the exact
+// string @fast-check/vitest's testNamePattern has to match between a dry
+// run and a mutant run -- stops varying once the pin is in effect, and
+// still varies when it isn't.
 //
 // @fast-check/vitest computes and bakes the seed into the title at
 // test-declaration time (inside buildTestWithPropRunner, called
@@ -116,9 +117,10 @@ describe('pinFastCheckSeedUnderStryker', () => {
 // final title via expect.getState().currentTestName so a later assertion
 // can compare them once all four have actually run.
 // Titles carry each test's own declared label ("pinned property A" vs.
-// "pinned property B") ahead of the seed marker, so the comparison this
-// slice actually needs to make is over the seed each title carries, not
-// over the whole string -- two titles with different labels always differ,
+// "pinned property B") ahead of the seed marker, so the comparison
+// pin-stryker-seed-to-unblind-the-mutation-gate actually needs to make is
+// over the seed each title carries, not over the whole string -- two
+// titles with different labels always differ,
 // pinned or not, which would make the "still varies without the guard"
 // half of the demonstration trivially true for the wrong reason.
 function extractSeedMarker(title: string | undefined): string {
