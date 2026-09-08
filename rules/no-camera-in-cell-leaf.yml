@@ -13,9 +13,12 @@ note: >-
   viewport.
 # SCOPE IS ONE CONCRETE FILE PATH ON PURPOSE, the same fragility no-logic-in-composition-root.yml
 # carries and for the same reason: the invariant is about this specific leaf, not about
-# src/components/ generally -- Grid.tsx, PatternPreview.tsx and LifeBoard.tsx all import Camera
-# legitimately, so a directory-wide rule would have a non-clean baseline and train people to
-# ignore its output. `npm run ast-grep:rules` fails if the path stops resolving, so a rename
+# src/components/ generally -- most components at that layer import from ../camera legitimately, so
+# a directory-wide rule would have a non-clean baseline and train people to ignore its output.
+# The durable form of that is the reason, not the roster: this leaf is the one place a camera
+# import is wrong, because it re-renders per cell. Ask `grep -rl "from '../camera'"` for the
+# current set rather than trusting a list here -- the list this replaces named three files when
+# eight product components imported it, and was wrong from the slice after it was written. `npm run ast-grep:rules` fails if the path stops resolving, so a rename
 # surfaces as a gate failure rather than as silence.
 #
 # The CellTile component (src/components/, since deleted) WAS THE SECOND PATH HERE and was dropped by collapse-dead-cell-layer's DESIGN
