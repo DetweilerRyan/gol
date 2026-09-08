@@ -99,10 +99,26 @@ Shape, to be ratified by a design pass rather than settled here:
   same argument `zoomGlide.ts`/`useZoomGlide.ts` already won. If it goes that
   way it inherits `rules/no-ambient-time-in-domain.yml`: time is an argument.
   Flagged as a design-pass question, not decided.
-- **Read the upstream implementation as prior art.** Headless UI is MIT
-  (verified 2026-09-08 against Headless UI's own `LICENSE` and the installed package's
-  own `license` field), so its state machine may be studied or adapted with
-  attribution rather than re-derived.
+- **Read the upstream implementation as prior art — but not as a reference
+  implementation of the contract above.** Headless UI is MIT (verified
+  2026-09-08 against Headless UI's own `LICENSE` and the installed package's own
+  `license` field), so its state machine may be studied or adapted with
+  attribution rather than re-derived. What it is worth taking: the four-state
+  machine (Hidden / Initiated / Visible / Hiding), the 750ms show and 300ms hide
+  delays, the module-level singleton store that keeps at most one tooltip
+  visible app-wide, and the `aria-describedby`-only-while-visible wiring.
+
+  **What it does not appear to buy you is 1.4.13.** Read on the published 2.2.10
+  build and confirmed against the `main` source, 2026-09-08: `TooltipPanel`
+  carries **no pointer handlers at all** — only a ref, `role="tooltip"` and a
+  style — so moving the pointer onto the panel does not hold it open, and the
+  300ms hide delay is a grace period rather than the **hoverable** clause. And
+  `Escape` is handled solely in the trigger's own `onKeyDown`, with no
+  document-level listener, so a tooltip raised by hover while focus sits
+  elsewhere has nothing to dismiss it — which reads as a **dismissible** gap
+  too. Both readings are from code rather than from a browser; verify in one
+  before treating them as settled, and note the whole component is unreleased,
+  so it may simply not be finished.
 
 **First consumers:** the four pause-and-play controls, plus the existing `+` and
 `−` glyph buttons in `GridToolbar.tsx`, whose meaning is currently carried by
@@ -134,7 +150,14 @@ the framework-free → component layering. Run `architect` DESIGN before `coder`
   imaginary work. Check the actual corners before reaching for anything.
 - **Popover API, or a plain absolutely-positioned element?** The popover top
   layer solves stacking-context escape — a problem this app may not have, given
-  the overlay siblings are already top-level. Earn it or skip it.
+  the overlay siblings are already top-level. Earn it or skip it. **Upstream
+  went neither way**: Headless UI's tooltip uses the Popover API nowhere
+  (grepped, 2026-09-08 — no `popover` attribute, no `showPopover`/`hidePopover`)
+  and instead portals the panel into `document.body` and positions it with the
+  `@floating-ui/react` it already depends on. That is a data point rather than a
+  precedent — Headless UI is a general-purpose library that must survive
+  arbitrary host layouts, and this app is one page whose overlay corners are
+  known.
 - **Show and hide delay values**, and whether hover intent needs a movement
   threshold or just a timer.
 - **The hoverable clause's geometry.** If there is a visual gap between trigger
