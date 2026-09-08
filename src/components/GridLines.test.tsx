@@ -77,7 +77,7 @@ describe('GridLines rendering', () => {
     expect(el.style.backgroundImage).toContain('var(--color-board-line-major)')
   })
 
-  // The coincidence question this slice's spike had to answer: gridLinePhasePx's
+  // The coincidence question collapse-dead-cell-layer's spike had to answer: gridLinePhasePx's
   // minor phase must land at the exact same screen pixel as a Cell's own
   // border, which is (worldToScreen(camera, x, y) mod nothing extra --
   // anchorOffsetPx + cellOffsetPx is an EXACT identity with worldToScreen, per

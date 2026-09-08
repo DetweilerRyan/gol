@@ -23,7 +23,7 @@ import { HOVER_INDICATOR_ID } from './HoverIndicator'
 // still runs, so every other test in this file renders exactly the same DOM
 // it always did. vi.mocked(Cell) is a direct per-Cell RENDER-CALL counter:
 // the literal successor of the getCellSnapshot-call-count probe the "tile
-// pan-stability" describe below used before this slice's step 4, which
+// pan-stability" describe below used before collapse-dead-cell-layer's step 4, which
 // retired useLiveCell as a render source entirely (see Cell.tsx's own
 // header). getCellSnapshot is not merely uncalled now -- the REVIEW pass of
 // the same slice retired the whole per-cell channel it belonged to, so a spy
@@ -187,8 +187,8 @@ describe('DOM structure', () => {
     // Generalises the assertion above: this virtualized design leans on
     // getBoundingClientRect() (post-transform) and layout-unit pixel math
     // (pre-transform) agreeing, which only a `scale` transform can break
-    // (see discussion #248's units-mismatch hazard, cited in this slice's
-    // design doc). This codebase never scales the layer -- a zoom changes
+    // (see discussion #248's units-mismatch hazard, cited in
+    // tile-virtualized-cells's design doc). This codebase never scales the layer -- a zoom changes
     // cellSize and re-lays every cell out instead -- so the layer's own
     // transform must always be a pure translate, never a scale.
     expect(layerDiv.style.transform).toMatch(/^translate\(-?\d+(\.\d+)?px, -?\d+(\.\d+)?px\)$/)
@@ -389,7 +389,7 @@ describe('hover indicator wiring', () => {
   })
 
   // THE WHEEL-ROUTE REGRESSION TEST, written first per this fix's own
-  // ordering (see this slice's corrective handoff): a wheel-pan moves
+  // ordering (see collapse-dead-cell-layer's corrective handoff): a wheel-pan moves
   // `camera` with NO pointermove of its own, so the pointer never reports a
   // new position -- recomputing the indicator from `camera` alone, against
   // the LAST pointer position already on file, is sufficient and is the
@@ -440,8 +440,9 @@ describe('hover indicator wiring', () => {
   // comment); Grid stashes them in lastPointerPixelsRef WITHOUT resolving a
   // cell, and the camera-change effect is what resolves them. So nothing
   // observable happens until a camera change arrives -- which is precisely
-  // why an empty onPointerPosition body went unnoticed: measured on this
-  // tree, deleting that callback's body entirely leaves all 636 tests green.
+  // why an empty onPointerPosition body went unnoticed: measured on
+  // collapse-dead-cell-layer's tree (2026-09-02), deleting that callback's
+  // body entirely leaves every test `npm test` collects green.
   //
   // The drag route is also the one architect's ADJUDICATE pass found broken
   // AND passing by luck at Playwright's default pointermove granularity, so a
@@ -488,9 +489,9 @@ describe('hover indicator wiring', () => {
 // tile-range layer -- see useCellTiles.ts/cellTiles.ts and
 // liveCellWindow.ts's own header). The old probe here (spying on
 // store.getCellSnapshot, called by every mounted Cell's own useLiveCell
-// subscription) was retired along with that subscription at this slice's
-// step 4 -- Cell now takes isAlive as a plain prop instead (see Cell.tsx's
-// header). The method itself is gone as of this slice's REVIEW pass, along
+// subscription) was retired along with that subscription at
+// collapse-dead-cell-layer's step 4 -- Cell now takes isAlive as a plain prop instead (see Cell.tsx's
+// header). The method itself is gone as of collapse-dead-cell-layer's REVIEW pass, along
 // with the rest of the per-cell channel, so there is nothing left to watch
 // even by mistake. The successor probe is
 // vi.mocked(Cell) (see the vi.mock('./Cell', { spy: true }) call at the top
@@ -532,7 +533,7 @@ describe('hover indicator wiring', () => {
 // STRIP-EVENT SUB-DESCRIBE, RETIRED HERE, NOT REPLACED IN KIND: the
 // pre-step-4 renderer's O(entering) proof (144/192/48 tile-slot counts) and
 // its companion subscription-leak test pinned per-tile-slot mounting and
-// per-cell subscribeCell -- both mechanisms this slice deletes outright
+// per-cell subscribeCell -- both mechanisms collapse-dead-cell-layer deletes outright
 // (the CellTile component is gone; Cell no longer subscribes). Their successor
 // property is the mounted-count guard in GridCells.test.tsx (|live ∩
 // window| + focus, exercised through the real liveCellsInRange pipeline) plus
@@ -645,7 +646,7 @@ describe('keyboard focus-cursor wiring', () => {
   // longer applies to ANY tap point, and TAP_PX could now be chosen
   // anywhere. Verified unchanged rather than "simplified for tidiness": this
   // whole describe was run against the flipped renderer with no edits below
-  // this comment, and it passed as-is (see this slice's step-4 handoff).
+  // this comment, and it passed as-is (see collapse-dead-cell-layer's step-4 handoff).
   const TAP_PX = { clientX: 30, clientY: 30 }
   const TAPPED = screenToWorld(CAMERA, TAP_PX.clientX, TAP_PX.clientY)
 

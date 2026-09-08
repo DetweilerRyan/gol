@@ -175,8 +175,8 @@ export default function Grid({
   // them whenever `camera` itself changes, regardless of why.
   //
   // WHY A REF FOR THE PIXELS, NOT useState. Raw pixels change on every
-  // pointermove -- the highest-frequency event in the app, and this slice
-  // cannot run test:perf to catch a regression there. Putting them in state
+  // pointermove -- the highest-frequency event in the app, and
+  // collapse-dead-cell-layer cannot run test:perf to catch a regression there. Putting them in state
   // would re-render Grid on every pixel of travel; a ref lets
   // lastPointerPixelsRef.current update with no render at all, and the only
   // render this produces is the one updateHovered's own identity-deduped
@@ -244,7 +244,7 @@ export default function Grid({
   const coalescedPan = useRafCoalescedPan(onPan)
 
   // trackHover is unconditionally true now, not gated on isPatternArmed --
-  // this slice's own inherited acceptance criterion (see the idea file) is
+  // collapse-dead-cell-layer's own inherited acceptance criterion (see the idea file) is
   // "the hover indicator and the click must resolve to the same cell at
   // every point", which only holds if hover always runs through the same
   // screenToWorld resolver onTap uses, whether or not a pattern is armed.
@@ -315,7 +315,7 @@ export default function Grid({
     // during a pan (the effect), not two that could disagree on timing.
     // Preview-during-pan is unchanged and out of scope for this fix: a
     // brief mid-drag divergence between the indicator and an armed
-    // pattern's preview is accepted (see this slice's corrective handoff).
+    // pattern's preview is accepted (see collapse-dead-cell-layer's corrective handoff).
     onPointerPosition: (pixelX, pixelY) => {
       lastPointerPixelsRef.current = { pixelX, pixelY }
     },
@@ -382,7 +382,7 @@ export default function Grid({
         // entirely -- the one case trackHover's own pointermove-driven
         // updateHovered can't reach, since there's no move event once the
         // pointer is off the element. Mirrors what CSS :hover used to do for
-        // free on every dead cell's own hover: class before this slice. Also
+        // free on every dead cell's own hover: class before collapse-dead-cell-layer. Also
         // clears lastPointerPixelsRef, not just `hovered` -- otherwise a
         // camera change AFTER the pointer has left (a wheel-pan reachable
         // with the mouse off the grid entirely) would resurrect the

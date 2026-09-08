@@ -10,7 +10,7 @@ interface HoverIndicatorProps {
  * precedent in Grid.tsx: a stable, non-visual handle for anything that needs
  * to reach this element without depending on its Tailwind paint class.
  */
-// Added alongside this slice's own corrective fix rather than as a separate
+// Added alongside collapse-dead-cell-layer's own corrective fix rather than as a separate
 // pass -- see the module comment below for why the class alone was never
 // meant to be load-bearing.
 export const HOVER_INDICATOR_ID = 'hover-indicator'

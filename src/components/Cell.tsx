@@ -77,8 +77,8 @@ interface CellProps {
 // second, per-cell subscription to the same store. The accepted cost: a
 // generation tick now re-renders every mounted cell (Grid's own
 // liveCellsInRange call reruns), not just the ones that flipped -- see
-// Grid.tsx's own header and this slice's step-4 handoff for the two perf
-// scenarios that show it.
+// Grid.tsx's own header and collapse-dead-cell-layer's step-4 handoff for
+// the two perf scenarios that show it.
 //
 // Takes plain scalars rather than a Camera: a Camera's identity changes on
 // every pointermove during a pan, and a Camera-typed prop here would defeat

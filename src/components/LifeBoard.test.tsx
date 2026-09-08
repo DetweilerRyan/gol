@@ -307,7 +307,7 @@ describe('toolbar zoom glide reaches the on-screen badge', () => {
   })
 })
 
-// zoom-glide-regressed-the-pan-path: the cost this slice's identity fix
+// zoom-glide-regressed-the-pan-path: the cost that slice's identity fix
 // actually removes -- see useZoomGlide.test.ts's "controller identity" and
 // useCamera.test.ts's "returned action identity" for the identity guards
 // themselves. #grid-content's non-passive wheel listener (useWheelInput.ts)

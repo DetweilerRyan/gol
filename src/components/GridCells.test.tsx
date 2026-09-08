@@ -113,7 +113,7 @@ describe('GridCells focus pass-through', () => {
 // THE IN-GATE GUARD FOR THE SLICE'S ENTIRE PREMISE: an empty board no longer
 // costs what a populated one costs, expressed as a mounted-button count this
 // runs inside crap4ts/Stryker (unlike perf/, which no pipeline role runs on
-// every slice -- see this slice's step-4 handoff). Exercises the REAL
+// every slice -- see collapse-dead-cell-layer's step-4 handoff). Exercises the REAL
 // pipeline end to end -- liveCellsInRange (liveCellWindow.ts) feeding
 // GridCells, exactly as Grid.tsx wires them -- rather than hand-building a
 // `cells` array that would only prove GridCells trusts its own prop.
