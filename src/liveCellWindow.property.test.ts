@@ -15,7 +15,7 @@ import { liveCellsInRange, type WindowCell } from './liveCellWindow'
 // entirely outside the range, which is what keeps the grid reachable by Tab
 // after a pan carries the cursor off screen. That +1 is what made
 // aliveCellCount (features/screenplay/questions.ts) read 3 where a step
-// expected 2 during this slice's step-4 verification, and the properties
+// expected 2 during collapse-dead-cell-layer's step-4 verification, and the properties
 // below state it in both directions rather than leaving it to a comment.
 
 const coordinate = fc.integer({ min: -12, max: 12 })
@@ -183,7 +183,7 @@ describe('liveCellsInRange (property)', () => {
   })
 
   it('mounts an ALIVE cursor sitting far outside the range, which is what makes a mounted count not a live count', () => {
-    // The exact shape that failed grid-scrollbars during this slice's step-4
+    // The exact shape that failed grid-scrollbars during collapse-dead-cell-layer's step-4
     // verification: a live cell far off screen is counted by anything reading
     // the DOM, but only while it happens to be the cursor.
     const range: TileRange = { minTileX: 0, maxTileX: 0, minTileY: 0, maxTileY: 0, spanCells: TILE_SPAN_CELLS }

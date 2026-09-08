@@ -24,15 +24,14 @@
 //
 // "percent" IS SPELLED OUT DELIBERATELY, and the reason lives nowhere else in
 // the tree. Playwright's getByText(string) is substring and case-insensitive
-// by default, and three perf/ specs match the zoom badge by bare percent
-// string -- zoom.perf.spec.ts's '100%', pan.perf.spec.ts's '40%', and
-// tile-boundary.perf.spec.ts's expectedZoomReadout(), which builds `${n}%`.
-// A description carrying a literal NN% token resolves each of those to three
-// elements (the badge plus both sr-only spans) and throws a strict-mode
-// violation in perf/, which sits outside every quality gate and outside
-// product's write boundary -- so nothing here would report it. The glyph buys
-// nothing anyway: this span is visually hidden, its only consumer is speech,
-// and a screen reader utters "percent" either way.
+// by default, and any perf/ spec that matches the zoom badge by a bare
+// percent string is exposed to the same risk: a description carrying a
+// literal NN% token resolves such a match to three elements (the badge plus
+// both sr-only spans) and throws a strict-mode violation in perf/, which
+// sits outside every quality gate and outside product's write boundary --
+// so nothing here would report it. The glyph buys nothing anyway: this span
+// is visually hidden, its only consumer is speech, and a screen reader
+// utters "percent" either way.
 export function visibleProportionText(percent: number): string {
   return `${percent} percent of the grid is in view`
 }

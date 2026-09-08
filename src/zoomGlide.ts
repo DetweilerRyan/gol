@@ -73,8 +73,9 @@ export function advanceZoomTarget(
 // in either direction -- which is exactly why the claim is hand-applied.
 //
 // Hand-applied, and re-measured after glideCellSizeAt was rekeyed onto the
-// eased value: replacing this body with `Math.max(0, t)` leaves all 889 tests
-// green. A progress above 1 reaches easeOutCubic, which maps it to a value
+// eased value: replacing this body with `Math.max(0, t)` leaves every test
+// `npm test` collects green (measured on smooth-zoom-transitions's tree,
+// 2026-09-02). A progress above 1 reaches easeOutCubic, which maps it to a value
 // above 1, which the `eased >= 1` branch short-circuits to toCellSize -- the
 // same answer clamping would have given. THE LOWER HALF IS NOT DEAD: it is
 // what makes a backwards clock hold at fromCellSize, and removing it reds

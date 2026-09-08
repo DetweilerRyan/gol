@@ -114,7 +114,7 @@ export const EVICT_LAG_TILES = 1
 // They are composable but this design adopts hysteresis only, and admission
 // overscan was considered and rejected on measurement, not on the (false)
 // "already fits inside one frame" premise this paragraph used to state --
-// see this slice's own commit history for the corrected numbers. Two
+// see fix-tile-hysteresis's own commit history for the corrected numbers. Two
 // independent reasons: symmetric overscan at any useful tolerance raises
 // steady-state mounted count permanently (a *directional* margin fares no
 // better -- the leading side would have to flip on every drag reversal,
@@ -336,7 +336,7 @@ export function nextTileRange(previous: TileRange, camera: Camera, widthPx: numb
   // exceeds EVICT_LAG_TILES and this rebuilds too. The range stores no
   // cellSize at all.
   //
-  // TWO COSTS RETENTION ADDS, both measured on this slice's perf run and both
+  // TWO COSTS RETENTION ADDS, both measured on fix-tile-hysteresis's perf run and both
   // disclosed here rather than left for the next reader to rediscover. The
   // ratified design predicted neither -- it analysed the pan strip only, and
   // its "(a) leaves rebuild frequency and worst-event admission identical"

@@ -57,9 +57,8 @@ export const MAJOR_GRIDLINE_INTERVAL = 10
 // time; collapse-dead-cell-layer deleted that -- GridLines.tsx paints the
 // whole lattice as two repeating CSS backgrounds (see gridLinePhasePx below)
 // and the ruler enumerates through computeMajorGridlines, so nothing asks
-// "is THIS coordinate major?" any more. Its last two callers were
-// gridGeometry.test.ts and gridGeometry.property.test.ts, where it was also
-// serving as computeMajorGridlines' own oracle -- a self-reference through
+// "is THIS coordinate major?" any more. It was also serving as
+// computeMajorGridlines' own test oracle -- a self-reference through
 // the shared MAJOR_GRIDLINE_INTERVAL that made the brute-force property blind
 // to a mutant on that constant (measured: 10 -> 11 left that property green
 // and was caught only by isMajorGridline's own assertions, which restated the

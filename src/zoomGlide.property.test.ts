@@ -325,7 +325,7 @@ describe('advanceZoomTarget (property)', () => {
   // Deliberately not "fixed" with an epsilon comparison in advanceZoomTarget.
   // The arithmetic is clampCellSize(base * factor), which is exactly what
   // camera.ts's zoomCameraAtPoint has always done -- zooming out and back in
-  // at this rung landed on 12.800000000000002 before this slice existed too,
+  // at this rung landed on 12.800000000000002 before smooth-zoom-transitions existed too,
   // so the residual predates the glide and the glide only makes it visible as
   // a non-null return. An epsilon would be new behaviour, and it would have
   // to agree with zoomCameraToCellSize's own exact-equality same-reference
@@ -352,7 +352,7 @@ describe('advanceZoomTarget (property)', () => {
 // instantaneous zoom would have produced -- which is what keeps
 // useCamera.test.ts's exact toEqual(zoomCameraAtPoint(...)) assertions and
 // features/camera-pan-and-zoom.e2e.spec.ts's zero-tolerance pixel reads
-// meaning what they meant before this slice. It holds because
+// meaning what they meant before smooth-zoom-transitions. It holds because
 // advanceZoomTarget clamps with the same bounds zoomCameraToCellSize clamps
 // with, and clampCellSize is idempotent; a target rounded, quantized or
 // clamped differently on the way through would break it silently.

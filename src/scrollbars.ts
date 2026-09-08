@@ -43,7 +43,8 @@ function computeAxisScrollbarMetrics(offset: number, cellSize: number, viewportS
   // `-> false` pair is ruled here. A scoped run reporting either line as
   // Timeout rather than Survived is reporting a wall-clock artifact and not a
   // kill: this function is straight-line arithmetic with no loop in it, so
-  // nothing here can hang. (Measured this slice -- a contaminated run had
+  // nothing here can hang. (Measured on
+  // equivalence-rulings-live-in-commits-not-at-sites -- a contaminated run had
   // both of contentPxLeft's mutants as Timeout, which was misread as "killed
   // elsewhere" and nearly lost this ruling.)
   const contentPxLeft = contentMin === undefined ? 0 : (contentMin - offset) * cellSize

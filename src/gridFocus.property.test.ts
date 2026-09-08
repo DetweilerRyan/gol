@@ -21,7 +21,7 @@ const directionArbitrary = fc.constantFrom<FocusDirection>('left', 'right', 'up'
 // the range is never empty, and that clamp is a deliberate, documented
 // weakening of its own "every returned cell is fully visible" contract below
 // one cell per axis (see its comment in gridGeometry.ts, recorded by coder
-// during this slice). A reveal property quantified over a 0x0 pre-measurement
+// during collapse-dead-cell-layer). A reveal property quantified over a 0x0 pre-measurement
 // viewport would be asserting against a range whose single cell is admittedly
 // not on screen, and would fail for a reason that is not a defect.
 const viewportArbitrary = fc

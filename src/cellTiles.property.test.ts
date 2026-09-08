@@ -353,8 +353,8 @@ describe('nextTileRange bounded wobble (property)', () => {
   // fail is documentation, and because the sibling monotone-pan bound above
   // had to make the opposite admission:
   //
-  //   - Rebuilding onto `required` exactly (the pre-fix policy this slice
-  //     removed): RED here, and red on all six guaranteed-regime rows below.
+  //   - Rebuilding onto `required` exactly (the pre-fix policy
+  //     fix-tile-hysteresis removed): RED here, and red on all six guaranteed-regime rows below.
   //     The 'eviction hysteresis' block's sub-cell-wobble test also catches
   //     it; the bounded-slack and no-speculative-admission properties do not.
   //   - One-sided retention (axisRetained's max clamp collapsed to

@@ -78,10 +78,10 @@ describe('placement state machine (property)', () => {
   //
   // Two of the three were already pinned by name in patternPlacement.test.ts
   // (cancelPlacing and movePreviewTo, each "returns the exact same state
-  // reference when nothing is armed"); toggleLibrary's was NOT, and this slice
-  // measured that gap -- returning a fresh `{ mode: 'browsing' }` instead of the
-  // BROWSING constant left all 950 tests `npm test` then collected green. It
-  // now has a named twin too.
+  // reference when nothing is armed"); toggleLibrary's was NOT, and
+  // rule-on-chrome-propagation-guards measured that gap -- returning a fresh
+  // `{ mode: 'browsing' }` instead of the BROWSING constant left every test
+  // `npm test` collected green. It now has a named twin too.
   //
   // Deliberately scoped to the three functions whose no-op branch IS a
   // `return state`/shared constant. armPattern and a same-cell movePreviewTo

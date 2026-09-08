@@ -6,7 +6,7 @@ import { tileOriginCell, type TileRange } from './cellTiles'
 // alive" with "one Cell per LIVE cell actually in range, plus the keyboard
 // focus cursor's own cell" -- the whole point of collapse-dead-cell-layer,
 // which measured an empty board costing the same as a 50,000-cell one under
-// the old policy (see this slice's own handoff for the frame-time numbers).
+// the old policy (see collapse-dead-cell-layer's own handoff for the frame-time numbers).
 //
 // Sits above both gameOfLife.ts (the live-cell Set) and cellTiles.ts (the
 // mounting-policy TileRange) -- the one sanctioned position for a module
