@@ -115,11 +115,12 @@ orchestrator-run `npm run test:perf` + `npm run perf-report`.
   needed before the a11y contract can be written.
 - **What does `Next generation` do mid-play?** Step-and-pause is the conventional
   answer; a no-op and a step-without-pausing are both defensible.
-- **Tooltip mechanism.** Native `title` is free but unstyleable, delayed, and
-  invisible to keyboard focus; a hand-rolled `aria-describedby` popover is a real
-  component with its own tests. Note `rules/no-unbraced-accessible-name.yml`
-  already treats `title` as name-shaped, so the choice has a rule-level
-  consequence.
+- **Tooltip mechanism — now its own candidate**, since nothing exists to consume:
+  see `ideas/candidates/build-an-accessible-tooltip.md`, which found that neither
+  Catalyst nor any released Headless UI ships one. The decisive argument against
+  native `title` turned out not to be styling but WCAG 1.4.13, which it fails on
+  all three clauses. Landing that candidate first gives this slice a primitive;
+  landing it after means building tooltips twice.
 - **Where do four more buttons live?** The HUD already overlaps the row ruler —
   see `ideas/candidates/hud-panel-occludes-the-row-ruler.md` — and widening it makes that worse;
   the toolbar is the other corner and has its own ghosting problem recorded in
