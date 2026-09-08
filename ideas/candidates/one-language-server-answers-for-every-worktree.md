@@ -69,6 +69,31 @@ a watcher is supposed to exist, never converged either, so the project root is n
 variable. Not lag: five minutes produced no movement, and the same file went fresh
 instantly under an `Edit`, so it is not latency.
 
+### This is the protocol working as specified, which is why no server setting fixes it
+
+LSP 3.17 says that after `textDocument/didOpen` "the document's truth is now managed by
+the client and the server must not try to read the document's truth using the document's
+Uri." A **correct** server is required to ignore the disk for an open document. So there
+is no server-side configuration to find, and the search for one would have been wasted
+effort — the remedy is necessarily client-side. The protocol's own remedies are
+`workspace/didChangeWatchedFiles` for closed files and a buffer reload for open ones, and
+both live in the client.
+
+The same failure class is open against other clients — `zed-industries/zed#48439`,
+"Zed shows cached/old file content when file is modified outside the editor" — so this is
+a client-implementation gap, not something peculiar to this harness.
+
+### How large is the stale set
+
+Bounded, and smaller than feared: **the harness registers a file with the server on an
+LSP operation, not on a `Read`.** Measured — a probe was created, read through the `Read`
+tool, `sed`-ed, and then hovered for the first time; the hover returned the **new**
+bytes. So merely reading a file does not enrol it, and the stale set is the intersection
+of "files this session has run an LSP operation against" with "files written
+out-of-band". That first set is invisible to the agent and accumulates silently for the
+life of the session, which is what makes any per-file remedy hard to apply correctly —
+see the Sketch.
+
 ### Facts about the servers, same date
 
 - **Per-session, not one global**, spawned **lazily on the session's first LSP call**,
@@ -78,6 +103,16 @@ instantly under an `Edit`, so it is not latency.
 - **≈85MB resident each** (~78MB `tsserver.js` + a 5–8MB wrapper), via `ps` — so the
   candidate's "if it is a gigabyte each" worry does not hold.
 - **One observed server had been alive since Aug 25** — a fortnight of frozen snapshots.
+  Servers are nonetheless recycled at some point: a server observed serving this session
+  at 09:12 was gone by 12:50 and had been replaced, so "one server per session for the
+  session's life" is not safe to assume in either direction.
+- **A server is a child process of its own session's `claude`**, confirmed by `ppid`. That
+  is what makes a per-session kill possible without disturbing a concurrent session — the
+  fortnight-old server above belonged to a different `claude` pid entirely.
+- **Killing a server clears every cached snapshot, and the harness restarts it
+  transparently.** Measured: a file staled at `BRAVO` against a disk holding `CHARLIE`
+  returned `CHARLIE` on the first hover after the server was killed, with no error
+  surfaced and a fresh server parented to the same session.
 - **No LSP plugin exposes a root/cwd knob.** The union of `lspServers[*]` keys across
   every plugin in the official marketplace manifest is `command`, `args`,
   `extensionToLanguage`, `startupTimeout`; the installed `typescript-lsp@1.0.0` payload
@@ -113,29 +148,96 @@ Part 2 makes hover load-bearing ("if the hover answers your question, stop; do n
 the defining file"), while sessions running under auto mode are told to prefer Bash for
 file edits. The two instructions compose into a role confidently reading a stale answer.
 
-Candidate responses, cheapest first:
+Three remedies were measured. They differ mainly in **whether they need to know which
+files are stale** — and since that set is invisible (see "How large is the stale set"),
+that is the axis that matters, not implementation cost.
+
+| Remedy                    | Needs the stale set?         | Automatable by a hook?          | Cost                                       |
+| ------------------------- | ---------------------------- | ------------------------------- | ------------------------------------------ |
+| Trivial `Edit` per file   | **yes**, and it is invisible | **no** — hooks lack tool access | free, but silent whenever a file is missed |
+| Kill the session's server | no                           | yes, scoped by `ppid`           | discards the project index; cold start     |
+| LSP proxy                 | no                           | n/a — always on                 | a permanent moving part                    |
 
 1. **Write the mechanism down** in `doc-comments.md` Part 2 §7, replacing the
    suspected-cause framing with the measured one, and state the rule it implies: a hover
    is trustworthy only if every write to that file this session went through
    `Edit`/`Write`. After a `git` operation or a Bash-authored edit, hover is unsafe until
-   the file is re-touched through the harness.
-2. **Give roles a forced-refresh recipe.** Measured and available: make any trivial
-   `Edit` to the file — it replaces the server's snapshot from disk wholesale, so the
-   edit need not touch the region you care about. Adding and removing a trailing newline
-   is a net-zero form of it. This is what a role should do after a rebase, a branch
-   switch, a `npm run format`, or its own Bash-authored edit, before trusting a hover.
-3. **Reconsider the auto-mode "prefer Bash for edits" guidance** for this repo, since it
-   is what converts the hazard from rare to routine.
+   the file is refreshed. **This is worth doing under every option below**, because none
+   of them makes the mechanism obvious to a reader.
+
+2. **The per-file `Edit` refresh — demoted to a last resort.** A trivial `Edit` does
+   replace the snapshot from disk wholesale, so the edit need not touch the region being
+   hovered. But applying it correctly requires enumerating the stale set, and only half of
+   that set is knowable: `git diff --name-only` gives the files that changed, while
+   nothing exposes which files the session has enrolled with the server. Worse, **a hook
+   cannot close the gap**, because the refresh has to go through `Edit`/`Write` and hooks
+   run shell commands with no tool access; a hook can compute a list and tell the agent,
+   but the agent must still comply per file. Its failure is silent and the wrong answer is
+   usually right — the bug's own worst property, inherited whole. An earlier draft of this
+   file called this remedy free to adopt; that was written before the stale-set problem
+   was understood, and it is withdrawn.
+
+3. **Kill the session's server on out-of-band writes.** Needs no knowledge of the stale
+   set, and is `ppid`-scopeable so it cannot disturb a concurrent session. A
+   `PostToolUse` hook matching `git` and format commands is the natural trigger — not
+   every Bash call, for the cost reason below.
+
+4. **An LSP proxy that resyncs open documents from disk.** Prototyped and measured in
+   `spikes/lsp-fs-sync/` on branch `lsp-fs-sync`: all five out-of-band writes named above
+   go stale unproxied and fresh proxied, with the in-band `didChange` path proven
+   unbroken. It is the only option that addresses the cause rather than periodically
+   discarding the symptom, and the only one with a permanent maintenance cost.
+
+5. **Reconsider the auto-mode "prefer Bash for edits" guidance** for this repo, since it
+   is what converts the hazard from rare to routine. Independent of which remedy wins.
+
+### Precedent for the restart remedy
+
+Restarting is the canonical, first-class remedy in every editor: VS Code ships
+`TypeScript: Restart TS Server`, and Neovim has `:lsp restart` — added after
+`neovim/neovim#13946` recorded that it "lacks a first-class way to restart servers".
+Microsoft tracks this exact failure class in `microsoft/vscode#7790` ("Switching branches
+results in spurious TypeScript errors") and `microsoft/TypeScript#44066` ("Stale errors
+for a few minutes after switching branches").
+
+**One difference in that precedent changes what restarting means here.** In VS Code the
+staleness self-heals in roughly two minutes, and people restart because ~20s beats
+waiting; restarting there is an impatience optimisation. This harness has no watcher at
+all — measured, five minutes with no convergence, and structurally never — so the same
+action is a **correctness** requirement rather than a speed-up. The precedent supports the
+mechanism while understating the stakes.
+
+**Automating it, by contrast, has essentially no precedent.** The only automated restart
+found is `rbuckton/tsserver-live-reload`, which watches the `typescript.tsdk` folder and
+restarts when `tsserver.js` itself changes — the same watch-then-restart shape, but aimed
+at people hacking on TypeScript rather than at stale project state. Nothing was found that
+auto-restarts on a branch switch or an out-of-band write.
+
+**And the documented cost is why nobody automates it.** A restart is "a few seconds to
+load in a big project", and `microsoft/vscode#206297` asks for a syntax-server-only
+restart specifically to avoid a full restart's downtime — the community treating a full
+restart as too heavy to do casually. That argues for a narrow trigger, and against an
+eager one.
 
 ## Touches
 
 `.claude/agents/articles/doc-comments.md` (Part 2 §7, the staleness paragraph and the
 hover-before-Read habit in Part 3). Possibly `workflow.md` if the rule is judged to
-belong beside the misroute bullet rather than in the doc-comments article. No `src/`, no
-`scripts/`, no `.claude/settings.json` — the plugin-config approach is withdrawn.
+belong beside the misroute bullet rather than in the doc-comments article. The
+plugin-config approach is withdrawn, so nothing in `.claude/settings.json` on that
+account.
 
-Docs-only, so the merge-protocol mutation-invariance allowlist covers it.
+**Scope depends on which remedy is chosen, and only the first stays docs-only:**
+
+- Remedy 1 or 2 alone — docs-only, and the merge-protocol mutation-invariance allowlist
+  covers it.
+- Remedy 3 (kill-hook) — adds a hook to `.claude/settings.json`. Still inside the
+  allowlist, but it is executable configuration rather than prose and wants its own
+  verification.
+- Remedy 4 (proxy) — `spikes/lsp-fs-sync/` exists on branch `lsp-fs-sync` and introduces
+  a new top-level `spikes/` directory, which is a repo-shape decision in its own right.
+  Promoting it to `scripts/` would pay the full gate freight (CRAP ≤ 6, its own vitest
+  suite, `dry4ts:scripts`, mutation testing), and that is outside the allowlist.
 
 ## Open questions
 
@@ -145,10 +247,23 @@ Docs-only, so the merge-protocol mutation-invariance allowlist covers it.
   and is done as its own commit. Ryan's call.
 - **What forces a refresh short of a new session? — answered.** Measured to _not_ work:
   elapsed time (5 min), `cat`, the `Read` tool, and `EnterWorktree`. Measured to work:
-  `Edit`, `Write`, and a trivial `Edit` to an unrelated part of the file. What remains
-  open is not the mechanism but the ergonomics: a refresh a role must _remember_ to
-  perform protects only the hovers it remembers to protect, which is the same weakness
-  this file already flags for the misroute.
+  `Edit`, `Write`, a trivial `Edit` to an unrelated part of the file, and killing the
+  server. The ergonomic weakness that remains applies to the per-file forms only, and is
+  now stated in the Sketch rather than here.
+- **Which remedy, and is more than one wanted?** The real decision this file now carries.
+  Remedy 1 is worth doing regardless; 3 and 4 are alternatives rather than complements,
+  and 4 already exists in prototype. Nobody has automated a restart on this trigger
+  before, so remedy 3 would be maintained without a precedent to copy.
+- **Would the kill-hook exhaust `maxRestarts`?** The plugin schema caps restart attempts,
+  and a hook firing on every out-of-band write could plausibly hit that cap and leave a
+  session with no server at all — a silent loss of the tool rather than a stale answer.
+  Inferred from the documented field, not measured; one kill was observed to restart
+  cleanly. This is the main thing to measure before adopting remedy 3.
+- **Does the proxy survive contact with the real harness?** Every proxy row was measured
+  against a conforming LSP client written for the spike, which proves the server sees the
+  write but not that the harness's own client tolerates the proxy end to end. Needs the
+  opt-in install, and note the official `typescript-lsp` plugin must be disabled first
+  since the first server registered for an extension wins.
 - **How far does the staleness reach?** The signature went stale alongside the comment,
   so the whole buffer is frozen; whether `findReferences` and `goToDefinition` return
   stale _results_ across files was inferred from that, not measured directly.
