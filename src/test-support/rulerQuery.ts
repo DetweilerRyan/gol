@@ -24,10 +24,10 @@
 // rulerGroupLabel(axis) }). A `[role="group"][aria-label="..."]` string would
 // pattern-match one attribute that happens to feed the computation today, and
 // would go quietly wrong the moment the name came from aria-labelledby or a
-// <legend>. A rulerGroupSelector() shipped in ruler-label-axis-affordance's first draft with no
-// caller and was removed in review rather than given a contrived one: this
-// directory sits outside crap4ts and Stryker, so a dead export here is
-// invisible to every gate.
+// <legend>. A rulerGroupSelector() shipped in ruler-label-axis-affordance's
+// first draft with no caller and was removed in review rather than given a
+// contrived one: this directory sits outside crap4ts and Stryker, so a dead
+// export here is invisible to every gate.
 export function rulerGroupLabel(axis: 'x' | 'y'): string {
   return axis === 'x' ? 'Column ruler' : 'Row ruler'
 }

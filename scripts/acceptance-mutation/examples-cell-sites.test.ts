@@ -115,16 +115,23 @@ describe('findExamplesCellSites', () => {
   })
 
   describe('against the real feature files', () => {
-    // Exactly three of the seven .feature files carry an Examples table
-    // today -- cell-life-and-death (two outlines), grid-reference-lines, and
-    // pattern-library. infinite-grid and camera-pan-and-zoom both had one at
-    // some point and lost it (see `gherkin-ast-mutation`'s history for the
-    // gherkin-examples test module this file replaced) -- asserting the
-    // absence explicitly is the
-    // point, since a target with zero mutable sites is exactly the case
-    // run.ts's zero-mutant reporting path exists to handle instead of
-    // silently losing.
-    it('finds the expected sites in each feature with an outline, and none in the two that lost theirs', () => {
+    // Pins the sites in the three features named below, and pins ZERO in
+    // infinite-grid and camera-pan-and-zoom -- both carried an Examples
+    // table at some point and lost it (see `gherkin-ast-mutation`'s history
+    // for the gherkin-examples test module this file replaced). Asserting
+    // the absence explicitly is the point: a target with zero mutable sites
+    // is exactly the case run.ts's zero-mutant reporting path exists to
+    // handle instead of silently losing.
+    //
+    // DELIBERATELY NOT A CENSUS. This comment used to open "exactly three of
+    // the seven .feature files carry an Examples table today"; by
+    // no-undated-cross-file-claims (2026-09-07) both numerals were wrong and
+    // so was the enumeration -- mouse-wheel-controls and
+    // keyboard-grid-navigation had grown tables the sentence said did not
+    // exist. `grep -l 'Examples:' features/*.feature` answers the question
+    // on demand and cannot rot; the three loaded here are the ones this test
+    // actually pins, which is a different and smaller claim.
+    it('finds the expected sites in each feature it loads, and none in the two that lost theirs', () => {
       const load = (name: string) => readFileSync(`${FEATURES_DIR}/${name}`, 'utf8')
 
       const cellLifeAndDeath = sitesOf(load('cell-life-and-death.feature'), 'cell-life-and-death.feature')

@@ -38,8 +38,9 @@ export function parseSeedRequest(search: string): SeedRequest | undefined {
   // `count === undefined || ... return undefined` regardless of what
   // spread/seed parse to. Both paths return the same undefined for every
   // `search` with no `cells` param -- this early return is a fast path, not
-  // a different outcome. Hand-applied, the whole unfiltered suite stays
-  // green (909/909).
+  // a different outcome. Hand-applied, every test `npm test` collects
+  // stayed green -- measured on
+  // equivalence-rulings-live-in-commits-not-at-sites's tree, 2026-09-04.
   if (cellsRaw === null) return undefined
 
   const count = parseNonNegativeInteger(cellsRaw)
@@ -68,16 +69,19 @@ function parseParamWithDefault(params: URLSearchParams, key: string, fallback: n
 // them via Number() and then filtering.
 function parseNonNegativeInteger(raw: string | null): number | undefined {
   // EQUIVALENT MUTANT, argued from code -- Stryker reports the `raw === null`
-  // disjunct -> `false` as Survived, and no test can kill it, doubly: this
-  // function's only two call sites never actually pass null (parseSeedRequest
-  // passes cellsRaw, which its own null guard above has already screened, and
-  // parseParamWithDefault only calls here after `params.has(key)`, which
-  // guarantees `params.get(key)` is a string), so the disjunct is dead code
-  // for every reachable input. And even if it were reached, RegExp#test
+  // disjunct -> `false` as Survived, and no test can kill it, doubly. No
+  // call site in this module reaches here with null -- parseSeedRequest
+  // passes cellsRaw, which its own null guard above has already screened,
+  // and parseParamWithDefault only calls here after `params.has(key)`,
+  // which guarantees `params.get(key)` is a string -- so the disjunct is
+  // dead code for every reachable input, and it stays dead as long as that
+  // holds of whatever calls it. And even if it WERE reached, RegExp#test
   // coerces a null argument to the string "null", which never satisfies
   // `/^\d+$/` -- so the second disjunct alone already returns undefined for
-  // a null raw. Hand-applied, the whole unfiltered suite stays green
-  // (909/909).
+  // a null raw, which is why the ruling survives a new caller rather than
+  // resting on the two above. Hand-applied, every test `npm test` collects
+  // stayed green -- measured on
+  // equivalence-rulings-live-in-commits-not-at-sites's tree, 2026-09-04.
   if (raw === null || !/^\d+$/.test(raw)) return undefined
   const value = Number(raw)
   return Number.isSafeInteger(value) ? value : undefined

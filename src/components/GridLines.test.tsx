@@ -77,16 +77,17 @@ describe('GridLines rendering', () => {
     expect(el.style.backgroundImage).toContain('var(--color-board-line-major)')
   })
 
-  // The coincidence question collapse-dead-cell-layer's spike had to answer: gridLinePhasePx's
-  // minor phase must land at the exact same screen pixel as a Cell's own
-  // border, which is (worldToScreen(camera, x, y) mod nothing extra --
-  // anchorOffsetPx + cellOffsetPx is an EXACT identity with worldToScreen, per
-  // cellAnchor.ts's own header). toBeCloseTo rather than toBe: the two sides
-  // reach that pixel value via a different sequence of floating-point
-  // operations (a multiply-then-wrap vs a subtract-then-multiply), so they
-  // are congruent over the reals but can differ by ~1e-13px in IEEE 754 --
-  // orders of magnitude below any rasterization quantum, never an exact
-  // decimal match for an arbitrary camera.
+  // The coincidence question collapse-dead-cell-layer's spike had to answer:
+  // gridLinePhasePx's minor phase must land at the exact same screen pixel as
+  // a Cell's own border, which is (worldToScreen(camera, x, y) mod nothing
+  // extra -- anchorOffsetPx + cellOffsetPx is an EXACT identity with
+  // worldToScreen, per cellAnchor.ts's own header). toBeCloseTo rather than
+  // toBe: the two sides reach that pixel value via a different sequence of
+  // floating-point operations (a multiply-then-wrap vs a
+  // subtract-then-multiply), so they are congruent over the reals but can
+  // differ by ~1e-13px in IEEE 754 -- orders of magnitude below any
+  // rasterization quantum, never an exact decimal match for an arbitrary
+  // camera.
   it("coincides with a mounted cell's own screen position at an arbitrary integer boundary, modulo floating-point noise", () => {
     const camera: Camera = { offsetX: 4.7, offsetY: -3.2, cellSize: 12.8 }
     const { minorXPx, minorYPx } = gridLinePhasePx(camera)

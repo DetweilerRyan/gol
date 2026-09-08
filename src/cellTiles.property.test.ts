@@ -356,9 +356,10 @@ describe('nextTileRange bounded wobble (property)', () => {
   // had to make the opposite admission:
   //
   //   - Rebuilding onto `required` exactly (the pre-fix policy
-  //     fix-tile-hysteresis removed): RED here, and red on all six guaranteed-regime rows below.
-  //     The 'eviction hysteresis' block's sub-cell-wobble test also catches
-  //     it; the bounded-slack and no-speculative-admission properties do not.
+  //     fix-tile-hysteresis removed): RED here, and red on all six
+  //     guaranteed-regime rows below. The 'eviction hysteresis' block's
+  //     sub-cell-wobble test also catches it; the bounded-slack and
+  //     no-speculative-admission properties do not.
   //   - One-sided retention (axisRetained's max clamp collapsed to
   //     `requiredMax`): RED here, and on the two -span rows below. NOTHING
   //     ELSE IN THIS FILE CATCHES IT -- this is the property's own unique

@@ -209,8 +209,9 @@ describe('returned action identity', () => {
   })
 
   // All seven of useCamera's returned actions, across a PAN -- the hot path
-  // zoom-glide-regressed-the-pan-path's perf finding is about (Grid pans through panByPixels many
-  // times a second during a drag). zoomInCentered/zoomOutCentered used to be
+  // zoom-glide-regressed-the-pan-path's perf finding is about (Grid pans
+  // through panByPixels many times a second during a drag).
+  // zoomInCentered/zoomOutCentered used to be
   // excluded here: they capture `camera` directly rather than going through
   // commit()'s functional setCamera update (see useCamera.ts's own comment
   // on why that bypass of commit() is load-bearing), which used to make them

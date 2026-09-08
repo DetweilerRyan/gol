@@ -33,8 +33,9 @@
      and Cell use those utilities/vars rather than restating a literal
      colour, the same "read the generated variable" convention GridLines
      already followed for --color-gray-*. The light-mode values below are
-     exactly what GridLines/Cell already painted before this slice (bg-white,
-     gray-200/gray-400 lines, bg-gray-900 live cells) -- this introduces the
+     exactly what GridLines/Cell already painted before
+     dark-mode-following-system-appearance (bg-white, gray-200/gray-400
+     lines, bg-gray-900 live cells) -- this introduces the
      token layer without moving a light-mode pixel. The dark-mode override
      sits in a plain rule below, under the same :where(.dark, .dark *)
      selector the custom-variant above compiles to, since @theme itself can't

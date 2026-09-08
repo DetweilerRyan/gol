@@ -144,9 +144,9 @@ export interface GridLinePhase {
  * The pixel offset a CSS repeating background pattern needs (as its own
  * background-position) to align a grid line to world coordinate 0, at both
  * the per-cell (minor) and every-MAJOR_GRIDLINE_INTERVAL-cells (major)
- * period -- what a repeating-background gridline paint positions itself
- * against, so the lattice stays aligned to world coordinate 0 as the camera
- * pans and zooms rather than to the viewport's own top-left corner.
+ * period. It is what a repeating-background gridline paint positions itself
+ * against: without it the lattice tracks the viewport's own top-left corner
+ * and slides out of register with the cells as the camera pans and zooms.
  */
 // worldToScreen(camera, 0, y).x is exactly -offsetX * cellSize -- the
 // screen-space position world x=0 currently sits at -- so that is the raw

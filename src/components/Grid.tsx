@@ -116,24 +116,25 @@ export default function Grid({
   // same world cell doesn't hand HoverIndicator (and anything watching this
   // state) a new object identity for no visible change.
   //
-  // MUTATION-SCAN NOTE -- corrected at the corrective's hardening gate, and
-  // the correction matters more than the note. This comment previously said
-  // all 5 unkilled mutants on the line below were equivalent, and that was
-  // WRONG for 4 of them. The argument it gave -- "both branches return an
-  // object whose own x/y are the same numbers either way, so only the
-  // reference identity differs" -- holds ONLY for the whole-condition
-  // mutant. For the per-axis ones it is false: with `prev.x === x` forced to
-  // true, a move that changes x but not y takes the `prev` branch and
-  // renders prev's OLD x. Those mutants were not equivalent, only
-  // unexercised -- 4 of the 5 were NoCoverage, and the reasoning was applied
-  // to the whole set on the strength of a hand-check that could not
-  // distinguish "equivalent" from "nothing drives this yet".
+  // MUTATION-SCAN NOTE -- corrected at the hardening gate of
+  // collapse-dead-cell-layer's ADJUDICATE corrective, and the correction
+  // matters more than the note. This comment previously said all 5 unkilled
+  // mutants on the line below were equivalent, and that was WRONG for 4 of
+  // them. The argument it gave -- "both branches return an object whose own
+  // x/y are the same numbers either way, so only the reference identity
+  // differs" -- holds ONLY for the whole-condition mutant. For the per-axis
+  // ones it is false: with `prev.x === x` forced to true, a move that
+  // changes x but not y takes the `prev` branch and renders prev's OLD x.
+  // Those mutants were not equivalent, only unexercised -- 4 of the 5 were
+  // NoCoverage, and the reasoning was applied to the whole set on the
+  // strength of a hand-check that could not distinguish "equivalent" from
+  // "nothing drives this yet".
   //
-  // Measured on the corrective tree: the camera-change effect below gave
-  // those mutants coverage for the first time, the Y-axis pair died to the
-  // wheel-route test, and the X-axis pair died once its X-axis twin was
-  // added (see Grid.test.tsx's 'hover indicator wiring' describe, which now
-  // pins both axes and the mid-drag route).
+  // Measured on that corrective's tree (2026-09-02): the camera-change
+  // effect below gave those mutants coverage for the first time, the Y-axis
+  // pair died to the wheel-route test, and the X-axis pair died once its
+  // X-axis twin was added (see Grid.test.tsx's 'hover indicator wiring'
+  // describe, which now pins both axes and the mid-drag route).
   //
   // EXACTLY ONE EQUIVALENT MUTANT REMAINS: the whole condition -> false,
   // which returns a freshly allocated { x, y } carrying the same numbers
@@ -176,13 +177,13 @@ export default function Grid({
   //
   // WHY A REF FOR THE PIXELS, NOT useState. Raw pixels change on every
   // pointermove -- the highest-frequency event in the app, and
-  // collapse-dead-cell-layer cannot run test:perf to catch a regression there. Putting them in state
-  // would re-render Grid on every pixel of travel; a ref lets
-  // lastPointerPixelsRef.current update with no render at all, and the only
-  // render this produces is the one updateHovered's own identity-deduped
-  // setter already causes when the resolved CELL (not the pixel) actually
-  // changes -- see that setter's own mutation-scan comment above, untouched
-  // by this addition.
+  // collapse-dead-cell-layer could not run test:perf to catch a regression
+  // there. Putting them in state would re-render Grid on every pixel of
+  // travel; a ref lets lastPointerPixelsRef.current update with no render at
+  // all, and the only render this produces is the one updateHovered's own
+  // identity-deduped setter already causes when the resolved CELL (not the
+  // pixel) actually changes -- see that setter's own mutation-scan comment
+  // above, untouched by this addition.
   //
   // WHY useLayoutEffect, NOT a plain useEffect or render-time state
   // adjustment (the pattern useCellTiles.ts/useGridFocus.ts's one-shot

@@ -89,8 +89,9 @@ function countNeighbors(liveCells: ReadonlyLiveCells): Map<CellKey, number> {
     // iteration produces which offset, landing on the same 8-point set. The
     // loop only ever sums `+1` into a Map keyed by the resulting cell, so
     // the final counts are the same regardless of which iteration visited
-    // which offset. Hand-applied (each independently), the whole unfiltered
-    // suite stays green (909/909).
+    // which offset. Hand-applied (each independently), every test `npm test`
+    // collects stayed green -- measured on
+    // equivalence-rulings-live-in-commits-not-at-sites's tree, 2026-09-04.
     for (const [dx, dy] of NEIGHBOR_OFFSETS) {
       const neighborKey = cellKey(x + dx, y + dy)
       neighborCounts.set(neighborKey, (neighborCounts.get(neighborKey) ?? 0) + 1)

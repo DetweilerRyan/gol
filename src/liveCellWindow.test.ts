@@ -32,9 +32,10 @@ describe('liveCellsInRange', () => {
   // BOTH AXES, ONE ROW EACH, and the second row is not decoration:
   // cellInRange checks all four bounds, and only the x pair had a
   // boundary-exclusion regression test until a scoped mutation scan found
-  // minY/maxY unexercised (3 of the 4
-  // ArithmeticOperator/ConditionalExpression mutants on cellInRange's y
-  // bounds survived a full unfiltered `npm test` run with no test noticing).
+  // minY/maxY unexercised (measured on collapse-dead-cell-layer's tree,
+  // 2026-09-02: 3 of the 4 ArithmeticOperator/ConditionalExpression mutants
+  // on cellInRange's y bounds survived a full unfiltered `npm test` run with
+  // no test noticing).
   // A row per axis is what keeps that independence -- a mutant on one axis'
   // bounds is killed by that axis' row alone -- while stating the shared
   // claim once instead of as two hand-copied twins.

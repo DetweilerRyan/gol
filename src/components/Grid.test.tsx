@@ -186,11 +186,12 @@ describe('DOM structure', () => {
 
     // Generalises the assertion above: this virtualized design leans on
     // getBoundingClientRect() (post-transform) and layout-unit pixel math
-    // (pre-transform) agreeing, which only a `scale` transform can break
-    // (see discussion #248's units-mismatch hazard, cited in
-    // tile-virtualized-cells's design doc). This codebase never scales the layer -- a zoom changes
-    // cellSize and re-lays every cell out instead -- so the layer's own
-    // transform must always be a pure translate, never a scale.
+    // (pre-transform) agreeing, which only a `scale` transform can break (see
+    // discussion #248's units-mismatch hazard, cited in
+    // tile-virtualized-cells's design doc). This codebase never scales the
+    // layer -- a zoom changes cellSize and re-lays every cell out instead --
+    // so the layer's own transform must always be a pure translate, never a
+    // scale.
     expect(layerDiv.style.transform).toMatch(/^translate\(-?\d+(\.\d+)?px, -?\d+(\.\d+)?px\)$/)
     expect(layerDiv.style.transform).not.toContain('scale')
   })
@@ -433,16 +434,16 @@ describe('hover indicator wiring', () => {
     expect(indicator.style.transform).not.toBe(before)
   })
 
-  // THE MID-DRAG ROUTE, which is the half of this corrective that the wheel
-  // tests above cannot reach. Once a drag crosses the pan threshold,
-  // useGridPointerGestures stops calling onHover and reports raw pixels
-  // through onPointerPosition instead (see that hook's own handlePointerMove
-  // comment); Grid stashes them in lastPointerPixelsRef WITHOUT resolving a
-  // cell, and the camera-change effect is what resolves them. So nothing
-  // observable happens until a camera change arrives -- which is precisely
-  // why an empty onPointerPosition body went unnoticed: measured on
-  // collapse-dead-cell-layer's tree (2026-09-02), deleting that callback's
-  // body entirely leaves every test `npm test` collects green.
+  // THE MID-DRAG ROUTE, which is the half of collapse-dead-cell-layer's
+  // corrective that the wheel tests above cannot reach. Once a drag crosses
+  // the pan threshold, useGridPointerGestures stops calling onHover and
+  // reports raw pixels through onPointerPosition instead (see that hook's own
+  // handlePointerMove comment); Grid stashes them in lastPointerPixelsRef
+  // WITHOUT resolving a cell, and the camera-change effect is what resolves
+  // them. So nothing observable happens until a camera change arrives --
+  // which is precisely why an empty onPointerPosition body went unnoticed:
+  // measured on collapse-dead-cell-layer's tree (2026-09-02), deleting that
+  // callback's body entirely leaves every test `npm test` collects green.
   //
   // The drag route is also the one architect's ADJUDICATE pass found broken
   // AND passing by luck at Playwright's default pointermove granularity, so a
@@ -490,8 +491,9 @@ describe('hover indicator wiring', () => {
 // liveCellWindow.ts's own header). The old probe here (spying on
 // store.getCellSnapshot, called by every mounted Cell's own useLiveCell
 // subscription) was retired along with that subscription at
-// collapse-dead-cell-layer's step 4 -- Cell now takes isAlive as a plain prop instead (see Cell.tsx's
-// header). The method itself is gone as of collapse-dead-cell-layer's REVIEW pass, along
+// collapse-dead-cell-layer's step 4 -- Cell now takes isAlive as a plain
+// prop instead (see Cell.tsx's header). The method itself is gone as of that
+// slice's REVIEW pass, along
 // with the rest of the per-cell channel, so there is nothing left to watch
 // even by mistake. The successor probe is
 // vi.mocked(Cell) (see the vi.mock('./Cell', { spy: true }) call at the top
