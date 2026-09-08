@@ -67,8 +67,9 @@ split?
 
 ## Answer
 
-**Take `architect`'s ordering, and treat the disagreement as the thing to resolve empirically rather
-than by argument.**
+**Take `architect`'s ordering.** The two rankings mostly agree once share is converted to bytes, so
+there is no disagreement left to settle — an earlier draft of this Answer proposed settling one, and the
+Complication above is what removed the need.
 
 Split `mutation-testing.md` first and `ast-grep-rules.md` second — second and fifth by absolute saving,
 and the two `architect` judged cheapest to split well. `testing-layers.md` is the largest available
@@ -114,9 +115,11 @@ this candidate read the pre-amendment list and called the claim false.
 - **Is the unconditional-read argument sound?** It is what protects four files, and CLAUDE.md's own
   routing preamble argues the reverse. Settle this before anyone proposes splitting `engineering.md`,
   which is where the disagreement has real money on it.
-- **Is there a floor below which a split is not worth it?** `acceptance-mutation.md` at 11% and
-  `state-flow.md` at 15% may not have enough rationale to be worth a second file. The pilot's file was
-  57%, so nothing measured yet speaks to the low end.
+- **Is there a floor below which a split is not worth it?** Ask it in bytes, not shares. `archive.md`
+  (2,611), `acceptance-mutation.md` (2,921) and `state-flow.md` (4,095) are the three smallest, and
+  `archive.md` is smallest of all despite a 26% share — which is the share-as-value error surviving in
+  the one question the rewrite first missed. The pilot's file carried far more, so nothing measured yet
+  speaks to the low end.
 - **What happens to `archive.md`?** It is already a rationale-only file with no read trigger — the tier
   before the tier existed. It may need renaming to `<something>.rationale.md` for consistency, or it may
   be a deliberate exception worth keeping as is.

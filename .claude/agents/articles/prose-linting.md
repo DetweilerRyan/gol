@@ -97,6 +97,9 @@ Three apply mechanically. Three are prompts to look. Know which you are holding.
 Counting is not what separates the columns. `ProcedureLength` counts too, and is still a prompt, because
 the unit it counts is a stand-in.
 
+**"Mechanical" means no judgement per finding. It does not mean sweepable in one pass.** Two of the three
+interact, so a batch application still needs the order and the re-run described below.
+
 ### `STE.SentenceLength` — act on every finding
 
 25-word cap on a sentence. Split it. This is the one rule here a sweep can follow without judgement.
@@ -112,7 +115,9 @@ it misquotes that file. A contraction named as an example — "'Do not' carries 
 — is the subject of the sentence, not its voice.
 
 This article is the live example, and carries three such findings that stand unfixed on purpose: **two
-naming the word itself, one quoting `engineering.md`.** **An article about a rule will trip that rule**, so
+naming the word itself, one quoting `engineering.md`.** It also carries one `OneInstruction` finding for the
+same reason. The sentence ordering the two length rules is false-positive class 1: a specified order,
+not two actions. **An article about a rule will trip that rule**, so
 expect this wherever prose-linting guidance discusses the token it governs.
 
 ### `STE.ParagraphLength` — act on every finding

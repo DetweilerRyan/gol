@@ -18,7 +18,7 @@ around that — read the sections below with the following corrections in front 
 | part                               | status                                                                                  |
 | ---------------------------------- | --------------------------------------------------------------------------------------- |
 | the shape rules themselves         | **applied** to `doc-comments.md` by `ste-shape-rules-on-doc-comments`                   |
-| the tool question                  | **settled** — Vale, four rules on, six off, all twelve tried or ruled on                |
+| the tool question                  | **settled** — Vale, six rules on, six off, all twelve tried or ruled on                 |
 | the `prose-linting.md` article     | **landed**, with its own sidecar, plus a CLAUDE.md pointer and routing branch           |
 | the sidecar rollout to other files | **moved out** to `roll-the-rationale-sidecar-out`, which carries `architect`'s ordering |
 | the accept/reject vocabulary       | **still open** — the guards below stand, and nothing has been built                     |

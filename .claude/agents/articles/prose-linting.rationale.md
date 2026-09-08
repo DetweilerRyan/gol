@@ -212,11 +212,30 @@ extended, and nothing rereads a conclusion.
 
 **What actually separates the two columns, which is the finding the stale version was groping at.** A
 rule is mechanical when **its trigger is the defect**: a sentence over 25 words, a paragraph over six
-sentences, a contraction. A rule is a prompt when its trigger is a **proxy** for the defect: a list item
-standing in for a procedure, a `, then` standing in for two actions, a be-verb plus participle standing
-in for a rule that hides its actor. Counting is not the distinction — `ProcedureLength` counts and is
-still a prompt, because the unit it counts is a stand-in.
+sentences. A rule is a prompt when its trigger is a **proxy** for the defect: a list item standing in for
+a procedure, a `, then` standing in for two actions, a be-verb plus participle standing in for a rule
+that hides its actor. Counting is not the distinction — `ProcedureLength` counts and is still a prompt,
+because the unit it counts is a stand-in.
 
-That test predicts the six rejections too. Every one of them fires on a proxy that does not hold here:
-three on part-of-speech tags, one on a slash that usually joins a compound term, one on an approved-word
-list that is not ASD's, and one on modal verbs whose force this repo deliberately varies.
+**`Contractions` sits at the edge of that, and the qualification matters.** Its trigger is a contraction
+_token_ while the defect is a contraction _used_, so the use/mention exemption is a proxy gap — narrower
+than the prompts', but real. What keeps it mechanical is that **its exempt class is nameable in advance
+and rare**: one class, quotation or mention, recognisable on sight. The three prompts carry three, five
+and one class, and each needs a judgement per finding. Exempt-class count is the sharper discriminator;
+trigger-versus-proxy is the reason behind it rather than a replacement for it.
+
+**That test predicts four of the six rejections, and naming the two it misses is what keeps it honest.**
+`Modals`, `Ambiguity`, `NounClusters` and — in part — `Articles` each fire on a proxy that does not hold
+here: three on part-of-speech tags, one on a slash that usually joins a compound term.
+
+The other two were rejected on grounds the test says nothing about:
+
+- **`Dictionary` was rejected on licence, not precision.** A word absent from its list is exactly what it
+  claims to find, so its trigger _is_ its defect. The list is simply the wrong list.
+- **`Gerunds` was rejected on triage cost, not correctness.** Its findings are STE violations by the
+  letter, so the test predicts it should be **on**. 941 findings, almost all idiomatic, is why it is not.
+
+An earlier version of this section claimed the test predicted all six. `architect` refuted it by reading
+this file's own rejection sections two headings above, which say "rejected on licence" and "rejected on
+cost" in those words. A headline generalisation outrunning the detail beneath it is the same failure this
+section was rewritten to fix, committed again in the act of fixing it.
