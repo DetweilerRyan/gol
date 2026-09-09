@@ -264,11 +264,12 @@ account.
   Remedy 1 is worth doing regardless; 3 and 4 are alternatives rather than complements,
   and 4 already exists in prototype. Nobody has automated a restart on this trigger
   before, so remedy 3 would be maintained without a precedent to copy.
-- **Would the kill-hook exhaust `maxRestarts`?** The plugin schema caps restart attempts,
-  and a hook firing on every out-of-band write could plausibly hit that cap and leave a
-  session with no server at all — a silent loss of the tool rather than a stale answer.
-  Inferred from the documented field, not measured; one kill was observed to restart
-  cleanly. This is the main thing to measure before adopting remedy 3.
+- **Would the kill-hook exhaust `maxRestarts`? — probed, no cap found.** Measured
+  2026-09-09: eight consecutive kills of this session's own server, each followed by a
+  hover, produced eight clean restarts. The objection is weaker than when it was written,
+  but it is not closed. A cap above eight may exist, the counter may reset on a successful
+  call, and an externally killed process may not count as a crash. Raise the count before
+  relying on this if remedy 3 is ever adopted.
 - **Does the proxy survive contact with the real harness?** Every proxy row was measured
   against a conforming LSP client written for the spike, which proves the server sees the
   write but not that the harness's own client tolerates the proxy end to end. Needs the

@@ -130,10 +130,14 @@ primary on driver 4 and on risk:
   documented at "a few seconds to load in a big project", and `microsoft/vscode#206297`
   exists precisely because a full restart is considered too heavy, requesting a
   syntax-server-only restart to reduce the downtime.
-- **`maxRestarts` is a real hazard and is unmeasured.** The plugin schema caps restart
-  attempts; a hook firing on every out-of-band write could plausibly exhaust it and leave
-  a session with **no server at all** — degrading a stale answer into a silently absent
-  tool. One kill was observed to restart cleanly; the cap was not probed.
+- **`maxRestarts` was probed on 2026-09-09, and no cap appeared.** The concern was that a
+  hook firing on every out-of-band write could exhaust the documented cap and leave a
+  session with **no server at all** — degrading a stale answer into a silently absent
+  tool. Eight consecutive kills, each followed by a hover, produced eight clean restarts.
+  **This weakens the objection but does not remove it.** A cap above eight may exist, the
+  counter may reset on a successful call, and an externally killed process may not count
+  as a crash at all. The official plugin sets no `maxRestarts`, so the default applies and
+  its value is undocumented here.
 - **No precedent for automating it.** Manual restart is canonical and first-class
   everywhere — VS Code's `TypeScript: Restart TS Server`, Neovim's `:lsp restart` (added
   after `neovim/neovim#13946`) — and Microsoft tracks this exact failure class
