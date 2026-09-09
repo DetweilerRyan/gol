@@ -61,12 +61,26 @@ tool cannot do for you.
 
 ## What is scoped, and what is not
 
-Vale runs over `.claude/agents/articles/**/*.md` only.
+Vale runs over `.claude/agents/**/*.md` — every topic article, the house-rules articles, and the five
+role files.
 
-**It is deliberately not pointed at `.claude/agents/*.md`.** The role files carry YAML front matter, and
-`architect.md` and `coder.md` both fail Vale's parser — a literal `": "` in their `description:` reads
-as a nested mapping. Because one unparseable file aborts the whole run, widening this glob makes Vale
-report nothing at all. Do not widen it without solving that first.
+**The role files were out of scope until `lint-the-role-files`, and the reason is worth keeping.** Their
+YAML front matter is parsed by a real YAML parser, and two `description:` scalars carried a literal `": "`
+that reads as a nested mapping. That slice single-quoted those two scalars, which is the root-cause fix. The
+value survives the parse byte-for-byte, and `agent-doc-check`'s line-anchored reader still finds it on the
+`description:` line.
+
+**One unparseable file silences every other file in the same invocation**, so those two were not merely
+unlinted — they were suppressing the whole run. **A new role file with an unquoted `": "` in its front
+matter would do it again.** The symptom is a confident zero rather than an error you notice. Quote any
+front-matter scalar that contains a colon followed by a space.
+
+**Use double quotes rather than single.** Prettier normalises a YAML scalar to that form, so single quotes
+red `npm run format:check`.
+
+**Vale's own `*` crosses `/`**, so `.claude/agents/*.md` and `.claude/agents/**/*.md` reach the same files.
+`.vale.ini` writes the `**` form deliberately, because it reads correctly to someone carrying `globSync`'s
+narrower intuition from `ast-grep-rule-check`.
 
 **`*.rationale.md` sidecars are exempt from every rule.** The last section of `.vale.ini` sets
 `BasedOnStyles` to an empty value for them. Sidecars hold the dated-record register, which several of
@@ -283,9 +297,12 @@ audit the pair by hand after a shortening pass, comparing against the article as
 
 ## Read a big number as unworked, not as broken
 
-Measured 2026-09-08: `vale .claude/agents/articles/` reports roughly 1,700 findings across 16 files, and
-**only two of those files have been worked** — `doc-comments.md` and this one. Every other article
-carries its findings untriaged.
+Measured 2026-09-09, after `lint-the-role-files` widened the scope: `vale .claude/agents/` reports over a
+thousand findings, and most of those files have never been worked. A file is worked when a slice edits it
+and runs mandate 6; every other one carries its findings untriaged.
+
+**The role files are the whole of the newly-scoped surface, and none of them has been worked.** Expect
+their share of that total to be large, and to mean nothing until a slice touches each one.
 
 So a large count over the whole directory says nothing about the corpus and nothing about the rules. It
 says twelve articles have not been read yet. **Lint the file you are editing**, not the directory,

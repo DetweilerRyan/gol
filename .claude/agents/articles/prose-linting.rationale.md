@@ -295,3 +295,43 @@ direction, so rewriting them would move no reader. Recorded here rather than sil
 **The pass also found a live defect outside this file.** The act-on grep the article now documents hit
 `engineering.md` — a permission written as `is permitted`, in an unsplit house-rules article outside this
 slice's manifest. Reported rather than fixed, for the same reason the manifest exists.
+
+## Widening the scope to the role files
+
+**Ruled 2026-09-09 by the user**, which is also the explicit direction `workflow.md` requires before
+touching a role file.
+
+**The blocker was real and it was worse than the article recorded.** The article said one unparseable file
+"aborts the whole run". Measured: `vale` over a role file and `engineering.md` in the same invocation
+reported **zero findings for both**, where `engineering.md` alone reports 107. So the two bad files were not
+merely unlinted — they were silencing every other file anyone linted alongside them.
+
+**Two of the five role files were invalid YAML, and the other three were already fine.** `architect.md` and
+`coder.md` failed with `E201:yaml: line 2: mapping values are not allowed in this context`. `cleaner.md`,
+`hardener.md` and `product.md` parsed cleanly.
+
+**Three fixes were considered. The one taken is the root-cause fix.**
+
+- **A folded block scalar** (`description: >-`) parses, and was measured to clear the error. It was rejected
+  because it moves the value off the `description:` line, where `agent-doc-check`'s bespoke line-anchored
+  reader looks for it. That check would then have passed while reading `>-` as the description — a gate
+  weakened silently, which is the failure direction this repo cares most about.
+- **`vale --ignore-syntax`** lints line by line and skips parsing entirely. Rejected: it also discards
+  markdown awareness, so fenced code blocks would be linted as prose.
+- **Quoting the scalar.** Taken. Measured: all five files parse, `agent-doc-check` still passes, and both
+  descriptions survive a real YAML parse **byte-for-byte identical** to what `main` carried. The diff is two
+  lines.
+
+**Use double quotes rather than single, and the reason is Prettier rather than YAML.** Both forms parse.
+Single-quoting was tried first and required doubling every internal apostrophe, which these descriptions
+carry in quantity. `npm run format:check` then failed, because Prettier normalises a YAML scalar to double
+quotes — and it had passed on `main`, so the breakage was introduced rather than pre-existing. Double
+quotes need no escaping here, since neither description contains a backslash or a double quote. **Check for
+both before reaching for this fix on a third file.**
+
+**The scope change is one glob, and the sidecar exemption still wins because it is still last.** Verified in
+one invocation after the change: a role file reports findings, an article reports findings, a
+`*.rationale.md` sidecar reports zero, and no file reports `E201`.
+
+**Widening the scope creates no obligation to fix what it revealed.** This article's own rule is to lint the
+file you are editing rather than the directory, so each role file is worked by the slice that edits it.
