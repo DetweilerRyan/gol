@@ -28,8 +28,10 @@ export interface CoalescedPan {
 // pointermove per frame to coalesce either way -- perf/gestures.ts awaits a
 // requestAnimationFrame round-trip between synthetic moves), so this
 // doesn't move the gated ScriptDuration numbers; it's for trackpad users,
-// not the benchmark. e2e/e2e-helpers.ts's dragPan comment documents the
-// push/flush invariant above and several specs depend on it.
+// not the benchmark. features/screenplay/interactions.ts's dragPan documents
+// the matching invariant from the other side -- that the net camera shift
+// equals the requested delta regardless of step count -- and several specs
+// depend on it.
 export function useRafCoalescedPan(onPan: (dxPixels: number, dyPixels: number) => void): CoalescedPan {
   const accumulatedRef = useRef({ dx: 0, dy: 0 })
   const rafIdRef = useRef<number | null>(null)
