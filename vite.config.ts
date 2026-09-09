@@ -12,17 +12,21 @@ const sharedExclude = [
   'scripts/**',
   // reference-check: allow ideas/__probe.test.ts -- a throwaway measurement probe, never committed to git, so it can never resolve
   //
-  // Both entries below exist because vitest's `unit` project inherits the
+  // The four entries below exist because vitest's `unit` project inherits the
   // unrooted default include (**/*.{test,spec}.?(c|m)[jt]s?(x)) and nothing
   // above subtracts it -- any directory in the repo is reachable unless
   // something in this array excludes it by name. Measured with throwaway
   // probes: `.claude/__probe.test.ts` and `ideas/__probe.test.ts` were both
   // collected into `unit` before these entries existed, and the ideas/ probe
   // imported src/gameOfLife -- so it would have run inside Stryker's sandbox
-  // too. These two entries are what make CLAUDE.md's merge-protocol
-  // mutation-invariant clause's path-allowlist predicate sound for ideas/
-  // and .claude/: without them, a stray test file in either directory runs
-  // inside Stryker's sandbox while the path check still answers "invariant."
+  // too. A probe placed in each of rules/ and rule-tests/ was collected the
+  // same way, both of them, measured 2026-09-08 by
+  // `the-invariance-allowlist-omits-paths-that-provably-cannot-move-a-mutant`
+  // before it added those two entries. These four entries are what make
+  // CLAUDE.md's merge-protocol mutation-invariant clause's path-allowlist
+  // predicate sound for ideas/, .claude/, rules/ and rule-tests/: without
+  // them, a stray test file in any of those directories runs inside
+  // Stryker's sandbox while the path check still answers "invariant."
   // `.claude/worktrees/**`, the narrower entry this replaces, is subsumed
   // by `.claude/**` -- a worktree is a whole other checkout with its own
   // node_modules and tests, so collecting one would run another slice's
@@ -34,9 +38,15 @@ const sharedExclude = [
   // has its own separate pipeline -- but .claude/ is where agent
   // definitions live, so a future colocated checker test placed there would
   // be silently excluded by this entry rather than picked up. Worth knowing
-  // before adding one.
+  // before adding one. The same caveat covers rules/ and rule-tests/, which
+  // hold only .yml today: a test colocated with the rule it exercises would
+  // be excluded here, and belongs under scripts/ast-grep-rule-check/ with
+  // the rest of that checker's suite. That cost is the price of the
+  // allowlist entry -- an exclusion a future author must not quietly drop.
   'ideas/**',
   '.claude/**',
+  'rules/**',
+  'rule-tests/**',
   '.stryker-tmp*/**',
   // playwright-bdd generates .features-gen/<project>/features/<name>.feature.spec.js
   // (the project name is `bdd`, from defineBddProject in playwright.config.ts).
