@@ -32,8 +32,8 @@ live in the client too, and the same failure class is open against other clients
 The full ruling, including the arms that refuted the two earlier explanations, is in
 `ideas/todo/only-harness-writes-reach-the-language-server.md`. The decision to
 adopt this approach over the alternatives — and why each alternative was rejected — is
-`adr/0002-lsp-proxy-for-out-of-band-writes.md`, currently **Proposed** rather than
-Accepted, pending the real-harness verification named in its Verification section.
+`adr/0002-lsp-proxy-for-out-of-band-writes.md`, which is **Accepted and not yet frozen**:
+the decision binds, and the record stays editable while adoption teaches it.
 
 ## The design
 

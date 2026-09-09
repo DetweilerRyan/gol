@@ -188,9 +188,10 @@ that is the axis that matters, not implementation cost.
 
 4. **An LSP proxy that resyncs open documents from disk — the recorded decision.**
    `adr/0002-lsp-proxy-for-out-of-band-writes.md` chooses this option and says why each
-   other one lost. It is **Proposed rather than Accepted**, deliberately, and promoting it
-   is a decision this slice inherits rather than makes. Prototyped and measured in
-   `spikes/lsp-fs-sync/` on branch `lsp-fs-sync`: all five out-of-band writes named above
+   other one lost. It is **Accepted, and deliberately not yet frozen**, so this slice
+   inherits the decision but may still amend the record as adoption teaches it.
+   Prototyped and measured in
+   `spikes/lsp-fs-sync/`: all five out-of-band writes named above
    go stale unproxied and fresh proxied, with the in-band `didChange` path proven
    unbroken. It is the only option that addresses the cause rather than periodically
    discarding the symptom, and the only one with a permanent maintenance cost.

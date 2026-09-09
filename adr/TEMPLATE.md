@@ -1,6 +1,6 @@
 # NNNN. Short imperative title
 
-- **Status:** Proposed | Accepted | Superseded by [NNNN](NNNN-….md)
+- **Status:** Proposed | Accepted (not yet frozen) | Accepted | Superseded by [NNNN](NNNN-….md)
 - **Date:** YYYY-MM-DD
 
 ## Context and problem statement
@@ -34,5 +34,7 @@ What would falsify this decision, and what would have to be measured to revisit 
 
 ---
 
-**Accepted ADRs are immutable.** Correct one by writing a superseding ADR and marking
-this one `Superseded by`, never by editing it. A `Proposed` ADR may still be edited.
+**A frozen `Accepted` ADR is immutable.** Correct one by writing a superseding ADR and
+marking this one `Superseded by`, never by editing it. A `Proposed` ADR may still be
+edited. So may an `Accepted (not yet frozen)` one, which binds as a decision while its
+wording settles. See `README.md` for the four statuses and who freezes.

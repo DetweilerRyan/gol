@@ -1,17 +1,21 @@
 # 0002. Resync the language server from disk with an LSP proxy
 
-- **Status:** Proposed
+- **Status:** Accepted (not yet frozen)
 - **Date:** 2026-09-08
+- **Accepted:** 2026-09-09 by Ryan
 
-**Proposed, not Accepted, for one specific reason:** every measurement supporting the
-chosen option came from a conforming LSP client written for the spike, not from the
-Claude Code harness itself. That proves the language server sees the write; it does not
-prove the harness's own client tolerates a proxy end to end.
+**Accepted, and deliberately not frozen.** The decision binds: the proxy is the chosen
+remedy, and the options below lost for the reasons recorded against each. The record
+stays editable because the parts this ADR is least sure about are the parts adoption will
+teach — see "What is still not covered" in Verification, and the open question of whether
+the proxy graduates to `scripts/` or stays a spike.
 
-**That run has since been done, and it passed** — see "Live-harness verification" at the
-end of Verification. **The status is nevertheless left at Proposed deliberately**, for
-review rather than for want of evidence: the author of this ADR is not the right party to
-mark its own decision Accepted. Promotion is Ryan's.
+**Freezing is Ryan's call and nothing triggers it automatically.** See `README.md` for
+what the status means.
+
+**The evidence gap that held this at Proposed is closed.** Every measurement had come
+from a conforming LSP client written for the spike rather than from the Claude Code
+harness itself. The live-harness run has since been done and it passed.
 
 ## Context and problem statement
 
