@@ -100,6 +100,23 @@ the unit it counts is a stand-in.
 **"Mechanical" means no judgement per finding. It does not mean sweepable in one pass.** Two of the three
 interact, so a batch application still needs the order and the re-run described below.
 
+### Triage the prompts one at a time. A sweep cannot clear them.
+
+**Bulk reading is not triage, and the finding count cannot tell you which you did.** A sweep clears the
+three mechanical rules. It cannot clear the three prompts, because each needs a judgement per finding.
+Both look identical afterwards: a number.
+
+So when you report a file as linted, say which half you did. "Zero on the mechanical rules" is a
+different claim from "I read every finding".
+
+**Read each prompt finding against its own exempt classes below, and record the disposition.** Name the
+count in each class and name any finding you left in as arguable. A residual you cannot place is not
+exempt by default.
+
+**The prompt rules are not noise, and this is measured rather than reassuring.** `ast-grep-rules.md`
+passed the mechanical bar, then a finding-by-finding pass over its 16 prompt findings turned up **two
+real defects**. Both had survived a bulk read of the same list one slice earlier.
+
 ### `STE.SentenceLength` — act on every finding
 
 25-word cap on a sentence. Split it. This is the one rule here a sweep can follow without judgement.
@@ -115,10 +132,15 @@ it misquotes that file. A contraction named as an example — "'Do not' carries 
 — is the subject of the sentence, not its voice.
 
 This article is the live example, and carries three such findings that stand unfixed on purpose: **two
-naming the word itself, one quoting `engineering.md`.** It also carries one `OneInstruction` finding for the
-same reason. The sentence ordering the two length rules is false-positive class 1: a specified order,
-not two actions. **An article about a rule will trip that rule**, so
-expect this wherever prose-linting guidance discusses the token it governs.
+naming the word itself, one quoting `engineering.md`.** It also carries one `OneInstruction` finding for
+the same reason. The sentence ordering the two length rules is false-positive class 1: a specified order,
+not two actions.
+
+**An article about a rule will trip that rule, and this holds for every rule here rather than for this one
+alone.** A guidance article quotes the defect it governs, so its findings are dominated by mentions rather
+than uses. Measured on this file: 45 prompt findings, every one exempt, and most of them the article
+quoting its own examples. **Expect that shape when you lint guidance prose, and do not read a high count as
+a dirty file.**
 
 ### `STE.ParagraphLength` — act on every finding
 
@@ -159,6 +181,18 @@ tells them how something behaves, leave it.**
 
 **Act on this class:** a rule or instruction written passively, where naming the actor makes it
 actionable. "The between-position is sanctioned" becomes "Use the between-position freely."
+
+**One construction accounts for every act-on finding so far, and it is greppable.** A permission stated
+as `is sanctioned`, `is permitted` or `is allowed` names no one who may act. Rewrite it as `you may …`.
+Three instances have been found this way, in three different articles. Search for the phrase before
+reading the findings one by one:
+
+```bash
+grep -rn "is sanctioned\|is permitted\|is allowed" .claude/agents/articles/
+```
+
+That grep is a shortcut into the act-on class, not a replacement for the pass. It finds the construction
+already seen; the pass is what finds the next one.
 
 **Five exempt classes — do not "fix" these:**
 

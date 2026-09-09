@@ -239,3 +239,34 @@ An earlier version of this section claimed the test predicted all six. `architec
 this file's own rejection sections two headings above, which say "rejected on licence" and "rejected on
 cost" in those words. A headline generalisation outrunning the detail beneath it is the same failure this
 section was rewritten to fix, committed again in the act of fixing it.
+
+## The triage of this article against its own rules, 2026-09-09
+
+The article was linted finding by finding, under the rule it had just gained. **45 prompt findings, 45
+exempt, 0 act-on.** The mechanical rules were at zero before the pass and are at zero after it.
+
+| Rule              | Findings | Act-on |
+| ----------------- | -------- | ------ |
+| `PassiveVoice`    | 30       | 0      |
+| `ProcedureLength` | 13       | 0      |
+| `OneInstruction`  | 2        | 0      |
+
+A clean sheet on a file this long is a result to distrust, so the reason is worth stating. Most of the
+findings are the article quoting the defect it governs. The `PassiveVoice` findings at the five
+exempt-class examples are the examples themselves — "Four `@see` forms were measured and rejected", "How
+it is computed", "Writing is verified by reading" — and the `ProcedureLength` and `OneInstruction`
+findings sit on the false-positive classes for those same rules. The tagger reads a mention as a use, and
+cannot do otherwise.
+
+That is the general finding, and it is now in the article: a guidance article trips its own rule. The
+count is high, the act-on share is near zero, and a reader who has not been told this reads the count as
+a dirty file.
+
+**Two residuals were left in as arguable rather than filed under a class.** "It is deliberately not
+pointed at `.claude/agents/*.md`" and "This is written down because it went wrong" are both descriptive
+passives whose actor is the author. Each sits beside an active instruction that carries the actual
+direction, so rewriting them would move no reader. Recorded here rather than silently counted as exempt.
+
+**The pass also found a live defect outside this file.** The act-on grep the article now documents hit
+`engineering.md` — a permission written as `is permitted`, in an unsplit house-rules article outside this
+slice's manifest. Reported rather than fixed, for the same reason the manifest exists.
