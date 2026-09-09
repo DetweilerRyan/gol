@@ -224,6 +224,12 @@ no migration — a one-time window that is now spent.
 `no-defaults` and `require-property` fire without being named in `rules`. Since `warn` exits 0, that set
 gates nothing.
 
+### What each enabled rule was written against
+
+`require-param-description` has a worked example rather than a hypothetical one: `Cache.insert` actually
+carried an `@param` that named a parameter and said nothing about it, which is the defect
+`doc-comments.md` rule 5 names.
+
 ### The six were each shown firing
 
 Every one was shown firing **through `npm run lint` itself** against a planted fault, in `src/`, and two of
@@ -308,6 +314,10 @@ oxlint's alpha JS-plugin API plus an alias, since the `jsdoc` name collides with
 Spiked 2026-09-08 and filed as `ideas/candidates/a-clean-lint-is-not-evidence-a-block-hovers.md`, which
 carries the measured numbers: the mechanism works and the baseline is clean, but it pulls `eslint` itself
 into a tree that has none.
+
+**The test-title gap is a design-time scoping decision, not an oversight.** `reference-check`'s
+`checkCitedSymbolExists` does not scan a quoted test title, so neither that checker nor this tier reaches
+the third of the three reference classes that motivated the work.
 
 ## The split itself, measured
 
