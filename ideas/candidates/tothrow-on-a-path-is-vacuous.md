@@ -34,7 +34,7 @@ a checker.
 
 Options, in ascending cost:
 
-1. Write it down in `engineering.md` beside the existing equivalence-demonstration
+1. Write it down in `mutation-testing.md` beside the existing equivalence-demonstration
    rule: an assertion on a throw names something only the _intended_ throw says.
    Zero machinery.
 2. An `ast-grep` rule banning `toThrow(<bare identifier>)` where the identifier
@@ -51,7 +51,7 @@ starting.
 
 ## Touches
 
-`.claude/agents/articles/engineering.md` for option 1. For option 3, an audit of
+`.claude/agents/articles/mutation-testing.md` for option 1. For option 3, an audit of
 what lives in the `mutate` exclusions across `stryker.config.json` and
 `stryker.scripts.config.json` — the question is how many guards sit there, which
 nobody has counted.
@@ -63,7 +63,7 @@ nobody has counted.
   and was false exactly once, here. A one-off audit ages out; a habit ("when you
   add a guard to an excluded file, fault-inject its test") does not, and costs one
   command. The habit is probably the honest answer, which makes this an
-  `engineering.md` edit rather than a program.
+  `mutation-testing.md` edit rather than a program.
 - **Does the same vacuity exist in non-throw assertions?** `toContain`,
   `toMatch`, and `stringContaining` have the identical shape — the assertion
   passes because the unintended value happens to contain the expected substring.

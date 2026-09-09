@@ -12,7 +12,7 @@ Conway's Game of Life, built as an infinite, pannable/zoomable grid (React 19 + 
 
 Three articles are house rules every role reads unconditionally — **and the orchestrating session reads them too.** They were labelled per-role because the seat that invokes the roles has no role file; the content was never role-specific.
 
-- **`.claude/agents/articles/engineering.md`** — design, test-layer placement, property tests, equivalence rulings, gate scoping, claim discipline.
+- **`.claude/agents/articles/engineering.md`** — design, test-layer placement, property tests, gate scoping, claim discipline. Its evidence lives in the sidecar `engineering.rationale.md`, which no role reads.
 - **`.claude/agents/articles/workflow.md`** — lint/format, role boundaries, commit messages, worktrees and branches.
 - **`.claude/agents/articles/handoffs.md`** — handoff shape, concurrent slices, defect adjudication, when blocked.
 
@@ -25,7 +25,7 @@ Ten are topic articles, read on the trigger each one names in its own header:
 - **`.claude/agents/articles/architecture.md`** — the twenty framework-free modules, one bullet each, and the acyclic dependency graph. Read before adding, moving, or splitting a module.
 - **`.claude/agents/articles/state-flow.md`** — where state lives, the sixteen hooks, the hook-identity contract, and the composition roots. Read before touching a hook or a composition root.
 - **`.claude/agents/articles/testing-layers.md`** — the test layers, the Gherkin contract, playwright-bdd, `.features-gen/`, the step registry, and the `features/screenplay/` decomposition. Read when authoring a `.feature`, a step module, or an e2e spec.
-- **`.claude/agents/articles/mutation-testing.md`** — Stryker's incremental cache, the four ways a run reports a confident number about nothing, the `:full` triggers, the seed-pinning account, and the sandbox exclusion. Read before ruling a survivor equivalent, and at `hardener`'s mutation stage.
+- **`.claude/agents/articles/mutation-testing.md`** — Stryker's incremental cache, the four ways a run reports a confident number about nothing, the `:full` triggers, the seed-pinning account, the sandbox exclusion, **how to rule a survivor equivalent, and when `it.skipIf` is an accepted idiom**. Read before ruling a survivor equivalent, and at `hardener`'s mutation stage.
 - **`.claude/agents/articles/ast-grep-rules.md`** — the rule list check 5 reads, how to read a finding, and how to author a rule that is not silently inert. Its sidecar `ast-grep-rules.rationale.md` carries each rule's scope, what it matches and how it was verified. Read the article before authoring or narrowing a rule, and the sidecar when changing one.
 - **`.claude/agents/articles/acceptance-mutation.md`** — the Gherkin Examples-table mutation runner, its guards, and its two mutation classes. Read before the first `npm run acceptance-mutation` in a slice.
 - **`.claude/agents/articles/doc-comments.md`** — the interface/implementation comment split, what belongs in JSDoc versus `//`, the hover budget and the sidecar `<module>.md` tier, the measured JSDoc syntax hazards, and the hover-before-Read reading habit. Read before writing or moving a comment block in `src/` or `scripts/`.
