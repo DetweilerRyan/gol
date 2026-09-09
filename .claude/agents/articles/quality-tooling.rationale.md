@@ -373,7 +373,7 @@ raised the figure on the other two.
 The standing conclusion is unchanged: the tier redistributes an enumeration far better than it
 redistributes argument, and this article held more of the former than the other two prose articles did.
 
-**The rationale-bytes row rose again, 5,742 to 8,787, and it is confounded exactly as
+**The rationale-bytes row rose again, 5,742 to 8,837, and it is confounded exactly as
 `testing-layers.rationale.md` records.** Mandate 6 took the block count from 41 to 73. A block-level
 classifier calls a block rationale when no sentence in it carries a directive, and smaller blocks are
 likelier to hold none, so the same prose reclassifies without a word of it changing. **A block-level

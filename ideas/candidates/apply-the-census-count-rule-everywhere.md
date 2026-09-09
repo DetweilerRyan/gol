@@ -69,6 +69,20 @@ The sweep must not run ahead of the sidecar rollout. `roll-the-rationale-sidecar
 articles wholesale, and a census edit landing first would be rewritten by the split that follows it. Sweep
 an article the same slice that splits it, or after.
 
+## Two residual censuses the first sweep missed, found by REVIEW
+
+Both are in files the rule was applied to, so they are evidence that a by-hand sweep misses cases even when
+the sweeper is looking for them.
+
+- **An ordinal is a census form the rule does not name.** `quality-tooling.md` calls `.gherkin-lintrc` "a
+  **ninth** checker", and CLAUDE.md calls the ast-grep rules "an **eighth** checker". Those two ordinals are
+  coupled across files, which is the same cross-file drift class as the "three advisory programs" against
+  CLAUDE.md's four — the contradiction the ruling was built on. **The sweep should add ordinals to the
+  census class explicitly**, since a reader looking for numerals will not see "ninth" as one.
+- **`testing-layers.md` says the barrel "withholds a dozen names"** in the same paragraph that says "No
+  count of the barrel's exports is kept here". The figure was exactly 12 when checked. The paragraph drops
+  one census and keeps another.
+
 ## Open questions
 
 - **Is any of it mechanisable?** A checker for "a numeral immediately followed by a plural noun naming a

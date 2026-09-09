@@ -369,16 +369,23 @@ a count written as history cannot rot — stripping these would destroy the reco
 
 ## The split itself, measured
 
-Split by `split-testing-layers-article`, 2026-09-09. Figures re-taken after the count-decoupling commit,
-which is the slice's final content commit, on the tree that commit produced. Re-derive rather than quoting
+Split by `split-testing-layers-article`, 2026-09-09. Figures re-taken by `close-architect-review-findings`
+after the last commit to touch the article, on the tree that commit produced. Re-derive rather than quoting
 these forward.
+
+**This caption named the wrong commit once, and the lesson generalises.** It read "after the count-decoupling
+commit, which is the slice's final content commit" — true when written, and falsified by the REVIEW pass
+that followed, which restored a caveat to the article and added 543 bytes. **A mandate-4 table is
+invalidated by any later edit to either file in the pair, including one made to close a review finding.**
+That REVIEW pass judged the table unaffected because it is attributed to a named commit; the attribution was
+the thing that had gone stale.
 
 | Measure                            | Before |  After |
 | ---------------------------------- | -----: | -----: |
-| Article bytes                      | 44,353 | 29,129 |
-| Sidecar bytes                      |      — | 32,111 |
-| Blocks in the article              |     34 |     78 |
-| Rationale bytes inside the article |  4,877 | 14,145 |
+| Article bytes                      | 44,353 | 29,812 |
+| Sidecar bytes                      |      — | 32,676 |
+| Blocks in the article              |     34 |     79 |
+| Rationale bytes inside the article |  4,877 | 14,826 |
 | Entanglement                       |    91% |    92% |
 | Backticked slice slugs             |     27 |     19 |
 | Vale mechanical findings           |    122 |      0 |

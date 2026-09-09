@@ -98,7 +98,7 @@ The convention that keeps this legible: **define a step shared by several featur
 
 **Re-derive which modules lend to which features when you need to know; no map is kept here.** The method: match every step line in `features/*.feature` against every step pattern in `features/steps/*.ts`. Then confirm each unmatched line is defined in the feature's own module. A map recorded in prose has rotted twice, and two instruments have since disagreed about it.
 
-**The method has a trap, and it is what made those two instruments disagree. A matcher that converts cucumber expressions to regular expressions by hand over-matches**, because `{word}` naively becomes `(\S+)`, and it then picks among multiple hits arbitrarily. **bddgen is the tie-breaker: it exits 0 on this tree, which proves the real registry has no ambiguous step text — so any multi-hit your matcher reports is your matcher's artifact rather than a fact about the layer.** Resolve one by hand against the step pattern's literal text.
+**The method has a trap, and it is what made those two instruments disagree. A matcher that converts cucumber expressions to regular expressions by hand over-matches**, because `{word}` naively becomes `(\S+)`, and it then picks among multiple hits arbitrarily. **bddgen is the tie-breaker.** It exits 0 on this tree, which proves the real registry has no ambiguous step text. **So any multi-hit your matcher reports is your matcher's artifact, rather than a fact about the layer.** Resolve one by hand against the step pattern's literal text.
 
 <!-- Closed decision: the map as it stood, its two corrections, and the unresolved disagreement between two instruments, are in `testing-layers.rationale.md`. -->
 
@@ -132,7 +132,7 @@ The layering under the barrel is a DAG. Viewport and notepad import no sibling, 
 
 `rules/no-expect-in-screenplay-questions.yml` holds `questions.ts` to its non-assertion contract. It is scoped to that one file because Playwright's retrying assertion is the sanctioned _wait_ primitive, and `interactions.ts` legitimately uses it as one. `e2e-helpers.ts` keeps publishing the names the step modules and specs were already using. Each is explicitly named rather than an `export *`, so the surface is readable as a list.
 
-_The rules below were split out of the enumeration headed "The black-box step form" in `archive.md`, which keeps the rest and argues why each was kept. They are here because their subjects still exist: `features/steps/`, `features/screenplay/`, and the e2e layer's activation routes._
+_The rules below were split out of the enumeration headed "The black-box step form" in `archive.md`, which keeps the rest and argues why each was kept. **They keep the ordinals they carried there**, which is why they open at "Second" with no "First" above them — that item stayed behind. They are here because their subjects still exist: `features/steps/`, `features/screenplay/`, and the e2e layer's activation routes._
 
 _Second, harness-style code is test infrastructure and is **not** expected to carry its own unit tests._ **This is the fact that outlived its subject.** The harness is gone, but `features/steps/` and `features/screenplay/` are the same category and inherit the ruling verbatim. They are the `features/`-side peers of `src/test-support/`, which `crap4ts.config.ts` and `stryker.config.json` already exclude for exactly this reason. Requiring coverage of it would gate a category this repo has deliberately decided not to gate. That is not the same as unverified.
 
