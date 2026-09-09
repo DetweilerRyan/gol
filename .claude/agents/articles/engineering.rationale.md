@@ -112,3 +112,65 @@ Measured, in `split-claude-md`: `agent-doc-check`'s check 5 required every `rule
 ## The property test that needed no config change
 
 - There's no scripts-scoped property _command_, so `architect`/`hardener`/`product` gain no counterpart to their `npm run test:property` obligation for `scripts/` work — running `npm run test:scripts` discharges it, because a property test there is collected by that one config like any other test. The clause this replaces said no property-test layer existed at all and that one should be added only if an invariant over a broad input range appeared that a table-driven test didn't cover. That happened, in `comma-list-mutants-are-all-syntax-breaking`: `scripts/acceptance-mutation/tuple-list.property.test.ts` (added under the name `mutation-rules.property.test.ts`) quantifies over coordinate-pair lists of any length, magnitude and sign, and the shape the table-driven fixtures could not reach — a single-pair list, and multi-digit coordinates — is exactly where the defect that slice fixed lived. Adding it needed **no config change**, which is the fact worth carrying: measured on that slice's tree, `vitest.scripts.config.ts`'s `scripts/**/*.test.ts` include collects a `*.property.test.ts` file, and `vite.config.ts`'s `sharedExclude` entry for `scripts/**` keeps the src-side `property` project — whose include is the unrooted `**/*.property.test.ts` — from collecting it too. So the suffix is a naming convention in `scripts/`, not a project selector as it is in `src/`, and a file placed there gets no separate run and no separate obligation. The bar for adding another is unchanged and is the one in "Writing a property test" above: pin the degenerates, and show it failing against a deliberately broken implementation first. The browser-required layer is a different story and still has no counterpart: `scripts/` is Node CLI tooling with no browser APIs to verify, so `npm run test:browser` has no scripts-scoped form and `hardener` simply skips that stage for `scripts/`-only work.
+
+## The split itself, measured
+
+Split by `split-engineering-article`, 2026-09-09. Figures taken after the final commit, on the tree that
+commit produced. Re-derive rather than quoting these forward.
+
+| Measure                            | Before |   After |
+| ---------------------------------- | -----: | ------: |
+| Article bytes                      | 61,890 |  41,669 |
+| Sidecar bytes                      |      — |  16,148 |
+| Rationale bytes inside the article | 17,383 |  12,457 |
+| Entanglement                       |    82% | **91%** |
+| Backticked slice slugs             |     30 |      13 |
+| Vale mechanical findings           |    128 |   **2** |
+
+**Two of those rows are bad news, and they are the interesting ones.**
+
+**Entanglement rose, 82% to 91%.** That is the share of directive-carrying blocks that also carry
+non-directive prose. Removing whole rationale blocks raised it by construction: the pure-evidence blocks
+left, and what remains is disproportionately rules with their reasoning welded on. **The sidecar tier
+redistributes an enumeration far better than it redistributes argument.** `ast-grep-rules.md` fell 87%
+because 70% of it was one grammatical list that could move verbatim. This article is prose, and prose
+resists the same operation.
+
+**Rationale bytes fell only 28%, against a 33% fall in total bytes.** So the article did not become
+proportionally more directive. It became smaller while holding a similar mix. Anyone planning the next
+split of a prose article should expect that, and should not promise a rationale-share improvement.
+
+**The two residual Vale findings are `Google's` and `Microsoft's`** — possessives that `STE.Contractions`
+reads as contractions. Expanding either produces nonsense, so both stay.
+
+## The prompt-rule triage, finding by finding
+
+106 prompt findings on the split article. **One was act-on. The rest were exempt, and the largest class
+was exempt for a single structural reason.**
+
+| Rule              | Findings | Act-on |
+| ----------------- | -------: | -----: |
+| `ProcedureLength` |       56 |      0 |
+| `PassiveVoice`    |       46 |      1 |
+| `OneInstruction`  |        4 |      0 |
+
+**The one act-on finding.** "What is ruled out is inventing an affordance whose only consumer is the
+test" stated a prohibition with no actor. It now reads "Never invent an affordance whose only consumer is
+the test." Found by reading the findings, not by the documented `is sanctioned|is permitted|is allowed`
+grep, which returned nothing on this article. **The grep remains a shortcut into the class rather than a
+substitute for the pass, and this slice is the evidence.**
+
+**All 56 `ProcedureLength` findings were statements rather than steps**, and that verdict was reachable
+once rather than 56 times: this repo writes a rule as a bullet carrying its own reason, so the rule fires
+on the house style. They divide as 34 rule-with-rationale bullets, 9 per-role command substitutions, 6
+standing verification obligations, 4 test-layer definitions, and 3 numbered decision questions. That
+lesson is now in `prose-linting.md`.
+
+**The 45 remaining `PassiveVoice` findings** divide across the article's five documented exempt classes,
+with one residual left in as arguable: "None may be skipped on the grounds that it cannot fail" is a
+prohibition with no named actor, kept for parallelism with the sentence beside it. Recorded here rather
+than counted as exempt.
+
+**All 4 `OneInstruction` findings** are the same markdown-list false positive as the `ProcedureLength`
+set: a list item describing a tool's ordered behaviour, or an enumeration of layers, rather than two
+instructions to a reader.

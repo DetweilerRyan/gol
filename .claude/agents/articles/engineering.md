@@ -56,7 +56,7 @@ These docs describe the codebase as it currently stands, not a contract that fre
 
 3. **Does an announced channel already carry it?** Ask whether one _exists_, not whether one could be added. If an accessible name, role, state or description already says it, the scenario reads that — **generated**. If nothing announces it, that is a **finding, not a licence**. A perception a real user needs and the accessible tree does not offer is an observability gap. It is `architect`'s to adjudicate in CONTRACT mode, and it can become a slice of its own — `aria-pressed-cell-state`, `ruler-label-axis-affordance` and `scrollbar-visible-proportion-affordance` each began exactly there.
 
-   What is ruled out is inventing an affordance whose only consumer is the test. That is a test hook wearing an affordance's name. Until such a slice lands the claim is **hand-written** residue, or it is asserted nowhere. Both are legitimate, and which applies is a product call.
+   **Never invent an affordance whose only consumer is the test.** That is a test hook wearing an affordance's name. Until such a slice lands the claim is **hand-written** residue, or it is asserted nowhere. Both are legitimate, and which applies is a product call.
 
 A hand-written test that survives all three carries a header saying so, and what that header must record is item 4's business — see `testing-layers.md`.
 

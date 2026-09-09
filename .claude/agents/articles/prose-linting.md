@@ -25,6 +25,12 @@ lints nothing, which reads exactly like a clean run. `vale sync` fetches the sty
 `.vale/` is gitignored as a downloaded artifact, and separately prettierignored. Prettier does not
 consult `.gitignore`, so without the second entry `npm run format` rewrites third-party YAML in place.
 
+**A new worktree therefore cannot lint until you restore that directory.** `git worktree add` copies
+tracked files only, so `.vale/` is absent and the first `vale` invocation fails on the missing styles
+path. Copy `.vale/` from a checkout that has it, or run `vale sync` again. **Do this before you start a split,
+not when the mandate to lint arrives.** The failure names a missing path rather than a missing style, so
+it does not read as "Vale is not set up here".
+
 ## Vale is report-only here
 
 Nothing gates on Vale's exit code, and `engineering.md`'s convention for a report-only checker applies:
@@ -43,6 +49,15 @@ Check each before you believe one.
 2. **A file failed to parse and aborted the run.** Vale parses YAML front matter with a real YAML
    parser, and one unparseable file aborts the whole invocation rather than skipping that file.
 3. **Vale is not installed.** See Setup.
+
+**A fourth way is not a zero at all, and no rule catches it.** Moving evidence out of a rule strands the
+words that pointed at it. "The split is clean" survived the table it described. "The bullet below"
+survived the bullets. Each is grammatical, each passes every mechanical rule, and each now points at
+nothing. Three appeared in one split.
+
+**After removing a block, re-read the sentences that survived around it** and
+check every "the", "that", "those" and "it" still has its referent. This is the one part of a lint pass a
+tool cannot do for you.
 
 ## What is scoped, and what is not
 
@@ -158,6 +173,14 @@ Ask of each finding: **is this bullet a step, or a statement?**
   move the reasoning to prose below the list.
 - **A statement** — a definition, a ruling, a hazard, a role's disposition. Leave it. Forcing a ruling
   under 20 words drops the qualifiers that carry it, which is worse prose bought with a cleaner number.
+
+**On a rules article the answer is usually "statement" for every finding at once, and knowing that in
+advance is worth a lot.** This repo writes a rule as a bullet carrying its own reason, so the rule fires
+on the house style rather than on a defect. Measured on `engineering.md`: **56 findings, 56 statements,
+none acted on** — rule-with-rationale bullets, the four test-layer definitions, the per-role command
+substitutions, and the standing verification obligations. **Classify the article's bullet convention first.** If it uses
+bullets for rules rather than for procedures, say so once and record the count. Do not reach the same
+verdict 56 times.
 
 ### `STE.OneInstruction` — act only on genuine chains
 
