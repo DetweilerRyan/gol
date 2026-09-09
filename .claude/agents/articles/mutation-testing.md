@@ -79,8 +79,11 @@ npm run dry4ts > out.log 2>&1; echo "EXIT=$?"
 ```
 
 Anything you add after the command — a pipe, an `||`, an `&&` — is a second program whose exit status is
-the one you will end up quoting. This matters most for the commands whose whole purpose is to fail:
-`dry4ts`, `ast-grep:rules`, `agent-doc-check`, `gherkin-lint`, `build`.
+the one you will end up quoting. This matters most for the commands whose whole purpose is to fail. Six
+carry a `# gate` marker in CLAUDE.md's Commands list — `lint`, `gherkin-lint`, `ast-grep:rules`,
+`agent-doc-check`, `reference-check` and `dry4ts`, with `dry4ts:scripts` beside it — and `build` fails
+the same way without carrying the label. **Re-derive that list from CLAUDE.md rather than from here**;
+an earlier version of this sentence named five and omitted `reference-check` and `lint`.
 
 Note what this shares with the three Stryker modes above: **the command reported success and the thing
 you asked about never ran.** A green line is a claim, and a claim is worth what the command that produced
@@ -118,6 +121,10 @@ for its importers is reused wholesale, because none of their own bytes moved. **
 and one direction is dangerous.** A cached `Killed` is reused even if the dependency change made that
 test stop killing, which reports the score too _high_. A cached `Survived` is reused even if the change
 made some test start killing, which reports it too _low_.
+
+> **`coverageAnalysis: off` was tried as a lever against this and rejected — it is inert with this
+> runner.** The vitest runner reads mutant coverage unconditionally, so the option changes nothing.
+> See `mutation-testing.rationale.md` before reaching for it.
 
 ## The seed pin, and what it does not license
 

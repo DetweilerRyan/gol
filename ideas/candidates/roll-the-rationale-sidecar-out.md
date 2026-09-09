@@ -20,16 +20,16 @@ decision about the four that should probably never be split at all.
 this section originally made. Multiplying each article's measured rationale share by its current size —
 excluding the four ruled out below:
 
-| article                  | share |  bytes | ~rationale bytes | `architect`'s pick |
-| ------------------------ | ----: | -----: | ---------------: | ------------------ |
-| `testing-layers.md`      |   30% | 44,353 |           13,306 | —                  |
-| `mutation-testing.md`    |   28% | 45,362 |           12,701 | **first**          |
-| `quality-tooling.md`     |   32% | 30,206 |            9,666 | —                  |
-| `architecture.md`        |   20% | 36,810 |            7,362 | —                  |
-| `ast-grep-rules.md`      |   16% | 42,467 |            6,795 | **second**         |
-| `state-flow.md`          |   15% | 27,298 |            4,095 | —                  |
-| `acceptance-mutation.md` |   11% | 26,554 |            2,921 | —                  |
-| `archive.md`             |   26% | 10,044 |            2,611 | —                  |
+| article                   | share |  bytes | ~rationale bytes | `architect`'s pick |
+| ------------------------- | ----: | -----: | ---------------: | ------------------ |
+| `testing-layers.md`       |   30% | 44,353 |           13,306 | —                  |
+| ~~`mutation-testing.md`~~ |   28% | 45,362 |           12,701 | **DONE** — first   |
+| `quality-tooling.md`      |   32% | 30,206 |            9,666 | —                  |
+| `architecture.md`         |   20% | 36,810 |            7,362 | —                  |
+| `ast-grep-rules.md`       |   16% | 42,467 |            6,795 | **second**         |
+| `state-flow.md`           |   15% | 27,298 |            4,095 | —                  |
+| `acceptance-mutation.md`  |   11% | 26,554 |            2,921 | —                  |
+| `archive.md`              |   26% | 10,044 |            2,611 | —                  |
 
 Shares measured on `bac96c4` by the block classifier described in `rationale-sidecar-pilot`; read them as
 upper bounds, since the classifier agrees with hand labels about two times in three and errs toward
@@ -59,6 +59,21 @@ Two of the four have a second, independent defence that does not depend on the a
 `workflow.md` (1,486 rationale bytes) and `handoffs.md` (3,161) are simply too small to be worth a second
 file. `orchestration.md`'s real defence is that it is 94% entangled, so its split is expensive rather than
 that it has many readers — it has exactly one.
+
+## Progress
+
+| slice                            | article               | landed  |
+| -------------------------------- | --------------------- | ------- |
+| `split-mutation-testing-article` | `mutation-testing.md` | pending |
+
+**One split done, eleven articles left of the twelve splittable.** `ast-grep-rules.md` is next by
+`architect`'s ordering — 84 backticked slice slugs, the most in the corpus by a factor of three, and a
+rule roster that mandate 5 will have to re-derive against `rules/`.
+
+**What the first split taught, beyond its own findings.** Mandates 2 and 4 were both defective and are
+rewritten above; mandate 5 did not exist and was added because the pair audit is structurally blind to a
+claim that was already false. Mandate 5 then earned itself immediately: on a second pass over the same
+article it caught a gate enumeration naming five commands where CLAUDE.md marks seven.
 
 ## Question
 
