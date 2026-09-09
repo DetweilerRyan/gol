@@ -171,7 +171,13 @@ The budget counts **rendered** lines. Measure it by hovering the symbol, not by 
 ### 7. Overflow goes to a sidecar `<module>.md`, not into the hover
 
 When an abstraction genuinely needs more than the budget, keep a lighter overview in the JSDoc. Move the
-depth into a Markdown file beside the source: `src/cellTiles.md` next to `src/cellTiles.ts`.
+depth into a Markdown file beside the source: `src/cellTiles.md` next to `src/cellTiles.ts`. The first live
+instance is `src/hooks/useZoomGlide.md`, written by `migrate-module-depth`; read it as the precedent.
+
+**A sidecar points at an article, it does not restate one.** Its content is depth the hover cannot hold —
+measurements, rejected alternatives, the failure mode a change invites. Where an article already carries a
+ruling, the sidecar cites it in one line. Two copies of one paragraph, in two files nobody checks against
+each other, is CLAUDE.md's branch 5 drift one tier down.
 
 That gives a three-tier escalation: **hover for the contract, sidecar for the depth, implementation only
 when changing it.**
@@ -181,9 +187,24 @@ braced form renders exactly.
 
 > Four alternative `@see` forms were measured and rejected. See `doc-comments.rationale.md`.
 
-**Nothing checks that a sidecar link resolves.** `npm run agent-doc-check` scans `.claude/**/*.md` plus
-`CLAUDE.md`, not `src/**`, so a `@see {@link ./name.md}` can rot silently after a rename. Until that gap
-closes, treat a rename that moves a module as a rename of its sidecar too.
+**Nothing checks a sidecar at all — neither that the link to it resolves, nor anything written inside it.**
+Two independent gaps stack, both measured 2026-09-09 by injecting a deliberate fault and re-running the
+checker:
+
+- `npm run reference-check`'s token grammar recognises `tsx|ts|yaml|yml` and **no other extension**. So a
+  `.md` filename is extracted nowhere — not in a source comment, not in a doc file. A
+  `@see {@link ./useZoomGlideNope.md}` planted in `src/hooks/useZoomGlide.ts` left the run green at an
+  unchanged reference count. Moving the sidecar under `.claude/**` would not help; the extension is the
+  block, not the location.
+- `src/**/*.md` is outside that checker's scan set (source surface is `.ts`/`.tsx`/`.yml`/`.yaml`; doc
+  surface is `CLAUDE.md`, `README.md`, `.claude/**/*.md`), so the sidecar's **own** references go unread.
+  A made-up module name carrying a `.ts` extension, appended to `src/hooks/useZoomGlide.md`, left the run
+  green; the same line appended to an article failed it. Vale is scoped to `[.claude/agents/**/*.md]`, so it
+  reports `0 files` on a sidecar rather than a clean read.
+
+Until those gaps close, treat a rename that moves a module as a rename of its sidecar too. Hold a sidecar to
+the comment-assertion convention by hand as well — **no quoted test titles, no caller rosters, no
+`<file>:NN`** — precisely because nothing will catch one.
 
 ### 8. Scope: exported declarations **and** interface/type members
 

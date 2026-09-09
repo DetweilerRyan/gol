@@ -20,8 +20,8 @@ actual offset range is about **1e-10 px**. It cannot red `features/camera-pan-an
 `getBoundingClientRect`-based assertion.
 
 **An earlier version of this note claimed it could, and that claim was wrong.** What the divergence does red
-is an exact-equality unit assertion. `useZoomGlide.test.ts`'s "accumulates zero float divergence from
-chaining" test pins it, using a fuzz-found adversarial camera.
+is an exact-equality unit assertion, and `useZoomGlide.test.ts` carries one built on a fuzz-found
+adversarial camera.
 
 ## Why the completion frame is bit-identical to an instantaneous zoom
 
@@ -31,31 +31,13 @@ already-in-range value is the identity. That half of the original claim holds.
 
 **This is the property a caller depends on**, which is why the hover states it and this file explains it.
 
-## The unmount asymmetry against `useRafCoalescedPan`
+## Two rulings this file does not restate
 
-An unfinished glide at unmount is **cancelled, never flushed**, where a coalesced pan flushes. The two
-animation-frame owners differ on purpose.
+Both are contracts this hook has with another one, so `state-flow.md` owns them and this file only routes
+you there. Read them before changing the unmount path or the ref-syncing effect.
 
-A coalesced pan owes its caller an already-accumulated delta, so dropping it would lose input the user
-already gave. A half-arrived-at cellSize is owed to nobody: it is an interpolation toward a target, not a
-record of anything the user did.
-
-`state-flow.md` carries that contrast, because it is a contract between two hooks and neither hover can
-hold it alone.
-
-## The controller's identity is a contract with named guards
-
-The returned controller is identity-stable across renders. `useCamera`'s private `commit()` closes over it,
-and every one of that hook's returned actions closes over `commit()`, so a controller rebuilt per render
-churns all of them.
-
-**What keeps it stable is that the controller closes over nothing that varies per render.** `onCamera` and
-the reduced-motion preference are both read through refs, reassigned in this hook's single
-dependency-array-free effect, which is what lets React Compiler memoize it.
-
-**Declaration order is load-bearing, and the failure is silent.** Placing that effect above
-`const prefersReducedMotion = useReducedMotion()` compiles, type-checks and passes every other test in the
-repo, while leaving the controller unmemoized and the change inert.
-
-`state-flow.md` carries the general contract this is one instance of, and
-`state-flow.rationale.md` carries the measurements behind it.
+- **The unmount asymmetry against `useRafCoalescedPan`** — an unfinished glide is cancelled, never flushed.
+  `state-flow.md`, the cross-hook constraint list.
+- **The returned controller's identity stability, and the silent failure if the ref-syncing effect is
+  declared above `useReducedMotion()`** — `state-flow.md`'s identity-contract section, with the churn
+  measurements in `state-flow.rationale.md`.

@@ -37,9 +37,10 @@ inside a closed decision that nobody reopened. The article now names no ordinal 
 
 **What the REVIEW pass then found, by re-deriving the two lists this audit skipped.**
 
-- **The per-hook bullet list covers fifteen of sixteen hooks.** `useContentBounds.ts` appears only inside
-  the `useLiveCells` bullet, as the shape that hook copied. It has never had a bullet of its own, so this
-  predates the split. Left alone deliberately: that whole list is ruled to migrate out of the article.
+- **The per-hook bullet list covered fifteen of sixteen hooks.** `useContentBounds.ts` appeared only inside
+  the `useLiveCells` bullet, as the shape that hook copied. It never had a bullet of its own, so the gap
+  predated the split. Left alone deliberately, because that whole list was ruled to migrate out of the
+  article — which `migrate-module-depth` then did, so the gap closed by deletion rather than by correction.
 - **Layer B's roster named three test files and there are more.** `useGridFocus.test.ts` pins `setFocus`
   identity, which is easy to miss because the same hook supplies two of the three standing exemptions, and
   `useMatchMedia.test.ts` pins the same property through a resubscribe count. Both are now named.
@@ -218,9 +219,20 @@ one block whether or not its content is mixed. **Do not read a low entering enta
 Those modules already carry their own JSDoc, so the article restates what a hover already gives a caller.
 CLAUDE.md's routing branch 4 sends that content to JSDoc, or to a `<module>.md` sidecar beside the source,
 rather than to a shared article. **Ruled 2026-09-09 by the user**: land this split as it stands, then
-migrate the module depth in its own slice, before `architecture.md` is split. **Done by `migrate-module-depth`**, which took the article to 18,469 bytes and left six cross-module
-constraints where fourteen per-hook bullets had been. Nothing in this sidecar moved with it, because this file holds evidence rather than interface depth, so
-the table above still describes the tree its own caption names.
+migrate the module depth in its own slice, before `architecture.md` is split. **Done by
+`migrate-module-depth`**, which took the article to 18,886 bytes and left five cross-module constraints
+where fourteen per-hook bullets had been. Nothing in this sidecar moved with it, because this
+file holds evidence rather than interface depth, so the table above still describes the tree its own caption
+names. The hook block alone moved; the four per-component bullets below it are untouched.
+
+**Two of the six drafted constraints failed the test the article states for them, and the REVIEW pass
+resolved them differently.** `useGridPointerGestures.ts`'s rect-relative-pixels entry was cut: its hover
+carries the rule _and_ the caller's half of it, so the entry was a second copy of a hover rather than
+something no hover could hold. `useCellTiles.ts`'s entry was kept and rewritten, because its original
+justification — "the guarantee is stated at the bottom of this section rather than in the hook" — was false;
+the hook's hover does state reference-stability, and what no hover holds is `Grid.tsx` resting on it three
+modules away. The general lesson is the one the rules already carry in the other direction: when a kept item
+fails its own stated test, fix the item or the test, never soften the test to keep the item.
 
 **The classifier is a reimplementation.** Calibrated against `engineering.md`, whose figures were recorded
 three slices earlier, it reads 10,839 rationale bytes and 83% entanglement where that split recorded 12,457

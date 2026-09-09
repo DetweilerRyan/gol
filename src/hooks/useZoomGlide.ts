@@ -37,6 +37,8 @@ interface GlideState {
  * src/zoomGlide.ts, which owns the actual arithmetic, never has to. Only the
  * toolbar route uses this; wheel zoom, drag-pan, scrollbar drag and reset
  * all stay instantaneous and never touch it.
+ *
+ * @see {@link ./useZoomGlide.md}
  */
 // The rAF lifecycle -- schedule/cancel/replace-on-a-new-call -- mirrors
 // useRafCoalescedPan.ts, this repo's other animation-frame owner, with one
