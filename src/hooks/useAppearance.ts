@@ -17,13 +17,17 @@ export interface UseAppearanceResult {
 }
 
 /**
- * Owns the one appearance preference the whole app has. Call exactly once
- * (a second call site would hold a second useState and the two could
- * desync). Delegates every rule to appearance.ts; this hook owns only
- * what's genuinely React/browser: the persisted preference as state, and
- * the one effect that pushes the resolved appearance onto `<html>` for
- * Tailwind's `dark:` variant (and dark-mode-following-system-appearance's
- * `@custom-variant` override in src/index.css) to key off.
+ * Owns the one appearance preference the whole app has. Seeded from
+ * localStorage through appearance.ts's parseAppearancePreference, and resolved
+ * against useSystemAppearance's live reading through resolveAppearance.
+ *
+ * Call exactly once: a second call site would hold a second useState, and the
+ * two could desync.
+ *
+ * Delegates every rule to appearance.ts. This hook owns only what is genuinely
+ * React or browser -- the persisted preference as state, and the one effect
+ * that pushes the resolved appearance onto `<html>` for Tailwind's `dark:`
+ * variant and src/index.css's `@custom-variant` override to key off.
  */
 export function useAppearance(): UseAppearanceResult {
   const [preference, setPreference] = useState<AppearancePreference>(() =>

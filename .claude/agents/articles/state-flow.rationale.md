@@ -218,9 +218,9 @@ one block whether or not its content is mixed. **Do not read a low entering enta
 Those modules already carry their own JSDoc, so the article restates what a hover already gives a caller.
 CLAUDE.md's routing branch 4 sends that content to JSDoc, or to a `<module>.md` sidecar beside the source,
 rather than to a shared article. **Ruled 2026-09-09 by the user**: land this split as it stands, then
-migrate the module depth in its own slice, before `architecture.md` is split. Nothing in this sidecar moves
-with it, because this file holds evidence rather than interface depth. The table above will need re-taking
-afterwards.
+migrate the module depth in its own slice, before `architecture.md` is split. **Done by `migrate-module-depth`**, which took the article to 18,469 bytes and left six cross-module
+constraints where fourteen per-hook bullets had been. Nothing in this sidecar moved with it, because this file holds evidence rather than interface depth, so
+the table above still describes the tree its own caption names.
 
 **The classifier is a reimplementation.** Calibrated against `engineering.md`, whose figures were recorded
 three slices earlier, it reads 10,839 rationale bytes and 83% entanglement where that split recorded 12,457

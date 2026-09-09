@@ -8,6 +8,11 @@ export interface ZoomGlideController {
    * Starts (or re-targets, if one is already gliding) a toolbar zoom glide
    * toward `factor`x the camera's current cellSize, anchored at
    * (`anchorPixelX`, `anchorPixelY`).
+   *
+   * The completion frame is bit-identical to an instantaneous zoom, so a
+   * caller may treat the glide as a purely visual lead-in to the same result.
+   *
+   * @see {@link ./useZoomGlide.md}
    */
   zoomBy(camera: Camera, factor: number, anchorPixelX: number, anchorPixelY: number): void
   /** Cancels any in-flight glide, freezing the camera at whatever cellSize it has reached. A no-op when nothing is gliding. */
@@ -17,25 +22,10 @@ export interface ZoomGlideController {
 interface GlideState {
   glide: ZoomGlide
   // The camera the glide STARTED at -- every frame recomputes
-  // zoomCameraToCellSize from THIS fixed starting camera, never from the
-  // previous frame's resulting camera. Chaining zoomCameraToCellSize calls
-  // frame-over-frame is algebraically exact but floating-point inexact --
-  // measured (cleaner, smooth-zoom-transitions step 3): fuzzing reachable
-  // camera/anchor/cellSize combinations over a real 12-frame, 60fps glide
-  // finds chained-vs-fixed divergences up to ~1 ULP (~1e-14 in offset
-  // units), even at anchor/offset magnitudes far past what this app ever
-  // reaches before cellAnchor.ts re-quantizes. That's real but many orders
-  // of magnitude below anything pixel-observable (worst case measured
-  // ~1e-10px within this app's actual offset range) -- nowhere near enough
-  // to red features/camera-pan-and-zoom.e2e.spec.ts or any getBoundingClientRect-based
-  // assertion, which the previous version of this comment claimed. What it
-  // DOES red is an exact-equality unit assertion, which is what
-  // useZoomGlide.test.ts's "accumulates zero float divergence from chaining"
-  // test pins, with a fuzz-found adversarial camera. Recomputing from one
-  // fixed starting camera also makes the completion frame bit-identical to
-  // today's instantaneous zoom, because toCellSize ===
-  // clampCellSize(fromCellSize * factor) and clamping an already-in-range
-  // value is the identity -- that part of the original claim holds.
+  // zoomCameraToCellSize from THIS fixed camera, never from the previous
+  // frame's result. See ./useZoomGlide.md for the float-divergence
+  // measurement behind that, and for why it makes the completion frame
+  // bit-identical to an instantaneous zoom.
   fromCamera: Camera
   anchorX: number
   anchorY: number

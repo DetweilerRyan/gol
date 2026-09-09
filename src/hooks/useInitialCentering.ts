@@ -2,9 +2,13 @@ import { useLayoutEffect, useRef } from 'react'
 import type { ElementSize } from './useElementSize'
 
 /**
- * Centers on the first measured size only. A layout effect (rather than a
- * plain effect) so the re-centered camera is committed before paint, leaving
- * no frame in which the grid is rendered at full size but still uncentered.
+ * Centers on the first NON-ZERO measured size only. `useElementSize` starts at
+ * 0x0 and the first real observation arrives after layout, so a latch on "first
+ * measurement" would fire on the zero and centre against nothing.
+ *
+ * A layout effect (rather than a plain effect) so the re-centered camera is
+ * committed before paint, leaving no frame in which the grid is rendered at
+ * full size but still uncentered.
  */
 export function useInitialCentering(
   size: ElementSize,
