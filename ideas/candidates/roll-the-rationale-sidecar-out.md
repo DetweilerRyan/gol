@@ -71,15 +71,18 @@ that it has many readers — it has exactly one.
 | `split-mutation-testing-article` | `mutation-testing.md` | landed |
 | `split-ast-grep-rules-article`   | `ast-grep-rules.md`   | landed |
 | `split-engineering-article`      | `engineering.md`      | landed |
+| `split-testing-layers-article`   | `testing-layers.md`   | landed |
+| `split-quality-tooling-article`  | `quality-tooling.md`  | landed |
 
-**Three splits done, nine articles left of the twelve splittable.** The next target is unchosen.
-`testing-layers.md` (44,353 bytes) is the largest remaining. `architecture.md` (36,810) is second and is
-itself 20% rationale, but it carries **no heading structure** — one H3 over a flat module list — so
-routing prose into it means inventing headings it does not have.
+**Five splits done, seven articles left of the twelve splittable.** The next target is unchosen.
+`architecture.md` is now the largest remaining, and it carries **no heading structure** — one H3 over a
+flat module list — so routing prose into it means inventing headings it does not have.
 
-**Read the byte figures in the Situation and Complication as a snapshot predating three splits.**
-`engineering.md` alone moved from 18,043 rationale bytes to 12,457. Re-derive before planning against
-any of them.
+**The ranking table in the Complication is inflated, and by enough to change the ordering.** Its
+`~rationale bytes` column multiplies a share measured on `bac96c4` by a current byte count. Both rows
+measured directly since disagree by a factor near two or three: `testing-layers.md` held 4,877 rationale
+bytes against the 13,306 listed, and `quality-tooling.md` 5,742 against 9,666. Every row is built the same
+way. **Re-measure a candidate before planning against it, and do not rank from that table as it stands.**
 
 **What the first split taught, beyond its own findings.** Mandates 2 and 4 were both defective and are
 rewritten above; mandate 5 did not exist and was added because the pair audit is structurally blind to a
@@ -160,12 +163,30 @@ The pilot established these, and they are not optional. Seven, and mandates 4 th
    numeral **of the same width** so the substitution is byte-neutral. The article figure has no such
    problem.
 
+   **The rationale-bytes and entanglement rows are confounded by mandate 6, and the byte count is the row
+   that compares.** A block-level classifier calls a block rationale when no sentence in it carries a
+   directive. Mandate 6 splits sentences and paragraphs, so it changes block granularity drastically —
+   34 blocks to 78 on one article, 41 to 73 on another — and smaller blocks are likelier to hold no
+   directive. The same prose then reclassifies without a word of it changing, and the figure moves the
+   wrong way. **A block-level classifier cannot compare a file against itself across a pass that changes
+   paragraph granularity.** Every prose split so far ran mandate 6, so their rationale-bytes rows all
+   carry this confound in the same direction, understating the reduction.
+
+   **Format, then measure, then substitute.** Prettier realigns a table column, so a substitution written
+   against the pre-format alignment silently misses and leaves the placeholder in place. Measured on the
+   fourth and fifth splits, in that order: the fifth hit it, the fourth avoided it by running the steps
+   this way round.
+
    **Expect entanglement to rise on a prose article, and do not promise otherwise.** It measures the
    share of directive-carrying blocks that also carry non-directive prose, so removing whole evidence
    blocks raises it by construction. Measured on `engineering.md`: 82% to 91%, with rationale bytes down
    only 28% against a 33% fall in total bytes. **The tier redistributes an enumeration far better than it
    redistributes argument** — `ast-grep-rules.md` fell 87% because 70% of it was one grammatical list
-   that moved verbatim, and prose does not offer that.
+   that moved verbatim, and prose does not offer that. **One counter-example exists and it is instructive
+   rather than contradictory**: `quality-tooling.md`'s entanglement _fell_ 12 points, because it held
+   several separable evidence blocks — a declined-rule roster, a patch mechanism, probe methods — that
+   could leave whole rather than being unwoven. That is the enumeration case wearing prose clothing, not
+   a reason to expect a fall on argument.
 
 5. **Re-derive every sentence that enumerates or quantifies over another file's contents**, from that
    file, during the split. Do not carry it across. Mandate 3's audit compares the pair against the
@@ -180,6 +201,11 @@ The pilot established these, and they are not optional. Seven, and mandates 4 th
    quoted or named. Three are prompts a person reads rather than obeys: `STE.ProcedureLength`,
    `STE.OneInstruction` and `STE.PassiveVoice`. That article carries the exempt classes for each, and a
    residual fitting no class is not automatically exempt.
+
+   **Write to the length rules while drafting, rather than converging on them afterwards.** Measured across
+   two consecutive splits: the first rewrote afterwards and needed four passes, taking `SentenceLength`
+   107 → 55 → 19 → 4 → 0. The second was drafted short and needed two, because 67 findings fell to 6 in the
+   extraction commit alone, before any lint pass ran.
 
    **Re-run after acting, and expect a second pass.** The two length rules trade against each other:
    splitting a sentence adds one to its paragraph. Both splits so far reached zero only on the second
