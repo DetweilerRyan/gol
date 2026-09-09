@@ -34,7 +34,7 @@ It is the tooling every other role's quality gate runs on, so it is held to the 
 
 **Its layout is two levels and no more.** `scripts/<program>/` holds one program's own modules — its `run.ts` shell plus the pure modules that shell delegates to. A file at `scripts/` root is shared by two or more programs.
 
-Two shared root modules exist. `scripts/feature-files.ts` exports `listFeatureFiles`, the one place that answers "which `.feature` files exist", used by both `acceptance-mutation` and `gherkin-dry-checker`. `gate-report.ts` exports `checkNonEmpty`, the "this program found nothing to check, and that is itself a failure" guard.
+The shared root modules are these. `scripts/feature-files.ts` exports `listFeatureFiles`, the one place that answers "which `.feature` files exist", used by both `acceptance-mutation` and `gherkin-dry-checker`. `gate-report.ts` exports `checkNonEmpty`, the "this program found nothing to check, and that is itself a failure" guard.
 
 **`listFeatureFiles` throws rather than returning an empty array, and both throws are load-bearing.** Do not soften either into a fallback. It globs recursively and returns paths relative to the features directory.
 
@@ -44,7 +44,7 @@ Two shared root modules exist. `scripts/feature-files.ts` exports `listFeatureFi
 
 <!-- Closed decision: why `listFeatureFiles` throws twice, the duplication that produced each shared module, and the probe behind the import-direction rule are in `quality-tooling.rationale.md`. -->
 
-### The three advisory programs
+### The advisory programs
 
 - `scripts/gherkin-dry-checker/` — advisory-only. It scans all `.feature` files for step-text vocabulary duplication and drift, discovering them through `scripts/feature-files.ts`. It always exits 0 on a successful run and writes to `reports/gherkin-dry/report.json`.
 - `scripts/halstead4ts/` — runs `fta-cli` against the same files as `crap4ts.config.ts`'s `include` list. It prints a Halstead table plus an FTA Score alongside crap4ts's per-function CRAP table. FTA reports at file granularity only, so this is a second, coarser report rather than something merged into crap4ts's output. FTA's own score formula is not published, so it is report-only and never a CI gate. `run.ts` resolves crap4ts's globs rather than keeping a copy of the file list. A file at or under FTA's size floor renders as an explicit `not scored (under FTA size floor)` row rather than vanishing from the report.
@@ -72,7 +72,7 @@ Two consequences follow. There is **no** scripts-scoped property command, and no
 
 Four facts about the library are easy to get wrong, all measured against the installed copy.
 
-- **The package ships a `duplicate-state` rule file that is not in its registry.** Naming it in the config aborts the run with `Rule "duplicate-state" does not exist`. The registered set is 31 rules, fewer than the `dist/rules/` listing suggests.
+- **The package ships a `duplicate-state` rule file that is not in its registry.** Naming it in the config aborts the run with `Rule "duplicate-state" does not exist`. The registered set is smaller than the `dist/rules/` listing suggests, and the registry is what decides.
 - **`name-length`'s and `max-scenarios-per-file`'s library defaults do not fit this repo.** Only the first of those two caps is derived from Prettier's print width. `max-scenarios-per-file` runs with `countOutlineExamples: false`, because `npm run acceptance-mutation` measures the quantity this repo actually budgets.
 - **`no-restricted-patterns` compiles every pattern with `new RegExp(pattern, 'i')`, unconditionally.** Case is therefore not available as a signal, so the list has to be an enumerated vocabulary rather than a shape.
 - **It reads names, descriptions and step text, and never Examples headers or cells.** That is not a hole in practice: `no-unused-variables` forces every header to appear in some step's `<placeholder>`, so the two rules together reach the whole table.
@@ -97,18 +97,18 @@ Its failure mode is someone widening the list to clear a finding. That is the sa
 
 **Ratified by `architect` in `oxlint-native-jsdoc-tier` and owned by it thereafter**, in the same sense `no-restricted-patterns`' list is. The rule set mechanises `doc-comments.md`'s authoring conventions, so widening or relaxing it to clear a finding is the same move as narrowing a fast-check arbitrary. **A role that hits one of these and believes it is wrong routes it to `architect` rather than editing the config.**
 
-**Six rules are on, all at `error`.** The rest of oxlint's native `jsdoc` set is declined on the record in the sidecar.
+**The rules in the table below are on, all at `error`.** The rest of oxlint's native `jsdoc` set is declined on the record in the sidecar.
 
 **Two ways this tier can be silently inert, both measured, both exiting 0.** They are the same failure shape this repo documents for a Stryker `ignorePatterns` glob, a vitest `include` and a `-t` pattern that match nothing. The command reports success, and the thing you asked about never ran.
 
-- **The `plugins` entry.** Remove `"jsdoc"` from `plugins` and all six rules are read, accepted, and never run. `.oxlintrc.json` carries a comment saying so at the site.
+- **The `plugins` entry.** Remove `"jsdoc"` from `plugins` and every rule in the tier is read, accepted, and never run. `.oxlintrc.json` carries a comment saying so at the site.
 - **Severity.** An oxlint `warn` **exits 0**. Every role reads `npm run lint` by its exit code, so a jsdoc rule at `warn` is a finding nobody will ever act on. That is why these are `error`, rather than the `rules/*.yml` convention: `npm run ast-grep` is report-only and read by its output, while `npm run lint` is a gate read by `$?`.
 
 **Enabling the plugin also activates a default rule set at `warn`**, and since `warn` exits 0 that set gates nothing. So the explicit severities are what make this tier real, not decoration.
 
 <!-- Closed decision: the inertness measurements, the severity battery, and the default rules that fire unnamed are in `quality-tooling.rationale.md`. -->
 
-### The six, and what each catches
+### The enabled rules, and what each catches
 
 | rule                          | catches                                                                                                                                                  |
 | ----------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------- |
@@ -119,9 +119,9 @@ Its failure mode is someone widening the list to clear a finding. That is the sa
 | `require-returns-description` | a bare `@returns`                                                                                                                                        |
 | `require-throws-description`  | a bare `@throws`                                                                                                                                         |
 
-**`check-tag-names` runs with `typed: true` plus three `tagNamePreference` bans, and both halves were measured rather than assumed.** Together they reach all five tags `doc-comments.md` rule 5 names as not written here, and `typed: true` bans the TypeScript-redundant family wholesale.
+**`check-tag-names` runs with `typed: true` plus a set of `tagNamePreference` bans, and both halves were measured rather than assumed.** Together they reach every tag `doc-comments.md` rule 5 names as not written here, and `typed: true` bans the TypeScript-redundant family wholesale.
 
-**Read the result at its actual scope: the closed table is _not_ mechanically enforced, and it cannot be.** What is mechanised is misspellings, non-JSDoc tags, the TypeScript-redundant family, and the article's own named five. The table itself remains an `architect` ruling enforced by review. **Admitting a tag means editing both `doc-comments.md`'s table and this config.** `@deprecated` is the likeliest candidate, and banning it here is deliberately what makes a future admission a ruling rather than a drift.
+**Read the result at its actual scope: the closed table is _not_ mechanically enforced, and it cannot be.** What is mechanised is misspellings, non-JSDoc tags, the TypeScript-redundant family, and the tags rule 5 names. The table itself remains an `architect` ruling enforced by review. **Admitting a tag means editing both `doc-comments.md`'s table and this config.** `@deprecated` is the likeliest candidate, and banning it here is deliberately what makes a future admission a ruling rather than a drift.
 
 **The `scripts/**` override does not shield any of this, and neither does `features/`.** That override declares its own `plugins` array omitting `jsdoc`, but a top-level plugin plus a top-level rule fires inside it anyway. So does the top-level `settings` block. This tier binds `product`'s TypeScript exactly as it binds `src/`.
 
@@ -135,10 +135,10 @@ So prose like `* Uses the @fast-check/vitest package` passes `npm run lint` sile
 
 **A clean `npm run lint` is therefore not evidence that a JSDoc block hovers as written.** **Backtick every `@`-prefixed token.** That remains the only guard on the mid-line half, and it stays a human discipline.
 
-**The alpha tier is deliberately not here.** Six `eslint-plugin-jsdoc` rules have no native oxlint port, and reaching them means oxlint's alpha JS-plugin API plus an alias. That is a separate evaluation with a real dependency cost, filed as `ideas/candidates/a-clean-lint-is-not-evidence-a-block-hovers.md`. None of it is needed to hold what this tier holds.
+**The alpha tier is deliberately not here.** Several `eslint-plugin-jsdoc` rules have no native oxlint port, and reaching them means oxlint's alpha JS-plugin API plus an alias. That is a separate evaluation with a real dependency cost, filed as `ideas/candidates/a-clean-lint-is-not-evidence-a-block-hovers.md`. None of it is needed to hold what this tier holds.
 
 **What no lint rule here reaches at all:** the dead file, symbol and test-title references in `//` comments that motivated this work. Every rule above operates **inside a JSDoc block**, and those references are overwhelmingly in `//` comments.
 
 That is why this tier is complementary to `scripts/reference-check/` rather than a substitute for it. That checker covers the file and symbol halves of the motivating problem. The test-title half was scoped out at design time and remains a gap this tier does not close either.
 
-<!-- Closed decision: the seventeen declined rules, their three groups, their finding counts, and the one to reopen if a parser change lands are in `quality-tooling.rationale.md`. -->
+<!-- Closed decision: the declined rules, the groups they fall into, their finding counts, and the one to reopen if a parser change lands are in `quality-tooling.rationale.md`. -->

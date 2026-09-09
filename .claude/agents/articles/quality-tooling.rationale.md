@@ -319,17 +319,50 @@ into a tree that has none.
 `checkCitedSymbolExists` does not scan a quoted test title, so neither that checker nor this tier reaches
 the third of the three reference classes that motivated the work.
 
+## The census counts were dropped by ruling, not by drift
+
+**Ruled 2026-09-09 by the user, during `split-quality-tooling-article`:** reduce the driftable surface area
+by decoupling the article's prose from counts of files. This goes **beyond** `engineering.md`, and a future
+editor needs to know that, because the rule there reads as a licence to put them back.
+
+`engineering.md` permits a count that stands beside its own complete enumeration, on the argument that a
+drift then makes the sentence visibly self-contradictory. That is a **permission, not a mandate**. The
+ruling here observes that a loud failure is still a failure someone has to fix, and that an enumeration
+carries the same information with nothing to keep in sync.
+
+**The line applied, in three classes.** A count that **is** the rule or the premise stays — "two levels and
+no more" for the `scripts/` layout, and "exactly one vitest config and therefore exactly one project",
+which is the whole premise of the property-suffix section. A count over the **sentence's own adjacent
+bullets** stays, since it cannot drift with the tree. A **census of external state** goes.
+
+What went, and what replaced it: "two shared root modules exist", replaced by naming them; the
+"three advisory programs" heading, replaced by "The advisory programs"; "the registered set is 31 rules",
+replaced by the rule that the registry decides and the `dist/rules/` listing does not; "six rules are on"
+and the "The six" heading, replaced by a pointer at the table that enumerates them; "three
+`tagNamePreference` bans" and "all five tags", replaced by the set and by "every tag rule 5 names"; "six
+`eslint-plugin-jsdoc` rules", replaced by "several"; and the closed-decision marker's "seventeen declined
+rules", replaced by "the declined rules".
+
+**One of those edits removed a live near-contradiction.** The heading said three advisory programs, while
+CLAUDE.md's programs paragraph names four advisory ones — it counts `acceptance-mutation`, which this
+article does not describe because it has an article of its own. Both sentences were defensible and they
+disagreed on their face. Dropping the numeral ends the disagreement without either file having to win.
+
+**The dated figures in this file are deliberately untouched**, including the 31-rule registry count and the
+declined-rule roster. A sidecar is the dated-record register, and a count written as history cannot rot.
+
 ## The split itself, measured
 
-Split by `split-quality-tooling-article`, 2026-09-09. Figures taken after the final content commit, on the
-tree that commit produced. Re-derive rather than quoting these forward.
+Split by `split-quality-tooling-article`, 2026-09-09. Figures re-taken after the count-decoupling commit,
+which is the slice's final content commit, on the tree that commit produced. Re-derive rather than quoting
+these forward.
 
 | Measure                            | Before |  After |
 | ---------------------------------- | -----: | -----: |
-| Article bytes                      | 30,206 | 18,726 |
-| Sidecar bytes                      |      — | 25,181 |
+| Article bytes                      | 30,206 | 18,780 |
+| Sidecar bytes                      |      — | 27,656 |
 | Blocks in the article              |     41 |     73 |
-| Rationale bytes inside the article |  5,742 |  8,787 |
+| Rationale bytes inside the article |  5,742 |  8,837 |
 | Entanglement                       |    87% |    75% |
 | Backticked slice slugs             |     33 |     11 |
 | Vale mechanical findings           |     80 |      0 |
