@@ -40,7 +40,7 @@ Two shared root modules exist. `scripts/feature-files.ts` exports `listFeatureFi
 
 **Shared root modules are ordinary product code** and sit inside the gates exactly like a program's own modules. The one exception is `scripts/test-support.ts`, which is test infrastructure. The same `**/test-support.ts` glob in `crap4ts.scripts.config.ts` and `stryker.scripts.config.json` excludes it, alongside `scripts/perf-report/test-support.ts`.
 
-**Imports run program → shared and never the reverse.** That is what keeps the shared file safe to change: a root module reaching back into a program directory would couple every other program to that program's internals. `rules/no-downward-import-in-scripts.yml` checks it mechanically, firing on any relative import under `scripts/` that descends through a directory segment.
+**Imports run program → shared and never the reverse.** That is what keeps the shared file safe to change. A root module reaching back into a program directory would couple every other program to that program's internals. `rules/no-downward-import-in-scripts.yml` checks it mechanically, firing on any relative import under `scripts/` that descends through a directory segment.
 
 <!-- Closed decision: why `listFeatureFiles` throws twice, the duplication that produced each shared module, and the probe behind the import-direction rule are in `quality-tooling.rationale.md`. -->
 
@@ -54,7 +54,7 @@ Two shared root modules exist. `scripts/feature-files.ts` exports `listFeatureFi
 
 **The boundary between the two is a file on disk, not a module import.** `import type` crosses it, since it is erased at compile time. A value import never may, in either direction, and `rules/no-value-import-across-perf-boundary.yml` checks that mechanically. It is also a real compiler boundary: `perf/` is in `tsconfig.app.json` with `moduleResolution: "bundler"` and `lib: DOM`, and `scripts/` is in `tsconfig.scripts.json` with `nodenext` and no DOM.
 
-**Before proposing a new program here, search for an existing tool first.** A bespoke checker pays every gate this section lists and becomes permanent maintenance, so the bar is whether anything off the shelf already does the job. `orchestration.md` states the habit, and why a search that turns nothing up is still worth its cost.
+**Before proposing a new program here, search for an existing tool first.** A bespoke checker pays every gate this section lists, and becomes permanent maintenance. So the bar is whether anything off the shelf already does the job. `orchestration.md` states the habit, and why a search that turns nothing up is still worth its cost.
 
 ### The `*.property.test.ts` suffix means something different here
 
@@ -83,13 +83,13 @@ Four facts about the library are easy to get wrong, all measured against the ins
 
 **It belongs to `architect` in the same sense `rules/*.yml` does**, even though it lives in a config file `product` otherwise owns. It mechanises the domain-altitude judgment: implementation vocabulary must not leak into the contract.
 
-Its failure mode is someone widening the list to clear a finding, which is the same move as narrowing a fast-check arbitrary or weakening an ast-grep rule. **A role that hits a pattern it believes is wrong routes it back to `architect` rather than editing the list.**
+Its failure mode is someone widening the list to clear a finding. That is the same move as narrowing a fast-check arbitrary, or weakening an ast-grep rule. **A role that hits a pattern it believes is wrong routes it back to `architect` rather than editing the list.**
 
 **Adding to this list is the safe direction**, because it narrows what a contract may say. Widening it to clear a finding is the move above.
 
-**Show a new pattern firing against a planted probe feature before landing it.** Require it to report **by its own pattern name** rather than merely turning the run red, and check it first against the existing `.feature` files for a clean baseline. A pattern that fires on the contract as it stands is a dirty baseline, and the fix is narrowing the pattern, never editing `product`'s text. This is the same obligation an ast-grep rule's fixture carries: a pattern that matches nothing is indistinguishable from a clean `features/`.
+**Show a new pattern firing against a planted probe feature before landing it.** Require it to report **by its own pattern name** rather than merely turning the run red. Check it first against the existing `.feature` files for a clean baseline. A pattern that fires on the contract as it stands is a dirty baseline, and the fix is narrowing the pattern, never editing `product`'s text. This is the same obligation an ast-grep rule's fixture carries: a pattern that matches nothing is indistinguishable from a clean `features/`.
 
-**Delete the probe feature in the same command that runs the lint.** A `.feature` with no step definitions makes `bddgen` exit 1 having generated nothing at all, so a probe left behind takes down every feature's generated spec rather than its own.
+**Delete the probe feature in the same command that runs the lint.** A `.feature` with no step definitions makes `bddgen` exit 1 having generated nothing at all. So a probe left behind takes down every feature's generated spec, rather than its own.
 
 <!-- Closed decision: the two categories the list holds, which slice added which entries, why `ctrl key` and `shift key` were rejected, and why verbs and `live cells` stay unrestricted, are in `quality-tooling.rationale.md`. -->
 
@@ -99,7 +99,7 @@ Its failure mode is someone widening the list to clear a finding, which is the s
 
 **Six rules are on, all at `error`.** The rest of oxlint's native `jsdoc` set is declined on the record in the sidecar.
 
-**Two ways this tier can be silently inert, both measured, both exiting 0.** They are the same failure shape this repo documents for a Stryker `ignorePatterns` glob, a vitest `include` and a `-t` pattern that match nothing: the command reports success and the thing you asked about never ran.
+**Two ways this tier can be silently inert, both measured, both exiting 0.** They are the same failure shape this repo documents for a Stryker `ignorePatterns` glob, a vitest `include` and a `-t` pattern that match nothing. The command reports success, and the thing you asked about never ran.
 
 - **The `plugins` entry.** Remove `"jsdoc"` from `plugins` and all six rules are read, accepted, and never run. `.oxlintrc.json` carries a comment saying so at the site.
 - **Severity.** An oxlint `warn` **exits 0**. Every role reads `npm run lint` by its exit code, so a jsdoc rule at `warn` is a finding nobody will ever act on. That is why these are `error`, rather than the `rules/*.yml` convention: `npm run ast-grep` is report-only and read by its output, while `npm run lint` is a gate read by `$?`.
