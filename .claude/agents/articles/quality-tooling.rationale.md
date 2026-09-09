@@ -326,26 +326,49 @@ tree that commit produced. Re-derive rather than quoting these forward.
 
 | Measure                            | Before |  After |
 | ---------------------------------- | -----: | -----: |
-| Article bytes                      | 30,206 | NN,NNN |
-| Sidecar bytes                      |      — | NN,NNN |
-| Blocks in the article              |     41 |    NNN |
-| Rationale bytes inside the article |  5,742 | NN,NNN |
-| Entanglement                       |    87% |   NNN% |
-| Backticked slice slugs             |     33 |     NN |
-| Vale mechanical findings           |     80 |      N |
+| Article bytes                      | 30,206 | 18,726 |
+| Sidecar bytes                      |      — | 25,181 |
+| Blocks in the article              |     41 |     73 |
+| Rationale bytes inside the article |  5,742 |  8,787 |
+| Entanglement                       |    87% |    75% |
+| Backticked slice slugs             |     33 |     11 |
+| Vale mechanical findings           |     80 |      0 |
 
-**Read the rationale-bytes and entanglement rows with the confound `testing-layers.rationale.md` records.**
-A block-level classifier cannot compare a file against itself across a pass that changes paragraph
-granularity, and mandate 6 changes it drastically. Smaller blocks are likelier to hold no directive, so the
-same prose reclassifies as rationale without a word of it changing. The byte count is the row that
-compares.
+**The article fell 38%, the largest drop of any prose article split so far**, against
+`engineering.md`'s 33% and `testing-layers.md`'s 34%. `ast-grep-rules.md`'s 87% remains the outlier, and
+it remains explained by what it held: a single grammatical list that moved verbatim.
+
+**Entanglement fell 12 points, 87% to 75%, and that is the first fall the tier has recorded.**
+`engineering.md` rose 9 points and `testing-layers.md` rose 1. The difference is what each article held.
+This one carried several **separable evidence blocks** — the declined-rule roster, the patch mechanism,
+the probe methods — that could leave whole rather than being unwoven from the rules around them. So the
+blocks that remain are not disproportionately rules-with-reasoning-welded-on, which is the effect that
+raised the figure on the other two.
+
+**Read that as the measure behaving correctly on a favourable case, not as this split being better done.**
+The standing conclusion is unchanged: the tier redistributes an enumeration far better than it
+redistributes argument, and this article held more of the former than the other two prose articles did.
+
+**The rationale-bytes row rose again, 5,742 to 8,787, and it is confounded exactly as
+`testing-layers.rationale.md` records.** Mandate 6 took the block count from 41 to 73. A block-level
+classifier calls a block rationale when no sentence in it carries a directive, and smaller blocks are
+likelier to hold none, so the same prose reclassifies without a word of it changing. **A block-level
+classifier cannot compare a file against itself across a pass that changes paragraph granularity.** The
+byte count is the row that compares.
 
 **The classifier is a reimplementation.** Calibrated against `engineering.md`, whose figures were recorded
 two slices earlier, it reads 10,839 rationale bytes and 83% entanglement where that split recorded 12,457
 and 91%. It is systematically low on both.
 
-**The idea file's ranking table over-estimated this article too, though less than the last one.** It listed
-`quality-tooling.md` at 9,666 rationale bytes, computed as a 32% share measured on `bac96c4` multiplied by
-the current byte count. Measured directly on `f44fa88`, before any edit, the article held **5,742**
-rationale bytes in 18 of its 41 blocks. That is the second row of that table shown to be inflated, by
-roughly the same mechanism and in the same direction.
+**The idea file's ranking table over-estimated this article too.** It listed `quality-tooling.md` at 9,666
+rationale bytes, computed as a 32% share measured on `bac96c4` multiplied by the current byte count.
+Measured directly on `f44fa88`, before any edit, the article held **5,742** rationale bytes in 18 of its
+41 blocks. That is the second row of that table shown to be inflated, by the same mechanism and in the
+same direction as the first. **Every row of that table is built that way**, so the remaining rollout
+ordering rests on shares measured against a tree three splits old.
+
+**Mandate 6 took two passes here rather than the four `testing-layers.md` needed, and the reason is worth
+carrying forward.** This article was rewritten short at extraction time, because slice 1's triage had
+already established which shapes the rules fire on. Its 67 `SentenceLength` findings fell to 6 in the
+extraction commit alone, before any lint pass ran. **Writing to the rule is much cheaper than converging
+on it**, so a later split should apply the length rules while drafting rather than afterwards.
