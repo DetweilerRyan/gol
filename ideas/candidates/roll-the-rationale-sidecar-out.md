@@ -101,7 +101,7 @@ corpus — which makes it the biggest prize and the highest risk in the same bre
 
 ### What each split must carry
 
-The pilot established these, and they are not optional:
+The pilot established these, and they are not optional. Seven, and mandates 4 through 7 were each added or rewritten after a split found the previous wording insufficient:
 
 1. **A closed-decision marker** stays in the instruction file wherever rationale that records a settled
    question moves out. One line per closed decision, naming the question and pointing at the sidecar,
@@ -113,6 +113,7 @@ The pilot established these, and they are not optional:
    from it, and a second author following it literally would either make a no-op edit or, reading "in
    that section" as licence, author a redundant per-file section. The two-part pairing it described is
    real but belongs to enabling a _rule_, not to adding a sidecar; `prose-linting.md` carries it.
+   **This mandate covers the sidecar only — mandate 6 covers linting the article.**
 3. **An audit of the pair afterwards**, by hand, against the article as it stood before. Nothing checks
    this — `reference-check` and `agent-doc-check` both stay green while a pair drifts, because every
    filename still resolves. Six passes on the pilot dropped fifteen illustrations out of the pair before
@@ -131,7 +132,23 @@ The pilot established these, and they are not optional:
    both substantive findings on the first split were exactly that shape: "every entry on the allowlist"
    naming five of seven, and "the exposure is bidirectional" describing one direction. An audit preserves
    those faithfully because they were preserved faithfully.
-6. **Re-point every inbound reference to the article you split.** Mandate 3 audits the pair against its
+6. **Run Vale over the new instruction file, and act on it per `prose-linting.md`.** The split rewrites
+   the article, so the article is the file you are editing — and `prose-linting.md` says to lint that
+   rather than the directory. Three rules are mechanical and every finding gets acted on:
+   `STE.SentenceLength`, `STE.ParagraphLength` and `STE.Contractions`, the last unless the text is
+   quoted or named. Three are prompts a person reads rather than obeys: `STE.ProcedureLength`,
+   `STE.OneInstruction` and `STE.PassiveVoice`. That article carries the exempt classes for each, and a
+   residual fitting no class is not automatically exempt.
+
+   **Re-run after acting, and expect a second pass.** The two length rules trade against each other:
+   splitting a sentence adds one to its paragraph. Both splits so far reached zero only on the second
+   pass. Record the finding count in mandate 4's table.
+
+   **This is separate from mandate 2, which covers the sidecar.** The sidecar is exempt and must report
+   zero; the article is linted and must reach zero on the three mechanical rules. One file is checked
+   for silence, the other for compliance.
+
+7. **Re-point every inbound reference to the article you split.** Mandate 3 audits the pair against its
    own past and is structurally blind to who points **at** it — which is how the second split left both
    of CLAUDE.md's pointers describing an article that no longer held what they claimed. **This will
    recur on every remaining split**, because each article has a CLAUDE.md pointer line describing its
