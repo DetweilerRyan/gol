@@ -18,7 +18,13 @@ exists — `stryker.config.json`'s `mutate` list, and the vitest include/exclude
 resolution that `vite.config.ts`'s `sharedExclude` feeds. The list is a
 cached answer to a question the tooling can already answer.
 
-Three things the enumerated form has actually cost, all on the record rather
+**There are three copies of the predicate, and only one is authoritative.**
+`CLAUDE.md`'s merge protocol holds it; `.claude/agents/articles/mutation-testing.md`
+enumerates it for the reader; `.claude/agents/hardener.md`'s stage 5 enumerates
+it again for the role that acts on it. Nothing checks any of them against each
+other.
+
+Four things the enumerated form has actually cost, all on the record rather
 than hypothesised:
 
 1. **It goes stale silently.** `rationale-sidecar-pilot` added two entries to
@@ -32,6 +38,26 @@ than hypothesised:
 3. **An entry can be sound the day it lands and unsound later.** A directory
    entry rests on a `sharedExclude` line; delete that line and the predicate
    is fail-open with nothing announcing it.
+4. **Both non-authoritative copies are stale right now**, which is the
+   sharpest form of the argument, since it is a present condition rather than
+   a history. `the-invariance-allowlist-omits-paths-that-provably-cannot-move-a-mutant`
+   added `rules/**`, `rule-tests/**` and `.oxlintrc.json` to the predicate and
+   deliberately did **not** update either copy: the article was being rewritten
+   concurrently by `split-mutation-testing-article`, so editing it would have
+   been discarded on rebase, and `hardener.md` belongs to a role and needs the
+   user's direction to touch. So the article under-counts the entries, and
+   `hardener.md` under-counts them further — and `hardener` is the role
+   licensed to **refuse** an exemption, so a correct instruction naming
+   `rules/**` can be refused by a role checking it against its own stale list.
+   Refusing fails safe, but it defeats the exemption on first use.
+
+**Two follow-ups this leaves, both concrete.** Reconcile the article's
+enumeration once `split-mutation-testing-article` has landed (its rewritten
+section states a hardcoded entry count and lists them). And decide whether
+`hardener.md` should enumerate the predicate at all, or defer to CLAUDE.md the
+way `.claude/agents/articles/orchestration.md` already does — deferring is the
+version that cannot drift, and is the same "ask whether the gate still encodes
+its invariant" move that removed the rule index from CLAUDE.md.
 
 ## Sketch
 
