@@ -49,7 +49,7 @@ It hands back real `Scenario` nodes **with their steps, examples and locations i
 
 **Targets are discovered from `features/`**, not from a hardcoded table — `discovery.ts`, over `scripts/feature-files.ts`. Every `.feature` file present is a target. Discovery no longer pairs a target against a `*.steps.test.ts(x)` file at all. The generated Playwright spec a mutant runs against does not exist yet at discovery time. See `discovery.ts`'s own comment for why that pairing check was dropped rather than adapted.
 
-**Every active target's unmutated feature runs once, batched with every other target's baseline, before any mutant is written.** A baseline that is not green aborts the whole run, naming the target. Not green means no matching spec in the report, zero specs collected, a failure, or a skipped spec.
+An active target is one with at least one mutation site. **Every active target's unmutated feature runs once, batched with every other target's baseline, before any mutant is written.** A baseline that is not green aborts the whole run, naming the target. Not green means no matching spec in the report, zero specs collected, a failure, or a skipped spec.
 
 There is then no trustworthy spec count to compare its mutants against. Proceeding would misreport them, rather than merely under-report.
 
@@ -116,12 +116,14 @@ The last of those is pinned rather than claimed: `mutation-rules.test.ts`'s PINN
 
 **One shape is worse than that, and it is a measured regression: a paren pair with decimal components.** `TUPLE_LIST_SHAPE` requires integer components, so a value like the app's own default camera offset is coordinate-shaped, paren-delimited and rejected. Such a mutant still dies, but through the parser dropping an unparseable item rather than through the assertion noticing a wrong coordinate.
 
+**`mutateCommaList` is deliberately not paren-aware, and restoring that is a rejected remedy.** Removing the flat splitter's paren-shaving patch was a decision rather than an accident. Reinstating it puts two theories of a coordinate list back into the program, which is what the tuple grammar exists to remove.
+
 **`tuple-grammar-rejects-decimal-components` was closed without code, and the re-open trigger is stated from both sides.** Two roles can independently build the world where this bites, and nothing mechanical will say so.
 
 - **From `product`'s side:** an Examples cell that is paren-delimited and carries a non-integer numeric component. No cell in `features/` carries a fractional value today. `.gherkin-lintrc`'s `no-restricted-patterns` also bans `\boffset ?[xy]\b`, so the one genuinely fractional quantity this app has is precluded from the contract rather than merely absent from it.
 - **From `scripts/`' side:** any widening of `TUPLE_LIST_SHAPE`'s integer components, or of the step's PAIR regex. **The three deliberately-mirrored copies must move in one slice or silently disagree.**
 
-<!-- Closed decision: the two independent measurement runs, the three things that narrowed the finding, why a decimal column and this trigger are disjoint, and why neither remedy was free, are in `acceptance-mutation.rationale.md`. -->
+<!-- Closed decision: the two independent measurement runs, the three things that narrowed the finding, why a decimal column and this trigger are disjoint, and the cost of each rejected remedy -- widening the grammar, and restoring paren-awareness in the fall-through -- are in `acceptance-mutation.rationale.md`. -->
 
 ## Three copies of the coordinate grammar exist, deliberately
 
