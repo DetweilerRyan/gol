@@ -352,36 +352,70 @@ those moves the figure. That is the fact to reason from rather than "no `.featur
 
 ## The split itself, measured
 
-Split by `split-testing-layers-article`, 2026-09-09. Figures taken after the final commit, on the tree that
-commit produced. Re-derive rather than quoting these forward.
+Split by `split-testing-layers-article`, 2026-09-09. Figures taken after the final content commit, on the
+tree that commit produced. Re-derive rather than quoting these forward.
 
 | Measure                            | Before |  After |
 | ---------------------------------- | -----: | -----: |
-| Article bytes                      | 44,353 | 00,000 |
-| Sidecar bytes                      |      — | 00,000 |
-| Rationale bytes inside the article |  4,877 |  0,000 |
-| Entanglement                       |    91% |   000% |
-| Backticked slice slugs             |     27 |     00 |
-| Vale mechanical findings           |    122 |     00 |
+| Article bytes                      | 44,353 | 29,149 |
+| Sidecar bytes                      |      — | 30,580 |
+| Blocks in the article              |     34 |     78 |
+| Rationale bytes inside the article |  4,877 | 14,259 |
+| Entanglement                       |    91% |    92% |
+| Backticked slice slugs             |     27 |     19 |
+| Vale mechanical findings           |    122 |      0 |
+
+**The rationale-bytes row rose, and it is measuring the wrong thing. Do not read it as a result.** The
+classifier counts a block as rationale when no sentence in it carries a directive. This article's blocks
+averaged roughly 1,300 bytes before the split, and a block that large almost always contains a directive
+somewhere. Mandate 6 then split 107 long sentences and 8 long paragraphs, taking the block count from 34
+to 78. Smaller blocks are far more likely to hold no directive at all, so the same prose reclassifies as
+rationale without a word of it changing.
+
+**That is a defect in the instrument, not a finding about the tier**, and it is the clearest result this
+split produced about the measurement itself. **A block-level classifier cannot compare a file against
+itself across a pass that changes paragraph granularity.** Both earlier prose splits ran mandate 6 as
+well, so their rationale-bytes rows carry the same confound in the same direction — understating the
+reduction — and `engineering.md`'s recorded fall from 17,383 to 12,457 is therefore a floor rather than a
+measurement.
+
+**What is comparable here is the byte count.** The article fell 34%, from 44,353 to 29,149, against
+`engineering.md`'s 33% and `ast-grep-rules.md`'s 87%. That places this split with the prose articles
+rather than with the enumeration-heavy one, which is what the tier's standing conclusion predicts.
+
+**Entanglement barely moved, 91% to 92%, and it started at the corpus maximum.** `engineering.md` reached
+91% only after being split. So this article was already at the ceiling that measure can reach, which is
+the same block-size effect seen from the other side: with 1,300-byte blocks, nearly every
+directive-bearing block also carries prose. The measure has no room to report an improvement here, and a
+future split of a prose article should not promise one.
 
 **The classifier is a reimplementation, and its figures are not comparable to the three earlier tables.**
-The original block classifier was scratch tooling described in `rationale-sidecar-pilot` and was never
-committed. This split rebuilt it from that description: a block is a paragraph or a list item; a block is
-directive if any sentence in it carries a normative marker or an imperative head verb; rationale bytes are
-the bytes of blocks carrying no directive; entanglement is the share of directive-carrying blocks that also
-carry non-directive prose. **Calibrated against `engineering.md`, whose figures were recorded one slice
-earlier**, the reimplementation reads 10,839 rationale bytes and 83% entanglement where that split recorded
-12,457 and 91%. It is therefore systematically low on both. Before and after rows here are taken with the
-same instrument, so the deltas are sound; the absolute figures should not be set beside the earlier tables.
+The original was scratch tooling described in `rationale-sidecar-pilot` and was never committed. This
+split rebuilt it from that description: a block is a paragraph or a list item; a block is directive if any
+sentence carries a normative marker or an imperative head verb; rationale bytes are the bytes of blocks
+carrying no directive; entanglement is the share of directive-carrying blocks that also carry
+non-directive prose. **Calibrated against `engineering.md`, whose figures were recorded one slice
+earlier**, the reimplementation reads 10,839 rationale bytes and 83% entanglement where that split
+recorded 12,457 and 91%. It is systematically low on both. Before and after rows here come from the same
+instrument, so they are internally consistent — but the row above is confounded anyway, for a reason that
+has nothing to do with the reimplementation.
 
 **The idea file's ranking table over-estimated this article by a factor near three.** It listed
 `testing-layers.md` at 13,306 rationale bytes, computed as a 30% share measured on `bac96c4` multiplied by
-the current byte count. Measured directly on `f44fa88`, the article held **4,877** rationale bytes in 11 of
-its 34 blocks. Every row of that table is built the same way, so the remaining rollout ordering rests on
-shares measured against a tree three splits old. Re-derive before planning against it.
+the current byte count. Measured directly on `f44fa88`, before any edit, the article held **4,877**
+rationale bytes in 11 of its 34 blocks. Every row of that table is built the same way, from shares
+measured against a tree three splits old. Re-derive before planning against it.
 
-**Entanglement was already 91% before the split**, the highest in the corpus at the time and equal to what
-`engineering.md` reached only after being split. This article's blocks average roughly 1,300 bytes; a block
-that large almost always contains a directive somewhere, so block-level classification has little room to
-find a pure-evidence block. That is a property of the prose shape rather than of the tier, and it is the
-clearest case yet that **the classifier ranks files usefully and measures a single file poorly.**
+**The Vale baseline was taken on the untouched file, before the first edit, as mandate 4 now requires.**
+122 mechanical findings: 107 `SentenceLength`, 8 `ParagraphLength`, 7 `Contractions`. Reaching zero took
+four passes rather than the two `prose-linting.md` predicts, and the two length rules traded against each
+other in both directions on the way.
+
+**One measurement hazard is worth recording, because it nearly produced a false zero here.** The first
+Vale run against this article reported no findings at all. The run was real and the file was in scope; a
+second identical invocation minutes later reported all 198. The cause was not diagnosed. What caught it
+was checking the zero against a file known to be non-empty, which is the habit
+`prose-linting.md`'s "three ways a run reports a confident zero" section argues for. **Never record a Vale
+zero without confirming the same invocation reports findings on a file that has them.** A worktree makes
+this likelier rather than less: `.vale/` is gitignored, so a new worktree cannot lint until that directory
+is restored, and the failure names a missing path rather than a missing style.
