@@ -350,22 +350,12 @@ step module, taking back the pan-away-and-back claim the triage had deleted a ha
 reword adds no test — playwright-bdd generates one spec per scenario or Examples row, so only adding one of
 those moves the figure. That is the fact to reason from rather than "no `.feature` was touched".
 
-## The census counts were dropped by ruling, not by drift
+## The census counts this slice dropped
 
-**Ruled 2026-09-09 by the user, during `split-testing-layers-article`:** reduce the driftable surface area
-by decoupling the article's prose from counts of files. This goes **beyond** `engineering.md`, and a future
-editor needs to know that, because the rule there reads as a licence to put them back.
-
-`engineering.md` permits a count that stands beside its own complete enumeration, on the argument that a
-drift then makes the sentence visibly self-contradictory. That is a **permission, not a mandate**. The
-ruling here observes that a loud failure is still a failure someone has to fix, and that an enumeration
-carries the same information with nothing to keep in sync.
-
-**The line applied, in three classes.** A count that **is** the rule or the premise stays — "four
-categories, and you may add nothing else here", "two Playwright projects", the three vitest projects the
-`--project` mechanics rest on. A count over the **sentence's own adjacent bullets** stays, since it cannot
-drift with the tree. A **census of external state** — files on disk, config entries, another article's
-structure — goes, replaced by the enumeration alone or by a worked example.
+**Ruled 2026-09-09 by the user, during `split-testing-layers-article`:** reduce the driftable surface area by decoupling the
+article's prose from counts of files. **The rule itself now lives in `engineering.md`**, under the
+count clause it narrows, and its evidence in `engineering.rationale.md`. Read it there rather than here.
+This section keeps only what is local to this slice: which sentences changed, and what replaced them.
 
 What went, and what replaced it: the pairing-state tallies, replaced by their own lists;
 "all 8 patterns", replaced by "every catalogued pattern"; "the single current instance" of the
@@ -386,7 +376,7 @@ these forward.
 | Measure                            | Before |  After |
 | ---------------------------------- | -----: | -----: |
 | Article bytes                      | 44,353 | 29,129 |
-| Sidecar bytes                      |      — | 32,868 |
+| Sidecar bytes                      |      — | 32,111 |
 | Blocks in the article              |     34 |     78 |
 | Rationale bytes inside the article |  4,877 | 14,145 |
 | Entanglement                       |    91% |    92% |
