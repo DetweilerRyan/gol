@@ -46,8 +46,8 @@ against ast-grep 0.45.1: **8** means a rule file failed to parse, **1** means an
 matched.
 
 **Read the rule's own `note:` field in `rules/<id>.yml` before acting on its finding.** Several rules ban
-something narrower than their name suggests — `no-dom-surgery-in-components` is not "no DOM in a
-component", and reading the DOM is sanctioned. The rule file is the live source; a summary here would
+something narrower than their name suggests. `no-dom-surgery-in-components` is not "no DOM in a
+component": **you may read the DOM**, and this repo does. The rule file is the live source; a summary here would
 drift from it.
 
 ## Authoring a rule
@@ -81,7 +81,7 @@ case is required, and a fixture binds to a rule by its `id` rather than its file
 scanner and resolves to nothing for the checker, which fails it. Write the `**` form. The checker is
 stricter than the scanner rather than wrong, and it fails safe.
 
-**Authoring a rule ahead of the directory it scopes is sanctioned, and carries a standing bargain.** The
+**You may author a rule ahead of the directory it scopes, and doing so carries a standing bargain.** The
 fixture proves the matcher. A live probe proves the `files:` glob once the target exists. An
 `allow-unresolved-files` marker makes the debt visible in between, and `npm run ast-grep:rules` reports
 that marker as stale the moment the glob resolves.
