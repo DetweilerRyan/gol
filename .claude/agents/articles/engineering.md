@@ -187,9 +187,18 @@ Six forms, worst first:
 - **Cite the command, not the number.** A figure quoted forward is stale the moment the tree moves, and reads as current forever. The command re-derives it on demand. Where the figure genuinely _is_ the finding, **date it and name the tree it was taken on**. A figure with provenance is checkable. A bare one is indistinguishable from a current one. "Reinstating a global Enter listener reds 5 tests" is a promise. "Reds 3 of 127 in the Playwright run, measured by `hardener` on `slice/re-audit-hand-written-e2e-residue`'s tip" is history.
 - **The same rule binds `.md`, harder.** Every role reads those files, so a stale claim there is _acted on_ rather than merely read. **Name which, not how many.** "Four features carry no Examples table" cannot rot from a fifth being added. "Four of the seven" has, twice.
 
-  One refinement keeps this from condemning `CLAUDE.md`'s own module map. **A count standing beside its own complete enumeration fails loudly. A count standing alone fails silently.** "Twenty framework-free modules — `appearance.ts`, `gameOfLife.ts`, …" lets a reader check the numeral against the list in the same breath. A drift then makes the sentence visibly self-contradictory. "Four of the seven" gives the reader nothing to check against.
+  This refinement exists to keep the rule above off `CLAUDE.md`'s own module map, and the ruling below narrows it. **A count standing beside its own complete enumeration fails loudly. A count standing alone fails silently.** "Twenty framework-free modules — `appearance.ts`, `gameOfLife.ts`, …" lets a reader check the numeral against the list in the same breath. A drift then makes the sentence visibly self-contradictory. "Four of the seven" gives the reader nothing to check against.
 
   **The enumeration makes a drift loud. It does not make the count worth keeping.** Ruled 2026-09-09. Where a numeral is a **census of external state**, drop it and keep the enumeration. A census counts files on disk, config entries, a library's registry, or another article's structure. A loud failure is still a failure someone has to fix, and the list carries the same information with nothing to keep in sync.
+
+  **The sweep has not reached `CLAUDE.md`'s own module map, and whether it should is open.** It is the worked
+  example above, and it is also a census of files on disk. Do not read the example as an exemption, and do
+  not sweep the map on the strength of this rule alone. `ideas/candidates/apply-the-census-count-rule-everywhere.md`
+  carries the question.
+
+  **The enumeration validates the count, not the claim.** A reader can count six names beside "Six of the
+  twenty import nothing at all" and still not see whether those six still import nothing. Where the list
+  does not carry the property the numeral counts, that numeral fails silently inside a form that looks loud.
 
   **Two kinds of count stay, and neither is a census.** A count that **is** the rule or the premise stays. "Four categories, and you may add nothing else here" closes a list, and "two levels and no more" is the constraint itself. A count over the sentence's **own adjacent bullets** also stays, because it cannot drift with the tree.
 

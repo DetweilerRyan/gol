@@ -34,6 +34,40 @@ reads as a census. It is also the single most-cited enumeration in the repo, and
 by name as the reason the enumeration clause exists at all. Removing its numerals means editing that
 citation too.
 
+**Deferred 2026-09-09 by the user.** `defer-the-module-map-ruling` closed the contradiction in
+`engineering.md` and left the question open. The sweep decides it.
+
+**The map is not one object, and the sweep must sort its numerals rather than rule on it whole.** Measured
+2026-09-09, before any sweep:
+
+| numeral in the map                   | checkable at a glance? |
+| ------------------------------------ | ---------------------- |
+| twenty framework-free modules        | yes                    |
+| sixteen at `src/` root               | yes                    |
+| four in `src/equality/`              | yes                    |
+| sixteen hooks                        | yes                    |
+| thirteen unit-tested components      | yes                    |
+| **six of the twenty import nothing** | **no**                 |
+
+All six were correct when measured. **The sixth is the one that matters**, because it is the case the
+count-beside-enumeration clause does not actually cover. A reader can count six names. A reader cannot see
+whether those six still import nothing without opening six files. The numeral and its list can therefore
+agree while both are false, which is silent failure inside the form the clause treats as loud.
+`engineering.md` now carries that limit as a caveat.
+
+**The map also holds a census with no list at all**: `patternLibrary.ts` is described as "the 8-pattern
+catalog". That is the same census `split-testing-layers-article` removed from an article, where "all 8
+patterns" became "every catalogued pattern". CLAUDE.md still carries it.
+
+**The map's own last paragraph is the target form.** It names `src/App.tsx`, `src/main.tsx` and
+`src/components/LifeBoard.tsx` as excluded, with no numeral. Nothing to keep in sync, and nothing lost.
+
+**One fact cuts the other way and belongs in the ruling.** The module map is the only census in the corpus
+with named owners and a standing obligation to maintain it: `cleaner.md`, `architect.md` and
+`engineering.md` all instruct a role to update the map as part of a split. No other census has that. The
+obligation is prose and nothing checks it, but it is a real difference from every other case the sweep will
+meet.
+
 **Role files are a separate authority problem.** `workflow.md` forbids editing another role's file without
 explicit user direction, and the five role files carry counts of their own. That is a different owner and
 possibly a different slice.
