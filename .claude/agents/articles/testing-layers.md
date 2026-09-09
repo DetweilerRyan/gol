@@ -98,6 +98,8 @@ The convention that keeps this legible: **define a step shared by several featur
 
 **Re-derive which modules lend to which features when you need to know; no map is kept here.** The method: match every step line in `features/*.feature` against every step pattern in `features/steps/*.ts`. Then confirm each unmatched line is defined in the feature's own module. A map recorded in prose has rotted twice, and two instruments have since disagreed about it.
 
+**The method has a trap, and it is what made those two instruments disagree. A matcher that converts cucumber expressions to regular expressions by hand over-matches**, because `{word}` naively becomes `(\S+)`, and it then picks among multiple hits arbitrarily. **bddgen is the tie-breaker: it exits 0 on this tree, which proves the real registry has no ambiguous step text — so any multi-hit your matcher reports is your matcher's artifact rather than a fact about the layer.** Resolve one by hand against the step pattern's literal text.
+
 <!-- Closed decision: the map as it stood, its two corrections, and the unresolved disagreement between two instruments, are in `testing-layers.rationale.md`. -->
 
 **A step's `Given`/`When`/`Then` keyword is not part of its identity here.** That is a config default rather than a property of the runner. playwright-bdd matches by step text alone, and filters by keyword only when `matchKeywords` is set, which this repo does not set. So a step registered with `When(...)` matches from a `Given` position and vice versa, and `features/pattern-library.feature` leans on that.
