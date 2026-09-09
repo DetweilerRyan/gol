@@ -350,17 +350,45 @@ step module, taking back the pan-away-and-back claim the triage had deleted a ha
 reword adds no test — playwright-bdd generates one spec per scenario or Examples row, so only adding one of
 those moves the figure. That is the fact to reason from rather than "no `.feature` was touched".
 
+## The census counts were dropped by ruling, not by drift
+
+**Ruled 2026-09-09 by the user, during `split-testing-layers-article`:** reduce the driftable surface area
+by decoupling the article's prose from counts of files. This goes **beyond** `engineering.md`, and a future
+editor needs to know that, because the rule there reads as a licence to put them back.
+
+`engineering.md` permits a count that stands beside its own complete enumeration, on the argument that a
+drift then makes the sentence visibly self-contradictory. That is a **permission, not a mandate**. The
+ruling here observes that a loud failure is still a failure someone has to fix, and that an enumeration
+carries the same information with nothing to keep in sync.
+
+**The line applied, in three classes.** A count that **is** the rule or the premise stays — "four
+categories, and you may add nothing else here", "two Playwright projects", the three vitest projects the
+`--project` mechanics rest on. A count over the **sentence's own adjacent bullets** stays, since it cannot
+drift with the tree. A **census of external state** — files on disk, config entries, another article's
+structure — goes, replaced by the enumeration alone or by a worked example.
+
+What went, and what replaced it: the pairing-state tallies, replaced by their own lists;
+"all 8 patterns", replaced by "every catalogued pattern"; "the single current instance" of the
+browser-required layer, replaced by naming that file as the worked example; "there are two subdirectories",
+replaced by the rule that none of them holds a test file; the ordinal reference to `archive.md`'s
+three-fact enumeration, replaced by a structure-free pointer; and "zero are live" for ARIA reach-arounds,
+replaced by the standing expectation that a new one is debt from the day it lands. The last of them was "the one feature that is not overlap-redundant", which is a tally of `features/` — the uniqueness that carries the point is about the geometry, and the sentence after it already states that.
+
+**The dated figures in this file are deliberately untouched.** A sidecar is the dated-record register, and
+a count written as history cannot rot — stripping these would destroy the record rather than protect it.
+
 ## The split itself, measured
 
-Split by `split-testing-layers-article`, 2026-09-09. Figures taken after the final content commit, on the
-tree that commit produced. Re-derive rather than quoting these forward.
+Split by `split-testing-layers-article`, 2026-09-09. Figures re-taken after the count-decoupling commit,
+which is the slice's final content commit, on the tree that commit produced. Re-derive rather than quoting
+these forward.
 
 | Measure                            | Before |  After |
 | ---------------------------------- | -----: | -----: |
-| Article bytes                      | 44,353 | 29,149 |
-| Sidecar bytes                      |      — | 30,580 |
+| Article bytes                      | 44,353 | 29,129 |
+| Sidecar bytes                      |      — | 32,868 |
 | Blocks in the article              |     34 |     78 |
-| Rationale bytes inside the article |  4,877 | 14,259 |
+| Rationale bytes inside the article |  4,877 | 14,145 |
 | Entanglement                       |    91% |    92% |
 | Backticked slice slugs             |     27 |     19 |
 | Vale mechanical findings           |    122 |      0 |
