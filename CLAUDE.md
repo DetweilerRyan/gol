@@ -369,14 +369,24 @@ If you use the native `EnterWorktree({ name })` or `Agent({ isolation: 'worktree
    ```bash
    git diff --name-only main...HEAD    # in the slice's worktree, after step 1's rebase
 
-   # every path matches one of:  features/**  ideas/**  .claude/**  CLAUDE.md  README.md  .vale.ini  .vale/**
+   # every path matches one of:  features/**  ideas/**  .claude/**  CLAUDE.md  README.md  .vale.ini  .vale/**  rules/**  rule-tests/**
    ```
 
-   `stryker.config.json` is deliberately **absent** from the allowlist, as are `vite.config.ts`, `vitest.*.config.ts`, `package.json`/`package-lock.json`, `tsconfig*.json` and `patches/**`. Touching any of them re-arms the full run, which is the point of leaving them out rather than an oversight.
+   `stryker.config.json` is deliberately **absent** from the allowlist, as are `vite.config.ts`, `vitest.*.config.ts`, `package.json`/`package-lock.json`, `tsconfig*.json`, `sgconfig.yml` and `patches/**`. Touching any of them re-arms the full run, which is the point of leaving them out rather than an oversight.
+
+   **`sgconfig.yml` is absent by ruling rather than by omission**, and it is the interesting one now that `rules/**` is allowlisted. It looks sound on the same three points: never mutated, read by no test, consulted by nothing inside the sandbox. Only the first of those is structural, so it is left out on the same `.prettierignore` ground below. An allowlist should carry only what has been argued **and needed**, and no diff has yet been blocked by `sgconfig.yml` alone. **It does not prop up the `rules/**` entry**, which rests on `sharedExclude` and the `mutate` globs instead. Moving `ruleDirs` elsewhere would leave the two entries vestigial but still sound, since a diff touching the new directory would fail the predicate and run the gate.
 
    **`.vale.ini` and `.vale/**` were added by `rationale-sidecar-pilot`, and the argument is that no path reaches a mutant from them.** `stryker.config.json`'s `mutate` list is `src/**` only, so neither file yields a mutant. No test can change its outcome because of them either. Nothing in `package.json`, `vite.config.ts` or the `vitest.*.config.ts` files references Vale. There is no `npm run` script that invokes it; the prose linter is run by hand. Verified 2026-09-08 by reading those four files.
 
    Note the claim that matters is the narrow one. Vale could gain a script, or even a gate, and the score still could not move, because Stryker runs the vitest suite and nothing else.
+
+   **`rules/**` and `rule-tests/**` were added by `the-invariance-allowlist-omits-paths-that-provably-cannot-move-a-mutant`, on three points plus a precondition it had to build first.** `stryker.config.json`'s `mutate` list is `src/**` only, so no file in either directory yields a mutant. Both directories hold `.yml` and nothing else, which no vitest include glob matches, so neither contributes a test. And no test reads either directory from the live tree. The checkers that do read them in production, `scripts/ast-grep-rule-check/` and `scripts/agent-doc-check/`, build a `mkdtempSync` temp repo per case in their own tests. The only live-tree reads anywhere in the `scripts/` suite are against `features/`.
+
+   Verified 2026-09-08 by grepping every `.test.ts` under `scripts/`, at all depths, for the `node:fs` read APIs and reading each hit. No `src/` test calls one at all.
+
+   **Each of the three points is guarded by something different, and only two of the three are guarded at all.** Point 1 holds because `stryker.config.json` is itself on the absent list, so widening `mutate` re-arms the gate in the same diff. Point 2 is cured by configuration, as the next paragraph describes. **Point 3 is guarded by nothing, and it is the one an ordinary slice breaks.** A `scripts/` test asserting an invariant over the live `rules/` directory would land through a normally-gated `scripts/` diff. Every `rules/`-only diff would be wrongly exempt from that moment on.
+
+   **The precondition, which is what point 2 needed.** The first two points describe the files that are there today, and the predicate is evaluated over a _future_ diff. So a diff adding a `.test.ts` under `rules/` would have matched this entry while being collected and run inside the sandbox. That hole was measured on this tree rather than reasoned about: a probe in each directory was collected into the `unit` project, both of them. `vite.config.ts`'s `sharedExclude` now names both directories, which is what makes this entry sound by construction rather than by inventory. Deleting either entry silently re-opens it.
 
    **A comment-only edit under `src/` cannot move the mutation score, and that is a ruling with an argument rather than an intuition.** Ruled 2026-09-09 by the user. Stryker's mutators operate on AST nodes: arithmetic, conditionals, literals. A comment is not one, so a comment-only diff creates no mutant, removes none, and re-fates none. **This is not an allowlist entry.** `src/**` stays off the list, and the exemption is claimed per diff, by demonstrating the diff is comment-only rather than by matching a path.
 
