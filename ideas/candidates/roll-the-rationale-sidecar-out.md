@@ -78,6 +78,13 @@ that it has many readers — it has exactly one.
 `architecture.md` is now the largest remaining, and it carries **no heading structure** — one H3 over a
 flat module list — so routing prose into it means inventing headings it does not have.
 
+**`architecture.md` is BLOCKED on a prior slice, and the constraint is a user ruling rather than a
+preference.** Roughly a third of `state-flow.md` turned out to be per-module interface depth, which
+CLAUDE.md's routing branch 4 sends to JSDoc rather than to a shared article, and `architecture.md` is
+twenty module bullets. **Ruled 2026-09-09 by the user: run
+`ideas/candidates/migrate-module-depth-out-of-the-articles.md` BEFORE splitting `architecture.md`**, so the
+split does not carefully place prose into a sidecar that the migration then moves again.
+
 **The ranking table in the Complication is inflated, and by enough to change the ordering.** Its
 `~rationale bytes` column multiplies a share measured on `bac96c4` by a current byte count. Both rows
 measured directly since disagree by a factor near two or three: `testing-layers.md` held 4,877 rationale
