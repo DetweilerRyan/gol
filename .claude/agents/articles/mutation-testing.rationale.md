@@ -33,6 +33,34 @@ the 22 moved to this file. The rationale _share_ went up rather than down, which
 recorded in `prose-linting.rationale.md`: removing rationale removes total bytes too, so only the
 absolute figure moves in the direction the split intends.
 
+## The Vale triage, done finding by finding
+
+Recorded 2026-09-09, on the rebased branch. `mutation-testing.md` reports **zero** on the three mechanical
+rules. Its 36 residual findings come from the two prompt rules, and every one was read individually
+rather than in bulk.
+
+**`STE.ProcedureLength`, 12 findings, 12 exempt.** Every one is a statement rather than a step: the three
+misreporting modes, two `:full` trigger conditions, two equivalence practical notes, two `ignorePatterns`
+hazards, the two `Timeout` consequences, and two allowlist what-secures-each facts. None is a procedure,
+so `prose-linting.md`'s test — is this bullet a step, or a statement — exempts all twelve.
+
+**`STE.PassiveVoice`, 24 findings, 24 exempt.** By the five classes: 11 descriptive prose where the actor
+is a tool and irrelevant, 4 passives that already name their agent ("killed **by a test in another**",
+"collected **by no vitest project**"), 4 predicate adjectives read as participles ("covered",
+"gitignored", "tracked"), 1 heading, and 1 dated past-tense record — the `coverageAnalysis: off`
+closed-decision marker, which claim discipline **requires** in that form.
+
+**Zero act-on findings, and that number needs its explanation.** The act-on class is a rule written
+passively where naming the actor makes it actionable, and `doc-comments.md` yielded 4 of 26 in that
+class. This file yielded none because it was written after that class was identified, so the shape was
+avoided at authoring time rather than removed afterwards. A later editor should not read zero as proof
+the rule is inert here.
+
+**One finding is genuinely arguable and was left in.** Line 108's "No current run-cost figure is recorded
+in either file" could be "Neither file records one". The passive fronts the missing figure, which is the
+subject, so it stays — but it is the closest call of the 36, and `prose-linting.md` is explicit that a
+residual fitting no class is not automatically exempt.
+
 ## The three misreporting modes, and where each was measured
 
 1. **Per-test attribution.** Measured in `live-cell-store`; the note lives above `getBoundsSnapshot` in
