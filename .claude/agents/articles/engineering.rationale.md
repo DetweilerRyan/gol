@@ -52,6 +52,42 @@ The bare slug is this repo's dominant idiom by an order of magnitude. Measured 2
 
 **How wide that gap is, measured on the sweep that first applied this rule.** `no-undated-cross-file-claims` swept the whole tree from a manifest built by regex, and two later passes each found more that the manifest had missed. `cleaner` found an undated whole-suite count, a stale test-count figure, a `<file>` line citation into a file whose structure had moved, and a stale _prediction_. `architect`'s REVIEW then found three untouched `909/909` counts byte-identical to one `cleaner` had just fixed, two more present-tense "the whole unfiltered suite stays green" rulings, a definite article standing in for a slice name ("the corrective", "the corrective tree"), and a "this slice" in `src/index.css` — which every prior pass had missed for the same reason: every prior pass was scoped to `.ts`/`.tsx`. Three roles, three passes, and each one still left instances of a class one of them had a literal string for. **State that as which rather than as how many** — the first draft of this very paragraph carried a tally, and the tally was wrong within the hour, because the pass writing it was still finding sites. That is the article's own count-beside-enumeration rule demonstrated on itself.
 
+## Narrowing the count-beside-enumeration clause
+
+**Ruled 2026-09-09 by the user**, on the evidence of `split-testing-layers-article` and
+`split-quality-tooling-article`. The instruction was to reduce the driftable surface area by decoupling
+article prose from counts of files.
+
+**What the clause said before, and why it was not enough.** It permitted a count standing beside its own
+complete enumeration, on the argument that a drift then reads as a visible self-contradiction. That
+argument is sound and is not withdrawn. What it omits is that a visible contradiction is still a defect
+someone has to notice and repair, and that the enumeration beside it already carries the whole fact. So the
+numeral buys legibility that the list supplies for free, and charges a maintenance obligation for it.
+
+**The decisive evidence is a cross-file contradiction the clause permitted.** `quality-tooling.md` carried
+a heading reading "The three advisory programs", enumerating them immediately below. CLAUDE.md's programs
+paragraph names four advisory ones, because it counts `scripts/acceptance-mutation/`, which that article
+does not describe — the acceptance-mutation runner has an article of its own. Both sentences were
+defensible, both stood beside enough context to be checked, and they disagreed on their face. Neither file
+was wrong about its own scope. **The enumeration rule cannot catch this, because the drift is between two
+files rather than inside one sentence.** Dropping the numeral ended it without either file having to win.
+
+**Eighteen edits across the two split slices established the three classes.** Ten in
+`quality-tooling.md` and eight in `testing-layers.md`. The per-slice edit lists are in
+`quality-tooling.rationale.md` and `testing-layers.rationale.md`, under the heading each carries about the
+ruling.
+
+**One edit is worth naming here, because it shows the class is not obvious.** `testing-layers.md` said
+"Zero are live" of the ARIA reach-arounds confined in `features/screenplay/`. It is two words, it stood
+beside a complete account of the discipline, and it would have read as current forever. It is still a
+census of the tree. It became "every one filed so far has been paid off", plus a standing rule that a new
+one is debt from the day it lands — which is what a reader needed anyway.
+
+**What was deliberately not touched.** The sidecars' own dated figures, because a sidecar is the
+dated-record register and a count written as history cannot rot. And `CLAUDE.md`'s module map, which is the
+worked example the original clause was written to protect; whether the sweep reaches it is the open
+question in `ideas/candidates/apply-the-census-count-rule-everywhere.md`.
+
 ## Writing a property test: what the two rules were measured on
 
 ### The eight-fault run that established the property/unit split

@@ -189,6 +189,12 @@ Six forms, worst first:
 
   One refinement keeps this from condemning `CLAUDE.md`'s own module map. **A count standing beside its own complete enumeration fails loudly. A count standing alone fails silently.** "Twenty framework-free modules — `appearance.ts`, `gameOfLife.ts`, …" lets a reader check the numeral against the list in the same breath. A drift then makes the sentence visibly self-contradictory. "Four of the seven" gives the reader nothing to check against.
 
+  **The enumeration makes a drift loud. It does not make the count worth keeping.** Ruled 2026-09-09. Where a numeral is a **census of external state**, drop it and keep the enumeration. A census counts files on disk, config entries, a library's registry, or another article's structure. A loud failure is still a failure someone has to fix, and the list carries the same information with nothing to keep in sync.
+
+  **Two kinds of count stay, and neither is a census.** A count that **is** the rule or the premise stays. "Four categories, and you may add nothing else here" closes a list, and "two levels and no more" is the constraint itself. A count over the sentence's **own adjacent bullets** also stays, because it cannot drift with the tree.
+
+  <!-- Closed decision: the eighteen edits this was ruled on, and the live cross-file contradiction the enumeration form permitted, are in `engineering.rationale.md`. -->
+
 **The past tense is the escape hatch, and it is a real one.** **You may write a claim in every form above, line numbers included, provided you write it as history.** Attribute it to a slice or a date, and phrase it about what _was_ true. Such a claim asserts nothing about the current tree.
 
 `doc-comments.md`'s account of the before-state that motivated the JSDoc sweep is the model. It names the slice's own measurement, says what it measured, and closes with "it is a record of the gap, not a live defect". Converting a rotting present-tense claim into a dated past one is usually the correct fix, and is always cheaper than deleting the knowledge.
