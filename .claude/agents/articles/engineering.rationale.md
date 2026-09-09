@@ -51,3 +51,64 @@ The bare slug is this repo's dominant idiom by an order of magnitude. Measured 2
 ### How far a grep falls short, measured on the sweep that first applied the rule
 
 **How wide that gap is, measured on the sweep that first applied this rule.** `no-undated-cross-file-claims` swept the whole tree from a manifest built by regex, and two later passes each found more that the manifest had missed. `cleaner` found an undated whole-suite count, a stale test-count figure, a `<file>` line citation into a file whose structure had moved, and a stale _prediction_. `architect`'s REVIEW then found three untouched `909/909` counts byte-identical to one `cleaner` had just fixed, two more present-tense "the whole unfiltered suite stays green" rulings, a definite article standing in for a slice name ("the corrective", "the corrective tree"), and a "this slice" in `src/index.css` — which every prior pass had missed for the same reason: every prior pass was scoped to `.ts`/`.tsx`. Three roles, three passes, and each one still left instances of a class one of them had a literal string for. **State that as which rather than as how many** — the first draft of this very paragraph carried a tally, and the tally was wrong within the hour, because the pass writing it was still finding sites. That is the article's own count-beside-enumeration rule demonstrated on itself.
+
+## Writing a property test: what the two rules were measured on
+
+### The eight-fault run that established the property/unit split
+
+Measured in `wheel-zoom-ignores-magnitude-and-pinch`, where `architect` ran eight faults against the wheel-zoom mapping's two properties (reciprocality — a delta then its exact negation returns the original; additive composition — two deltas in sequence land where their sum lands in one) and against its unit tests:
+
+| fault injected                          | properties       | unit tests |
+| --------------------------------------- | ---------------- | ---------- |
+| base `ZOOM_FACTOR` 1.25 → 1.5           | both green       | **9 red**  |
+| notch constant 100 → 200                | both green       | **7 red**  |
+| exponent sign flipped                   | both green       | **8 red**  |
+| exponential → linear                    | **both red**     | green      |
+| continuous → quantized to whole notches | **additive red** | green      |
+| `deltaMode === 0` branch inverted       | **additive red** | green      |
+| zoom guard drops `                      |                  | ctrlKey`   | both green | **1 red** |
+| zoom anchor x/y swapped                 | both green       | **1 red**  |
+
+Reciprocality and additive composition hold for any exponential family `b ** (k*d)` — any base, any scale, either sign — so no property over that module could ever pin the base to `ZOOM_FACTOR`. That is a ruling recorded in `camera.property.test.ts`'s header, not an oversight.
+
+### The arbitrary that drew from one corner of its own range
+
+**Two ways this goes wrong, both measured in that slice rather than hypothesized.** A property that restates the implementation's own formula is an equivalence check rather than a test — `coder` flagged one against its own interest there, and it was replaced. And **a property is only as strong as the region its arbitrary actually samples**: those replacements drew from `pixelArbitrary`, whose `fc.float` draws uniformly over _representable_ floats, which crowd toward zero — **16,682 of 20,000 draws under 0.01 in magnitude**. Correct for a pixel position, useless for a wheel delta, and the quantize fault above survived at a **0.027%** detection rate until the arbitrary was replaced. **Ask what your arbitrary draws, not what its bounds are.**
+
+### The Invalid Date defect that paid for both rules
+
+Both rules were paid for. In `import-utilities`, `datesEqual` compared two Invalid Dates as **unequal**, so an Invalid Date was the one container the shared equality walker reported as unequal to its own `structuredClone`. `coder`, `cleaner` and `architect` all ran the property suite green; it surfaced at `hardener` on roughly a 0.2% `fc.date()` draw. Reflexivity passed through a same-reference short-circuit and symmetry saw `false` in both directions, so exactly one property could catch it, and only sometimes.
+
+## Dropped from the source article, and why
+
+`engineering.md` is adapted from unclebob/swarm-forge's `main`-branch constitution
+(`swarmforge/constitution/articles/engineering.prompt`). Two parts of the source were reviewed and not
+carried over.
+
+- The Go/Clojure/Java language-tool installation table and per-language framework preferences (Babashka, Speclj, Maven) — this is a single-language TypeScript project; its tools (`dry4ts`, `crap4ts`, Stryker, `scripts/acceptance-mutation`) are already pinned in `package.json`/`scripts/`, nothing needs installing from GitHub at agent startup.
+- `six-pack` branch's own `local-workflow.prompt` was also reviewed for this migration — it's entirely about that branch's tmux/QA-handoff-merge mechanics (`done_with_current.sh`, `merge_and_process QA <commit>`, ignoring wake-ups mid-task), not applicable here, and its one substantive rule (run tests before handoff) duplicates the `local-engineering` rule already captured above.
+
+## The six published mechanism errors
+
+Each was reached from a mechanism that sounded right, was never measured, and was caught by the next role
+rather than by its author.
+
+Every role in this pipeline has published one. A DESIGN pass asserted a third-party runner's cleanup lifecycle and was wrong (`black-box-acceptance-pilot`). A REVIEW pass concluded a guard existed from reading call sites (`ruler-label-axis-affordance`). `smooth-zoom-transitions` produced three in a single slice, each caught by the next role rather than by its author: the exactness ruling's justification named a consequence two orders of magnitude larger than anything the instrument could see; "a bare unconditional statement call has no Stryker mutator" was false, and one scoped run showed the mutant existing and Killed; and a severity argument called a float boundary vanishingly unlikely when the arithmetic behind it holds for 7.2% of inputs. **In all six cases the verdict survived and the reason did not.** That is the characteristic signature — a right answer for a wrong reason is not self-correcting, because nothing downstream fails.
+
+## The gate that went on guarding the old location
+
+Measured, in `split-claude-md`: `agent-doc-check`'s check 5 required every `rules/*.yml` to be named in `CLAUDE.md`. The invariant behind it was _a rule must be documented where roles will read_. Before the split those were the same sentence; the split moved the prose to `ast-grep-rules.md` and pulled them apart. The check was treated as fixed, a 28-row index was kept in `CLAUDE.md` to satisfy it, and four doc lines were then written hardening the wrong version into place. That index cost auto-loaded budget for every role and every subagent, had a row that diverged from its rule file on day one, and left the real gap — nothing required a rule to have article prose at all — wide open. **It resolved the other way in the end, which is the point:** check 5 now reads `.claude/agents/articles/ast-grep-rules.md` (`scripts/agent-doc-check/run.ts`'s `RULE_DOC_PATH`) and CLAUDE.md carries no rule index at all — the check moved to where the invariant went, and the awkward artifact it had been propping up disappeared with it.
+
+## The device-pixel wheel argument
+
+- **A harness argument may not be in the unit its name implies, and the wrong unit reads as a completed measurement.** Measured 2026-09-03: Playwright's `page.mouse.wheel(x, y)` takes **device** pixels, so the page receives `deltaY / devicePixelRatio` — a requested 100 arrives as **100 / 50 / 33.3** at `deviceScaleFactor` 1 / 2 / 3. A DPR-2 gridline sweep built on it silently swept 51/64/100/125/195% instead of the intended 40/41/100/156/300%, produced a full table, exited 0, and looked finished. Nothing in `features/` is affected today because the suite runs at DPR 1 — but every wheel scenario there would quietly measure a different gesture the moment it did not, and no assertion in the repo would notice. The general form: when a probe's numbers are _plausible but not what you targeted_, check the argument's units before concluding anything about the subject.
+
+## Why the `scripts/` tool configs stopped enumerating their file lists
+
+<!-- reference-check: allow mutation-rules.property.test.ts -- the historical name of `scripts/acceptance-mutation/tuple-list.property.test.ts`, renamed by `cells-column-has-two-parsers-and-neither-models-tuples`; the old name is the git-history search key and stating it wrongly to satisfy this checker would make the sentence false -->
+
+**A new program in `scripts/` is picked up automatically** — `crap4ts.scripts.config.ts`'s `include` and `stryker.scripts.config.json`'s `mutate` are both `scripts/**/*.ts` minus `*.test.ts`, `run.ts`, and `test-support.ts` (the I/O shells and the shared fixture helpers stay excluded, the same way `src/test-support/**` is on the `src/` side). They used to be hand-maintained lists, and a program omitted from them was invisible to `crap4ts:scripts` and `test:mutation:scripts` while both still reported success — the same silent-blindness failure that `ast-grep:rules` exists to catch in the rule files, and it had already happened once in `scripts/` itself. What you must still do by hand is add an **exclusion** when a new file genuinely shouldn't be measured; the failure now shows up as a loud threshold breach rather than as silence. `.dry4tsrc.json` carries the third exclusion of the same kind, `**/run.ts` — every program's entry shell is the same six-line read-decide-print-exit `main()`, which `dry4ts` reports as a duplicate once a second program exists. It is deliberately broader than the intent ("a `scripts/` program's I/O shell") because `dry4ts` matches `ignorePatterns` against paths relative to the directory it was pointed at, not to the repo root — measured: `scripts/**/run.ts` matches nothing under `dry4ts scripts` — and one config serves both `npm run dry4ts` and `npm run dry4ts:scripts`. Nothing under `src/` is named `run.ts` today; if something ever is, it is silently exempt.
+
+## The property test that needed no config change
+
+- There's no scripts-scoped property _command_, so `architect`/`hardener`/`product` gain no counterpart to their `npm run test:property` obligation for `scripts/` work — running `npm run test:scripts` discharges it, because a property test there is collected by that one config like any other test. The clause this replaces said no property-test layer existed at all and that one should be added only if an invariant over a broad input range appeared that a table-driven test didn't cover. That happened, in `comma-list-mutants-are-all-syntax-breaking`: `scripts/acceptance-mutation/tuple-list.property.test.ts` (added under the name `mutation-rules.property.test.ts`) quantifies over coordinate-pair lists of any length, magnitude and sign, and the shape the table-driven fixtures could not reach — a single-pair list, and multi-digit coordinates — is exactly where the defect that slice fixed lived. Adding it needed **no config change**, which is the fact worth carrying: measured on that slice's tree, `vitest.scripts.config.ts`'s `scripts/**/*.test.ts` include collects a `*.property.test.ts` file, and `vite.config.ts`'s `sharedExclude` entry for `scripts/**` keeps the src-side `property` project — whose include is the unrooted `**/*.property.test.ts` — from collecting it too. So the suffix is a naming convention in `scripts/`, not a project selector as it is in `src/`, and a file placed there gets no separate run and no separate obligation. The bar for adding another is unchanged and is the one in "Writing a property test" above: pin the degenerates, and show it failing against a deliberately broken implementation first. The browser-required layer is a different story and still has no counterpart: `scripts/` is Node CLI tooling with no browser APIs to verify, so `npm run test:browser` has no scripts-scoped form and `hardener` simply skips that stage for `scripts/`-only work.
