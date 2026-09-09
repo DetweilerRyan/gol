@@ -9,6 +9,13 @@ below is history: what was measured, in which slice, by what method, and which r
 corrected. Several figures describe trees that no longer exist — **do not quote a number forward from this
 file without re-deriving it.**
 
+## Where this article came from
+
+`testing-layers.md` was extracted verbatim from CLAUDE.md at `b5e333e`, from lines 167-172, 184-203, 209,
+211 and 213-218. No prose was edited in the extracting commit. Only the common leading indent of a
+fragment lifted out of a nested list was removed. That note stood at the head of the article until
+`split-testing-layers-article` moved it here, where a provenance record belongs.
+
 ## What this split found, and why mandate 5 exists
 
 Six enumerations in the article were re-derived against their sources on 2026-09-09. Every one was wrong.
@@ -204,6 +211,10 @@ own module:
 - `pattern-library.ts` — exactly one step, `the pattern library is open`, to
   `while-the-pattern-library-is-open`.
 
+The remaining modules lent nothing, and `while-the-pattern-library-is-open.ts` borrowed from three lenders
+while lending to none. That is the shape to expect from a feature written late against vocabulary that
+already existed.
+
 **A second instrument disagrees with that map, and the disagreement is unresolved.** A scratch matcher
 written for this split on 2026-09-09 read seven lenders rather than eight — `cell-life-and-death.ts` lending
 to seven features, not eight — with different per-feature counts throughout. Neither measurement is
@@ -321,8 +332,8 @@ Every figure below is history. The article carries none of them, and
 | `slice/stable-hook-identities` | 33 tests, 8 files | 94 tests, 11 files | 127 in 19 files |
 | `f44fa88`, 2026-09-09          | 28 tests, 7 files | 98 tests, 12 files | 126 in 19 files |
 
-Three earlier figures the article carried at various points: 28 / 46 / 74 across 7 files each; 41 / 78 / 119;
-and 27 / 73 for `e2e` before `scrollbar-thumb-overflows-its-track` added its thumb-containment test to an
+Three earlier figures the article carried at various points: 28 / 46 / 74 across 7 files each; 41 / 78 / 119,
+measured on `preview-follows-pointer-may-be-statable`; and 27 / 73 for `e2e` before `scrollbar-thumb-overflows-its-track` added its thumb-containment test to an
 existing spec file, which is why the file count did not move with it.
 
 **The 62 figure is the one that needed three independent confirmations**, because a stale number had been
