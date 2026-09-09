@@ -120,8 +120,8 @@ commit produced. Re-derive rather than quoting these forward.
 
 | Measure                            | Before |   After |
 | ---------------------------------- | -----: | ------: |
-| Article bytes                      | 61,890 |  41,669 |
-| Sidecar bytes                      |      — |  16,148 |
+| Article bytes                      | 61,890 |  41,771 |
+| Sidecar bytes                      |      — |  20,957 |
 | Rationale bytes inside the article | 17,383 |  12,457 |
 | Entanglement                       |    82% | **91%** |
 | Backticked slice slugs             |     30 |      13 |
@@ -139,6 +139,20 @@ resists the same operation.
 **Rationale bytes fell only 28%, against a 33% fall in total bytes.** So the article did not become
 proportionally more directive. It became smaller while holding a similar mix. Anyone planning the next
 split of a prose article should expect that, and should not promise a rationale-share improvement.
+
+**The sidecar figure is self-referential, and getting it right needs a fixed point.** Writing the byte
+count into the sidecar changes the sidecar's byte count. The first attempt recorded a figure measured
+before this very section existed, and was wrong in the flattering direction — which is the direction
+mandate 4 exists to catch. Settle the surrounding prose first, measure, then substitute a numeral of the
+same width. The article figure has no such problem and needs no such care.
+
+**Mandate 3's audit found one drop, and it is the shape the pilot warned about.** A lint pass compressed
+the hand-written-e2e bullet and took `triage-paired-specs` and its 35-test figure out of the pair
+entirely, rather than moving them. `testing-layers.md` still carries the fact five times, so nothing was
+lost from the corpus — but that article is read by `coder` and `product` alone, so the three other roles
+would have lost the evidence for a rule they all read. Restored as a pointer. **The lesson is that a
+shortening pass drops content the splitting pass carefully placed**, and only a by-hand comparison
+against the pre-split article finds it.
 
 **The two residual Vale findings are `Google's` and `Microsoft's`** — possessives that `STE.Contractions`
 reads as contractions. Expanding either produces nonsense, so both stay.
