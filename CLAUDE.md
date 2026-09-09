@@ -369,7 +369,7 @@ If you use the native `EnterWorktree({ name })` or `Agent({ isolation: 'worktree
    ```bash
    git diff --name-only main...HEAD    # in the slice's worktree, after step 1's rebase
 
-   # every path matches one of:  features/**  ideas/**  .claude/**  CLAUDE.md  README.md  .vale.ini  .vale/**  rules/**  rule-tests/**
+   # every path matches one of:  features/**  ideas/**  .claude/**  CLAUDE.md  README.md  .vale.ini  .vale/**  rules/**  rule-tests/**  .oxlintrc.json
    ```
 
    `stryker.config.json` is deliberately **absent** from the allowlist, as are `vite.config.ts`, `vitest.*.config.ts`, `package.json`/`package-lock.json`, `tsconfig*.json`, `sgconfig.yml` and `patches/**`. Touching any of them re-arms the full run, which is the point of leaving them out rather than an oversight.
@@ -379,6 +379,12 @@ If you use the native `EnterWorktree({ name })` or `Agent({ isolation: 'worktree
    **`.vale.ini` and `.vale/**` were added by `rationale-sidecar-pilot`, and the argument is that no path reaches a mutant from them.** `stryker.config.json`'s `mutate` list is `src/**` only, so neither file yields a mutant. No test can change its outcome because of them either. Nothing in `package.json`, `vite.config.ts` or the `vitest.*.config.ts` files references Vale. There is no `npm run` script that invokes it; the prose linter is run by hand. Verified 2026-09-08 by reading those four files.
 
    Note the claim that matters is the narrow one. Vale could gain a script, or even a gate, and the score still could not move, because Stryker runs the vitest suite and nothing else.
+
+   **`.oxlintrc.json` was added by the same slice, and it needs no precondition.** It is safe as a matter of fact rather than of configuration. That is the `CLAUDE.md` and `README.md` category: a fixed filename cannot match a test glob, so no future diff turns this path into a test. It is not mutated, `mutate` being `src/**`. It _is_ tracked, and therefore copied into the sandbox, but nothing there consults it. Stryker runs the vitest suite and nothing else, and oxlint is referenced by neither `vite.config.ts`, `vitest.scripts.config.ts`, `src/test-setup.ts`, `fast-check-stryker-seed.ts` nor either Stryker config. Verified 2026-09-08 by grepping those six files.
+
+   The instance that paid for this: `oxlint-native-jsdoc-tier` changed four paths, three of them already allowlisted. The fourth was this file, and it put the diff through a full run whose every mutant was `main`'s by construction.
+
+   **Do not generalise this entry to "a fixed filename is safe".** `package.json` is a fixed filename, and it sits on the absent list precisely because it can move the score. Filename shape buys only the first half of the argument, that the path can never itself become a test. The half that does the work is that nothing in the run consults it, and that half is an inventory of the tree today rather than a structural guarantee.
 
    **`rules/**` and `rule-tests/**` were added by `the-invariance-allowlist-omits-paths-that-provably-cannot-move-a-mutant`, on three points plus a precondition it had to build first.** `stryker.config.json`'s `mutate` list is `src/**` only, so no file in either directory yields a mutant. Both directories hold `.yml` and nothing else, which no vitest include glob matches, so neither contributes a test. And no test reads either directory from the live tree. The checkers that do read them in production, `scripts/ast-grep-rule-check/` and `scripts/agent-doc-check/`, build a `mkdtempSync` temp repo per case in their own tests. The only live-tree reads anywhere in the `scripts/` suite are against `features/`.
 
