@@ -17,7 +17,9 @@ That note stood inside the article until `split-state-flow-article` moved it her
 
 ## What this split found
 
-Every enumeration in the article was re-derived on 2026-09-09. One was wrong.
+Three enumerations were re-derived on 2026-09-09. One was wrong. The pass did **not** re-derive the two
+list-shaped enumerations, and the REVIEW pass afterwards found both incomplete — recorded below, so the
+claim here is what was checked rather than what was written.
 
 **Wrong: "a fourteenth hook would enter this section's enumerated list".** That appears in the argument for
 declining a shared `useLatestRef` helper. `src/hooks/` holds sixteen hooks, so a new one would be the
@@ -32,6 +34,15 @@ inside a closed decision that nobody reopened. The article now names no ordinal 
   `useCamera.ts`, and `placementRef` in `usePatternPlacement.ts`. Five, across four.
 - **"All seven returned actions" of `useCamera`.** Its return literal carries eight keys. One is `camera`,
   the state itself, so seven are actions. The claim is exact rather than approximately right.
+
+**What the REVIEW pass then found, by re-deriving the two lists this audit skipped.**
+
+- **The per-hook bullet list covers fifteen of sixteen hooks.** `useContentBounds.ts` appears only inside
+  the `useLiveCells` bullet, as the shape that hook copied. It has never had a bullet of its own, so this
+  predates the split. Left alone deliberately: that whole list is ruled to migrate out of the article.
+- **Layer B's roster named three test files and there are more.** `useGridFocus.test.ts` pins `setFocus`
+  identity, which is easy to miss because the same hook supplies two of the three standing exemptions, and
+  `useMatchMedia.test.ts` pins the same property through a resubscribe count. Both are now named.
 
 ## The identity contract: what `stable-hook-identities` measured
 
@@ -177,13 +188,16 @@ renders** when `Grid` rendered the whole tree itself.
 
 ## The split itself, measured
 
-Split by `split-state-flow-article`, 2026-09-09. Figures taken after the final content commit, on the tree
-that commit produced. Re-derive rather than quoting these forward.
+Split by `split-state-flow-article`, 2026-09-09. Re-derive rather than quoting these forward.
+
+The byte and Vale rows were re-taken after the REVIEW pass, on the tree that pass produced. **The four
+classifier rows predate it** and describe the tree as it stood at the final content commit, because the
+classifier is not runnable from here. Read them as the shape of the split, not as a current reading.
 
 | Measure                            | Before |  After |
 | ---------------------------------- | -----: | -----: |
-| Article bytes                      | 27,298 | 20,264 |
-| Sidecar bytes                      |      — | 13,721 |
+| Article bytes                      | 27,298 | 20,709 |
+| Sidecar bytes                      |      — | 14,856 |
 | Blocks in the article              |     21 |     70 |
 | Rationale bytes inside the article |  3,149 |  9,142 |
 | Entanglement                       |    67% |    76% |

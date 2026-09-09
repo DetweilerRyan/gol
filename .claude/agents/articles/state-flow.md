@@ -22,7 +22,7 @@ Two rulings come with it.
 
 **Use `isShallowEqual` only for small, known-shallow projected state**, per the scope contract in its own JSDoc. It never descends into nested containers, and every call allocates. **Never reach for it to compare two `liveCells` Sets.** Write a dedicated comparison instead.
 
-<!-- Closed decision: why the contract is bounded by allocation rather than by complexity class, and where the O(n²) fallback actually lives, are in `state-flow.rationale.md`. -->
+<!-- Closed decision: why the contract is bounded by allocation rather than by complexity class, and why the O(n²) fallback is `isDeepEqual`'s rather than this module's, are in `state-flow.rationale.md`. -->
 
 ### State flow
 
@@ -68,7 +68,7 @@ Two rulings come with it.
 
 **Declaration order is load-bearing.** Placing that effect above `const prefersReducedMotion = useReducedMotion()` leaves the controller unmemoized and the change inert, while compiling, type-checking and passing every other test in the repo.
 
-Three guards pin it, each `it.skipIf(underStryker)`. Stryker's per-expression instrumentation defeats React Compiler's memoization, so an ungated identity assertion reds the **dry run** and `npm run test:mutation` never starts. Each carries an unskipped companion proving the instrument non-vacuous.
+Three guards pin it, each `it.skipIf(underStryker)`. Stryker's per-expression instrumentation defeats React Compiler's memoization, so an ungated identity assertion reds the **dry run** and `npm run test:mutation` never starts. Each carries an unskipped companion proving the instrument non-vacuous. The skipped guards do not run under Stryker at all, so a companion is the only thing guarding its path there. Build one that reds when the guarded code breaks, never one that only proves the harness runs.
 
 `useZoomGlide.test.ts` pins controller identity across a re-render. `useCamera.test.ts` pins the whole returned surface. It also pins all seven actions across a pan. `LifeBoard.test.tsx` pins no `wheel` re-registration during a six-frame drag pan.
 
@@ -86,7 +86,7 @@ Three exemptions stand. `useGridFocus.moveFocus` and `jumpToEdge` reach only a D
 
 **What decides an exemption is where the churn lands, not whether it happens.** Each one is a measurement rather than a judgement call.
 
-**Guarded in two layers, and no `ast-grep` rule is possible.** Layer A is the durable one: composition-level render-count guards. They currently live in `Grid.test.tsx` and `LifeBoard.test.tsx`, and both count `Cell` render calls through `vi.mock('./Cell', { spy: true })`. Layer B is per-hook identity assertions, added only where capture risk exists: `useCamera.test.ts`, `usePatternPlacement.test.ts` and `useZoomGlide.test.ts`. Both layers use the skip-plus-companion idiom above.
+**Guarded in two layers, and no `ast-grep` rule is possible.** Layer A is the durable one: composition-level render-count guards. They currently live in `Grid.test.tsx` and `LifeBoard.test.tsx`, and both count `Cell` render calls through `vi.mock('./Cell', { spy: true })`. Layer B is per-hook identity assertions, added only where capture risk exists: `useCamera.test.ts`, `usePatternPlacement.test.ts`, `useZoomGlide.test.ts` and `useGridFocus.test.ts`, which pins `setFocus` even though the two exempt functions beside it stay unpinned. `useMatchMedia.test.ts`'s no-resubscribe guard is the same layer read through its effect. Both layers use the skip-plus-companion idiom above.
 
 **Identity is a property of compiled output, so tests are the only instrument that can see it.** The discriminator is forward reference, which is scope analysis rather than a syntax pattern.
 
@@ -108,7 +108,7 @@ Three exemptions stand. `useGridFocus.moveFocus` and `jumpToEdge` reach only a D
 
   Inside `#grid-content`, `Grid` renders these siblings in DOM order: `GridLines`, a transformed layer div wrapping `GridCells`, `HoverIndicator`, then `PatternPreview`. Later-in-DOM wins among same-level absolutely-positioned siblings. So lines paint furthest back, and every opaque live cell occludes them. The preview paints over both the cell buttons and the hover indicator.
 
-  **The pan transform sits on that inner layer div and never on `#grid-content` itself.** That is load-bearing rather than stylistic. `useGridPointerGestures` and `useWheelInput` both call `getBoundingClientRect()` on `#grid-content`, so a transform there would shift that rect and silently resolve every tap and hover to the wrong world cell. `Grid.test.tsx` asserts `#grid-content` carries no transform, and asserts in its own adjacent comment that the layer div's transform is a pure `translate(...)` with no `scale`. This app re-lays-out on zoom instead of scaling, which keeps `getBoundingClientRect()` and layout units from disagreeing the way a scaled scroll container's would.
+  **The pan transform sits on that inner layer div and never on `#grid-content` itself.** That is load-bearing rather than stylistic. `useGridPointerGestures` and `useWheelInput` both call `getBoundingClientRect()` on `#grid-content`, so a transform there would shift that rect and silently resolve every tap and hover to the wrong world cell. `Grid.test.tsx` asserts `#grid-content` carries no transform, before and after a pan. A second test asserts the layer div's transform matches a pure `translate(...)` and contains no `scale`. This app re-lays-out on zoom instead of scaling, which keeps `getBoundingClientRect()` and layout units from disagreeing the way a scaled scroll container's would.
 
   **`GridCells` no longer decides which cells exist.** `Grid` calls `liveCellsInRange(liveCells, tiles.range, gridFocus.focus)` once per render, then hands the finished array down. See `liveCellWindow.ts`. `GridCells` only lays it out, one `Cell` per entry, keyed by that cell's own `CellKey` — a stable identity for as long as the cell stays alive.
 
