@@ -52,8 +52,12 @@ reads unconditionally" — and `orchestration.md` is read at session start by th
 that splitting an unconditionally-read file moves argument out of the one place everyone sees. CLAUDE.md's
 own routing preamble argues the opposite: auto-loading is "a cost, not a distribution channel", and
 CLAUDE.md itself was shrunk on exactly that logic. On that reading, the unconditional files are the ones
-to split **hardest**. The two positions are not reconciled here, and `engineering.md` — 18,043 bytes of
-rationale, the largest mass in the corpus — is what hangs on it.
+to split **hardest**. The two positions were not reconciled when this was written, and `engineering.md`
+— then 18,043 bytes of rationale, the largest mass in the corpus — was what hung on it. **Settled
+2026-09-09 by the user, for the second position**, and `split-engineering-article` acted on it. The
+ruling and what it did not concede are in `engineering.rationale.md`. The reconciling argument is
+mandate 1: a closed-decision marker keeps the settled fact in the unconditionally-read file while the
+argument moves out, so the first position's concern is answered rather than overridden.
 
 Two of the four have a second, independent defence that does not depend on the argument above:
 `workflow.md` (1,486 rationale bytes) and `handoffs.md` (3,161) are simply too small to be worth a second
@@ -62,14 +66,20 @@ that it has many readers — it has exactly one.
 
 ## Progress
 
-| slice                            | article               | landed  |
-| -------------------------------- | --------------------- | ------- |
-| `split-mutation-testing-article` | `mutation-testing.md` | pending |
-| `split-ast-grep-rules-article`   | `ast-grep-rules.md`   | pending |
+| slice                            | article               | landed |
+| -------------------------------- | --------------------- | ------ |
+| `split-mutation-testing-article` | `mutation-testing.md` | landed |
+| `split-ast-grep-rules-article`   | `ast-grep-rules.md`   | landed |
+| `split-engineering-article`      | `engineering.md`      | landed |
 
-**Two splits done, ten articles left of the twelve splittable.** `ast-grep-rules.md` is next by
-`architect`'s ordering — 84 backticked slice slugs, the most in the corpus by a factor of three, and a
-rule roster that mandate 5 will have to re-derive against `rules/`.
+**Three splits done, nine articles left of the twelve splittable.** The next target is unchosen.
+`testing-layers.md` (44,353 bytes) is the largest remaining. `architecture.md` (36,810) is second and is
+itself 20% rationale, but it carries **no heading structure** — one H3 over a flat module list — so
+routing prose into it means inventing headings it does not have.
+
+**Read the byte figures in the Situation and Complication as a snapshot predating three splits.**
+`engineering.md` alone moved from 18,043 rationale bytes to 12,457. Re-derive before planning against
+any of them.
 
 **What the first split taught, beyond its own findings.** Mandates 2 and 4 were both defective and are
 rewritten above; mandate 5 did not exist and was added because the pair audit is structurally blind to a
@@ -91,9 +101,12 @@ Split `mutation-testing.md` first and `ast-grep-rules.md` second — second and 
 and the two `architect` judged cheapest to split well. `testing-layers.md` is the largest available
 target and is a reasonable substitute for either if effort is the constraint rather than legibility.
 
-**Do not split any of the four** without a separate decision, and treat `engineering.md` as the one that
-genuinely needs one: it holds the largest rationale mass in the corpus, and the argument protecting it is
-the one the Complication shows is contested.
+**Do not split any of the remaining three** — `workflow.md`, `handoffs.md`, `orchestration.md` — without
+a separate decision. `engineering.md` was the fourth and has had its decision: ruled 2026-09-09 for
+splitting, and split. Note that the other three each have an **independent** defence that never rested on
+the contested argument, so that ruling does not carry across to them. `workflow.md` (1,486 rationale
+bytes) and `handoffs.md` (3,161) are too small to be worth a second file, and `orchestration.md` is 94%
+entangled, so its split is expensive rather than protected.
 
 **`CLAUDE.md` is out of scope here** and needs its own slice if it is ever split. It is not an article,
 it is auto-loaded rather than triggered, and its 48% rationale share is the largest single number in the
@@ -118,6 +131,14 @@ The pilot established these, and they are not optional. Seven, and mandates 4 th
    this — `reference-check` and `agent-doc-check` both stay green while a pair drifts, because every
    filename still resolves. Six passes on the pilot dropped fifteen illustrations out of the pair before
    an audit caught them.
+
+   **Run it after the lint pass, not after the split, because the two passes fight.** The splitting pass
+   places content deliberately; the shortening pass then deletes some of what it placed, and neither
+   notices. Measured on `split-engineering-article`: a mandate-6 rewrite compressed one bullet and took
+   `triage-paired-specs` and its 35-test figure out of the pair entirely, rather than moving them. A
+   practical audit is mechanical — extract every backticked slice slug and every distinctive figure from
+   the pre-split article, and assert each still appears somewhere across the pair.
+
 4. **A before/after measurement recorded in the sidecar's own intro, taken after the final commit**, so
    the next split has a comparison. **Re-measure at the end and cite the commit it was taken on** — the
    second split recorded figures taken mid-pass and got four rows wrong, in the flattering direction,
@@ -126,6 +147,26 @@ The pilot established these, and they are not optional. Seven, and mandates 4 th
    absolute rationale figure, not the share** — the share is a ratio and moves the wrong way, which is
    recorded in `prose-linting.rationale.md`. This is the mandate the first split skipped, because it
    named an obligation without naming the measurement or where it goes.
+
+   **A "before" figure taken at any point after the work began is not a before figure.** The third split
+   recorded a Vale baseline of 128 that was measured once the extraction commits had already shortened
+   the article; the true pre-split count was 186. Derive every before row by linting or measuring the
+   pre-split file itself — `git show main:<path>` into a scratch copy **placed inside the scoped
+   directory**, since `.vale.ini` scopes by path and a copy at the repo root silently reports zero.
+
+   **The sidecar byte figure is self-referential and needs a fixed point.** Writing the count into the
+   sidecar changes the count. The third split first recorded 16,148 against an actual 19,812, wrong by
+   3,664 and in the flattering direction. Settle the surrounding prose, measure, then substitute a
+   numeral **of the same width** so the substitution is byte-neutral. The article figure has no such
+   problem.
+
+   **Expect entanglement to rise on a prose article, and do not promise otherwise.** It measures the
+   share of directive-carrying blocks that also carry non-directive prose, so removing whole evidence
+   blocks raises it by construction. Measured on `engineering.md`: 82% to 91%, with rationale bytes down
+   only 28% against a 33% fall in total bytes. **The tier redistributes an enumeration far better than it
+   redistributes argument** — `ast-grep-rules.md` fell 87% because 70% of it was one grammatical list
+   that moved verbatim, and prose does not offer that.
+
 5. **Re-derive every sentence that enumerates or quantifies over another file's contents**, from that
    file, during the split. Do not carry it across. Mandate 3's audit compares the pair against the
    article as it stood before, so it is structurally blind to a claim that was **already false** — and
@@ -169,9 +210,12 @@ this candidate read the pre-amendment list and called the claim false.
 
 ## Open questions
 
-- **Is the unconditional-read argument sound?** It is what protects four files, and CLAUDE.md's own
-  routing preamble argues the reverse. Settle this before anyone proposes splitting `engineering.md`,
-  which is where the disagreement has real money on it.
+- ~~**Is the unconditional-read argument sound?**~~ **Settled 2026-09-09, for the routing preamble.**
+  Auto-loading is a cost rather than a distribution channel, and mandate 1's closed-decision markers
+  reconcile the two positions rather than overriding one. `split-engineering-article` acted on the
+  ruling; `engineering.rationale.md` records it, including what was **not** conceded — a future split
+  that drops the markers revives the objection in full. **The ruling covers `engineering.md` only.** The
+  other three protected files have independent defences, so nothing here licenses splitting them.
 - **Is there a floor below which a split is not worth it?** Ask it in bytes, not shares. `archive.md`
   (2,611), `acceptance-mutation.md` (2,921) and `state-flow.md` (4,095) are the three smallest, and
   `archive.md` is smallest of all despite a 26% share — which is the share-as-value error surviving in
