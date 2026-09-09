@@ -65,8 +65,9 @@ that it has many readers — it has exactly one.
 | slice                            | article               | landed  |
 | -------------------------------- | --------------------- | ------- |
 | `split-mutation-testing-article` | `mutation-testing.md` | pending |
+| `split-ast-grep-rules-article`   | `ast-grep-rules.md`   | pending |
 
-**One split done, eleven articles left of the twelve splittable.** `ast-grep-rules.md` is next by
+**Two splits done, ten articles left of the twelve splittable.** `ast-grep-rules.md` is next by
 `architect`'s ordering — 84 backticked slice slugs, the most in the corpus by a factor of three, and a
 rule roster that mandate 5 will have to re-derive against `rules/`.
 
@@ -116,8 +117,10 @@ The pilot established these, and they are not optional:
    this — `reference-check` and `agent-doc-check` both stay green while a pair drifts, because every
    filename still resolves. Six passes on the pilot dropped fifteen illustrations out of the pair before
    an audit caught them.
-4. **A before/after measurement recorded in the sidecar's own intro**, so the next split has a
-   comparison. Name the unit: article bytes before, article and sidecar bytes after, rationale-only
+4. **A before/after measurement recorded in the sidecar's own intro, taken after the final commit**, so
+   the next split has a comparison. **Re-measure at the end and cite the commit it was taken on** — the
+   second split recorded figures taken mid-pass and got four rows wrong, in the flattering direction,
+   in the one artifact whose whole job is to be accurate. Name the unit: article bytes before, article and sidecar bytes after, rationale-only
    bytes, entanglement, backticked slice-slug counts, and Vale findings on the article. **State the
    absolute rationale figure, not the share** — the share is a ratio and moves the wrong way, which is
    recorded in `prose-linting.rationale.md`. This is the mandate the first split skipped, because it
@@ -128,6 +131,13 @@ The pilot established these, and they are not optional:
    both substantive findings on the first split were exactly that shape: "every entry on the allowlist"
    naming five of seven, and "the exposure is bidirectional" describing one direction. An audit preserves
    those faithfully because they were preserved faithfully.
+6. **Re-point every inbound reference to the article you split.** Mandate 3 audits the pair against its
+   own past and is structurally blind to who points **at** it — which is how the second split left both
+   of CLAUDE.md's pointers describing an article that no longer held what they claimed. **This will
+   recur on every remaining split**, because each article has a CLAUDE.md pointer line describing its
+   contents and a split invalidates it. One command:
+   `grep -n "<article>.md" CLAUDE.md .claude/agents/*.md .claude/agents/articles/*.md`. Expect the
+   manifest to grow by CLAUDE.md as a result.
 
 ## Touches
 

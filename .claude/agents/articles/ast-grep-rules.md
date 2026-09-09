@@ -17,7 +17,10 @@
 
 Thirty-one, and this list is what `npm run agent-doc-check`'s check 5 reads:
 
-`no-react-in-domain`, `no-dom-in-domain`, `no-build-env-in-domain`, `no-ambient-time-in-domain`, `no-module-state-in-domain`, `domain-imports-upward`, `no-manual-memo-ts` / `no-manual-memo-tsx`, `no-logic-in-composition-root`, `no-overlays-inside-grid-content`, `no-camera-in-cell-leaf`, `no-tile-policy-in-components`, `no-value-import-across-perf-boundary`, `no-aliveness-by-paint-class`, `no-test-support-in-product-ts` / `no-test-support-in-product-tsx`, `no-domain-imports-in-bdd-steps`, `no-domain-imports-in-e2e-specs`, `no-ruler-axis-by-paint-class`, `no-unbraced-accessible-name`, `no-unbraced-name-from-contents`, `no-store-in-cell-components`, `no-playwright-config-import-in-mutation-config`, `no-cucumber-parser-outside-adapter`, `no-fast-check-outside-property-file-ts` / `no-fast-check-outside-property-file-tsx`, `no-dom-surgery-in-components`, `no-barrel-import-in-screenplay`, `no-expect-in-screenplay-questions`, and — outside that sentence, in their own sections below — `no-dead-doc-on-annotated-return-literal` and `no-downward-import-in-scripts`.
+`no-react-in-domain`, `no-dom-in-domain`, `no-build-env-in-domain`, `no-ambient-time-in-domain`, `no-module-state-in-domain`, `domain-imports-upward`, `no-manual-memo-ts` / `no-manual-memo-tsx`, `no-logic-in-composition-root`, `no-overlays-inside-grid-content`, `no-camera-in-cell-leaf`, `no-tile-policy-in-components`, `no-value-import-across-perf-boundary`, `no-aliveness-by-paint-class`, `no-test-support-in-product-ts` / `no-test-support-in-product-tsx`, `no-domain-imports-in-bdd-steps`, `no-domain-imports-in-e2e-specs`, `no-ruler-axis-by-paint-class`, `no-unbraced-accessible-name`, `no-unbraced-name-from-contents`, `no-store-in-cell-components`, `no-playwright-config-import-in-mutation-config`, `no-cucumber-parser-outside-adapter`, `no-fast-check-outside-property-file-ts` / `no-fast-check-outside-property-file-tsx`, `no-dom-surgery-in-components`, `no-barrel-import-in-screenplay`, `no-expect-in-screenplay-questions`, and — documented outside the main enumeration, in the sidecar — `no-dead-doc-on-annotated-return-literal` and `no-downward-import-in-scripts`.
+
+**The sidecar's enumeration follows this same order.** Search it for the rule id rather than reading it
+through. It is one 29,809-byte sentence, and that is how it is meant to be used.
 
 **Re-derive this list against `rules/` rather than trusting it.** It is an enumeration of another
 directory's contents, and `ls rules/*.yml | wc -l` is the check.
@@ -65,6 +68,13 @@ Four things that make a rule inert, all of them measured:
   nothing and reports nothing.
 - **A `files:` glob that resolves to nothing.** `npm run ast-grep:rules` fails it, which is the check
   that catches this class.
+- **A missing or misspelled `severity:` key**, which silently demotes the rule to `help` and exits 0.
+  `npm run ast-grep:rules` checks that too.
+
+**That list is derived from `npm run ast-grep:rules`'s own checks, and CLAUDE.md describes them in
+full.** Four more are not restated here. `id` must match the filename, ids must be unique, an `invalid:`
+case is required, and a fixture binds to a rule by its `id` rather than its filename. **Read CLAUDE.md's
+`ast-grep-rule-check` entry before authoring**, rather than treating this list as the whole obligation.
 
 **One glob asymmetry to write around.** ast-grep's `*` **crosses `/`**; `npm run ast-grep:rules` resolves
 `files:` globs with `node:fs`'s `globSync`, whose `*` does **not**. So `src/*.test.tsx` is live for the
