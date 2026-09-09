@@ -1,6 +1,6 @@
 # Article: Prose Linting — running Vale over the agent docs, and what to do with a finding
 
-**Audience:** any role or session that edits `.claude/agents/articles/**`
+**Audience:** any role or session that edits `.claude/agents/**`
 
 **Read when:**
 
@@ -66,7 +66,7 @@ role files.
 
 **The role files were out of scope until `lint-the-role-files`, and the reason is worth keeping.** Their
 YAML front matter is parsed by a real YAML parser, and two `description:` scalars carried a literal `": "`
-that reads as a nested mapping. That slice single-quoted those two scalars, which is the root-cause fix. The
+that reads as a nested mapping. That slice quoted those two scalars, which is the root-cause fix. The
 value survives the parse byte-for-byte, and `agent-doc-check`'s line-anchored reader still finds it on the
 `description:` line.
 
@@ -77,10 +77,6 @@ front-matter scalar that contains a colon followed by a space.
 
 **Use double quotes rather than single.** Prettier normalises a YAML scalar to that form, so single quotes
 red `npm run format:check`.
-
-**Vale's own `*` crosses `/`**, so `.claude/agents/*.md` and `.claude/agents/**/*.md` reach the same files.
-`.vale.ini` writes the `**` form deliberately, because it reads correctly to someone carrying `globSync`'s
-narrower intuition from `ast-grep-rule-check`.
 
 **`*.rationale.md` sidecars are exempt from every rule.** The last section of `.vale.ini` sets
 `BasedOnStyles` to an empty value for them. Sidecars hold the dated-record register, which several of
@@ -104,6 +100,9 @@ report zero.
 is ast-grep's behaviour, not `globSync`'s — the asymmetry CLAUDE.md documents under
 `ast-grep-rule-check`. A glob written on the `globSync` intuition **fails open**: it silently lints
 files nobody scoped it to.
+
+So `.claude/agents/*.md` and `.claude/agents/**/*.md` reach the same files. `.vale.ini` writes the `**`
+form deliberately, because it reads correctly to someone carrying that narrower intuition.
 
 ## The six enabled rules, and what to do with each
 

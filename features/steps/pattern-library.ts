@@ -155,8 +155,8 @@ Then('it should be listed under the {string} category', async ({ page }, categor
 // coordinate of the shape "(-32, -22.5)" -- the app's own default camera
 // offset -- is rejected by isTupleList and shortens a pair-regex's view of it
 // on 30 of 40 mutants. So the old class is history for THIS column and live
-// for the next one. See tuple-list.ts's header and CLAUDE.md's residual
-// paragraph, which state the same boundary from the runner's side.
+// for the next one. See tuple-list.ts's header and acceptance-mutation.md's
+// honest-residual section, which state the same boundary from the runner's side.
 //
 // Keep all three regardless of which currently detects what.
 Then(
