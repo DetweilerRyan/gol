@@ -20,7 +20,7 @@ role is told that if the hover answers its question it should stop, and not open
 defining file. That instruction is only safe if a hover tells the truth.
 
 It does not, reliably. Measured 2026-09-08 (full ruling and arm-by-arm evidence in
-`ideas/candidates/only-harness-writes-reach-the-language-server.md`):
+`ideas/todo/only-harness-writes-reach-the-language-server.md`):
 
 > Once a file has been touched by an LSP operation, every later answer about it is served
 > from a snapshot the harness holds. Only a write through the harness's own `Edit`/`Write`

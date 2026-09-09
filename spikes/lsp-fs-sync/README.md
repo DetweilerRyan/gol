@@ -13,7 +13,7 @@ survive in its ADR. Do not build anything that assumes this path is stable.
 ## The problem
 
 Measured 2026-09-08 (see
-`ideas/candidates/only-harness-writes-reach-the-language-server.md` for the full
+`ideas/todo/only-harness-writes-reach-the-language-server.md` for the full
 ruling): once the harness sends `textDocument/didOpen`, every later hover is served from
 the snapshot the harness holds. Writes that bypass the harness — `sed`, `cat >`, a
 heredoc, `git rebase`, `git checkout`, `npm run format` — never reach the server, in any
@@ -30,7 +30,7 @@ live in the client too, and the same failure class is open against other clients
 (`zed-industries/zed#48439`).
 
 The full ruling, including the arms that refuted the two earlier explanations, is in
-`ideas/candidates/only-harness-writes-reach-the-language-server.md`. The decision to
+`ideas/todo/only-harness-writes-reach-the-language-server.md`. The decision to
 adopt this approach over the alternatives — and why each alternative was rejected — is
 `adr/0002-lsp-proxy-for-out-of-band-writes.md`, currently **Proposed** rather than
 Accepted, pending the real-harness verification named in its Verification section.

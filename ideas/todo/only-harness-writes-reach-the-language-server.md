@@ -158,12 +158,16 @@ that is the axis that matters, not implementation cost.
 | Kill the session's server | no                           | yes, scoped by `ppid`           | discards the project index; cold start     |
 | LSP proxy                 | no                           | n/a — always on                 | a permanent moving part                    |
 
-1. **Write the mechanism down** in `doc-comments.md` Part 2 §7, replacing the
-   suspected-cause framing with the measured one, and state the rule it implies: a hover
-   is trustworthy only if every write to that file this session went through
-   `Edit`/`Write`. After a `git` operation or a Bash-authored edit, hover is unsafe until
-   the file is refreshed. **This is worth doing under every option below**, because none
-   of them makes the mechanism obvious to a reader.
+1. **Write the mechanism down — LANDED, and no longer part of this slice.**
+   `doc-comments.md` Part 2 §7's first hover hazard now names the write path rather than
+   recency, gives the refresh idiom, and records that a `Read` does not enrol a file. The
+   measurements sit in `doc-comments.rationale.md`, the register they belong to and one
+   exempt from every Vale rule. `workflow.md` carries a peer rule under its own
+   "Language server" heading, because that file is read unconditionally by all five roles
+   and by the orchestrating session while `doc-comments.md` is trigger-read by three —
+   and the seat that runs `git rebase` on every landing had no route to the rule.
+   **What remains open is the mechanism, not the documentation.** Read those three files
+   before re-deriving any of it.
 
 2. **The per-file `Edit` refresh — demoted to a last resort.** A trivial `Edit` does
    replace the snapshot from disk wholesale, so the edit need not touch the region being
@@ -182,7 +186,10 @@ that is the axis that matters, not implementation cost.
    `PostToolUse` hook matching `git` and format commands is the natural trigger — not
    every Bash call, for the cost reason below.
 
-4. **An LSP proxy that resyncs open documents from disk.** Prototyped and measured in
+4. **An LSP proxy that resyncs open documents from disk — the recorded decision.**
+   `adr/0002-lsp-proxy-for-out-of-band-writes.md` chooses this option and says why each
+   other one lost. It is **Proposed rather than Accepted**, deliberately, and promoting it
+   is a decision this slice inherits rather than makes. Prototyped and measured in
    `spikes/lsp-fs-sync/` on branch `lsp-fs-sync`: all five out-of-band writes named above
    go stale unproxied and fresh proxied, with the in-band `didChange` path proven
    unbroken. It is the only option that addresses the cause rather than periodically
