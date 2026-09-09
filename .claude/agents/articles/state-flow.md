@@ -12,15 +12,15 @@ The store reference is stable and propagates no renders. The caller maps or filt
 
 **This is a preference, not a description of the landed tree.** The per-cell subscription it describes was deliberately retired in `collapse-dead-cell-layer`. Read the exception with the rule; the state-flow section below records what replaced it.
 
-**Projections must be cached.** Compare with a shallow-equality check and return the **prior reference** when equal. Identity stability is then a property of the store, rather than something each consumer re-establishes with a `useMemo` the compiler may or may not keep.
+**Cache every projection.** Compare with a shallow-equality check, and return the **prior reference** when equal. Identity stability is then a property of the store, rather than something each consumer re-establishes with a `useMemo` the compiler may or may not keep.
 
 **Prefer primitive projections where the shape allows.** A `boolean` compares by value, so the `Object.is` bail-out is free and no cache is involved. Reach for the shallow-equality cache only for object projections.
 
 Two rulings come with it.
 
-**Dependency injection through React context is dispreferred here**, because it complicates component unit tests. Prop-drilling a store is preferred precisely because a test constructs a real store and passes it.
+**Do not inject dependencies through React context here.** It complicates component unit tests. Prop-drill a store instead, precisely because a test can then construct a real store and pass it.
 
-**`isShallowEqual` is contracted for small, known-shallow projected state only**, per the scope contract in its own JSDoc. It never descends into nested containers, and every call allocates. **Never reach for it to compare two `liveCells` Sets.** Write a dedicated comparison instead.
+**Use `isShallowEqual` only for small, known-shallow projected state**, per the scope contract in its own JSDoc. It never descends into nested containers, and every call allocates. **Never reach for it to compare two `liveCells` Sets.** Write a dedicated comparison instead.
 
 <!-- Closed decision: why the contract is bounded by allocation rather than by complexity class, and where the O(n²) fallback actually lives, are in `state-flow.rationale.md`. -->
 
@@ -76,7 +76,7 @@ Three guards pin it, each `it.skipIf(underStryker)`. Stryker's per-expression in
 
 **The general contract, established by `stable-hook-identities`: a hook-returned function must not capture render-varying state it only needs at call time. Where such a function crosses a component boundary as a prop, a test asserts its identity.**
 
-The sanctioned mechanism is a **ref synced in a dependency-array-free `useEffect`**. Never `useCallback`, which `rules/no-manual-memo-ts` and `-tsx` forbid under React Compiler. Never a write during render, which the compiler forbids outright; `useRafCoalescedPan.ts` carries that trap's explanation. Five such refs exist across four hooks: `onCameraRef` and `prefersReducedMotionRef` in `useZoomGlide.ts`, `onPanRef` in `useRafCoalescedPan.ts`, `cameraRef` in `useCamera.ts`, and `placementRef` in `usePatternPlacement.ts`.
+**Sync the value into a ref, inside a dependency-array-free `useEffect`.** That is the sanctioned mechanism. Never `useCallback`, which `rules/no-manual-memo-ts` and `-tsx` forbid under React Compiler. Never a write during render, which the compiler forbids outright; `useRafCoalescedPan.ts` carries that trap's explanation. Five such refs exist across four hooks: `onCameraRef` and `prefersReducedMotionRef` in `useZoomGlide.ts`, `onPanRef` in `useRafCoalescedPan.ts`, `cameraRef` in `useCamera.ts`, and `placementRef` in `usePatternPlacement.ts`.
 
 **The call-time read is semantically better, not merely a memoization trick.** `stampArmedPattern` reads the placement when the click happens, rather than when the render happened. That is what makes it impossible to stamp a pattern `Escape` cancelled in between. The same holds for the camera a zoom click zooms from.
 
@@ -86,7 +86,7 @@ Three exemptions stand. `useGridFocus.moveFocus` and `jumpToEdge` reach only a D
 
 **What decides an exemption is where the churn lands, not whether it happens.** Each one is a measurement rather than a judgement call.
 
-**Guarded in two layers, and no `ast-grep` rule is possible.** Layer A is the durable one: composition-level render-count guards. They currently live in `Grid.test.tsx` and `LifeBoard.test.tsx`, and both count `Cell` render calls through `vi.mock('./Cell', { spy: true })`. Layer B is per-hook identity assertions, added only where capture risk exists. Both layers use the skip-plus-companion idiom above.
+**Guarded in two layers, and no `ast-grep` rule is possible.** Layer A is the durable one: composition-level render-count guards. They currently live in `Grid.test.tsx` and `LifeBoard.test.tsx`, and both count `Cell` render calls through `vi.mock('./Cell', { spy: true })`. Layer B is per-hook identity assertions, added only where capture risk exists: `useCamera.test.ts`, `usePatternPlacement.test.ts` and `useZoomGlide.test.ts`. Both layers use the skip-plus-companion idiom above.
 
 **Identity is a property of compiled output, so tests are the only instrument that can see it.** The discriminator is forward reference, which is scope analysis rather than a syntax pattern.
 

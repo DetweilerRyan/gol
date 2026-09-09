@@ -40,6 +40,10 @@ over `useZoomGlide`'s controller, and every one of its seven returned actions cl
 for the two centered-zoom actions, over the controller directly. Before the slice all seven were stable.
 With the controller rebuilt per render, none were.
 
+**`zoomInCentered` and `zoomOutCentered` were a ruled exception that `stable-hook-identities` superseded.**
+They were held to churn legitimately, because they captured `camera`. That slice made them read it through a
+ref at call time instead, which is why `useCamera.test.ts` now asserts all seven rather than five.
+
 **Declaration order is load-bearing, and the failure is silent.** Placing the ref-syncing effect above
 `const prefersReducedMotion = useReducedMotion()` compiles, type-checks and passes every other test in the
 repo, while leaving the controller unmemoized and the change inert.
@@ -161,6 +165,9 @@ A tick therefore re-renders `Grid`, `GridCells` and every mounted `Cell`, where 
 one per tile slot in range. At minimum zoom the old design mounted roughly **34,000 tile slots**; the new
 one mounts nothing at all on an empty board.
 
+The retired hook was `useLiveCell`, and `subscribeCell` — the store method it subscribed through — was
+retired with it.
+
 **This replaced `use-immer`'s `useImmer`**, since removed from `package.json`. A producer hands back a new
 `Set` identity every tick, which defeats React Compiler's memoization however deep the prop drilling goes,
 so every visible cell re-rendered on every tick.
@@ -175,13 +182,13 @@ that commit produced. Re-derive rather than quoting these forward.
 
 | Measure                            | Before |  After |
 | ---------------------------------- | -----: | -----: |
-| Article bytes                      | 27,298 | NN,NNN |
-| Sidecar bytes                      |      — | NN,NNN |
-| Blocks in the article              |     21 |    NNN |
-| Rationale bytes inside the article |  3,149 | NN,NNN |
-| Entanglement                       |    67% |   NNN% |
-| Backticked slice slugs             |      5 |     NN |
-| Vale mechanical findings           |     67 |      N |
+| Article bytes                      | 27,298 | 20,264 |
+| Sidecar bytes                      |      — | 13,721 |
+| Blocks in the article              |     21 |     70 |
+| Rationale bytes inside the article |  3,149 |  9,142 |
+| Entanglement                       |    67% |    76% |
+| Backticked slice slugs             |      5 |      2 |
+| Vale mechanical findings           |     67 |      0 |
 
 **Read the rationale-bytes and entanglement rows with the confound `testing-layers.rationale.md` records.**
 A block-level classifier cannot compare a file against itself across a pass that changes paragraph
@@ -191,6 +198,15 @@ granularity, and mandate 6 changes it drastically. The byte count is the row tha
 entered at 82%, `quality-tooling.md` at 87%, and `testing-layers.md` at 91%. The low figure is a property of
 its shape: a few enormous bullets carry most of the prose, and a bullet that runs to 6,893 bytes reads as
 one block whether or not its content is mixed. **Do not read a low entering entanglement as an easy split.**
+
+**Per-module interface depth makes up 29% of the article, and it is scheduled to leave.** Measured
+2026-09-09: 4,486 bytes across fourteen per-hook sub-bullets, plus 1,536 across four per-component bullets.
+Those modules already carry their own JSDoc, so the article restates what a hover already gives a caller.
+CLAUDE.md's routing branch 4 sends that content to JSDoc, or to a `<module>.md` sidecar beside the source,
+rather than to a shared article. **Ruled 2026-09-09 by the user**: land this split as it stands, then
+migrate the module depth in its own slice, before `architecture.md` is split. Nothing in this sidecar moves
+with it, because this file holds evidence rather than interface depth. The table above will need re-taking
+afterwards.
 
 **The classifier is a reimplementation.** Calibrated against `engineering.md`, whose figures were recorded
 three slices earlier, it reads 10,839 rationale bytes and 83% entanglement where that split recorded 12,457
