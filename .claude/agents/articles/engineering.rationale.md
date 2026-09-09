@@ -121,11 +121,11 @@ commit produced. Re-derive rather than quoting these forward.
 | Measure                            | Before |   After |
 | ---------------------------------- | -----: | ------: |
 | Article bytes                      | 61,890 |  41,771 |
-| Sidecar bytes                      |      — |  20,957 |
+| Sidecar bytes                      |      — |  21,610 |
 | Rationale bytes inside the article | 17,383 |  12,457 |
 | Entanglement                       |    82% | **91%** |
 | Backticked slice slugs             |     30 |      13 |
-| Vale mechanical findings           |    128 |   **2** |
+| Vale mechanical findings           |    186 |   **2** |
 
 **Two of those rows are bad news, and they are the interesting ones.**
 
@@ -139,6 +139,14 @@ resists the same operation.
 **Rationale bytes fell only 28%, against a 33% fall in total bytes.** So the article did not become
 proportionally more directive. It became smaller while holding a similar mix. Anyone planning the next
 split of a prose article should expect that, and should not promise a rationale-share improvement.
+
+**The Vale baseline in that table was itself wrong once, and the error was the same one twice over.** The
+first figure recorded was 128, measured on the article after the extraction commits had already shortened
+it. The true pre-split count, re-derived by linting `main`'s copy of the file in scope, is 186. **A
+"before" figure taken at any point after the work began is not a before figure**, and the fact that this
+slice recorded the measurement rule and then broke it in the same table is the strongest argument for
+re-deriving rather than recalling. The three `after` rows drawn from the classifier were re-run on the
+final tree and are unchanged.
 
 **The sidecar figure is self-referential, and getting it right needs a fixed point.** Writing the byte
 count into the sidecar changes the sidecar's byte count. The first attempt recorded a figure measured
