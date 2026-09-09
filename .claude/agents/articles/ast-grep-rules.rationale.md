@@ -15,13 +15,20 @@ holds the per-rule arguments behind it, so a scope can be argued with rather tha
 `split-ast-grep-rules-article`, 2026-09-08, the second split under
 `roll-the-rationale-sidecar-out`.
 
-| measure                 | before | after                     |
+| measure                 | before | after (`988fe92`)         |
 | ----------------------- | -----: | ------------------------- |
-| article bytes           | 42,467 | **5,469** (−87%)          |
-| sidecar bytes           |      — | 41,488                    |
+| article bytes           | 42,467 | **6,207** (−85%)          |
+| sidecar bytes           |      — | 42,358                    |
+| pair total              | 42,467 | 48,565 (**+14.4%**)       |
 | Vale findings (article) |    144 | 16                        |
 | slice-slug mentions     |     13 | 2 in the article, 16 here |
 | entanglement (article)  |   100% | 80%                       |
+
+**Measured on `988fe92`, after the final commit, and that qualifier is the point.** An earlier version of
+this table was taken mid-pass and had four rows wrong — article bytes, sidecar bytes, Vale findings and
+the pair total — every one of them in the flattering direction. `architect` caught it in REVIEW. The
+mandate now says to re-measure at the end and cite the commit, because a figure recorded for the next
+split to compare against is the one number here that must not be approximate.
 
 **Two of those figures need a caveat, and both cut against the split rather than for it.**
 
@@ -30,10 +37,11 @@ reads 84 before and 36 after, but 31 of the 36 are the navigation list doing its
 slice references gives 13 → 2, and both survivors — `agent-doc-check` and `allow-unresolved-files` — are
 a script name and a marker name rather than slices, so the real figure is zero.
 
-The **pair grew**, 42,467 to 46,957 bytes. The enumeration moved without shrinking, and this file's own
-framing prose is new. That is consistent with the finding recorded in `prose-linting.rationale.md`: this
-tier redistributes rather than shortens, and only the instruction file's size moves in the intended
-direction.
+The **pair grew** by 6,098 bytes, 42,467 to 48,565 — **+14.4%**, the largest growth of any split so far.
+The enumeration moved without shrinking, this file's framing prose is new, and closing `architect`'s
+findings added a further 751 bytes to the article. That is consistent with the finding recorded in
+`prose-linting.rationale.md`: this tier redistributes rather than shortens, and only the instruction
+file's size moves in the intended direction.
 
 **This split moved rather than rewrote, and that was forced by the material.** 29,809 of the article's
 42,467 bytes — 70% — were a **single sentence**: one grammatical enumeration hanging off "the current
