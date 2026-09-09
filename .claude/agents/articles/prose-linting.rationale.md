@@ -242,14 +242,39 @@ section was rewritten to fix, committed again in the act of fixing it.
 
 ## The triage of this article against its own rules, 2026-09-09
 
-The article was linted finding by finding, under the rule it had just gained. **45 prompt findings, 45
+The article was linted finding by finding, under the rule it had just gained. **46 prompt findings, 46
 exempt, 0 act-on.** The mechanical rules were at zero before the pass and are at zero after it.
+
+**Read that 46 as history, not as a single measurement.** The triage covered 45. The pass's own edits then
+added a 46th — line 140, "its findings are dominated by mentions rather than uses", which names its agent
+and is class 4. The figure here is the committed tree, measured after the final commit rather than during
+the pass. Recorded this way because the first version of this section carried the mid-pass 45, which the
+committed tree already contradicted.
 
 | Rule              | Findings | Act-on |
 | ----------------- | -------- | ------ |
-| `PassiveVoice`    | 30       | 0      |
+| `PassiveVoice`    | 31       | 0      |
 | `ProcedureLength` | 13       | 0      |
 | `OneInstruction`  | 2        | 0      |
+
+The article's own rule asks for the count in each exempt class, not only in each rule. For the 31
+`PassiveVoice` findings:
+
+| Exempt class                              | Count |
+| ----------------------------------------- | ----- |
+| 1. Dated past-tense record                | 9     |
+| 2. Descriptive, actor irrelevant          | 4     |
+| 3. Predicate adjective read as participle | 6     |
+| 4. Passive already naming its agent       | 2     |
+| 5. Deliberate aphorism or heading         | 3     |
+| A quoted exempt-class example             | 5     |
+| Arguable, left in                         | 2     |
+
+The sixth row is not one of the five classes in the article, and that is the general finding stated
+plainly: five of the findings are the passages where the article prints its own exempt-class examples. The
+tagger reads a mention as a use and cannot do otherwise. All 13 `ProcedureLength` and both
+`OneInstruction` findings fall in their rules' documented false-positive classes — statements rather than
+steps, and one specified order rather than two actions.
 
 A clean sheet on a file this long is a result to distrust, so the reason is worth stating. Most of the
 findings are the article quoting the defect it governs. The `PassiveVoice` findings at the five

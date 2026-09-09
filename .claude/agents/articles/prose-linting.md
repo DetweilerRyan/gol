@@ -138,7 +138,7 @@ not two actions.
 
 **An article about a rule will trip that rule, and this holds for every rule here rather than for this one
 alone.** A guidance article quotes the defect it governs, so its findings are dominated by mentions rather
-than uses. Measured on this file: 45 prompt findings, every one exempt, and most of them the article
+than uses. Measured on this file: 46 prompt findings, every one exempt, and most of them the article
 quoting its own examples. **Expect that shape when you lint guidance prose, and do not read a high count as
 a dirty file.**
 
