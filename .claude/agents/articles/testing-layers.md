@@ -38,15 +38,15 @@
 
    Third, a hand-written spec **with no** `.feature`: `hover-click-agreement` and `hud-layout-and-shortcuts`. There are two, since `convert-modal-inertness-to-scenarios` restated the third as `features/while-the-pattern-library-is-open.feature`. Their subject matter is residue end to end. `product`'s plain-English outline specifies them instead. Each records that outline in its own header comment, so the accepted behavior stays written down.
 
-   **What residue is — four categories, and nothing else may be added here.** (1) **Hit-testing and stacking**: which element receives a pointer event where two overlap. (2) The **computed accessibility tree** — what a browser's own accessible-name/description algorithm delivers. That is distinct from the attributes it is computed from, which a step module can read for itself and jsdom only reimplements. (3) **Rendered pixel geometry**: a measured box, a pixel coordinate, an element resolved by point. (4) **Native-event delivery** — an event carrying fields no step sends, such as a wheel with both axes populated.
+   **What residue is — four categories, and you may add nothing else here.** (1) **Hit-testing and stacking**: which element receives a pointer event where two overlap. (2) The **computed accessibility tree** — what a browser's own accessible-name/description algorithm delivers. That is distinct from the attributes it is computed from, which a step module can read for itself and jsdom only reimplements. (3) **Rendered pixel geometry**: a measured box, a pixel coordinate, an element resolved by point. (4) **Native-event delivery** — an event carrying fields no step sends, such as a wheel with both axes populated.
 
    **Anything expressible as a `.feature` scenario goes there instead.**
 
-   **Rendered colour is none of the four, and was adjudicated rather than assumed** (`dark-mode-following-system-appearance`, CONTRACT). Category 3 is pixel _geometry_ — a box, a coordinate, an element resolved by point — and a palette is not that. Which appearance is in effect _is_ expressible at domain altitude, so it is Gherkin. What the palette actually looks like is a judgement the user makes by eye. Per that slice's standing ruling it is asserted **nowhere**, rather than pinned in a spec a palette tweak would break.
+   **Rendered colour is none of the four, and was adjudicated rather than assumed** (`dark-mode-following-system-appearance`, CONTRACT). Category 3 is pixel _geometry_ — a box, a coordinate, an element resolved by point — and a palette is not that. Which appearance is in effect _is_ expressible at domain altitude, so it is Gherkin. What the palette actually looks like is a judgement the user makes by eye. Per that slice's standing ruling, assert it **nowhere**, rather than pinning it in a spec a palette tweak would break.
 
    This enumeration binds the hand-written `*.e2e.spec.ts` layer only. A screenplay question helper reading a rendered colour for a `.feature` step, as `appearanceInEffect` does, is outside it. A claim that seems to need implementation vocabulary is a prompt to re-read `.gherkin-lintrc`'s altitude rules. It is not a licence to write the claim here.
 
-   **A claim can be contract-eligible and still go quietly empty, and that is not a fifth category.** `engineering.md`'s question 2 asks whether a scenario would be **false** at another viewport. What it does not cover is one that would be **vacuous** — still true, guarding nothing. `rule-on-chrome-propagation-guards` ruled on this in CONTRACT mode. **The claim goes to the contract, and the layout fact it leans on is recorded as prose in the `.feature`. No precondition step is written.**
+   **A claim can be contract-eligible and still go quietly empty, and that is not a fifth category.** `engineering.md`'s question 2 asks whether a scenario would be **false** at another viewport. What it does not cover is one that would be **vacuous** — still true, guarding nothing. `rule-on-chrome-propagation-guards` ruled on this in CONTRACT mode. **Send the claim to the contract, and record the layout fact it leans on as prose in the `.feature`. Write no precondition step.**
 
    **Where a vacuity worry does buy something is a clause saying the act happened.** Pair the claim with a clause that fails when the act never landed — `Then the zoom percentage should be 125 / And no cell should be alive`. Put that clause **first**, so a missed act reports as a missed act. Record in the scenario's prose which of the two is the canary.
 
@@ -54,7 +54,7 @@
 
 <!-- Closed decision: the fault run that separated the canary from the non-canary, and why the layout fact stays prose rather than becoming a precondition step, are in `testing-layers.rationale.md`. -->
 
-**Every hand-written test carries a header naming the claim it uniquely holds**, and that header is what licenses the test to keep existing. `triage-paired-specs` generalized the `feature-prose-honesty` pattern from `.feature` prose to this layer, and this is the durable form of that triage. The reverse obligation comes with it: a test may not be deleted here without its claim being restated in `features/**`.
+**Every hand-written test carries a header naming the claim it uniquely holds**, and that header is what licenses the test to keep existing. `triage-paired-specs` generalized the `feature-prose-honesty` pattern from `.feature` prose to this layer, and this is the durable form of that triage. The reverse obligation comes with it: do not delete a test here without restating its claim in `features/**`.
 
 A deletion resting on **subsumption** is the weak case, and it must say so in the commit that makes it. Subsumption means a surviving sibling that happens to make the same claim, rather than a demonstrated failure. Such coverage is usually _incidental_ — it holds only for the sibling's current inputs — and it can evaporate later with nothing going red. That is the same failure `ruler-label-axis-affordance` measured one affordance earlier.
 
@@ -94,7 +94,7 @@ That is why this obligation attaches to editing rather than to authoring. A head
 
 No ast-grep rule can supply it. A homegrown text-uniqueness checker would answer a different question than the runner does.
 
-The convention that keeps this legible: **a step shared by several features is defined once, in the module the step is _about_**. A borrower gets it by writing the same text and defining nothing. `rules/no-domain-imports-in-bdd-steps.yml` forbids a step module importing another, since the sharing is a registry fact and an import would dress it up as a module dependency.
+The convention that keeps this legible: **define a step shared by several features once, in the module the step is _about_**. A borrower gets it by writing the same text and defining nothing. `rules/no-domain-imports-in-bdd-steps.yml` forbids a step module importing another, since the sharing is a registry fact and an import would dress it up as a module dependency.
 
 **Re-derive which modules lend to which features when you need to know; no map is kept here.** The method: match every step line in `features/*.feature` against every step pattern in `features/steps/*.ts`. Then confirm each unmatched line is defined in the feature's own module. A map recorded in prose has rotted twice, and two instruments have since disagreed about it.
 
