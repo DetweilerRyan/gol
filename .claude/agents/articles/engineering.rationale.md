@@ -156,7 +156,7 @@ same width. The article figure has no such problem and needs no such care.
 
 **Mandate 3's audit found one drop, and it is the shape the pilot warned about.** A lint pass compressed
 the hand-written-e2e bullet and took `triage-paired-specs` and its 35-test figure out of the pair
-entirely, rather than moving them. `testing-layers.md` still carries the fact five times, so nothing was
+entirely, rather than moving them. The `testing-layers.md` pair still carries the fact, so nothing was
 lost from the corpus — but that article is read by `coder` and `product` alone, so the three other roles
 would have lost the evidence for a rule they all read. Restored as a pointer. **The lesson is that a
 shortening pass drops content the splitting pass carefully placed**, and only a by-hand comparison
