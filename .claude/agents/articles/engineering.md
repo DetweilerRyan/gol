@@ -86,46 +86,11 @@ Both rules were paid for. In `import-utilities`, `datesEqual` compared two Inval
 
 **Narrowing an arbitrary to make a finding go away is not a fix.** Filtering Invalid Dates out of the generator would have left the defect in the module and removed the only thing that could find it — the same move as weakening an ast-grep rule to clear a violation. Fix the module.
 
-## Skipping a test under the mutation runner
-
-`it.skipIf('__stryker__' in globalThis)(...)` is an accepted idiom, under narrow conditions. Stryker instruments every expression with an impure mutant-tracking call, and a few assertions are about behavior that instrumentation structurally destroys rather than merely perturbs — the landed case is the retired useLiveCell hook's own test's "does not resubscribe on identical `(store, key)`", where wrapping `useSyncExternalStore`'s callback arguments defeats React Compiler's closure memoization and the assertion cannot hold. Left unskipped it fails during Stryker's dry run, before a single mutant executes, so `npm run test:mutation` never starts.
-
-All four conditions must hold:
-
-1. **The instrumentation destroys the asserted behavior**, not just makes it slow or flaky. If it's flakiness, fix the flake.
-2. **Per test, never per file or per describe.** The skip is an exemption for one assertion; widening it exempts assertions nobody examined.
-3. **The module's mutation coverage survives without it.** A skipped test kills no mutants, so the surrounding tests have to. Say at handoff that mutation score is unchanged, and let `hardener`'s run confirm it.
-4. **A comment says why**, naming the mechanism — the next reader must not have to rediscover it.
-
-The abuse shape is the mirror image: skipping a test _because_ it kills a mutant that is awkward to keep alive, or because it fails under Stryker for a reason nobody has explained. That converts a real gap into a green score, invisibly. `architect` rules on new uses of the idiom; anyone else who needs one reports it rather than adding it.
-
-**`// Stryker disable` is not the better alternative here — that was measured, in `render-perf-improvements`, and rejected.** Stryker's instrumenter does support comment directives, so the obvious question is whether disabling mutants on just the affected declarations lets the test run. It does not, and the reason generalises: the React Compiler bailout is triggered by the _file's_ instrumentation, not by the individual mutant switches. Measured against the two landed cases (the useLiveCell hook has since been retired by `collapse-dead-cell-layer`, which deleted the per-cell store subscription it wrapped; the table is left as the measurement it was rather than re-fitted to a tree it was not taken on, and the second landed case today is `useLiveCells.ts`, its whole-set successor):
-
-| what was tried                                           | mutants measured in that file                                    | does the test pass under Stryker |
-| -------------------------------------------------------- | ---------------------------------------------------------------- | -------------------------------- |
-| `it.skipIf` (what's landed)                              | `Grid.tsx` 23/23 killed, the retired useLiveCell hook 3/3 killed | no — it doesn't run              |
-| `// Stryker disable all` around the specific declaration | unchanged                                                        | **no** — dry run still fails     |
-| `// Stryker disable all` at the top of the file          | **0 of 23**, **0 of 3**                                          | yes                              |
-
-Only the file-wide form works, and it costs every mutant in the file. Worse, it costs them _silently_: Stryker still creates the mutants, reports them as ignored, and scores the file `n/a` — so the file leaves the denominator without the score dropping. A skipped test kills no mutants but removes none either; a file-wide disable removes them all while looking clean. Prefer the skip.
-
-Neither tool is malfunctioning, so no upstream fix is coming: Stryker's instrumentation is a read of a mutable global during render, which is on React's own documented list of bailout conditions. The interaction has no public report — the nearest analogue is [stryker-js#2704](https://github.com/stryker-mutator/stryker-js/issues/2704), where instrumentation displaces the `@flow` pragma and silently disables that Babel plugin — and it is worth reporting now that React Compiler is stable and default-on in Next.js, since the population hitting it is about to grow.
-
-## Ruling a mutation survivor equivalent
-
-A surviving mutant is either a missing test or an equivalent mutant, and only one of those is free. The ruling is `architect`'s; anyone else who believes a survivor is equivalent reports it rather than closing the question.
-
-**Hand-apply the mutant and run the suite, unfiltered.** Stryker's own `coveredBy`/`killedBy` answer different questions — see `mutation-testing.md`'s account of first-kill-wins attribution — so neither is evidence about equivalence. Say which command you ran and at what scope, per "The scope of a claim is the scope of the command that produced it" below.
-
-**A survivor ruled equivalent carries a one-or-two-line argument at its own site**, so the next full-scope run doesn't re-derive it. The convention is `scripts/acceptance-mutation/playwright-runner.ts`'s: name the mutation, then why no input distinguishes it. That comment is also the artifact a later reader can _check_, which a triage note in a commit message is not.
-
-**A property test used to kill in the suite and be unable to kill in the gate. That gap is now closed here, and the habit it taught is the part to keep.** `@fast-check/vitest` puts the run's seed in the test _title_; Stryker filters each mutant run by the **dry run's** test names; the seeds differed between processes, the title never matched, and **a `test.prop` body never executed against any mutant** — so "hand-applying it reds the property" and "the gate reports Survived" were both true at once, and only the second is what a mutation score means. `pin-stryker-seed-to-unblind-the-mutation-gate` fixed it for this repo's property tests specifically, by pinning the seed when and only when the process is running under Stryker; measured, seed-bearing kills went from 0 to 420. Three things survive the fix. **One**: the general shape does — a runner that varies a test's _title_ between runs is invisible to a filter that matches by name, and CONTRACT-mode question 4 exists because that class of lifecycle question is answered by measuring, not by reasoning. **Two**: the deterministic `it.each` twin is **not** made redundant. `killedBy` is first-kill-wins, so a property now beating a twin to the report says nothing about whether the twin was needed — measured on `analyze.ts`'s `pairKey`, where the pinned property wins the race and the unpinned control shows the twin killing the mutant alone. **Three**: a pinned run freezes one draw, so a green gate is evidence about that draw and not about the arbitrary's whole range. Still say which run you mean, and still prefer a twin when a specific survivor needs specific inputs named.
-
-**The corollary is the useful half: an argument that doesn't fit in two lines is not comment material, it is a warning.** The budget is on the **argument**, not on the comment: a measurement cited beside it ("forcing this operand true leaves all 654 of `npm run test:scripts` green") is evidence, and evidence is always welcome — it is the _reasoning_ that has to compress. Equivalence claims that stay local — this literal is unreachable, this bound is rejected one line later, this regex anchor is redundant because `.` matches no newline — compress honestly. A claim that has to reason about what callers pass, or about a value space shared between two functions, is the shape that has been wrong here. Treat "I can't state this in two lines" as a signal to write a test or find a counterexample, not to write a longer comment.
-
-The worked example is `scripts-mutation-survivors-untriaged`, which triaged 23 unexamined `scripts/` survivors. Every survivor whose site already carried an equivalence comment survived scrutiny intact; the two rulings that had to be overturned mid-slice, and the one **live defect** the slice then found in unmutated source, were all at the one site whose equivalence depended on a collision space shared between two functions (`analyze.ts`'s `pairKey` and its two callers). Read the arrow carefully — n is 23, and the likeliest common cause is that locally-arguable sites are both easier to comment and easier to get right, not that the writing itself confers correctness. The rule above holds under either reading.
-
-That slice also supplied the counter-shape the budget has to tolerate. `analyze.ts`'s loop-bound and diagonal-guard comments run past two lines and reason across functions — and both are _correct_, confirmed by hand-application at full scope. What distinguishes them from the one that was wrong is not length: it is that each is a **closed** argument about a value space the file itself defines, and each now carries the measurement that settles it. The warning fires on an argument that is long because it is _unresolved_, not on one that is long because it is documented.
+**Two sections about the mutation runner used to sit here and now live in `mutation-testing.md`**: how to
+rule a survivor equivalent, and when `it.skipIf('__stryker__' in globalThis)` is an accepted idiom. They
+moved to the article whose read trigger already named the first of them. `architect` owns the equivalence
+ruling and carries a trigger for that article; anyone else reports a suspected equivalent rather than
+closing the question.
 
 ## Structural rules (ast-grep)
 

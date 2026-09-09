@@ -456,3 +456,31 @@ per-merge grep nobody can be relied on to run.
 against the usual 61.
 
 <!-- reference-check: allow ideas/__probe.test.ts -- a throwaway measurement probe, never committed to git, so it can never resolve -->
+
+## The two sections relocated from `engineering.md`, 2026-09-09
+
+`split-engineering-article` moved "Ruling a mutation survivor equivalent" and "Skipping a test under the
+mutation runner" out of `engineering.md` and into the article whose read trigger already named the first
+of them. This is the evidence those two sections carried.
+
+### The `// Stryker disable` measurement
+
+**`// Stryker disable` is not the better alternative here — that was measured, in `render-perf-improvements`, and rejected.** Stryker's instrumenter does support comment directives, so the obvious question is whether disabling mutants on just the affected declarations lets the test run. It does not, and the reason generalises: the React Compiler bailout is triggered by the _file's_ instrumentation, not by the individual mutant switches. Measured against the two landed cases (the useLiveCell hook has since been retired by `collapse-dead-cell-layer`, which deleted the per-cell store subscription it wrapped; the table is left as the measurement it was rather than re-fitted to a tree it was not taken on, and the second landed case today is `useLiveCells.ts`, its whole-set successor):
+
+| what was tried                                           | mutants measured in that file                                    | does the test pass under Stryker |
+| -------------------------------------------------------- | ---------------------------------------------------------------- | -------------------------------- |
+| `it.skipIf` (what's landed)                              | `Grid.tsx` 23/23 killed, the retired useLiveCell hook 3/3 killed | no — it doesn't run              |
+| `// Stryker disable all` around the specific declaration | unchanged                                                        | **no** — dry run still fails     |
+| `// Stryker disable all` at the top of the file          | **0 of 23**, **0 of 3**                                          | yes                              |
+
+Neither tool is malfunctioning, so no upstream fix is coming: Stryker's instrumentation is a read of a mutable global during render, which is on React's own documented list of bailout conditions. The interaction has no public report — the nearest analogue is [stryker-js#2704](https://github.com/stryker-mutator/stryker-js/issues/2704), where instrumentation displaces the `@flow` pragma and silently disables that Babel plugin — and it is worth reporting now that React Compiler is stable and default-on in Next.js, since the population hitting it is about to grow.
+
+### The seed-title gap, and what survived closing it
+
+**A property test used to kill in the suite and be unable to kill in the gate. That gap is now closed here, and the habit it taught is the part to keep.** `@fast-check/vitest` puts the run's seed in the test _title_; Stryker filters each mutant run by the **dry run's** test names; the seeds differed between processes, the title never matched, and **a `test.prop` body never executed against any mutant** — so "hand-applying it reds the property" and "the gate reports Survived" were both true at once, and only the second is what a mutation score means. `pin-stryker-seed-to-unblind-the-mutation-gate` fixed it for this repo's property tests specifically, by pinning the seed when and only when the process is running under Stryker; measured, seed-bearing kills went from 0 to 420. Three things survive the fix. **One**: the general shape does — a runner that varies a test's _title_ between runs is invisible to a filter that matches by name, and CONTRACT-mode question 4 exists because that class of lifecycle question is answered by measuring, not by reasoning. **Two**: the deterministic `it.each` twin is **not** made redundant. `killedBy` is first-kill-wins, so a property now beating a twin to the report says nothing about whether the twin was needed — measured on `analyze.ts`'s `pairKey`, where the pinned property wins the race and the unpinned control shows the twin killing the mutant alone. **Three**: a pinned run freezes one draw, so a green gate is evidence about that draw and not about the arbitrary's whole range. Still say which run you mean, and still prefer a twin when a specific survivor needs specific inputs named.
+
+### The 23-survivor triage behind the two-line budget
+
+The worked example is `scripts-mutation-survivors-untriaged`, which triaged 23 unexamined `scripts/` survivors. Every survivor whose site already carried an equivalence comment survived scrutiny intact; the two rulings that had to be overturned mid-slice, and the one **live defect** the slice then found in unmutated source, were all at the one site whose equivalence depended on a collision space shared between two functions (`analyze.ts`'s `pairKey` and its two callers). Read the arrow carefully — n is 23, and the likeliest common cause is that locally-arguable sites are both easier to comment and easier to get right, not that the writing itself confers correctness. The rule above holds under either reading.
+
+That slice also supplied the counter-shape the budget has to tolerate. `analyze.ts`'s loop-bound and diagonal-guard comments run past two lines and reason across functions — and both are _correct_, confirmed by hand-application at full scope. What distinguishes them from the one that was wrong is not length: it is that each is a **closed** argument about a value space the file itself defines, and each now carries the measurement that settles it. The warning fires on an argument that is long because it is _unresolved_, not on one that is long because it is documented.
