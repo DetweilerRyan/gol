@@ -71,6 +71,7 @@
     "@vitejs/plugin-react": "^6.0.4",
     "@vitest/browser-playwright": "^4.1.10",
     "@vitest/coverage-v8": "^4.1.10",
+    "ajv": "^8.20.0",
     "babel-plugin-react-compiler": "^1.0.0",
     "crap4ts": "1.0.1",
     "dry4ts": "^0.2.0",
