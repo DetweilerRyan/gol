@@ -6,6 +6,10 @@ import type { ContentBounds } from './gameOfLife'
 // ContentBounds -- a scrollbar's whole job is to represent where the live
 // cells are relative to the viewport), which is exactly why it's separate:
 // camera.ts and gridGeometry.ts stay independent of gameOfLife.ts.
+//
+// Before changing SCROLLBAR_THICKNESS_PX, or deleting anything here that reads
+// as defensive, see ./scrollbars.rationale.md -- it carries the two-directional
+// guard argument and the measurements behind it.
 
 export interface ScrollbarMetrics {
   thumbRatio: number

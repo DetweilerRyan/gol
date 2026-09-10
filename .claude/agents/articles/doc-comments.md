@@ -168,11 +168,24 @@ it with `findReferences`, because the cost scales with call sites.
 
 The budget counts **rendered** lines. Measure it by hovering the symbol, not by counting source lines.
 
-### 7. Overflow goes to a sidecar `<module>.md`, not into the hover
+### 7. Overflow goes beside the source, as a pair of sidecars
 
 When an abstraction genuinely needs more than the budget, keep a lighter overview in the JSDoc. Move the
-depth into a Markdown file beside the source: `src/hooks/useZoomGlide.md` next to `src/hooks/useZoomGlide.ts`. The first live
-instance is `src/hooks/useZoomGlide.md`, written by `migrate-module-depth`; read it as the precedent.
+depth into Markdown beside the source. That depth splits across two files, by filename, so a reader knows
+which register they opened before reading a word.
+
+| File                    | Holds                                             | Read when                                        |
+| ----------------------- | ------------------------------------------------- | ------------------------------------------------ |
+| `<module>.md`           | extended examples, use cases, best-practice notes | the hover was not enough, and you are calling it |
+| `<module>.rationale.md` | measurements, rejected alternatives, corrections  | you are changing it                              |
+
+Either file may be absent, and usually one is. All three live instances are rationale:
+`src/cache.rationale.md`, `src/hooks/useZoomGlide.rationale.md` and `src/scrollbars.rationale.md`. Read the
+`useZoomGlide` one as the precedent.
+
+This mirrors the article tier on purpose, so one convention covers both. Separating by filename rather than
+by section is the point. A filename shows in an editor tab, a diff header and an `@see` link. The reader
+opens nothing to know which register it is.
 
 **A sidecar points at an article, it does not restate one.** Its content is depth the hover cannot hold —
 measurements, rejected alternatives, the failure mode a change invites. Where an article already carries a
@@ -182,29 +195,30 @@ each other, is CLAUDE.md's branch 5 drift one tier down.
 That gives a three-tier escalation: **hover for the contract, sidecar for the depth, implementation only
 when changing it.**
 
-**Write the reference as `@see {@link ./useZoomGlide.md}`.** Hover mangles a bare path after `@see`. The
-braced form renders exactly.
+**Write the reference as `@see {@link ./useZoomGlide.rationale.md}`.** Hover mangles a bare path after
+`@see`. The braced form renders exactly. Point the hover at whichever half the caller needs, and at both
+when both exist.
 
 > Four alternative `@see` forms were measured and rejected. See `doc-comments.rationale.md`.
 
-**Nothing checks a sidecar at all — neither that the link to it resolves, nor anything written inside it.**
-Two independent gaps stack, both measured 2026-09-09 by injecting a deliberate fault and re-running the
-checker:
+**A sidecar's filename is checked; its contents are not.** `check-md-references` added `md` to
+`reference-check`'s extractor, so a link naming a missing file now fails the gate. Measured: renaming both
+module sidecars redded four references at once. Two gaps remain, both measured 2026-09-09 by injecting a
+deliberate fault:
 
-- `npm run reference-check`'s token grammar recognises `tsx|ts|yaml|yml` and **no other extension**. So a
-  `.md` filename is extracted nowhere — not in a source comment, not in a doc file. A
-  `@see {@link ./useZoomGlideNope.md}` planted in `src/hooks/useZoomGlide.ts` left the run green at an
-  unchanged reference count. Moving the sidecar under `.claude/**` would not help; the extension is the
-  block, not the location.
-- `src/**/*.md` is outside that checker's scan set (source surface is `.ts`/`.tsx`/`.yml`/`.yaml`; doc
-  surface is `CLAUDE.md`, `README.md`, `.claude/**/*.md`), so the sidecar's **own** references go unread.
-  A made-up module name carrying a `.ts` extension, appended to `src/hooks/useZoomGlide.md`, left the run
-  green; the same line appended to an article failed it. Vale is scoped to `[.claude/agents/**/*.md]`, so it
-  reports `0 files` on a sidecar rather than a clean read.
+- **Matching is by basename, never by full path.** A sidecar moved to another directory still resolves, so
+  the check catches a rename or a deletion and not a relocation.
+- **`src/**/*.md` is outside the checker's scan set.** The source surface is `.ts`/`.tsx`/`.yml`/`.yaml`, and
+  the doc surface is `CLAUDE.md`, `README.md` and `.claude/**/*.md`. A sidecar's own references go unread; a
+  made-up `.ts` token appended to `src/scrollbars.rationale.md` left the run green.
 
-Until those gaps close, treat a rename that moves a module as a rename of its sidecar too. Hold a sidecar to
-the comment-assertion convention by hand as well — **no quoted test titles, no caller rosters, no
-`<file>:NN`** — precisely because nothing will catch one.
+**Vale does reach the pair, and treats the halves differently.** `.vale.ini` scopes `[src/**/*.md]` to the
+same six STE rules the articles carry. Its `[**/*.rationale.md]` section then exempts the rationale half,
+matching how article rationale is treated.
+
+Until the scan gaps close, treat a rename that moves a module as a rename of both its sidecars. Hold a
+sidecar to the comment-assertion convention by hand as well: no quoted test titles, no caller rosters, no
+`<file>:NN`. Nothing will catch one.
 
 ### 8. Scope: exported declarations **and** interface/type members
 

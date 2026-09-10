@@ -12,7 +12,7 @@ export interface ZoomGlideController {
    * The completion frame is bit-identical to an instantaneous zoom, so a
    * caller may treat the glide as a purely visual lead-in to the same result.
    *
-   * @see {@link ./useZoomGlide.md}
+   * @see {@link ./useZoomGlide.rationale.md}
    */
   zoomBy(camera: Camera, factor: number, anchorPixelX: number, anchorPixelY: number): void
   /** Cancels any in-flight glide, freezing the camera at whatever cellSize it has reached. A no-op when nothing is gliding. */
@@ -23,7 +23,7 @@ interface GlideState {
   glide: ZoomGlide
   // The camera the glide STARTED at -- every frame recomputes
   // zoomCameraToCellSize from THIS fixed camera, never from the previous
-  // frame's result. See ./useZoomGlide.md for the float-divergence
+  // frame's result. See ./useZoomGlide.rationale.md for the float-divergence
   // measurement behind that, and for why it makes the completion frame
   // bit-identical to an instantaneous zoom.
   fromCamera: Camera
@@ -38,7 +38,7 @@ interface GlideState {
  * toolbar route uses this; wheel zoom, drag-pan, scrollbar drag and reset
  * all stay instantaneous and never touch it.
  *
- * @see {@link ./useZoomGlide.md}
+ * @see {@link ./useZoomGlide.rationale.md}
  */
 // The rAF lifecycle -- schedule/cancel/replace-on-a-new-call -- mirrors
 // useRafCoalescedPan.ts, this repo's other animation-frame owner, with one

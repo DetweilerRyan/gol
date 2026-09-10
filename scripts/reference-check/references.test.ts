@@ -11,9 +11,9 @@ describe('extractFileTokens', () => {
   })
 
   it('finds .md tokens, the dominant citation form in this corpus', () => {
-    expect(extractFileTokens('see `engineering.md` and `src/hooks/useZoomGlide.md`')).toEqual([
+    expect(extractFileTokens('see `engineering.md` and `src/hooks/useZoomGlide.rationale.md`')).toEqual([
       'engineering.md',
-      'src/hooks/useZoomGlide.md',
+      'src/hooks/useZoomGlide.rationale.md',
     ])
   })
 

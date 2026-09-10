@@ -16,10 +16,10 @@ root, plus every line of `CLAUDE.md`, `README.md` and `.claude/**/*.md`.
 
 **Verified by two fault injections at `migrate-module-depth`'s REVIEW**, by `architect`:
 
-- A made-up `.ts` token appended to `src/hooks/useZoomGlide.md` left the gate green at an unchanged 401
+- A made-up `.ts` token appended to `src/hooks/useZoomGlide.rationale.md` left the gate green at an unchanged 401
   files and 1946 references. The same line inside `state-flow.md` fails it, so `src/**/*.md` is outside the
   scan set.
-- Breaking the `@see {@link ./useZoomGlide.md}` link inside `useZoomGlide.ts` to a non-existent filename
+- Breaking the `@see {@link ./useZoomGlide.rationale.md}` link inside `useZoomGlide.ts` to a non-existent filename
   also left it green, and the reference count did not move. So the token was never extracted at all.
 
 **Two consequences, and the second is the larger one.**
