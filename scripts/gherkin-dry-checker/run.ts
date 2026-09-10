@@ -3,6 +3,7 @@
 // https://github.com/unclebob/Acceptance-Pipeline-Specification's
 // gherkin-ir-dry-checker: find step-text vocabulary duplication/drift across
 // our .feature files. Report-only and advisory, matching the spec's own
+// reference-check: allow ir-dry-checker-spec.md -- a file in unclebob's Acceptance-Pipeline-Specification, cited by URL on the line above; not a file in this repo
 // stance -- it never rewrites feature files, and (per ir-dry-checker-spec.md)
 // exits 0 on a successful run regardless of findings; only a genuine error
 // exits nonzero.

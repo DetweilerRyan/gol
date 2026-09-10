@@ -1,4 +1,5 @@
 // Turns a flat list of parsed steps into DRY findings, per
+// reference-check: allow ir-dry-checker-spec.md -- a file in unclebob's Acceptance-Pipeline-Specification, cited by URL on the line above; not a file in this repo
 // ir-dry-checker-spec.md's five finding kinds. Deliberately extended beyond
 // the spec's single-feature-per-invocation scope: steps here are tagged with
 // a `feature` field and analyzed across the whole project's Gherkin corpus,

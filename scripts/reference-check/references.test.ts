@@ -10,6 +10,17 @@ describe('extractFileTokens', () => {
     expect(extractFileTokens('see src/components/Grid.tsx')).toEqual(['src/components/Grid.tsx'])
   })
 
+  it('finds .md tokens, the dominant citation form in this corpus', () => {
+    expect(extractFileTokens('see `engineering.md` and `src/hooks/useZoomGlide.md`')).toEqual([
+      'engineering.md',
+      'src/hooks/useZoomGlide.md',
+    ])
+  })
+
+  it('does not report a truncated match for a word starting with md', () => {
+    expect(extractFileTokens('the .mdx flavour is not scanned')).toEqual([])
+  })
+
   it('finds .yml and .yaml tokens', () => {
     expect(extractFileTokens('rules/no-foo.yml and sgconfig.yaml')).toEqual(['rules/no-foo.yml', 'sgconfig.yaml'])
   })

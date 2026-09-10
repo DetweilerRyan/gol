@@ -8,8 +8,10 @@ import { browserApiPort } from './dev-port.ts'
 // module-level unit test as src/**/*.test.ts, but for the handful of contracts
 // jsdom has no faithful equivalent for (today: the real ResizeObserver's
 // auto-fire on observe()). Deliberately NOT the Playwright e2e layer -- these
-// import a module directly and never boot the app; see CLAUDE.md's Testing
-// structure section and .claude/agents/articles/engineering.md.
+// import a module directly and never boot the app. See
+// .claude/agents/articles/testing-layers.md's Testing structure section, which
+// is where that account moved, and engineering.md for which layer a test
+// belongs in.
 //
 // It reuses @playwright/test's already-installed Chromium binary rather than a
 // second browser download, and stays a separate config from vite.config.ts so

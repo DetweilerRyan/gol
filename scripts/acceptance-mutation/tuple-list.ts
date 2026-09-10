@@ -4,6 +4,7 @@
 // bounding box. This is deliberately its own module rather than an entry
 // inside mutation-rules.ts: that file's header says VALUE_RULES transcribes
 // https://github.com/unclebob/Acceptance-Pipeline-Specification's
+// reference-check: allow mutator-spec.md -- a file in unclebob's Acceptance-Pipeline-Specification, cited by URL on the line above; not a file in this repo
 // mutator-spec.md, and a tuple grammar this specific to this repo's data
 // doesn't come from that spec, so it lives beside the transcription instead
 // of inside it -- the same relationship examples-cell-sites.ts has to

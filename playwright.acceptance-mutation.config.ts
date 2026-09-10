@@ -90,6 +90,7 @@ export default defineConfig({
     // absolute, which was taken with both flags already on.
     //
     // Note 'off' was never artifact-free: playwright already wrote a ~116K
+    // reference-check: allow error-context.md -- an artifact Playwright writes into test-results/ on a failure; never a tracked file
     // error-context.md (an ARIA snapshot) per failed spec, which is the 3.0M
     // above. This raises the ceiling on what an abort leaves behind; it does
     // not introduce the cost.

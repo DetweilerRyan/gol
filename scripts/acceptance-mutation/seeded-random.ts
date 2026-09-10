@@ -16,6 +16,7 @@
 // repo already documents. So nothing beyond the stream itself was moved down
 // here: mutateInteger stays in mutation-rules.ts beside the rest of
 // VALUE_RULES' mutators, where a reader comparing the table against
+// reference-check: allow mutator-spec.md -- a file in unclebob's Acceptance-Pipeline-Specification, cited by URL on the line above; not a file in this repo
 // mutator-spec.md can still see it.
 
 function hashString(input: string): number {

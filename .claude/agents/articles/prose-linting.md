@@ -96,6 +96,8 @@ severity on exactly the technical prose a sidecar holds.
 the whole exemption, and nothing checks it. The test is one command: `vale` on any `*.rationale.md` must
 report zero.
 
+<!-- reference-check: allow docs/sub/nested.md -- Vale's own documentation example for glob behaviour, quoted verbatim; not a path in this repo -->
+
 **Vale's `*` crosses `/`.** Its own documentation gives `docs/*.md` matching `docs/sub/nested.md`. That
 is ast-grep's behaviour, not `globSync`'s — the asymmetry CLAUDE.md documents under
 `ast-grep-rule-check`. A glob written on the `globSync` intuition **fails open**: it silently lints

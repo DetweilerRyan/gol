@@ -171,7 +171,7 @@ The budget counts **rendered** lines. Measure it by hovering the symbol, not by 
 ### 7. Overflow goes to a sidecar `<module>.md`, not into the hover
 
 When an abstraction genuinely needs more than the budget, keep a lighter overview in the JSDoc. Move the
-depth into a Markdown file beside the source: `src/cellTiles.md` next to `src/cellTiles.ts`. The first live
+depth into a Markdown file beside the source: `src/hooks/useZoomGlide.md` next to `src/hooks/useZoomGlide.ts`. The first live
 instance is `src/hooks/useZoomGlide.md`, written by `migrate-module-depth`; read it as the precedent.
 
 **A sidecar points at an article, it does not restate one.** Its content is depth the hover cannot hold —
@@ -182,7 +182,7 @@ each other, is CLAUDE.md's branch 5 drift one tier down.
 That gives a three-tier escalation: **hover for the contract, sidecar for the depth, implementation only
 when changing it.**
 
-**Write the reference as `@see {@link ./cellTiles.md}`.** Hover mangles a bare path after `@see`. The
+**Write the reference as `@see {@link ./useZoomGlide.md}`.** Hover mangles a bare path after `@see`. The
 braced form renders exactly.
 
 > Four alternative `@see` forms were measured and rejected. See `doc-comments.rationale.md`.

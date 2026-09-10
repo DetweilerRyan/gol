@@ -19,7 +19,12 @@
 // and `ts` is a literal prefix of `tsx`, so the longer form has to come
 // first or a hypothetical `app.tsx` would report a truncated `.ts` match.
 // reference-check: allow app.tsx -- illustrative hypothetical filename, not a real file
-const EXTENSION_ALTERNATION = 'tsx|ts|yaml|yml'
+// `md` earns its place because this repo's dominant citation form is a bare
+// backticked filename rather than a Markdown link -- measured 2026-09-09 at
+// 1,448 backticked `.md` tokens against 4 link-form ones. Every off-the-shelf
+// link checker reads links, so none of them sees the 1,448. See
+// doc-comments.rationale.md for the three tools evaluated and rejected.
+const EXTENSION_ALTERNATION = 'tsx|ts|yaml|yml|md'
 // The trailing negative lookahead keeps `.tsconfig` (or any other longer
 // word starting with a real extension) from reporting a truncated token.
 const FILE_TOKEN_SOURCE = `[A-Za-z0-9_.*/-]*\\.(?:${EXTENSION_ALTERNATION})(?![A-Za-z0-9_])`

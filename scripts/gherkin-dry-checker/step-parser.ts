@@ -1,5 +1,6 @@
 // Extracts step objects (keyword, text, location) from raw Gherkin text, for
 // the same feature-file subset described in the Acceptance Pipeline
+// reference-check: allow parser-spec.md -- a file in unclebob's Acceptance-Pipeline-Specification, cited by URL on the line above; not a file in this repo
 // Specification's parser-spec.md: Feature/Background/Scenario/Scenario
 // Outline/Examples declarations, Given/When/Then/And/But steps.
 //

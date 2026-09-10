@@ -1,4 +1,5 @@
 // Portable token-similarity baseline described in mutator's sibling spec,
+// reference-check: allow ir-dry-checker-spec.md -- a file in unclebob's Acceptance-Pipeline-Specification, cited by URL on the line above; not a file in this repo
 // ir-dry-checker-spec.md. The spec deliberately leaves the exact stopword
 // list, tokenizer, and placeholder-slot syntax as implementation choices
 // ("intentionally allows implementation flexibility for language-neutral

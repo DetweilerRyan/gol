@@ -8,6 +8,7 @@
 // independent reasons -- either alone would justify the exclusion:
 //
 //  1. A document about dead references necessarily *names* dead references.
+// reference-check: allow ideas/doc-references-are-checked-by-nothing.md -- a retired idea file, deleted when its slice landed; named as the measured example this exclusion was derived from
 //     ideas/doc-references-are-checked-by-nothing.md itself scores 19
 //     unresolved tokens against this checker's own extractor, every one
 //     deliberate (the dead filenames it uses as its own worked examples).

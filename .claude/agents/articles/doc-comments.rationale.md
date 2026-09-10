@@ -54,6 +54,8 @@ Both rulings in `doc-comments.md`'s Scope section are dated 2026-09-06 and were 
 
 **On prose after a block tag.** Measured: a paragraph written after a `@throws` (`Cache.remove`'s "Removing mid-iteration invalidates that iteration…") renders inside that tag's block, below its text — TS reads everything up to the next tag as the tag's own comment text. It still reads as its own paragraph, so this is attribution drift rather than a hazard, but a fact about the whole function sitting under `@throws` looks like a fact about the throw.
 
+<!-- reference-check: allow cellTiles.md -- the measured table's own subject: these five rows were rendered against a hypothetical path, and renaming them would falsify the record -->
+
 ## The `@see` form: four rejected alternatives
 
 TypeScript parses the token after a `@see` as an entity name, which mangles a bare path:
@@ -67,6 +69,47 @@ TypeScript parses the token after a `@see` as an entity name, which mangles a ba
 | **`@see {@link ./cellTiles.md}`** | **`@see — ./cellTiles.md`**   | **exact — this is the mandated form**           |
 
 All five survive `tsc --emitDeclarationOnly` verbatim, so this is purely a hover-rendering ruling. **The plain `@see ./name.md` form was the one predicted to work during planning, and `{@link}` the one predicted to render unresolved for a relative Markdown path. The measurement is the reverse of both.** When `{@link}` _can_ resolve a target it links it, which is why a `{@link Cache.has}` renders as a clickable file link instead.
+
+## TypeDoc was evaluated against the `@see` ruling, and can be configured to work
+
+**Do not reopen the mandated form by pointing at TypeDoc.** It was tested on 2026-09-09, at TypeDoc
+0.28.20, and the finding is that a working configuration exists and costs the hover.
+
+**The first reading was wrong, and the correction matters.** `{@link ./useZoomGlide.md}` warns under
+`validation.invalidLink` — but so does a link to a file that **exists**, because `{@link}` resolves
+declaration references rather than paths. Read as "TypeDoc rejects our form" that is a vacuous check, and it
+exits 4 either way.
+
+**Registering the Markdown as a document makes it resolve.** With
+`projectDocuments: ["src/hooks/*.md"]`, and the reference written as a bare **document name** rather than a
+path:
+
+| `@see {@link …}`                       | unresolved warnings |
+| -------------------------------------- | ------------------- |
+| `./useZoomGlide.md` — the path form    | 2                   |
+| `glideNotes` — an unambiguous doc name | **0**               |
+| `noSuchDocument`                       | **2**               |
+
+So the check is real and non-vacuous. `exclude: ["src/catalyst/**"]` handles the vendored boundary, and the
+cost is ten packages.
+
+**It is rejected because the two requirements are in direct conflict.** The form TypeDoc validates is a bare
+name, which is **row three of the table above** — "clean, but says nothing about where the file is". And
+because `{@link}` links a target when it can resolve one, a bare name that collides with an exported symbol
+resolves in the hover to **that symbol** rather than to the document. TypeScript has no notion of a TypeDoc
+document.
+
+**The hover is the audience the sidecar tier exists to serve, so the hover wins.** One caveat on the scope
+of this ruling: TypeDoc's behaviour was measured directly, while the hover half rests on the table above
+rather than on a fresh hover pass.
+
+**Two link checkers were rejected earlier and for a simpler reason.** Linkinator (8.1.0, maintained) parses
+Markdown **link syntax**, and Hyperlink (5.0.4, last published June 2022) reads HTML only. Measured on this
+corpus 2026-09-09: **1,448 bare backticked `.md` citations against 4 in link form**, three of which are
+external URLs. A link checker cannot see the form this corpus actually uses.
+
+**`check-md-references` closed the gap instead**, by adding one alternation to `reference-check`'s
+extractor. That reaches all 1,448.
 
 ## The member and return-type measurements
 

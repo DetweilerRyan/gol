@@ -1,5 +1,6 @@
 // Type-aware mutation of a single Gherkin example cell value, following the
 // rule ordering from https://github.com/unclebob/Acceptance-Pipeline-Specification's
+// reference-check: allow mutator-spec.md -- a file in unclebob's Acceptance-Pipeline-Specification, cited by URL on the line above; not a file in this repo
 // mutator-spec.md. Mutations are deterministic for a given (seedKey, value)
 // pair so repeated runs produce identical, diffable mutants.
 
