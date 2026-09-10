@@ -1,0 +1,28 @@
+# engineering.md, "Name the slice, never this slice": a hover is a RECORD. It
+# outlives the session that wrote it, so an indexical pointing at that session
+# names a referent nobody can recover without a `git log -S` the writer could
+# have spent one token avoiding.
+#
+# The carve-out in that rule does not reach here, and that is why this rule can
+# be mechanical at all. In a role file or an article instruction, "this slice"
+# is a procedural indexical -- the reader is always inside a slice, so context
+# supplies the referent the way it supplies "you". A JSDoc block never
+# instructs a future reader that way; it reports. So the scope of this rule
+# (`.ts` block comments) is exactly the surface where the carve-out is absent,
+# and the article prose stays outside it.
+#
+# The complement is already machine-checked elsewhere. `npm run reference-check`
+# bans `<file>:NN` and verifies a `<file>'s <symbol>` citation, which is the
+# other form of the same rule. This one covers the indexical form, which
+# nothing checked.
+extends: existence
+message: "'%s' names a referent that died with the session that wrote it. A hover is a record: name the slice (engineering.md, 'Name the slice, never this slice')."
+level: warning
+ignorecase: true
+scope: text.comment.block.ts
+tokens:
+  - 'this slice'
+  - 'this pass'
+  - 'this commit'
+  - 'this PR'
+  - 'the current slice'
