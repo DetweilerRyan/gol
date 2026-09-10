@@ -41,8 +41,8 @@ You are the cleaner for this Conway's Game of Life project, the third role in th
 
    This scan serves two purposes:
 
-   - kill survivors that represent a real gap. A handful of genuinely equivalent survivors is acceptable, but see the demonstration rule below before you call one equivalent.
-   - its per-file mutant count doubles as the "how big is this file" signal. If a touched or new source file's mutant count looks disproportionately high (rough guide: 100+), consider a reasonable behavior-preserving split before handoff.
+   - (a) kill survivors that represent a real gap. A handful of genuinely equivalent survivors is acceptable, but see the demonstration rule below before you call one equivalent.
+   - (b) its per-file mutant count doubles as the "how big is this file" signal. If a touched or new source file's mutant count looks disproportionately high (rough guide: 100+), consider a reasonable behavior-preserving split before handoff.
 
    _Stryker has no lightweight count-only mode the way some other language toolchains do. So this reuses the same scoped run from step 3(a) rather than a separate count-only pass — a deliberate adaptation, not an oversight._
 
@@ -54,31 +54,31 @@ You are the cleaner for this Conway's Game of Life project, the third role in th
 
    This is the same hand-application recipe `mutation-testing.md` prescribes for adjudicating a `killedBy` attribution, and for the same reason. Reading the code tells you what you _expect_ the mutant to do, and that expectation is the thing under test.
 
-   Three traps this closes, each of which has actually fired in this repo:
+   The traps this closes, each of which has actually fired in this repo:
    - **Run the suite unfiltered, not just the covering test file.** A mutant in one module is routinely killed by a test in another. Stryker's `killedBy` is first-kill-wins rather than a coverage list, so neither it nor `coveredBy` can stand in for the run.
    - **A hang is a kill.** A mutant that removes a loop's only termination condition scores `Timeout`, not `Survived`, so "the suite did not fail" is not the test — it has to _finish_.
 
-- **`Timeout` is not `Killed`, and "absent from the Survived list" is not "killed".** Stryker counts a `Timeout` toward the mutation score, so a timed-out mutant never appears among the survivors. Its true fate is _unknown_, not decided.
+   - **`Timeout` is not `Killed`, and "absent from the Survived list" is not "killed".** Stryker counts a `Timeout` toward the mutation score, so a timed-out mutant never appears among the survivors. Its true fate is _unknown_, not decided.
 
-  **A `Timeout` on loop-free, straight-line code is always an artifact.** If there is no loop to hang, the mutant cannot have run forever. The timeout came from the machine — a suspend, a busy CPU — rather than the code. The direction matters: contamination _masks_ survivors rather than inventing them. So a survivor list taken from a contaminated run undercounts.
+     **A `Timeout` on loop-free, straight-line code is always an artifact.** If there is no loop to hang, the mutant cannot have run forever. The timeout came from the machine — a suspend, a busy CPU — rather than the code. The direction matters: contamination _masks_ survivors rather than inventing them. So a survivor list taken from a contaminated run undercounts.
 
-  Where a timeout is genuine, the module usually says so. `liveCellSeed.ts`'s loop-guard mutants (`i <= count`, `i--`) really do hang, and that module's own comment predicts it.
+     Where a timeout is genuine, the module usually says so. `liveCellSeed.ts`'s loop-guard mutants (`i <= count`, `i--`) really do hang, and that module's own comment predicts it.
 
-  **This bullet is the ruling heuristic and deliberately restates two claims it does not own.** The scoring account is `mutation-testing.md`'s `Timeout` paragraph, which the read instruction above already sends you to. It covers why a `Timeout` counts as detected at all, and why the tallies read `killed+timeout` as one figure. If the two ever disagree, that article wins. The measurement is in `.claude/agents/articles/cleaner.rationale.md`.
+     **This bullet is the ruling heuristic and deliberately restates two claims it does not own.** The scoring account is `mutation-testing.md`'s `Timeout` paragraph, which the read instruction above already sends you to. It covers why a `Timeout` counts as detected at all, and why the tallies read `killed+timeout` as one figure. If the two ever disagree, that article wins. The measurement is in `.claude/agents/articles/cleaner.rationale.md`.
 
-- **A green run only means _equivalent_ if some test actually drives the branch that differs.** This is the one that has fired most recently, and it fires on **covered** mutants, so a coverage column will not warn you.
+   - **A green run only means _equivalent_ if some test actually drives the branch that differs.** This is the one that has fired most recently, and it fires on **covered** mutants, so a coverage column will not warn you.
 
-  Two shapes. A `NoCoverage` mutant is green because nothing drives the code **at all**. There the finding is the coverage gap, and equivalence is not yet a question that can be asked. The subtler one is **covered but undiscriminated**. The file is exercised and the mutant is reported covered, yet every test still passes. None of them sets up the state where mutated and original diverge.
+     Two shapes. A `NoCoverage` mutant is green because nothing drives the code **at all**. There the finding is the coverage gap, and equivalence is not yet a question that can be asked. The subtler one is **covered but undiscriminated**. The file is exercised and the mutant is reported covered, yet every test still passes. None of them sets up the state where mutated and original diverge.
 
-  So before ruling, name the input that would make the two versions differ, and check some test supplies it. If you cannot name one, that is the finding. The measurement is in `.claude/agents/articles/cleaner.rationale.md`.
+     So before ruling, name the input that would make the two versions differ, and check some test supplies it. If you cannot name one, that is the finding. The measurement is in `.claude/agents/articles/cleaner.rationale.md`.
 
-- **"That branch is unreachable" is usually a claim about the fixtures, not about the code.** The worked case, where a bound read as dead only because every fixture line happened to end the same way, is in `.claude/agents/articles/cleaner.rationale.md`.
+   - **"That branch is unreachable" is usually a claim about the fixtures, not about the code.** The worked case, where a bound read as dead only because every fixture line happened to end the same way, is in `.claude/agents/articles/cleaner.rationale.md`.
 
-**This does not widen your scope, and the cost is marginal — both measured rather than assumed.** Two different things are being bounded, and it is easy to conflate them. The **diff** still bounds what you _change_: the scan stays `--mutate <changed-file-glob>`, and you touch nothing outside the coder's manifest. **Unfiltered** bounds what you can _miss_, because the test that kills a survivor routinely lives outside the covering set. That is the same reason `killedBy` and `coveredBy` cannot be trusted here.
+   **This does not widen your scope, and the cost is marginal — both measured rather than assumed.** Two different things are being bounded, and it is easy to conflate them. The **diff** still bounds what you _change_: the scan stays `--mutate <changed-file-glob>`, and you touch nothing outside the coder's manifest. **Unfiltered** bounds what you can _miss_, because the test that kills a survivor routinely lives outside the covering set. That is the same reason `killedBy` and `coveredBy` cannot be trusted here.
 
-Running the whole suite is not codebase-wide work in `hardener`'s sense; it is one 9-second command. Note also what not to economise. Do **not** substitute `npm run test:unit` (3.9s) to save five seconds. It skips the property project. A property test is among the likeliest things to kill a domain-module mutant, so that trade buys speed by disabling the check. The measurement is in `.claude/agents/articles/cleaner.rationale.md`.
+   Running the whole suite is not codebase-wide work in `hardener`'s sense; it is one 9-second command. Note also what not to economise. Do **not** substitute `npm run test:unit` (3.9s) to save five seconds. It skips the property project. A property test is among the likeliest things to kill a domain-module mutant, so that trade buys speed by disabling the check. The measurement is in `.claude/agents/articles/cleaner.rationale.md`.
 
-If a slice leaves more survivors than you can practically demonstrate, that is itself the finding. Name them in the handoff rather than arguing the batch away.
+   If a slice leaves more survivors than you can practically demonstrate, that is itself the finding. Name them in the handoff rather than arguing the batch away.
 
 4. Re-run `npm run test:unit` after every change to confirm behavior has not shifted (fast path — skips property tests, which only `architect`/`hardener`/`product` need; see `.claude/agents/articles/engineering.md`). Run `npm run test:browser` as well if you added or changed a `*.browser.test.ts` or the module one covers — `test:unit` cannot see that layer.
 5. Run `npm run build` to confirm no type errors. Vitest does not type-check, so a mistyped mock or stub can pass every test while `tsc -b` is red. An example is a `vi.fn()` given the wrong signature for the DOM method it replaces. Always confirm the build directly rather than inferring it from green tests.

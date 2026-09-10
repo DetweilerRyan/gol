@@ -22,6 +22,6 @@ Measured on this tree: `npm test` is **9.05s** for 664 tests, against a scoped S
 
 The `gherkin-ast-mutation` case: a scan's end-of-line bound read as dead defensive code because every fixture line happened to end in a `|`, so the pipe always stopped the loop first. The bound was live, the mutant hung forever, and `hardener` had to overturn the argument by measurement.
 
-## This file once claimed `hardener` owned both mutation suites
+## `cleaner.md` once claimed `hardener` owned both mutation suites
 
-This line said `hardener` owned both until the `acceptance-mutation-on-playwright` review; `product.md`, `hardener.md` and CLAUDE.md always said otherwise.
+`cleaner.md`'s Boundaries line said `hardener` owned both until the `acceptance-mutation-on-playwright` review; `product.md`, `hardener.md` and CLAUDE.md always said otherwise.
