@@ -26,9 +26,19 @@
 # list, and the remedy is the backticks the repo already writes around a CSS
 # at-rule. Widening the pattern to guess at intent would cost the rule its one
 # job.
+#
+# The residue was then observed, which is why it is stated here rather than
+# designed around. Widening to .tsx on 2026-09-10 produced exactly one finding
+# across the 31 tracked components: a bare `@custom-variant` opening a line in a
+# JSX comment in GridToolbar.tsx. It was not a false positive by this repo's own
+# convention -- useAppearance.ts already backticked the same at-rule -- so the
+# predicted remedy applied unchanged and the rule caught a real inconsistency.
+# A JSX `{/* ... */}` block is in scope on .tsx and has no .ts counterpart.
 extends: existence
 message: "'%s' is outside doc-comments.md rule 5's closed block-tag table (@example, @param, @returns, @throws, @see). Keep the content and drop the tag word, or move the line to a `//` comment."
 level: warning
-scope: text.comment.block.ts
+scope:
+  - text.comment.block.ts
+  - text.comment.block.tsx
 raw:
   - '(?m)^@(?!example\b|param\b|returns\b|throws\b|see\b)[a-zA-Z]+'

@@ -19,7 +19,9 @@ extends: existence
 message: "'%s' names a referent that died with the session that wrote it. A hover is a record: name the slice (engineering.md, 'Name the slice, never this slice')."
 level: warning
 ignorecase: true
-scope: text.comment.block.ts
+scope:
+  - text.comment.block.ts
+  - text.comment.block.tsx
 tokens:
   - 'this slice'
   - 'this pass'

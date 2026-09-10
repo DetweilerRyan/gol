@@ -19,6 +19,11 @@
 # anchoring are boundary statements doc-comments.md rule 3 protects as interface
 # facts -- a module saying which half of a job is not its own.
 #
+# That comparison is scoped to the `.ts` corpus it was run over, and is left
+# that way rather than restated over the wider one. Widening to .tsx on
+# 2026-09-10 was measured only for the anchor this rule ships: 0 findings across
+# the 31 tracked components. The three rejected anchors were not re-run there.
+#
 # So this rule ships at zero findings, one narrower than the design pass proposed:
 # that one paired a sentence anchor with a verb list to keep exactly one hit, the
 # second-sentence opener in is-strict-equal.ts. That hover was rewritten in the
@@ -26,6 +31,8 @@
 extends: existence
 message: "A hover's opening sentence says what the caller gets, not what the declaration is: drop the '%s' opener (doc-comments.md rule 2)."
 level: warning
-scope: text.comment.block.ts
+scope:
+  - text.comment.block.ts
+  - text.comment.block.tsx
 raw:
   - '^This (function|hook|module|component|class|method|file|type|helper|constant|utility)\b'

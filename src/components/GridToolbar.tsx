@@ -36,7 +36,7 @@ export default function GridToolbar({
       {/* A native <select> (Headless.Select, via src/catalyst/select.tsx) --
           getByRole('combobox') resolves it directly, and it already carries
           the dark: variants that dark-mode-following-system-appearance's
-          @custom-variant makes work. Wrapped in a div rather than a w-*
+          `@custom-variant` makes work. Wrapped in a div rather than a w-*
           override on the Select's own className:
           that className lands on the same element as the component's own
           `block w-full`, and which of the two wins is a

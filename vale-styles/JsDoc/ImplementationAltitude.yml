@@ -19,7 +19,9 @@ extends: existence
 message: "'%s' describes how the thing works inside. doc-comments.md rule 4 puts that in a `//` comment below the signature, where a caller does not pay for it."
 level: warning
 ignorecase: true
-scope: text.comment.block.ts
+scope:
+  - text.comment.block.ts
+  - text.comment.block.tsx
 tokens:
   - 'recursively'
   - 'internally'

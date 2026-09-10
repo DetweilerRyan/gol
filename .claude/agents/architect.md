@@ -109,17 +109,23 @@ Also read `product`'s **ARIA reach-arounds** — the places its specs had to ass
   finding is an `STE` finding. Widening this style to a new surface is a design change, not a rule
   edit.
 
-  A rule ships with a `<Rule>.bad.ts` that fires exactly it, and a `<Rule>.good.ts` that stays
-  silent. That is the reason a `rules/*.yml` ships a fixture: a rule matching nothing reports nothing,
-  and is indistinguishable from a clean codebase. **Vale's own `vale test` cannot do this job** — `input:`
-  is parsed as Markdown, so a comment-scoped rule never matches it. Read
+  <!-- reference-check: allow text.comment.block.ts -- a Vale scope selector, not a path -->
+
+  A rule ships with a `<Rule>.bad.ts` that fires exactly it, and a `<Rule>.good.ts` that stays silent.
+  **It ships the `.bad.tsx`/`.good.tsx` pair beside it too.** A scope selector is strictly per
+  extension, so a rule carrying only `text.comment.block.ts` is silently inert on every component.
+  Carry both scopes in the rule's own `scope:` list; a list is OR.
+
+  That is the reason a `rules/*.yml` ships a fixture: a rule matching nothing reports nothing, and is
+  indistinguishable from a clean codebase. **Vale's own `vale test` cannot do this job** — `input:` is
+  parsed as Markdown, so a comment-scoped rule never matches it. Read
   `.claude/agents/articles/prose-linting.md` before authoring one; it carries the one-command fixture
   run.
 
   **A silent good fixture proves nothing on its own.** Loosen the matcher in a scratch copy of the
   style and confirm the fixture then reports. A near-miss both versions ignore pins nothing.
 
-  **A rule added to `.vale.ini`'s `[*.ts]` section must be added by name to all three exemption
+  **A rule added to `.vale.ini`'s `[*.{ts,tsx}]` section must be added by name to all three exemption
   sections below it.** Nothing checks that.
 
 - **`rules/*.yml` and `rule-tests/` are yours.** You are the only role that authors or changes them; every other role reads `npm run ast-grep`'s output and reports tensions to you. See "Structural rules (ast-grep)" in `.claude/agents/articles/engineering.md` for the shared reading convention.

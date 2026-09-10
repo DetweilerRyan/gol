@@ -196,17 +196,30 @@ Vale runs over `.claude/agents/**/*.md`: every topic article, the house-rules ar
 role files. It also runs over `CLAUDE.md`, and over `src/**/*.md`, the module sidecars beside the
 source. Those three surfaces get the `STE` style.
 
-**It runs over every `.ts` file in the tree as well, under a different style.** `[*.ts]` enables
-`JsDoc`, the tracked style in `vale-styles/JsDoc/`. Each of its rules carries the `.ts`
-block-comment scope, so it reaches block comments only.
+**It runs over every `.ts` and `.tsx` file in the tree as well, under a different style.**
+`[*.{ts,tsx}]` enables `JsDoc`, the tracked style in `vale-styles/JsDoc/`. Each of its rules carries
+both block-comment scopes as a **list**, which Vale reads as OR. So it reaches block comments only,
+in modules and components alike.
 
-**`.tsx` is deliberately out of scope.** A scope selector is strictly per extension. Reaching a
-component needs a second scope entry **plus** a `.bad.tsx`/`.good.tsx` fixture pair per rule; without
-the fixtures the new scope is untested and fails silent.
+<!-- reference-check: allow text.comment.block.ts -- a Vale scope selector, not a path; the trailing
+     segment is the extension the scope binds to -->
+
+**A scope selector is strictly per extension, and that is the trap.** `text.comment.block.ts` never
+reaches a `.tsx` file. A rule carrying only the `.ts` scope is handed every component and matches
+nothing, which reports zero and reads exactly like a clean file. `[*.ts]` does not match a `.tsx` file
+either — the suffix has to be named, hence the brace glob.
+
+**So a new rule owes two scope entries and two fixture pairs**, `.bad.ts`/`.good.ts` and
+`.bad.tsx`/`.good.tsx`. Nothing checks this. The `.tsx` pair is the narrower of the two: the `.ts`
+pair proves the rule discriminates, and the `.tsx` pair proves the second scope is live at all.
+
+**`.tsx` carries one comment shape `.ts` does not** — the JSX `{/* ... */}` block inside a component
+body. It is in scope, and it is prose a reader writes loosely. `BlockTagVocabulary`'s first `.tsx`
+finding came from one.
 
 **Three sections exempt paths that only look like source**: `vale-styles/fixtures/*` (deliberate
 bait), `.claude/worktrees/*` and `.stryker-tmp*/*` (other checkouts, which a bare `vale .` walks
-into). They sit below `[*.ts]`, because sections stack and the later one takes the key. Vale has no
+into). They sit below `[*.{ts,tsx}]`, because sections stack and the later one takes the key. Vale has no
 ignore mechanism other than a later section.
 
 **Lint a module sidecar exactly like an article**, because whoever holds a call site reads it to act.
@@ -263,9 +276,9 @@ are the `*.rationale.md` exemption, plus the three that keep bait and other chec
 `vale .` walk. Each switches the rule off once by name, so a seventh `STE` rule goes in all seven
 places.
 
-**A `JsDoc` rule is a four-place edit** on the same reasoning: `[*.ts]` enables it, and the three
-exemption sections below that one switch it off by name. `[**/*.rationale.md]` is not one of them,
-because `[*.ts]` cannot match a `.md` file. **Nothing checks either count.**
+**A `JsDoc` rule is a four-place edit** on the same reasoning: `[*.{ts,tsx}]` enables it, and the
+three exemption sections below that one switch it off by name. `[**/*.rationale.md]` is not one of
+them, because `[*.{ts,tsx}]` cannot match a `.md` file. **Nothing checks either count.**
 
 <!-- reference-check: allow docs/sub/nested.md -- Vale's own documentation example for glob behaviour, quoted verbatim; not a path in this repo -->
 
