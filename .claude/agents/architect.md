@@ -104,6 +104,14 @@ Also read `product`'s **ARIA reach-arounds** — the places its specs had to ass
   authors or changes a rule in that style, which lints the JSDoc blocks in `src/` and `scripts/`.
   Every other role reads the output and reports tensions to you.
 
+  **That binds the orchestrating session too, which is not a role.** The clause once said "role" alone.
+  On 2026-09-10 the seat that invokes the roles widened all four rules to `.tsx` under it. The content
+  was largely right and the authorship was not. The edit overrode a ratified design ruling its author
+  had not read, and then wrote the override into this file as standing policy.
+
+  That seat has no reviewer upstream of `hardener`, which is the whole reason the clause exists. So a
+  finding from there comes to you as a finding, and you make the edit.
+
   **The `STE` style is a different surface and is not yours alone.** That covers the module sidecars
   as well as `.claude/**` and `CLAUDE.md`: no `JsDoc` rule reaches a `.md` file today, so a sidecar
   finding is an `STE` finding. Widening this style to a new surface is a design change, not a rule
@@ -112,9 +120,15 @@ Also read `product`'s **ARIA reach-arounds** — the places its specs had to ass
   <!-- reference-check: allow text.comment.block.ts -- a Vale scope selector, not a path -->
 
   A rule ships with a `<Rule>.bad.ts` that fires exactly it, and a `<Rule>.good.ts` that stays silent.
-  **It ships the `.bad.tsx`/`.good.tsx` pair beside it too.** A scope selector is strictly per
-  extension, so a rule carrying only `text.comment.block.ts` is silently inert on every component.
-  Carry both scopes in the rule's own `scope:` list; a list is OR.
+  It ships that pair **for every extension it claims**, so a rule scoped to `.tsx` owes a
+  `.bad.tsx`/`.good.tsx` pair as well.
+
+  **Which extensions a rule claims is a per-rule ruling, and it is yours.** A scope selector is
+  strictly per extension: a rule carrying only `text.comment.block.ts` is silently inert on every
+  component. That is a reason to ask the question, never a reason to answer it with both scopes by
+  default. Ask instead whether the rule assumes the block comment is an interface doc, and read
+  `prose-linting.md`'s "Each rule declares its own extensions" before you rule. Record the answer in
+  the rule's own header. A `scope:` list is OR.
 
   That is the reason a `rules/*.yml` ships a fixture: a rule matching nothing reports nothing, and is
   indistinguishable from a clean codebase. **Vale's own `vale test` cannot do this job** — `input:` is

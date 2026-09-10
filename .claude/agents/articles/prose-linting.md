@@ -209,13 +209,47 @@ reaches a `.tsx` file. A rule carrying only the `.ts` scope is handed every comp
 nothing, which reports zero and reads exactly like a clean file. `[*.ts]` does not match a `.tsx` file
 either — the suffix has to be named, hence the brace glob.
 
-**So a new rule owes two scope entries and two fixture pairs**, `.bad.ts`/`.good.ts` and
-`.bad.tsx`/`.good.tsx`. Nothing checks this. The `.tsx` pair is the narrower of the two: the `.ts`
-pair proves the rule discriminates, and the `.tsx` pair proves the second scope is live at all.
+### Each rule declares its own extensions. That is per rule, never per style.
+
+**Ruled by `architect` on 2026-09-10, and enforced again in the REVIEW pass that followed.** A blanket
+"every rule carries both scopes" is the shape the ruling rejects. The question a new rule answers is
+one question:
+
+> Does this rule assume the block comment is an interface doc?
+
+A rule that assumes it is a rule whose finding can **invert** on a comment that is not one. Vale's
+scope cannot ask that question for you. `block` means multi-line, and no selector separates a JSDoc
+hover from a JSX `{/* ... */}` block or a plain `/* ... */`. So the rule's author answers it, and
+records the answer in the rule's own header.
+
+**Carrying the premise is not on its own a reason to drop an extension.** The discriminator is
+measured noise that no remedy can clear without moving correctly-placed prose. A premise-carrying rule
+with no such finding keeps the extension, because the coverage then costs nothing. `MeasurementInDoc`
+lost `.tsx` on three such findings and was never shipped. `ImplementationAltitude` carries the same
+premise, measured zero, and keeps `.tsx`.
+
+The four shipped rules, and the answer each one records:
+
+| rule                     | `.ts` | `.tsx` | assumes a hover? | measured `.tsx` noise |
+| ------------------------ | :---: | :----: | :--------------: | :-------------------- |
+| `SelfReferentialOpener`  |   Y   |   Y    |        no        | 0                     |
+| `DeadIndexical`          |   Y   |   Y    |        no        | 0                     |
+| `ImplementationAltitude` |   Y   |   Y    |       yes        | 0                     |
+| `BlockTagVocabulary`     |   Y   |   Y    |       yes        | 1, remediable         |
+
+The design pass wrote that table under earlier names. `NoThisFunction` became
+`SelfReferentialOpener`, `ThisSlice` became `DeadIndexical`, and `MeasurementInDoc` never shipped.
+`BlockTagVocabulary` arrived after the ruling and was ruled separately, in the REVIEW pass.
+`prose-linting.rationale.md` carries both cross-tabulations.
+
+**A rule owes a fixture pair for every extension it claims**, `.bad.<ext>` and `.good.<ext>`. Nothing
+checks this. The second pair is the narrower of the two. The first proves the rule discriminates. The
+second proves the second scope is live at all. A rule claiming an extension with no pair there is
+untested, and it fails silent.
 
 **`.tsx` carries one comment shape `.ts` does not** — the JSX `{/* ... */}` block inside a component
-body. It is in scope, and it is prose a reader writes loosely. `BlockTagVocabulary`'s first `.tsx`
-finding came from one.
+body. It is in scope, and it is prose a reader writes loosely. It is also the shape a premise-carrying
+rule inverts on. `BlockTagVocabulary` pins both halves of it, in the `.tsx` pair.
 
 **Three sections exempt paths that only look like source**: `vale-styles/fixtures/*` (deliberate
 bait), `.claude/worktrees/*` and `.stryker-tmp*/*` (other checkouts, which a bare `vale .` walks

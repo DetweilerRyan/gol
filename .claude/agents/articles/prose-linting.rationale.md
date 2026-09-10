@@ -759,3 +759,76 @@ A package can redirect it. `vale-llm-slop` ships `.vale-config/0-vale-llm-slop.i
 `.vale/.vale-config/styles` rather than to `.vale/`. Both copies exist in this checkout after one
 `vale sync`. Harmless while they are the same package, and worth knowing before reading a stale style
 as the live one.
+
+### The per-rule extension ruling, and the two cross-tabulations behind it
+
+The design pass ruled on 2026-09-10 that each rule declares the extensions where its own premise
+holds. It cross-tabulated every `.tsx` finding by rule and by comment kind, over the rule set as it
+stood then:
+
+| rule                     | JSDoc | JSX | plain `/* */` |
+| ------------------------ | ----: | --: | ------------: |
+| `NoThisFunction`         |     1 |   0 |             0 |
+| `ImplementationAltitude` |     1 |   0 |             0 |
+| `MeasurementInDoc`       |     1 |   3 |             0 |
+| `ThisSlice`              |     0 |   0 |             0 |
+
+All the noise was one rule, and its three hits were inverted. `LifeBoard.tsx` carried a measurement
+inside a `{/* ... */}` block, which is the implementation channel for markup, so the measurement was
+correctly placed and flagging it inverted the rule. `MeasurementInDoc` was the rule that lost `.tsx`,
+and it never shipped.
+
+The REVIEW pass re-ran the same cross-tabulation on 2026-09-10, over the four rules that did ship and
+over the 31 tracked components. `src/components/GridToolbar.tsx` was restored to its pre-widening
+state first, so the corpus was the one the widening met:
+
+| rule                     | `.tsx` findings | JSDoc | JSX | plain `/* */` |
+| ------------------------ | --------------: | ----: | --: | ------------: |
+| `SelfReferentialOpener`  |               0 |     0 |   0 |             0 |
+| `DeadIndexical`          |               0 |     0 |   0 |             0 |
+| `ImplementationAltitude` |               0 |     0 |   0 |             0 |
+| `BlockTagVocabulary`     |               1 |     0 |   1 |             0 |
+
+The shape repeated exactly: all the noise is one rule, and its one hit sits in a JSX comment.
+
+**`BlockTagVocabulary` keeps `.tsx` anyway, and the discriminator is what makes that consistent.**
+The earlier table grants `.tsx` to `ImplementationAltitude`, which the ruling names as
+premise-carrying. So the premise alone never decided it. What decided it was measured noise that no
+remedy can clear without moving correctly-placed prose. `MeasurementInDoc`'s three hits were of that
+kind. `BlockTagVocabulary`'s one hit was not: the remedy was a backtick around a CSS at-rule, and
+`src/hooks/useAppearance.ts` already backticked the same at-rule before this slice began. Traced with
+`git log -L`, the backticks there landed in `no-undated-cross-file-claims` and survived
+`migrate-module-depth`. So the remedy is a typographic convention the repo holds independently, not a
+concession invented to clear a finding.
+
+**Two figures bound the trade.** Eleven of the 31 tracked components carry a `/** ... */` block, which
+is what the `.tsx` scope buys the rule. Six carry a `{/* ... */}` block, which is where its residue
+lives. Dropping `.tsx` would blind the rule on the first set to spare the second.
+
+**Reopen this if a later corpus produces two or more JSX hits, or one that a backtick cannot clear.**
+That is the ruling's own discriminator, not a fresh judgement.
+
+### Three Vale mechanics measured on 3.20.0 while enforcing that ruling
+
+**Brace expansion in a section glob is real, and a glob matching nothing fails closed.** Measured over
+the eight fixtures, counting `JsDoc` findings: `*.ts` gave 4, `*.tsx` gave 4, `*.{ts,tsx}` and
+`*.{tsx,ts}` gave 8, `*.ts*` gave 8. The negative controls matter more. `*.{ts,zzz}` gave 4, so the
+alternation genuinely selects. `*.{qqq,zzz}` gave 0, so an unmatched glob applies no style rather than
+falling back to everything.
+
+**A malformed brace glob is an eighth way to report a confident zero.** `*.{ts` gave 0 findings and
+exit 0, with no diagnostic. It is the same shape as "the file matches no section glob", reached
+through a typo in the section header rather than through a file's path.
+
+<!-- reference-check: allow text.comment.block.ts -- a Vale scope selector, not a path; the trailing segment is the extension the scope binds to -->
+<!-- reference-check: allow text.comment.block.tsx -- the same selector, bound to the other extension -->
+
+**A `scope:` list is OR, confirmed independently of the shipped rules.** A throwaway style carrying one
+`existence` rule was run four ways over the two `SelfReferentialOpener` bad fixtures.
+`text.comment.block.ts` reported the `.ts` file only. `text.comment.block.tsx` reported the `.tsx`
+file only. The two as a list reported both.
+
+**The bare `text.comment.block` selector also reports both, and it is rejected.** It reaches every
+extension at once, which moves the extension decision out of the rule and into `.vale.ini`'s section
+glob. That is precisely what the per-rule ruling forbids, so the list form is the one to write even
+though the bare form is shorter.
