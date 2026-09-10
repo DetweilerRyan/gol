@@ -1,6 +1,6 @@
 ---
 name: lint-jsdoc-with-vale
-title: Lint JSDoc blocks with Vale, scoped to block comments only, and record how that triage differs
+title: Lint JSDoc with Vale — the STE pass, and repo-authored rules enforcing doc-comments.md
 created: 2026-09-10
 ---
 
@@ -73,6 +73,12 @@ How does an agent lint the JSDoc it just wrote, and act on a finding correctly?
 
 ## Answer
 
+Two halves with different shapes and different risks. **Part A** is remediation — 276 mechanical STE
+findings against prose nothing has checked. **Part B** is a ratchet — four repo-authored rules that
+enforce `doc-comments.md` and currently find one violation. They share a config and nothing else.
+
+## Part A — scope STE to JSDoc, and record how its triage differs
+
 Three parts. The second is the reason this is not just a config change.
 
 **1. The config.** `[formats]` mapping, plus a second style directory — call it `STEDoc` — that is
@@ -103,11 +109,79 @@ counts words per sentence — not even the same unit. A merge makes a 57KB artic
 the cross-link. Landing a lint that reports 276 findings nobody has triaged would be the worst of
 both.
 
+## Part B — repo-authored rules that mechanically enforce `doc-comments.md`
+
+**Spiked 2026-09-10. It works.** Four rules were written against the article's own wording, scoped to
+block comments, and run over the same 102 production files. Each fires on a deliberately bad JSDoc
+and stays silent on a good one written to rule 3.
+
+### The finding that decides how these get written: anchoring
+
+| `NoThisFunction`                 | findings | true positives | precision |
+| -------------------------------- | -------: | -------------: | --------: |
+| unanchored — the phrase anywhere |       22 |              1 |  **4.5%** |
+| anchored to a sentence opener    |    **1** |          **1** |  **100%** |
+
+The 21 false positives were ordinary referring expressions — "this module stays free of DOM types",
+"dragGesture.ts (which this hook wraps)". Rule 2 bans `This function…` as a **first-line opener**, and
+a rule that ignores that distinction is unusable. **A naively written rule here is worse than none**,
+because 22 findings read as a real backlog.
+
+The working form, for the record:
+
+```yaml
+extends: existence
+level: warning
+nonword: true
+tokens:
+  - '(?:^|\. )This (?:function|method|hook|component|module|helper|utility) (?:is|does|will|returns|takes|handles|provides)'
+  - '(?:^|\. )A (?:function|helper|utility) (?:that|which)'
+scope:
+  - text.comment.block.ts
+  - text.comment.block.tsx
+```
+
+The other three are `ImplementationAltitude` (a vocabulary list — "under the hood", "loops over",
+"recursively", "is implemented as"), `MeasurementInDoc` ("measured in/at/on", "benchmarked", per rule
+4), and `ThisSlice` (`engineering.md`'s "name the slice, never 'this slice'").
+
+### These are ratchets, not cleanup
+
+**One real violation in 102 files.** The corpus already follows the article. That is a different
+value proposition from Part A's 276 mechanical findings, and it should not be sold as remediation.
+The value is preventing drift in prose nothing has ever checked.
+
+### A second scope leak
+
+`text.comment.block.tsx` includes JSX `{/* … */}` comments. All four `MeasurementInDoc` hits were in
+JSX render commentary — implementation prose, the `//` equivalent — not JSDoc. Handle it or accept
+the noise; do not read those as violations.
+
+### What is expressible, and what is not
+
+| mechanically expressible                 | not                                                   |
+| ---------------------------------------- | ----------------------------------------------------- |
+| rule 2's banned opener, anchored         | rule 3 — cannot detect the **absence** of a guarantee |
+| rule 4's "measurements stay `//`"        | rule 6 — hover budget is **rendered lines**, not text |
+| `engineering.md`'s "never _this slice_"  | rule 8 — needs an AST                                 |
+| rule 1's altitude, via a vocabulary list | rule 2's "one sentence" first line — untested         |
+
+**That division is the ownership story.** Vale takes vocabulary and phrasing; `ast-grep` takes
+structure, and already owns `rules/no-dead-doc-on-annotated-return-literal.yml`, which is a rule 8
+case. So **`architect` owns the JSDoc-scoped Vale rules on the `ast-grep` precedent** — the role that
+authors `rules/*.yml` authors these, and every other role reads the output and reports tensions.
+
+The precedent brings its sharpest clause with it: _a rule that matches nothing reports nothing and is
+indistinguishable from a clean codebase._ Every rule ships with a fixture that fails without it,
+which is why the spike tested a bad block **and** a good one.
+
 ## Touches
 
 - `.vale.ini` — the `[formats]` mapping and a `[*.ts]`/`[*.tsx]` section
 - `.vale/STEDoc/` — six scoped rules; note `.vale/` is gitignored, so this needs an answer for how it
   is reproduced (see open questions)
+- a repo-authored style directory for Part B's rules, plus a fixture per rule
+- `.claude/agents/architect.md` — ownership of the JSDoc-scoped rules, beside its `rules/*.yml` clause
 - `.claude/agents/articles/prose-linting.md` — the new triage section, the audience line, the fifth
   confident-zero mode
 - `.claude/agents/articles/doc-comments.md` — one pointer
@@ -125,6 +199,14 @@ both.
   exercise.
 - **Do `.test.ts` files get linted?** They are excluded from this measurement, and their comments are
   a different register again.
+- **Does Part B need its own gate, or is `ast-grep`'s report-only convention right?** `ast-grep` rules
+  are `severity: warning` and move no exit code, read rather than gated. Vale is report-only for the
+  same reason. Consistent, but it means a repo-authored rule catches drift only when someone runs it —
+  which is what `give-vale-an-owner-and-a-trigger` is about.
+- **Can Part B land before Part A?** It is one violation and four rules, against Part A's 276
+  findings. Landing B first gives the ratchet immediately and leaves remediation for later, which may
+  be the better order — but both need the `[formats]` mapping and the style-directory answer, so
+  neither is free-standing.
 - **Does the caveat about intersection hold?** If most `SentenceLength` findings in a JSDoc turn out
   to want a _move_ rather than a _split_, the two articles intersect more than measured here, and
   the do-not-merge ruling should be revisited on that evidence.
