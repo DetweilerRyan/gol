@@ -746,9 +746,9 @@ instances on the tracked list, and the remedy is the backticks this repo already
 
 ### The three exemption sections reach nested paths
 
-Bait carrying all four violations was written two directories deep under each exempt path — inside a
-Stryker sandbox, inside a nested checkout under `.claude/worktrees/`, and inside a subdirectory of
-`vale-styles/fixtures/` — with an identical control file at the repo root. The three exempt paths reported **nothing** and the control reported **four**
+Bait carrying all four violations was written below each exempt path rather than directly inside it —
+two levels down in a Stryker sandbox and in a nested checkout under `.claude/worktrees/`, one level
+down under `vale-styles/fixtures/` — with an identical control file at the repo root. The three exempt paths reported **nothing** and the control reported **four**
 findings, one per rule. So `*` crossing `/` holds for a section glob, and the exemptions are not
 merely top-level.
 

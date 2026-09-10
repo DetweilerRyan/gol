@@ -181,8 +181,8 @@ sidecars too: no `JsDoc` rule reaches a `.md` file today, so a sidecar finding i
 vale --config=vale-styles/fixtures/fixtures.vale.ini vale-styles/fixtures
 ```
 
-Contract: the bad fixture reports one finding, of exactly its own rule and nothing else. The good
-fixture reports nothing.
+Contract: the bad fixture reports at least one finding, of exactly its own rule and nothing else.
+The good fixture reports nothing.
 
 Check the silent half too. A good fixture is evidence only if it fires under the wrong rule. Loosen
 the matcher in a scratch copy of the style, and confirm the fixture reports.
