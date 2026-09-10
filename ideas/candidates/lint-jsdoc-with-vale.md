@@ -4,6 +4,12 @@ title: Lint JSDoc with Vale — repo-authored rules, the STE pass, and giving th
 created: 2026-09-10
 ---
 
+> **Second DESIGN pass, 2026-09-10 at `49d955f`, by `architect` in DESIGN mode.** Triggered by a
+> question about Vale's `Std` package. Nothing ratified below is withdrawn. The pass measured three
+> mechanisms nobody had found — rule inheritance, `.vale.ini` parameter overrides, and the undocumented
+> `vale test` runner — declined all three with reasons, corrected one row of Q1's table, and added four
+> confident-zero modes. See "Second design pass" below; read it before Q1, Q3 or Q5.
+>
 > **DESIGN pass ratified 2026-09-10 at `ee9fdba`, by `architect` in DESIGN mode.** Every measurement
 > below was re-derived; four of the original figures did not reproduce and are corrected in place, with
 > the superseded value kept beside the new one. The design ruling is the "Ratified design" section
@@ -125,6 +131,267 @@ How does an agent lint the JSDoc it just wrote, and act on a finding correctly?
 ---
 
 # Ratified design
+
+## Second design pass — `Std`, `vale test`, and rule inheritance (ruled 2026-09-10)
+
+**Nothing in the ratified design is withdrawn. Two mechanisms nobody knew about were measured, and
+both are declined with reasons; three corrections and four new confident-zero modes land in the
+sections below.** Every figure here was produced in a throwaway worktree off `49d955f`, which is
+`ee9fdba` plus three `ideas/`-only commits — so the 104-file corpus is byte-identical to the one the
+first pass measured, and the two reproductions below confirm it.
+
+### What `Std` is
+
+`vale-cli/Std`, 14 rules in six namespaced directories: `Abbreviations` (Acronyms, Latin), `DateTime`
+(DateFormat, TimeFormat), `Grammar` (Contractions, PassiveVoice), `Punctuation` (Ellipses,
+OxfordComma, Spacing), `Readability` (SentenceLength), `Usage` (FirstPersonPlural, FirstPersonSingular,
+GenderedPronouns, GenderedTerms). Its `meta.json` requires `vale_version >= 3.20.0`; this repo runs
+exactly 3.20.0. Its `NOTICE` says every rule was extracted from an existing MIT style — Google,
+Microsoft, IBM — rather than written fresh.
+
+### `extends:` is real inheritance, not copy-and-edit
+
+The hub's phrase "rules you extend" is literal. Measured, four ways:
+
+| probe                                                                    | result                                                                        |
+| ------------------------------------------------------------------------ | ----------------------------------------------------------------------------- |
+| child `extends: Std.Grammar.PassiveVoice`, adding only `level:`/`scope:` | fires correctly — inherits the whole 170-token list **and** the `raw:` anchor |
+| child `extends: Std.Readability.SentenceLength` with `max: 100`          | silent — the override takes                                                   |
+| child `extends: STE.SentenceLength`                                      | reproduces the first pass's **843** exactly — inheritance is faithful         |
+| child reports under **its own** name (`Mine.Child2`), not the parent's   | so a child is a first-class rule, not an alias                                |
+
+**Failure modes are loud.** `extends:` naming a style not on the path, or a typo'd rule inside a style
+that is on the path, both abort the whole run at **E201, exit 2**, quoting the offending line. This is
+the one mechanism in the Vale surface so far that fails safe by default.
+
+**Hazard, and it is the reason inheritance is not free: a child key _replaces_ the parent's, it does
+not merge.** A child of `STE.SentenceLength` that adds `scope: text.comment.block.ts` silently **loses**
+the parent's `scope: sentence`, and the `occurrence` rule starts counting words per whole comment block
+instead of per sentence — measured, `useGridPointerGestures.ts`'s `onPointerPosition` hover reported as
+a "134-word sentence". It still reports, so this is not a confident zero; it is a **confident wrong
+number**, which is worse. Two of `Std`'s 14 carry a `scope:` (`Readability.SentenceLength` and
+`Punctuation.OxfordComma`); the other twelve can be re-scoped by a child safely.
+
+### `Rule[param]` overrides work in `.vale.ini` — and are banned here
+
+Measured on 3.20.0, undocumented in `vale --help`:
+
+| form                                                            | effect                                                                      |
+| --------------------------------------------------------------- | --------------------------------------------------------------------------- |
+| `Std.Readability.SentenceLength[max] = 100`                     | **works** — populates `RuleToParams`, silences the rule                     |
+| `Std.Readability.SentenceLength[scope] = text.comment.block.ts` | **works** — corpus findings drop from all comments to block comments only   |
+| `Std.Readability.SentenceLength.scope = …` (dotted form)        | **silently ignored** — parsed as a check name, `ls-config` shows it `false` |
+| bare `scope = …`                                                | **silently ignored**, same way                                              |
+| `…[scope] = bogus.nonsense.scope`                               | **silent, exit 0** — the rule matches nothing                               |
+
+**`RuleToParams` is global, not per-section, and that is what disqualifies it.** Measured: with
+`[*.md]` enabling `STE`-style `SentenceLength` and `[*.ts]` setting `Rule[scope] = text.comment.block.ts`,
+the 29-word sentence in the `.md` file reported **nothing** — the `.ts` section's param suppressed the
+rule on Markdown. Two sections setting the same param conflict with **last-one-wins**, again globally:
+with `[*.ts]` and `[*.tsx]` each naming their own scope, `a.ts` went silent and only `a.tsx` reported.
+
+Three consequences, all of which the design takes:
+
+1. The mechanism **cannot** express Q4's per-rule, per-extension scope table. One rule has one scope,
+   tree-wide.
+2. It fails silently and in the **suppressing** direction, which is the dangerous one.
+3. So **`scope:` stays in the rule file, and `.vale.ini` never carries a `Rule[param]` line.** That is
+   an addition to the Interfaces list below, not a preference.
+
+### `vale test` exists, gates for real, and cannot reach any rule this slice ships
+
+**Write this down, because the next reader will find `vale test` and assume the Q3 harness was
+redundant.** It is absent from `vale --help`'s command list; only `vale test --help` documents it
+("Run the test cases kept beside a configuration's rules", `vale test [path...]`). It runs a rule's
+inline `tests:` key — `name` / `input` / `want`, where `want` is the exact expected output line
+(`1:16:Style.Rule:message`) or `""` for silence. All 14 `Std` rules carry one; neither `STE` nor `Slop`
+does.
+
+**It is a real gate.** Measured: **0** on pass, **1** on a mismatch with a diff, **2** on a runtime error.
+
+**And it cannot test a comment-scoped rule.** Isolated: one rule, one correct `want`, passes unscoped
+(exit 0); the identical rule with `scope: text.comment.block.ts` added fails (exit 1) with the expected
+line and no actual line.
+
+**The reason is sharper than "input is plain text": `input:` is always parsed as Markdown.** A
+`scope: heading` rule passes on `"# A foobar here\n"` and stays silent on the same words without the
+`#`. So the `[formats]` mapping cannot reach it, there is no per-test extension key, and an unknown key
+(`ext:`) is accepted and ignored without a word.
+
+**Four new confident-zero modes**, on top of the three the first pass found:
+
+| mode                                             | symptom                                                                                                          |
+| ------------------------------------------------ | ---------------------------------------------------------------------------------------------------------------- |
+| a rule file with **no `tests:` key**             | **silently skipped** in directory mode — a dir with one tested and one untested rule reports "1 file — 2 passed" |
+| a `Rule[param]` line in any section              | applies **globally**; a scope set for `.ts` suppresses the same rule on `.md`                                    |
+| a dotted or bare `scope =` line in `.vale.ini`   | parsed as a check name, enables nothing, disables nothing, exit 0                                                |
+| `Rule[scope]` naming a scope that does not exist | rule matches nothing, exit 0 — the ini-level twin of the rule-file mode the first pass found                     |
+
+The loud ones, for contrast: a directory where **no** rule has tests gives "no test cases found", exit 2;
+an empty directory gives "no test files found", exit 2; a missing path gives a `stat` error, exit 2.
+
+**One more trap: `vale test` resolves `extends:` against the current working directory**, not against
+any `.vale.ini`'s `StylesPath`. The same child rule passes when run from the directory holding its
+parent style and aborts at E201 exit 2 when run from one directory up.
+
+#### Ruling on Q3 — the harness stands, with one new contract clause and one prohibition
+
+The Q3 file-fixture harness survives, **and it now has the reason the first pass could not state**:
+Vale ships a native rule-test runner that this design's rules specifically cannot use.
+
+- **Interface 3 gains a clause: a comment-scoped rule must not carry a `tests:` key.** The only test it
+  can pass is `want: ""`, which passes **vacuously** — a green assertion about nothing, the same
+  licensing direction as narrowing a generator to clear a finding. Ban it so nobody reads a passing
+  `vale test` as evidence about a scoped rule.
+- **This slice does not run `vale test` at all, and `prose-linting.md` says why.** Every rule it ships is
+  comment-scoped, so `vale test vale-styles/` reports "no test cases found" and exits 2 — which reads as
+  a broken harness rather than as a design decision.
+- **No part of the harness gets simpler.** The tempting simplification — leave a rule unscoped so it can
+  carry inline `tests:`, and let `.vale.ini` supply the scope — is closed twice over: the ini scope
+  mechanism is global and silent (above), and an unscoped rule fires on every comment, which is the
+  untriaged backlog Q2 forbids. Recorded so the next reader does not re-derive it.
+
+### Ruling on Q1 — unchanged, and one row of its table is corrected
+
+**`Packages = Std` is not added. The two-`StylesPath` ruling stands verbatim**, and `.vale.ini`'s
+`Packages` line is untouched.
+
+The decisive cost is measured: **any tracked rule that `extends: Std.*` makes `.vale/` a hard
+precondition for loading _any_ rule.** A missing parent aborts the whole run at E201 exit 2. That
+destroys the property Q3 specifically measured and relied on — that the fixture harness needs no
+`.vale/` and works in a fresh worktree before `vale sync`. Collision risk is moot in the other
+direction: `Std` and `JsDoc` are different style names, so first-wins never arbitrates between them.
+The residual collision risk is only that a repo-authored style must never be named `Std`, `STE` or
+`Slop`.
+
+**Correction to the Q1 table, and it is the kind of row that fails open.** The row reading
+"`vale sync` target — **the last listed path**" is true only when no already-synced package redirects
+it. Measured: `.vale/.vale-config/0-vale-llm-slop.ini`, shipped inside the vale-llm-slop package,
+declares `StylesPath = styles`. With that file present, `Packages = Std` synced to
+**`.vale/.vale-config/styles/Std`**, not to `.vale/Std`. Restate the row as: _the sync target is the
+last listed `StylesPath`, unless a package-supplied `.vale-config/*.ini` redirects it_ — and carry the
+measurement into the rationale sidecar.
+
+### Ruling on adoption — ignore `Std` for slice 1; neither adopt nor extend
+
+Four reasons, each measured:
+
+1. **Nothing in `Std` speaks to slice 1's premise.** The four repo-authored rules encode a
+   `doc-comments.md` invariant — interface altitude, measurement placement, opener form, dated-record
+   vocabulary. `Std`'s 14 are general English style. There is no parent to inherit from.
+2. **`Std.Grammar.Contractions` inverts this repo's house rule.** It is a `substitution` rule from
+   Microsoft style swapping `are not` → `aren't`, `cannot` → `can't`, `do not` → `don't`. It yields
+   **173** findings on the corpus, every one of which asks for the opposite of what `STE.Contractions`
+   asks for. A wholesale `BasedOnStyles = Std` enables it.
+3. **All 14 ship `level: suggestion`** against this repo's `MinAlertLevel = warning`. Enabled as
+   shipped they are **silent and look enabled** — the same shape as the `agent-tools` hook's
+   `VALE_HOOK_LEVEL` default trap, in the opposite direction. Every one would need re-levelling by
+   name, and `.vale.ini`'s own principle of disabling by name means declining `Std` costs 14 explicit
+   lines rather than an omission.
+4. **The `.vale/` precondition above.**
+
+#### Nothing in `Std` is worth adopting outright either
+
+All 14 run over the 104-file corpus, all comments, `MinAlertLevel = suggestion`:
+
+| rule                         | findings | verdict on the JSDoc surface                                                     |
+| ---------------------------- | -------: | -------------------------------------------------------------------------------- |
+| `Readability.SentenceLength` |      893 | duplicates `STE.SentenceLength` and counts differently — see Q5 below            |
+| `Grammar.PassiveVoice`       |      370 | duplicates `STE.PassiveVoice` with worse recall — see Q5 below                   |
+| `Abbreviations.Acronyms`     |      324 | a false-positive machine on code prose; every sampled hit is `AST`               |
+| `Grammar.Contractions`       |      173 | **inverts the house rule**                                                       |
+| `Abbreviations.Latin`        |       38 | plausible (`e.g.` → "for example"), but 38 findings is a backlog Q2 forbids      |
+| `Punctuation.Ellipses`       |       13 | fires on legitimate elision inside quoted prose                                  |
+| `Usage.FirstPersonPlural`    |       13 | the closest thing to a genuine register rule here (`we`, `our`, `us` in a hover) |
+| `Punctuation.OxfordComma`    |       11 | fires on non-list `and` constructions                                            |
+| `Usage.FirstPersonSingular`  |        6 | same register argument, same backlog objection                                   |
+| `Punctuation.Spacing`        |        2 | both false positives — `metricsDelta.T`, `env.M` read as a missing space         |
+| `DateTime.DateFormat`        |        0 |                                                                                  |
+| `DateTime.TimeFormat`        |        0 |                                                                                  |
+| `Usage.GenderedPronouns`     |        0 |                                                                                  |
+| `Usage.GenderedTerms`        |        0 |                                                                                  |
+
+The two that came closest — `Usage.FirstPersonPlural`/`FirstPersonSingular` at 19 combined, and
+`Abbreviations.Latin` at 38 — are declined on Q2's constraint rather than on their merits: each lands a
+backlog nobody has triaged. **Both are legitimate candidates for a later slice**, and that slice would
+pair the rule with its remediation the way Q2 requires of slice 2. Neither is slice 1's.
+
+### Ruling on Q5 — `Std` does not displace `STE` for slice 2, and both halves are measured
+
+**`PassiveVoice`: `STE`'s `sequence` mechanism wins on recall, and that is what slice 2 needs.**
+
+Control first, as the first pass's Trap 2 requires: scoped children of both rules fired on the same
+three bait comments, at the same three offsets, before any corpus number was read.
+
+Over the 104-file corpus at `scope: text.comment.block.ts`: **`STE` 96, `Std` 89, 88 shared.** `STE`'s
+96 reproduces the first pass's `.ts`-only figure of 96 exactly.
+
+- `Std`'s **1** unique hit (`checks.ts`, `is\nleft`) is a genuine passive that `STE`'s POS tagger missed
+  across a line break.
+- Of `STE`'s **8** unique hits, **6 are genuine passives `Std` missed.** Its `raw:` anchor requires the
+  participle adjacent to the auxiliary, so an intervening adverb or negation defeats it — `is
+deliberately not passed`, `is ever rescaled`, `is never clamped`, `is better typed`, `is being aimed`
+  — and its irregular list omits prefixed forms, so `being rebuilt` escapes while `built` is listed.
+- The other **2** are `STE` false positives: `is what makes repeated`, `is this filename named`.
+
+So `Std` trades recall for a little precision. Slice 2's value is finding real passives to rewrite,
+which makes recall the axis that matters. **Keep `STE.PassiveVoice`.**
+
+**`SentenceLength`: not functionally identical, and `Std` is the coarser counter.** At the same
+inherited `scope: sentence`, over the same corpus: **`Std` 893, `STE` 843**, 835 shared — and **683 of
+those 835 shared locations report a different word count**. `Std` tokenises with `\b(\w+)\b`, `STE` with
+`[\w''’-]+`, so `twenty-five` is two words to `Std` and one to `STE`, and a contraction splits the same
+way. Net, `Std` reports 50 more findings on identical prose. Being better maintained does not offset a
+counter that disagrees with the incumbent on 82% of shared findings. **Keep `STE.SentenceLength`.**
+
+**One figure I could not confirm.** The first pass's block-scope `.ts`-only `SentenceLength` count of
+**178** is neither reproduced nor refuted here. The obvious re-measurement — a child inheriting
+`STE.SentenceLength` and adding a comment scope — is invalid for exactly the replace-not-merge reason
+above, since the added `scope:` destroys the parent's `scope: sentence` and the rule starts counting
+whole blocks. Treat 178 as unverified until slice 2 re-derives it by a method that keeps both scopes.
+Slice 1 does not depend on it.
+
+### Ruling on the mutation exemption — unchanged, and the offered reasoning is the weaker of two
+
+Verified: `.gitignore` line 60 is `/.vale/`, so a synced package genuinely does not enter the tracked
+diff. **But that is not the load-bearing argument, and it should not be recorded as one.** The
+invariance argument turns on `stryker.config.json`'s `mutate` list being `src/**` and on no vitest
+project collecting the file — a gitignored path satisfies both, but so does a tracked one outside
+`src/`, which is exactly why the existing `vale-styles/**` argument is stated the way it is. Read the
+other way round it is actively misleading: CLAUDE.md already records that Stryker's sandbox is
+populated from **tracked** files, which is why `.gitignore` itself is deliberately off the invariance
+allowlist. So "untracked" is a fact about sandbox contents, not a proof that a path cannot move a score.
+
+**And under this pass's rulings the question is moot:** no `Packages` line is added, no `.vale/`
+dependency is created, and slice 1's diff is unchanged. The recorded exemption and its argument stand
+verbatim.
+
+### What this pass adds to the descope list
+
+- **`Packages = Std`, and `extends: Std.*` in any rule.** Declined on the `.vale/` precondition, the
+  `Contractions` inversion, and the `suggestion` levels. Revisit only if a future rule needs a large
+  token list that `Std` already carries — inheritance makes that genuinely cheap, at the price of
+  re-arming `vale sync` as a precondition for the whole run.
+- **`vale test`, and inline `tests:` keys.** Unreachable for every rule this slice ships, and banned on
+  a comment-scoped rule because the only test it can pass is vacuous.
+- **`Rule[param]` overrides in `.vale.ini`.** Global, silent, and unable to express the per-extension
+  scope table.
+- **`Std.Abbreviations.Latin` and the two `Usage.FirstPerson*` rules.** Not rejected on merit —
+  deferred, because each lands a backlog and Q2 forbids that.
+
+### Where this pass had to guess
+
+| guess                                                                         | how it gets settled                                                                        |
+| ----------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------ |
+| Whether `Std`'s sync location would have been `.vale/Std` in a clean `.vale/` | delete `.vale/` and sync from scratch; the redirect came from an already-installed package |
+| Whether `Usage.FirstPersonPlural`'s 13 hits are true positives                | read all 13; only 3 were sampled here                                                      |
+| The first pass's 178 block-scope `SentenceLength` figure                      | slice 2 re-derives it with a method that preserves `scope: sentence`                       |
+| Whether `Std` gains a rule that changes any of this                           | `meta.json` carries a releases feed; a re-check costs one `vale sync` and one corpus run   |
+
+### Two more corrections to the file-set rows
+
+- **`prose-linting.md` gains four confident-zero modes rather than three** — the table above.
+- **The duplicated `## Ratified file set` heading below is fixed in this pass.**
 
 ## Q1 — where a repo-authored Vale style lives
 
@@ -549,7 +816,7 @@ is silent and permanent. Its handoff must name the skip, the instruction, and th
 outside the argument above — most plausibly a test under `src/` closing a coverage shortfall — the
 exemption is void from that point and stage 5 runs.
 
-## Ratified file set## Ratified file set
+## Ratified file set
 
 **The rule files below are a proposal, not a specification.** Per the ownership clause, `architect`
 decides which rules exist, what they match and how they are scoped. What is ratified here is the
@@ -607,16 +874,25 @@ match — **so never name a fixture `*.test.ts` or `*.spec.ts`**); `stryker.conf
 
 1. **`.vale.ini` ↔ `vale-styles/`.** `vale-styles` first, `.vale` last. `vale sync` writes only to
    `.vale`; `vale-styles/` is authored and tracked; a style-name collision resolves to `vale-styles/`.
-2. **Rule ↔ scope.** Every rule in `vale-styles/JsDoc/` carries exactly `scope: [text.comment.block.ts]`.
-   No `.tsx`. A rule that needs another scope is a design change, not a rule edit.
+2. **Rule ↔ scope.** Every rule in `vale-styles/JsDoc/` carries its own `scope:` **in its own file**,
+   per Q4's per-rule extension table — which supersedes this item's original "`.ts` only, no `.tsx`"
+   wording. A rule that needs another scope is a design change, not a rule edit. **The scope is never
+   set from `.vale.ini`**: the `Rule[scope]` parameter form works but applies globally and silently.
+   See the second design pass.
 3. **Rule ↔ fixture.** `vale-styles/JsDoc/<Rule>.yml` pairs with `vale-styles/fixtures/<Rule>.bad.ts` and
    `<Rule>.good.ts`, matched by basename. Contract: bad reports ≥ 1 of exactly `JsDoc.<Rule>` and nothing
-   else; good reports 0. A rule without both files is unshipped.
+   else; good reports 0. A rule without both files is unshipped. **A comment-scoped rule must not carry
+   an inline `tests:` key** — `vale test` parses `input:` as Markdown, so the only test such a rule can
+   pass is `want: ""`, which passes vacuously. See the second design pass.
 4. **Harness ↔ live config.** The harness is the only thing that reads `vale-styles/fixtures/`. The live
    `.vale.ini` exempts that path by name.
 5. **Fixture ↔ every other gate.** A fixture is valid TypeScript, passes `npm run lint` and
    `npm run format:check`, is named so it matches no vitest include, and lives outside every tsconfig.
-6. **Token quoting.** Author every `tokens:` entry in **single** quotes, as upstream does. A YAML
+6. **`.vale.ini` ↔ rule parameters.** `.vale.ini` carries no `Rule[param] = value` line, ever.
+   `RuleToParams` is global rather than per-section, so a parameter written inside one section silently
+   changes the rule everywhere it is enabled, and two sections setting the same parameter resolve
+   last-one-wins. Measured in the second design pass.
+7. **Token quoting.** Author every `tokens:` entry in **single** quotes, as upstream does. A YAML
    double-quoted scalar processes `\b` as a backspace escape, so `"\bword\b"` is not the regex it looks
    like. Prettier leaves a double-quoted scalar containing a backslash alone, so **nothing catches this**.
 
@@ -651,6 +927,9 @@ match — **so never name a fixture `*.test.ts` or `*.spec.ts`**); `stryker.conf
   **unable to lint** — never on a finding. Gating on findings would contradict the report-only design
   and the three prompt rules that need judgement, and any gate must read `--output=JSON` rather than
   `$?`, since the live config can never exit nonzero on a finding.
+- **`Packages = Std`, `extends: Std.*`, `vale test`, inline `tests:` keys, and `Rule[param]` overrides
+  in `.vale.ini`.** All five declined with measured reasons — see the second design pass's own descope
+  list, which carries the reason for each.
 - **`.test.ts` register.** Closed for Part B (3 whole-tree findings, none in a test). Open for Part A.
 
 ## What survives from the original open questions
