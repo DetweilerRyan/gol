@@ -2,7 +2,7 @@
 
 **Audience:** the orchestrating session - **Read when:** at session start, before composing any role invocation, and at every merge-protocol step.
 
-The five roles have files. The seat that invokes them does not, and until this article it had no reading list either. That is the gap this article exists to close. **Everything here is either a duty no role can perform, or a contract a role expects the invoking prompt to satisfy.** Those contracts were documented only on the receiving end. Nothing here restates a role's own work.
+The five roles have files. The seat that invokes them does not, and until this article it had no reading list either. That is the gap this article exists to close. **Everything here is either a duty no role can perform, or a contract a role expects the invoking prompt to satisfy. A contract earns its place here only if the role's own file was the one place that documented it.** Nothing here restates a role's own work.
 
 **Why this is an article and not a sixth file in `.claude/agents/`.** That directory's direct `*.md` children are agent files by definition. `listAgentFiles` in `scripts/agent-doc-check/run.ts` hands every one of them to check 2. Check 2 requires frontmatter naming a `tools` allowlist and a `model`. This seat is never invoked as an agent and has neither, so a role file here could only pass the gate by asserting something untrue. `articles/` is excluded from that scan for exactly this reason, and `mutation-testing.md` already names this seat on its Audience line.
 
@@ -30,7 +30,7 @@ Each of these is something a role expects to be told. Nothing on the role's side
 Subagents are stateless between invocations. Two counters therefore belong here and nowhere else.
 
 - **The two-round-trip budget on an adjudicated finding.** `handoffs.md` states the rule and `architect.md` repeats it. What neither can do is apply it, because **nothing but this seat can count to two**. The roles are stateless between invocations, and a third appearance looks like a first to both of them. Hold the count, and escalate to the user when it is reached.
-- **Whether an acceptance spike ran.** `hardener` is told to check that a spike left nothing behind _if the slice ran one_, and only this seat knows. The spike also leaves a throwaway implementation that this seat discards.
+- **Whether an acceptance spike ran.** `hardener.md` tells `hardener` to check that a spike left nothing behind _if the slice ran one_, and only this seat knows. The spike also leaves a throwaway implementation that this seat discards.
 
 ## The escalation lanes that end here
 
@@ -72,7 +72,7 @@ Why this matters more here than elsewhere: every other artifact has a reviewer u
 
 ## When a slice exposes a missing guardrail, amend the role that should have caught it
 
-Treat the gap as part of the work. The worked example: a test file had grown to 38 tests and 19.88s unnoticed. `cleaner` watched mutant _count_ as a split signal, and nobody watched test _runtime_ — the other factor in mutation cost. Fixing only the symptom leaves the blind spot.
+Treat the gap as part of the work. The worked example: a test file had grown to 38 tests and 19.88s unnoticed. That happened because `cleaner` watched mutant _count_ as a split signal, and nobody watched test _runtime_ — the other factor in mutation cost. Fixing only the symptom leaves the blind spot.
 
 `workflow.md` forbids a role editing another role's file without explicit user direction. So **propose the amendment and get the go-ahead** rather than folding it in. Make the edit from this seat rather than from inside a peer role. Say in the commit message that the user authorized it, so it stays traceable. Prefer the narrowest home: one role's file over a shared article when only one role needs it.
 
