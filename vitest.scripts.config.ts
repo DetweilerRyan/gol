@@ -17,9 +17,9 @@ export default defineConfig({
     // Pins fast-check's global seed, but only when this process is itself
     // running under Stryker -- see fast-check-stryker-seed.ts's header
     // comment and vite.config.ts's `property` project, which carries the
-    // other setupFiles entry (scripts/'s two *.property.test.ts files need
-    // the same pin as src/'s fourteen, and this config is the only one that
-    // reaches them). Applied to every test in this project rather than only
+    // other setupFiles entry. Every *.property.test.ts under scripts/ needs
+    // the same pin as the ones under src/, and this config is the only one
+    // that reaches them. Applied to every test in this project rather than only
     // the property files -- harmless, since the pin is a no-op unless
     // fast-check is actually in use, and scoping setupFiles any narrower
     // than the whole project isn't a vitest option.
