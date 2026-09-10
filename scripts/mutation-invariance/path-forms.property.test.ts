@@ -30,12 +30,12 @@
 // running just this file with `npx vitest run --config
 // vitest.scripts.config.ts scripts/mutation-invariance/path-forms.property.test.ts`.
 // Counts are of this file's own tests at the time of measurement -- six
-// properties plus one pinned row, seven in all -- and each break was applied
-// alone and reverted before the next:
+// properties plus a six-row pinned table, twelve in all -- and each break
+// was applied alone and reverted before the next:
 //   * `matchesChangedPath`'s `changedPath.startsWith(`${dir}/`)` reduced to
 //     `changedPath.startsWith(dir)` -- the classic fail-open prefix bug, and
-//     the one that would mark a real diff invariant and skip stage 5. 2 red:
-//     the sibling-prefix property and the empty-directory row.
+//     the one that would mark a real diff invariant and skip stage 5. 3 red:
+//     the sibling-prefix property and two empty-directory rows.
 //     path-forms.test.ts catches this one too, but only because someone
 //     thought to write the `features-x/foo` row down.
 //   * `vitestExcludeCovers`'s three equality tests reduced to
@@ -141,17 +141,26 @@ describe('path-forms -- the recognised forms are recognised', () => {
   })
 })
 
-// Degenerate values DIR cannot draw, pinned deterministically rather than
-// left to the generator -- DIR's segments are non-empty by construction, so
-// the empty directory is unreachable from it.
-describe('path-forms -- the empty directory', () => {
-  it('is what directoryOf recovers from "/**", and still fails safe', () => {
-    // `/**` is rejected by the schema's `path` pattern, which requires at
-    // least one leading character, so no config can carry it. Pinned anyway
-    // because it is the one input that makes `dir` empty, and an empty dir
-    // is where a prefix check degenerates into matching everything.
-    expect(directoryOf('/**')).toBe('')
-    expect(matchesChangedPath('/**', 'src/camera.ts')).toBe(false)
-    expect(matchesChangedPath('/**', '')).toBe(false)
+// Degenerate values pinned deterministically rather than left to the
+// generator, because DIR cannot draw either of them: its segments are
+// non-empty by construction, so the empty directory is out of reach, and its
+// alphabet excludes `*`, so a `**` entry path is too. Both are rejected by
+// schemas/mutation-invariance.schema.json's `path` pattern, so no config can
+// carry one -- they are pinned because they are where a prefix check
+// degenerates into matching everything, which is the fail-open direction.
+//
+// An it.each table rather than one it() block per row: dry4ts:scripts scores
+// the two files in this pair together, and a describe-plus-three-expects
+// block here is structurally identical to path-forms.test.ts's own.
+describe('path-forms -- degenerate values DIR cannot draw', () => {
+  it.each([
+    ['the empty string is the directory directoryOf recovers from "/**"', () => directoryOf('/**'), ''],
+    ['an empty-directory entry matches no changed path', () => matchesChangedPath('/**', 'src/camera.ts'), false],
+    ['nor does it match the empty changed path', () => matchesChangedPath('/**', ''), false],
+    ['a bare "**" is not the dir/** form at all', () => directoryOf('**'), undefined],
+    ['so it matches by equality only, like any bare file', () => matchesChangedPath('**', 'src/camera.ts'), false],
+    ['and an empty exclude glob covers only the empty directory', () => vitestExcludeCovers('', 'src'), false],
+  ] as const)('%s', (_label, compute, expected) => {
+    expect(compute()).toEqual(expected)
   })
 })
