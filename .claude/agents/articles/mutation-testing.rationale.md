@@ -493,7 +493,7 @@ That slice also supplied the counter-shape the budget has to tolerate. `analyze.
 
 Moved out of `CLAUDE.md` by `the-invariance-allowlist-omits-paths-that-provably-cannot-move-a-mutant`. That file now names only the command, so this is the sole prose home for why each entry is sound. The list itself lives in `mutation-invariance.config.json`, which is the single source of truth; this section explains, and can rot without changing what the gate does.
 
-**`npm run mutation-invariance`'s check C4 requires every path in that config to appear verbatim here.** So this section is bound to the config mechanically. Adding an entry without an argument reds the gate.
+**The mutation-invariance checker's C4 requires every path in that config to appear verbatim here.** So this section is bound to the config mechanically. Adding an entry without an argument reds the gate.
 
 ### The scope of every argument below
 
