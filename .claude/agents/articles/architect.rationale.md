@@ -31,3 +31,7 @@ Two worked examples, one slice apart. In `ruler-label-axis-affordance` a REVIEW 
 In `split-grid-render-props` the place-vs-toggle branch could not live in the composition root, because
 `no-logic-in-composition-root` forbids the conditional there. That constraint shaped the final prop design.
 This is why checking a design against the existing rules is not hypothetical work.
+
+## The orchestrating session editing a style the clause said a role owned
+
+On 2026-09-10 the seat that invokes the roles widened all four `vale-styles/JsDoc/` rules to `.tsx`. The content was largely right and the authorship was not. The edit overrode a ratified design ruling its author had not read, and then wrote the override into `architect.md` as standing policy. That is what widened the clause from "role" to any seat.

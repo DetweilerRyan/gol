@@ -104,10 +104,9 @@ Also read `product`'s **ARIA reach-arounds** — the places its specs had to ass
   authors or changes a rule in that style, which lints the JSDoc blocks in `src/` and `scripts/`.
   Every other role reads the output and reports tensions to you.
 
-  **That binds the orchestrating session too, which is not a role.** The clause once said "role" alone.
-  On 2026-09-10 the seat that invokes the roles widened all four rules to `.tsx` under it. The content
-  was largely right and the authorship was not. The edit overrode a ratified design ruling its author
-  had not read, and then wrote the override into this file as standing policy.
+  **That binds the orchestrating session too, which is not a role.** The clause once said "role" alone,
+  and the seat that invokes the roles edited the style under it. The case is in
+  `.claude/agents/articles/architect.rationale.md`.
 
   That seat has no reviewer upstream of `hardener`, which is the whole reason the clause exists. So a
   finding from there comes to you as a finding, and you make the edit.
