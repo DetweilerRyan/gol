@@ -70,35 +70,52 @@ tool cannot do for you.
 
 ## How a pass damages the file it cleans
 
-A lint pass is an edit, and its defects are not random. Six shapes recurred across six files linted in
-one session, each with an independent review. None is caught by a checker.
+A lint pass is an edit, and its defects are not random. Seven shapes came out of six files linted in
+one session, each with an independent review. One shape appeared in three files and most appeared
+once, so read the list as a catalogue rather than as frequencies. None is caught by a checker.
 
 **1. What a split drops is disproportionately an obligation.** One pass produced four meaning
-regressions and every one weakened a duty. The four were a consequence clause, a measurement, a
-"check that…" demoted to an assertion, and an action that evidence licensed. Each looked like a plausible shortening.
+regressions and every one weakened a duty. The four were a dropped consequence clause and a measurement
+stripped of what its number answers. The other two were a "check that…" demoted to an assertion, and
+an action that evidence licensed. Each looked like a plausible shortening.
 
-**2. So diff the tokens, not your memory.** Take a full tokenize-and-frequency diff of the file
-against its pre-edit copy. Account for every non-zero delta as a split, a deliberate edit, or a
-defect.
+The direction is not uniform, so do not screen for losses alone. The same rollout turned a plain
+enumeration into "in this order", asserting a sequence nobody had argued. A split adds an obligation
+as readily as it drops one.
+
+**2. So diff the tokens, not your memory.** Take a full tokenize-and-frequency diff against the
+pre-edit copy. **Diff the pair rather than the file** whenever the pass also moved content to a
+sidecar. A file-only diff reads every moved sentence as a loss. Account for every non-zero
+delta as a split, a move, a deliberate edit, or a defect.
 
 A fixed word list is the fallback for a file too large to diff whole. Such a list must include
 causal connectives — `because`, `since`, `so`. A lost causal link reads as two adjacent facts, and no
 obligation word moves.
 
-**3. That diff has one blind spot, and it is the worst defect in the set.** Splitting `X and Y` into
-`X. Y.` turns a conjunct into a standalone claim, so the first sentence asserts a sufficiency that was
-never true. Obligation words go **up**, not down, because the condition gained a verb. Read every
-split of a sentence saying when something is finished, permitted or sufficient.
+**3. That diff has one blind spot, and the check reads the defect as an improvement.** Splitting
+`X and Y` into `X. Y.` turns a conjunct into a standalone claim, so the first sentence asserts a
+sufficiency that was never true. Obligation words go **up**, not down, because the condition gained a
+verb. Read every split of a sentence saying when something is finished, permitted or sufficient.
 
-**4. Check list structure, because `format:check` is green over a broken list.** Replacing a whole
+**4. Splitting a sentence also widens definitions.** Detaching a restrictive clause — a `because`, an
+`only if` — leaves a definition covering cases it used to exclude. This shape appeared in three of
+the six files, more than any other. The token diff cannot see it either, because the detached clause
+survives as an adjacent sentence. Read every definition whose sentence you split.
+
+**5. Check list structure, because `format:check` is green over a broken list.** Replacing a whole
 line can dedent the continuations under it, which ends the list early and opens a fresh one at the
-next numbered item. Prettier normalises the break as intentional. Count `^ *1\. ` restarts and
-indented continuations before and after; a moved count means a split list.
+next numbered item. Prettier normalises the break as intentional, so the gate vouches for the break.
+Count indented continuations and top-level list items before and after.
 
-**5. You have not restored a reference until you confirm its anchor exists.** A token check verifies tokens,
-not referents. When a pass removes labels and later puts a citation back, confirm the target survived.
+Counting `^ *1\. ` restarts is not enough on its own. A list that reopens at its next number leaves
+that count unmoved, which is what the one measured break did.
 
-**6. A pass introduces findings as well as clearing them.** Splitting a sentence multiplies be-verb
+**6. A reference is not restored until you confirm its anchor exists.** A token check verifies tokens,
+not referents. A citation survives a pass that removes the label it points at, and the citation token
+shows no delta at all. Note that `npm run reference-check` does not close this gap for doc prose. Its
+citation matcher stops at a backtick, so the backticked form this repo writes never reaches it.
+
+**7. A pass introduces findings as well as clearing them.** Splitting a sentence multiplies be-verb
 sites, and two extra words push a bullet past `ProcedureLength`'s 20-word proxy. Compare residual
 counts to a pre-edit baseline and name what the pass added, rather than reporting a self-inflicted
 finding as a survivor.
@@ -159,14 +176,14 @@ form deliberately, because it reads correctly to someone carrying that narrower 
 
 Three apply mechanically. Three are prompts to look. Know which you are holding.
 
-| rule                  | treat it as | act on a finding?                           |
-| --------------------- | ----------- | ------------------------------------------- |
-| `STE.SentenceLength`  | mechanical  | yes — split the sentence                    |
-| `STE.ParagraphLength` | mechanical  | yes — split the paragraph                   |
-| `STE.Contractions`    | mechanical  | yes, unless the text is **quoted or named** |
-| `STE.ProcedureLength` | a prompt    | only if the list item is a **step**         |
-| `STE.OneInstruction`  | a prompt    | only if it chains two **actions**           |
-| `STE.PassiveVoice`    | a prompt    | only if a **rule** hides its actor          |
+| rule                  | treat it as | act on a finding?                       |
+| --------------------- | ----------- | --------------------------------------- |
+| `STE.SentenceLength`  | mechanical  | yes — split the sentence                |
+| `STE.ParagraphLength` | mechanical  | yes — split the paragraph               |
+| `STE.Contractions`    | mechanical  | yes, unless the text **names** the word |
+| `STE.ProcedureLength` | a prompt    | only if the list item is a **step**     |
+| `STE.OneInstruction`  | a prompt    | only if it chains two **actions**       |
+| `STE.PassiveVoice`    | a prompt    | only if a **rule** hides its actor      |
 
 **What puts a rule in one column or the other is whether its trigger _is_ the defect.** A sentence over
 25 words is exactly the thing `SentenceLength` claims to find, and a contraction is exactly what
@@ -200,7 +217,7 @@ real defects**. Both had survived a bulk read of the same list one slice earlier
 
 25-word cap on a sentence. Split it. This is the one rule here a sweep can follow without judgement.
 
-### `STE.Contractions` — act on every finding except a quotation
+### `STE.Contractions` — act on every finding the text uses rather than names
 
 Expand it. At the head of an instruction, "Do not" also carries more weight than "Don't". So this rule
 tends to improve a heading rather than merely conform it.
@@ -210,21 +227,32 @@ rather than used.** A contraction inside quoted prose belongs to the file you ar
 it misquotes that file. A contraction named as an example — "'Do not' carries more weight than 'Don't'"
 — is the subject of the sentence, not its voice.
 
-This article is the live example, and carries three such findings that stand unfixed on purpose: **two
-naming the word itself, one quoting `engineering.md`.** It also carries `OneInstruction` findings for
-the same reason. The sentence ordering the two length rules is false-positive class 1: a specified order,
-not two actions.
+**Quotation marks are not the test, and reading them as the test is how this class gets over-applied.**
+A contraction inside invented internal speech is a use, so expand it. Ask whether the sentence quotes
+another file or names the word itself. Nothing else earns the exemption.
+
+This article is the live example, and carries `Contractions` findings that stand unfixed on purpose:
+**some naming the word itself, some quoting `engineering.md`.** It also carries `OneInstruction`
+findings for the same reason. The sentence ordering the two length rules is false-positive class 1: a
+specified order, not two actions.
 
 **An article about a rule will trip that rule, and this holds for every rule here rather than for this one
 alone.** A guidance article quotes the defect it governs, so its findings are dominated by mentions rather
-than uses. Measured on this file: 46 prompt findings, every one exempt, and most of them the article
-quoting its own examples. **Expect that shape when you lint guidance prose, and do not read a high count as
-a dirty file.**
+than uses. Every prompt finding on this file triages as exempt, most of them the article quoting its own
+examples. The dated count and its per-class breakdown are in `prose-linting.rationale.md`.
+**Expect that shape when you lint guidance prose, and do not read a high count as a dirty file.**
 
-**A second exempt class, and it is a rule false positive rather than a judgement.** The rule's
-possessive token ends `(?!\s)`. So a possessive followed by **punctuation** fires, and one followed
-by a **space** does not. "the cleaner's, architect's, and hardener's gates" yields two findings from
-three possessives. Nothing is wrong with the prose; the comma is doing it.
+**A second exempt class, and it is a rule false positive rather than a judgement.** A **bare**
+possessive fires only when punctuation follows it, because the rule's possessive token ends `(?!\s)`.
+So "the cleaner's, architect's, and hardener's gates" yields two findings from three possessives.
+Nothing is wrong with the prose; the comma is doing it.
+
+**Backticking the noun suppresses the finding too, and that is a second, independent mechanism.**
+Measured on vale 3.20.0 over six probe sentences. A possessive on a backticked noun fired in none of
+them, before a comma, a period or a space. A bare one fired before the comma and the period alone.
+Reading the rule's own regex cannot tell you this, because the regex never sees what the Markdown
+scoper removed first. The account of a refutation that made exactly that error is in
+`prose-linting.rationale.md`.
 
 **Never put `that's` through a mechanical sweep.** It expands to _that is_ or _that has_ by context,
 and only the sentence tells you which. An automated sweep wrote "that is already been done" into a
@@ -255,6 +283,12 @@ none acted on** — rule-with-rationale bullets, the four test-layer definitions
 substitutions, and the standing verification obligations. **Classify the article's bullet convention first.** If it uses
 bullets for rules rather than for procedures, say so once and record the count. Do not reach the same
 verdict 56 times.
+
+**A role file is where this rule and landed practice disagree, and the disagreement is open.** Five
+role files were linted. Two of them left genuine steps unacted on purpose, because the remedy
+separates a step's reasoning from the step it qualifies. Record the classification and the count in
+your commit if you do the same. Do not settle the tension inside one file: the ruling belongs at
+article level, and a silent unilateral divergence is the worst option.
 
 ### `STE.OneInstruction` — act only on genuine chains
 

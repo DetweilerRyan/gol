@@ -374,9 +374,18 @@ count answers; the property-test duty went from "check that…" to "It also mean
 failing", turning an obligation into an assertion; and the Halstead bullet lost "is corroborating
 evidence for splitting it up", removing the action the corroboration licenses.
 
-None looked deliberate. Each is a plausible shortening. The reviewer named the four-for-four pattern
-as the headline finding rather than the individual regressions, and conducted the review under the
-file being reviewed, which it flagged as a conflict rather than claiming it did not operate.
+None looked deliberate. Each is a plausible shortening.
+
+**Read the four-for-four framing as the author's, not the reviewer's.** `21cec03`, the REVIEW commit,
+names no pattern across the four: it leads with the baseline correction and sorts the regressions into
+two classes, "content that left the pair entirely" and "actionable instructions weakened into
+descriptions". The phrase first appears in the author's own idea commit `606caad`. The regressions are
+real and the count is right. The generalisation over them was written by the person who made them, and
+that is worth knowing before treating four instances in one file as a direction.
+
+**One of the four is described more precisely here than in the article's compressed list.** Q4 kept
+its measurement. What the pass dropped was the sentence saying what the count answers, which is a
+different loss from dropping a measurement.
 
 ### The blind spot in a word count
 
@@ -393,9 +402,21 @@ juxtaposed facts. The section's instruction rests on that causation, and the sen
 antecedent without it. Found by a full token-frequency diff, which showed `because` 4 to 3; a fixed
 word list would have had to name that word in advance.
 
-Measured across the four landed role files at the time: sixteen causal connectives dropped, and all
-sixteen survived as adjacency on inspection. The check earns its place by making that a finding
-someone clears rather than a question nobody asks.
+**Note that adjacency is the defect here, not the reassurance.** The two facts above did survive as
+adjacent sentences. That is precisely why the loss was invisible, and the word carries the opposite
+sense in the paragraph below.
+
+A cross-file total was recorded alongside this — "sixteen causal connectives dropped across the four
+landed role files, all sixteen surviving as adjacency". **It does not reproduce, and the inspection it
+claims has no record behind it.** Re-derived 2026-09-10 over `because`, `since` and `so`, comparing
+each file's pre-lint copy with its post-review copy: 22 drops counting the role file alone, and 14
+counting the role file plus its sidecar. Neither figure is 16, and no other definition tried reaches
+it. The only inspection in the record is `7bd7388`'s, which read `coder.md`'s three `because` losses
+and found each one benign.
+
+**The rule never needed the total.** One real loss, found by a full token diff on a file where a fixed
+word list would have missed it, is the whole argument for the check. A cross-file count of drops is
+not a count of defects, because a drop is benign until somebody reads the site.
 
 ### The list that split under a green gate
 
@@ -405,19 +426,26 @@ top-level list plus loose prose, and the next item opened a fresh ordered list. 
 format:check` was green over it** — Prettier normalises the break as intentional — so nothing in the
 repo could have caught it.
 
-The same pass restored a "from step 3(a)" cross-reference whose `(a)`/`(b)` labels it had removed in
-the same edit. A word-count check verifies tokens, not referents.
+The same pass removed the `(a)`/`(b)` labels from the two-purposes prose while keeping the "from step
+3(a)" citation that points at them. Both the pre-lint and the post-lint commit carry that citation, so
+the record shows a citation retained past its anchor rather than a citation restored. A word-count
+check verifies tokens, not referents, and the citation token itself never moved.
 
 ### Findings a pass creates
 
-`orchestration.md`. The pass reported 19 `PassiveVoice` residuals against a measured baseline of 18,
-and 18 `ProcedureLength` against 17. It had fixed one passive and created one, by isolating a quoted
-`engineering.md` section title that the matcher then read as prose. The `ProcedureLength` finding was
-created outright, by a contraction rewrite that took a bullet from under 20 words to 21.
+`orchestration.md`. The pass reported 19 `PassiveVoice` residuals. The true residual was 18, against a
+measured baseline of 18, so the reported number was itself one high — worth stating, because the
+fixed-one-created-one account below only adds up against 18. It had fixed one passive and created one,
+by isolating a quoted `engineering.md` section title that the matcher then read as prose. It reported
+18 `ProcedureLength` against a baseline of 17, and that finding was created outright, by a contraction
+rewrite that took a bullet from under 20 words to 21.
 
-Writing this article's own additions reproduced it a third time: +3 `PassiveVoice` and +2
-`ProcedureLength` against a measured baseline of 34 and 13, plus one `SentenceLength` and one
-`ParagraphLength` that the additions created and then cleared.
+Writing this article's own additions reproduced it a third time. The commit recorded +3 `PassiveVoice`;
+re-measured 2026-09-10 against the same baseline of 34, the figure is **+4** — the gitignored-state
+description, "None is caught by a checker", the "finished, permitted or sufficient" predicates, and the
+quoted broken string "that is already been done". The last one demonstrates the verbatim-quotation
+exempt class the same additions introduced. `ProcedureLength` was +2 as recorded, against a baseline of 13. A `SentenceLength` and a `ParagraphLength` were created and cleared inside the pass, which the
+committed tree cannot show either way.
 
 ### Two baselines measured mid-pass
 
@@ -430,9 +458,92 @@ mid-pass". Twice is a rule.
 
 ### The Contractions mechanism that was plausible and wrong
 
-A rollout commit recorded that the landed role files reached zero `Contractions` because their
-possessives are backticked. Refuted by reading `.vale/STE/Contractions.yml`: the possessive token is
-`\b\w+['’](?:re|ve|ll|d|s)\b(?!\s)`, and the `(?!\s)` is the whole story. A possessive followed by a
-space does not fire; one followed by punctuation does. "the cleaner's, architect's, and hardener's
-gates" produced two findings from three possessives, and the landed peers carry bare possessives that
-read zero because a space follows them.
+This entry has now been wrong twice, in opposite directions, and the second error is the instructive
+one because it was written as a refutation.
+
+**Claim 1, `8907adf`.** Vale fires on a bare possessive and not on a backticked one, "which is why the
+four landed role files reached zero — they write `product`'s".
+
+**Claim 2, `7bd7388`, offered as a refutation of claim 1.** Derived by reading
+`.vale/STE/Contractions.yml`: the possessive token is `\b\w+['’](?:re|ve|ll|d|s)\b(?!\s)`, "the
+`(?!\s)` is the whole story", and the peers "reached zero because their possessives are followed by
+spaces, NOT because they are backticked".
+
+**Measured 2026-09-10, vale 3.20.0, six probe sentences in one in-scope file.** Each sentence carried
+one possessive on `cleaner`, varying only the backticks and the following character:
+
+| form              | followed by | finding |
+| ----------------- | ----------- | ------- |
+| `` `cleaner`'s `` | comma       | none    |
+| `` `cleaner`'s `` | period      | none    |
+| `` `cleaner`'s `` | space       | none    |
+| `cleaner's`       | comma       | fires   |
+| `cleaner's`       | period      | fires   |
+| `cleaner's`       | space       | none    |
+
+So there are two independent suppressors, and each claim named one of them. Claim 1 had the mechanism
+right and the attribution wrong: backticks do suppress, but the peers it cited carry **bare**
+possessives followed by spaces. Claim 2 had the attribution right and the mechanism wrong: it upgraded
+"a space also suppresses" into "the `(?!\s)` is the whole story", and asserted the negative.
+
+**The negative is what the command could not support.** Reading a rule's regex tells you what the regex
+matches. It cannot tell you what Vale hands the regex, because the Markdown scoper runs first and a
+code span never reaches it. A refutation is a claim like any other, and this one outran the file it was
+read from. The likely mechanism is that scoping; the table above is what was measured, and it stands
+whether or not the explanation does.
+
+### The shape that recurred most: a definition widened by a split
+
+Three of the six files, and the only shape in the set that appeared in more than one. Each time, a
+sentence over the 25-word cap was split at a restrictive clause, and the clause became a separate
+sentence. A restrictive clause narrows the thing it attaches to; detached, it narrows nothing.
+
+- `product.md`. The ARIA reach-around definition lost its restrictive `because` clause, so it came to
+  cover any assertion on a CSS class or a pixel measurement, made for any reason.
+- `orchestration.md`. The article's admission criterion lost "Those contracts were documented only on
+  the receiving end", leaving a bold criterion that admits any contract a role expects the invoking
+  prompt to satisfy. That widened the one file no role reviews, in the seat's own favour.
+- `coder.md`. "since that's the layer property tests and mutation testing cover" became "which is the
+  layer …", and `which` attaches most naturally to the wrong antecedent. A restrictive reason was
+  downgraded to a non-restrictive aside.
+
+The token-frequency diff cannot see any of these, for the same reason it cannot see the split
+conjunct: the clause is still there, one sentence later. The article carries this as its own rule
+rather than as a footnote to the conjunct rule, because the two fail in opposite directions — the
+conjunct case makes a claim too strong, and this one makes a definition too weak.
+
+**The direction is not uniform either, and the counter-case is in the same rollout.** `product.md`'s
+VERIFY step 6 gained "in this order" in a list conversion, asserting a sequence nobody had argued.
+That is an obligation the split added rather than dropped. Four regressions in one file are still four
+regressions; they are not a law about which way a split fails.
+
+### Why the token diff has to cover the pair, not the file
+
+The rollout's passes moved evidence to a sidecar and linted in the same commit, so a file-only token
+diff reads every moved sentence as a loss. Measured 2026-09-10 on `architect.md`, `so` counted over
+the pre-lint file against the landed state:
+
+| comparison                 | `so`    |
+| -------------------------- | ------- |
+| role file alone            | 21 → 15 |
+| role file plus its sidecar | 21 → 17 |
+
+Six apparent losses, two of which are real. A reviewer accounting for every non-zero delta on the
+file-only figure spends the pass clearing four moves, which is the surest way to stop doing the check
+at all.
+
+### The `ProcedureLength` divergence, recorded rather than settled
+
+The article says to act on a finding whose list item is a genuine step. Two of the five linted role
+files classified findings as genuine steps and deliberately left them: `coder.md`, six of twenty-two,
+and `product.md`, five of twenty-four. Both times the reason was the same — the remedy moves a step's
+reasoning out from under the step it qualifies, and a role file is read while the step is executed.
+
+`7bd7388` declined to settle it inside one file, on the ground that diverging in one file mid-rollout
+is worse than the residual. That reasoning holds and the question is still open. It is recorded here
+and flagged in the article so the next pass records its own classification rather than diverging
+quietly, which is the outcome nobody would choose deliberately.
+
+Two figures often quoted alongside this are not instances of it. `architect.md`'s 34 and
+`hardener.md`'s 20 unacted `ProcedureLength` findings were classified as **statements**, not as steps,
+so they are the rule working rather than a divergence from it.
