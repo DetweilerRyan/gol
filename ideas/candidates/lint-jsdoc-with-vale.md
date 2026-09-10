@@ -493,7 +493,63 @@ legitimately in an interface statement. It is the first token to drop if a later
 not dropped now, because the one hit it produced is a true positive and narrowing a matcher to clear a
 finding is the move this repo already rejects elsewhere.
 
-## Ratified file set
+## Orchestration — which seat runs what
+
+**The five-role cycle does not apply, and saying so is part of the design.** `product` has no
+user-visible behavior to specify or verify, `coder` has no `src/` behavior to TDD (the three fixes are
+comment-only), and `cleaner` has no new logic to clean. The deliverable is rules, config and docs.
+
+**Slice 1:**
+
+| step                                                               | seat                       |
+| ------------------------------------------------------------------ | -------------------------- |
+| the four rules and their fixtures                                  | `architect`, **authoring** |
+| `.vale.ini`, the `package.json` script, doc edits, the three fixes | the orchestrating session  |
+| review of the whole slice, its own rules included                  | `architect`, REVIEW        |
+| the gate                                                           | `hardener`                 |
+
+`architect` **authors** here rather than reviews — this is its existing `rules/*.yml` responsibility
+applied to a second checker, under the ownership clause above. **Name the self-review conflict in the
+REVIEW prompt**, as `split-architect-role` did: it is reviewing rules it wrote.
+
+**Step 5 is one invocation producing four commits, not four invocations.** The rules share a fixture
+harness and a scope decision, and roles are stateless between calls, so splitting them loses that
+context for no gain.
+
+**Slice 2** is remediation of 227 findings across `src/` and `scripts/` comments. Sequence it after
+slice 1 lands, and expect it to want its own orchestration answer — comment-only edits at that volume
+are closer to the role-file lint passes than to this slice.
+
+### The mutation gate — exempted by user ruling, with the argument
+
+**This slice does not match the mutation-invariance predicate.** Two paths refuse it: `package.json`
+is explicitly off the allowlist alongside `vite.config.ts` and `tsconfig*.json`, and `vale-styles/**`
+is a new path on no allowlist — and an allowlist fails safe precisely so an unanticipated path runs
+the gate.
+
+**The user ruled the full run may be skipped anyway.** That is a ruling, not a predicate match, and it
+is recorded as such so nobody later reads it as the allowlist having grown. The argument, verified
+2026-09-10:
+
+- **`vale-styles/**` yields no mutant.** `stryker.config.json`'s `mutate` list is `src/**/*.ts` and
+  `src/**/*.tsx` minus exclusions. Nothing outside `src/` is mutable.
+- **`vale-styles/**` compiles nowhere.** Measured: a deliberately broken `.ts` placed there passes
+  `npm run build`. All three `include` lists are `["src", "features", "perf"]` and `["scripts"]`.
+- **`vale-styles/**` is collected by no test project.** Measured: a file containing a **failing**
+  vitest test, named `<Rule>.bad.ts`, is listed by neither `vitest list` nor the `scripts` config.
+- **`package.json`'s new script is invoked by no test**, so it can neither create nor re-fate a mutant.
+
+So no mutant is created, removed or re-fated, and the score cannot move.
+
+**Hand this to `hardener` as an instruction naming the diff it was computed over.** `hardener` may
+never grant itself an exemption, and may refuse this one — a refusal costs one run, and a wrong grant
+is silent and permanent. Its handoff must name the skip, the instruction, and the diff.
+
+**The exemption is self-revoking, and here it is likely.** If remediation at any stage writes a file
+outside the argument above — most plausibly a test under `src/` closing a coverage shortfall — the
+exemption is void from that point and stage 5 runs.
+
+## Ratified file set## Ratified file set
 
 **The rule files below are a proposal, not a specification.** Per the ownership clause, `architect`
 decides which rules exist, what they match and how they are scoped. What is ratified here is the
@@ -589,6 +645,8 @@ match — **so never name a fixture `*.test.ts` or `*.spec.ts`**); `stryker.conf
 - **The STE remediation.** Slice 2, config and remediation together.
 - **Linting `.tsx` JSDoc.** Blocked by the scope-selector semantics; the unblocking move is a `src/`
   change to JSX render commentary, which is its own candidate.
+- **The full mutation run**, by user ruling with a verified argument — see Orchestration. Recorded as
+  a ruling rather than an allowlist match, so it is not read later as the predicate having grown.
 - **Any gate, and any CI.** Q6 adds an `npm run prose-lint` script, but it fails only on being
   **unable to lint** — never on a finding. Gating on findings would contradict the report-only design
   and the three prompt rules that need judgement, and any gate must read `--output=JSON` rather than
