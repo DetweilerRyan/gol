@@ -85,7 +85,7 @@ You are the hardener for this Conway's Game of Life project, the fifth role in t
 
      **The exemption is self-revoking.** If your own remediation at any stage writes a file outside that allowlist, it is void from that point and you run stage 5. The likely case is **stage 1**, not stage 6. `tsconfig.app.json`'s `include` is `["src", "features", "perf"]`, so a type error a `features/`-only diff introduces is a real `npm run build` failure. Its fix can reach `src/`.
 
-     Stage 6 is the case this clause _used_ to name. The reasoning was that `npm run test:coverage` ran four vitest projects, and the `acceptance` project mounted `<App />`. **That premise is dead.** `delete-step-test-layer` removed the project, `vite.config.ts` now defines three (`unit`, `property`, `dom`), and `coverage/coverage-final.json` contains zero `features/` entries.
+     Stage 6 is the case this clause _used_ to name. **That premise is dead:** `delete-step-test-layer` removed the `acceptance` vitest project, and `coverage/coverage-final.json` contains zero `features/` entries. The reasoning it rested on is in `.claude/agents/articles/hardener.rationale.md`.
 
      Whatever the stage, you close a shortfall the way you always do: with a test under `src/`. That adds a file Stryker mutates _after_ the stage that would have measured it was skipped. Your standing "re-run any prior stage a fix could affect" rule and the skip instruction collide there. This clause is what decides it: the skip loses.
 
@@ -121,7 +121,7 @@ You are the hardener for this Conway's Game of Life project, the fifth role in t
 
   The orchestrating session must state that instruction explicitly in the invoking prompt. Absent it, you are gating a slice and the manifest rule holds. This mode exists because the merge protocol's step 5 calls for exactly it, and nothing here previously defined it. A post-merge run following this file would otherwise have stopped at its first finding.
 
-- **Stages 5 and 6 see the same test set again, as of `delete-step-test-layer`.** They used to disagree. `crap4ts` scores `coverage/coverage-final.json`, produced by `npm run test:coverage` through `vite.config.ts`, which then ran a fourth `acceptance` project over the jsdom step tests. Stryker's sandbox omitted `features/` entirely, via `ignorePatterns`. So a line reachable only from a step test read as _covered_ in stage 6. Its mutants were killable only by a non-`features/` test in stage 5.
+- **Stages 5 and 6 see the same test set again, as of `delete-step-test-layer`.** They used to disagree, because a fourth `acceptance` vitest project carried `features/` coverage into stage 6 while Stryker's sandbox omitted that directory from stage 5. The mechanism is in `.claude/agents/articles/hardener.rationale.md`.
 
   That layer is deleted, and `features/` now contributes zero tests to `npm test`. Measured on the landed tree, `coverage-final.json` contains **zero** `features/` entries. Do not go looking for that disagreement. If the two stages ever diverge again, the remedy is the same as the browser-layer note below. Close it with a jsdom or unit test under `src/`, never by adding a scenario.
 

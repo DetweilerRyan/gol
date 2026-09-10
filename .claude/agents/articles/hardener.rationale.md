@@ -21,3 +21,9 @@ Measured on `main` at `1895906`: `npm run test:mutation:scripts` **also aborted,
 ## The incremental cache once had a structural floor
 
 Stage 5's incremental run used to carry a structural floor of ~10% of mutants and ~3m45s, re-tested even when nothing changed at all. `@fast-check/vitest` interpolated the run's seed into each property test's _title_, and Stryker's `IncrementalDiffer` matches cached results _by test name_, so every property test looked brand-new every run. `pin-stryker-seed-to-unblind-the-mutation-gate` removed it.
+
+## The `acceptance` project, and the stage 5 / stage 6 disagreement it caused
+
+`crap4ts` scores `coverage/coverage-final.json`, produced by `npm run test:coverage` through `vite.config.ts`, which then ran a fourth `acceptance` project over the jsdom step tests. Stryker's sandbox omitted `features/` entirely, via `ignorePatterns`. So a line reachable only from a step test read as _covered_ in stage 6. Its mutants were killable only by a non-`features/` test in stage 5.
+
+That same project is why the mutation-invariant exemption's self-revocation clause used to name stage 6. `npm run test:coverage` ran four vitest projects and the `acceptance` one mounted `<App />`, so a `features/`-only diff could genuinely move `crap4ts`. `delete-step-test-layer` removed the project, `vite.config.ts` now defines three (`unit`, `property`, `dom`), and the premise died with it.
