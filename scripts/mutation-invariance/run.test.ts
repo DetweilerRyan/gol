@@ -14,22 +14,28 @@
 // under scripts/ for node:fs read APIs") stops at this file and would miss
 // them.
 //
-// Two different reasons cover the two different buckets of what's read:
+// Different reasons cover what's read, in three buckets:
 //   - vite.config.ts, stryker.config.json, mutation-invariance.config.json,
 //     schemas/mutation-invariance.schema.json: each sits on the config's
 //     own `absent` list, so no allowlist entry rests on the claim that any
 //     of them goes unread by the scripts/ suite -- editing one is already
 //     defined to re-arm the gate.
-//   - .claude/agents/articles/mutation-testing.rationale.md (read for C4)
-//     and `git ls-files` output (read for C3, which checks the
-//     tracked-ness of CLAUDE.md/README.md/.vale.ini/.oxlintrc.json): these
-//     *do* fall under an `allow[]` entry (.claude/** is vitest-exclude
-//     allowlisted). Sound for a different reason -- the config's own
-//     `scope` declares the predicate for `npm run test:mutation` (the src/
-//     run), where nothing in scripts/ is visible at all. Whether it's also
-//     sound for `npm run test:mutation:scripts` is the open question filed
-//     as the-invariance-predicate-does-not-say-which-mutation-run-it-covers,
-//     not settled by this comment.
+//   - .claude/agents/articles/mutation-testing.rationale.md (read for C4):
+//     falls under the `.claude/**` allow[] entry, securedBy vitest-exclude.
+//   - `git ls-files` output (read for C3, which checks the tracked-ness of
+//     every `written-argument` entry -- currently CLAUDE.md, README.md,
+//     .vale.ini and .oxlintrc.json): each of those falls under its own
+//     `allow[]` entry too, but securedBy written-argument, not
+//     vitest-exclude -- a different tier, since none of the four is a
+//     directory a test glob could ever reach.
+//   The last two, unlike the absent-tier bucket above, fall under `allow[]`
+//   entries -- but both are sound for the same further reason regardless of
+//   tier: the config's own `scope` declares the predicate for
+//   `npm run test:mutation` (the src/ run), where nothing in scripts/ is
+//   visible at all. Whether it's also sound for
+//   `npm run test:mutation:scripts` is the open question filed as
+//   the-invariance-predicate-does-not-say-which-mutation-run-it-covers,
+//   not settled by this comment.
 
 import path from 'node:path'
 import { execFileSync } from 'node:child_process'
