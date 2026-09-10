@@ -26,21 +26,31 @@ The package ships **sixteen** rules. Measured 2026-09-10 against the linted corp
 | **eight others**      |    **0** | mixed         |
 
 47 findings total across `.claude/agents/**`. Adding `CLAUDE.md`, which is now linted too, takes
-`Metaphor` from 25 to **30** and the total to 53. `Metaphor` alone is over half either way.
+`Metaphor` from 25 to **30** and the total to **57** — `CLAUDE.md` contributes ten findings across six
+rules, not the five `Metaphor` hits alone. `Metaphor` is 30 of 57, still over half either way.
+
+Shipped levels across the sixteen: **one `error`** (`Assistant`), **seven `warning`**
+(`EmptyQualifiers`, `Metaphor`, `NegativeParallelism`, `RestatesCode`, `SelfPraise`, `VagueReasons`,
+`Vocabulary`), **eight `suggestion`** (the rest).
 
 ## Complication
 
 **No single file can carry this spike, and that is measured rather than assumed.** The widest spread
-in the corpus is **three of sixteen rules** in one file — `testing-layers.md`, `prose-linting.md` and
-`acceptance-mutation.md` each hit that ceiling. A pilot article can inform a judgement on three
-rules. It says nothing about the other thirteen.
+among the **articles and role files** is **three of sixteen rules** — `testing-layers.md`,
+`prose-linting.md` and `acceptance-mutation.md` each hit that ceiling. `CLAUDE.md` is the outlier at
+**six of sixteen**, twice any article, and is the widest-spread file in the corpus. Six is still not
+sixteen, so the conclusion holds either way: a single-file pilot can inform a judgement on at most
+six rules, and says nothing about the other ten.
 
-**Eight rules fire nowhere.** `Assistant`, `SelfPraise`, `Transitions`, `Tricolon`, `VagueReasons`,
-`Vocabulary`, `Hedging` and `RestatesCode` produce no finding on any linted file. For those the
+**Seven rules fire nowhere.** `Assistant`, `SelfPraise`, `Transitions`, `Tricolon`, `VagueReasons`,
+`Vocabulary` and `Hedging` produce no finding on any linted file. (`RestatesCode` is **not** one of
+them — it fires once, on `CLAUDE.md`, so it belongs to step 3.) For those the
 question is not "are these findings good" — there are none — but "do we want a ratchet against future
 drift". That is a different question and needs no pilot.
 
-**Nine of sixteen ship at `suggestion`, and `MinAlertLevel = warning` silences them completely.** A
+**Eight of sixteen ship at `suggestion`, and `MinAlertLevel = warning` silences them completely** —
+including **five of the nine rules that actually fire** (`EmDash`, `Ceremony`, `Anthropomorphism`,
+`Overused`, `Headers`). A
 spike that enables a rule without re-levelling it measures nothing and reports a confident zero. This
 is failure mode 1 in `prose-linting.md`'s own list.
 
@@ -49,11 +59,14 @@ Measured during this candidate's own preparation: adding `Slop` to the agent-doc
 into the exempt `*.rationale.md` sidecars, because that exemption section disables the six **STE**
 rules by name and knows nothing about Slop. Findings read **105** with the leak and **47** with it
 closed — so more than half of what a naive enable reports comes from files that are supposed to be
-exempt. Closing it costs one `= NO` line per adopted rule.
+exempt. The 58-finding difference is **entirely** the nine `.rationale.md` sidecars; the delta on
+non-exempt files is exactly zero. Closing it costs one `= NO` line per adopted rule.
 
 **And the edit is four-place.** `.vale.ini` carries three enable sections — the agent-docs glob,
 `[CLAUDE.md]`, `[src/**/*.md]` — because Vale does not inherit per-rule keys across a later
-`BasedOnStyles`. Every adopted rule is three enables plus one disable.
+`BasedOnStyles`. Every adopted rule is three enables plus one disable. Note `[src/**/*.md]` reaches
+**no live file today** — the only `.md` files under `src/` are three `.rationale.md`, all exempted by
+the later section — so it is three live places plus one precautionary.
 
 ## Question
 
@@ -71,8 +84,12 @@ it is a large topic article (29,812 bytes) with the full register mix — read t
 facts, procedures, closed decisions; it has a `.rationale.md` sidecar, so the pilot also exercises
 the exemption the leak above threatens; and it is one of the three files at the three-rule ceiling.
 
-**`prose-linting.md` is explicitly disqualified as pilot**, on its own text: an article about a rule
-trips that rule, and its findings are dominated by mentions rather than uses.
+**`prose-linting.md` is disqualified as pilot**, but not for the reason first written here. Its four
+`Slop` findings were checked one at a time, and **all four are uses, none is a mention** — the
+self-reference effect is not present today. The real reasons are two. It is the spike's own
+deliverable (see Touches), so remediating it during the pilot conflates the sample with the output.
+And it is the file that _will_ accumulate mentions once each adopted rule is documented there with a
+quoted example, which makes it a bad long-term instrument rather than a bad one now.
 
 ### Step 1 — `Metaphor`, first and corpus-wide, because it is not a pilot-sized question
 
@@ -84,7 +101,7 @@ the largest question in the spike from a single instance.
 
 | phrase                           | count | where                                               |
 | -------------------------------- | ----: | --------------------------------------------------- |
-| `load-bearing`                   |    14 | 8 files, including `CLAUDE.md` and four role files  |
+| `load-bearing`                   |    14 | 8 files, including `CLAUDE.md` and two role files   |
 | `reads as a` / `read as a`       |     8 | 5 files, including `CLAUDE.md`                      |
 | `provenance`                     |     4 | `architecture.md`, `engineering.md`, `CLAUDE.md`    |
 | `stands in for` / `stand in for` |     3 | `engineering.md`, `cleaner.md`, `testing-layers.md` |
@@ -100,15 +117,26 @@ rejection of that one term drops `Metaphor` from 30 findings to 16. And `provena
 metaphor in this corpus at all: `architecture.md`'s rule is literally about **an argument's
 provenance**, which is the word's ordinary sense.
 
-**A phrase-level rejection is not a rule-level rejection.** `Slop` rules are `existence` matchers
-over a token list, so a term can be removed from the rule's own list rather than the rule being
-dropped. Whether this repo should carry a patched `Slop` style is its own question, and it belongs to
-the user, not to the spike.
+**A phrase-level rejection is not a rule-level rejection, and it needs no patched style.** Fifteen of
+the sixteen `Slop` rules are `existence` matchers over a regex list, so a term is separable from its
+rule. (`EmDash` is the exception: `occurrence`, `scope: paragraph`, one token and `max: 2`. There is
+no phrase to reject there, only a threshold to tune.)
+
+**Vale's own `TokenIgnores` does this from `.vale.ini`, with no vendoring and no patch.** Measured
+2026-09-10 against the closed config over `.claude/agents/**`: adding the five phrases as
+`TokenIgnores` patterns took `Slop` from 47 findings to 23, while `STE` stayed at 785 — zero
+collateral on today's corpus. Two limits, both measured. It matches **raw source**, so `the _shape_
+of the` survives the pattern `(the shape of the)`, and that one finding is the 25th of 25. And it is
+a per-format-section key, so it repeats in the same three live sections the `= NO` lines do.
 
 ### Step 2 — the two other rules the pilot exercises
 
 `EmDash` (L41) and `Ceremony` (L67, "Note that"). `Metaphor`'s pilot finding (L121, "stands in
 for") is folded into step 1.
+
+Corpus-wide each of these is four sites rather than one: `EmDash` in `testing-layers.md` (1),
+`mutation-testing.md` (2) and `coder.md` (1); `Ceremony` in `testing-layers.md`, `prose-linting.md`,
+`doc-comments.md` and `CLAUDE.md` (1 each).
 
 For each, in isolation: re-level to `warning`, run on the pilot only, show the user **the finding,
 the sentence, and the proposed rewrite**. The user rules adopt / reject / adopt-with-exemptions.
@@ -117,19 +145,21 @@ on one cannot be contaminated by fatigue from another.
 
 ### Step 3 — rules that fire elsewhere but not on the pilot
 
-`EmptyQualifiers` (6), `NegativeParallelism` (4), `Overused` (2), `Anthropomorphism` (2),
-`Headers` (1).
+`EmptyQualifiers` (7), `NegativeParallelism` (5), `Anthropomorphism` (3), `Overused` (2),
+`Headers` (1), `RestatesCode` (1). Counts include `CLAUDE.md`.
 
 Same protocol, but the sample comes from whichever files carry the findings. The pilot cannot serve
 here, and pretending otherwise would be the claim-scope error this repo already documents.
 
-### Step 4 — the eight that fire nowhere
+### Step 4 — the seven that fire nowhere
 
 No findings to review, so the judgement is different and should be put to the user as such: **is this
 a ratchet worth having against prose that has not drifted yet?** Cost is one `= NO` line and three
-enables per rule; benefit is catching a shape before it lands. `Assistant` is the interesting one —
-it ships at `error`, it is the only rule in the set that does, and "assistant voice in committed
-prose" is exactly the drift an agent-authored corpus is prone to.
+enables per rule; benefit is catching a shape before it lands. Put each rule's token list, or a
+synthetic line that trips it, in front of the user — with no findings there is nothing else to rule
+on. `Assistant` is the interesting one: it ships at `error`, it is the only rule in the set that
+does, and "assistant voice in committed prose" is exactly the drift an agent-authored corpus is
+prone to.
 
 ### Output
 
@@ -147,16 +177,21 @@ is the follow-up, and its size is knowable only once the set is chosen.
 
 ## Open questions
 
-- **Should this repo carry a patched `Slop` style?** Step 1 may reject a phrase without rejecting
-  its rule, and `Slop` rules are `existence` matchers over token lists, so a term can be dropped from
-  the list. That means vendoring or patching a style package, which the repo does elsewhere for
-  crap4ts and which `quality-tooling.rationale.md` records the mechanism for. It is a real cost and
-  a real precedent, and it is the user's call rather than the spike's.
+- **How should a phrase-level rejection be expressed?** `TokenIgnores` in `.vale.ini` is measured to
+  work (see step 1) and is the cheap answer. The alternative — vendoring or patching the style
+  package — is the only route to a _narrower_ edit, such as extending `Metaphor`'s existing
+  `provenance` lookbehind (which already exempts `SLSA`, `build`, `data`, `artifact`, `image`,
+  `package`, `chain`, `file`) to cover `argument` and `rule`. The crap4ts precedent does **not**
+  transfer: `patch-package` runs on `node_modules` from `npm postinstall`, and `.vale/` is gitignored
+  and populated by a hand-run `vale sync`, which that mechanism never reaches.
 - **Do role files need their own pilot?** They are a different register — imperative instruction
-  rather than explanation — and `architect.md` and `coder.md` each fire two rules. A confirmation
-  pass on one role file may be cheaper than assuming the article verdict transfers.
-- **Does `CLAUDE.md` differ?** It is now linted and is a routing index, which is a third register
-  again. Not measured here.
+  rather than explanation — and `architect.md` (`NegativeParallelism` 3, `Metaphor` 1) and `coder.md`
+  (`EmptyQualifiers` 2, `EmDash` 1) each fire two rules. The sites are already enumerated, so a
+  confirmation pass is cheap.
+- **`CLAUDE.md` is measured now, and it is the widest-spread file in the corpus**: six rules, ten
+  findings. It is a routing index rather than an article, it has no `.rationale.md` sidecar, and it
+  is auto-loaded into every session. It cannot be _the_ pilot, since it cannot exercise the sidecar
+  exemption, but it should be sampled alongside one.
 - **Should any adopted rule gate?** Every STE rule is `warning`, so none moves an exit code. `Slop`'s
   `Assistant` ships at `error`, and adopting it as shipped would be the first prose rule in this repo
   that can fail a run.
