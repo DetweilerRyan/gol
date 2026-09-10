@@ -153,8 +153,8 @@ red `npm run format:check`.
 these rules fight; see `doc-comments.rationale.md` for what that register looks like.
 
 **An empty `BasedOnStyles` is not enough on its own, and this failed silently once.** An explicit
-`STE.Rule = warning` in any section above **activates that rule by itself**, and it survives into the
-sidecar section. `BasedOnStyles` replaces the style list, not the per-rule keys. So the sidecar section
+`STE.Rule = warning` in any earlier section that also matches **activates that rule by itself**, and it
+survives into the sidecar section. `BasedOnStyles` replaces the style list, not the per-rule keys. So the sidecar section
 must also switch each enabled rule off by name. Without that it leaks, and it leaks in
 the direction that looks fine: the sidecars get linted and nothing says so.
 
@@ -166,10 +166,11 @@ severity on exactly the technical prose a sidecar holds.
 the whole exemption, and nothing checks it. The test is one command: `vale` on any `*.rationale.md` must
 report zero.
 
-**Enabling a rule is a four-place edit, because Vale does not inherit per-rule keys.** `.vale.ini`
-carries the six-rule enable block three times: the agent-docs glob, `[CLAUDE.md]`, and
-`[src/**/*.md]`. The sidecar exemption then switches each rule off once. A seventh rule goes in all
-four.
+**Enabling a rule is a four-place edit, and glob overlap is the reason.** `.vale.ini` carries the
+six-rule enable block three times: the agent-docs glob, `[CLAUDE.md]`, and `[src/**/*.md]`. No
+section's per-rule key reaches a file that section's own glob does not match, so each of the three
+needs its own copy. The sidecar glob overlaps all three, and a key does carry into a later matching
+section. So the exemption switches each rule off once by name, and a seventh rule goes in all four.
 
 <!-- reference-check: allow docs/sub/nested.md -- Vale's own documentation example for glob behaviour, quoted verbatim; not a path in this repo -->
 

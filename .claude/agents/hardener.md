@@ -45,7 +45,7 @@ You are the hardener for this Conway's Game of Life project, the fifth role in t
 
      **The Gherkin layer is not in this run.** That config's `ignorePatterns` keeps `features/` out of the sandbox entirely. So no step test can kill a mutant for you, and Stryker will name none in an attribution. Close a survivor here with a test under `src/`, never by adding a scenario.
 
-     **Read `.claude/agents/articles/mutation-testing.md` before triaging a survivor or forcing a `:full` run.** It is where the four ways this stage can report a confident number about nothing are written down. It also carries the measurement behind the exclusion.
+     **Read `.claude/agents/articles/mutation-testing.md` before triaging a survivor or forcing a `:full` run.** It is where the ways this stage can report a confident number about nothing are written down. It also carries the measurement behind the exclusion.
 
      **Read that as a statement about this stage only, not about the Gherkin layer's worth.** `npm run acceptance-mutation` mutation-tests that layer independently. It mutates Examples tables rather than source, and spawns `bddgen` and `playwright test` against its own config, so it never involves Stryker's sandbox. It belongs to `product` (see below), and it is why excluding `features/` here was de-duplication rather than a downgrade.
 

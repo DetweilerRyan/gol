@@ -359,6 +359,34 @@ one invocation after the change: a role file reports findings, an article report
 **Widening the scope creates no obligation to fix what it revealed.** This article's own rule is to lint the
 file you are editing rather than the directory, so each role file is worked by the slice that edits it.
 
+## Vale carries a per-rule key across sections, measured 2026-09-10
+
+The article states two mechanisms about per-rule keys that sound contradictory, and both hold. A
+per-rule key reaches only the files its own section's glob matches. A per-rule key from an earlier
+matching section then survives into every later section that also matches, whatever that later
+section does to `BasedOnStyles`.
+
+The probe used `STE.ProcedureLength`, which ships at `suggestion` and so fires only where something
+re-levels it. Three throwaway files carried the same over-length list item, under a throwaway config
+with three sections: one re-levelling the rule, one naming `STE` and nothing else, and a last one
+emptying `BasedOnStyles`. Measured on vale 3.20.0 against this repo's own `StylesPath`:
+
+| Sections the file matches                                  | Result     |
+| ---------------------------------------------------------- | ---------- |
+| the re-levelling section                                   | 1 finding  |
+| the `STE`-only section, and no other                       | 0 findings |
+| the re-levelling section and the empty-`BasedOnStyles` one | 1 finding  |
+
+Row 2 is why the enable block repeats three times. The three enable globs match disjoint sets of
+files, so a key written for one never reaches the other two. Row 3 reproduces the 78-finding leak of
+2026-09-08 in miniature, and is why the sidecar section switches each enabled rule off by name.
+
+**The wrong summary of this is "Vale does not inherit per-rule keys", and that sentence reached the
+article for one commit.** Row 3 refutes it. A reader who believes it deletes the six `= NO` lines
+from the sidecar section as redundant, which restores the exact leak the paragraph above them
+documents. Only row 2 is about the four-place edit; row 3 answers a different question, and the two
+rows were collapsed into one claim.
+
 ## The incidents behind "How a pass damages the file it cleans"
 
 Six files were linted to mechanical zero in one session — the five role files and `orchestration.md`
