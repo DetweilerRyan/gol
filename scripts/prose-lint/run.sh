@@ -33,5 +33,30 @@ if [ -z "$files" ]; then
 	exit 1
 fi
 
-echo "$files" | xargs vale --output=line
+# `--no-exit` plus a status check is what splits "cannot lint" from "found
+# something", and the split is measured rather than assumed. Against vale 3.20.0:
+# a clean run and a warning-only run both exit 0; an error-severity alert exits 1,
+# which `--no-exit` turns into 0; a runtime error exits 2, which `--no-exit` does
+# NOT suppress. So with the flag on, any nonzero means vale could not lint.
+#
+# That is the case this script existed for and did not catch. Without the status
+# check below, vale aborting the whole run on one unparseable file -- the failure
+# .vale.ini's own agent-docs section documents -- printed its error to stderr and
+# still reached the "measured zero" line with exit 0.
+#
+# The number the check reads is xargs' own, never vale's, and the two differ by
+# platform: measured against macOS's BSD xargs, a command exit of 1-125 is
+# reported as 1, where GNU xargs reports 123. So do not print it as vale's exit
+# code and do not branch on its value -- only its nonzero-ness carries meaning,
+# which is exactly what `--no-exit` leaves well defined. xargs may also split a
+# long list across several vale invocations; it still reports nonzero if any one
+# of them failed.
+echo "$files" | xargs vale --no-exit --output=line
+status=$?
+if [ "$status" -ne 0 ]; then
+	echo "prose-lint: vale could not lint (xargs status $status), so the output above is not a result." >&2
+	echo "prose-lint: with --no-exit a finding cannot cause this. See prose-linting.md's confident-zero list." >&2
+	exit 1
+fi
+
 echo "prose-lint: linted $(echo "$files" | wc -l | tr -d ' ') tracked file(s). A zero above is a measured zero."

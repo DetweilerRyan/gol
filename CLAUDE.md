@@ -228,7 +228,7 @@ The four gating checkers keep their full entries here, because they are what pol
 
 Eight of the nine run via `tsx`, each as `tsx scripts/.../run.ts`: `npm run halstead4ts`, `acceptance-mutation`, `gherkin-dry`, `perf-report`, `ast-grep:rules`, `agent-doc-check`, `reference-check`, `mutation-invariance`. The ninth, `npm run prose-lint`, is the `sh` script ruled a defect above. Each of those **eight** has its own `.test.ts` unit tests, runnable via `npm run test:scripts`, which is a dedicated Node-environment vitest config. The ninth has none, and cannot: `npm run test:scripts` is a vitest config over TypeScript, so a `.sh` program is unreachable by it. That is the same defect, seen from the test side rather than the gate side. `vite.config.ts` excludes `scripts/**` from the main `npm test` and `npm run test:unit` run, so scripts' tests no longer run there.
 
-**The ast-grep structural rules.** `sgconfig.yml` + `rules/*.yml` are a ninth checker, and the only one that is not a `scripts/` program. [ast-grep](https://ast-grep.github.io) structural rules encode the architectural invariants that were previously prose only.
+**The ast-grep structural rules.** `sgconfig.yml` + `rules/*.yml` are a tenth checker, and the only one that is not a `scripts/` program. [ast-grep](https://ast-grep.github.io) structural rules encode the architectural invariants that were previously prose only.
 
 Report-only **for findings**. Every rule is `severity: warning`, so a rule matching your code does not move the exit code — read the output rather than `$?`. The exit code answers a different question. Measured against ast-grep 0.45.1, **8** means a rule file failed to parse and **1** means an `error`-severity rule matched. So a nonzero exit always warrants investigation.
 

@@ -37,7 +37,15 @@ it does not read as "Vale is not set up here".
 the filesystem, and prints how many files it linted. That trailing count is the point. A zero from a
 clean tree and a zero from a run that linted nothing are the same bytes. Four of the eight ways below
 produce exactly that. The script fails when it **cannot** lint — no binary, no `.vale/`, an
-unloadable config, an empty file list — and never on a finding.
+unloadable config, an empty file list, or a mid-run abort (number 2 below) — and never on a finding.
+
+**That last case is the one the script shipped without.** Vale exits nonzero for two unrelated
+reasons, and the script has to fail on one and not the other. `--no-exit` is what separates them: it
+suppresses the exit-1 an `error`-severity finding causes and leaves the exit-2 a runtime error causes
+untouched. So with the flag on, any nonzero means the run did not happen, and the script now reads it.
+Before that, an aborted run printed its error to stderr and still reached the "measured zero" line
+with exit 0 — a checker written against the confident-zero list reproducing the list's second entry.
+`prose-linting.rationale.md` carries the measurement and the `xargs` caveat.
 
 Run it after editing `.claude/**`, `CLAUDE.md`, a module sidecar, or a JSDoc block. No role owns the
 running, because four seats do the editing.

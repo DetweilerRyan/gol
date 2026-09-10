@@ -659,6 +659,33 @@ reports `0 errors, 0 warnings and 0 suggestions in stdin` and exits 0. Non-inter
 at once, so a mistyped path in a verification command reads as a clean tree. The tell is the words
 "in stdin" where a file count belongs.
 
+### `--no-exit` separates "cannot lint" from "found something", measured 2026-09-10
+
+`scripts/prose-lint/run.sh` declared in its own header that it fails loudly when it cannot lint. It
+did not. The `xargs vale` line discarded its status, and the trailing echo returned 0 unconditionally,
+so a vale abort printed `E100` to stderr and still closed with "A zero above is a measured zero".
+Found by stubbing a `vale` on `PATH` that answered `ls-config` with 0 and the lint invocation with 2.
+
+The fix could not simply fail on any nonzero, because vale's nonzero is overloaded. Measured on vale
+3.20.0, over a scratch config carrying one `warning` rule and one `error` rule:
+
+| what happened             | exit | with `--no-exit` |
+| ------------------------- | ---: | ---------------: |
+| clean file                |    0 |                0 |
+| `warning`-severity match  |    0 |                0 |
+| `error`-severity match    |    1 |            **0** |
+| runtime error (E201/E100) |    2 |            **2** |
+
+`--no-exit` suppresses exactly the finding-driven status and preserves the runtime one, which is the
+split the script's design already claimed. Every rule `.vale.ini` enables is `warning` today, so the
+middle row is latent rather than live — but the flag is what keeps the script honest if a rule is ever
+re-levelled to `error`, instead of silently converting it into a findings gate.
+
+**The status the script reads is `xargs`', not vale's, and it is platform-dependent.** Measured on
+macOS's BSD `xargs`: a command exit anywhere in 1-125 is reported as **1**; GNU `xargs` reports 123 for
+the same case. Both report 127 for a missing command. So the number is fit to test for zero and unfit
+to print as vale's own, which is why the script's message names it as an xargs status.
+
 ### `occurrence` counts less than it looks like it counts
 
 Three probes over one two-paragraph JSDoc block, at the `.ts` block-comment scope:
