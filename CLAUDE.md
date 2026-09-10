@@ -440,7 +440,9 @@ If you use the native `EnterWorktree({ name })` or `Agent({ isolation: 'worktree
 
    **The exemption is self-revoking.** If `hardener`'s own remediation at any stage writes a file outside the allowlist, the exemption is void from that point and stage 5 runs.
 
-   This is not hypothetical, and it is the exemption's most likely failure. Stage 5 is skipped, and stage 6 then legitimately moves — see the paragraph above. `hardener`'s standing duty is then to close a coverage shortfall with a test under `src/`. That adds a file Stryker mutates, _after_ the stage that would have measured it was skipped.
+   This is not hypothetical, and **the trigger is stage 1**. `tsconfig.app.json`'s `include` is `["src", "features", "perf"]`, so a type error a `features/`-only diff introduces is a real `npm run build` failure, and its fix can reach `src/`. That adds a file Stryker mutates, _after_ the stage that would have measured it was skipped.
+
+   **Stage 6 was the example this clause used to give, and the paragraph above now refutes it.** That example rested on the `acceptance` project, whose removal left `coverage/coverage-final.json` with zero `features/` entries, so `crap4ts` cannot legitimately move on an allowlist-only diff. The example outlived its premise and was repaired by `the-invariance-allowlist-omits-paths-that-provably-cannot-move-a-mutant`. Read this as a caution about examples in this clause: **the rule is what binds, and an example that a later slice can falsify is what produced the defect.** Stage 8, `npm run agent-doc-check`, is not a replacement trigger — it moves on the doc entries, but its remediation is prose and cannot reach `src/`.
 
    It is written as a self-revocation rather than as a caveat, because it then resolves safely for a careless reader. The skip instruction is the more specific and more recent one, so anything phrased as an exception to it loses. See `.claude/agents/hardener.md`'s stage 5.
 
