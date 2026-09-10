@@ -513,7 +513,7 @@ The checker verifies the second half against each project's own `exclude`, not a
 
 **`rules/**`** and **`rule-tests/**`** — both directories hold `.yml` and nothing else today, but the predicate is evaluated over a future diff, so the exclusion is what makes the entry sound rather than the current contents. Measured 2026-09-08: a probe in each was collected into the `unit` project, both of them.
 
-**`.vale/**`** — added by `split-mutation-testing-article`, which measured `[unit] .vale/__probe.test.ts` being collected. Note the trap it closed: the directory is gitignored, which is **not** the same as being safe from collection. A `git add -f` makes such a file tracked, at which point it matches this allowlist entry, and without the exclusion it would run inside the sandbox while the predicate answered invariant.
+**`.vale/**`** — the standing evidence that the precondition gets skipped rather than met. `rationale-sidecar-pilot` put the entry on the allowlist; the `sharedExclude` line behind it arrived a slice later, in `split-mutation-testing-article`, which measured `[unit] .vale/__probe.test.ts` being collected and recorded it as closing a live gate hole. So for one slice the entry was live with nothing under it. Note the trap it closed: the directory is gitignored, which is **not** the same as being safe from collection. A `git add -f` makes such a file tracked, at which point it matches this allowlist entry, and without the exclusion it would run inside the sandbox while the predicate answered invariant.
 
 ### Secured by `written-argument`
 

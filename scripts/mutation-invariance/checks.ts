@@ -1,5 +1,6 @@
-// The seven checks over a parsed mutation-invariance config, described in
-// CLAUDE.md's merge-protocol step 5. Every check here is a binary fact --
+// The seven checks over a parsed mutation-invariance config -- the allowlist
+// behind CLAUDE.md's merge-protocol step 5 exemption, which is where the
+// predicate they police is defined. Every check here is a binary fact --
 // this program is a gate, like ast-grep-rule-check and agent-doc-check, not
 // advisory like gherkin-dry-checker or halstead4ts.
 //
@@ -122,7 +123,7 @@ export function checkWrittenArgumentTracked(
     }))
 }
 
-/** C4: every `allow[].path` and every `absent[].path` appears verbatim in the rationale text (CLAUDE.md's merge-protocol prose, at the real call site). */
+/** C4: every `allow[].path` and every `absent[].path` appears verbatim in the rationale text -- the per-entry arguments, which run.ts's RATIONALE_PATH resolves to `.claude/agents/articles/mutation-testing.rationale.md`. */
 export function checkMentionedInRationale(config: MutationInvarianceConfig, rationaleText: string): GateFailure[] {
   const paths = [...config.allow.map((entry) => entry.path), ...config.absent.map((entry) => entry.path)]
   return paths

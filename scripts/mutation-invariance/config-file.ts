@@ -2,8 +2,8 @@
 // Both the config text and the schema text are handed in as strings, never
 // read from disk here, so every failure mode (malformed JSON in either
 // file, a schema-compile error, a schema-validation error) is reachable
-// from an in-memory fixture -- run.ts (out of scope for this slice) is the
-// only place that actually reads the two files.
+// from an in-memory fixture -- run.ts is the only place that actually reads
+// the two files.
 //
 // ajv 8 traps, measured by architect's DESIGN pass and worth restating here
 // since a mistake in any of the four silently degrades this module rather
@@ -22,7 +22,7 @@
 import { Ajv, type ErrorObject, type ValidateFunction } from 'ajv'
 import type { GateFailure } from '../gate-report.ts'
 
-/** How an `allow[]` entry's path is kept out of the mutation sandbox or out of its scoring, per CLAUDE.md's merge-protocol step 5. */
+/** How an `allow[]` entry's path is kept out of the mutation sandbox or out of its scoring. What each tier does and does not prove is in `.claude/agents/articles/mutation-testing.md`. */
 export type SecuredBy = 'vitest-exclude' | 'stryker-ignore-patterns' | 'written-argument'
 
 export interface AllowEntry {

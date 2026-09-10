@@ -305,18 +305,19 @@ stays green through it.
 **The third tier is the one to read carefully.** A `written-argument` entry is verified only to the
 extent that a fixed filename can never become a test. That nothing inside the run consults the file
 is an inventory taken on a date, and no check performs it. `package.json` is the standing
-counterexample: also a fixed filename, and deliberately absent because it can move the score. So a
-green run from that checker is **not** a proof for those entries. **Nothing in the report says so** —
-the report prints one line, and it is the same line either way. Read the tier off the config.
+counterexample: also a fixed filename, and deliberately absent because it can move the score.
+
+So a green run from that checker is **not** a proof for those entries. **Nothing in the report says
+so** — the report prints one line, and it is the same line either way. Read the tier off the config.
 
 **The same gap reaches the `vitest-exclude` tier, and it is the one an ordinary slice opens.** C1
 proves the directory is collected by no vitest project. It does **not** prove that some test which
 _is_ collected reads the directory out of the sandbox. Stryker's sandbox is populated from tracked
-files, so `ideas/`, `.claude/`, `rules/` and `rule-tests/` are all present inside it. A single
-`readFileSync` of one of them from a test that runs under `npm run test:mutation` would make a
-diff in that directory able to change a mutant's fate, while the checker stayed green.
+files, so `ideas/`, `.claude/`, `rules/` and `rule-tests/` are all present inside it. Take a test
+that runs under `npm run test:mutation` and reads one of them with a single `readFileSync`. A diff
+in that directory could then change a mutant's fate, while the checker stayed green.
 
-**Re-derive that inventory rather than reading it forward**, because no check performs it and an
+**Re-derive that inventory rather than reading it forward**, because no check performs it. An
 ordinary feature slice can invalidate it without touching `rules/`, the config, or this article. The
 method is one command plus a read: grep every file the `src/` run collects, plus `src/test-setup.ts`
 and `fast-check-stryker-seed.ts`, for `node:fs`, `readFileSync`, `existsSync`, `node:child_process`
@@ -325,8 +326,8 @@ neither setup file touches the filesystem. `perf/raw-sink.ts` does, and is colle
 project.
 
 **That grep finds runtime reads only, and it is not the whole method.** A static `import` of a JSON
-file or a Vite `?raw` specifier that points out of `src/` is a live read of the sandbox with no
-filesystem API in it, so it leaves no hit. Check the import specifiers too — grep `src/` for `?raw`,
+file, or a Vite `?raw` specifier, can point out of `src/`. Either one is a live read of the sandbox
+with no filesystem API in it, so it leaves no hit. Check the import specifiers too — grep `src/` for `?raw`,
 for an import ending `.json`, and for a specifier climbing above `src/`. Verified 2026-09-10 at the
 same time as the paragraph above: **zero hits on all three**. Read each claim as scoped to the
 command that produced it, and re-run rather than reading either forward.
@@ -358,6 +359,9 @@ fails the path check and the gate runs. `rules/` and `rule-tests/` were in that 
 added their `sharedExclude` entries **first**, in a separate commit, for exactly this reason.
 **Adding any of the remaining three to the allowlist would likewise mean excluding it from vitest
 before the entry is sound.**
+
+**Check that the exclusion is actually there.** The order has been got wrong once, and
+`mutation-testing.rationale.md`'s `.vale/**` entry records the slice it happened in.
 
 **Gitignored paths cannot reach this predicate at all**, which is a different fact from being excluded
 from vitest. `.stryker-tmp*/**` and `.features-gen/**` need `sharedExclude` entries yet want no allowlist

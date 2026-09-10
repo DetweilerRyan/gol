@@ -1,9 +1,8 @@
 // The whole program's decision as one pure function: parse+validate the
 // config, run every checks.ts check, and -- only if both of those are
-// clean -- evaluate a --diff verdict. run.ts's job (out of scope for this
-// slice) shrinks to gathering DecideInput off disk/git and handing it to
-// decide() here, mirroring ast-grep-rule-check's and agent-doc-check's own
-// decide.ts split.
+// clean -- evaluate a --diff verdict. run.ts's job is gathering DecideInput
+// off disk and git and handing it to decide() here, mirroring
+// ast-grep-rule-check's and agent-doc-check's own decide.ts split.
 //
 // Exit codes: 0 everything asserted is true; 1 validation failed and no
 // verdict was computed; 2 config sound but the diff is not invariant. Kept
