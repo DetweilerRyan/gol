@@ -1,6 +1,6 @@
 ---
 name: lint-jsdoc-with-vale
-title: Lint JSDoc with Vale — the STE pass, and repo-authored rules enforcing doc-comments.md
+title: Lint JSDoc with Vale — repo-authored rules, the STE pass, and giving the linter an owner and a trigger
 created: 2026-09-10
 ---
 
@@ -204,7 +204,8 @@ than implying a gate exists.**
 
 `ast-grep` has `rule-tests/`, `npm run ast-grep:test` and `npm run ast-grep:rules`. Vale has no
 equivalent, and this slice cannot build one — a checker would live in `scripts/`, which drags in CRAP ≤ 6,
-its own vitest suite, `dry4ts` and mutation testing. That is `give-vale-an-owner-and-a-trigger`'s job.
+its own vitest suite, `dry4ts` and mutation testing. **Q6's `prose-lint` script is deliberately not
+that checker**: it fails loudly when it cannot lint, and does not enforce the fixture convention.
 
 **What this slice ships instead — a tracked, self-contained harness. Measured working.**
 
@@ -255,8 +256,8 @@ them or any tree-wide run reports eight deliberate findings — the exact untria
 But an exempt path cannot test itself. The second config is what lets the fixtures be exempt in the live
 run and live in the harness run.
 
-**`give-vale-an-owner-and-a-trigger` inherits a concrete requirement from this**, and it is sharper than
-"run Vale": **Vale exits 0 on a warning-only match.** Measured — 1 only on an `error`-severity match, and
+**Q6's script inherits a concrete requirement from this**, and it is sharper than "run Vale":
+**Vale exits 0 on a warning-only match.** Measured — 1 only on an `error`-severity match, and
 this repo re-levels every rule to `warning` in `.vale.ini`, so **the live config can never exit nonzero on
 a finding.** A gate must read `--output=JSON`, never `$?`.
 
@@ -391,6 +392,88 @@ both:
    `reference-check` already carry the `.claude/worktrees/` exclusion for exactly this reason, so the
    precedent is settled; the Stryker sandbox is the new one.
 
+## Q6 — who runs Vale, and when
+
+**Folded in from `give-vale-an-owner-and-a-trigger`, which is retired into this candidate.** Keeping
+them apart risked the efficacy of both: this slice's whole output is rules and config that **nothing
+runs**, and that candidate's whole subject is the running.
+
+### The gap, measured
+
+Every checker here has an owner and a trigger. `hardener` runs the eight stages, `architect` owns
+`ast-grep:rules`, `cleaner` owns `crap4ts` and `dry4ts`, `product` owns `acceptance-mutation`.
+
+**Vale has neither.** Verified: no `npm run` script invokes it, there is **no `.github/` directory at
+all**, no git hook, nothing in `.claude/settings.json`, and **no role file mentions Vale** in any of
+the five. `.vale.ini`'s own first line says it: _"Report-only: nothing gates on the exit code."_ This
+seat runs it by hand, when it remembers.
+
+`prose-linting.md` is reactive and its own triggers admit it — all three read _before acting on a
+finding_, _before re-levelling a rule_, _when a run reports zero_. **Every one assumes a finding
+exists. Nothing tells anyone to produce one.**
+
+### The naive fix makes it worse
+
+Vale is a `brew` binary, not an npm dependency, and `prose-linting.md` already records the
+consequence: _"A machine without it lints nothing, which reads exactly like a clean run."_ A bare
+"run Vale" instruction in a role file converts a hazard someone might hit into **one the pipeline
+hits by design**. A missing `.vale/` is the same shape — exit 2, empty stdout, which a `grep -c`
+reports as zero.
+
+### Ruling: two mechanisms, because the surfaces differ
+
+**Prose surfaces (`.claude/**`, `CLAUDE.md`) — the `vale-cli/agent-tools` edit hook.** It fires on
+Claude's edits in-turn and returns alerts in the same turn, which is exactly the edit-shaped trigger
+this needed, already built and maintained. It installs as a Claude Code plugin, the mechanism
+`CLAUDE.md` already documents for `typescript-lsp`. `jq` and `vale` are both already on PATH here.
+
+**Code surfaces (JSDoc) — an `npm run` script, because the hook cannot reach them.** See the research
+below: the hook hard-filters to markup extensions. The script's first job is to **fail loudly when it
+cannot lint** — a missing binary, a missing `.vale/`, a config that will not load — rather than to
+gate on findings. Gating on findings would contradict the report-only design and the three prompt
+rules that need judgement.
+
+**The trigger is an edit, not a pipeline position**, and the owner is whoever made the edit — which
+can be four different roles, so a single owning role would be wrong. That is separate from, and does
+not disturb, `architect`'s ownership of the **rules** established above.
+
+### The research, and three traps in it
+
+Measured 2026-09-10 against `vale-cli/agent-tools` and `vale-cli/vale-ls`.
+
+**The hook does not fire on a `.ts` edit.** Proven by running the script against both a `.ts` and a
+`.md` file carrying an identical error-level finding: the `.md` fired with a full alert, the `.ts` was
+silent. The cause is a hard extension filter — `*.md | *.mdx | *.markdown | *.adoc | *.rst | *.org |
+*.txt`, everything else `exit 0` — applied before any config is consulted.
+
+**Trap 1: the hook's level defaults to `error`, and this repo has none.** `level=${VALE_HOOK_LEVEL:-
+${CLAUDE_PLUGIN_OPTION_LEVEL:-error}}`, against **20 rules at `warning` and zero at `error`**. Installed
+as shipped it is **silent forever and looks installed**. It needs `VALE_HOOK_LEVEL=warning`.
+
+**Trap 2: the hook exits silently without `vale-hook.tmpl` beside it.** `[ -f "$tmpl" ] || exit 0`. A
+first test of the above was silent for _both_ files for this reason, which would have produced the
+right answer for the wrong reason. The control has to fire before the silence means anything.
+
+**Trap 3: the MCP server is not free.** `scaffold_rule`, `test_rule`, `stress_rule`, `diff_rule`,
+`audit_style` require a Vale CMS Pro/Site subscription. `test_rule` and `stress_rule` are precisely
+the fixture harness Q3 designs by hand — so **Q3's build-it-ourselves ruling stands, now with a named
+alternative rejected on cost** rather than never considered.
+
+**`vale-ls` is declined.** Its documented capabilities are editor ergonomics — hover documentation,
+`StylesPath` autocomplete, document links, click-to-fix code actions. The autocomplete would help
+`architect` author rules, but agents do not drive an editor UI and get the same diagnostics from
+`vale --output=JSON`. Adding an LSP for that is machinery without a matching gain. The page does not
+say whether it handles source-code comments at all.
+
+**Also from the hook, worth stealing:** it anchors on the file's own `.vale.ini` by walking up from
+the file rather than trusting the session's working directory, because a path-scoped section never
+matches otherwise. The `npm run` script should do the same.
+
+### What the hook does not solve
+
+It fires on **Claude's** edits only — no coverage for a human edit, for CI, or for a deliberate audit
+run. So it narrows this question rather than closing it, and the `npm run` script carries the rest.
+
 ## The four rules, and the three findings
 
 | rule                     | whole-tree findings | ruling                                                                                                                               |
@@ -439,6 +522,8 @@ Edited:
 | _(same file)_                                        | the ownership boundary: which Vale rules `architect` owns and which it does not                                                  |
 | `.claude/agents/articles/prose-linting.rationale.md` | every measurement in this file, and the corrected figures beside the old                                                         |
 | `.claude/agents/articles/doc-comments.md`            | one pointer, where a comment is written                                                                                          |
+| `package.json`                                       | one `prose-lint` script whose first job is to fail loudly when it cannot lint                                                    |
+| `.claude/agents/articles/orchestration.md`           | the edit-shaped trigger for this seat, and the `agent-tools` hook's level trap                                                   |
 | `.claude/agents/architect.md`                        | ownership of `vale-styles/JsDoc/**` and its fixtures, beside the `rules/*.yml` clause                                            |
 | `CLAUDE.md`                                          | one line naming `architect` as owner, matching the ast-grep entry                                                                |
 | `src/equality/is-strict-equal.ts`                    | comment-only                                                                                                                     |
@@ -451,6 +536,10 @@ Conditional, measure before editing:
 | path             | when                                                                                                                                                    |
 | ---------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `.oxlintrc.json` | only if a bait fixture reds the `jsdoc/*` tier. `ignorePatterns` already exists, so it is a one-line entry. **Prefer writing fixtures that pass lint.** |
+
+**Conditional on the hook decision:** `.claude/settings.json` — only if the `agent-tools` plugin is
+adopted for the prose surfaces, and then it must carry `VALE_HOOK_LEVEL=warning` or the hook is silent
+forever. Installing a plugin is a user action; this slice can document it but cannot perform it.
 
 **Not edited, and each for a measured reason:** `.gitignore` and `.prettierignore` (the sync target does
 not move); `tsconfig*.json` (`vale-styles/` is outside all three `include` lists); `vite.config.ts`
@@ -500,8 +589,10 @@ match — **so never name a fixture `*.test.ts` or `*.spec.ts`**); `stryker.conf
 - **The STE remediation.** Slice 2, config and remediation together.
 - **Linting `.tsx` JSDoc.** Blocked by the scope-selector semantics; the unblocking move is a `src/`
   change to JSX render commentary, which is its own candidate.
-- **Any gate, any `npm run` script, any CI.** `give-vale-an-owner-and-a-trigger`, which now inherits the
-  measured requirement that a Vale gate must read `--output=JSON` rather than `$?`.
+- **Any gate, and any CI.** Q6 adds an `npm run prose-lint` script, but it fails only on being
+  **unable to lint** — never on a finding. Gating on findings would contradict the report-only design
+  and the three prompt rules that need judgement, and any gate must read `--output=JSON` rather than
+  `$?`, since the live config can never exit nonzero on a finding.
 - **`.test.ts` register.** Closed for Part B (3 whole-tree findings, none in a test). Open for Part A.
 
 ## What survives from the original open questions
