@@ -69,9 +69,9 @@ function parseJson(text: string, file: string, check: string): JsonParseResult {
 // can suppress it -- this module always constructs Ajv with its default
 // options, so `message` is populated on every error and there is no
 // fallback string to test; the `?? '...'` this used to carry was an
-// unreachable branch, invisible to every gate here (see this program's
-// own args.ts for the same repo-wide idiom of naming that class rather than
-// leaving a silent, unkillable mutant).
+// unreachable branch, invisible to every gate here (see ../single-flag-arg.ts
+// for the same repo-wide idiom of naming that class rather than leaving a
+// silent, unkillable mutant).
 function formatAjvError(error: ErrorObject): string {
   const location = error.instancePath === '' ? '(root)' : error.instancePath
   return `${location} ${error.message}`
@@ -109,12 +109,14 @@ export function parseConfig(
   }
 
   if (!validate(configResult.value)) {
-    // `?? []` is unreachable by construction, not merely untested: ajv only
-    // ever sets `validate.errors` to `null` before a validation call or
-    // after one that *passed* -- having just observed `validate(...)` return
-    // `false`, `.errors` is guaranteed a populated array. Same idiom as
-    // args.ts's `as Error`, invisible to every gate here.
-    const errors: ErrorObject[] = validate.errors ?? []
+    // `as ErrorObject[]`, not `?? []`: ajv only ever sets `validate.errors`
+    // to `null` before a validation call or after one that *passed* --
+    // having just observed `validate(...)` return `false`, `.errors` is
+    // guaranteed a populated array, so a `?? []` fallback would be
+    // unreachable by construction and invisible to every gate here. Same
+    // idiom as ../single-flag-arg.ts's `as Error`, and the same treatment
+    // this file's own formatAjvError already got (see the comment above).
+    const errors = validate.errors as ErrorObject[]
     return {
       failures: errors.map((error) => ({
         check: 'schema-valid',
