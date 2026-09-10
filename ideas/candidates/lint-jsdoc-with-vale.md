@@ -4,10 +4,15 @@ title: Lint JSDoc with Vale — the STE pass, and repo-authored rules enforcing 
 created: 2026-09-10
 ---
 
+> **DESIGN pass ratified 2026-09-10 at `ee9fdba`, by `architect` in DESIGN mode.** Every measurement
+> below was re-derived; four of the original figures did not reproduce and are corrected in place, with
+> the superseded value kept beside the new one. The design ruling is the "Ratified design" section
+> onward. Nothing here is code — the file set, the interfaces and the ordering are the deliverable.
+
 ## Situation
 
-Vale lints comments in source code natively, using tree-sitter grammars. It needs one config entry
-this repo does not have:
+Vale lints comments in source code natively, using tree-sitter grammars. It needs one config entry this
+repo does not have:
 
 ```ini
 [formats]
@@ -15,198 +20,428 @@ ts = md
 tsx = md
 ```
 
-Without it, four of the six enabled rules silently do nothing while `Contractions` still fires.
-Measured over `src/` and `scripts/` production files: **181 findings without the mapping, 1,511 with
-it.** A run without the mapping therefore looks alive and is not.
+Without it, four of the six enabled rules silently do nothing while `Contractions` still fires. **A run
+without the mapping therefore looks alive and is not.**
 
-**Scoping to JSDoc only is possible and cheap.** A rule carrying
-`scope: sentence.text.comment.block.ts` fires on a `/** */` block and never on a `//` line. The
-dotted form is AND; the list form is OR, and getting that backwards silently lints everything.
+### The corpus, stated as the command that produced it
 
-Measured yield, `src/` + `scripts/`, 102 production files:
+```bash
+git ls-files 'src/**/*.ts' 'src/**/*.tsx' 'src/*.ts' 'src/*.tsx' 'scripts/**/*.ts' 'scripts/*.ts' \
+  | grep -v '\.test\.' | grep -v '^src/catalyst/' | grep -v '^src/test-support/'
+```
 
-| rule              | all comments | **JSDoc only** |
-| ----------------- | -----------: | -------------: |
-| `SentenceLength`  |          856 |        **218** |
-| `PassiveVoice`    |          418 |        **111** |
-| `Contractions`    |          212 |         **58** |
-| `ProcedureLength` |           16 |              0 |
-| `ParagraphLength` |            9 |              0 |
-| **total**         |        1,511 |        **387** |
-| **mechanical**    |        1,077 |        **276** |
+**104 files** at `ee9fdba` (the earlier note said 102; the command was not recorded, so the two are not
+comparable). Every figure in this file is that list unless it says "whole tree", which means
+`git ls-files '*.ts' '*.tsx' | grep -v '^src/catalyst/'` — **278 files**.
 
-The three zeros are real rather than inert: a bait JSDoc with a seven-sentence paragraph and an
-"and then" chain fires `ParagraphLength` and `OneInstruction` under the compound scope.
-`ProcedureLength` is unverified — the bait list item was under its 20-word cap.
+### Re-derived yield
 
-For scale, `CLAUDE.md` was 153 mechanical findings.
+| rule              | no `[formats]` | all comments | block scope (`.ts`+`.tsx`) | block scope, `.ts` only |
+| ----------------- | -------------: | -----------: | -------------------------: | ----------------------: |
+| `SentenceLength`  |              0 |          843 |                        218 |                     178 |
+| `PassiveVoice`    |              0 |          405 |                        111 |                      96 |
+| `Contractions`    |            212 |          209 |                         58 |                      49 |
+| `ProcedureLength` |              0 |           15 |                          0 |                       0 |
+| `ParagraphLength` |              0 |            8 |                          0 |                       0 |
+| `OneInstruction`  |              0 |            0 |                          0 |                       0 |
+| **total**         |        **212** |    **1,480** |                    **387** |                 **323** |
+| **mechanical**    |        **212** |    **1,060** |                    **276** |                 **227** |
+
+Mechanical = `SentenceLength` + `Contractions` + `ParagraphLength`.
+
+**What reproduced and what did not.**
+
+| claim                                       |   was |                 re-derived | verdict                             |
+| ------------------------------------------- | ----: | -------------------------: | ----------------------------------- |
+| no-`[formats]` total                        |   181 |  **212**, all Contractions | not reproduced                      |
+| all-comments total                          | 1,511 |                  **1,480** | not reproduced                      |
+| block-scope total                           |   387 |                    **387** | exact, including the per-rule split |
+| block-scope mechanical                      |   276 |                    **276** | exact                               |
+| `NoThisFunction` unanchored                 |    22 |      **22** (needs case-i) | exact                               |
+| `NoThisFunction` anchored                   |     1 |                      **1** | exact                               |
+| `MeasurementInDoc`: all four hits in JSX    | 4 JSX | **3 JSX, 1 genuine JSDoc** | refuted                             |
+| block scope means "`/** */` and never `//`" |     — |  **multi-line, not JSDoc** | refuted — see the next section      |
+
+The two totals that moved are the two nobody depends on. Both scoped figures reproduced to the finding.
 
 ## Complication
 
-**Triaging a Vale finding in a JSDoc is not the same act as triaging one in a Markdown file, and
-nothing says so.** Four differences, three measured:
+### The scope selectors do not mean what the candidate assumed
 
-**1. The remedy is often placement rather than prose.** In an article, an over-long sentence gets
-split. In a JSDoc it may instead mean the content does not belong in the interface at all —
-`doc-comments.md` rule 4 sends implementation detail to `//`, and rule 7 sends overflow to a
-`<module>.md` sidecar. A `SentenceLength` finding on a hover is frequently a **placement signal**,
-and splitting the sentence in place is the wrong fix that still clears the finding.
+Measured against vale 3.20.0 over one probe file carrying all six comment shapes:
 
-**2. A fifth way to report a confident zero, specific to code.** `prose-linting.md` lists four. The
-missing `[formats]` mapping is a fifth and the worst-shaped: the run reports findings, so it does not
-look silent, while two thirds of the rule set is inert.
+| comment shape              |   scope |
+| -------------------------- | ------: |
+| `// line`                  |  `line` |
+| `/* single-line plain */`  |  `line` |
+| `/** single-line jsdoc */` |  `line` |
+| `{/* single-line jsx */}`  |  `line` |
+| multi-line `/* plain */`   | `block` |
+| multi-line `/** jsdoc */`  | `block` |
+| multi-line `{/* jsx */}`   | `block` |
 
-**3. New exempt classes, and one new hazard.** Measured: prose inside an `@example` fenced block is
-**exempt automatically**, because `ts = md` makes Vale skip Markdown code fences — a long sentence
-and a contraction inside a fence both went unflagged. But `@param` and `@returns` descriptions **are**
-linted, and `@returns` is conventionally a noun phrase, so `PassiveVoice` on it may need an exempt
-class of its own rather than a rewrite.
+**The discriminator is multi-line versus single-line. It is not JSDoc versus not.** Three consequences,
+each of which the design has to answer rather than inherit:
 
-**4. `ParagraphLength` remediation costs hover height, and `SentenceLength` does not.** Splitting a
-sentence reflows within the same rendered lines. Splitting a paragraph inserts a blank ` *` line,
-which spends one of `doc-comments.md` rule 6's ~15 rendered lines. Markdown has no such budget. This
-is reasoned from the two rules rather than measured, and should be checked during the slice.
+1. **It over-reaches.** Multi-line JSX render commentary is in scope. In `.tsx`, **40 of 64** block-scope
+   findings (62.5%) are JSX render commentary rather than JSDoc. That is the "second scope leak", and it
+   is not a `.tsx` quirk — it is what `block` means.
+2. **It under-reaches, and nobody had noticed.** The corpus holds **53 single-line `/** … */` JSDoc
+   blocks** that `block` scope never sees. Fourteen of them carry a contraction. A `line`-scoped rule
+   would reach them and every `//` comment with them, so **no scope selector means "JSDoc"**.
+3. **There is no documentation scope.** `text.comment.documentation.ts` and
+   `text.comment.block.documentation.ts` both report 0 and exit 0. An invalid scope is silent.
+
+### Triaging a Vale finding in a JSDoc is not the same act as triaging one in Markdown
+
+**1. The remedy is often placement rather than prose.** In an article an over-long sentence gets split. In
+a JSDoc it may mean the content does not belong in the interface at all — `doc-comments.md` rule 4 sends
+implementation detail to `//`, rule 7 sends overflow to a sidecar. Splitting the sentence in place is the
+wrong fix that still clears the finding.
+
+**2. New confident-zero modes.** `prose-linting.md` lists four. This slice adds three, and they are
+measured:
+
+| mode                                          | symptom                                                                             |
+| --------------------------------------------- | ----------------------------------------------------------------------------------- |
+| missing `[formats]` mapping                   | run reports findings, so it does not look silent, while four of six rules are inert |
+| `<Style>.<Rule> = warning` names no such rule | **silent, exit 0.** A typo in `.vale.ini` disables nothing and enables nothing      |
+| a `scope:` selector that does not exist       | **silent, exit 0.** The rule matches nothing and reads as a clean tree              |
+
+**3. `@example` is exempt automatically; `@param` and `@returns` are not.** `ts = md` makes Vale skip
+Markdown fences, so prose inside an `@example` block is unlinted. Measured: `PassiveVoice` fires on a
+`@returns` noun phrase ("The value that is returned by the caller"), which is conventional rather than
+wrong, so `@returns` wants an exempt class of its own.
+
+**4. `ParagraphLength` remediation costs hover height and `SentenceLength` does not.** Splitting a
+sentence reflows within the same rendered lines. Splitting a paragraph inserts a blank ` *` line, which
+spends one of `doc-comments.md` rule 6's ~15 rendered lines. Reasoned from the two rules, still not
+measured.
 
 ## Question
 
 How does an agent lint the JSDoc it just wrote, and act on a finding correctly?
 
-## Answer
+---
 
-Two halves with different shapes and different risks. **Part A** is remediation — 276 mechanical STE
-findings against prose nothing has checked. **Part B** is a ratchet — four repo-authored rules that
-enforce `doc-comments.md` and currently find one violation. They share a config and nothing else.
+# Ratified design
 
-## Part A — scope STE to JSDoc, and record how its triage differs
+## Q1 — where a repo-authored Vale style lives
 
-Three parts. The second is the reason this is not just a config change.
+**Ruling: two `StylesPath` lines. The tracked directory first, `.vale` last.**
 
-**1. The config.** `[formats]` mapping, plus a second style directory — call it `STEDoc` — that is
-STE with `.text.comment.block.ts` and `.text.comment.block.tsx` appended to each rule's scope. Six
-rules, one mechanical edit each, applied only in the `[*.ts]` section so the Markdown side keeps
-stock STE. Vale's `scope` lives in the rule file and `.vale.ini` cannot override it, which is why a
-second directory is needed rather than a section key.
-
-**2. A `Triaging a finding in a comment` section in `prose-linting.md`**, carrying the four
-differences above. The first matters most: **check whether the fix is a rewrite or a move**, and
-`doc-comments.md` decides which. That is the cross-link, and it is one direction only — the placement
-rules stay where they are.
-
-**3. Two small edits closing the audience gap.** `prose-linting.md`'s audience line reads _"any role
-or session that edits `.claude/agents/**`"_, which this slice makes **false** — `coder`, `cleaner`
-and `architect` would all be running Vale over code. Widen it, add a read trigger for "you ran Vale
-over a comment you wrote", and add one pointer from `doc-comments.md` at the point a comment is
-written.
-
-**Do not merge the two articles.** They are 28,267 and 28,902 bytes, and they govern different
-dimensions: every `doc-comments.md` rule is about placement, sufficiency or assertion, and every
-Vale rule is a word-count, contraction or be-verb matcher. Vale cannot express a single
-`doc-comments.md` rule, and the hover budget is measured in rendered lines while `SentenceLength`
-counts words per sentence — not even the same unit. A merge makes a 57KB article, larger than
-`engineering.md`, that both audiences must carry in full.
-
-**Remediating the 276 is a separate slice.** This one establishes the config, the triage rules and
-the cross-link. Landing a lint that reports 276 findings nobody has triaged would be the worst of
-both.
-
-## Part B — repo-authored rules that mechanically enforce `doc-comments.md`
-
-**Spiked 2026-09-10. It works.** Four rules were written against the article's own wording, scoped to
-block comments, and run over the same 102 production files. Each fires on a deliberately bad JSDoc
-and stays silent on a good one written to rule 3.
-
-### The finding that decides how these get written: anchoring
-
-| `NoThisFunction`                 | findings | true positives | precision |
-| -------------------------------- | -------: | -------------: | --------: |
-| unanchored — the phrase anywhere |       22 |              1 |  **4.5%** |
-| anchored to a sentence opener    |    **1** |          **1** |  **100%** |
-
-The 21 false positives were ordinary referring expressions — "this module stays free of DOM types",
-"dragGesture.ts (which this hook wraps)". Rule 2 bans `This function…` as a **first-line opener**, and
-a rule that ignores that distinction is unusable. **A naively written rule here is worse than none**,
-because 22 findings read as a real backlog.
-
-The working form, for the record:
-
-```yaml
-extends: existence
-level: warning
-nonword: true
-tokens:
-  - '(?:^|\. )This (?:function|method|hook|component|module|helper|utility) (?:is|does|will|returns|takes|handles|provides)'
-  - '(?:^|\. )A (?:function|helper|utility) (?:that|which)'
-scope:
-  - text.comment.block.ts
-  - text.comment.block.tsx
+```ini
+StylesPath = vale-styles
+StylesPath = .vale
 ```
 
-The other three are `ImplementationAltitude` (a vocabulary list — "under the hood", "loops over",
-"recursively", "is implemented as"), `MeasurementInDoc` ("measured in/at/on", "benchmarked", per rule
-4), and `ThisSlice` (`engineering.md`'s "name the slice, never 'this slice'").
+Measured on vale 3.20.0, each fact by its own probe:
 
-### These are ratchets, not cleanup
+| fact                                                   | measured                                           |
+| ------------------------------------------------------ | -------------------------------------------------- |
+| repeated `StylesPath` keys                             | both resolve; styles from both directories load    |
+| comma-joined `StylesPath = A, B`                       | **E201, exit 2** — not a supported form            |
+| style-name collision across the two paths              | **first listed wins** (verified in both orders)    |
+| `vale sync` target                                     | **the last listed path** (verified in both orders) |
+| `vale sync` when that path is absent                   | creates it and succeeds                            |
+| `vale sync` when that path holds an authored style     | leaves the authored style in place                 |
+| a `StylesPath` that does not exist, at lint time       | E201, exit 2, whole run aborts                     |
+| `BasedOnStyles` naming a style that is not on the path | **E100, exit 2 — loud**                            |
+| a non-`.yml` file inside a style directory             | ignored                                            |
+| a malformed `.yml` inside a style directory            | E201, exit 2, whole run aborts                     |
 
-**One real violation in 102 files.** The corpus already follows the article. That is a different
-value proposition from Part A's 276 mechanical findings, and it should not be sold as remediation.
-The value is preventing drift in prose nothing has ever checked.
+The ordering does two jobs at once, which is why it is the answer: **tracked-first** gives the repo's own
+style lookup priority, and **`.vale` last** keeps `vale sync` writing exactly where `.gitignore` line
+`/.vale/` and `.prettierignore` line `.vale` already point. Neither ignore file changes.
 
-### A second scope leak
+**It fails safe.** The repeated-key behaviour is undocumented INI-parser accumulation, so pin the version.
+If a future Vale takes last-only, `BasedOnStyles = JsDoc` aborts with E100 at exit 2 rather than reporting
+a confident zero. Record that argument in the rationale sidecar, because it is what makes the mechanism
+acceptable.
 
-`text.comment.block.tsx` includes JSX `{/* … */}` comments. All four `MeasurementInDoc` hits were in
-JSX render commentary — implementation prose, the `//` equivalent — not JSDoc. Handle it or accept
-the noise; do not read those as violations.
+**Rejected, with reasons:**
 
-### What is expressible, and what is not
+| option                                       | why not                                                                                                                                                                                             |
+| -------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `Packages = <local directory>`               | **works** — measured, syncs into `StylesPath` — but needs `vale sync` after every rule edit. A stale copy lints the previous rule silently. The slice would be authoring a new confident-zero mode. |
+| `postinstall` copy, on the crap4ts precedent | same staleness, and Vale is installed by `brew`, not `npm`, so `npm ci` is the wrong hook                                                                                                           |
+| vendor the package and drop `vale sync`      | loses the version pin `.vale.ini` currently carries, which is the only thing stopping upstream drift                                                                                                |
+| put the style under `.vale/`                 | untracked by `/.vale/`, and prettierignored                                                                                                                                                         |
+| put the style under `rules/`                 | `ast-grep-rule-check` recurses `sgconfig.yml`'s `ruleDirs` and would read Vale YAML as malformed ast-grep rules                                                                                     |
 
-| mechanically expressible                 | not                                                   |
-| ---------------------------------------- | ----------------------------------------------------- |
-| rule 2's banned opener, anchored         | rule 3 — cannot detect the **absence** of a guarantee |
-| rule 4's "measurements stay `//`"        | rule 6 — hover budget is **rendered lines**, not text |
-| `engineering.md`'s "never _this slice_"  | rule 8 — needs an AST                                 |
-| rule 1's altitude, via a vocabulary list | rule 2's "one sentence" first line — untested         |
+**Directory name: `vale-styles/` at repo root.** One tracked `StylesPath` serves both halves — the
+`JsDoc` style below, and `STEDoc` when the successor slice lands it.
 
-**That division is the ownership story.** Vale takes vocabulary and phrasing; `ast-grep` takes
-structure, and already owns `rules/no-dead-doc-on-annotated-return-literal.yml`, which is a rule 8
-case. So **`architect` owns the JSDoc-scoped Vale rules on the `ast-grep` precedent** — the role that
-authors `rules/*.yml` authors these, and every other role reads the output and reports tensions.
+## Q2 — one slice or two, and in which order
 
-The precedent brings its sharpest clause with it: _a rule that matches nothing reports nothing and is
-indistinguishable from a clean codebase._ Every rule ships with a fixture that fails without it,
-which is why the spike tested a bad block **and** a good one.
+**Ruling: two slices, and Part B lands first.** The candidate's own open question guessed right.
 
-## Touches
+The discriminating constraint, and it is the one to design against: **no landed state may leave a hand-run
+reporting a backlog nobody has triaged.**
 
-- `.vale.ini` — the `[formats]` mapping and a `[*.ts]`/`[*.tsx]` section
-- `.vale/STEDoc/` — six scoped rules; note `.vale/` is gitignored, so this needs an answer for how it
-  is reproduced (see open questions)
-- a repo-authored style directory for Part B's rules, plus a fixture per rule
-- `.claude/agents/architect.md` — ownership of the JSDoc-scoped rules, beside its `rules/*.yml` clause
-- `.claude/agents/articles/prose-linting.md` — the new triage section, the audience line, the fifth
-  confident-zero mode
-- `.claude/agents/articles/doc-comments.md` — one pointer
-- No `src/`, no `scripts/` in this slice. Documentation and configuration only.
+| piece                                           |                                    findings the day it lands | may land alone |
+| ----------------------------------------------- | -----------------------------------------------------------: | -------------- |
+| `[formats]` with no `.ts` section               |                 **0** — measured, Vale processes **0 files** | yes            |
+| tracked `StylesPath`, style named by no section |                                                            0 | yes            |
+| Part B's four rules, `.ts`-scoped, whole tree   | **3** — all three ruled true positives, all fixable in-slice | yes            |
+| Part A's `STEDoc` section                       |                                  **387** (or 323 `.ts`-only) | **no**         |
 
-## Open questions
+So the split is **not** "config then rules". It is:
 
-- **How does a gitignored style directory carry a repo-authored style?** `.vale/` is populated by
-  `vale sync` from the pinned package and is gitignored as a downloaded artifact. A hand-written
-  `STEDoc` cannot live there without being wiped or untracked. Options: track it at a different path
-  and point `StylesPath` at both, or vendor it. **This is the first real design question of the
-  slice and should be settled before any rule is written.**
-- **Is `ProcedureLength` reachable in a JSDoc at all?** Its zero is unverified. A `@param` list is a
-  Markdown list under `ts = md`, so it may be reachable in a way this repo's JSDoc simply does not
-  exercise.
-- **Do `.test.ts` files get linted?** They are excluded from this measurement, and their comments are
-  a different register again.
-- **Does Part B need its own gate, or is `ast-grep`'s report-only convention right?** `ast-grep` rules
-  are `severity: warning` and move no exit code, read rather than gated. Vale is report-only for the
-  same reason. Consistent, but it means a repo-authored rule catches drift only when someone runs it —
-  which is what `give-vale-an-owner-and-a-trigger` is about.
-- **Can Part B land before Part A?** It is one violation and four rules, against Part A's 276
-  findings. Landing B first gives the ratchet immediately and leaves remediation for later, which may
-  be the better order — but both need the `[formats]` mapping and the style-directory answer, so
-  neither is free-standing.
-- **Does the caveat about intersection hold?** If most `SentenceLength` findings in a JSDoc turn out
-  to want a _move_ rather than a _split_, the two articles intersect more than measured here, and
-  the do-not-merge ruling should be revisited on that evidence.
+- **Slice 1, `lint-jsdoc-with-vale` — plumbing plus the ratchet.** The tracked style directory, the
+  `[formats]` mapping, the four repo-authored rules with fixtures, the three fixes, and the doc edits.
+  Ends at zero findings.
+- **Slice 2, the STE remediation — `STEDoc` and the 227 findings together, never apart.** Its config
+  section and its remediation are one commit sequence, because the section alone is the backlog.
+
+**This renames the halves relative to the candidate.** What the candidate calls Part B ships first as
+Part 1. Say so in the handoff so nobody sequences from the old numbering.
+
+## Q3 — the fixture mechanism
+
+**The `ast-grep` precedent transfers as a convention and stops at enforcement. Say that plainly rather
+than implying a gate exists.**
+
+`ast-grep` has `rule-tests/`, `npm run ast-grep:test` and `npm run ast-grep:rules`. Vale has no
+equivalent, and this slice cannot build one — a checker would live in `scripts/`, which drags in CRAP ≤ 6,
+its own vitest suite, `dry4ts` and mutation testing. That is `give-vale-an-owner-and-a-trigger`'s job.
+
+**What this slice ships instead — a tracked, self-contained harness. Measured working.**
+
+```
+vale-styles/
+  JsDoc/
+    NoThisFunctionOpener.yml
+    ImplementationAltitude.yml
+    MeasurementInDoc.yml
+    ThisSlice.yml
+  fixtures/
+    fixtures.vale.ini
+    NoThisFunctionOpener.bad.ts    NoThisFunctionOpener.good.ts
+    ImplementationAltitude.bad.ts  ImplementationAltitude.good.ts
+    MeasurementInDoc.bad.ts        MeasurementInDoc.good.ts
+    ThisSlice.bad.ts               ThisSlice.good.ts
+```
+
+`vale-styles/fixtures/fixtures.vale.ini`:
+
+```ini
+StylesPath = ..
+MinAlertLevel = warning
+
+[formats]
+ts = md
+
+[*.ts]
+BasedOnStyles = JsDoc
+```
+
+`StylesPath` resolves relative to the config file, so `..` is `vale-styles/`. **The harness needs no
+`.vale/` at all** — Part B's rules extend nothing from STE, so the fixture run works in a fresh worktree
+before `vale sync`. Measured: the bad fixture reports exactly `JsDoc.NoThisFunctionOpener`, the good one
+reports zero.
+
+The hand-run, which goes in `prose-linting.md` as a procedure:
+
+```bash
+vale --config=vale-styles/fixtures/fixtures.vale.ini --output=JSON vale-styles/fixtures/*.ts
+```
+
+Every `<Rule>.bad.ts` must report at least one finding of exactly `JsDoc.<Rule>` and nothing else. Every
+`<Rule>.good.ts` must report nothing.
+
+**Why a second config rather than one.** The fixtures are bait, so the main `.vale.ini` has to exempt
+them or a whole-tree `vale .` reports eight deliberate findings — the exact untriaged backlog Q2 forbids.
+But an exempt path cannot test itself. The second config is what lets the fixtures be exempt in the live
+run and live in the harness run.
+
+**`give-vale-an-owner-and-a-trigger` inherits a concrete requirement from this**, and it is sharper than
+"run Vale": **Vale exits 0 on a warning-only match.** Measured — 1 only on an `error`-severity match, and
+this repo re-levels every rule to `warning` in `.vale.ini`, so **the live config can never exit nonzero on
+a finding.** A gate must read `--output=JSON`, never `$?`.
+
+## Q4 — the JSX scope leak
+
+**Ruling: Part B's rules carry `scope: [text.comment.block.ts]` and drop `text.comment.block.tsx`.**
+
+The leak is not a `.tsx` quirk to work around; it is what `block` means. There is no narrower scope — the
+`documentation` selectors do not exist and fail silently. So the three options are accept, exclude `.tsx`,
+or change the comments. Measured cost of excluding `.tsx`, for Part B specifically:
+
+| rule               | `.tsx` hits lost | of which JSX render commentary |
+| ------------------ | ---------------: | -----------------------------: |
+| `MeasurementInDoc` |                3 |                        3 (all) |
+| the other three    |                0 |                              — |
+
+**Two of those three are in `src/components/LifeBoard.tsx`, a composition root excluded from Stryker and
+crap4ts already.** So `.ts`-only costs zero true positives and removes every false one: whole-tree
+precision goes to 100%.
+
+**The gap this leaves, recorded rather than hidden.** Thirteen components' JSDoc is unlinted by Part B,
+and Part A would forgo 24 genuine `.tsx` JSDoc findings against 40 JSX ones. The clean fix is a `src/`
+change — move multi-line `{/* … */}` render commentary to `//` above the element, which `doc-comments.md`
+rule 4 arguably already wants — and that is a slice of its own, not this one. Raise it as a candidate.
+
+## Q5 — the ordering
+
+Seven steps. Each leaves `npm run lint`, `npm run format:check`, `npm run build`, `npm run agent-doc-check`,
+`npm run reference-check` and every hand-run `vale` invocation clean.
+
+**Step 0 — precondition.** `vale sync`. A fresh worktree has no `.vale/`, and lint aborts at E201 exit 2
+before reaching any rule. This is the documented confident-zero mode and it is the first thing to trip.
+
+**Step 1 — the tracked style path, carrying nothing yet.** Add `StylesPath = vale-styles` **above** the
+existing `StylesPath = .vale`. Create `vale-styles/JsDoc/` with the first rule and its two fixtures, plus
+`vale-styles/fixtures/fixtures.vale.ini`. Add no `[formats]`, no `.ts` section.
+
+Verify: `vale .claude/agents/articles/doc-comments.md` reports the same 41 warnings as before, so the
+second path changed no Markdown result. `vale sync` still reports it synced to `.vale`. The harness run
+passes. Whole-tree `vale .` is unchanged, because the new style is named by no section.
+
+**Step 2 — `[formats] ts = md` alone.** Measured inert: with no `.ts` section Vale processes **0 files**.
+Verify by running `vale` over twenty corpus files and reading "in 0 files".
+
+**Step 3 — the fixtures exemption, before anything can leak into it.** A section matching
+`vale-styles/fixtures/*`, placed **after** the `[*.ts]` section that step 4 adds but before the two
+Markdown sections. It must set `BasedOnStyles =` empty **and** switch each explicitly-enabled rule off by
+name. `.vale.ini`'s own comment records why the empty value alone is not enough, and it failed silently in
+that direction once.
+
+**Step 4 — the first rule goes live.** Add `[*.ts]` with `BasedOnStyles = JsDoc` and the rule named
+explicitly at `warning`. Verify whole-tree: the rule's known finding count and nothing from `vale-styles/`.
+
+**Step 5 — rules two through four, one commit each, each repeating steps 1, 3 and 4's verification.**
+Then fix the three findings. All three are comment-only.
+
+**Step 6 — the doc edits.** `prose-linting.md`, its rationale sidecar, `doc-comments.md`'s one pointer,
+`architect.md`'s ownership clause.
+
+**Step 7 — `npm run lint`, then `npm run format`.** Then `npm run agent-doc-check` and
+`npm run reference-check`, both of which this slice's `.claude/**` edits can move.
+
+### The section glob needs no narrowing, and that is measured
+
+`[*.ts]` matches every `.ts` in the tree — tests, `perf/`, `features/`, root configs. Run over all 278
+whole-tree files, the four rules yield **3 findings total**, all in production code. So there is no
+test-comment register problem to solve here, and the open question about `.test.ts` files is closed for
+Part B. **It is not closed for Part A**, whose 227 is a production-only figure.
+
+## The four rules, and the three findings
+
+| rule                     | whole-tree findings | ruling                                                                                                                               |
+| ------------------------ | ------------------: | ------------------------------------------------------------------------------------------------------------------------------------ |
+| `NoThisFunctionOpener`   |                   1 | `src/equality/is-strict-equal.ts` — "This function is preferable over…", a plain rule 2 violation                                    |
+| `MeasurementInDoc`       |                   1 | `scripts/feature-files.ts` — "(measured on darwin…)" in a hover; rule 4 puts the measurement in `//`                                 |
+| `ImplementationAltitude` |                   1 | `scripts/ast-grep-rule-check/decide.ts` — "(recursively, per sgconfig.yml)" describes `run.ts`'s internals inside `decide()`'s hover |
+| `ThisSlice`              |                   0 | clean corpus; the fixture is what distinguishes that from an inert rule                                                              |
+
+**Anchoring is confirmed and is the rule-authoring lesson.** `NoThisFunctionOpener` unanchored gives 22
+findings at 4.5% precision; anchored to a sentence opener **and** a verb list it gives 1 at 100%. Both
+halves earn their keep — measured, anchor-without-verb-list gives 3, of which 2 are ordinary mid-block
+referring expressions.
+
+**`recursively` is the token most likely to produce a future false positive**, since it can appear
+legitimately in an interface statement. It is the first token to drop if a later corpus shows one. It is
+not dropped now, because the one hit it produced is a true positive and narrowing a matcher to clear a
+finding is the move this repo already rejects elsewhere.
+
+## Ratified file set
+
+**Slice 1.** New:
+
+| path                                           | what                         |
+| ---------------------------------------------- | ---------------------------- |
+| `vale-styles/JsDoc/NoThisFunctionOpener.yml`   | rule                         |
+| `vale-styles/JsDoc/ImplementationAltitude.yml` | rule                         |
+| `vale-styles/JsDoc/MeasurementInDoc.yml`       | rule                         |
+| `vale-styles/JsDoc/ThisSlice.yml`              | rule                         |
+| `vale-styles/fixtures/fixtures.vale.ini`       | the harness config           |
+| `vale-styles/fixtures/<Rule>.bad.ts` × 4       | must fire, exactly that rule |
+| `vale-styles/fixtures/<Rule>.good.ts` × 4      | must stay silent             |
+
+Edited:
+
+| path                                                 | what                                                                                                                             |
+| ---------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------- |
+| `.vale.ini`                                          | second `StylesPath`, `[formats]`, `[*.ts]`, the fixtures exemption                                                               |
+| `.claude/agents/articles/prose-linting.md`           | audience line, read trigger, three new confident-zero modes, the scope-selector table, the triage section, the fixture procedure |
+| `.claude/agents/articles/prose-linting.rationale.md` | every measurement in this file, and the corrected figures beside the old                                                         |
+| `.claude/agents/articles/doc-comments.md`            | one pointer, where a comment is written                                                                                          |
+| `.claude/agents/architect.md`                        | ownership of `vale-styles/JsDoc/**` and its fixtures, beside the `rules/*.yml` clause                                            |
+| `src/equality/is-strict-equal.ts`                    | comment-only                                                                                                                     |
+| `scripts/feature-files.ts`                           | comment-only                                                                                                                     |
+| `scripts/ast-grep-rule-check/decide.ts`              | comment-only                                                                                                                     |
+| `ideas/candidates/lint-jsdoc-with-vale.md`           | `git rm` as part of the slice                                                                                                    |
+
+Conditional, measure before editing:
+
+| path             | when                                                                                                                                                    |
+| ---------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `.oxlintrc.json` | only if a bait fixture reds the `jsdoc/*` tier. `ignorePatterns` already exists, so it is a one-line entry. **Prefer writing fixtures that pass lint.** |
+
+**Not edited, and each for a measured reason:** `.gitignore` and `.prettierignore` (the sync target does
+not move); `tsconfig*.json` (`vale-styles/` is outside all three `include` lists); `vite.config.ts`
+(the `unit` project's unrooted default include is `**/*.{test,spec}.…`, which `<Rule>.bad.ts` does not
+match — **so never name a fixture `*.test.ts` or `*.spec.ts`**); `stryker.config.json` and
+`crap4ts.config.ts` (both scope `src/**`).
+
+## Interfaces
+
+1. **`.vale.ini` ↔ `vale-styles/`.** `vale-styles` first, `.vale` last. `vale sync` writes only to
+   `.vale`; `vale-styles/` is authored and tracked; a style-name collision resolves to `vale-styles/`.
+2. **Rule ↔ scope.** Every rule in `vale-styles/JsDoc/` carries exactly `scope: [text.comment.block.ts]`.
+   No `.tsx`. A rule that needs another scope is a design change, not a rule edit.
+3. **Rule ↔ fixture.** `vale-styles/JsDoc/<Rule>.yml` pairs with `vale-styles/fixtures/<Rule>.bad.ts` and
+   `<Rule>.good.ts`, matched by basename. Contract: bad reports ≥ 1 of exactly `JsDoc.<Rule>` and nothing
+   else; good reports 0. A rule without both files is unshipped.
+4. **Harness ↔ live config.** The harness is the only thing that reads `vale-styles/fixtures/`. The live
+   `.vale.ini` exempts that path by name.
+5. **Fixture ↔ every other gate.** A fixture is valid TypeScript, passes `npm run lint` and
+   `npm run format:check`, is named so it matches no vitest include, and lives outside every tsconfig.
+6. **Token quoting.** Author every `tokens:` entry in **single** quotes, as upstream does. A YAML
+   double-quoted scalar processes `\b` as a backspace escape, so `"\bword\b"` is not the regex it looks
+   like. Prettier leaves a double-quoted scalar containing a backslash alone, so **nothing catches this**.
+
+## Where I had to guess
+
+| guess                                                              | how a coder settles it                                                                                                            |
+| ------------------------------------------------------------------ | --------------------------------------------------------------------------------------------------------------------------------- |
+| `ImplementationAltitude`'s exact token list beyond the four named  | measure precision whole-tree before adding a token                                                                                |
+| Whether a bait fixture reds oxlint's `jsdoc/*` tier                | write one, run `npm run lint`                                                                                                     |
+| The exact `.vale.ini` section-glob form for the fixtures exemption | Vale's `*` crosses `/`, so `vale-styles/fixtures/*` should reach them; verify with a whole-tree run reporting zero from that path |
+| Whether `@returns` needs its own exempt class in Part A            | slice 2's problem; the `PassiveVoice`-on-`@returns` hit is measured, the remedy is not                                            |
+
+## Two findings against existing docs, neither this slice's to fix alone
+
+1. **`prose-linting.md` says the exit code "is 1 when a rule matched".** Measured: **0** on a
+   warning-only match, 1 only on an `error`-severity match. Since `.vale.ini` re-levels every rule to
+   `warning`, the live config cannot exit nonzero on a finding. Correct it in step 6.
+2. **`prose-linting.md` says "Use double quotes rather than single. Prettier normalises a YAML scalar to
+   that form".** Measured: with `singleQuote: true` Prettier normalises to **single** quotes, in both
+   standalone YAML and Markdown front matter. `architect.md`'s `description:` keeps double quotes only
+   because it contains an apostrophe. The advice is right for the case it was written about and wrong as
+   stated. Correct it in step 6.
+
+## What is descoped
+
+- **The STE remediation.** Slice 2, config and remediation together.
+- **Linting `.tsx` JSDoc.** Blocked by the scope-selector semantics; the unblocking move is a `src/`
+  change to JSX render commentary, which is its own candidate.
+- **Any gate, any `npm run` script, any CI.** `give-vale-an-owner-and-a-trigger`, which now inherits the
+  measured requirement that a Vale gate must read `--output=JSON` rather than `$?`.
+- **`.test.ts` register.** Closed for Part B (3 whole-tree findings, none in a test). Open for Part A.
+
+## What survives from the original open questions
+
+- **Gitignored style directory** — answered, Q1.
+- **`ProcedureLength` reachable in a JSDoc?** — **answered: yes.** Both list-scoped rules reach a genuine
+  Markdown list inside a JSDoc (a 23-word item fires `ProcedureLength`, an "and then" chain fires
+  `OneInstruction`). A `@param` tag line is **not** a Markdown list and reaches neither. Their zeros on
+  the corpus are real: this repo's JSDoc carries no such lists.
+- **`.test.ts` files** — see descoped.
+- **Own gate, or `ast-grep`'s report-only convention?** — report-only here, and the reason is now
+  measured rather than stylistic: the live config cannot exit nonzero.
+- **Part B before Part A?** — **yes**, and Q2 gives the constraint that forces it.
+- **Does the intersection caveat hold?** — still open, and slice 2 owns it. The do-not-merge ruling stands
+  and this pass found nothing against it: the two articles govern different dimensions, and the design
+  needed a cross-link rather than a merge.
