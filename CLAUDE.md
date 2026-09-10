@@ -255,7 +255,7 @@ Two rules keep the board honest:
 
 - **Promote with a move-only commit, then edit.** Run `git mv ideas/candidates/<name>.md ideas/todo/<name>.md` and commit _that alone_, before fleshing the file out. Git infers renames from content similarity, and a candidate being expanded into a todo is precisely the case that defeats it.
 
-  Measured here: a move plus a substantial rewrite in one commit is recorded as delete-plus-add rather than a rename. `git log --follow` then loses everything before the move, even at `-M10%`. Moved by itself the same change scores `R100` and the history survives. (`--follow` is required to read across the move either way; a plain `git log -- ideas/todo/<name>.md` starts at the promotion regardless.)
+  Measured here: a move plus a substantial rewrite in one commit is recorded as delete-plus-add rather than a rename. `git log --follow` then loses everything before the move, even at `-M10%`. Moved by itself the same change scores `R100` and the history survives. (You need `--follow` to read across the move either way; a plain `git log -- ideas/todo/<name>.md` starts at the promotion regardless.)
 
 - **The slice deletes its own idea file.** Run `git rm ideas/todo/<name>.md` as part of the slice's work. The deletion then lands on the branch alongside the change it describes. The `slice/<name>` tag in merge-protocol step 6 then marks a tree that no longer carries it. The tag is the permanent record and carries its own message. A file left behind becomes a third lane nobody maintains.
 
@@ -290,7 +290,7 @@ There is no daemon or persistent process wiring these together. The orchestratin
 
 > `architect` has four modes. **DESIGN** ratifies an _implementation_ — a file set, interfaces, an ordering — and is what this section is about. **CONTRACT** ratifies a _specification_ during `product`'s acceptance spike. It asks three questions. Is the drafted contract observable through the UI at all? What accessible affordance does it need that does not exist? Is it at the right altitude for Gherkin? **ADJUDICATE** rules on a defect `product` reports at the end of the cycle. A slice may use several. Contract review comes first, since there is no point planning an implementation for a contract that cannot be verified.
 
-`architect` may be invoked a **second time, before `coder`**, as a design pass that ratifies a file set and interface rather than reviewing landed code. It still runs in its normal post-`cleaner` slot afterward, so the slice gets both a design and a review. The two jobs compete for one pass otherwise. That is the same reasoning that split `hardener` out of the four-pack architect.
+The orchestrating session may invoke `architect` a **second time, before `coder`**, as a design pass that ratifies a file set and interface rather than reviewing landed code. It still runs in its normal post-`cleaner` slot afterward, so the slice gets both a design and a review. The two jobs compete for one pass otherwise. That is the same reasoning that split `hardener` out of the four-pack architect.
 
 **The orchestrating session decides this, not `product`.** Every trigger below is a fact about the current shape of `src/`, and `product` is deliberately blind to it. It reads `src/` but never writes it, precisely so its reach stays honest. `product` may _flag_ that a slice smells structurally large; it does not make the call.
 
@@ -316,7 +316,7 @@ The file names in the compact module map above are a current snapshot, not a fro
 
 ## Running slices concurrently
 
-Two or three slices can be worked at once: **one slice = one git worktree = one branch = one Claude Code session.** Every role in a cycle runs inside that slice's worktree and commits to that slice's branch. Only the merge protocol below writes to `main`, and the orchestrating session drives it. The role-facing half of this lives in `.claude/agents/articles/workflow.md` ("Worktrees and branches") and `handoffs.md` ("Concurrent slices").
+You can work two or three slices at once: **one slice = one git worktree = one branch = one Claude Code session.** Every role in a cycle runs inside that slice's worktree and commits to that slice's branch. Only the merge protocol below writes to `main`, and the orchestrating session drives it. The role-facing half of this lives in `.claude/agents/articles/workflow.md` ("Worktrees and branches") and `handoffs.md` ("Concurrent slices").
 
 Isolation is what makes it safe. Each worktree gets its own `node_modules`, `coverage/`, `reports/` (including the Stryker incremental cache and `reports/perf/`), `test-results/`, `.stryker-tmp*`, `dist/`, and `dist-perf/`. Those are all fixed relative paths, so separate checkouts separate them for free.
 
