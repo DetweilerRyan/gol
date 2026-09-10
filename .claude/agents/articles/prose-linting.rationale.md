@@ -463,6 +463,49 @@ Record the composition rather than the net, because a net is what stops reproduc
 commit. A `SentenceLength` and a `ParagraphLength` were created and cleared inside the first pass,
 which the committed tree cannot show either way.
 
+**The re-review after the rebase left both compositions unmoved**, which is the useful control on the
+paragraph above: the baseline itself moved, because `ratify-the-rationale-tier` had edited the article
+in the meantime. Re-measured 2026-09-10 on the rebased tree against `main`'s copy in scope, the six
+rows above are still the six, and `ProcedureLength` is still +1 against 13. Its one added site is item
+4 of the confident-zero list — a hazard rather than a step, so exempt on the documented class. That
+pass also created a `SentenceLength` and cleared it, the second time `lint-pass-regressions` did so.
+
+### The `Contractions` delta the first two passes did not record
+
+`Contractions` is mechanical, so a self-inflicted finding on it is worth more than one on a prompt
+rule, and neither earlier pass recorded its composition. Measured 2026-09-10, baseline 3 on `main`'s
+copy in scope and 4 on the landed tree:
+
+| site                                                 | added or removed |
+| ---------------------------------------------------- | ---------------- |
+| the possessive on `cleaner's`                        | added            |
+| the possessive on `architect's`                      | added            |
+| the concurrency prohibition quoting `engineering.md` | removed          |
+
+The two added sites are the sentence that documents the bare-possessive false positive, so they are
+exempt under that class rather than under use/mention — and the article's live-example sentence said
+use/mention until the re-review corrected it. The rule fires twice on three possessives, exactly as
+that sentence claims, so the file is its own fixture.
+
+The removal is a defect fixed rather than a finding cleared. `"Don't run …"` was exempt as a quotation
+of `engineering.md`; `split-engineering-article` then linted that file to `"Do not run …"`, and the
+quotation kept the old wording. **A quotation's exemption expires when the quoted file is worked, and
+nothing reports that.** `reference-check` cannot: it resolves filenames and identifier-shaped symbols,
+not quoted prose.
+
+### What `reference-check` does and does not see in doc prose
+
+The article claims `npm run reference-check` leaves the referent half of a citation unchecked for doc
+prose, because its citation matcher never reaches the backticked form. Verified 2026-09-10 by
+injecting two citations of a symbol that does not exist in `camera.ts` into `prose-linting.md`, and
+running the gate. The unbackticked one reported a `cited-symbol-exists` failure. The one written the
+way this corpus writes it, with each half in its own code span, reported nothing: `references.ts`'s
+`CITATION_PATTERN` requires the possessive to abut the filename token, and the closing backtick sits
+between them.
+
+That matters here because the backticked form is what this corpus writes. `references.ts` records
+1,448 backticked `.md` tokens against 4 link-form ones, measured on the same tree.
+
 ### Two baselines measured mid-pass
 
 `architect.md`'s pass recorded 92 mechanical. Re-derived on `main`'s copy in scope, the figure was

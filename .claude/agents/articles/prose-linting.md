@@ -41,7 +41,7 @@ parse. So `$?` alone cannot tell "linted, found things" from "never linted anyth
 
 **A config error exits 2, and a missing `.vale/` is the common one.** Vale writes the path error to
 stderr and leaves stdout empty. A `grep -c` pipeline over stdout therefore counts zero, which is the
-worst reading of the three. Do not take the number from Vale's own closing line either: it says the run
+worst of the three exit-code readings. Do not take the number from Vale's own closing line either: it says the run
 stopped "with code 1" while the process exits 2. Measured on vale 3.20.0; the reproduction is in
 `prose-linting.rationale.md`.
 
@@ -75,8 +75,8 @@ one session, each with an independent review. One shape appeared in three files 
 once, so read the list as a catalogue rather than as frequencies. None is caught by a checker.
 
 **1. What a split drops is disproportionately an obligation.** One pass produced four meaning
-regressions and every one weakened a duty. The four were a dropped consequence clause and a measurement
-stripped of what its number answers. The other two were a "check that…" demoted to an assertion, and
+regressions and every one weakened a duty. Two of the four were a dropped consequence clause and a
+measurement stripped of what its number answers. The other two were a "check that…" demoted to an assertion, and
 an action that evidence licensed. Each looked like a plausible shortening.
 
 The direction is not uniform, so do not screen for losses alone. The same rollout turned a plain
@@ -127,8 +127,12 @@ The incidents behind each of these are in `prose-linting.rationale.md`.
 
 ## What is scoped, and what is not
 
-Vale runs over `.claude/agents/**/*.md` — every topic article, the house-rules articles, and the five
-role files.
+Vale runs over `.claude/agents/**/*.md`: every topic article, the house-rules articles, and the five
+role files. It also runs over `src/**/*.md`, the module sidecars beside the source.
+
+**Lint a module sidecar exactly like an article**, because whoever holds a call site reads it to act.
+`migrate-architecture-depth` split that tier in two: `<module>.md` is in scope and
+`<module>.rationale.md` is exempt, under the same last section that exempts an article's sidecar.
 
 **The role files were out of scope until `lint-the-role-files`, and the reason is worth keeping.** Their
 YAML front matter is parsed by a real YAML parser, and two `description:` scalars carried a literal `": "`
@@ -231,10 +235,15 @@ it misquotes that file. A contraction named as an example — "'Do not' carries 
 A contraction inside invented internal speech is a use, so expand it. Ask whether the sentence quotes
 another file or names the word itself. Nothing else earns the exemption.
 
-This article is the live example, and carries `Contractions` findings that stand unfixed on purpose:
-**some naming the word itself, some quoting `engineering.md`.** It also carries `OneInstruction`
-findings for the same reason. The sentence ordering the two length rules is false-positive class 1: a
-specified order, not two actions.
+This article is the live example. Its `Contractions` findings stand unfixed on purpose: **some naming
+the word itself, some demonstrating the possessive false positive below.** It also carries
+`OneInstruction` findings for the same reason. The sentence ordering the two length rules is
+false-positive class 1: a specified order, not two actions.
+
+**A quotation is exempt only while it stays faithful, and this file lost its own live instance to that.**
+The concurrency prohibition quoted under `OneInstruction` below once quoted `engineering.md`'s
+`Don't run …`. `split-engineering-article` then linted that file, so the quotation below now matches
+the linted wording. Re-read a quoted contraction whenever a slice works the file it quotes.
 
 **An article about a rule will trip that rule, and this holds for every rule here rather than for this one
 alone.** A guidance article quotes the defect it governs, so its findings are dominated by mentions rather
@@ -299,8 +308,8 @@ Three false-positive classes, and the second is dangerous rather than noisy:
 1. **A specified order, not two actions.** "Write JSDoc, then `// prettier-ignore`, then the
    declaration" is one instruction whose content **is** the ordering. Splitting it destroys the rule.
    Where it fires like this, reach for the other rule — state the sequence as a numbered list.
-2. **A prohibition on concurrency.** "Don't run `npm run test:mutation` and `npx playwright test` at the same
-   time" trips the token, and this rule's advice would turn one prohibition into two instructions,
+2. **A prohibition on concurrency.** "Do not run `npm run test:mutation` and `npx playwright test` at the
+   same time" trips the token, and this rule's advice would turn one prohibition into two instructions,
    **inverting it**. Following the tool here is worse than ignoring it.
 3. **Descriptive prose in a bullet.** The rule's scope is list items, not instructions, so a `while
 …ing` gerund describing how something works is flagged though it instructs nobody.
@@ -342,7 +351,8 @@ already seen; the pass is what finds the next one.
 `doc-comments.md` deliberately, as genuinely arguable. If you hit one, either act on it or say in the
 commit why you did not — do not widen a class to cover it.
 
-**One exempt class is easy to create by accident: a verbatim quotation.** Splitting a long sentence
+**A verbatim quotation creates a finding that belongs to another file, and it is easy to create one by
+accident.** Splitting a long sentence
 can isolate a quoted section title, or a quoted line from another file. The matcher then reads it as
 your own prose. Check whether a new `PassiveVoice` finding sits inside quotation marks before triaging
 it as yours.
