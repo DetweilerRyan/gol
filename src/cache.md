@@ -3,59 +3,45 @@
 Depth that overflows the hover budget, per `doc-comments.md` rule 7. The hover carries the contract; this
 file carries why the contract is shaped that way. Read it before "modernising" anything in this module.
 
-The performance exception for Mutability
+## The performance exception for mutability
 
-TLDR: When fast read/write algorithms and memory-efficient data structures
-are the priority, Mutability wins over Immutability. Therefore,
+**When fast read/write algorithms and memory-efficient data structures are the priority, mutability wins
+over immutability.** So this module deliberately departs from three conventions of the functional
+paradigm that the rest of `src/` holds to: immutability, purity, and statelessness.
 
-in order to ensure that this cache is as performant as possible we
-will be deviating from some of the established conventions of the
-Functional Paradigm. Namely, immutability, purity, and statelessness.
+Each time an entry is inserted, updated, or removed, the node holding that entry must be replaced — and
+every node's `Map` along the key path may be mutated too.
 
-How does embracing mutability here increase performance?
+## Why the immutable form is O(entries) and this one is O(keypath)
 
-Each time an entry is inserted, updated, or removed from the cache,
-the node where the entry exists must be replaced (no big deal, right?)
-AND every node's map along the keypath may be mutated.
+Setting or deleting a value on a `Map` without mutating the original requires cloning the map and
+mutating the clone. That loops over the whole map on every write, so it is O(n):
 
-The standard approach for setting and deleting values on a Map in
-JavaScript without mutating the original map instance requires us to
-clone the old map and then perform the mutation on the clone. Meaning,
-we have to loop over the entire map every time we add a new value or
-update/remove an existing value, and therefore it's O(n).
+```typescript
+function set<K, V>(oldMap: ReadOnlyMap<K, V>, key: K, value: V): ReadOnlyMap<K, V> {
+  // clone the map
+  const clone = new Map(oldMap) // O(n)
 
-immutable set:
+  // mutate the clone
+  clone.set(key, value) // O(1)
 
-function set<K,V>(oldMap: ReadOnlyMap<K,V>, key: K, value: V): ReadOnlyMap<K,V> {
-// clone the map.
-const clone = new Map(oldMap); // O(n)
-
-// mutate the clone
-clone.set(key,value); // O(1)
-
-// return the clone
-return clone as ReadOnlyMap<K, V>;
+  // return the clone
+  return clone as ReadOnlyMap<K, V>
 }
+```
 
-The immutable algorithms for insert, update, and remove will have an
-asymptotic complexity that is a function of the number of entries in
-the cache, O(n), while the mutable algorithms are constant time O(1).
+The immutable algorithms for insert, update and remove therefore have a complexity that is a function of
+the number of entries in the cache. The mutable ones are constant time. An immutable approach makes those
+three calls slower as the cache grows, which is the thing this module exists to avoid.
 
-Simply put, an immutable approach will cause calls to insert, update,
-and remove to become slower as the cache grows larger, and that's no
-good.
+## Immer does not close the gap, and the alternatives that would are not here
 
-Is it possible to create an immutable Map whose insertion and removal
-algorithms are O(1)? Yes, of course.
+An immutable `Map` with near-constant-time insertion and removal is certainly possible. Immutable.js and
+mori both ship one, built without cloning. Neither is a dependency of this repo.
 
-Immer does have support for manipulating maps in an immutable way (this
-repo itself opts into it via `enableMapSet()` inside `createLiveCellStore`,
-for the live-cell Set that store owns), but their approach also creates a
-shallow clone of the base Map/Set on first write within a `produce()` call,
-and that clone is O(n) -- see `prepareMapCopy`/`prepareSetCopy` in
-https://github.com/immerjs/immer/blob/v11.1.17/src/plugins/mapset.ts#L197-L201,
-verified against immer 11.1.17, the version in this repo's lockfile at
-the time of writing.
-
-Immutable.js and mori both have immutable Maps with near-constant-time
-algorithms that do not rely on cloning.
+Immer does support manipulating maps immutably, and this repo already opts into that elsewhere — see the
+`enableMapSet()` call inside `createLiveCellStore`, for the live-cell `Set` that store owns. It does not
+help here. Immer shallow-clones the base `Map` or `Set` on the first write inside a `produce()` call, and
+that clone is O(n): see `prepareMapCopy` and `prepareSetCopy` in
+https://github.com/immerjs/immer/blob/v11.1.17/src/plugins/mapset.ts#L197-L201, verified against immer
+11.1.17, the version in this repo's lockfile at the time of writing.

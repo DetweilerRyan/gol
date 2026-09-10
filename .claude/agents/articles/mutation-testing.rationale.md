@@ -395,7 +395,7 @@ mutant, replacement `";"`, status **Killed**. So that file's 100% score did answ
 unable to answer.
 
 The expression-position case yields `void 0` instead, which is why `Scrollbar.tsx`'s `Math.max(0, …)`
-clamp — described in `architecture.md`'s `src/scrollbars.ts` bullet — genuinely has no removal mutant. The second suppression is the mutator's own
+clamp — described in `architecture.md`, alongside the scrollbar-thickness coupling — genuinely has no removal mutant. The second suppression is the mutator's own
 `filter(mutantsInScope) { return mutantsInScope.length === 1 }`, applied in `babel-transformer.js`'s
 `applyMutantFilters` with **scope = the node plus its descendants**. Both readings were verified against
 `node_modules/@stryker-mutator/instrumenter/dist/src/`, not inferred.

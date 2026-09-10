@@ -65,6 +65,10 @@ export interface LiveCellStore {
    * A legitimate render source ONLY when paired with subscribeBounds above
    * (the useSyncExternalStore contract) -- reading it during render with no
    * matching subscription is still a correctness bug.
+   *
+   * @returns the previous object, by reference, whenever the box has not
+   * moved -- which is what keeps a subscriber from re-rendering on every
+   * mutation that leaves the bounds where they were.
    */
   getBoundsSnapshot(): ContentBounds | null
   /** Notified after any mutator runs; pairs with getLiveCells below. */
@@ -74,6 +78,9 @@ export interface LiveCellStore {
    * A legitimate render source ONLY when paired with subscribeCells above
    * (the useSyncExternalStore contract) -- reading it during render with no
    * matching subscription is still a correctness bug. See module header.
+   *
+   * @returns a frozen set, always -- every mutator publishes through one
+   * private freeze, so no caller needs a defensive copy.
    */
   getLiveCells(): ReadonlyLiveCells
 }

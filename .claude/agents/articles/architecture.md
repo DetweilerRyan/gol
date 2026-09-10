@@ -2,7 +2,7 @@
 
 **Audience:** coder, cleaner, architect - **Read when:** before adding, moving, or splitting a module, and at the start of every architect REVIEW or DESIGN pass.
 
-> Extracted verbatim from CLAUDE.md @ b5e333e, lines 107-127, 129-142. No prose was edited in the extracting commit; only the common leading indent of a fragment lifted out of a nested list was removed.
+> Originally extracted verbatim from CLAUDE.md at commit b5e333e. `migrate-architecture-depth` later moved the per-module bullets into each module's own JSDoc hover, so that provenance describes the extraction and no longer describes this file.
 
 ### Core logic: the framework-free modules, the hooks, and the unit-tested components
 
@@ -19,14 +19,16 @@ Each of these spans more than one module, so no hover can state it alone.
 
   That is both the product call and the perf one. Animating a continuous gesture fights the user's own input, and the wheel route is where the expensive zoom numbers are.
 
-- **`APPEARANCE_STORAGE_KEY` is the one `localStorage` key** that `appearance.ts`, `src/hooks/useAppearance.ts` and the tests all agree on. It is a shared constant rather than a string repeated in three places.
+- **Persisted appearance goes through `appearance.ts`'s `APPEARANCE_STORAGE_KEY`, never a fresh string literal.** The hook that writes it and the module that parses it must name one key. Whoever adds a second persistence site is exactly the reader who would not think to hover the constant.
 - **`liveCellWindow.ts`'s "+1" may leave the mounted set, so the DOM is not a windowed view of the board.** The keyboard cursor's cell is mounted even when it sits outside the `TileRange`. That keeps the grid reachable by Tab after a pan carries the cursor off screen. It is also why a dead cell can be mounted at all.
 - **`gridFocus.ts` and `liveCellWindow.ts` are two independent projections of the same camera.** Neither imports the other; the focus coordinate reaches the window as a plain argument.
 - **`cellAnchor.ts` and `cellTiles.ts` are independent by construction.** `spanCells` is a parameter both take rather than a shared import, so precision bounding and mounting coverage can change without dragging each other.
 - **`scrollbars.ts` is the one camera-side module that knows the game model.** It takes `ContentBounds`, which is exactly why it is separate from `camera.ts`. `liveCellWindow.ts` holds the same two-sided position over `gameOfLife.ts` and `cellTiles.ts`.
 - **`liveCellSeed.ts` is a framework-free module rather than harness code, deliberately.** A seeder that silently produces the wrong population makes every perf number measured against it wrong too, and nothing downstream would notice. It lives where mutation testing and property tests can see it.
 
-<!-- Closed decision: `advanceGeneration`'s `changed` delta has no production consumer left — `liveCellStore.ts` was the last one, and `collapse-dead-cell-layer` retired it. It survives on a ruling rather than on a caller: it is a domain fact about a generation, computed free inside the pass that already decides survival. A green run of `gameOfLife.ts`'s own unit and property tests is the whole of what guards it. -->
+**`advanceGeneration`'s `changed` delta survives on a ruling rather than on a caller.** `liveCellStore.ts` was its last production consumer, and `collapse-dead-cell-layer` retired it. It stays because it is a domain fact about a generation, computed free inside the pass that already decides survival. `gameOfLife.ts`'s own unit and property tests are the whole of what guards it. Do not read a green suite as evidence that something uses it.
+
+**Every framework-free module carries a property test, with two deliberate exceptions, both in `src/equality/`.** `is-strict-equal.ts` is a wrapper over `Object.is` with no invariant to quantify over. `container-equality.ts` states no contract of its own — it is the walker both comparators inject into, so `is-shallow-equal.property.test.ts` and `is-deep-equal.property.test.ts` cover it from both sides. Read a missing `*.property.test.ts` anywhere else as a gap rather than as a third exception.
 
 **The lesson generalizes past scrollbars, and it is the one worth carrying: a property over a module cannot reach an argument's provenance.** `scrollbars.property.test.ts` already asserted "the thumb never extends past the track, in either length or offset" — and it was green, and correct, throughout the entire life of the defect, because it quantifies over the `trackLengthPx` it is _handed_. The bug lived in the gap between that parameter's name and the value one call site passed for it. No property, and no amount of mutation score, over `scrollbars.ts` can see that gap; the guards that can are the parameter's own name (which is why the rename is part of the fix, not cosmetics) and an observation of the rendered result. Before concluding a module is well covered because its invariants are quantified, ask what its callers actually pass.
 
@@ -57,7 +59,9 @@ The edges, as they stand:
 
 They live inside every gate rather than in a `src/catalyst/`-style exclusion, precisely because this repo now maintains them. **`rules/*.yml` covers a new domain module with no rule edits**, whether it sits at `src/` root or in a subdirectory. ast-grep's `*` crosses `/`, so the domain rules' `files: src/*.ts` glob reaches `src/<dir>/*.ts`. **Their `ignores: src/*.test.ts` entry reaches `src/<dir>/*.test.ts` by the same rule**, so the test files under a subdirectory fall out exactly as they do at the root. `crap4ts.config.ts` and `stryker.config.json` scope by `src/**`, so they reach a subdirectory too.
 
-**Prefer flat at `src/` root for a single cohesive module.** A subdirectory suits a set of siblings that belong together, as `src/equality/` shows. (Measured twice against ast-grep 0.45.1 — once before `src/equality/` existed and again on the landed tree, both times with a throwaway probe module plus a `.test.ts` twin: the domain rules fired on the module and never on the twin. This paragraph previously claimed the opposite; it was wrong.) File naming follows the same split: `src/` root modules and `src/hooks/` are camelCase, `src/components/` is PascalCase, and `src/equality/` deliberately keeps the kebab-case names it was ported under — a decision, not drift, since the file names double as the identifiers a reader looks up when tracing these back to their source.
+**Prefer flat at `src/` root for a single cohesive module.** A subdirectory suits a set of siblings that belong together, as `src/equality/` shows. (Measured twice against ast-grep 0.45.1 — once before `src/equality/` existed and again on the landed tree, both times with a throwaway probe module plus a `.test.ts` twin: the domain rules fired on the module and never on the twin. This paragraph previously claimed the opposite; it was wrong.)
+
+**File naming follows the same split.** `src/` root modules and `src/hooks/` are camelCase, and `src/components/` is PascalCase. `src/equality/` keeps its ported kebab-case names. That is a decision rather than drift: a reader looks those names up to trace the code to its source.
 
 **`src/catalyst/` sits apart from all of the above.** It is vendored third-party Tailwind Catalyst UI, dropped in as source rather than installed as a dependency. This project does not author it, and it is deliberately outside every quality gate.
 

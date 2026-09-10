@@ -13,6 +13,10 @@ import { patternCellPositions, type Pattern } from './patternLibrary'
  * - idle: neither browsing nor placing; clicks toggle single cells.
  * - browsing: the pattern library modal is open.
  * - placing: a pattern is armed and follows the pointer until it's stamped.
+ *
+ * Ask the queries below -- isLibraryOpen, armedPattern, previewPositions --
+ * rather than matching on `mode` at a call site. Which combinations exist is
+ * this module's business, and a caller that switches on `mode` re-decides it.
  */
 export type PlacementState =
   | { mode: 'idle' }

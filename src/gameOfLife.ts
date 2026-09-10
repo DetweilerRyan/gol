@@ -111,7 +111,11 @@ export interface GenerationStep {
   next: LiveCells
   /**
    * Every key whose membership differs between the previous generation and
-   * `next`, in no particular order. The store notifies exactly these.
+   * `next`, in no particular order.
+   *
+   * This is kept on a ruling rather than on a caller -- architecture.md
+   * carries the ruling and names what guards it. Read that before adding a
+   * consumer, or before deleting this.
    */
   changed: CellKey[]
 }
