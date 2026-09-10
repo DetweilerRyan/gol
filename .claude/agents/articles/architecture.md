@@ -37,7 +37,7 @@ Two guards can see such a defect:
 - the parameter's own name, which is why a rename is part of the fix rather than cosmetics
 - an observation of the rendered result
 
-So before concluding a module is well covered because its invariants are quantified, ask what its callers actually pass. `src/scrollbars.rationale.md` carries the worked case behind this rule.
+So before concluding a module is well covered because a property quantifies its invariants, ask what its callers actually pass. `src/scrollbars.rationale.md` carries the worked case behind this rule.
 
 **The framework-free modules form a small acyclic graph, and keeping it acyclic is the point of the split.**
 The edges, as they stand:
