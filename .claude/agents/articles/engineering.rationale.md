@@ -11,9 +11,9 @@ a number forward from this file without re-deriving it.**
 
 ## The separate decision this split required
 
-`ideas/candidates/roll-the-rationale-sidecar-out.md` ruled `engineering.md` out of the rollout queue
-"without a separate decision", and named it as the one file that genuinely needed one. Two positions were
-recorded there and left unreconciled:
+The rollout that produced these sidecars ruled `engineering.md` out of its queue "without a separate
+decision", and named it as the one file that genuinely needed one. Its idea file is retired, as a slice
+retires its own; the two positions it recorded were left unreconciled and are kept here:
 
 - **Position A.** Splitting an unconditionally-read file moves argument out of the one place everyone
   sees. This is what protected four files, `engineering.md` among them.
