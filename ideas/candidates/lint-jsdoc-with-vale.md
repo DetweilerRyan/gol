@@ -260,27 +260,69 @@ run and live in the harness run.
 this repo re-levels every rule to `warning` in `.vale.ini`, so **the live config can never exit nonzero on
 a finding.** A gate must read `--output=JSON`, never `$?`.
 
-## Q4 — the JSX scope leak
+## Q4 — the JSX scope leak — RULED PER RULE, NOT PER SLICE
 
-**Ruling: Part B's rules carry `scope: [text.comment.block.ts]` and drop `text.comment.block.tsx`.**
+**Superseded by measurement, 2026-09-10.** The design ruled `.ts` only, dropping `text.comment.block.tsx`
+from every rule. Re-measured, that is too blunt: it costs three working rules their coverage of every
+component in the repo to suppress three findings from one.
 
-The leak is not a `.tsx` quirk to work around; it is what `block` means. There is no narrower scope — the
-`documentation` selectors do not exist and fail silently. So the three options are accept, exclude `.tsx`,
-or change the comments. Measured cost of excluding `.tsx`, for Part B specifically:
+Every finding, cross-tabulated by rule and comment kind:
 
-| rule               | `.tsx` hits lost | of which JSX render commentary |
-| ------------------ | ---------------: | -----------------------------: |
-| `MeasurementInDoc` |                3 |                        3 (all) |
-| the other three    |                0 |                              — |
+| rule                     | JSDoc |   JSX | plain `/* */` |
+| ------------------------ | ----: | ----: | ------------: |
+| `NoThisFunction`         |     1 | **0** |             0 |
+| `ImplementationAltitude` |     1 | **0** |             0 |
+| `MeasurementInDoc`       |     1 | **3** |             0 |
+| `ThisSlice`              |     0 | **0** |             0 |
 
-**Two of those three are in `src/components/LifeBoard.tsx`, a composition root excluded from Stryker and
-crap4ts already.** So `.ts`-only costs zero true positives and removes every false one: whole-tree
-precision goes to 100%.
+**All the `.tsx` noise is one rule.** And its three hits are inverted false positives: `LifeBoard.tsx`
+carries "measured at 1280x900 exactly one pair does" inside a `{/* … */}` block. Rule 4 says a measured
+finding belongs in the **implementation** channel, and a JSX comment **is** the implementation channel
+for markup. The measurement is correctly placed; flagging it inverts the rule.
 
-**The gap this leaves, recorded rather than hidden.** All fourteen component files' JSDoc is unlinted by Part B,
-and Part A would forgo 24 genuine `.tsx` JSDoc findings against 40 JSX ones. The clean fix is a `src/`
-change — move multi-line `{/* … */}` render commentary to `//` above the element, which `doc-comments.md`
-rule 4 arguably already wants — and that is a slice of its own, not this one. Raise it as a candidate.
+**The principle, which outlives these four rules.** Two of them carry a hidden premise — _this block
+comment is an interface doc_. `MeasurementInDoc` and `ImplementationAltitude` both do. `NoThisFunction`
+and `ThisSlice` do not: a bad opener is bad anywhere, and `engineering.md` bans "this slice" everywhere.
+
+Vale's scope cannot express "is this an interface doc", because `block` means _multi-line_. So a
+premise-carrying rule is limited on `.ts` too; it only looks like a `.tsx` problem because this repo
+writes `.ts` implementation notes as `//` and `.tsx` ones as `{/* … */}`.
+
+**So each rule declares the extensions where its premise holds**, and the next rule anyone writes has
+to answer the same question: _does this rule assume the comment is a hover?_ Suggested starting point,
+subject to the ownership clause below:
+
+| rule                     | `.ts` | `.tsx` |
+| ------------------------ | :---: | :----: |
+| `NoThisFunction`         |   Y   |   Y    |
+| `ThisSlice`              |   Y   |   Y    |
+| `ImplementationAltitude` |   Y   |   Y    |
+| `MeasurementInDoc`       |   Y   |   —    |
+
+## Ownership — `architect` alone, and these rules are guidance
+
+**`architect` owns the Vale rules that apply to module interface prose, and no other role authors or
+changes one.** That covers JSDoc in `src/` and `scripts/`, and the module sidecars Vale lints
+(`src/**/*.md`). It does not cover the shared STE style over `.claude/**` and `CLAUDE.md`, which is
+a different surface with a different audience.
+
+This is the `ast-grep` precedent, applied to a second checker. `architect.md` already says
+"**`rules/*.yml` and `rule-tests/` are yours.** You are the only role that authors or changes them;
+every other role reads the output and reports tensions to you." The Vale clause takes the same shape,
+in the same place.
+
+**Everything this candidate says about the four rules is guidance, not specification.** The token
+lists, the anchoring, the per-rule extension table, the messages, the fixture shapes — all of it is
+evidence that the approach works and a starting point for whoever implements it. **`architect` makes
+the call on what to implement and how.** Specifically it may:
+
+- reject a rule outright, including `MeasurementInDoc`, whose premise is the weakest of the four
+- change a token list, or replace an `existence` matcher with another of Vale's twelve rule types
+- re-scope a rule, or level it differently
+- add rules this candidate never considered, and decline the ones it proposed
+
+The measured facts stand as facts — anchoring took `NoThisFunction` from 4.5% to 100% precision, and
+`block` means multi-line. The **rules** are a proposal.
 
 ## Q5 — the ordering
 
@@ -370,6 +412,12 @@ finding is the move this repo already rejects elsewhere.
 
 ## Ratified file set
 
+**The rule files below are a proposal, not a specification.** Per the ownership clause, `architect`
+decides which rules exist, what they match and how they are scoped. What is ratified here is the
+_shape_: where a repo-authored style lives, that every rule ships with a bad and a good fixture, and
+which files an implementation touches. A different set of four rules — or three, or six — lands in
+the same file set.
+
 **Slice 1.** New:
 
 | path                                           | what                         |
@@ -388,9 +436,11 @@ Edited:
 | ---------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------- |
 | `.vale.ini`                                          | second `StylesPath`, `[formats]`, `[*.ts]`, and three exemption sections (fixtures, worktrees, Stryker sandbox)                  |
 | `.claude/agents/articles/prose-linting.md`           | audience line, read trigger, three new confident-zero modes, the scope-selector table, the triage section, the fixture procedure |
+| _(same file)_                                        | the ownership boundary: which Vale rules `architect` owns and which it does not                                                  |
 | `.claude/agents/articles/prose-linting.rationale.md` | every measurement in this file, and the corrected figures beside the old                                                         |
 | `.claude/agents/articles/doc-comments.md`            | one pointer, where a comment is written                                                                                          |
 | `.claude/agents/architect.md`                        | ownership of `vale-styles/JsDoc/**` and its fixtures, beside the `rules/*.yml` clause                                            |
+| `CLAUDE.md`                                          | one line naming `architect` as owner, matching the ast-grep entry                                                                |
 | `src/equality/is-strict-equal.ts`                    | comment-only                                                                                                                     |
 | `scripts/feature-files.ts`                           | comment-only                                                                                                                     |
 | `scripts/ast-grep-rule-check/decide.ts`              | comment-only                                                                                                                     |
