@@ -440,12 +440,28 @@ by isolating a quoted `engineering.md` section title that the matcher then read 
 18 `ProcedureLength` against a baseline of 17, and that finding was created outright, by a contraction
 rewrite that took a bullet from under 20 words to 21.
 
-Writing this article's own additions reproduced it a third time. The commit recorded +3 `PassiveVoice`;
-re-measured 2026-09-10 against the same baseline of 34, the figure is **+4** — the gitignored-state
-description, "None is caught by a checker", the "finished, permitted or sufficient" predicates, and the
-quoted broken string "that is already been done". The last one demonstrates the verbatim-quotation
-exempt class the same additions introduced. `ProcedureLength` was +2 as recorded, against a baseline of 13. A `SentenceLength` and a `ParagraphLength` were created and cleared inside the pass, which the
-committed tree cannot show either way.
+Writing this article's own additions reproduced it a third time. The commit recorded +3
+`PassiveVoice`; re-measured 2026-09-10 against the same baseline of 34, the figure was **+4**.
+
+**A net figure hides its own composition, and this one changed under a second pass.** The +4 above was
+measured at the slice's first commit. The REVIEW pass then deleted one of those four sites and added
+two more, so the same net +4 now decomposes differently. Measured on the committed tree against
+`main`'s copy in scope, five sites added and one removed:
+
+| site                                                              | added or removed |
+| ----------------------------------------------------------------- | ---------------- |
+| "None is caught by a checker"                                     | added            |
+| the "finished, permitted or sufficient" predicates                | added            |
+| "A reference is not restored until you confirm its anchor exists" | added            |
+| "Two of them left genuine steps unacted on purpose"               | added            |
+| the quoted broken string "that is already been done"              | added            |
+| the reworded `Contractions` table row                             | removed          |
+
+The last added row demonstrates the verbatim-quotation exempt class these same additions introduced.
+Record the composition rather than the net, because a net is what stops reproducing first.
+`ProcedureLength` is +1 on the committed tree against a baseline of 13, and was +2 at the first
+commit. A `SentenceLength` and a `ParagraphLength` were created and cleared inside the first pass,
+which the committed tree cannot show either way.
 
 ### Two baselines measured mid-pass
 
