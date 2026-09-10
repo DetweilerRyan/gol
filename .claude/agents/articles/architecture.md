@@ -8,7 +8,7 @@
 
 CLAUDE.md's compact module map names the framework-free modules, the hooks and the unit-tested components. **This article does not restate that list.** The map is the routing index. This article is the account of how those modules depend on each other, and what each one may not do.
 
-**What a single module owns is its own hover.** Read the JSDoc above a declaration for its contract, and its `<module>.md` sidecar where one exists for the depth behind it. What follows is only what no single hover can hold.
+**What a single module owns is its own hover.** Read the JSDoc above a declaration for its contract, and its sidecars beside the source where they exist — `<module>.md` for worked depth, `<module>.rationale.md` for the evidence. What follows is only what no single hover can hold.
 
 ### Cross-module contracts
 

@@ -196,18 +196,28 @@ That gives a three-tier escalation: **hover for the contract, sidecar for the de
 when changing it.**
 
 **Write the reference as `@see {@link ./useZoomGlide.rationale.md}`.** Hover mangles a bare path after
-`@see`. The braced form renders exactly. Point the hover at whichever half the caller needs, and at both
-when both exist.
+`@see`. The braced form renders exactly. Point the hover at whichever half that declaration's reader needs,
+and at both when both exist. Point it at `<module>.rationale.md` when what the reader most needs is why the
+contract is shaped this way. All three live links do exactly that.
 
 > Four alternative `@see` forms were measured and rejected. See `doc-comments.rationale.md`.
 
-**A sidecar's filename is checked; its contents are not.** `check-md-references` added `md` to
-`reference-check`'s extractor, so a link naming a missing file now fails the gate. Measured: renaming both
-module sidecars redded four references at once. Two gaps remain, both measured 2026-09-09 by injecting a
-deliberate fault:
+**What `reference-check` sees of a sidecar is narrower than "the filename is checked", and the difference
+falls on the one form this rule mandates.** `check-md-references` added `md` to the extractor, so a
+**repo-relative** token names a file the checker resolves. Everything below was measured 2026-09-09 by
+fault injection against the landed tree:
 
-- **Matching is by basename, never by full path.** A sidecar moved to another directory still resolves, so
-  the check catches a rename or a deletion and not a relocation.
+- **A repo-relative token in doc prose or in a `//` comment is checked.** Rewriting
+  `src/cache.rationale.md` to a name that resolves to nothing fails the gate by name and line. Renaming
+  both module sidecars redded four such references at once.
+- **A leading-dot token is discarded before it reaches any check.** `references.ts`'s `isDiscardedToken`
+  drops every token starting with `.`, which is dotted-relative noise for its purpose and is also the exact
+  shape of `@see {@link ./cache.rationale.md}`. Breaking that link to a name that resolves to nothing left
+  the run green with the reference count unmoved, so the token was never extracted. **Cite a sidecar
+  repo-relative in a `//` comment for that reason.** The `./` form stays only inside `{@link}`, where
+  hover rendering demands it, and it buys no check there.
+- **Matching is by basename, never by full path.** A sidecar moved to another directory still resolves.
+  Measured by relocating `src/cache.rationale.md` into `src/hooks/`: green.
 - **`src/**/*.md` is outside the checker's scan set.** The source surface is `.ts`/`.tsx`/`.yml`/`.yaml`, and
   the doc surface is `CLAUDE.md`, `README.md` and `.claude/**/*.md`. A sidecar's own references go unread; a
   made-up `.ts` token appended to `src/scrollbars.rationale.md` left the run green.
@@ -219,6 +229,12 @@ matching how article rationale is treated.
 Until the scan gaps close, treat a rename that moves a module as a rename of both its sidecars. Hold a
 sidecar to the comment-assertion convention by hand as well: no quoted test titles, no caller rosters, no
 `<file>:NN`. Nothing will catch one.
+
+**Which half a fact goes in is branch 5's test, one tier down: does a caller act on it?** The claim a
+caller acts on belongs in the hover, and its worked-out form in `<module>.md`. The evidence behind that
+claim belongs in `<module>.rationale.md`. `useZoomGlide` is the live example. Its hover states that the
+completion frame is bit-identical to an instantaneous zoom, because a caller can rely on that. The
+float-divergence measurement that establishes it sits in the rationale half.
 
 ### 8. Scope: exported declarations **and** interface/type members
 

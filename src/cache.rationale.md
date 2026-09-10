@@ -1,7 +1,8 @@
-# `cache.ts` — implementation notes
+# `cache.ts` — rationale
 
-Depth that overflows the hover budget, per `doc-comments.md` rule 7. The hover carries the contract; this
-file carries why the contract is shaped that way. Read it before "modernising" anything in this module.
+The rationale half of the sidecar pair, per `doc-comments.md` rule 7: the hover carries the contract, and
+this file carries the evidence for why the contract is shaped that way. Read it before "modernising"
+anything in this module, not in order to call it.
 
 ## The performance exception for mutability
 

@@ -217,7 +217,7 @@ one block whether or not its content is mixed. **Do not read a low entering enta
 **Per-module interface depth makes up 29% of the article, and it is scheduled to leave.** Measured
 2026-09-09: 4,486 bytes across fourteen per-hook sub-bullets, plus 1,536 across four per-component bullets.
 Those modules already carry their own JSDoc, so the article restates what a hover already gives a caller.
-CLAUDE.md's routing branch 4 sends that content to JSDoc, or to a `<module>.md` sidecar beside the source,
+CLAUDE.md's routing branch 4 sends that content to JSDoc, or to a sidecar beside the source,
 rather than to a shared article. **Ruled 2026-09-09 by the user**: land this split as it stands, then
 migrate the module depth in its own slice, before `architecture.md` is split. **Done by
 `migrate-module-depth`**, which took the article to 18,886 bytes and left five cross-module constraints

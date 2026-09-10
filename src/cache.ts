@@ -1,5 +1,5 @@
 // Deliberately MUTABLE rather than immutable, and that is a performance
-// ruling rather than an oversight. See ./cache.rationale.md for the argument in full.
+// ruling rather than an oversight. See src/cache.rationale.md for the argument in full.
 
 type KeyPath = unknown[]
 

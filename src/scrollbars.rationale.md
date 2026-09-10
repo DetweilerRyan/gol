@@ -1,8 +1,8 @@
 # `scrollbars.ts` — rationale
 
-Why this module and its component are guarded the way they are. Read this before
+Why this module and `Scrollbar.tsx` are guarded the way they are. Read this before
 changing `SCROLLBAR_THICKNESS_PX`, before changing how the scrollbar tests assert,
-or before deleting something here that reads as defensive.
+or before deleting anything in `Scrollbar.tsx` that reads as defensive.
 
 This is a rationale sidecar: evidence, measurements and closed rulings, not
 instructions. The rule these cases were generalized into lives in
@@ -10,9 +10,7 @@ instructions. The rule these cases were generalized into lives in
 
 ## The property test that was green throughout the defect
 
-The rule this was generalized into lives in `architecture.md`. What follows is only the case it came from.
-
-`scrollbars.property.test.ts` already asserted "the thumb never extends past the track, in either length or offset" — and it was green, and correct, throughout the entire life of the defect, because it quantifies over the `trackLengthPx` it is _handed_. The bug lived in the gap between that parameter's name and the value one call site passed for it. No property, and no amount of mutation score, over `scrollbars.ts` can see that gap; the guards that can are the parameter's own name (which is why the rename is part of the fix, not cosmetics) and an observation of the rendered result.
+`scrollbars.property.test.ts` already quantified thumb containment — length and offset both inside the track — and it was green, and correct, throughout the entire life of the defect, because it quantifies over the `trackLengthPx` it is _handed_. The bug lived in the gap between that parameter's name and the value one call site passed for it. Renaming the parameter was half the fix rather than cosmetics; the other half was `grid-scrollbars.e2e.spec.ts`'s containment test, which is where the rendered result is observed at all.
 
 ## The constant is guarded in two directions, by two different layers
 

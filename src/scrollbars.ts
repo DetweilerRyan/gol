@@ -7,9 +7,11 @@ import type { ContentBounds } from './gameOfLife'
 // cells are relative to the viewport), which is exactly why it's separate:
 // camera.ts and gridGeometry.ts stay independent of gameOfLife.ts.
 //
-// Before changing SCROLLBAR_THICKNESS_PX, or deleting anything here that reads
-// as defensive, see ./scrollbars.rationale.md -- it carries the two-directional
-// guard argument and the measurements behind it.
+// How a caller sizes the track it hands computeThumbGeometry is guarded in two
+// layers, in two directions, and neither guard is visible from this file:
+// SCROLLBAR_THICKNESS_PX and the clamp that applies it both live in
+// Scrollbar.tsx. See src/scrollbars.rationale.md before changing either, or
+// before changing how the scrollbar tests assert.
 
 export interface ScrollbarMetrics {
   thumbRatio: number

@@ -23,7 +23,7 @@ interface GlideState {
   glide: ZoomGlide
   // The camera the glide STARTED at -- every frame recomputes
   // zoomCameraToCellSize from THIS fixed camera, never from the previous
-  // frame's result. See ./useZoomGlide.rationale.md for the float-divergence
+  // frame's result. See src/hooks/useZoomGlide.rationale.md for the float-divergence
   // measurement behind that, and for why it makes the completion frame
   // bit-identical to an instantaneous zoom.
   fromCamera: Camera

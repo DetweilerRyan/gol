@@ -11,7 +11,7 @@ Adapted from unclebob/swarm-forge's `main`-branch constitution (`swarmforge/cons
 
   Push new logic down into a framework-free module whenever it can be expressed as a pure function. A hook should stay a thin adapter around one browser API. Logic pushed down stays covered by unit tests, property tests and mutation testing, rather than stranded where none of them reach it.
 
-**Where a comment goes is a design decision too.** A `//` comment is invisible to `LSP` hover, and declaration emit strips it. So put anything a _caller_ needs above the declaration, in JSDoc. Everything about how the thing works inside stays `//`. `.claude/agents/articles/doc-comments.md` carries that partition, the hover budget it implies, the sidecar `<module>.md` overflow tier, and the reading habit that makes it pay. **Read it before writing or moving a comment block.**
+**Where a comment goes is a design decision too.** A `//` comment is invisible to `LSP` hover, and declaration emit strips it. So put anything a _caller_ needs above the declaration, in JSDoc. Everything about how the thing works inside stays `//`. `.claude/agents/articles/doc-comments.md` carries that partition, the hover budget it implies, the paired sidecar overflow tier beside the source, and the reading habit that makes it pay. **Read it before writing or moving a comment block.**
 
 ## Where guidance and file names live
 

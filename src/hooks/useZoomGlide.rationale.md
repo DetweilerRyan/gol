@@ -1,8 +1,8 @@
-# `useZoomGlide.ts` — implementation notes
+# `useZoomGlide.ts` — rationale
 
-Depth that overflows the hover budget, per `doc-comments.md` rule 7. The hover carries the contract; this
-file carries why the contract is shaped that way. Read it when you are changing the glide, not in order to
-call it.
+The rationale half of the sidecar pair, per `doc-comments.md` rule 7: the hover carries the contract, and
+this file carries the evidence for why the contract is shaped that way. Read it when you are changing the
+glide, not in order to call it.
 
 ## Every frame recomputes from the camera the glide started at
 

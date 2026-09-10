@@ -19,6 +19,11 @@ interface ScrollbarDragState {
 // exactly the other axis's bar thickness, so the two track boxes tile the
 // viewport edge with no overlap). One constant covers both facts because
 // they're the same fact.
+//
+// Before changing this value, and before deleting the Math.max clamp below as
+// dead defensive code, read src/scrollbars.rationale.md: the value is coupled to
+// the h-2.5/w-2.5 classes by two guards in two different layers, and the clamp
+// has exactly one guard in the whole suite.
 const SCROLLBAR_THICKNESS_PX = 10
 
 /**
