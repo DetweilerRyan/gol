@@ -1,7 +1,36 @@
 ---
 name: spike-the-slop-rules-one-at-a-time
-title: Spike each Vale Slop rule on a pilot article, with the user ruling on each, to decide which to enable
+title: DECLINED — the Slop rules are not worth a spike; Metaphor read at roughly zero precision
 created: 2026-09-10
+---
+
+## Declined, 2026-09-10
+
+**Ruled by the user: not worth doing.** Step 1 was started and stopped after its evidence came in.
+
+All **30 `Metaphor` findings** were extracted with their sentences and read. **Every one is correct
+house usage**, on five phrases:
+
+- `load-bearing` (14) always appears as "X is load-bearing rather than tidy/stylistic", naming a
+  structural reason and the alternative it rules out in two words.
+- `reads as a` (8) is literal in the parser cases — a YAML parser does read — and elsewhere names
+  the interpretation-versus-reality concern this repo is built around.
+- `provenance` (4) is the ordinary sense of the word, and `architecture.md` names a rule after it.
+- `stands in for` (3) and `the shape of the` (1) are accurate, the latter contrasted against
+  "calibration".
+
+So the largest rule in the set found nothing true. The other fifteen produce **27 findings between
+them**, and eight of those rules fire nowhere at all. The remediation would have been real and the
+yield close to zero.
+
+**What survives, and is worth keeping.** The measurements below stand and were expensive to take —
+in particular that enabling `Slop` naively leaks into the exempt sidecars (**105 findings with the
+leak, 47 with it closed**), and that `TokenIgnores` rather than a patched style package is the
+mechanism for rejecting a phrase without rejecting its rule. Anyone reopening this should start from
+those rather than re-derive them.
+
+**The method itself was sound and is not the reason this was declined.** It was declined on yield.
+
 ---
 
 ## Situation
