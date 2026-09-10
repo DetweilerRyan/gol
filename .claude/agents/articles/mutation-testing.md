@@ -306,8 +306,31 @@ stays green through it.
 extent that a fixed filename can never become a test. That nothing inside the run consults the file
 is an inventory taken on a date, and no check performs it. `package.json` is the standing
 counterexample: also a fixed filename, and deliberately absent because it can move the score. So a
-green run from that checker is **not** a proof for those entries. Its report prints the two
-populations separately for that reason.
+green run from that checker is **not** a proof for those entries. **Nothing in the report says so** —
+the report prints one line, and it is the same line either way. Read the tier off the config.
+
+**The same gap reaches the `vitest-exclude` tier, and it is the one an ordinary slice opens.** C1
+proves the directory is collected by no vitest project. It does **not** prove that some test which
+_is_ collected reads the directory out of the sandbox. Stryker's sandbox is populated from tracked
+files, so `ideas/`, `.claude/`, `rules/` and `rule-tests/` are all present inside it. A single
+`readFileSync` of one of them from a test that runs under `npm run test:mutation` would make a
+diff in that directory able to change a mutant's fate, while the checker stayed green.
+
+**Re-derive that inventory rather than reading it forward**, because no check performs it and an
+ordinary feature slice can invalidate it without touching `rules/`, the config, or this article. The
+method is one command plus a read: grep every file the `src/` run collects, plus `src/test-setup.ts`
+and `fast-check-stryker-seed.ts`, for `node:fs`, `readFileSync`, `existsSync`, `node:child_process`
+and `import.meta.glob`, and read each hit. Verified 2026-09-10: **zero hits under `src/`**, and
+neither setup file touches the filesystem. `perf/raw-sink.ts` does, and is collected by no vitest
+project.
+
+**The `scripts/` suite is a separate question, and the answer is different.** `vite.config.ts`
+excludes `scripts/**`, so no `scripts/` test runs under `npm run test:mutation` at all and none of
+them can reach this. Under `npm run test:mutation:scripts` several do read the live tree —
+`scripts/mutation-invariance/run.test.ts` reads four config files and the rationale sidecar, and two
+`acceptance-mutation` tests read `features/`. That is precisely why the config's own `scope` field
+declares the predicate for the `src/` run only, and why the candidate
+`the-invariance-predicate-does-not-say-which-mutation-run-it-covers` is still open.
 
 **Those config entries are load-bearing for this exemption specifically**, not just for a tidy test
 run. The checker verifies them, so deleting one now reds `npm run mutation-invariance` rather than

@@ -1,7 +1,7 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
   "title": "mutation-invariance.config.json",
-  "description": "The merge protocol's mutation-invariant path allowlist, described in CLAUDE.md's merge-protocol step 5. `allow[]` names a path whose diff provably cannot move `npm run test:mutation`'s score; `absent[]` records a path that was considered and ruled out, each with a `reason`.",
+  "description": "The merge protocol's mutation-invariant path allowlist, described in CLAUDE.md's merge-protocol step 5. `allow[]` names a path argued not to move `npm run test:mutation`'s score, with `securedBy` naming what that argument rests on -- two of the three tiers are machine-checked and `written-argument` is not, so validation passing is not a proof for a `written-argument` entry. `absent[]` records a path that was considered and ruled out, each with a `reason`.",
   "type": "object",
   "additionalProperties": false,
   "required": ["scope", "allow", "absent"],

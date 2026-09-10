@@ -1,5 +1,18 @@
 import { describe, expect, it } from 'vitest'
-import { parseConfig } from './config-file.ts'
+import { parseConfig, type ParseConfigResult } from './config-file.ts'
+import type { GateFailure } from '../gate-report.ts'
+
+// ParseConfigResult is a union -- failures OR a config, never both -- so a
+// test asserting on the failure member has to establish which member it
+// holds first. Throwing rather than returning a fallback keeps the "it
+// unexpectedly succeeded" case a named failure instead of an empty array
+// that quietly satisfies every assertion below it.
+function failuresOf(result: ParseConfigResult): GateFailure[] {
+  if (result.failures === undefined) {
+    throw new Error('expected parseConfig to report failures, but it returned a config')
+  }
+  return result.failures
+}
 
 // A schema fixture built in-memory, kept structurally faithful to
 // schemas/mutation-invariance.schema.json (draft-07, the three ajv traps
@@ -60,7 +73,7 @@ const VALID_CONFIG = JSON.stringify({
 describe('parseConfig', () => {
   it('returns the parsed config and no failures for a schema-valid config', () => {
     const { config, failures } = parseConfig(VALID_CONFIG, SCHEMA, 'mutation-invariance.config.json')
-    expect(failures).toEqual([])
+    expect(failures).toBeUndefined()
     expect(config?.scope).toBe('npm run test:mutation')
     expect(config?.allow).toHaveLength(3)
     expect(config?.absent).toHaveLength(1)
@@ -72,13 +85,12 @@ describe('parseConfig', () => {
       ...JSON.parse(VALID_CONFIG),
     })
     const { config, failures } = parseConfig(withSchemaKey, SCHEMA, 'mutation-invariance.config.json')
-    expect(failures).toEqual([])
+    expect(failures).toBeUndefined()
     expect(config).toBeDefined()
   })
 
   it('fails on malformed JSON in the config text, attributing the failure to configPath', () => {
-    const { config, failures } = parseConfig('{ not json', SCHEMA, 'mutation-invariance.config.json')
-    expect(config).toBeUndefined()
+    const failures = failuresOf(parseConfig('{ not json', SCHEMA, 'mutation-invariance.config.json'))
     expect(failures).toHaveLength(1)
     expect(failures[0].check).toBe('config-parse')
     expect(failures[0].file).toBe('mutation-invariance.config.json')
@@ -91,8 +103,7 @@ describe('parseConfig', () => {
   })
 
   it('fails on malformed JSON in the schema text, attributing the failure to the schema file', () => {
-    const { config, failures } = parseConfig(VALID_CONFIG, '{ not json', 'mutation-invariance.config.json')
-    expect(config).toBeUndefined()
+    const failures = failuresOf(parseConfig(VALID_CONFIG, '{ not json', 'mutation-invariance.config.json'))
     expect(failures).toHaveLength(1)
     expect(failures[0].check).toBe('schema-parse')
     expect(failures[0].file).toBe('schemas/mutation-invariance.schema.json')
@@ -100,8 +111,7 @@ describe('parseConfig', () => {
 
   it('fails when the schema itself does not compile', () => {
     const brokenSchema = JSON.stringify({ type: 'object', properties: { foo: { type: 'not-a-real-type' } } })
-    const { config, failures } = parseConfig(VALID_CONFIG, brokenSchema, 'mutation-invariance.config.json')
-    expect(config).toBeUndefined()
+    const failures = failuresOf(parseConfig(VALID_CONFIG, brokenSchema, 'mutation-invariance.config.json'))
     expect(failures).toHaveLength(1)
     expect(failures[0].check).toBe('schema-compile')
   })
@@ -117,8 +127,7 @@ describe('parseConfig', () => {
       allow: [{ path: 'ideas/**' }, { path: 'rules/**' }],
       absent: [],
     })
-    const { config, failures } = parseConfig(badConfig, SCHEMA, 'mutation-invariance.config.json')
-    expect(config).toBeUndefined()
+    const failures = failuresOf(parseConfig(badConfig, SCHEMA, 'mutation-invariance.config.json'))
     expect(failures.length).toBeGreaterThan(1)
     expect(failures.every((failure) => failure.check === 'schema-valid')).toBe(true)
     expect(failures.every((failure) => failure.file === 'mutation-invariance.config.json')).toBe(true)
@@ -126,14 +135,14 @@ describe('parseConfig', () => {
 
   it('formats a nested violation with the instancePath, not "(root)"', () => {
     const badConfig = JSON.stringify({ scope: 'x', allow: [{ path: 'ideas/**' }], absent: [] })
-    const { failures } = parseConfig(badConfig, SCHEMA, 'mutation-invariance.config.json')
+    const failures = failuresOf(parseConfig(badConfig, SCHEMA, 'mutation-invariance.config.json'))
     expect(failures.some((failure) => failure.message.startsWith('/allow/0 '))).toBe(true)
     expect(failures.some((failure) => failure.message.startsWith('(root) '))).toBe(false)
   })
 
   it('formats a root-level violation (a missing required top-level property) as "(root)"', () => {
     const badConfig = JSON.stringify({ allow: [], absent: [] })
-    const { failures } = parseConfig(badConfig, SCHEMA, 'mutation-invariance.config.json')
+    const failures = failuresOf(parseConfig(badConfig, SCHEMA, 'mutation-invariance.config.json'))
     expect(failures).toHaveLength(1)
     expect(failures[0].message).toContain('(root)')
     expect(failures[0].message).toContain("must have required property 'scope'")
@@ -141,7 +150,7 @@ describe('parseConfig', () => {
 
   it('rejects an unknown top-level property (additionalProperties: false)', () => {
     const badConfig = JSON.stringify({ ...JSON.parse(VALID_CONFIG), extra: true })
-    const { failures } = parseConfig(badConfig, SCHEMA, 'mutation-invariance.config.json')
+    const failures = failuresOf(parseConfig(badConfig, SCHEMA, 'mutation-invariance.config.json'))
     expect(failures.length).toBeGreaterThan(0)
   })
 
@@ -165,7 +174,7 @@ describe('parseConfig', () => {
     ],
   ] as const)('%s', (_title, badAllowEntry) => {
     const badConfig = JSON.stringify({ scope: 'x', allow: [badAllowEntry], absent: [] })
-    const { failures } = parseConfig(badConfig, SCHEMA, 'mutation-invariance.config.json')
+    const failures = failuresOf(parseConfig(badConfig, SCHEMA, 'mutation-invariance.config.json'))
     expect(failures.length).toBeGreaterThan(0)
   })
 })

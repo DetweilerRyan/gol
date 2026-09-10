@@ -71,18 +71,18 @@ function decideDiff(config: MutationInvarianceConfig, diff: DiffInput): DecideRe
  * `diff` at all is exit 0 -- config validity alone was asked for.
  */
 export function decide(input: DecideInput): DecideResult {
-  const { config, failures: parseFailures } = parseConfig(input.configText, input.schemaText, input.configPath)
-  // `||` reads defensively -- parseConfig's own contract (config-file.ts)
-  // never returns `config` and a non-empty `failures` together, so `!config`
-  // and `parseFailures.length > 0` are always equal for every value this
-  // function actually receives, and `&&`/`|| false` cannot be told apart
-  // from `||` by any input this program can construct.
-  if (!config || parseFailures.length > 0) {
-    return { exitCode: 1, lines: formatFailureLines('config invalid', parseFailures) }
+  // One operand, because ParseConfigResult is a union rather than a pair of
+  // optional fields -- there is no "config present alongside failures" state
+  // to guard against, so there is no second condition here whose correlation
+  // with the first would have to be argued in a comment and could not be
+  // told apart by any test.
+  const parsed = parseConfig(input.configText, input.schemaText, input.configPath)
+  if (parsed.failures !== undefined) {
+    return { exitCode: 1, lines: formatFailureLines('config invalid', parsed.failures) }
   }
 
   const checkFailures = checkAll({
-    config,
+    config: parsed.config,
     vitestProjects: input.vitestProjects,
     strykerIgnorePatterns: input.strykerIgnorePatterns,
     trackedFiles: input.trackedFiles,
@@ -96,5 +96,5 @@ export function decide(input: DecideInput): DecideResult {
     return { exitCode: 0, lines: ['mutation-invariance -- config valid, no --diff given.'] }
   }
 
-  return decideDiff(config, input.diff)
+  return decideDiff(parsed.config, input.diff)
 }

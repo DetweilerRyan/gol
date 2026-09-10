@@ -43,6 +43,18 @@ export interface MutationInvarianceConfig {
   absent: AbsentEntry[]
 }
 
+/**
+ * Either a config and no failures, or failures and no config -- never both,
+ * and never neither. A union rather than a pair of independently optional
+ * fields, so a caller needs one test to know which it holds. The pair shape
+ * this replaces made the correlation a prose contract that decide.ts had to
+ * restate and defend; here the compiler carries it, and the state a
+ * defensive second operand was guarding against is unrepresentable. Same
+ * shape as this file's own JsonParseResult, one level up.
+ */
+export type ParseConfigResult =
+  { config: MutationInvarianceConfig; failures?: undefined } | { config?: undefined; failures: GateFailure[] }
+
 // Attributed to the schema file itself in a GateFailure -- the config
 // doesn't carry its own schema's path, and parseConfig's own signature
 // (configText, schemaText, configPath) has no separate schemaPath
@@ -87,11 +99,7 @@ function formatAjvError(error: ErrorObject): string {
  * doesn't itself compile, then every schema-validation error against the
  * config (`allErrors: true`, so more than one can come back at once).
  */
-export function parseConfig(
-  configText: string,
-  schemaText: string,
-  configPath: string,
-): { config?: MutationInvarianceConfig; failures: GateFailure[] } {
+export function parseConfig(configText: string, schemaText: string, configPath: string): ParseConfigResult {
   const schemaResult = parseJson(schemaText, SCHEMA_FILE, 'schema-parse')
   if (schemaResult.failure) return { failures: [schemaResult.failure] }
 
@@ -126,5 +134,5 @@ export function parseConfig(
     }
   }
 
-  return { config: configResult.value as MutationInvarianceConfig, failures: [] }
+  return { config: configResult.value as MutationInvarianceConfig }
 }
