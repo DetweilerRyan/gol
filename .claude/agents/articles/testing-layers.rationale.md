@@ -440,7 +440,8 @@ other in both directions on the way.
 Vale run against this article reported no findings at all. The run was real and the file was in scope; a
 second identical invocation minutes later reported all 198. The cause was not diagnosed. What caught it
 was checking the zero against a file known to be non-empty, which is the habit
-`prose-linting.md`'s "three ways a run reports a confident zero" section argues for. **Never record a Vale
+`prose-linting.md`'s confident-zero section argues for. That section is a numbered list, so it is cited
+by name here rather than by count -- it has grown twice. **Never record a Vale
 zero without confirming the same invocation reports findings on a file that has them.** A worktree makes
 this likelier rather than less: `.vale/` is gitignored, so a new worktree cannot lint until that directory
 is restored, and the failure names a missing path rather than a missing style.

@@ -116,7 +116,7 @@ rather than closing the question.
 
 ## Working inside scripts/
 
-`scripts/` is a separate TypeScript project from `src/` and `features/`. It has its own vitest config, coverage directory, CRAP config and Stryker config. `quality-tooling.md` in this directory says what each of its seven programs does. It is the tooling every other role's quality gate runs on, so it is held to the same bar as `src/`. Use the parallel set of commands, never the `src/`-scoped ones.
+`scripts/` is a separate TypeScript project from `src/` and `features/`. It has its own vitest config, coverage directory, CRAP config and Stryker config. `quality-tooling.md` in this directory describes the advisory programs, and CLAUDE.md carries the full entry for each gating one. It counted seven when eight had landed, so count the directories under `scripts/` rather than trusting a figure in prose. It is the tooling every other role's quality gate runs on, so it is held to the same bar as `src/`. Use the parallel set of commands, never the `src/`-scoped ones.
 
 Four of the seven are report-only. **`npm run ast-grep:rules`, `npm run agent-doc-check` and `npm run reference-check` are the exceptions and genuinely gate.** Each exits non-zero on three conditions:
 

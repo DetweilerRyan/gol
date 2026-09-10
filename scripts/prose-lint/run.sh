@@ -6,7 +6,7 @@
 # That split is the whole point. `.vale.ini` is report-only and three of the six
 # STE rules are prompts needing per-finding judgement, so a gate on findings would
 # contradict the design. But a run that CANNOT lint reports zero and reads exactly
-# like a clean pass -- prose-linting.md lists seven ways that happens. This script
+# like a clean pass -- prose-linting.md lists eight ways that happens. This script
 # closes the ones a command can close.
 #
 # Paths, never a filesystem walk: a bare `vale .` walks into every checkout under

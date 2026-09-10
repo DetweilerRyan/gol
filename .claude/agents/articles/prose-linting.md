@@ -33,6 +33,15 @@ path. Copy `.vale/` from a checkout that has it, or run `vale sync` again. **Do 
 not when the mandate to lint arrives.** The failure names a missing path rather than a missing style, so
 it does not read as "Vale is not set up here".
 
+**`npm run prose-lint` is the command.** It runs Vale over the tracked file list rather than walking
+the filesystem, and prints how many files it linted. That trailing count is the point. A zero from a
+clean tree and a zero from a run that linted nothing are the same bytes. Four of the eight ways below
+produce exactly that. The script fails when it **cannot** lint — no binary, no `.vale/`, an
+unloadable config, an empty file list — and never on a finding.
+
+Run it after editing `.claude/**`, `CLAUDE.md`, a module sidecar, or a JSDoc block. No role owns the
+running, because four seats do the editing.
+
 ## Vale is report-only here
 
 Nothing gates on Vale's exit code, and `engineering.md`'s convention for a report-only checker applies:
@@ -50,7 +59,7 @@ worst of the three exit-code readings. Do not take the number from Vale's own cl
 stopped "with code 1" while the process exits 2. Measured on vale 3.20.0; the reproduction is in
 `prose-linting.rationale.md`.
 
-## Seven ways a run reports a confident zero
+## Eight ways a run reports a confident zero
 
 Check each before you believe one.
 
@@ -73,6 +82,11 @@ Check each before you believe one.
 7. **`vale test` skips a rule file that carries no `tests:` key.** Measured over a directory holding
    two rules, one untested: `1 file — 1 passed, 0 failed`, exit 0. That is the missing-fixture hazard
    `npm run ast-grep:rules` catches, in a checker that has none.
+8. **A malformed section glob matches nothing, silently.** Measured on Vale 3.20.0 over the fixture
+   directory: a header of `[*.{ts]` reports 0 findings and exits 0, with no diagnostic. This is
+   number 4 reached through a typo in `.vale.ini` rather than through a file's path. Brace expansion
+   itself is real — `*.{ts,zzz}` selected the `.ts` fixtures alone and `*.{qqq,zzz}` selected none,
+   so an unmatched glob applies no style rather than falling back to everything.
 
 **One more way is not a zero at all, and no rule catches it.** Moving evidence out of a rule strands the
 words that pointed at it. "The split is clean" survived the table it described. "The bullet below"
