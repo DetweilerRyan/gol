@@ -118,13 +118,16 @@ rather than closing the question.
 
 `scripts/` is a separate TypeScript project from `src/` and `features/`. It has its own vitest config, coverage directory, CRAP config and Stryker config. `quality-tooling.md` in this directory describes the advisory programs, and CLAUDE.md carries the full entry for each gating one. It counted seven when eight had landed, so count the directories under `scripts/` rather than trusting a figure in prose. It is the tooling every other role's quality gate runs on, so it is held to the same bar as `src/`. Use the parallel set of commands, never the `src/`-scoped ones.
 
-Four of the seven are report-only. **`npm run ast-grep:rules`, `npm run agent-doc-check` and `npm run reference-check` are the exceptions and genuinely gate.** Each exits non-zero on three conditions:
+Most are report-only. **These are the exceptions and genuinely gate:** `npm run ast-grep:rules`, `npm run agent-doc-check`, `npm run reference-check` and `npm run mutation-invariance`. Each exits non-zero on what it checks:
 
 - a misconfigured rule file
 - docs that state something mechanically false
 - a comment or doc line naming a file, symbol or line number that does not resolve
+- a mutation-invariance allowlist entry that no longer holds against the tree
 
-Do not generalize "the `scripts/` tools are advisory" to any of the three.
+**Read `npm run mutation-invariance`'s exit code carefully, because it carries three meanings rather than two.** 0 is invariant, 2 is not invariant, and **1 means the config failed validation, so no verdict exists** — never read 1 as a pass. It is also the one no role runs. The orchestrating session runs it at merge step 3, and CLAUDE.md's merge protocol is the source of truth for when.
+
+Do not generalize "the `scripts/` tools are advisory" to any of these four.
 
 **A new program in `scripts/` is picked up automatically.** `crap4ts.scripts.config.ts`'s `include` and `stryker.scripts.config.json`'s `mutate` are glob-minus-exclusion rather than hand-maintained lists, and each config states its own reasoning. **What you must still do by hand is add an exclusion** when a new file genuinely should not be measured. The failure then shows up as a loud threshold breach rather than as silence.
 
