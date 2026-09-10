@@ -251,7 +251,7 @@ Every `<Rule>.bad.ts` must report at least one finding of exactly `JsDoc.<Rule>`
 `<Rule>.good.ts` must report nothing.
 
 **Why a second config rather than one.** The fixtures are bait, so the main `.vale.ini` has to exempt
-them or a whole-tree `vale .` reports eight deliberate findings — the exact untriaged backlog Q2 forbids.
+them or any tree-wide run reports eight deliberate findings — the exact untriaged backlog Q2 forbids.
 But an exempt path cannot test itself. The second config is what lets the fixtures be exempt in the live
 run and live in the harness run.
 
@@ -277,7 +277,7 @@ or change the comments. Measured cost of excluding `.tsx`, for Part B specifical
 crap4ts already.** So `.ts`-only costs zero true positives and removes every false one: whole-tree
 precision goes to 100%.
 
-**The gap this leaves, recorded rather than hidden.** Thirteen components' JSDoc is unlinted by Part B,
+**The gap this leaves, recorded rather than hidden.** All fourteen component files' JSDoc is unlinted by Part B,
 and Part A would forgo 24 genuine `.tsx` JSDoc findings against 40 JSX ones. The clean fix is a `src/`
 change — move multi-line `{/* … */}` render commentary to `//` above the element, which `doc-comments.md`
 rule 4 arguably already wants — and that is a slice of its own, not this one. Raise it as a candidate.
@@ -296,19 +296,28 @@ existing `StylesPath = .vale`. Create `vale-styles/JsDoc/` with the first rule a
 
 Verify: `vale .claude/agents/articles/doc-comments.md` reports the same 41 warnings as before, so the
 second path changed no Markdown result. `vale sync` still reports it synced to `.vale`. The harness run
-passes. Whole-tree `vale .` is unchanged, because the new style is named by no section.
+passes. The tracked-tree run below is unchanged, because the new style is named by no section.
 
 **Step 2 — `[formats] ts = md` alone.** Measured inert: with no `.ts` section Vale processes **0 files**.
 Verify by running `vale` over twenty corpus files and reading "in 0 files".
 
-**Step 3 — the fixtures exemption, before anything can leak into it.** A section matching
-`vale-styles/fixtures/*`, placed **after** the `[*.ts]` section that step 4 adds but before the two
-Markdown sections. It must set `BasedOnStyles =` empty **and** switch each explicitly-enabled rule off by
-name. `.vale.ini`'s own comment records why the empty value alone is not enough, and it failed silently in
-that direction once.
+**Step 3 — the three exemption sections, written at the file position `[*.ts]` will sit above.** One for
+`vale-styles/fixtures/*`, one for `.claude/worktrees/*`, one for `.stryker-tmp*/*`. Each must set
+`BasedOnStyles =` empty **and** switch every explicitly-enabled rule off by name. `.vale.ini`'s own
+comment records why the empty value alone is not enough, and it failed silently in that direction once.
+
+Both intermediate states are green: with `[*.ts]` absent the exemptions match nothing that is enabled, and
+with it present they win because sections stack and the later one takes the key.
 
 **Step 4 — the first rule goes live.** Add `[*.ts]` with `BasedOnStyles = JsDoc` and the rule named
-explicitly at `warning`. Verify whole-tree: the rule's known finding count and nothing from `vale-styles/`.
+explicitly at `warning`, **above** step 3's exemptions. Verify with the command that produced the
+baseline, which is a tracked-file list rather than a filesystem walk:
+
+```bash
+git ls-files '*.ts' '*.tsx' | grep -v '^src/catalyst/' | xargs vale --output=JSON
+```
+
+Expect the rule's known finding count and nothing from `vale-styles/`.
 
 **Step 5 — rules two through four, one commit each, each repeating steps 1, 3 and 4's verification.**
 Then fix the three findings. All three are comment-only.
@@ -319,12 +328,26 @@ Then fix the three findings. All three are comment-only.
 **Step 7 — `npm run lint`, then `npm run format`.** Then `npm run agent-doc-check` and
 `npm run reference-check`, both of which this slice's `.claude/**` edits can move.
 
-### The section glob needs no narrowing, and that is measured
+### The section glob needs no narrowing, but the invocation does
 
 `[*.ts]` matches every `.ts` in the tree — tests, `perf/`, `features/`, root configs. Run over all 278
-whole-tree files, the four rules yield **3 findings total**, all in production code. So there is no
+tracked files, the four rules yield **3 findings total**, all in production code. So there is no
 test-comment register problem to solve here, and the open question about `.test.ts` files is closed for
 Part B. **It is not closed for Part A**, whose 227 is a production-only figure.
+
+**`vale .` is not that command, and the difference is 3 findings against 10.** Measured: a bare `vale .`
+at the repo root processes **916 files** and reports the same three findings **once per checkout it
+walks into** — `.claude/worktrees/idea-pause-and-play/`,
+`.claude/worktrees/the-invariance-allowlist-omits-paths-that-provably-cannot-move-a-mutant/`, and a
+`.stryker-tmp/sandbox-*/`. It does **not** enter `node_modules`. Two consequences, and the design takes
+both:
+
+1. **Every verification in the ordering names the tracked-file list**, never a filesystem walk. That is
+   what the 3-finding baseline is scoped to.
+2. **`.vale.ini` exempts `.claude/worktrees/*` and `.stryker-tmp*/*` anyway**, because somebody will type
+   `vale .` and Vale has no ignore mechanism other than a later section. Both `agent-doc-check` and
+   `reference-check` already carry the `.claude/worktrees/` exclusion for exactly this reason, so the
+   precedent is settled; the Stryker sandbox is the new one.
 
 ## The four rules, and the three findings
 
@@ -363,7 +386,7 @@ Edited:
 
 | path                                                 | what                                                                                                                             |
 | ---------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------- |
-| `.vale.ini`                                          | second `StylesPath`, `[formats]`, `[*.ts]`, the fixtures exemption                                                               |
+| `.vale.ini`                                          | second `StylesPath`, `[formats]`, `[*.ts]`, and three exemption sections (fixtures, worktrees, Stryker sandbox)                  |
 | `.claude/agents/articles/prose-linting.md`           | audience line, read trigger, three new confident-zero modes, the scope-selector table, the triage section, the fixture procedure |
 | `.claude/agents/articles/prose-linting.rationale.md` | every measurement in this file, and the corrected figures beside the old                                                         |
 | `.claude/agents/articles/doc-comments.md`            | one pointer, where a comment is written                                                                                          |
@@ -404,12 +427,12 @@ match — **so never name a fixture `*.test.ts` or `*.spec.ts`**); `stryker.conf
 
 ## Where I had to guess
 
-| guess                                                              | how a coder settles it                                                                                                            |
-| ------------------------------------------------------------------ | --------------------------------------------------------------------------------------------------------------------------------- |
-| `ImplementationAltitude`'s exact token list beyond the four named  | measure precision whole-tree before adding a token                                                                                |
-| Whether a bait fixture reds oxlint's `jsdoc/*` tier                | write one, run `npm run lint`                                                                                                     |
-| The exact `.vale.ini` section-glob form for the fixtures exemption | Vale's `*` crosses `/`, so `vale-styles/fixtures/*` should reach them; verify with a whole-tree run reporting zero from that path |
-| Whether `@returns` needs its own exempt class in Part A            | slice 2's problem; the `PassiveVoice`-on-`@returns` hit is measured, the remedy is not                                            |
+| guess                                                             | how a coder settles it                                                                                                                                               |
+| ----------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `ImplementationAltitude`'s exact token list beyond the four named | measure precision whole-tree before adding a token                                                                                                                   |
+| Whether a bait fixture reds oxlint's `jsdoc/*` tier               | write one, run `npm run lint`                                                                                                                                        |
+| The exact `.vale.ini` section-glob form for the three exemptions  | Vale's `*` crosses `/`, so `vale-styles/fixtures/*` should reach them; verify with a tracked-tree run and a bare `vale .`, both reporting zero from each exempt path |
+| Whether `@returns` needs its own exempt class in Part A           | slice 2's problem; the `PassiveVoice`-on-`@returns` hit is measured, the remedy is not                                                                               |
 
 ## Two findings against existing docs, neither this slice's to fix alone
 
