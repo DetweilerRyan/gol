@@ -1,0 +1,21 @@
+# doc-comments.md rule 5: the block-tag table is CLOSED. Those five tags are the
+# entire permitted block-tag vocabulary in src/ and scripts/.
+#
+# This is the one rule here with a named gap to fill. oxlint's
+# jsdoc/check-tag-names gates a misspelled tag and the TypeScript-redundant
+# family, and the article says in the same breath that it cannot enforce the
+# table -- the rest of standard JSDoc still passes that gate. `@summary` is the
+# worked case, and it is what BlockTagVocabulary.bad.ts carries: oxlint accepts
+# it, this rule does not.
+#
+# `(?m)^` anchors per source line of the comment. Vale strips the `/**` opener
+# and every leading ` * ` before a rule sees the text, so a tag that opens a
+# hover line opens the line this pattern sees. Verified silent on an inline
+# {@link}, on an at-sign inside prose, and on a banned tag inside an @example
+# fence, which Vale skips because `ts = md` makes the comment Markdown.
+extends: existence
+message: "'%s' is outside doc-comments.md rule 5's closed block-tag table (@example, @param, @returns, @throws, @see). Keep the content and drop the tag word, or move the line to a `//` comment."
+level: warning
+scope: text.comment.block.ts
+raw:
+  - '(?m)^@(?!example\b|param\b|returns\b|throws\b|see\b)[a-zA-Z]+'
