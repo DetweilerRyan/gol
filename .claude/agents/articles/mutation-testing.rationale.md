@@ -488,3 +488,53 @@ Neither tool is malfunctioning, so no upstream fix is coming: Stryker's instrume
 The worked example is `scripts-mutation-survivors-untriaged`, which triaged 23 unexamined `scripts/` survivors. Every survivor whose site already carried an equivalence comment survived scrutiny intact; the two rulings that had to be overturned mid-slice, and the one **live defect** the slice then found in unmutated source, were all at the one site whose equivalence depended on a collision space shared between two functions (`analyze.ts`'s `pairKey` and its two callers). Read the arrow carefully — n is 23, and the likeliest common cause is that locally-arguable sites are both easier to comment and easier to get right, not that the writing itself confers correctness. The rule above holds under either reading.
 
 That slice also supplied the counter-shape the budget has to tolerate. `analyze.ts`'s loop-bound and diagonal-guard comments run past two lines and reason across functions — and both are _correct_, confirmed by hand-application at full scope. What distinguishes them from the one that was wrong is not length: it is that each is a **closed** argument about a value space the file itself defines, and each now carries the measurement that settles it. The warning fires on an argument that is long because it is _unresolved_, not on one that is long because it is documented.
+
+## The mutation-invariance allowlist, entry by entry
+
+Moved out of `CLAUDE.md` by `the-invariance-allowlist-omits-paths-that-provably-cannot-move-a-mutant`. That file now names only the command, so this is the sole prose home for why each entry is sound. The list itself lives in `mutation-invariance.config.json`, which is the single source of truth; this section explains, and can rot without changing what the gate does.
+
+**`npm run mutation-invariance`'s check C4 requires every path in that config to appear verbatim here.** So this section is bound to the config mechanically. Adding an entry without an argument reds the gate.
+
+### The scope of every argument below
+
+Each argument is made for `npm run test:mutation`, the `src/`-scoped run configured by `stryker.config.json`. It is **not** made for `npm run test:mutation:scripts`. That configuration carries no `ignorePatterns` at all, and two `scripts/` tests read `features/` from the live tree, so a `features/**`-only diff can change a mutant's fate there. The candidate `the-invariance-predicate-does-not-say-which-mutation-run-it-covers` owns that question and this slice did not settle it.
+
+### Secured by `stryker-ignore-patterns`
+
+**`features/**`** — `stryker.config.json` carries `"ignorePatterns": ["/features"]`, so the directory is never copied into the sandbox. Nothing in it can run, kill, or be attributed a kill. The leading `/` anchors the pattern to the project root, which is why the checker's matcher strips it before comparing.
+
+### Secured by `vitest-exclude`
+
+The shared argument: `stryker.config.json`'s `mutate` list is `src/**` only, so no file in any of these directories yields a mutant. And `vite.config.ts`'s `sharedExclude` reaches every vitest project, so a test file placed in one is collected by no project and can kill nothing.
+
+The checker verifies the second half against each project's own `exclude`, not against the shared constant. That distinction is deliberate: a project that stopped spreading the constant into its own list would keep the constant correct while collecting the directory again.
+
+**`ideas/**`** and **`.claude/**`** — added by `shared-exclude-covers-docs-dirs`, which measured the hole first. Probes in both were collected into the `unit` project, and the `ideas/` one imported `src/gameOfLife`, so it would have run inside the sandbox.
+
+**`rules/**`** and **`rule-tests/**`** — both directories hold `.yml` and nothing else today, but the predicate is evaluated over a future diff, so the exclusion is what makes the entry sound rather than the current contents. Measured 2026-09-08: a probe in each was collected into the `unit` project, both of them.
+
+**`.vale/**`** — added by `split-mutation-testing-article`, which measured `[unit] .vale/__probe.test.ts` being collected. Note the trap it closed: the directory is gitignored, which is **not** the same as being safe from collection. A `git add -f` makes such a file tracked, at which point it matches this allowlist entry, and without the exclusion it would run inside the sandbox while the predicate answered invariant.
+
+### Secured by `written-argument`
+
+This tier is the honest one, and its name says what it is. A fixed filename cannot match a test glob, so none of these paths can ever become a test. That is the half the checker verifies. **The other half — that nothing inside the run consults the file — is an inventory of the tree on a date, not a structural guarantee**, and no check performs it. `package.json` is the standing counterexample: also a fixed filename, and on the absent list precisely because it can move the score.
+
+**`CLAUDE.md`** and **`README.md`** — documentation. Tracked, therefore copied into the sandbox, but Stryker runs the vitest suite and nothing else, and no test reads either file.
+
+**`.vale.ini`** — added by `rationale-sidecar-pilot`. Nothing in `package.json`, `vite.config.ts` or the `vitest.*.config.ts` files references Vale, and no `npm run` script invokes it. Vale could gain a script, or a gate, and the score still could not move.
+
+**`.oxlintrc.json`** — added by `the-invariance-allowlist-omits-paths-that-provably-cannot-move-a-mutant`. Oxlint is referenced by neither `vite.config.ts`, `vitest.scripts.config.ts`, `src/test-setup.ts`, `fast-check-stryker-seed.ts` nor either Stryker config. The instance that paid for the entry: `oxlint-native-jsdoc-tier` changed four paths with zero TypeScript among them, and the one unallowlisted path put the diff through a full run whose every mutant was `main`'s by construction. The entry does not license skipping anything else; `.oxlintrc.json` gates `npm run lint`, which is not one of `hardener`'s stages at all.
+
+### The absent list, and why each ruling stands
+
+**`absent` never participates in the decision.** A changed path matching no `allow` entry is not invariant, full stop. These entries only supply the reason printed beside the verdict, so the list is deliberately not a closed set.
+
+**They decide what the run sees.** `stryker.config.json` and `stryker.scripts.config.json` pick the mutants and the sandbox. `vite.config.ts`, `vitest.browser.config.ts` and `vitest.scripts.config.ts` pick the tests. Editing any of them re-arms the full run, which is the point of leaving them out.
+
+**They decide what the code is.** `package.json` and `package-lock.json` move dependency versions under the whole suite. `tsconfig.json`, `tsconfig.app.json`, `tsconfig.node.json` and `tsconfig.scripts.json` decide what compiles. `patches/**` rewrites a dependency's own source.
+
+**`src/**`, `scripts/**` and `perf/**`** are the mutated and test-bearing trees themselves. `public/**` is shipped asset content.
+
+**`.gitignore`** is the interesting ruling. It yields no mutant, yet Stryker's sandbox is populated from tracked files, so an edit here changes what the sandbox contains. **`.prettierignore`** is left out on the weaker ground that an allowlist should carry only what has been argued and needed. **`sgconfig.yml`** is the same weaker ground: it looks sound on all three points, but only the first is structural, and no diff has been blocked by it alone.
+
+**`mutation-invariance.config.json`** and **`schemas/**`** are absent by the same logic as `stryker.config.json`, and this is the one an author will be tempted to skip. A file that decides the gate's own scope must re-arm the gate when edited. Without these two entries, the first slice to widen the allowlist would be granting itself an exemption in the same diff.
