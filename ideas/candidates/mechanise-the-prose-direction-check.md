@@ -68,6 +68,12 @@ decision under CLAUDE.md branch 3, not a wording change.
 - **Would a rule-4 check have a false-positive rate worth paying?** A deliberate new list moves the
   restart count too. On the `CLAUDE.md` pass, restarts went 3 → 4 and every one was intentional, so
   the check reports a question rather than a defect.
-- **Does rule 3 have a mechanical form at all?** The split-conjunct blind spot is the worst defect in
-  the set and the least mechanisable, since detecting it means knowing that a sentence states a
-  sufficiency condition.
+- **Does rule 3 have a mechanical form at all?** The split-conjunct blind spot is the least
+  mechanisable of the six, since detecting it means knowing that a sentence states a sufficiency
+  condition.
+- **Is `ProcedureLength`'s actionable condition right while its application is wrong?** Six linted
+  files now hold findings recorded as act-on shape but not acted on, each time because the remedy
+  separates a step's reasoning from the step it qualifies. `prose-linting.md` records that
+  disagreement as open, so **do not re-file the divergence itself** — one open question, one home.
+  What is unrecorded is the narrower question: whether "act only on a genuine step" is the wrong
+  test, or the right test applied badly.
