@@ -45,7 +45,7 @@ worst reading of the three. Do not take the number from Vale's own closing line 
 stopped "with code 1" while the process exits 2. Measured on vale 3.20.0; the reproduction is in
 `prose-linting.rationale.md`.
 
-## Three ways a run reports a confident zero
+## Four ways a run reports a confident zero
 
 Check each before you believe one.
 
@@ -55,8 +55,11 @@ Check each before you believe one.
 2. **A file failed to parse and aborted the run.** Vale parses YAML front matter with a real YAML
    parser, and one unparseable file aborts the whole invocation rather than skipping that file.
 3. **Vale is not installed, or `.vale/` is absent.** See Setup.
+4. **The file matches no section glob in `.vale.ini`.** Vale applies no style, reports 0, and exits 0.
+   A scratch copy of a file placed outside the globs is how a reviewer re-deriving a baseline hits
+   this. Put the copy at an in-scope path instead.
 
-**A fourth way is not a zero at all, and no rule catches it.** Moving evidence out of a rule strands the
+**One more way is not a zero at all, and no rule catches it.** Moving evidence out of a rule strands the
 words that pointed at it. "The split is clean" survived the table it described. "The bullet below"
 survived the bullets. Each is grammatical, each passes every mechanical rule, and each now points at
 nothing. Three appeared in one split.
@@ -64,6 +67,46 @@ nothing. Three appeared in one split.
 **After removing a block, re-read the sentences that survived around it** and
 check every "the", "that", "those" and "it" still has its referent. This is the one part of a lint pass a
 tool cannot do for you.
+
+## How a pass damages the file it cleans
+
+A lint pass is an edit, and its defects are not random. Six shapes recurred across six files linted in
+one session, each with an independent review. None is caught by a checker.
+
+**1. What a split drops is disproportionately an obligation.** One pass produced four meaning
+regressions and every one weakened a duty. The four were a consequence clause, a measurement, a
+"check that…" demoted to an assertion, and an action that evidence licensed. Each looked like a plausible shortening.
+
+**2. So diff the tokens, not your memory.** Take a full tokenize-and-frequency diff of the file
+against its pre-edit copy. Account for every non-zero delta as a split, a deliberate edit, or a
+defect.
+
+A fixed word list is the fallback for a file too large to diff whole. Such a list must include
+causal connectives — `because`, `since`, `so`. A lost causal link reads as two adjacent facts, and no
+obligation word moves.
+
+**3. That diff has one blind spot, and it is the worst defect in the set.** Splitting `X and Y` into
+`X. Y.` turns a conjunct into a standalone claim, so the first sentence asserts a sufficiency that was
+never true. Obligation words go **up**, not down, because the condition gained a verb. Read every
+split of a sentence saying when something is finished, permitted or sufficient.
+
+**4. Check list structure, because `format:check` is green over a broken list.** Replacing a whole
+line can dedent the continuations under it, which ends the list early and opens a fresh one at the
+next numbered item. Prettier normalises the break as intentional. Count `^ *1\. ` restarts and
+indented continuations before and after; a moved count means a split list.
+
+**5. You have not restored a reference until you confirm its anchor exists.** A token check verifies tokens,
+not referents. When a pass removes labels and later puts a citation back, confirm the target survived.
+
+**6. A pass introduces findings as well as clearing them.** Splitting a sentence multiplies be-verb
+sites, and two extra words push a bullet past `ProcedureLength`'s 20-word proxy. Compare residual
+counts to a pre-edit baseline and name what the pass added, rather than reporting a self-inflicted
+finding as a survivor.
+
+**Measure the baseline before the first edit, on the pre-edit file, at an in-scope path.** A figure
+recalled mid-pass has been wrong twice in this repo's history, both times reading low.
+
+The incidents behind each of these are in `prose-linting.rationale.md`.
 
 ## What is scoped, and what is not
 
@@ -168,7 +211,7 @@ it misquotes that file. A contraction named as an example — "'Do not' carries 
 — is the subject of the sentence, not its voice.
 
 This article is the live example, and carries three such findings that stand unfixed on purpose: **two
-naming the word itself, one quoting `engineering.md`.** It also carries one `OneInstruction` finding for
+naming the word itself, one quoting `engineering.md`.** It also carries `OneInstruction` findings for
 the same reason. The sentence ordering the two length rules is false-positive class 1: a specified order,
 not two actions.
 
@@ -177,6 +220,16 @@ alone.** A guidance article quotes the defect it governs, so its findings are do
 than uses. Measured on this file: 46 prompt findings, every one exempt, and most of them the article
 quoting its own examples. **Expect that shape when you lint guidance prose, and do not read a high count as
 a dirty file.**
+
+**A second exempt class, and it is a rule false positive rather than a judgement.** The rule's
+possessive token ends `(?!\s)`. So a possessive followed by **punctuation** fires, and one followed
+by a **space** does not. "the cleaner's, architect's, and hardener's gates" yields two findings from
+three possessives. Nothing is wrong with the prose; the comma is doing it.
+
+**Never put `that's` through a mechanical sweep.** It expands to _that is_ or _that has_ by context,
+and only the sentence tells you which. An automated sweep wrote "that is already been done" into a
+role file. In another file four of five instances were _that is_ and the fifth was _that has_, which
+is exactly why a sweep looks safe. Expand this one by hand and read each site.
 
 ### `STE.ParagraphLength` — act on every finding
 
@@ -254,6 +307,11 @@ already seen; the pass is what finds the next one.
 **A residual that fits none of the five is not automatically exempt.** Four such cases were left in
 `doc-comments.md` deliberately, as genuinely arguable. If you hit one, either act on it or say in the
 commit why you did not — do not widen a class to cover it.
+
+**One exempt class is easy to create by accident: a verbatim quotation.** Splitting a long sentence
+can isolate a quoted section title, or a quoted line from another file. The matcher then reads it as
+your own prose. Check whether a new `PassiveVoice` finding sits inside quotation marks before triaging
+it as yours.
 
 ## `SentenceLength` and `ParagraphLength` trade against each other
 

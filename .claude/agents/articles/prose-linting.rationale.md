@@ -358,3 +358,81 @@ one invocation after the change: a role file reports findings, an article report
 
 **Widening the scope creates no obligation to fix what it revealed.** This article's own rule is to lint the
 file you are editing rather than the directory, so each role file is worked by the slice that edits it.
+
+## The incidents behind "How a pass damages the file it cleans"
+
+Six files were linted to mechanical zero in one session — the five role files and `orchestration.md`
+— each with an independent `architect` REVIEW. Every review found a defect the pass had introduced.
+These are those defects, with the figures.
+
+### The direction, four for four
+
+`architect.md`, mechanical 101 to 0. The review found four meaning regressions and every one weakened
+an obligation: contract-mode Q2 lost "before a spec has been written around the workaround", removing
+the consequence that makes an affordance finding urgent; Q4 kept "read the count" but lost what the
+count answers; the property-test duty went from "check that…" to "It also means whoever… showed it
+failing", turning an obligation into an assertion; and the Halstead bullet lost "is corroborating
+evidence for splitting it up", removing the action the corroboration licenses.
+
+None looked deliberate. Each is a plausible shortening. The reviewer named the four-for-four pattern
+as the headline finding rather than the individual regressions, and conducted the review under the
+file being reviewed, which it flagged as a conflict rather than claiming it did not operate.
+
+### The blind spot in a word count
+
+`coder.md`. "your job is done once the underlying wiring exists **and** the unit/Gherkin layer is
+green" was split into two sentences, so the first asserted that wiring alone finishes the slice. The
+obligation-word count did not catch it: `must` went **1 to 2**, an increase, because the detached
+conjunct gained its own modal.
+
+### The connective a fixed list cannot anticipate
+
+`orchestration.md`. "a test file had grown to 38 tests and 19.88s unnoticed, **because** `cleaner`
+watched mutant _count_ … and nobody watched test _runtime_" lost its connective and became two
+juxtaposed facts. The section's instruction rests on that causation, and the sentence after it has no
+antecedent without it. Found by a full token-frequency diff, which showed `because` 4 to 3; a fixed
+word list would have had to name that word in advance.
+
+Measured across the four landed role files at the time: sixteen causal connectives dropped, and all
+sixteen survived as adjacency on inspection. The check earns its place by making that a finding
+someone clears rather than a question nobody asks.
+
+### The list that split under a green gate
+
+`cleaner.md`. A whole-line replacement inside an ordered list dedented traps 3 to 5 and three closing
+paragraphs from three spaces to column 0. Step 3 ended at the second trap; the remainder became a
+top-level list plus loose prose, and the next item opened a fresh ordered list. **`npm run
+format:check` was green over it** — Prettier normalises the break as intentional — so nothing in the
+repo could have caught it.
+
+The same pass restored a "from step 3(a)" cross-reference whose `(a)`/`(b)` labels it had removed in
+the same edit. A word-count check verifies tokens, not referents.
+
+### Findings a pass creates
+
+`orchestration.md`. The pass reported 19 `PassiveVoice` residuals against a measured baseline of 18,
+and 18 `ProcedureLength` against 17. It had fixed one passive and created one, by isolating a quoted
+`engineering.md` section title that the matcher then read as prose. The `ProcedureLength` finding was
+created outright, by a contraction rewrite that took a bullet from under 20 words to 21.
+
+Writing this article's own additions reproduced it a third time: +3 `PassiveVoice` and +2
+`ProcedureLength` against a measured baseline of 34 and 13, plus one `SentenceLength` and one
+`ParagraphLength` that the additions created and then cleared.
+
+### Two baselines measured mid-pass
+
+`architect.md`'s pass recorded 92 mechanical. Re-derived on `main`'s copy in scope, the figure was
+**101** — 65 `SentenceLength` rather than 57, plus a `ParagraphLength`. 92 was the count after the six
+worked examples had already been removed.
+
+This repo already carried a commit titled "correct the Vale baseline, which was itself measured
+mid-pass". Twice is a rule.
+
+### The Contractions mechanism that was plausible and wrong
+
+A rollout commit recorded that the landed role files reached zero `Contractions` because their
+possessives are backticked. Refuted by reading `.vale/STE/Contractions.yml`: the possessive token is
+`\b\w+['’](?:re|ve|ll|d|s)\b(?!\s)`, and the `(?!\s)` is the whole story. A possessive followed by a
+space does not fire; one followed by punctuation does. "the cleaner's, architect's, and hardener's
+gates" produced two findings from three possessives, and the landed peers carry bare possessives that
+read zero because a space follows them.
