@@ -324,6 +324,13 @@ and `import.meta.glob`, and read each hit. Verified 2026-09-10: **zero hits unde
 neither setup file touches the filesystem. `perf/raw-sink.ts` does, and is collected by no vitest
 project.
 
+**That grep finds runtime reads only, and it is not the whole method.** A static `import` of a JSON
+file or a Vite `?raw` specifier that points out of `src/` is a live read of the sandbox with no
+filesystem API in it, so it leaves no hit. Check the import specifiers too — grep `src/` for `?raw`,
+for an import ending `.json`, and for a specifier climbing above `src/`. Verified 2026-09-10 at the
+same time as the paragraph above: **zero hits on all three**. Read each claim as scoped to the
+command that produced it, and re-run rather than reading either forward.
+
 **The `scripts/` suite is a separate question, and the answer is different.** `vite.config.ts`
 excludes `scripts/**`, so no `scripts/` test runs under `npm run test:mutation` at all and none of
 them can reach this. Under `npm run test:mutation:scripts` several do read the live tree —

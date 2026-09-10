@@ -7,7 +7,7 @@
 // UNLIKE agent-doc-check's, ast-grep-rule-check's and reference-check's own
 // run.test.ts, which build a mkdtempSync temp repo per case and read the
 // live tree never. Do not read this file as mirroring them: it is the
-// deliberate exception, and the two paragraphs below are the price of it.
+// deliberate exception, and the three paragraphs below are the price of it.
 //
 // HAZARD, flagged by architect and recorded rather than buried: this test
 // (via runCheck -> gatherDecideInput) reads several live-tree files, which
