@@ -1,6 +1,7 @@
 # The JsDoc style, owned by `architect`
 
-Rules that mechanically enforce `.claude/agents/articles/doc-comments.md` over JSDoc blocks.
+Rules that mechanically enforce this repo's conventions over JSDoc blocks — mostly
+`.claude/agents/articles/doc-comments.md`, and `engineering.md`'s indexical clause.
 
 `architect` alone authors or changes a rule here, on the `ast-grep` precedent. Every other role
 reads the output and reports tensions to it.

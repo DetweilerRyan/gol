@@ -1,12 +1,14 @@
 # Article: Prose Linting — running Vale over the agent docs, and what to do with a finding
 
-**Audience:** any role or session that edits `.claude/agents/**`
+**Audience:** any role or session that edits `.claude/agents/**`, `CLAUDE.md`, a module sidecar, or a
+JSDoc block in `src/` or `scripts/`
 
 **Read when:**
 
 - before acting on a Vale finding, so you know which ones to act on
 - before enabling, disabling or re-levelling a rule in `.vale.ini`
 - when a Vale run reports zero and you want to know whether that is real
+- after writing or changing a JSDoc block, before handing off — see "Triaging a finding in a comment"
 
 > The measurements behind every ruling here are in `prose-linting.rationale.md`: the per-rule precision
 > counts, the dates, and the rules tried and rejected. Read it when you are **changing** a ruling below,
@@ -45,7 +47,7 @@ worst of the three exit-code readings. Do not take the number from Vale's own cl
 stopped "with code 1" while the process exits 2. Measured on vale 3.20.0; the reproduction is in
 `prose-linting.rationale.md`.
 
-## Four ways a run reports a confident zero
+## Six ways a run reports a confident zero
 
 Check each before you believe one.
 
@@ -124,6 +126,39 @@ finding as a survivor.
 recalled mid-pass has been wrong twice in this repo's history, both times reading low.
 
 The incidents behind each of these are in `prose-linting.rationale.md`.
+
+## Triaging a finding in a comment
+
+Vale lints JSDoc blocks in `src/` and `scripts/`, and a finding there is **not** the same act as a
+finding in an article. Four differences.
+
+**1. The remedy is often placement, not prose.** In an article an over-long sentence gets split. In a
+JSDoc it may mean the content does not belong in the interface at all. `doc-comments.md` rule 4 sends
+implementation detail to `//`, and rule 7 sends overflow to a `<module>.md` sidecar.
+
+**Splitting the sentence in place is the wrong fix that still clears the finding.** Ask which before
+rewriting.
+
+**2. `@example` fenced code is exempt automatically; `@param` and `@returns` prose is not.**
+
+Measured:
+a long sentence and a contraction inside a ` ```ts ` fence both go unflagged, because `ts = md` makes
+Vale skip Markdown code fences. `@returns` is conventionally a noun phrase, so a `PassiveVoice`
+finding there may want an exemption rather than a rewrite.
+
+**3. A paragraph split costs hover height; a sentence split does not.** Splitting a sentence reflows
+within the same rendered lines. Splitting a paragraph inserts a blank ` *` line, which spends one of
+`doc-comments.md` rule 6's roughly fifteen. Markdown carries no such budget.
+
+**4. Vale strips the comment markers before any rule sees the text.** `/**`, `*/` and every leading
+`*` are gone, so a rule cannot tell `/**` from `/*`, and `scope: text.comment.block.<ext>` means
+**multi-line**, not "documentation". Scope is also strictly per-extension: a `.ts` scope never reaches
+a `.tsx` file.
+
+**Who owns the rules.** `architect` alone authors or changes a rule in `vale-styles/JsDoc/`, which is
+the style covering module interface prose — JSDoc and the module sidecars Vale lints. Every other role
+reads the output and reports tensions to it, exactly as with `rules/*.yml`. The shared `STE` style over
+`.claude/**` and `CLAUDE.md` is a different surface and is not `architect`'s alone.
 
 ## What is scoped, and what is not
 

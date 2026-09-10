@@ -77,6 +77,11 @@ Ask this of each existing line:
 - **Does it explain how the thing works inside, or why it was built that way?** → `//`, below the
   signature.
 
+**Vale lints these blocks.** `vale-styles/JsDoc/` carries rules that mechanically enforce some of
+what follows, and `architect` owns them. See `prose-linting.md`'s "Triaging a finding in a comment"
+for how a finding here differs from one in an article. The remedy is often a **move** rather than a
+rewrite.
+
 ### 2. The first line is one sentence saying what the caller gets
 
 Not how it is computed. No "This function…". This line has to make reading the body unnecessary, and it
