@@ -289,21 +289,29 @@ It does **not** reach two cases:
 
 ## The mutation-invariant merge allowlist is structurally safe
 
-The allowlist has **seven** entries, and each is safe. But **not all for the same kind of reason, and the
-difference is what you have to protect**:
+**A checker owns the allowlist now, and this section no longer lists it.** The entries live in
+`mutation-invariance.config.json`, and `npm run mutation-invariance` verifies each one against the
+tree. Every entry's argument lives in `mutation-testing.rationale.md`, bound to the config by the
+checker's own C4. This section used to carry a copy of the list, and that copy was wrong: it said
+seven when the predicate had ten.
 
-- **`CLAUDE.md`, `README.md` and `.vale.ini`** — safe as a matter of **fact**: a fixed filename cannot
-  match a test glob.
-- **`features/**`** — safe by `stryker.config.json`'s `ignorePatterns` keeping it out of the sandbox.
-- **`ideas/**`, `.claude/**` and `.vale/**`** — safe by `vite.config.ts`'s `sharedExclude` naming all
-  three. A test file placed in any of them is collected by no vitest project, so it can kill nothing.
+**What the checker verifies, and what it structurally cannot see.** An entry declares how it is
+secured, and two of the three tiers are machine-checked. A `stryker-ignore-patterns` entry is checked
+against a last-wins walk of those patterns, negations included. A `vitest-exclude` entry is checked
+against **every vitest project's own `exclude`**, not against the shared constant those projects
+spread. A project that stopped spreading it is the regression worth catching. Checking the constant
+stays green through it.
 
-**Re-derive that list from CLAUDE.md rather than from here.** This enumeration is a claim about another
-file and it has been wrong once. `.vale/**` sat on the allowlist for a slice with no `sharedExclude`
-entry behind it — the precondition below skipped rather than met.
+**The third tier is the one to read carefully.** A `written-argument` entry is verified only to the
+extent that a fixed filename can never become a test. That nothing inside the run consults the file
+is an inventory taken on a date, and no check performs it. `package.json` is the standing
+counterexample: also a fixed filename, and deliberately absent because it can move the score. So a
+green run from that checker is **not** a proof for those entries. Its report prints the two
+populations separately for that reason.
 
-**Those three config entries are load-bearing for this exemption specifically**, not just for a tidy test
-run:
+**Those config entries are load-bearing for this exemption specifically**, not just for a tidy test
+run. The checker verifies them, so deleting one now reds `npm run mutation-invariance` rather than
+failing silently:
 
 - Deleting `sharedExclude`'s `'ideas/**'` or `'.claude/**'` re-opens a hole that a per-merge grep would
   otherwise have to cover.
@@ -313,10 +321,13 @@ run:
 
 **Making a path structurally safe is a precondition for putting it on the allowlist, not a follow-up.**
 `vite.config.ts`'s `unit` project inherits an **unrooted** include, so it reaches every directory
-`sharedExclude` does not name. `perf/`, `rules/`, `rule-tests/`, `patches/` and `public/` are all
-collected today. None is on the allowlist, which is exactly why they need no exclusion: a diff touching
-one fails the path check and the gate runs. It is also exactly why **adding any of them to the allowlist
-would first mean excluding it from vitest.**
+`sharedExclude` does not name. `perf/`, `patches/` and `public/` are all collected
+today, and none is on the allowlist. That is exactly why they need no exclusion: a diff touching one
+fails the path check and the gate runs. `rules/` and `rule-tests/` were in that same list until
+`the-invariance-allowlist-omits-paths-that-provably-cannot-move-a-mutant` allowlisted them, and it
+added their `sharedExclude` entries **first**, in a separate commit, for exactly this reason.
+**Adding any of the remaining three to the allowlist would likewise mean excluding it from vitest
+before the entry is sound.**
 
 **Gitignored paths cannot reach this predicate at all**, which is a different fact from being excluded
 from vitest. `.stryker-tmp*/**` and `.features-gen/**` need `sharedExclude` entries yet want no allowlist

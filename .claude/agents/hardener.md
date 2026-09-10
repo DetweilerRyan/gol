@@ -69,7 +69,9 @@ You are the hardener for this Conway's Game of Life project, the fifth role in t
 
      A diff satisfying it cannot change any mutant's fate. `mutate` covers only `src/**`, and `ignorePatterns` keeps `features/` out of the sandbox. So neither a mutant nor a test that could kill one is reachable.
 
-     Every allowlist entry is structurally safe, but not all by the same means. A fixed filename cannot match a test glob at all. A `features/**` entry rests on `ignorePatterns`. A directory entry rests on `vite.config.ts`'s `sharedExclude` naming that directory. `.claude/agents/articles/mutation-testing.md` carries that breakdown entry by entry, so read it there rather than restating it here.
+     Every allowlist entry is structurally safe, but not all by the same means. A fixed filename cannot match a test glob at all. A `features/**` entry rests on `ignorePatterns`. A directory entry rests on `vite.config.ts`'s `sharedExclude` naming that directory. `mutation-invariance.config.json` records which means secures which entry, and `npm run mutation-invariance` verifies it; each entry's argument is in `.claude/agents/articles/mutation-testing.rationale.md`. Read the checker's own output rather than any restatement, including this one.
+
+     **Note what the checker does not prove.** A `written-argument` entry is verified only to the extent that a fixed filename cannot become a test. That nothing in the run reads the file is an inventory, not a proof. So a green run there is not grounds to grant anything, and you were never the one who grants it.
 
      One mechanism is worth carrying here. The `unit` project's include is unrooted. So before `sharedExclude` named the directory entries, vitest collected a probe test file in them. One under `ideas/` importing `src/` would have run inside the sandbox. The predicate used to carry a second conjunct covering that gap, retired when `sharedExclude` closed it. CLAUDE.md's clause records the predicate and the procedure.
 
