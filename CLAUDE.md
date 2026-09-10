@@ -412,6 +412,8 @@ If you use the native `EnterWorktree({ name })` or `Agent({ isolation: 'worktree
 
    What still moves on such a diff is **`npm run build`**: `tsconfig.app.json`'s `include` is `["src", "features", "perf"]`, so a type error there fails stage 1. For the `.claude/**` and `CLAUDE.md` entries, **`npm run agent-doc-check`** moves too.
 
+   **That list is per-entry, not universal, so re-derive it for the entry you are exempting.** A `rules/**` or `rule-tests/**`-only diff moves a different set. `build` is not among them, since `tsconfig.app.json`'s `include` names neither directory. **Stage 2, `npm run reference-check`, does move**, because a deleted rule file breaks any doc line citing its filename. So does **stage 8, `npm run agent-doc-check`**, whose check 5 reads the live `rules/` listing against `.claude/agents/articles/ast-grep-rules.md`.
+
    Note this does not weaken the exemption. The predicate is an allowlist of paths that cannot move the **mutation score**, and that is more clearly true now, not less. It does mean the honest claim is narrower than it used to be. This exempts one stage from one run, and the stages that remain are fewer than the sentence this replaces implied. It is still not a fast path through the gate.
 
    **Compute the predicate once, in step 3's worktree after the rebase, and carry the answer to step 5.** Step 4 is a fast-forward, so the tree step 5 gates is byte-identical to the one step 3 gated. There is no second diff worth taking, and reconstructing one from `main`'s reflog is a worse way to ask the same question.
