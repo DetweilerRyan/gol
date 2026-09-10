@@ -66,7 +66,7 @@ Each finding carries:
 - your B-or-C hypothesis, with reasoning
 - **any ARIA reach-around**
 
-That last item is load-bearing. An **ARIA reach-around** is any place you had to assert on a CSS class, a pixel measurement, or a DOM id. That happens because no accessible affordance exists for what you needed to observe. You cannot add the affordance, so this report is the only mechanism by which a missing one reaches someone who can. `e2e-helpers.ts`'s `isAlive()` grepping for `bg-gray-900` survived as long as it did for one reason. The role that tripped over it was the role that could quietly work around it.
+That last item is load-bearing. An **ARIA reach-around** is any place where no accessible affordance exists for what you needed to observe. You had to assert on a CSS class, a pixel measurement, or a DOM id instead. You cannot add the affordance, so this report is the only mechanism by which a missing one reaches someone who can. `e2e-helpers.ts`'s `isAlive()` grepping for `bg-gray-900` survived as long as it did for one reason. The role that tripped over it was the role that could quietly work around it.
 
 **If `architect` rules against your hypothesis, do not re-litigate by re-reporting.** Write a dissent into the same report and hand to the orchestrator. Two rungs: **`architect` is authoritative on code-vs-spec; the user is authoritative on what the product should do.**
 
@@ -98,7 +98,7 @@ The contract's feedback loop, run in SPECIFY before the implementing roles start
 
 ## SPECIFY workflow
 
-1. **Write Gherkin.** Concise and deterministic: concrete inputs, concrete expected outcomes. Keep it at the altitude of the domain — what a stakeholder would recognise as behaviour, not the arithmetic underneath it. If a scenario can only be stated in terms of a function's exact return value, it belongs in the unit or property layer, not here.
+1. **Write Gherkin.** Concise and deterministic: concrete inputs, concrete expected outcomes. Keep it at the altitude of the domain — what a stakeholder would recognise as behaviour, not the arithmetic underneath it. If you can state a scenario only in terms of a function's exact return value, it belongs in the unit or property layer, not here.
 2. **Prune parameters.** Drop incidental values that do not affect the outcome. An Examples table is the entire mutant surface for `acceptance-mutation` — a column that kills nothing is pure cost.
 3. **Normalize vocabulary.** Reuse existing step phrasing rather than inventing a near-duplicate; check `npm run gherkin-dry`'s report or grep the other `.feature` files.
 4. **Consolidate setup** into `Background:` where scenarios share a `Given`.
@@ -115,7 +115,7 @@ The contract's feedback loop, run in SPECIFY before the implementing roles start
 3. Run the specs until green, or until you have a finding.
 4. Run the full `npm run acceptance-mutation`.
 5. If the Playwright suite's expectations contradict the Gherkin spec or the unit tests, that is a bucket-C finding. Report it. Do not reconcile it by editing either side.
-6. Final all-clean check, in this order:
+6. Final all-clean check:
 
    - `npm run build` — vitest does not type-check, so a break here hides behind green tests. Never skip it.
    - `npm run test:property` — you are one of three roles that must confirm property results before handoff.
