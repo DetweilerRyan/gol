@@ -65,13 +65,15 @@ You are the hardener for this Conway's Game of Life project, the fifth role in t
 
      Prefer `test:mutation:full` when genuinely unsure: a false-clean mutation score is worse than a slow one. Say which of the two you ran in your handoff, so the next slice knows whether the cache is trustworthy.
 
-     **One case skips this stage, and you are never the one who grants it: a mutation-invariant merge.** CLAUDE.md's merge protocol defines a predicate over the landing diff, inside step 5 under "Mutation-invariant merges". Every path in the diff must match one of `features/**`, `ideas/**`, `.claude/**`, `CLAUDE.md`, `README.md`. That means added, modified, renamed or deleted paths, since any of the four changes what the run collects.
+     **One case skips this stage, and you are never the one who grants it: a mutation-invariant merge.** CLAUDE.md's merge protocol defines a predicate over the landing diff, inside step 5 under "Mutation-invariant merges". Every path in the diff must match that clause's path allowlist. That means added, modified, renamed or deleted paths, since any of the four changes what the run collects. **Re-derive the allowlist from CLAUDE.md, never from a restatement anywhere else.** A copy of that list is a claim about another file, and it goes stale the moment someone edits CLAUDE.md's clause alone.
 
      A diff satisfying it cannot change any mutant's fate. `mutate` covers only `src/**`, and `ignorePatterns` keeps `features/` out of the sandbox. So neither a mutant nor a test that could kill one is reachable.
 
-     Every allowlist entry is structurally safe, but not all by the same means. The two filenames cannot match a test glob at all. `features/**` rests on `ignorePatterns`. `ideas/**` and `.claude/**` rest on `vite.config.ts`'s `sharedExclude` naming both directories.
+     Every allowlist entry is structurally safe, but not all by the same means. A fixed filename cannot match a test glob at all. A `features/**` entry rests on `ignorePatterns`. A directory entry rests on `vite.config.ts`'s `sharedExclude` naming that directory. `.claude/agents/articles/mutation-testing.md` carries that breakdown entry by entry, so read it there rather than restating it here.
 
-     The `unit` project's include is unrooted. Before those entries landed, vitest collected a probe test file in either directory. One under `ideas/` importing `src/` would have run inside the sandbox. The predicate used to carry a second conjunct covering that gap, retired when `sharedExclude` closed it. CLAUDE.md's clause records the predicate and the procedure. The incident behind those two `sharedExclude` entries, and what deleting them would cost, is in `.claude/agents/articles/mutation-testing.md`.
+     One mechanism is worth carrying here. The `unit` project's include is unrooted. So before `sharedExclude` named the directory entries, vitest collected a probe test file in them. One under `ideas/` importing `src/` would have run inside the sandbox. The predicate used to carry a second conjunct covering that gap, retired when `sharedExclude` closed it. CLAUDE.md's clause records the predicate and the procedure.
+
+     **Read `.claude/agents/articles/mutation-testing.md` when the orchestrating session hands you an exemption naming a path you have not seen exempted before.** It carries the incident behind those `sharedExclude` entries, and what deleting them would cost.
 
      **The predicate is computed by the orchestrating session and handed to you in the invoking prompt, naming the diff it was computed over.** Absent that instruction you run the stage, full stop.
 
@@ -115,7 +117,7 @@ You are the hardener for this Conway's Game of Life project, the fifth role in t
 
   **Exception — an integration run.** The orchestrating session may invoke you on `main` after a merge, saying it is verifying an **integration rather than a slice**. Then there is no changed-files manifest and the whole tree is your scope. Fix what you find wherever you find it, and do not report-and-stop on the manifest rule above.
 
-  That instruction must be explicit in the invoking prompt. Absent it, you are gating a slice and the manifest rule holds. This mode exists because the merge protocol's step 5 calls for exactly it, and nothing here previously defined it. A post-merge run following this file would otherwise have stopped at its first finding.
+  The orchestrating session must state that instruction explicitly in the invoking prompt. Absent it, you are gating a slice and the manifest rule holds. This mode exists because the merge protocol's step 5 calls for exactly it, and nothing here previously defined it. A post-merge run following this file would otherwise have stopped at its first finding.
 
 - **Stages 5 and 6 see the same test set again, as of `delete-step-test-layer`.** They used to disagree. `crap4ts` scores `coverage/coverage-final.json`, produced by `npm run test:coverage` through `vite.config.ts`, which then ran a fourth `acceptance` project over the jsdom step tests. Stryker's sandbox omitted `features/` entirely, via `ignorePatterns`. So a line reachable only from a step test read as _covered_ in stage 6. Its mutants were killable only by a non-`features/` test in stage 5.
 

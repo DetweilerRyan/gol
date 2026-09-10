@@ -20,4 +20,4 @@ Measured on `main` at `1895906`: `npm run test:mutation:scripts` **also aborted,
 
 ## The incremental cache once had a structural floor
 
-There used to be a structural floor here of ~10% of mutants and ~3m45s, re-tested even when nothing changed at all. `@fast-check/vitest` interpolated the run's seed into each property test's _title_, and Stryker's `IncrementalDiffer` matches cached results _by test name_, so every property test looked brand-new every run. `pin-stryker-seed-to-unblind-the-mutation-gate` removed it.
+Stage 5's incremental run used to carry a structural floor of ~10% of mutants and ~3m45s, re-tested even when nothing changed at all. `@fast-check/vitest` interpolated the run's seed into each property test's _title_, and Stryker's `IncrementalDiffer` matches cached results _by test name_, so every property test looked brand-new every run. `pin-stryker-seed-to-unblind-the-mutation-gate` removed it.
