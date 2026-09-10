@@ -155,6 +155,12 @@ function compareAsContainer(a: object, b: object, compare: LeafComparator): bool
  * if they are the same kind of container (Date, Set, Map, Array, or plain
  * object) whose corresponding members are equal under `compare`.
  *
+ * The injected `compare` is the design rather than a convenience: every branch
+ * that is not a leaf comparison -- kind dispatch, mismatch handling, size and
+ * key-count guards, Set multiset matching -- exists exactly once here. The two
+ * comparators that inject into it are one line each, which is what stops them
+ * re-diverging the way the ported originals had.
+ *
  * @param compare assumed reflexive -- a Set member matched by SameValueZero
  * is treated as equal without `compare` being consulted.
  */
