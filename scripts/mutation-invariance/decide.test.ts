@@ -79,7 +79,16 @@ describe('decide', () => {
       baseInput({ configText: '{ not json', diff: { range: 'x', command: 'y', changedPaths: ['z'] } }),
     )
     expect(result.exitCode).toBe(1)
-    expect(result.lines.some((line) => line.includes('[config-parse]'))).toBe(true)
+    // Pins formatFailureLines' whole shape (the 'config invalid' label, the
+    // header template, the blank separator line, and the per-failure
+    // `[check] file` / `  message` pair) -- a substring-only check on the
+    // failure line alone can't tell the header or separator apart from an
+    // emptied one.
+    expect(result.lines[0]).toBe('mutation-invariance -- config invalid, 1 failure(s):')
+    expect(result.lines[1]).toBe('')
+    expect(result.lines[2]).toBe('[config-parse] mutation-invariance.config.json')
+    expect(result.lines[3]).toMatch(/^ {2}invalid JSON: /)
+    expect(result.lines).toHaveLength(4)
     // If the diff had been evaluated it would report invariant/not-invariant
     // language; a parse failure must short-circuit before that.
     expect(result.lines.some((line) => line.includes('invariant'))).toBe(false)
@@ -93,8 +102,25 @@ describe('decide', () => {
       }),
     )
     expect(result.exitCode).toBe(1)
-    expect(result.lines.some((line) => line.includes('vitest-projects-non-empty'))).toBe(true)
+    // Same shape-pinning as the config-parse case above, for the
+    // 'config unsound' label instead.
+    expect(result.lines[0]).toBe('mutation-invariance -- config unsound, 1 failure(s):')
+    expect(result.lines[1]).toBe('')
+    expect(result.lines[2]).toBe('[vitest-projects-non-empty] (none)')
+    expect(result.lines[3]).toBe('  no vitest projects were provided -- C1 would pass vacuously')
+    expect(result.lines).toHaveLength(4)
     expect(result.lines.some((line) => line.includes('is mutation-invariant'))).toBe(false)
+  })
+
+  // The disqualifying-path guard reads `verdict.disqualifying?.absentReason`
+  // -- an empty diff is the one verdict shape where `disqualifying` itself
+  // is never set (see diff-verdict.ts), so this is the only input that can
+  // tell the optional chain, and the `if` guard itself, apart from a mutant
+  // that drops either: both would dereference `undefined` and throw.
+  it('does not crash on an empty diff, where disqualifying is never set', () => {
+    const result = decide(baseInput({ diff: { range: 'x', command: 'y', changedPaths: [] } }))
+    expect(result.exitCode).toBe(2)
+    expect(result.lines[1]).toContain('check the range')
   })
 
   it('exits 0 and reports the range when the diff is invariant', () => {

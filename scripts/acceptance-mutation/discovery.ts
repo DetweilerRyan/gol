@@ -18,8 +18,8 @@
 // guarantee than the old feature<->steps-file pairing this replaces, so
 // nothing is lost by dropping it.
 import path from 'node:path'
-import { parseArgs as nodeParseArgs } from 'node:util'
 import { listFeatureFiles } from '../feature-files.ts'
+import { parseSingleStringFlag } from '../single-flag-arg.ts'
 
 export interface MutationTarget {
   feature: string
@@ -62,44 +62,13 @@ export function filterTargets(targets: MutationTarget[], featureArg: string | un
  *
  * @throws Error naming the accepted form, on any unknown flag, missing value, or positional argument.
  */
-// A thin wrapper over node:util's
-// parseArgs, kept here rather than inlined at the call site, for the same
-// reason as above -- run.ts is excluded from crap4ts/Stryker's scripts/
-// scope by their `run.ts`-at-any-depth globs, so the one line of logic (translating
-// parseArgs' `values` shape into `{ feature } | {}`) needs to live somewhere
+// A thin wrapper over single-flag-arg.ts's parseSingleStringFlag, kept here
+// rather than inlined at the call site, for the same reason as above --
+// run.ts is excluded from crap4ts/Stryker's scripts/ scope by their
+// `run.ts`-at-any-depth globs, so the one line of logic (translating a
+// `string | undefined` into `{ feature } | {}`) needs to live somewhere
 // covered.
-//
-// This used to be hand-rolled, and was re-derived three times over one
-// slice's iterations -- unknown-flag rejection, missing-value rejection,
-// and positional rejection are each things node:util's parseArgs has done
-// since Node 18.3, under `strict: true` (the default) and
-// `allowPositionals: false` (also the default once strict is true). Check
-// the stdlib before writing the loop.
-//
-// Node's own rejection messages (e.g. "Unknown option '--nope'") name the
-// offending argument but not what *is* valid, and an agent invoking this
-// tool has to know both to recover. Catch and re-throw with the accepted
-// form appended, rather than replacing Node's text -- this is a message
-// fix, not a reason to reclaim the parsing logic itself.
 export function parseArgs(argv: string[]): { feature?: string } {
-  let values: { feature?: string }
-  try {
-    ;({ values } = nodeParseArgs({
-      args: argv,
-      options: { feature: { type: 'string' } },
-      strict: true,
-      allowPositionals: false,
-    }))
-  } catch (error) {
-    // `as Error` rather than an `error instanceof Error` narrowing: parseArgs
-    // throws only ERR_PARSE_ARGS_* / ERR_INVALID_ARG_TYPE, all Error
-    // subclasses, so the non-Error arm would be unreachable by construction --
-    // and unreachable defensive code is invisible to every gate here (Stryker
-    // has no mutator for `instanceof`, so it generates no mutant on such a
-    // ternary at all, and crap4ts scores line coverage, which a never-taken
-    // branch on an executed line doesn't move). Same idiom as run.ts's own
-    // `(err as Error).message`.
-    throw new Error(`${(error as Error).message}. The only accepted argument is --feature <name>.`)
-  }
-  return values.feature === undefined ? {} : { feature: values.feature }
+  const feature = parseSingleStringFlag(argv, 'feature', '--feature <name>')
+  return feature === undefined ? {} : { feature }
 }

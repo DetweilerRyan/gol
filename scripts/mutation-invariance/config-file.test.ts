@@ -83,6 +83,11 @@ describe('parseConfig', () => {
     expect(failures[0].check).toBe('config-parse')
     expect(failures[0].file).toBe('mutation-invariance.config.json')
     expect(failures[0].message).toContain('invalid JSON')
+    // Pins errorMessage's own body, not just parseJson's "invalid JSON: "
+    // prefix -- a mutant that empties errorMessage's body still leaves that
+    // prefix, so the suffix has to be checked too: JSON.parse's own error
+    // text is never literally the string "undefined".
+    expect(failures[0].message).not.toContain('undefined')
   })
 
   it('fails on malformed JSON in the schema text, attributing the failure to the schema file', () => {
@@ -101,11 +106,20 @@ describe('parseConfig', () => {
     expect(failures[0].check).toBe('schema-compile')
   })
 
+  // Two independently-invalid allow[] entries, so allErrors: true's effect
+  // is actually observable: `new Ajv({})` (ajv's own allErrors: false
+  // default) or an explicit allErrors: false would stop at the first
+  // entry's error and report only 1, not 2 -- a single bad entry can't
+  // distinguish the two, since ajv reports at least 1 either way.
   it('reports every ajv error when the config violates the schema, with allErrors: true', () => {
-    const badConfig = JSON.stringify({ scope: 'x', allow: [{ path: 'ideas/**' }], absent: [] })
+    const badConfig = JSON.stringify({
+      scope: 'x',
+      allow: [{ path: 'ideas/**' }, { path: 'rules/**' }],
+      absent: [],
+    })
     const { config, failures } = parseConfig(badConfig, SCHEMA, 'mutation-invariance.config.json')
     expect(config).toBeUndefined()
-    expect(failures.length).toBeGreaterThan(0)
+    expect(failures.length).toBeGreaterThan(1)
     expect(failures.every((failure) => failure.check === 'schema-valid')).toBe(true)
     expect(failures.every((failure) => failure.file === 'mutation-invariance.config.json')).toBe(true)
   })
@@ -131,42 +145,26 @@ describe('parseConfig', () => {
     expect(failures.length).toBeGreaterThan(0)
   })
 
-  it('requires argument and verifiedOn for a written-argument entry', () => {
-    const badConfig = JSON.stringify({
-      scope: 'x',
-      allow: [{ path: 'CLAUDE.md', securedBy: 'written-argument' }],
-      absent: [],
-    })
-    const { failures } = parseConfig(badConfig, SCHEMA, 'mutation-invariance.config.json')
-    expect(failures.length).toBeGreaterThan(0)
-  })
-
-  it('rejects a written-argument entry using the dir/** form', () => {
-    const badConfig = JSON.stringify({
-      scope: 'x',
-      allow: [{ path: 'ideas/**', securedBy: 'written-argument', argument: 'x', verifiedOn: '2026-09-08' }],
-      absent: [],
-    })
-    const { failures } = parseConfig(badConfig, SCHEMA, 'mutation-invariance.config.json')
-    expect(failures.length).toBeGreaterThan(0)
-  })
-
-  it('rejects a vitest-exclude entry not using the dir/** form', () => {
-    const badConfig = JSON.stringify({
-      scope: 'x',
-      allow: [{ path: 'ideas', securedBy: 'vitest-exclude' }],
-      absent: [],
-    })
-    const { failures } = parseConfig(badConfig, SCHEMA, 'mutation-invariance.config.json')
-    expect(failures.length).toBeGreaterThan(0)
-  })
-
-  it('rejects a verifiedOn that is not YYYY-MM-DD shaped', () => {
-    const badConfig = JSON.stringify({
-      scope: 'x',
-      allow: [{ path: 'CLAUDE.md', securedBy: 'written-argument', argument: 'x', verifiedOn: 'not-a-date' }],
-      absent: [],
-    })
+  // Four schema-validation predicates that share one shape (one bad
+  // allow[0] entry -> parseConfig reports at least one failure) -- an
+  // it.each table rather than four near-identical it() blocks, since
+  // dry4ts:scripts flagged the hand-written copies as duplicates.
+  it.each([
+    [
+      'requires argument and verifiedOn for a written-argument entry',
+      { path: 'CLAUDE.md', securedBy: 'written-argument' },
+    ],
+    [
+      'rejects a written-argument entry using the dir/** form',
+      { path: 'ideas/**', securedBy: 'written-argument', argument: 'x', verifiedOn: '2026-09-08' },
+    ],
+    ['rejects a vitest-exclude entry not using the dir/** form', { path: 'ideas', securedBy: 'vitest-exclude' }],
+    [
+      'rejects a verifiedOn that is not YYYY-MM-DD shaped',
+      { path: 'CLAUDE.md', securedBy: 'written-argument', argument: 'x', verifiedOn: 'not-a-date' },
+    ],
+  ] as const)('%s', (_title, badAllowEntry) => {
+    const badConfig = JSON.stringify({ scope: 'x', allow: [badAllowEntry], absent: [] })
     const { failures } = parseConfig(badConfig, SCHEMA, 'mutation-invariance.config.json')
     expect(failures.length).toBeGreaterThan(0)
   })

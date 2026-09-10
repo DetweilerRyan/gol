@@ -50,6 +50,7 @@ describe('checkVitestExcludeCoverage (C1)', () => {
     ]
     const failures = checkVitestExcludeCoverage(cfg, projects)
     expect(failures).toHaveLength(1)
+    expect(failures[0].check).toBe('vitest-exclude-covers')
     expect(failures[0].message).toContain('"dom"')
   })
 
@@ -57,6 +58,7 @@ describe('checkVitestExcludeCoverage (C1)', () => {
     const cfg = config({ allow: [allowEntry({ path: 'ideas', securedBy: 'vitest-exclude' })] })
     const failures = checkVitestExcludeCoverage(cfg, [{ name: 'unit', exclude: ['ideas/**'] }])
     expect(failures).toHaveLength(1)
+    expect(failures[0].check).toBe('vitest-exclude-covers')
     expect(failures[0].message).toContain('dir/**')
   })
 
@@ -76,6 +78,7 @@ describe('checkStrykerIgnoreCoverage (C2)', () => {
     const cfg = config({ allow: [allowEntry({ path: 'features/**' })] })
     const failures = checkStrykerIgnoreCoverage(cfg, ['/features', '!/features'])
     expect(failures).toHaveLength(1)
+    expect(failures[0].check).toBe('stryker-ignore-covers')
     expect(failures[0].message).toContain('negation')
   })
 
@@ -84,10 +87,21 @@ describe('checkStrykerIgnoreCoverage (C2)', () => {
     expect(checkStrykerIgnoreCoverage(cfg, ['/features', '!/features', '/features'])).toEqual([])
   })
 
-  it('fails a stryker-ignore-patterns entry that does not use the dir/** form', () => {
-    const cfg = config({ allow: [allowEntry({ path: 'features' })] })
-    const failures = checkStrykerIgnoreCoverage(cfg, ['/features'])
+  // Pins isIgnoredByStrykerPatterns' walk itself: a non-covering pattern
+  // must be skipped (`if (!covers) continue`) rather than setting `ignored`
+  // from its own `negated` flag, and the walk's initial `ignored` must start
+  // false -- both only diverge when no pattern in the list ever covers the
+  // directory, which every other C2 fixture here happens not to exercise.
+  it('fails when no ignorePatterns entry mentions the directory at all', () => {
+    const cfg = config({ allow: [allowEntry({ path: 'features/**' })] })
+    const failures = checkStrykerIgnoreCoverage(cfg, ['/unrelated'])
     expect(failures).toHaveLength(1)
+  })
+
+  it('fails a stryker-ignore-patterns entry that does not use the dir/** form', () => {
+    const failures = checkStrykerIgnoreCoverage(config({ allow: [allowEntry({ path: 'features' })] }), ['/features'])
+    expect(failures).toHaveLength(1)
+    expect(failures[0].check).toBe('stryker-ignore-covers')
     expect(failures[0].message).toContain('dir/**')
   })
 })
@@ -110,21 +124,26 @@ describe('checkWrittenArgumentTracked (C3)', () => {
     })
     const failures = checkWrittenArgumentTracked(cfg, new Set(['CLAUDE.md']))
     expect(failures).toHaveLength(1)
+    expect(failures[0].check).toBe('written-argument-tracked')
     expect(failures[0].file).toBe('MISSING.md')
+    expect(failures[0].message).toBe('MISSING.md is not a tracked file')
   })
 })
 
 describe('checkMentionedInRationale (C4)', () => {
   it('passes when every allow and absent path appears verbatim', () => {
     const cfg = config({ allow: [allowEntry({ path: 'features/**' })], absent: [{ path: 'src/**', reason: 'x' }] })
-    expect(checkMentionedInRationale(cfg, 'features/** and src/** are both discussed')).toEqual([])
+    const failures = checkMentionedInRationale(cfg, 'features/** and src/** are both discussed')
+    expect(failures).toHaveLength(0)
   })
 
   it('fails a path missing from the rationale text', () => {
     const cfg = config({ allow: [allowEntry({ path: 'features/**' })] })
     const failures = checkMentionedInRationale(cfg, 'no mention here')
     expect(failures).toHaveLength(1)
+    expect(failures[0].check).toBe('mentioned-in-rationale')
     expect(failures[0].file).toBe('features/**')
+    expect(failures[0].message).toBe('features/** does not appear verbatim in the rationale text')
   })
 
   it('checks absent paths too, independently of allow', () => {
@@ -136,8 +155,14 @@ describe('checkMentionedInRationale (C4)', () => {
 })
 
 describe('checkNoDuplicatePaths (C5)', () => {
-  it('passes on a config with no duplicates', () => {
-    const cfg = config({ allow: [allowEntry({ path: 'features/**' }), allowEntry({ path: 'ideas/**' })] })
+  it('passes on a config with no duplicates in either list', () => {
+    const cfg = config({
+      allow: [allowEntry({ path: 'features/**' }), allowEntry({ path: 'ideas/**' })],
+      absent: [
+        { path: 'src/**', reason: 'a' },
+        { path: 'rules/**', reason: 'b' },
+      ],
+    })
     expect(checkNoDuplicatePaths(cfg)).toEqual([])
   })
 
@@ -145,6 +170,7 @@ describe('checkNoDuplicatePaths (C5)', () => {
     const cfg = config({ allow: [allowEntry({ path: 'features/**' }), allowEntry({ path: 'features/**' })] })
     const failures = checkNoDuplicatePaths(cfg)
     expect(failures).toHaveLength(1)
+    expect(failures[0].check).toBe('no-duplicate-paths')
     expect(failures[0].message).toContain('allow[]')
   })
 
@@ -157,12 +183,14 @@ describe('checkNoDuplicatePaths (C5)', () => {
     })
     const failures = checkNoDuplicatePaths(cfg)
     expect(failures).toHaveLength(1)
+    expect(failures[0].check).toBe('no-duplicate-paths')
     expect(failures[0].message).toContain('absent[]')
   })
 
   it('does not cross-report an allow path duplicated in absent (that is C6, not C5)', () => {
-    const cfg = config({ allow: [allowEntry({ path: 'x' })], absent: [{ path: 'x', reason: 'r' }] })
-    expect(checkNoDuplicatePaths(cfg)).toEqual([])
+    expect(
+      checkNoDuplicatePaths(config({ allow: [allowEntry({ path: 'x' })], absent: [{ path: 'x', reason: 'r' }] })),
+    ).toEqual([])
   })
 })
 
@@ -175,7 +203,8 @@ describe('checkAllowAbsentDisjoint (C6)', () => {
   it('fails a path appearing in both allow and absent verbatim', () => {
     const cfg = config({ allow: [allowEntry({ path: 'features/**' })], absent: [{ path: 'features/**', reason: 'x' }] })
     const failures = checkAllowAbsentDisjoint(cfg)
-    expect(failures.some((failure) => failure.message.includes('both allow[] and absent[]'))).toBe(true)
+    const matched = failures.find((failure) => failure.message.includes('both allow[] and absent[]'))
+    expect(matched?.check).toBe('allow-absent-disjoint')
   })
 
   it('fails an absent path nested inside an allowed directory', () => {
@@ -185,6 +214,7 @@ describe('checkAllowAbsentDisjoint (C6)', () => {
     })
     const failures = checkAllowAbsentDisjoint(cfg)
     expect(failures).toHaveLength(1)
+    expect(failures[0].check).toBe('allow-absent-disjoint')
     expect(failures[0].message).toContain('src/**')
   })
 })
@@ -196,17 +226,29 @@ describe('checkNonEmptyInputs (C7)', () => {
 
   it('fails on an empty allow[]', () => {
     const failures = checkNonEmptyInputs(input({ config: config({ allow: [] }) }))
-    expect(failures.some((failure) => failure.check === 'allow-non-empty')).toBe(true)
+    expect(failures).toEqual([{ check: 'allow-non-empty', file: '(none)', message: 'allow[] is empty' }])
   })
 
   it('fails on empty vitestProjects -- otherwise C1 would pass vacuously', () => {
     const failures = checkNonEmptyInputs(input({ vitestProjects: [] }))
-    expect(failures.some((failure) => failure.check === 'vitest-projects-non-empty')).toBe(true)
+    expect(failures).toEqual([
+      {
+        check: 'vitest-projects-non-empty',
+        file: '(none)',
+        message: 'no vitest projects were provided -- C1 would pass vacuously',
+      },
+    ])
   })
 
   it('fails on empty trackedFiles -- otherwise C3 would pass vacuously', () => {
     const failures = checkNonEmptyInputs(input({ trackedFiles: new Set() }))
-    expect(failures.some((failure) => failure.check === 'tracked-files-non-empty')).toBe(true)
+    expect(failures).toEqual([
+      {
+        check: 'tracked-files-non-empty',
+        file: '(none)',
+        message: 'no tracked files were provided -- C3 would pass vacuously',
+      },
+    ])
   })
 })
 

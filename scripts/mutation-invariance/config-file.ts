@@ -6,13 +6,18 @@
 // only place that actually reads the two files.
 //
 // ajv 8 traps, measured by architect's DESIGN pass and worth restating here
-// since a mistake in any of the three silently degrades this module rather
+// since a mistake in any of the four silently degrades this module rather
 // than throwing somewhere obvious: ajv's default export is draft-07 (the
 // draft the schema itself declares); "format": "date" cannot appear in the
 // schema, since ajv 8 core ships no formats and throws on an unknown one --
-// schemas/mutation-invariance.schema.json uses a `pattern` instead; and the
+// schemas/mutation-invariance.schema.json uses a `pattern` instead; the
 // schema must declare `$schema` in its own `properties`, or
-// `additionalProperties: false` would reject the config's own `$schema` key.
+// `additionalProperties: false` would reject the config's own `$schema` key;
+// and under this repo's `nodenext` module resolution with no
+// `esModuleInterop`, ajv's default export is not constructable -- `import
+// Ajv from 'ajv'; new Ajv()` fails at the type level, so this module imports
+// the named `Ajv` export instead (found by `coder`, not in the DESIGN pass's
+// original list).
 
 import { Ajv, type ErrorObject, type ValidateFunction } from 'ajv'
 import type { GateFailure } from '../gate-report.ts'
@@ -46,17 +51,17 @@ const SCHEMA_FILE = 'schemas/mutation-invariance.schema.json'
 
 type JsonParseResult = { value: unknown; failure?: undefined } | { value?: undefined; failure: GateFailure }
 
+// Shared by parseJson's catch and parseConfig's own ajv.compile catch below
+// -- both need a best-effort message out of a caught value typed `unknown`.
+function errorMessage(error: unknown): string {
+  return error instanceof Error ? error.message : String(error)
+}
+
 function parseJson(text: string, file: string, check: string): JsonParseResult {
   try {
     return { value: JSON.parse(text) }
   } catch (error) {
-    return {
-      failure: {
-        check,
-        file,
-        message: `invalid JSON: ${error instanceof Error ? error.message : String(error)}`,
-      },
-    }
+    return { failure: { check, file, message: `invalid JSON: ${errorMessage(error)}` } }
   }
 }
 
@@ -99,17 +104,16 @@ export function parseConfig(
     validate = ajv.compile(schemaResult.value as object)
   } catch (error) {
     return {
-      failures: [
-        {
-          check: 'schema-compile',
-          file: SCHEMA_FILE,
-          message: error instanceof Error ? error.message : String(error),
-        },
-      ],
+      failures: [{ check: 'schema-compile', file: SCHEMA_FILE, message: errorMessage(error) }],
     }
   }
 
   if (!validate(configResult.value)) {
+    // `?? []` is unreachable by construction, not merely untested: ajv only
+    // ever sets `validate.errors` to `null` before a validation call or
+    // after one that *passed* -- having just observed `validate(...)` return
+    // `false`, `.errors` is guaranteed a populated array. Same idiom as
+    // args.ts's `as Error`, invisible to every gate here.
     const errors: ErrorObject[] = validate.errors ?? []
     return {
       failures: errors.map((error) => ({

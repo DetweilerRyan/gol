@@ -72,6 +72,11 @@ function decideDiff(config: MutationInvarianceConfig, diff: DiffInput): DecideRe
  */
 export function decide(input: DecideInput): DecideResult {
   const { config, failures: parseFailures } = parseConfig(input.configText, input.schemaText, input.configPath)
+  // `||` reads defensively -- parseConfig's own contract (config-file.ts)
+  // never returns `config` and a non-empty `failures` together, so `!config`
+  // and `parseFailures.length > 0` are always equal for every value this
+  // function actually receives, and `&&`/`|| false` cannot be told apart
+  // from `||` by any input this program can construct.
   if (!config || parseFailures.length > 0) {
     return { exitCode: 1, lines: formatFailureLines('config invalid', parseFailures) }
   }
