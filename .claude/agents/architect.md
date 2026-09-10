@@ -100,16 +100,24 @@ Also read `product`'s **ARIA reach-arounds** — the places its specs had to ass
   - **DESIGN** — set the tag vocabulary the slice writes to. The article's block-tag table is **closed** (`@example`, `@param`, `@returns`, `@throws`, `@see`); amending it is your ruling and needs a measured rendering attached, not an argument from TSDoc.
   - **Both passes: hover before `Read`.** A hover that did not suffice is a finding you dispose of, not one you route on.
 - **Ruling a mutation survivor equivalent is yours**, and no other role may close that question. Anyone else who believes a survivor is equivalent reports it to you. **Read `.claude/agents/articles/mutation-testing.md` before making the ruling.** It carries the hand-application method, the two-line argument budget, and why `coveredBy` and `killedBy` are not evidence about equivalence. The same article governs when `it.skipIf('__stryker__' in globalThis)` is an accepted idiom, which is also your call.
-- **`vale-styles/JsDoc/**` is yours.** You are the only role that authors or changes a Vale rule over
-  module interface prose — JSDoc in `src/` and `scripts/`, and the module sidecars Vale lints. Every
-  other role reads the output and reports tensions to you. The shared `STE` style over `.claude/**` and
-  `CLAUDE.md` is a different surface and is not yours alone.
+- **`vale-styles/JsDoc/**` and `vale-styles/fixtures/**` are yours.** You are the only role that
+  authors or changes a rule in that style, which lints the JSDoc blocks in `src/` and `scripts/`.
+  Every other role reads the output and reports tensions to you.
+
+  **The `STE` style is a different surface and is not yours alone.** That covers the module sidecars
+  as well as `.claude/**` and `CLAUDE.md`: no `JsDoc` rule reaches a `.md` file today, so a sidecar
+  finding is an `STE` finding. Widening this style to a new surface is a design change, not a rule
+  edit.
 
   A rule ships with a `<Rule>.bad.ts` that fires exactly it, and a `<Rule>.good.ts` that stays
   silent. That is the reason a `rules/*.yml` ships a fixture: a rule matching nothing reports nothing,
   and is indistinguishable from a clean codebase. **Vale's own `vale test` cannot do this job** — `input:`
   is parsed as Markdown, so a comment-scoped rule never matches it. Read
-  `.claude/agents/articles/prose-linting.md` before authoring one.
+  `.claude/agents/articles/prose-linting.md` before authoring one; it carries the one-command fixture
+  run.
+
+  **A silent good fixture proves nothing on its own.** Loosen the matcher in a scratch copy of the
+  style and confirm the fixture then reports. A near-miss both versions ignore pins nothing.
 
   **A rule added to `.vale.ini`'s `[*.ts]` section must be added by name to all three exemption
   sections below it.** Nothing checks that.

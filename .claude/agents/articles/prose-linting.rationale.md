@@ -634,3 +634,128 @@ quietly, which is the outcome nobody would choose deliberately.
 Two figures often quoted alongside this are not instances of it. `architect.md`'s 34 and
 `hardener.md`'s 20 unacted `ProcedureLength` findings were classified as **statements**, not as steps,
 so they are the rule working rather than a divergence from it.
+
+## The JSDoc surface: what `lint-jsdoc-with-vale`'s review pass measured, 2026-09-10
+
+Everything here was measured against vale 3.20.0 on the `lint-jsdoc-with-vale` branch, at the commit
+that added the four `JsDoc` rules. Two corpora are named, and they are not the same list. **Tracked**
+means `git ls-files '*.ts' '*.tsx' | grep -v '^src/catalyst/'`, which is 272 files. **Corpus** means
+that list minus `vale-styles/`, restricted to `.ts`, which is 264 files — the `.tsx` half is out of
+scope, since every rule takes the `.ts` block-comment scope.
+
+### The exit code, re-derived at full scope
+
+The article previously said the exit code "is 1 when a rule matched". It is not.
+
+| what happened                     | exit |
+| --------------------------------- | ---: |
+| a `warning`-severity rule matched |    0 |
+| an `error`-severity rule matched  |    1 |
+| a file failed to parse (E201)     |    2 |
+| the named path does not exist     |    0 |
+
+The last row is the one worth keeping. A path that does not resolve is read as **stdin**: the run
+reports `0 errors, 0 warnings and 0 suggestions in stdin` and exits 0. Non-interactively that returns
+at once, so a mistyped path in a verification command reads as a clean tree. The tell is the words
+"in stdin" where a file count belongs.
+
+### `occurrence` counts less than it looks like it counts
+
+Three probes over one two-paragraph JSDoc block, at the `.ts` block-comment scope:
+
+| rule                         | result                        |
+| ---------------------------- | ----------------------------- |
+| token `the`, `max: 1`        | two findings, counts 3 and 2  |
+| token `the`, `max: 0`        | **nothing**                   |
+| token `\n` or `\s`, `max: 1` | **nothing**                   |
+| token `[\w]+`, `max: 1`      | two findings, counts 9 and 10 |
+
+Two separate facts. `max: 0` never fires, so "at most zero" is not expressible. And whitespace is
+gone before the counter runs, so a rendered-**line** budget is not expressible either — while a word
+budget is. Both read as an enabled rule.
+
+The same probe settles what `block` scope hands a rule: **one text unit per paragraph**, not per
+comment. That is why an unflagged `^` anchors at a paragraph opener rather than at the top of a hover.
+
+### `vale test` skips an untested rule file
+
+A directory holding two rules, one with a `tests:` key and one without, reports
+`1 file — 1 passed, 0 failed` and exits 0. The untested rule is skipped in silence. That is the
+missing-fixture hazard `npm run ast-grep:rules` exists to catch, arriving in a checker that has none —
+and the second reason, after the Markdown parsing of `input:`, that the fixtures here are files.
+
+### Prettier normalises a YAML scalar to single quotes
+
+The article said the opposite, and the advice mattered because a `tokens:` entry carrying `\b` must
+not be double-quoted. Measured with this repo's own `.prettierrc.json`:
+
+| input                           | after `prettier --write` |
+| ------------------------------- | ------------------------ |
+| front matter `name: "plain"`    | `name: 'plain'`          |
+| front matter with an apostrophe | unchanged, double-quoted |
+| YAML `a: "b"`                   | `a: 'b'`                 |
+| YAML `c: "d\be"`                | unchanged, double-quoted |
+
+So the apostrophe case is the exception that produced the original advice, and the backslash case is
+the one nothing catches.
+
+### `SelfReferentialOpener`: what each anchor costs, over the 264-file corpus
+
+Measured with one token list, varying only the anchor, after this pass rewrote the hover in
+`is-strict-equal.ts`:
+
+| form                                 | findings |
+| ------------------------------------ | -------: |
+| unanchored, `ignorecase: true`       |       25 |
+| unanchored, case-sensitive           |        2 |
+| sentence-anchored, `(?:^\|[.!?]\s+)` |        2 |
+| paragraph-anchored `^` (shipped)     |        0 |
+
+Before the hover rewrite the sentence-anchored form gave 3. The two that survive it are boundary
+statements `doc-comments.md` rule 3 protects — a module saying which half of a job is not its own —
+in `gherkin-document.ts` and `useAppearance.ts`. The design pass proposed pairing the sentence anchor
+with a verb list to keep the third hit and drop those two; the shipped rule takes the narrower anchor
+instead, and the hit it would have kept was fixed by hand in the same pass.
+
+### A fixture that pinned nothing, and how the review found it
+
+`SelfReferentialOpener.good.ts` claimed to pin the anchor by carrying the same referring expression
+mid-paragraph. It did not. Under a deliberately wrong `(?m)^` variant the fixture stayed **silent**,
+because its referring expressions sat mid-**line**, where the two anchors agree. Reflowed so each one
+opens a source line, the fixture reports twice under `(?m)^` and stays silent under `^`.
+
+The general form is the one the article now carries: a good fixture is evidence only if it fires
+under the wrong rule. The three other good fixtures were checked the same way and all discriminated —
+a stemmed token list fires on `ImplementationAltitude.good.ts`, a bare-noun list fires on
+`DeadIndexical.good.ts`, and an unanchored matcher fires on `BlockTagVocabulary.good.ts`.
+
+Every token was probed individually as well: all five `DeadIndexical` entries and all six
+`ImplementationAltitude` entries fire on their own, and `this passage` and `this slicer` stay silent,
+so the word boundaries hold.
+
+### `BlockTagVocabulary`'s anchor, and its one residue
+
+`(?m)^` is per source line, and it has to be: a run of `@param` lines is one Markdown paragraph, so a
+bare `^` would reach only the first of them. Measured on a block whose banned tag sat between two
+legitimate ones.
+
+The residue is a bare at-rule that **opens** a source line — `@supports` at a line start reports as a
+block tag, because nothing in the text distinguishes the two. A backticked at-rule is silent, since
+Vale skips code spans; an at-sign inside prose mid-line is silent because of the anchor. Zero
+instances on the tracked list, and the remedy is the backticks this repo already writes.
+
+### The three exemption sections reach nested paths
+
+Bait carrying all four violations was written two directories deep under each exempt path — inside a
+Stryker sandbox, inside a nested checkout under `.claude/worktrees/`, and inside a subdirectory of
+`vale-styles/fixtures/` — with an identical control file at the repo root. The three exempt paths reported **nothing** and the control reported **four**
+findings, one per rule. So `*` crossing `/` holds for a section glob, and the exemptions are not
+merely top-level.
+
+### `vale sync` does not always target the last `StylesPath`
+
+A package can redirect it. `vale-llm-slop` ships `.vale-config/0-vale-llm-slop.ini` declaring
+`StylesPath = styles`, so a re-sync in a checkout that already has the package writes to
+`.vale/.vale-config/styles` rather than to `.vale/`. Both copies exist in this checkout after one
+`vale sync`. Harmless while they are the same package, and worth knowing before reading a stale style
+as the live one.

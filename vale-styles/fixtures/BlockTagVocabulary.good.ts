@@ -2,10 +2,12 @@
  * Adds two lengths that are already in the caller's own unit, and returns the
  * sum in that same unit rather than a normalised one.
  *
- * Three near-misses live in the paragraph above and below on purpose. An
- * at-rule such as `@media` written inside prose, an address a@b.example
- * written inside prose, and an inline {@link ./README.md} are none of them
- * block tags, so none may fire.
+ * Four near-misses live in this paragraph and below on purpose. A backticked
+ * at-rule such as `@media`, an address a@b.example written inside prose, and
+ * an inline {@link ./README.md} are none of them block tags. Nor is a bare
+ * at-rule such as @supports once it sits mid-line rather than opening one, and
+ * mid-line is the only form pinned here: a bare at-rule that OPENS a source
+ * line is a known false positive, and the remedy is the backticks above.
  *
  * @example
  * ```ts

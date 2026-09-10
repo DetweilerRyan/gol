@@ -7,14 +7,22 @@
 # inside the hover, not the start of the hover and not the start of a source
 # line. `(?m)^` would be per source line and would fire on every soft-wrapped
 # continuation; a bare `^` and `\A` behave identically here. Both halves are
-# pinned by SelfReferentialOpener.good.ts, which carries the same referring
-# expression mid-paragraph and must stay silent.
+# pinned by SelfReferentialOpener.good.ts, whose two referring expressions each
+# OPEN a source line mid-paragraph: silent under `^`, two findings under `(?m)^`.
+# An earlier fixture put them mid-line, where the two anchors agree, so it
+# pinned nothing -- caught in review, which is what a fixture is for.
 #
-# The anchor is what makes this rule shippable. Unanchored, the same token list
-# reports three findings on the tracked .ts list, and two of them are boundary
-# statements that doc-comments.md rule 3 protects as interface facts -- a module
-# saying which half of a job is not its own. Widening the matcher to reach the
-# third would land a backlog of legitimate prose.
+# The anchor is what makes this rule shippable. Measured 2026-09-10 over the 264
+# tracked `.ts` files minus src/catalyst and vale-styles, on the same token list:
+# unanchored with `ignorecase` 25, unanchored case-sensitive 2, sentence-anchored
+# (`(?:^|[.!?]\s+)`) 2, and this paragraph anchor 0. The two that survive sentence
+# anchoring are boundary statements doc-comments.md rule 3 protects as interface
+# facts -- a module saying which half of a job is not its own.
+#
+# So this rule ships at zero findings, one narrower than the design pass proposed:
+# that one paired a sentence anchor with a verb list to keep exactly one hit, the
+# second-sentence opener in is-strict-equal.ts. That hover was rewritten in the
+# same review pass, so the narrower rule is not what cleared the finding.
 extends: existence
 message: "A hover's opening sentence says what the caller gets, not what the declaration is: drop the '%s' opener (doc-comments.md rule 2)."
 level: warning

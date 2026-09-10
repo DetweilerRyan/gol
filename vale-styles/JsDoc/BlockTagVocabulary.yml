@@ -8,11 +8,24 @@
 # worked case, and it is what BlockTagVocabulary.bad.ts carries: oxlint accepts
 # it, this rule does not.
 #
-# `(?m)^` anchors per source line of the comment. Vale strips the `/**` opener
-# and every leading ` * ` before a rule sees the text, so a tag that opens a
-# hover line opens the line this pattern sees. Verified silent on an inline
-# {@link}, on an at-sign inside prose, and on a banned tag inside an @example
-# fence, which Vale skips because `ts = md` makes the comment Markdown.
+# `(?m)^` anchors per source line of the comment, which is the anchor the tag
+# form needs: a run of `@param` lines is ONE Markdown paragraph, so a bare `^`
+# would reach only the first of them. Measured. Vale strips the `/**` opener and
+# every leading ` * ` before a rule sees the text, so a tag that opens a hover
+# line opens the line this pattern sees.
+#
+# Verified silent on an inline {@link}, on an address and a backticked at-rule
+# written mid-line, on a bare at-rule written mid-line, and on a banned tag
+# inside an @example fence, which Vale skips because `ts = md` makes the comment
+# Markdown. BlockTagVocabulary.good.ts carries all four, and each one fires once
+# the anchor is removed.
+#
+# THE RESIDUE, stated rather than designed around: a bare at-rule such as
+# @supports that OPENS a source line is a false positive, because nothing in the
+# text distinguishes it from a block tag. Zero instances on the tracked `.ts`
+# list, and the remedy is the backticks the repo already writes around a CSS
+# at-rule. Widening the pattern to guess at intent would cost the rule its one
+# job.
 extends: existence
 message: "'%s' is outside doc-comments.md rule 5's closed block-tag table (@example, @param, @returns, @throws, @see). Keep the content and drop the tag word, or move the line to a `//` comment."
 level: warning

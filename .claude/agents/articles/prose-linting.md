@@ -38,8 +38,11 @@ it does not read as "Vale is not set up here".
 Nothing gates on Vale's exit code, and `engineering.md`'s convention for a report-only checker applies:
 read the output, not `$?`.
 
-**The exit code is not a findings count.** It is 1 when a rule matched, and 1 when a file failed to
-parse. So `$?` alone cannot tell "linted, found things" from "never linted anything".
+**The exit code is not a findings count.** Measured on vale 3.20.0: **0** when a `warning`-severity
+rule matched. **1** when an `error`-severity one did. **2** when a file failed to parse.
+
+Every rule `.vale.ini` enables is `warning`. So the live config never exits nonzero on a finding, and
+anything that gates has to read `--output=JSON` rather than `$?`.
 
 **A config error exits 2, and a missing `.vale/` is the common one.** Vale writes the path error to
 stderr and leaves stdout empty. A `grep -c` pipeline over stdout therefore counts zero, which is the
@@ -47,7 +50,7 @@ worst of the three exit-code readings. Do not take the number from Vale's own cl
 stopped "with code 1" while the process exits 2. Measured on vale 3.20.0; the reproduction is in
 `prose-linting.rationale.md`.
 
-## Six ways a run reports a confident zero
+## Seven ways a run reports a confident zero
 
 Check each before you believe one.
 
@@ -60,6 +63,16 @@ Check each before you believe one.
 4. **The file matches no section glob in `.vale.ini`.** Vale applies no style, reports 0, and exits 0.
    A scratch copy of a file placed outside the globs is how a reviewer re-deriving a baseline hits
    this. Put the copy at an in-scope path instead.
+5. **Vale reads a mistyped path as stdin.** Measured, non-interactively: the run reports
+   `0 errors, 0 warnings and 0 suggestions in stdin` and exits 0. The tell is **in stdin** where a
+   file count belongs. Every verification here names a path list.
+6. **An `occurrence` rule counts nothing.** Two ways, both measured. It never fires at `max: 0`, so
+   "at most zero" is not expressible. And under `scope: text.comment.block.<ext>` a whitespace token
+   counts zero while `[\w]+` counts every word, so a rendered-**line** budget is not expressible
+   either.
+7. **`vale test` skips a rule file that carries no `tests:` key.** Measured over a directory holding
+   two rules, one untested: `1 file — 1 passed, 0 failed`, exit 0. That is the missing-fixture hazard
+   `npm run ast-grep:rules` catches, in a checker that has none.
 
 **One more way is not a zero at all, and no rule catches it.** Moving evidence out of a rule strands the
 words that pointed at it. "The split is clean" survived the table it described. "The bullet below"
@@ -155,15 +168,46 @@ within the same rendered lines. Splitting a paragraph inserts a blank ` *` line,
 **multi-line**, not "documentation". Scope is also strictly per-extension: a `.ts` scope never reaches
 a `.tsx` file.
 
-**Who owns the rules.** `architect` alone authors or changes a rule in `vale-styles/JsDoc/`, which is
-the style covering module interface prose — JSDoc and the module sidecars Vale lints. Every other role
-reads the output and reports tensions to it, exactly as with `rules/*.yml`. The shared `STE` style over
-`.claude/**` and `CLAUDE.md` is a different surface and is not `architect`'s alone.
+**Who owns the rules.** `architect` alone authors or changes a rule in `vale-styles/JsDoc/`, the style
+that lints JSDoc blocks in `src/` and `scripts/`. Every other role reads the output and reports
+tensions to it, exactly as with `rules/*.yml`.
+
+**The `STE` style is a different surface and is not `architect`'s alone.** That covers the module
+sidecars too: no `JsDoc` rule reaches a `.md` file today, so a sidecar finding is an `STE` finding.
+
+**Running the fixtures is one command, and it needs no `.vale/`:**
+
+```bash
+vale --config=vale-styles/fixtures/fixtures.vale.ini vale-styles/fixtures
+```
+
+Contract: the bad fixture reports one finding, of exactly its own rule and nothing else. The good
+fixture reports nothing.
+
+Check the silent half too. A good fixture is evidence only if it fires under the wrong rule. Loosen
+the matcher in a scratch copy of the style, and confirm the fixture reports.
+
+A near-miss that the shipped rule and the loosened one both ignore pins nothing. That is how one
+fixture here shipped without pinning the anchor it named.
 
 ## What is scoped, and what is not
 
 Vale runs over `.claude/agents/**/*.md`: every topic article, the house-rules articles, and the five
-role files. It also runs over `src/**/*.md`, the module sidecars beside the source.
+role files. It also runs over `CLAUDE.md`, and over `src/**/*.md`, the module sidecars beside the
+source. Those three surfaces get the `STE` style.
+
+**It runs over every `.ts` file in the tree as well, under a different style.** `[*.ts]` enables
+`JsDoc`, the tracked style in `vale-styles/JsDoc/`. Each of its rules carries the `.ts`
+block-comment scope, so it reaches block comments only.
+
+**`.tsx` is deliberately out of scope.** A scope selector is strictly per extension. Reaching a
+component needs a second scope entry **plus** a `.bad.tsx`/`.good.tsx` fixture pair per rule; without
+the fixtures the new scope is untested and fails silent.
+
+**Three sections exempt paths that only look like source**: `vale-styles/fixtures/*` (deliberate
+bait), `.claude/worktrees/*` and `.stryker-tmp*/*` (other checkouts, which a bare `vale .` walks
+into). They sit below `[*.ts]`, because sections stack and the later one takes the key. Vale has no
+ignore mechanism other than a later section.
 
 **Lint a module sidecar exactly like an article**, because whoever holds a call site reads it to act.
 `migrate-architecture-depth` split that tier in two: `<module>.md` is in scope and
@@ -180,8 +224,16 @@ unlinted — they were suppressing the whole run. **A new role file with an unqu
 matter would do it again.** The symptom is a confident zero rather than an error you notice. Quote any
 front-matter scalar that contains a colon followed by a space.
 
-**Use double quotes rather than single.** Prettier normalises a YAML scalar to that form, so single quotes
-red `npm run format:check`.
+**Quote it the way Prettier will leave it, which here means single quotes.** This repo sets
+`singleQuote: true`. Measured: Prettier normalises a YAML scalar to **single** quotes, in both
+standalone YAML and Markdown front matter. The earlier advice in this article said the opposite.
+
+A scalar containing an apostrophe is the exception and keeps double quotes. That is why
+`architect.md` has one.
+
+**A `tokens:` entry in a rule file is single-quoted for a second, unrelated reason.** A YAML
+double-quoted scalar processes `\b` as a backspace escape, so `"\bword\b"` is not the regex it looks
+like. Prettier leaves a double-quoted scalar containing a backslash alone, so nothing catches it.
 
 **`*.rationale.md` sidecars are exempt from every rule.** The last section of `.vale.ini` sets
 `BasedOnStyles` to an empty value for them. Sidecars hold the dated-record register, which several of
@@ -201,11 +253,19 @@ severity on exactly the technical prose a sidecar holds.
 the whole exemption, and nothing checks it. The test is one command: `vale` on any `*.rationale.md` must
 report zero.
 
-**Enabling a rule is a four-place edit, and glob overlap is the reason.** `.vale.ini` carries the
+**Enabling a rule is a seven-place edit, and glob overlap is the reason.** `.vale.ini` carries the
 six-rule enable block three times: the agent-docs glob, `[CLAUDE.md]`, and `[src/**/*.md]`. No
 section's per-rule key reaches a file that section's own glob does not match, so each of the three
-needs its own copy. The sidecar glob overlaps all three, and a key does carry into a later matching
-section. So the exemption switches each rule off once by name, and a seventh rule goes in all four.
+needs its own copy.
+
+Four later sections overlap those globs, and a key does carry into a later matching section. They
+are the `*.rationale.md` exemption, plus the three that keep bait and other checkouts out of a
+`vale .` walk. Each switches the rule off once by name, so a seventh `STE` rule goes in all seven
+places.
+
+**A `JsDoc` rule is a four-place edit** on the same reasoning: `[*.ts]` enables it, and the three
+exemption sections below that one switch it off by name. `[**/*.rationale.md]` is not one of them,
+because `[*.ts]` cannot match a `.md` file. **Nothing checks either count.**
 
 <!-- reference-check: allow docs/sub/nested.md -- Vale's own documentation example for glob behaviour, quoted verbatim; not a path in this repo -->
 
