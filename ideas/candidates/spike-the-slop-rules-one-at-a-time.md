@@ -138,7 +138,7 @@ Corpus-wide each of these is four sites rather than one: `EmDash` in `testing-la
 `mutation-testing.md` (2) and `coder.md` (1); `Ceremony` in `testing-layers.md`, `prose-linting.md`,
 `doc-comments.md` and `CLAUDE.md` (1 each).
 
-For each, in isolation: re-level to `warning`, run on the pilot only, show the user **the finding,
+For each, in isolation: re-level to `warning`, run on **every site the rule fires at** — four each for `EmDash` and `Ceremony` — show the user **the finding,
 the sentence, and the proposed rewrite**. The user rules adopt / reject / adopt-with-exemptions.
 Record the ruling and the reason before moving to the next rule. One rule per review, so a verdict
 on one cannot be contaminated by fatigue from another.
