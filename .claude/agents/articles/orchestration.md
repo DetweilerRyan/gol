@@ -70,6 +70,23 @@ Two habits that caught more than care did:
 
 Why this matters more here than elsewhere: every other artifact has a reviewer upstream of `hardener`. `features/` has `architect` CONTRACT and `product` VERIFY. `src/` has `cleaner` and `architect` REVIEW. `rules/` has its own fixture. Documentation authored from this seat has none. **A green gate is not evidence a comment is true**: a false `.feature` step reds, a false comment never does.
 
+**`npm run prose-lint` is the mechanical half of this.** Vale is report-only. Nothing reads its exit
+code, and three of its six enabled rules are prompts to look rather than rules to obey. So the script
+fails only when it **cannot lint**.
+
+That means no binary, no `.vale/`, a config that will not load, or
+an empty file list. A run that cannot lint reports zero. That zero reads exactly like a clean pass,
+which is why the script treats it as a failure.
+
+**The trigger is an edit, not a stage.** Run it after editing `.claude/**`, `CLAUDE.md`, a module
+sidecar, or a JSDoc block. This seat edits the first two constantly. That is why the trigger is
+written here and in the role files both.
+
+**No role owns the running, because four seats do the editing.** What `architect` owns is the
+**rules** under `vale-styles/JsDoc/`. Read `prose-linting.md` before acting on any finding. Read its
+"Triaging a finding in a comment" section when the finding sits in a JSDoc. The remedy there is often
+a move rather than a rewrite.
+
 ## When a slice exposes a missing guardrail, amend the role that should have caught it
 
 Treat the gap as part of the work. The worked example: a test file had grown to 38 tests and 19.88s unnoticed. That happened because `cleaner` watched mutant _count_ as a split signal, and nobody watched test _runtime_ — the other factor in mutation cost. Fixing only the symptom leaves the blind spot.
