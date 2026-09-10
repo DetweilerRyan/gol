@@ -35,6 +35,17 @@ follows, in a file nothing tests.
   long sentence detached the "because no accessible affordance exists" condition, so the definition
   came to cover any assertion made for any reason.
 
+**Two more shapes, both from `cleaner.md`, and the first is the worst of the set because a gate is
+green over it.** Replacing a whole line inside an ordered list dedented its continuations from three
+spaces to column 0. The list silently split in two: the step ended early, its remaining content
+became loose top-level prose, and the next numbered item opened a fresh list. **`npm run
+format:check` stayed green** — Prettier normalises the break as intentional — so nothing in the repo
+could ever have caught it.
+
+The second: a cross-reference restored by the obligation-word check pointed at an anchor that the
+same pass had removed. **A word-count check verifies tokens, not referents.** Restoring a citation
+is not finished until its target is confirmed to still exist.
+
 **And two ways of measuring the pass were themselves wrong.** A baseline recalled rather than
 measured pre-edit read 92 mechanical where the real figure was 101 — the second occurrence of that
 exact defect in this repo, which already carries a commit titled _"correct the Vale baseline, which
@@ -64,7 +75,15 @@ passed. The word list is not exhaustive and should say so.
 - A fresh worktree has no `.vale/` directory, since it is gitignored and `npm ci` does not create
   it. Vale then exits **1** with a path error, which a `grep -c` pipeline converts into "0".
 
-**4. `that's` must never go through a mechanical contraction sweep.** It expands to _that is_ or
+**4. Check list structure after any line-replacement edit, because `format:check` will not.** Count
+ordered-list restarts (`^ *1\. `) and indented continuations before and after. A count that moves
+means a list split. This is the only defect in the set that a command can detect outright, and the
+only one a green gate actively hides.
+
+**5. A restored reference is not restored until its anchor is confirmed.** The token check and the
+referent check are different checks.
+
+**6. `that's` must never go through a mechanical contraction sweep.** It expands to _that is_ or
 _that has_ by context. An automated sweep wrote "that is already been done" into `architect.md`.
 On `cleaner.md` four of five instances were _that is_ and the fifth was _that has_ — which is
 exactly why a sweep looks safe. Note the sibling finding while there: Vale fires `Contractions` on a
