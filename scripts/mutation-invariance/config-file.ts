@@ -60,9 +60,16 @@ function parseJson(text: string, file: string, check: string): JsonParseResult {
   }
 }
 
+// ajv's `message` is typed optional only because the `messages: false` option
+// can suppress it -- this module always constructs Ajv with its default
+// options, so `message` is populated on every error and there is no
+// fallback string to test; the `?? '...'` this used to carry was an
+// unreachable branch, invisible to every gate here (see this program's
+// own args.ts for the same repo-wide idiom of naming that class rather than
+// leaving a silent, unkillable mutant).
 function formatAjvError(error: ErrorObject): string {
   const location = error.instancePath === '' ? '(root)' : error.instancePath
-  return `${location} ${error.message ?? 'failed schema validation'}`
+  return `${location} ${error.message}`
 }
 
 /**

@@ -52,7 +52,11 @@ function decideDiff(config: MutationInvarianceConfig, diff: DiffInput): DecideRe
   if (verdict.invariant) {
     return { exitCode: 0, lines: [`mutation-invariance -- ${diff.range} is mutation-invariant.`] }
   }
-  const lines = [`mutation-invariance -- ${diff.range} is NOT mutation-invariant.`, `  ${verdict.reason ?? ''}`]
+  // evaluateDiff sets `reason` on every `invariant: false` verdict (see
+  // diff-verdict.ts) -- the `?? ''` this used to carry had no path that
+  // could reach it, and so no test could distinguish it from `reason`
+  // itself; dropped for the same reason as config-file.ts's formatAjvError.
+  const lines = [`mutation-invariance -- ${diff.range} is NOT mutation-invariant.`, `  ${verdict.reason}`]
   if (verdict.disqualifying?.absentReason) {
     lines.push(`  (${verdict.disqualifying.path} is in absent[]: ${verdict.disqualifying.absentReason})`)
   }

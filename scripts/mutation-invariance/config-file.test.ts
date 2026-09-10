@@ -110,6 +110,21 @@ describe('parseConfig', () => {
     expect(failures.every((failure) => failure.file === 'mutation-invariance.config.json')).toBe(true)
   })
 
+  it('formats a nested violation with the instancePath, not "(root)"', () => {
+    const badConfig = JSON.stringify({ scope: 'x', allow: [{ path: 'ideas/**' }], absent: [] })
+    const { failures } = parseConfig(badConfig, SCHEMA, 'mutation-invariance.config.json')
+    expect(failures.some((failure) => failure.message.startsWith('/allow/0 '))).toBe(true)
+    expect(failures.some((failure) => failure.message.startsWith('(root) '))).toBe(false)
+  })
+
+  it('formats a root-level violation (a missing required top-level property) as "(root)"', () => {
+    const badConfig = JSON.stringify({ allow: [], absent: [] })
+    const { failures } = parseConfig(badConfig, SCHEMA, 'mutation-invariance.config.json')
+    expect(failures).toHaveLength(1)
+    expect(failures[0].message).toContain('(root)')
+    expect(failures[0].message).toContain("must have required property 'scope'")
+  })
+
   it('rejects an unknown top-level property (additionalProperties: false)', () => {
     const badConfig = JSON.stringify({ ...JSON.parse(VALID_CONFIG), extra: true })
     const { failures } = parseConfig(badConfig, SCHEMA, 'mutation-invariance.config.json')
