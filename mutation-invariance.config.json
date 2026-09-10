@@ -1,0 +1,140 @@
+{
+  "$schema": "./schemas/mutation-invariance.schema.json",
+  "scope": "npm run test:mutation (stryker.config.json's src/-scoped run) -- not npm run test:mutation:scripts, which carries no ignorePatterns at all and reads features/** from the live tree in its own tests",
+  "allow": [
+    {
+      "path": "features/**",
+      "securedBy": "stryker-ignore-patterns"
+    },
+    {
+      "path": "ideas/**",
+      "securedBy": "vitest-exclude"
+    },
+    {
+      "path": ".claude/**",
+      "securedBy": "vitest-exclude"
+    },
+    {
+      "path": ".vale/**",
+      "securedBy": "vitest-exclude"
+    },
+    {
+      "path": "rules/**",
+      "securedBy": "vitest-exclude"
+    },
+    {
+      "path": "rule-tests/**",
+      "securedBy": "vitest-exclude"
+    },
+    {
+      "path": "CLAUDE.md",
+      "securedBy": "written-argument",
+      "argument": "Tracked, and therefore copied into Stryker's sandbox, but never mutated (mutate is src/**) and consulted by no test, build, or lint config; a fixed filename can never itself become a test glob match.",
+      "verifiedOn": "2026-09-08"
+    },
+    {
+      "path": "README.md",
+      "securedBy": "written-argument",
+      "argument": "Same category as CLAUDE.md: tracked but never mutated (mutate is src/**), and consulted by no test, build, or lint config.",
+      "verifiedOn": "2026-09-08"
+    },
+    {
+      "path": ".vale.ini",
+      "securedBy": "written-argument",
+      "argument": "Not mutated (mutate is src/**); no script or config in vite.config.ts, the vitest.*.config.ts files, or either Stryker config references Vale, and there is no npm run script that invokes it -- the prose linter is run by hand.",
+      "verifiedOn": "2026-09-08"
+    },
+    {
+      "path": ".oxlintrc.json",
+      "securedBy": "written-argument",
+      "argument": "Not mutated (mutate is src/**); tracked and copied into the sandbox but nothing there consults it -- oxlint is referenced by neither vite.config.ts, vitest.scripts.config.ts, src/test-setup.ts, fast-check-stryker-seed.ts nor either Stryker config.",
+      "verifiedOn": "2026-09-08"
+    }
+  ],
+  "absent": [
+    {
+      "path": "stryker.config.json",
+      "reason": "Decides the src/ mutation run's own mutate/ignorePatterns scope; editing it must re-arm the gate, the same reasoning that keeps mutation-invariance.config.json itself absent."
+    },
+    {
+      "path": "stryker.scripts.config.json",
+      "reason": "Decides the scripts/ mutation run's scope; same re-arming reasoning as stryker.config.json."
+    },
+    {
+      "path": "vite.config.ts",
+      "reason": "Defines vitest's sharedExclude, which is what makes the vitest-exclude tier sound in the first place; editing it can change what the gate sees."
+    },
+    {
+      "path": "vitest.browser.config.ts",
+      "reason": "A separate vitest project outside stryker.config.json's mutate scope, but its own exclude list can change what a *.browser.test.ts run covers."
+    },
+    {
+      "path": "vitest.scripts.config.ts",
+      "reason": "Configures the scripts/ vitest project; can change what a scripts/ test collects, and therefore what a scripts/-scoped mutant is killed by."
+    },
+    {
+      "path": "package.json",
+      "reason": "Carries every npm script this gate and every other gate run through; editing it can change what runs."
+    },
+    {
+      "path": "package-lock.json",
+      "reason": "Pins the dependency tree Stryker's sandbox installs from."
+    },
+    {
+      "path": "tsconfig.json",
+      "reason": "The project-reference root; changing it can change what `tsc -b` includes."
+    },
+    {
+      "path": "tsconfig.app.json",
+      "reason": "Its `include` is [\"src\", \"features\", \"perf\"] -- the reason a features/**-only diff still moves `npm run build`."
+    },
+    {
+      "path": "tsconfig.node.json",
+      "reason": "Part of the same project-reference graph as tsconfig.json."
+    },
+    {
+      "path": "tsconfig.scripts.json",
+      "reason": "Its `include` is scripts/, governing what the scripts/ vitest project (and therefore the scripts/ mutation run) compiles."
+    },
+    {
+      "path": "sgconfig.yml",
+      "reason": "Ruled absent by inventory rather than by a structural coupling to rules/**: never mutated, read by no test, consulted by nothing inside the sandbox -- but no diff has yet been blocked by it alone, so it is left out on the same .prettierignore ground rather than allowlisted."
+    },
+    {
+      "path": "patches/**",
+      "reason": "patch-package output applied at postinstall; can change installed dependency behavior the sandbox runs against."
+    },
+    {
+      "path": ".gitignore",
+      "reason": "Governs what is tracked and therefore copied into Stryker's sandbox; deliberately left out of the vitest/stryker-exclude reasoning that covers ideas/**, .claude/** and rules/**/rule-tests/**."
+    },
+    {
+      "path": ".prettierignore",
+      "reason": "Left absent on the same ground as sgconfig.yml -- an allowlist should carry only what has been argued and needed, and no diff has yet been blocked by it alone."
+    },
+    {
+      "path": "src/**",
+      "reason": "Stryker's own mutate scope; obviously moves the score."
+    },
+    {
+      "path": "scripts/**",
+      "reason": "The scripts/ mutation run's own mutate scope; moves the scripts/ score, and some scripts/ tests read features/** from the live tree."
+    },
+    {
+      "path": "perf/**",
+      "reason": "Included in tsconfig.app.json's build scope."
+    },
+    {
+      "path": "public/**",
+      "reason": "Static assets served by the built app; never argued safe."
+    },
+    {
+      "path": "mutation-invariance.config.json",
+      "reason": "Decides this gate's own scope; editing it must re-arm the gate, exactly as stryker.config.json does."
+    },
+    {
+      "path": "schemas/**",
+      "reason": "Backs this gate's own config validation; editing it must re-arm the gate for the same reason as the config file itself."
+    }
+  ]
+}
