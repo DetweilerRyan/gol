@@ -1,0 +1,29 @@
+# doc-comments.md rule 4: how the thing works inside, and cross-references into
+# another module's internals, stay in a `//` comment below the signature. A
+# hover states what a caller needs in order to use the thing.
+#
+# The token list is a small closed vocabulary of implementation register. It is
+# deliberately not a general "sounds internal" matcher: every entry names a
+# mechanism rather than a contract, so a caller cannot act on any of them.
+#
+# `recursively` is the entry most likely to produce a future false positive,
+# since a traversal contract can legitimately be a caller's business. It is the
+# first token to drop if a later corpus shows one. It is not dropped now: the
+# one hit it produced was a true positive, and narrowing a matcher to clear a
+# finding is the move this repo rejects everywhere else.
+#
+# Suffixed forms are why the entries are spelled out rather than stemmed.
+# `internal` and `recursive` are adjectives that can carry an interface fact,
+# and ImplementationAltitude.good.ts uses both to pin that they stay silent.
+extends: existence
+message: "'%s' describes how the thing works inside. doc-comments.md rule 4 puts that in a `//` comment below the signature, where a caller does not pay for it."
+level: warning
+ignorecase: true
+scope: text.comment.block.ts
+tokens:
+  - 'recursively'
+  - 'internally'
+  - 'under the hood'
+  - 'loops over'
+  - 'iterates over'
+  - 'implemented as'

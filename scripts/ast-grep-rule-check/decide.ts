@@ -81,8 +81,8 @@ function formatLines(rules: RuleFile[], fixtures: FixtureFile[], failures: Failu
  * file (catching parse errors rather than throwing), run every check in
  * checks.ts over what parsed, and turn the result into an exit code plus the
  * exact lines to print. run.ts's job shrinks to gathering RawFile[] off disk
- * (recursively, per sgconfig.yml) and handing them to decide() here -- which
- * is what lets a test pin the exit code without touching the filesystem.
+ * and handing them to decide() here -- which is what lets a test pin the exit
+ * code without touching the filesystem.
  *
  * @param globHasMatch must resolve a pattern against the repo root, which is
  * the base every rule's `files:` glob is written relative to.
