@@ -124,6 +124,12 @@ carried over.
 - The Go/Clojure/Java language-tool installation table and per-language framework preferences (Babashka, Speclj, Maven) — this is a single-language TypeScript project; its tools (`dry4ts`, `crap4ts`, Stryker, `scripts/acceptance-mutation`) are already pinned in `package.json`/`scripts/`, nothing needs installing from GitHub at agent startup.
 - `six-pack` branch's own `local-workflow.prompt` was also reviewed for this migration — it's entirely about that branch's tmux/QA-handoff-merge mechanics (`done_with_current.sh`, `merge_and_process QA <commit>`, ignoring wake-ups mid-task), not applicable here, and its one substantive rule (run tests before handoff) duplicates the `local-engineering` rule already captured above.
 
+## The experiment that committed one row and no table
+
+`black-box-acceptance-pilot`'s defect duel published one row's conclusion into `CLAUDE.md` and recorded the table nowhere. When that row turned out to be wrong, nothing said what the other rows were, so none could be re-checked. The error was catchable only because `product` independently re-derived that one row.
+
+`architect.rationale.md` records the same duel from the other side, as a conclusion written down at a wider scope than the command that produced it. Read the scope half there rather than restating it here.
+
 ## The six published mechanism errors
 
 Each was reached from a mechanism that sounded right, was never measured, and was caught by the next role
@@ -148,6 +154,10 @@ Measured, in `split-claude-md`: `agent-doc-check`'s check 5 required every `rule
 ## The property test that needed no config change
 
 - There's no scripts-scoped property _command_, so `architect`/`hardener`/`product` gain no counterpart to their `npm run test:property` obligation for `scripts/` work — running `npm run test:scripts` discharges it, because a property test there is collected by that one config like any other test. The clause this replaces said no property-test layer existed at all and that one should be added only if an invariant over a broad input range appeared that a table-driven test didn't cover. That happened, in `comma-list-mutants-are-all-syntax-breaking`: `scripts/acceptance-mutation/tuple-list.property.test.ts` (added under the name `mutation-rules.property.test.ts`) quantifies over coordinate-pair lists of any length, magnitude and sign, and the shape the table-driven fixtures could not reach — a single-pair list, and multi-digit coordinates — is exactly where the defect that slice fixed lived. Adding it needed **no config change**, which is the fact worth carrying: measured on that slice's tree, `vitest.scripts.config.ts`'s `scripts/**/*.test.ts` include collects a `*.property.test.ts` file, and `vite.config.ts`'s `sharedExclude` entry for `scripts/**` keeps the src-side `property` project — whose include is the unrooted `**/*.property.test.ts` — from collecting it too. So the suffix is a naming convention in `scripts/`, not a project selector as it is in `src/`, and a file placed there gets no separate run and no separate obligation. The bar for adding another is unchanged and is the one in "Writing a property test" above: pin the degenerates, and show it failing against a deliberately broken implementation first. The browser-required layer is a different story and still has no counterpart: `scripts/` is Node CLI tooling with no browser APIs to verify, so `npm run test:browser` has no scripts-scoped form and `hardener` simply skips that stage for `scripts/`-only work.
+
+## The build break that sat undetected for a full role
+
+`cleaner` once landed a `vi.fn()` spy typed with the wrong signature for the DOM method it stubbed. Every test passed, `cleaner` handed off believing it was clean, and the break sat undetected for a full role until `architect` happened to run `npm run build`.
 
 ## The split itself, measured
 
