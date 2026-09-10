@@ -15,6 +15,19 @@
 # Suffixed forms are why the entries are spelled out rather than stemmed.
 # `internal` and `recursive` are adjectives that can carry an interface fact,
 # and ImplementationAltitude.good.ts uses both to pin that they stay silent.
+#
+# EXTENSIONS: .ts AND .tsx. Ruled per rule on 2026-09-10, under prose-linting.md's
+# "Each rule declares its own extensions".
+#
+# This rule DOES assume the block comment is an interface doc: rule 4's remedy is
+# to move the line to the implementation channel, and a JSX `{/* ... */}` block
+# already IS that channel for markup. Carrying the premise is not on its own a
+# reason to drop an extension. The discriminator is measured noise no remedy can
+# clear without moving correctly-placed prose, and there is none: 0 findings over
+# the tracked components, in both the design pass and the review that followed.
+#
+# REOPEN THIS the first time a JSX comment reports here. `MeasurementInDoc` is the
+# rule that failed this test, on three such hits, and it never shipped.
 extends: existence
 message: "'%s' describes how the thing works inside. doc-comments.md rule 4 puts that in a `//` comment below the signature, where a caller does not pay for it."
 level: warning

@@ -8,13 +8,21 @@
 # is a procedural indexical -- the reader is always inside a slice, so context
 # supplies the referent the way it supplies "you". A JSDoc block never
 # instructs a future reader that way; it reports. So the scope of this rule
-# (`.ts` block comments) is exactly the surface where the carve-out is absent,
-# and the article prose stays outside it.
+# (block comments in source) is exactly the surface where the carve-out is
+# absent, and the article prose stays outside it.
 #
 # The complement is already machine-checked elsewhere. `npm run reference-check`
 # bans `<file>:NN` and verifies a `<file>'s <symbol>` citation, which is the
 # other form of the same rule. This one covers the indexical form, which
 # nothing checked.
+#
+# EXTENSIONS: .ts AND .tsx. Ruled per rule on 2026-09-10, under prose-linting.md's
+# "Each rule declares its own extensions".
+#
+# This rule does NOT assume the block comment is an interface doc. engineering.md
+# bans a dead indexical in any record, and a JSX `{/* ... */}` block is as much a
+# record as a hover. So the premise question does not arise, and .tsx costs
+# nothing. Measured over the tracked components on the same date: 0 findings.
 extends: existence
 message: "'%s' names a referent that died with the session that wrote it. A hover is a record: name the slice (engineering.md, 'Name the slice, never this slice')."
 level: warning
