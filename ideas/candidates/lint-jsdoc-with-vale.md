@@ -204,8 +204,10 @@ Three consequences, all of which the design takes:
 redundant.** It is absent from `vale --help`'s command list; only `vale test --help` documents it
 ("Run the test cases kept beside a configuration's rules", `vale test [path...]`). It runs a rule's
 inline `tests:` key — `name` / `input` / `want`, where `want` is the exact expected output line
-(`1:16:Style.Rule:message`) or `""` for silence. All 14 `Std` rules carry one; neither `STE` nor `Slop`
-does.
+(`1:16:Style.Rule:message`) or `""` for silence. All 14 `Std` rules carry one (`grep -l '^tests:'`, 14 of
+14); **neither `STE` nor `Slop` carries a single one** (`grep -l 'tests:' .vale/STE/*.yml
+.vale/Slop/*.yml` reports 0 of 28). The runner is reachable for the upstream package and for nothing
+this repo has installed.
 
 **It is a real gate.** Measured: **0** on pass, **1** on a mismatch with a diff, **2** on a runtime error.
 
@@ -230,9 +232,21 @@ line and no actual line.
 The loud ones, for contrast: a directory where **no** rule has tests gives "no test cases found", exit 2;
 an empty directory gives "no test files found", exit 2; a missing path gives a `stat` error, exit 2.
 
-**One more trap: `vale test` resolves `extends:` against the current working directory**, not against
-any `.vale.ini`'s `StylesPath`. The same child rule passes when run from the directory holding its
-parent style and aborts at E201 exit 2 when run from one directory up.
+**One more trap: `vale test` resolves `extends:` through a `.vale.ini` discovered from the current
+working directory, and honours that config's `StylesPath`.** Four probes discriminate the mechanism,
+because the obvious two do not:
+
+| probe                                                                        |      result |
+| ---------------------------------------------------------------------------- | ----------: |
+| run from the directory holding the parent style, **no `.vale.ini` anywhere** | E201 exit 2 |
+| same directory, `.vale.ini` with `StylesPath = .`                            |      exit 0 |
+| run from one directory up, the config still sitting beside the rule file     | E201 exit 2 |
+| parent moved to `elsewhere/`, config says `StylesPath = elsewhere`           |      exit 0 |
+
+So cwd is **not** a search root on its own, and `vale test` does **not** walk up from the rule file. It
+needs a discoverable config, exactly as `vale test --help`'s "kept beside a configuration's rules"
+implies. A first, weaker version of this note claimed cwd was the search root; that was consistent with
+two probes and refuted by the four above.
 
 #### Ruling on Q3 — the harness stands, with one new contract clause and one prohibition
 
@@ -387,6 +401,11 @@ verbatim.
 | Whether `Usage.FirstPersonPlural`'s 13 hits are true positives                | read all 13; only 3 were sampled here                                                      |
 | The first pass's 178 block-scope `SentenceLength` figure                      | slice 2 re-derives it with a method that preserves `scope: sentence`                       |
 | Whether `Std` gains a rule that changes any of this                           | `meta.json` carries a releases feed; a re-check costs one `vale sync` and one corpus run   |
+
+**One figure explained rather than guessed at, so nobody chases it.** A side probe of
+`STE.SentenceLength` unscoped over the same corpus reported **709**, not the 843 above. The cause is the
+probe, not the corpus: that config carried no `[*.tsx]` section, so the corpus's 16 `.tsx` files were
+processed by no section at all. The 843 run had both sections and is the comparable figure.
 
 ### Two more corrections to the file-set rows
 
