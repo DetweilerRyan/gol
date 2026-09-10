@@ -74,7 +74,13 @@ file — `must`, `never`, `always`, `only`, `before`, `rather than` — and acco
 On `cleaner.md` that found a silently dropped `from step 3(a)` cross-reference that reading had
 passed. The word list is not exhaustive and should say so.
 
-**Extend it with causal connectives** — `because`, `since`, `so`. On `coder.md` `because` went 3 → 0
+**Better still, drop the word list.** A full tokenize-and-frequency diff of the whole file against
+its pre-edit copy is strictly broader and costs the same. It is what found the lost `because` on
+`orchestration.md`, where a fixed list would have had to guess that word in advance. Every non-zero
+delta then gets accounted for, as a sentence split, a deliberate edit, or a defect. A word list is
+the fallback when the file is too large to diff whole.
+
+**Extend a list, if you use one, with causal connectives** — `because`, `since`, `so`. On `coder.md` `because` went 3 → 0
 and only that extension surfaced it. Measured across the four landed role files, sixteen connectives
 were dropped; on inspection all sixteen survived as adjacency, which preserves the relation. The
 check earns its place by making that a finding you clear rather than a question nobody asked.
@@ -106,6 +112,15 @@ by **punctuation** fires and one followed by a **space** does not — measured a
 findings from three possessives. This also refutes a plausible-looking mechanism recorded during the
 rollout: the landed role files did not reach zero because their possessives are backticked, but
 because they are followed by spaces.
+
+**7. A lint pass introduces prompt findings as well as clearing them, so compare residuals to a
+pre-edit baseline.** Splitting one sentence multiplies be-verb sites, and adding two words to a
+bullet can push it past `ProcedureLength`'s 20-word proxy. On `orchestration.md` the pass fixed one
+`PassiveVoice` and created one, and created a `ProcedureLength` finding outright — both recorded as
+residuals rather than as self-inflicted, which is the reporting defect. Name what the pass added.
+
+**8. `PassiveVoice` has a third exempt class the article does not list: a verbatim quotation.**
+Splitting a sentence can isolate a quoted section title, which the matcher then sees as prose.
 
 ## Touches
 
