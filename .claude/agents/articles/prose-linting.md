@@ -39,6 +39,12 @@ read the output, not `$?`.
 **The exit code is not a findings count.** It is 1 when a rule matched, and 1 when a file failed to
 parse. So `$?` alone cannot tell "linted, found things" from "never linted anything".
 
+**A config error exits 2, and a missing `.vale/` is the common one.** Vale writes the path error to
+stderr and leaves stdout empty. A `grep -c` pipeline over stdout therefore counts zero, which is the
+worst reading of the three. Do not take the number from Vale's own closing line either: it says the run
+stopped "with code 1" while the process exits 2. Measured on vale 3.20.0; the reproduction is in
+`prose-linting.rationale.md`.
+
 ## Three ways a run reports a confident zero
 
 Check each before you believe one.
@@ -48,7 +54,7 @@ Check each before you believe one.
    the live example: it ships at `suggestion` and is re-levelled here to `warning`.
 2. **A file failed to parse and aborted the run.** Vale parses YAML front matter with a real YAML
    parser, and one unparseable file aborts the whole invocation rather than skipping that file.
-3. **Vale is not installed.** See Setup.
+3. **Vale is not installed, or `.vale/` is absent.** See Setup.
 
 **A fourth way is not a zero at all, and no rule catches it.** Moving evidence out of a rule strands the
 words that pointed at it. "The split is clean" survived the table it described. "The bullet below"

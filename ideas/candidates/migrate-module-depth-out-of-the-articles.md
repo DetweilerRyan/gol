@@ -76,7 +76,7 @@ and the `useReducedMotion`/`useSystemAppearance` extraction history.
 
 **Ruled 2026-09-09 by the user: this slice runs BEFORE `architecture.md` is split.** That article is
 twenty module bullets, so splitting it first would carefully place prose into a sidecar that this slice then
-moves again. The retired `roll-the-rationale-sidecar-out` effort carried the same ordering constraint.
+moves again. `roll-the-rationale-sidecar-out.md` carries the same ordering constraint.
 
 ## Touches
 

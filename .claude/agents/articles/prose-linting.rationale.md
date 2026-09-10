@@ -157,6 +157,29 @@ Those are the same number with opposite verdicts. The claim-discipline conflict 
 distinguishing reason is an argument for a documented exemption rather than for disabling, which is the
 treatment the other two prompt-rules already carried.
 
+## What a missing `.vale/` actually reports, measured 2026-09-10
+
+Taken in the `ratify-the-rationale-tier` worktree on vale 3.20.0, by moving `.vale/` aside and running
+`vale .claude/agents/articles/prose-linting.md` with the two streams redirected separately.
+
+| what                | value                                                                             |
+| ------------------- | --------------------------------------------------------------------------------- |
+| process exit status | **2**                                                                             |
+| stdout              | **0 bytes**                                                                       |
+| stderr              | 7,482 bytes — `E201 Invalid value`, an echo of `.vale.ini`, then the missing path |
+| Vale's closing line | `Execution stopped with code 1.`                                                  |
+
+Two things follow, and the second is why this is recorded rather than assumed. The exit status is **2**
+rather than the 1 the report-only section lists for a rule match or a parse failure, so a caller that
+tests for 1 reads a config error as success. And the closing line names a different number from the one
+the process returns, so quoting Vale at itself is how the wrong figure spreads.
+
+The `grep -c` symptom is a consequence of the empty stdout rather than of the error text. A pipeline
+reading stdout counts zero however the run failed.
+
+An earlier draft of CLAUDE.md's worktree-setup note recorded the exit status as 1, taken from that
+closing line. It never reached `main`.
+
 ## Two mistakes worth not repeating
 
 **`BasedOnStyles = Vale` is not "no style".** It was the first attempt at the sidecar exemption and it is
