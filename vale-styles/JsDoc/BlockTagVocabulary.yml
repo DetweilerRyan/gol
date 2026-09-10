@@ -27,15 +27,31 @@
 # at-rule. Widening the pattern to guess at intent would cost the rule its one
 # job.
 #
-# The residue was then observed, which is why it is stated here rather than
-# designed around. Widening to .tsx on 2026-09-10 produced exactly one finding
-# across the 31 tracked components: a bare `@custom-variant` opening a line in a
-# JSX comment in GridToolbar.tsx. It was not a false positive by this repo's own
-# convention -- useAppearance.ts already backticked the same at-rule -- so the
-# predicted remedy applied unchanged and the rule caught a real inconsistency.
-# A JSX `{/* ... */}` block is in scope on .tsx and has no .ts counterpart.
+# EXTENSIONS: .ts AND .tsx. Ruled per rule on 2026-09-10, under prose-linting.md's
+# "Each rule declares its own extensions".
+#
+# This rule DOES assume the block comment is an interface doc: a line-opening
+# @word means a block tag only inside a JSDoc. On a JSX `{/* ... */}` block --
+# a shape .ts has no counterpart for -- it means nothing of the kind, and the
+# message's "move the line to a `//` comment" remedy does not apply there.
+#
+# Carrying that premise is not on its own a reason to drop .tsx. The
+# discriminator is measured noise no remedy can clear without moving
+# correctly-placed prose. Measured over the 31 tracked components: ONE finding,
+# a bare `@custom-variant` opening a wrapped line in a JSX comment in
+# GridToolbar.tsx. That is the residue stated above, and a backtick cleared it.
+#
+# The backtick is a convention this repo held BEFORE this rule existed --
+# useAppearance.ts carries it, landed by `no-undated-cross-file-claims`. So the
+# remedy is not a concession invented to clear a finding. Against that one hit
+# sits the coverage: 11 of the 31 components carry a `/** ... */` block, which
+# is the rule's actual job.
+#
+# REOPEN THIS on two or more JSX hits, or on one no backtick can clear. That is
+# the ruling's discriminator, not a fresh judgement. prose-linting.rationale.md
+# carries both cross-tabulations.
 extends: existence
-message: "'%s' is outside doc-comments.md rule 5's closed block-tag table (@example, @param, @returns, @throws, @see). Keep the content and drop the tag word, or move the line to a `//` comment."
+message: "'%s' is outside doc-comments.md rule 5's closed block-tag table (@example, @param, @returns, @throws, @see). Keep the content and drop the tag word, or move the line to a `//` comment. In a JSX comment, where no block tag exists, backtick it instead."
 level: warning
 scope:
   - text.comment.block.ts
