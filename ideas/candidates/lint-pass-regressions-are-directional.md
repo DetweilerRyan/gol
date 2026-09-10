@@ -60,11 +60,24 @@ What should a reader do differently, given that none of this is machine-checkabl
 Four additions to `prose-linting.md`, with the incidents behind them in
 `prose-linting.rationale.md` per CLAUDE.md branch 5.
 
+**0. The obligation-word count has a measured blind spot, and it must be stated with the rule.**
+Splitting `X and Y` into `X. Y.` can turn a _conjunct_ into a standalone claim, so sentence one now
+asserts a sufficiency that was never true. On `coder.md`, "your job is done once the wiring exists
+**and** the layer is green" became "your job is done once the wiring exists." — and the count
+**missed it, because `must` went up, not down.** Splitting a condition adds obligation words while
+weakening the condition. So the count is a screen, not a proof: read every split of a sentence that
+states when something is finished, permitted or sufficient.
+
 **1. Check the direction of what a split dropped, not just its presence.** The cheap mechanical
 form, which earned its place: count obligation-bearing words across the pair against the pre-edit
 file — `must`, `never`, `always`, `only`, `before`, `rather than` — and account for every decrease.
 On `cleaner.md` that found a silently dropped `from step 3(a)` cross-reference that reading had
 passed. The word list is not exhaustive and should say so.
+
+**Extend it with causal connectives** — `because`, `since`, `so`. On `coder.md` `because` went 3 → 0
+and only that extension surfaced it. Measured across the four landed role files, sixteen connectives
+were dropped; on inspection all sixteen survived as adjacency, which preserves the relation. The
+check earns its place by making that a finding you clear rather than a question nobody asked.
 
 **2. Measure the baseline on the pre-edit file, in scope, before the first edit.** Twice is a rule.
 
@@ -86,9 +99,13 @@ referent check are different checks.
 **6. `that's` must never go through a mechanical contraction sweep.** It expands to _that is_ or
 _that has_ by context. An automated sweep wrote "that is already been done" into `architect.md`.
 On `cleaner.md` four of five instances were _that is_ and the fifth was _that has_ — which is
-exactly why a sweep looks safe. Note the sibling finding while there: Vale fires `Contractions` on a
-**bare** possessive (`cleaner's`) and not on a backticked one (`` `cleaner` ``'s), so a finding on a
-role name is a formatting fix, not a contraction.
+exactly why a sweep looks safe. **And a bare possessive needs its own exempt class, which the article does not currently have.**
+`Contractions` is an `existence` rule whose possessive token ends `(?!\s)`. So a possessive followed
+by **punctuation** fires and one followed by a **space** does not — measured against
+`.vale/STE/Contractions.yml`. "the cleaner's, architect's, and hardener's gates" produced two
+findings from three possessives. This also refutes a plausible-looking mechanism recorded during the
+rollout: the landed role files did not reach zero because their possessives are backticked, but
+because they are followed by spaces.
 
 ## Touches
 
@@ -104,6 +121,11 @@ role name is a formatting fix, not a contraction.
   cheap enough that a documented one-liner may be the right form.
 - **Should the direction check apply to any prose edit, or only to a lint pass?** The four
   regressions came from sentence-splitting, but nothing about the failure is specific to Vale.
+- **The article and the practice have diverged, and one of them should move.** `prose-linting.md`
+  says act on a genuine step. The landed role files now carry 6, 34 and 20 findings recorded-as-
+  act-on-shape but not acted on, each time because the remedy separates a step's reasoning from the
+  step it qualifies. Three files agreeing is a convention forming by accident. Either amend the
+  remedy or act on the files; a standing unilateral divergence inside role files is the worst option.
 - **Does `ProcedureLength` need its own entry?** Across five files I exempted it heavily, and two
   reviews found the blanket argument overclaimed — on `product.md` for 11 of 24 findings. The
   article's actionable condition may be right while the way it gets applied is not.
