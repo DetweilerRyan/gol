@@ -103,7 +103,7 @@ describe('checkAgentFrontmatterValid', () => {
     for (const substring of includes) expect(failures[0].message).toContain(substring)
   })
 
-  it.each(['opus', 'sonnet', 'haiku'])('passes model %s as a known model', (model) => {
+  it.each(['opus', 'sonnet', 'haiku', 'fable'])('passes model %s as a known model', (model) => {
     const files = [{ path: '.claude/agents/coder.md', text: GOOD_FRONTMATTER('coder', 'Read', model) }]
     expect(checkAgentFrontmatterValid(files)).toEqual([])
   })

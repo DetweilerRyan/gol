@@ -26,7 +26,7 @@ export interface Failure {
 }
 
 const KNOWN_TOOLS = ['Read', 'Write', 'Edit', 'Bash', 'Grep', 'Glob', 'LSP']
-const KNOWN_MODELS = ['opus', 'sonnet', 'haiku']
+const KNOWN_MODELS = ['opus', 'sonnet', 'haiku', 'fable']
 
 /**
  * Check 1: every `npm run <script>` reference in the docs names a real
