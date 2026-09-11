@@ -538,3 +538,37 @@ This tier is the honest one, and its name says what it is. A fixed filename cann
 **`.gitignore`** is the interesting ruling. It yields no mutant, yet Stryker's sandbox is populated from tracked files, so an edit here changes what the sandbox contains. **`.prettierignore`** is left out on the weaker ground that an allowlist should carry only what has been argued and needed. **`sgconfig.yml`** is the same weaker ground: it looks sound on all three points, but only the first is structural, and no diff has been blocked by it alone.
 
 **`mutation-invariance.config.json`** and **`schemas/**`** are absent by the same logic as `stryker.config.json`, and this is the one an author will be tempted to skip. A file that decides the gate's own scope must re-arm the gate when edited. Without these two entries, the first slice to widen the allowlist would be granting itself an exemption in the same diff.
+
+## `vale-styles/**` — a per-diff user ruling, not an allowlist entry, 2026-09-10
+
+`lint-jsdoc-with-vale` introduced `vale-styles/`, a tracked directory of Vale rule files and their
+`.ts` fixtures, and its diff also touches `package.json`. **Neither path is on the allowlist and
+neither is being proposed for it.** The user ruled that the full mutation run could be skipped for
+that slice. Record it as a ruling so nobody later reads it as the predicate having grown.
+
+Two paths refuse the predicate outright. `package.json` sits on the absent list above, deliberately.
+`vale-styles/**` sits on no list at all, which is the allowlist failing safe exactly as designed: an
+unanticipated path runs the gate.
+
+The argument the ruling rests on, re-verified against the tree on 2026-09-10:
+
+| claim                                         | how it was checked                                                                                                                                   |
+| --------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `vale-styles/**` yields no mutant             | `stryker.config.json`'s `mutate` list is `src/**/*.ts` and `src/**/*.tsx` minus exclusions                                                           |
+| `vale-styles/**` compiles nowhere             | `tsconfig.app.json` includes `src`, `features`, `perf`; `tsconfig.scripts.json` includes `scripts`; `tsconfig.node.json` carries no `include` at all |
+| no test project collects it                   | `vitest list` under both configs returns nothing under that directory                                                                                |
+| the new `package.json` script runs in no test | so it can neither create nor re-fate a mutant                                                                                                        |
+
+**Why this is a ruling and not an entry.** An allowlist entry is a standing claim about a path, and
+`vale-styles/` will not stay inert: its fixtures are `.ts` files, so one renamed to `*.test.ts` or
+moved under `src/` becomes collectable. The `written-argument` tier is honest that it proves only
+that a **fixed filename** can never become a test, and a directory of files a future slice may add
+to is not that. An entry here would be a claim nobody has earned.
+
+**Hand it to `hardener` as an instruction naming the diff.** `hardener` may refuse an exemption and
+may never grant itself one, so a verification that comes back invariant grants nothing on its own.
+Its handoff must name the skip, the instruction and the diff, and the merge carries that forward.
+
+**The exemption is self-revoking and here that is likely.** If remediation at any stage writes a file
+outside the argument above — most plausibly a test under `src/` closing a coverage shortfall — it is
+void from that point and stage 5 runs.
