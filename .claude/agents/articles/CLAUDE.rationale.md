@@ -25,8 +25,9 @@ carrying one deliberately unresolvable filename token and one deliberately unres
 | `.claude/agents/articles/CLAUDE.rationale.md` | scanned; reported the bad token  | checked; reported the bad script |
 | `CLAUDE.rationale.md` (repo root)             | not scanned; reported no failure | not checked; reported no failure |
 
-The scan counts moved with it on that date: 422 files scanned from `articles/` against 421
-from the root, and 32 doc files against 32.
+The scan counts moved with it on that date. `reference-check` scanned 422 files with the
+sidecar in `articles/` and 421 with it at the root; `agent-doc-check` read 33 doc files
+against 32.
 
 The mechanism is in each checker's own scope module. `reference-check`'s `scan-scope.ts`
 takes `CLAUDE.md` and `README.md` by exact name plus every `.md` under `.claude/`;
