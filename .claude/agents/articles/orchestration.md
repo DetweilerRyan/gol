@@ -87,6 +87,45 @@ written here and in the role files both.
 "Triaging a finding in a comment" section when the finding sits in a JSDoc. The remedy there is often
 a move rather than a rewrite.
 
+## Handing a role an exemption gets flagged, and the flag is fair
+
+**A subagent cannot verify that you are relaying a real user ruling.** It sees only your prompt. So an
+instruction to skip a gate on the user's authority is, from inside that role, an unverifiable claim
+of consent. Expect the harness to flag the hand-back as a possible gate bypass. Measured on
+`lint-jsdoc-with-vale`, where `hardener` was handed a stage-5 skip against an exit-2 predicate.
+
+**Treat the flag as information for the user, not as an obstacle to route around.** What it says is
+structurally true and does not depend on the ruling being genuine. Three things follow:
+
+- **Do not let your own relay settle it.** Surface the flag to the user before the landing action it
+  gates, and say plainly what is being skipped and what the predicate returned.
+- **Give the role the refusal right explicitly**, in the prompt. `hardener` may refuse an exemption.
+  It may never grant itself one. Naming the flag makes that right easier to exercise, not harder. A
+  role that re-tests the claims and cannot falsify them has produced evidence, not a rubber stamp.
+- **Record the skip as a risk acceptance**, never as a predicate discharge, in the handoff and in the
+  tag. The two read identically a month later unless the difference is written down.
+
+**Give the role the technical claims to re-test rather than to inherit.** On that slice, `hardener`
+proved the `src/` diff comment-only by emitting both files through `tsc --removeComments` and diffing
+the output, which is stronger than any path predicate. It then checked the emitted text no longer
+contained the changed string, closing the "identical for the wrong reason" hole. That evidence exists
+because the prompt asked for falsification rather than confirmation.
+
+## `product` VERIFY does not run on a slice with no behaviour change
+
+The cycle says `product` opens and closes every slice. **VERIFY is a black-box check through the real
+UI, so a slice that changes no behaviour gives it nothing to verify.** Ruled by the user on
+`lint-jsdoc-with-vale`, a documentation and tooling slice whose only `src/` changes were comments.
+
+**Demonstrate it rather than asserting it**, the same way the comment-only mutation exemption is
+claimed per diff. Check three inputs: `features/*.feature`, `features/steps/*.ts`, and whether any
+`src/` change is non-comment. All three empty means a black-box pass has nothing to see.
+
+Handle one consequence rather than skipping it silently. **Merge step 8 carries the
+acceptance-mutation figure forward from `product`'s VERIFY handoff.** There is now no such handoff.
+Say in the merge record that the step is moot, and why. A step with no output reads as a step nobody
+ran.
+
 ## When a slice exposes a missing guardrail, amend the role that should have caught it
 
 Treat the gap as part of the work. The worked example: a test file had grown to 38 tests and 19.88s unnoticed. That happened because `cleaner` watched mutant _count_ as a split signal, and nobody watched test _runtime_ — the other factor in mutation cost. Fixing only the symptom leaves the blind spot.

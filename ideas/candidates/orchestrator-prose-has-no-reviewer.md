@@ -69,6 +69,30 @@ Options, none obviously right:
 `.claude/agents/architect.md` or `hardener.md`, `.claude/agents/articles/workflow.md`, possibly
 `scripts/agent-doc-check/`, and CLAUDE.md's own routing test.
 
+## Two more instances, from `lint-jsdoc-with-vale`
+
+Both were orchestrator-authored, both reached a permanent file, and both were caught downstream by
+something that happened to point at them rather than by a reviewer.
+
+**A ratified ruling was contradicted and its negation written into three files.** The slice's own
+design pass had ruled that Vale scope is decided **per rule, not per slice**, and that ruling lived
+only in the slice's candidate file. The orchestrating session did not read it, widened all four rules
+uniformly, and wrote the opposite rule into `prose-linting.md`, `architect.md` and `.vale.ini`. The
+candidate was scheduled for deletion at landing, so the negation would have survived alone. `architect`
+caught it only because the orchestrator later mentioned the file in an unrelated question.
+
+**A checker reproduced the defect it was written to prevent.** `scripts/prose-lint/run.sh` exists to
+make a Vale run that **cannot lint** fail loudly instead of reporting a clean zero. Its first version
+discarded `xargs`'s exit status, so a run that could not lint printed its error and still closed with
+`A zero above is a measured zero`, exit 0 — the second entry on the confident-zero list the script
+was written against. `hardener` found it at the gate.
+
+**What both have in common** is the argument for this candidate. Neither is a typo or a style lapse,
+so a lint pass would not have caught either. Both are a claim that is wrong, written confidently, by
+the one participant whose output nothing reviews before `hardener`. And in the first case `hardener`
+would not have caught it either: the file was consistent with itself, and only a reader holding the
+prior ruling could see the contradiction.
+
 ## Open questions
 
 - **Is this a documentation problem or an orchestrator problem?** Every entry above was written by the
