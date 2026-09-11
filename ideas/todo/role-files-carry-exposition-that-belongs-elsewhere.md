@@ -177,21 +177,30 @@ handoffs and should stay.
 
 ### 2d. How to stop the third kind coming back
 
-Three options, cheapest first. **None is chosen here; this entry records the analysis so the ruling is
-made on it.**
+**Ruled by the user on 2026-09-11: adopt the first two. The third is too much.**
 
-- **Attribute nothing — say "not yours".** A prohibition needs no owner. "Never edit `rules/*.yml`"
+- **ADOPTED — attribute nothing; say "not yours".** A prohibition needs no owner. "Never edit `rules/*.yml`"
   carries the whole instruction; "those are `architect`'s" adds only a fact that can rot. This costs
   nothing, needs no tooling, and removes most of the surface. Where a name is genuinely needed, prefer
   the cycle position to the name: "later roles in the cycle" survives a rename.
-- **A single source for anything two files must agree on.** The threshold that drifted — mutant count
+- **ADOPTED — a single source for anything two files must agree on.** The threshold that drifted — mutant count
   for a split — belongs in one place both roles read, which is an article rather than a role file.
   `engineering.md` already carries the shared-concern rule and says duplicates drift out of sync.
-- **A checker, on `agent-doc-check`'s check 4 precedent.** That check does not ban the cycle string from
-  appearing in many files; it asserts every copy is byte-identical, builds its role vocabulary from the
-  roles that exist, and fails loudly when it finds none at all. A check on the same shape — every claim
-  about role X appears in X's own file — needs a machine-readable way to tell a description from a
-  prohibition, and nobody has shown that is decidable. **Do not reach for this before the first two.**
+- **DECLINED — a checker on `agent-doc-check`'s check 4 precedent.** The shape exists: check 4 does not
+  ban the cycle string from many files, it asserts every copy is byte-identical and fails loudly when it
+  finds none at all. **The user declined it on 2026-09-11 as too much machinery**, and the technical
+  objection agrees: such a check needs a machine-readable way to tell a description from a prohibition,
+  and nobody has shown that is decidable. A checker that cannot make that distinction either passes
+  everything or flags every legitimate prohibition.
+
+  **Re-open only with new evidence**, and the evidence would be a drifted description that survived both
+  rules above — not an argument that one could.
+
+**Why the two adopted rules are sufficient without the third, stated so the decline is defensible.** Rule
+one removes the surface rather than policing it: a prohibition that names no owner has nothing to drift
+against. Rule two moves what genuinely must agree into one file both roles read, which is the
+single-source fix the repo already applies everywhere else. What remains after both is a description
+that someone wrote deliberately in the wrong place, and that is a review finding rather than a gate.
 
 **What makes the third kind dangerous is worth stating once.** Neither reader of a drifted description
 is the role it describes. `coder` reads a claim about `cleaner` and has no way to check it; `cleaner`

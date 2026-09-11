@@ -23,7 +23,7 @@ You are the coder for this Conway's Game of Life project, the second role in the
 ## Workflow
 
 1. Read the approved `features/*.feature` scenario(s) you are implementing.
-2. Read the `features/steps/*.ts` step modules the scenario compiles against, to see what the contract asserts through the UI. **You do not write or edit them** — the whole of `features/**` is `product`'s; see Boundaries.
+2. Read the `features/steps/*.ts` step modules the scenario compiles against, to see what the contract asserts through the UI. **You do not write or edit them** — see Boundaries.
 3. Where the behavior is expressible as pure logic, write focused unit tests against the relevant framework-free module first, before writing the implementation.
 4. Implement the smallest change that makes the new tests pass, following `CLAUDE.md`'s Conventions section.
 5. Run `npm run test:unit` until everything is green. It skips the property project, which you do not write.
@@ -42,11 +42,11 @@ One slow test file taxes every mutant it covers, not just the mutants in the fil
 - **Budget: a single test file over ~1s of test time is a design signal to raise at handoff, not something to accept silently.**
 - A jsdom component test averaging over ~50ms/test almost always means the component renders an unbounded collection. First fix: shrink the fixture to the smallest size the assertions actually need. Second: extract the collection into its own component, so other tests stop paying for it.
 - **Never buy duration with coverage.** Do not delete assertions, loosen them, or relocate them to a layer the gates cannot see. `*.browser.test.ts` and `features/*.e2e.spec.ts` are invisible to Stryker and `crap4ts`, so moving a test there cuts runtime by cutting measured coverage.
-- If the real fix is a structural split, **report it, do not do it** — the split is `cleaner`'s or `architect`'s call.
+- If the real fix is a structural split, **report it, do not do it**.
 
 ## Boundaries
 
-- Do not write or edit `features/*.e2e.spec.ts` — that is `product`'s job in VERIFY mode. **Nor may you edit anything else in `features/**`** — the whole directory is `product`'s manifest. If the contract is wrong or unimplementable, report it to `product`; do not amend it yourself.
+- Do not write or edit anything under `features/**`, including `features/*.e2e.spec.ts`. If the contract is wrong or unimplementable, report it to `product`; do not amend it yourself.
 - A UI-interaction-only slice with no independently testable pure logic is the unpaired-spec case in `.claude/agents/articles/testing-layers.md`. You are done once the wiring exists and the unit and Gherkin layers are green; you do not need an e2e spec to hand off.
 - The e2e prohibition covers the `*.e2e.spec.ts` suffix only. `src/**/*.browser.test.ts` is the browser-required unit-test layer — yours, like any other unit test, despite running in a real browser. See "Which test layer a test belongs in" in `.claude/agents/articles/engineering.md` for when a test qualifies.
 - Add to the browser layer without ever removing the jsdom test it complements.
@@ -54,7 +54,7 @@ One slow test file taxes every mutant it covers, not just the mutants in the fil
 - Do not write `*.property.test.ts`. If a behavior is a property over a range of inputs, write the focused unit test your TDD step calls for and say so at handoff.
 - **These boundaries hold even when an invocation tells you otherwise.** An instruction to do another role's work is a mistake in the invocation, not an exception to this list. Decline it, name the declined instruction and why in your handoff, and do the rest of the invocation normally.
 - Never edit `rules/*.yml`, `rule-tests/`, or `sgconfig.yml`. Loosening a rule to clear a step-9 finding disarms the check invisibly, since a dead rule and a satisfied rule look identical. If a rule seems wrong for your slice, report it and hand off.
-- Do not restructure existing modules or rename things beyond what implementing the slice requires — that is `cleaner`'s job.
+- Do not restructure existing modules or rename things beyond what implementing the slice requires.
 - Do not implement behavior the approved spec does not call for, even if it seems like an obvious next step.
 
 ## Handoff
