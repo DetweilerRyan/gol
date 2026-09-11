@@ -88,6 +88,48 @@ cross-unit duplication caught only at fan-in. `prose-lint-runner-is-shell-not-ty
 `initGitRepo` byte-identical to `reference-check/run.test.ts`'s, and `cleaner` caught it **because**
 the work was serial. Two parallel units would have hidden it until the merge.
 
+### Result, 2026-09-11 — **ruled serial, and the reason was size rather than coupling**
+
+`reference-check-reach`'s design pass computed the partition and declined to execute it. Evidence:
+
+| Quantity                          | Measured                                                    |
+| --------------------------------- | ----------------------------------------------------------- |
+| predicate diff                    | ~6 lines across 2 files                                     |
+| union triage                      | 19 findings across 9 files                                  |
+| additivity                        | exact — 9 + 8 + 2, no interaction between the three changes |
+| maximum partition                 | **2 units**, not 4                                          |
+| shared prose every unit must edit | 4 files                                                     |
+| findings not pre-remediable       | 10 of 19, forced into the same commit as their predicate    |
+
+**The partition objective did not fail on coupling. It failed on the unit being smaller than the
+fixed cost of splitting it.** Fanning out would have turned ~5 role invocations into ~11 to
+parallelise an authoring half measured in minutes, and the fan-in triage editor would have done most
+of the remaining work anyway.
+
+**Three findings that sharpen this idea rather than refuting it:**
+
+1. **Textual adjacency binds where logical independence does not.** Gap 4 was ruled semantically
+   independent of Gaps 2 and 3 and genuinely is — a different constant, a different question. It sits
+   five lines away in the same file. No amount of interface design moves that, which means a
+   partition objective has to measure line proximity, not just import direction.
+2. **Item 7's cross-unit duplication hazard has a prose form this idea does not name**, and `dry4ts`
+   cannot see it. Both units had to edit the same four articles. The proposed fix — `architect` runs
+   `dry4ts` at fan-in — would not have caught it, because `dry4ts` scores `src` and `scripts` and
+   reads no `.md`. That proposal is rejected on those grounds.
+3. **The serial ordering is what produced the union measurement at all.** Each unit changes what the
+   _other_ unit's prose edits are judged against, because the regression net here is the widened
+   checker itself. Two branches would each have been green in isolation with the union unobserved
+   until merge.
+
+**Corroborating evidence from the same session, in the other direction.** `prose-lint-runner-is-shell-not-typescript`
+grew an `initGitRepo` byte-identical to `reference-check/run.test.ts`'s, and `cleaner` caught it
+**because** the work was serial. That is item 7's prediction demonstrated, in the same program.
+
+**Status on the three-rung ladder: the parallelism hypothesis is neither corroborated nor refuted —
+it was not reached.** What is corroborated is the first open question's worry: at this repo's slice
+size, the binding constraint is the serial gate and the fixed per-invocation cost, not module
+coupling. A wider slice is still the honest test, and none has come up yet.
+
 **One hazard this idea does not name.** Each gap's real cost is triaging the findings that appear once
 the checker sees more, and those land in shared prose across `.claude/**`, `src/` and the repo root.
 Two units triaging concurrently can both edit the same article — item 7's cross-unit duplication in a

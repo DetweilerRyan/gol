@@ -73,20 +73,19 @@ kind to unwind. Ordering here is cheap; re-remediating is not.
 Nothing in the table below changes a rule. Each one closes a gap that would otherwise silently weaken
 every later wave.
 
-| Slice                                                 | Why first                                                                                                                                                                                                                                                                                                                                                                                                                             |
-| ----------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `reference-check-reach`                               | **Bundles four changes to one program.** 15 unchecked citations in the linter's own directory; the leading-dot discard that hides the mandated `@see {@link ./x.rationale.md}` form; the same discard hiding every dot directory; and the extension alternation that omits `sh` and `json` entirely. Two of the four edit the same predicate and a third sits five lines from it, so the achievable partition is two units, not four. |
-| `vale-styles-is-reachable-by-vitests-default-include` | The new directory is absent from `vite.config.ts`'s `sharedExclude`. Inert today, and it arms the moment anyone allowlists `vale-styles/**` for mutation invariance — the fail-open pairing that allowlist is built against.                                                                                                                                                                                                          |
-| Decide whether `prose-lint` gets a pipeline home      | **Not filed.** A gate change, so it needs a ruling: a `hardener` stage, a role trigger, or deliberately neither. Answer before Wave 2 doubles the rule count.                                                                                                                                                                                                                                                                         |
-| Review `prose-linting.md` end to end                  | It now owns the instruction-versus-explanation split, so an error in it propagates into everything written afterwards. Unreviewed by anyone but its author since that move.                                                                                                                                                                                                                                                           |
-| Review `doc-comments.md` against it                   | The two meet at the hover boundary and must agree. Both are read by every author.                                                                                                                                                                                                                                                                                                                                                     |
-| Reconcile the four `JsDoc` rules with both articles   | The rules mechanise `doc-comments.md` rules 2, 4 and 5. A rule and its article can disagree in silence, and the rule wins.                                                                                                                                                                                                                                                                                                            |
-| Settle `prose-linting.md`'s size                      | Measured against `main` it grew 27 percent across this slice. Needs a target from the user, not an invented one.                                                                                                                                                                                                                                                                                                                      |
-| `rename-prose-linting-to-match-its-job`               | The article's job is now wider than its name. Cheap, and it is the file every later wave is written against.                                                                                                                                                                                                                                                                                                                          |
-| `orchestrator-prose-has-no-reviewer`                  | **Process, not tooling.** Every artifact in the cycle has a reviewer upstream of `hardener` except orchestrator-authored prose. This slice demonstrated the cost twice.                                                                                                                                                                                                                                                               |
-| `a-clean-lint-is-not-evidence-a-block-hovers`         | oxlint sees a JSDoc tag only at line start; TypeScript's hover parser sees any whitespace-preceded `@`. A block passes `npm run lint` while hovering broken, and the `JsDoc` rules lint prose inside blocks that may not hover at all.                                                                                                                                                                                                |
-| `mechanise-prose-soundness-with-a-style-package`      | Survey `Std`, `Google` and `Microsoft`. The gate's own standard is soundness enforced by tooling rather than by prose someone remembers, and six rules enforce a fraction of what the articles ask for. Wholesale `Std` is already declined; the per-rule and the two unexamined packages are not.                                                                                                                                    |
-| `rename-the-rationale-tier`                           | The tier is named for one of the four things it holds, which invites a misfile in one direction. Sequence late in Wave 1, after the contents settle, and consider landing it with the rename above.                                                                                                                                                                                                                                   |
+| Slice                                                 | Why first                                                                                                                                                                                                                                                                                          |
+| ----------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `vale-styles-is-reachable-by-vitests-default-include` | The new directory is absent from `vite.config.ts`'s `sharedExclude`. Inert today, and it arms the moment anyone allowlists `vale-styles/**` for mutation invariance — the fail-open pairing that allowlist is built against.                                                                       |
+| Decide whether `prose-lint` gets a pipeline home      | **Not filed.** A gate change, so it needs a ruling: a `hardener` stage, a role trigger, or deliberately neither. Answer before Wave 2 doubles the rule count.                                                                                                                                      |
+| Review `prose-linting.md` end to end                  | It now owns the instruction-versus-explanation split, so an error in it propagates into everything written afterwards. Unreviewed by anyone but its author since that move.                                                                                                                        |
+| Review `doc-comments.md` against it                   | The two meet at the hover boundary and must agree. Both are read by every author.                                                                                                                                                                                                                  |
+| Reconcile the four `JsDoc` rules with both articles   | The rules mechanise `doc-comments.md` rules 2, 4 and 5. A rule and its article can disagree in silence, and the rule wins.                                                                                                                                                                         |
+| Settle `prose-linting.md`'s size                      | Measured against `main` it grew 27 percent across this slice. Needs a target from the user, not an invented one.                                                                                                                                                                                   |
+| `rename-prose-linting-to-match-its-job`               | The article's job is now wider than its name. Cheap, and it is the file every later wave is written against.                                                                                                                                                                                       |
+| `orchestrator-prose-has-no-reviewer`                  | **Process, not tooling.** Every artifact in the cycle has a reviewer upstream of `hardener` except orchestrator-authored prose. This slice demonstrated the cost twice.                                                                                                                            |
+| `a-clean-lint-is-not-evidence-a-block-hovers`         | oxlint sees a JSDoc tag only at line start; TypeScript's hover parser sees any whitespace-preceded `@`. A block passes `npm run lint` while hovering broken, and the `JsDoc` rules lint prose inside blocks that may not hover at all.                                                             |
+| `mechanise-prose-soundness-with-a-style-package`      | Survey `Std`, `Google` and `Microsoft`. The gate's own standard is soundness enforced by tooling rather than by prose someone remembers, and six rules enforce a fraction of what the articles ask for. Wholesale `Std` is already declined; the per-rule and the two unexamined packages are not. |
+| `rename-the-rationale-tier`                           | The tier is named for one of the four things it holds, which invites a misfile in one direction. Sequence late in Wave 1, after the contents settle, and consider landing it with the rename above.                                                                                                |
 
 #### In flight — the three foundation lanes, promoted 2026-09-11
 
@@ -100,7 +99,7 @@ argument. **It is prerequisite to no Wave 1 row.** It defuses a hazard that arms
 allowlists `vale-styles/**`, and it earns a lane by being free — `vite.config.ts` alone, no overlap
 with the other two.
 
-**C and A have landed** (`slice/vale-styles-is-reachable-by-vitests-default-include`, `slice/prose-lint-runner-is-shell-not-typescript`); B remains. Land order was C then A then B: the vitest exclusion first because it is one line, then the runner
+**All three foundation lanes have landed** — `slice/vale-styles-is-reachable-by-vitests-default-include`, `slice/prose-lint-runner-is-shell-not-typescript`, `slice/reference-check-reach`. Land order was C then A then B: the vitest exclusion first because it is one line, then the runner
 port, then the checker bundle — so the widened scan reaches the ported `run.ts` rather than the
 reverse. Whichever of the port and the bundle lands second inherits the other's new scan surface at
 merge step 3, which is expected rather than a defect. The port also moots one of the bundle's open
@@ -109,6 +108,29 @@ questions, since it removes the repo's only `.sh`.
 All three re-arm the full mutation run by construction: `scripts/**` and `vite.config.ts` are both on
 the mutation-invariance **absent** list. Three lanes therefore cost three `test:mutation:full` runs at
 step 3. That is the price of the concurrency, not an argument against it.
+
+#### Wave 1's tooling half is complete. Its process half is not.
+
+The three Complication bullets at the top of this file are all closed, and each was closed by
+measurement rather than by the change alone:
+
+- **The linter's own directory is now linted by the reference checker.** `vale-styles/` joined the
+  source prefixes, and the doc surface became every tracked `.md` outside `ideas/` rather than two
+  files named exactly.
+- **The runner is TypeScript and testable**, reached by `test:scripts`, `crap4ts:scripts`,
+  `dry4ts:scripts`, `test:mutation:scripts` and `reference-check`.
+- **Nothing in the pipeline runs the linter** — still true. That row is unchanged and is the one
+  foundation fact these three slices did **not** close. It is the unfiled pipeline-home decision
+  below.
+
+**What remains in Wave 1 is the part no slice can discharge:** the article reviews, the `JsDoc` rule
+reconciliation, the size question, the two renames, and `orchestrator-prose-has-no-reviewer`. Those
+are judgement, and the gate at the top of this file says the user closes them.
+
+**One thing the three slices changed about the rest of Wave 1.** The renames are now cheaper and
+safer than when they were filed: `reference-check` reaches every tracked `.md`, so a rename that
+strands a citation reds the gate instead of passing silently. That was the argument for sequencing
+them after the tooling, and it held.
 
 ### Wave 2 — run the style over the surface it was built for
 
