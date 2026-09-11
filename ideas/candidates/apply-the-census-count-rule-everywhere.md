@@ -15,6 +15,36 @@ Two files are already swept, by the slices that produced the rule. `testing-laye
 `quality-tooling.md` ten. Every other article, `CLAUDE.md`, and the five role files carry their censuses
 untouched.
 
+## The user's sharpening, 2026-09-11 — and it supplies the priority test this entry lacked
+
+**Ruled: every fact recorded in a role file or an article should be re-evaluated and rewritten so that
+it does not need modifying when agents perform their usual work.** That is a stronger standard than
+"drop a census numeral", and it reorders this sweep.
+
+**The test is: does a normal slice move this fact?** A normal slice adds a module, a hook, a component
+or a test, and touches `src/`. It does not add a Vale rule, split an article, or change the role
+roster.
+
+So the counts to fix first are the ones a normal slice moves:
+
+- `CLAUDE.md`'s **"Twenty framework-free modules"**, **"Sixteen hooks"**, **"Thirteen unit-tested
+  components"** — a slice that adds one module falsifies all the sentences that quote them.
+- `state-flow.rationale.md`'s **"sixteen hooks"** and **"fifteen of sixteen"**.
+- `ast-grep-rules.rationale.md`'s **"all sixteen hooks are `src/hooks/*.ts`"**.
+
+And the counts that can wait, because only unusual work moves them: the role count (five), the rule
+count (31), the article count (ten), the program count (nine). **A slice that changes those is a slice
+about the pipeline itself**, and whoever runs it is already editing the document that carries the
+count.
+
+**The distinction matters more than the sweep order.** A count only unusual work can move is a count
+whose editor is already in the file. A count normal work moves is a count nobody is looking at when it
+goes stale — and that is the one that rots.
+
+**Worth recording plainly: almost nothing in the 2026-09-11 session was usual work.** Three tooling
+slices, a documentation strip, a spike and a model change. The corpus's counts survived because nobody
+added a module for a day, not because they are stable.
+
 ## Complication
 
 **The rule is live and the corpus does not follow it.** That is the same failure the repo already names for
