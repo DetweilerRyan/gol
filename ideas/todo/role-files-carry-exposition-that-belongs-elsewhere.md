@@ -94,10 +94,40 @@ a sentence whose whole content is that an argument exists elsewhere.
 `coder.md`'s was removed when this was ruled. **The other 20 are follow-up work**, one per role file,
 and each strip clears its own.
 
-**This binds the other three sidecar tiers differently, and do not over-apply it.** An article may
-point at its own sidecar, and `CLAUDE.md`'s branches 4 and 5 still mandate the `@see` form for a
-module sidecar. The rule is specific to a role file, because a role file's reader is the only one
-who provably never needs the argument.
+**The rule widened on the same day it was made, and the wider form is the one that binds.**
+
+### 3a. An article never points at its own sidecar either
+
+**Ruled by the user on 2026-09-11, extending 3.** Reading an article is for instruction that guides
+execution. An agent in a normal pipeline has no reason to read a `.rationale.md` sidecar for an
+article, so the article carries no pointer to one.
+
+**Measured 2026-09-11: 64 pointers across nine articles.** `engineering.md` 11;
+`acceptance-mutation.md`, `quality-tooling.md` and `testing-layers.md` 9 each; `doc-comments.md` 8;
+`mutation-testing.md` and `state-flow.md` 7 each; `prose-linting.md` 3; `ast-grep-rules.md` 1.
+
+**Module sidecars are the one tier that keeps its pointer**, and the distinction is what a reader is
+holding. A role or an article sidecar argues about a rule, and the reader is following the rule
+rather than changing it. A module sidecar belongs to whoever is **changing that module** — the
+reader has the call site in front of them and the pointer is how they reach the reasoning. So
+`CLAUDE.md`'s branches 4 and 5 keep the mandated `@see {@link ./<name>.rationale.md}` form.
+
+### 3b. Examine every instruction that has an agent updating an article
+
+**Directed by the user on 2026-09-11.** Agents should not be changing articles. Three places instruct
+it today and each needs a ruling rather than a presumption:
+
+- `cleaner.md` and `architect.md`, identically worded: a file-list mention made stale by the change
+  "is yours to correct in the same pass ... a factual fix only; never edit another role's scope or
+  workflow."
+- `CLAUDE.md`'s module-map paragraph: `cleaner` and `architect` "are expected to update both that map
+  and the article behind it" after a behaviour-preserving split.
+
+**Note what the existing wording already forbids before judging it.** Both are scoped to keeping a
+file list accurate, and both explicitly bar editing scope or workflow. So the question is not whether
+agents rewrite guidance — they are already told not to. It is whether a factual file-list correction
+is a fourth thing an agent may do to an article, or whether even that belongs to the seat that owns
+the document. Answer it; do not leave the presumption standing.
 
 ### 3. Keep the one-clause why
 
