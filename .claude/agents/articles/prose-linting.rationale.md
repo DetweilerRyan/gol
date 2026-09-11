@@ -904,3 +904,69 @@ above 20 **counted** words, and Vale's count ran one below the raw word count on
 21-word item is silent. And a comment-scoped `existence` rule fires with no `[formats]` mapping while
 a `scope: sentence` rule does not, so a single-rule probe cannot tell a missing mapping from a working
 one. Each probe needed its own control before its zero meant anything.
+
+### `extends:` is real style inheritance, and a child's key replaces the parent's
+
+A rule may name another style's rule as its parent. The design pass measured the mechanism and
+declined to use it; nothing in the tree uses it today, and the `extends: existence` lines in
+`vale-styles/JsDoc/` name a rule **type** rather than a parent rule.
+
+Re-measured on Vale 3.20.0, 2026-09-10:
+
+| probe                                                        | result                                                                       |
+| ------------------------------------------------------------ | ---------------------------------------------------------------------------- |
+| a child naming `STE.SentenceLength` and adding only `level:` | fires, reporting under its **own** name — so a child is a rule, not an alias |
+| a child naming a style that is not on the search path        | **E201, exit 2**, quoting the offending line, whole run aborts               |
+
+**The hazard, and it is the reason inheritance is not free.** A child key **replaces** the parent's,
+it does not merge. Measured with one `.ts` file holding a two-sentence hover, each sentence about
+eighteen words and so both under the 25-word cap:
+
+| the child rule                             | result                                  |
+| ------------------------------------------ | --------------------------------------- |
+| scope inherited from the parent            | silent, as both sentences pass          |
+| the same child, plus a comment-block scope | **one finding, "Sentence is 39 words"** |
+
+Adding the comment scope destroyed the parent's `scope: sentence`, so the counter ran over the whole
+block while the message still said "Sentence". That is not a confident zero. It is a **confident wrong
+number**, which is worse, and it is the shape a JSDoc sentence-length rule would take on the obvious
+first attempt.
+
+**This first read as a refutation**, because the first fixture held one long sentence in one block,
+where per-sentence and per-block counts coincide. A single-sentence probe cannot discriminate.
+
+**The E201 row is what rules `extends:` out of this repo's style**, independently of any parent's
+merits. A tracked rule with an inherited parent makes a synced `.vale/` a hard precondition for
+loading **any** rule, and the fixture harness exists precisely because it needs none: it runs in a
+fresh worktree before `vale sync`.
+
+### `Packages = Std` was measured and declined, 2026-09-10
+
+`vale-cli/Std` is 14 rules in six namespaced directories, covering abbreviations, date and time
+formats, two grammar rules, three punctuation rules, readability, and four usage rules. It is not
+installed here and no `Packages` line names it.
+
+Four reasons, and the first three do not rot:
+
+1. **Nothing in it speaks to this style's premise.** The repo's own rules encode `doc-comments.md`
+   invariants — interface altitude, opener form, tag vocabulary, dated-record vocabulary. Its 14 are
+   general English style, so there is no parent worth inheriting from.
+2. **Its `Contractions` rule inverts the house rule.** It is a `substitution` rule from Microsoft
+   style, swapping `are not` to `aren't` and `cannot` to `can't` — the opposite of what
+   `STE.Contractions` asks for. A wholesale `BasedOnStyles = Std` enables it.
+3. **All 14 ship at `suggestion`** against this repo's `MinAlertLevel = warning`. Enabled as shipped
+   they are silent and look enabled. Re-levelling each by name is 14 lines, so declining the package
+   is cheaper than adopting it even before anyone reads a finding.
+4. **The `.vale/` precondition above**, which any `extends:` into it would create.
+
+The design pass ran all 14 over its own corpus at `MinAlertLevel = suggestion`. **Those counts are
+superseded and are not restated here**, because that corpus was defined by a command that no longer
+describes anything in this tree. What survives is the ranking it produced, which is a fact about the
+rules rather than about the corpus: two readability rules duplicate `STE` equivalents and count
+differently, an acronym rule fires on `AST` throughout, and the remainder either invert the house rule
+or fire on legitimate technical prose.
+
+**Two were declined on the landing constraint rather than on merit** — a Latin-abbreviation rule and
+two first-person usage rules. Each would land a backlog nobody has triaged, which is what that
+constraint forbids. They stay legitimate candidates for a slice that pairs the rule with its
+remediation.

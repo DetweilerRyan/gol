@@ -135,6 +135,16 @@ Also read `product`'s **ARIA reach-arounds** — the places its specs had to ass
   `.claude/agents/articles/prose-linting.md` before authoring one; it carries the one-command fixture
   run.
 
+  **Do not reach for `extends:` to inherit another style's rule.** It works, and it has two traps a
+  passing run hides. First, a child's key **replaces** the parent's rather than merging. Add a
+  comment scope to a child of a sentence-scoped rule and you destroy `scope: sentence`. The counter
+  then measures whole blocks, under a message that still says "Sentence".
+
+  Second, a parent that is
+  not on the search path aborts the **whole run** at E201. That makes a synced `.vale/` a
+  precondition for loading every rule, including the fixtures that deliberately need none.
+  `prose-linting.rationale.md` carries both measurements.
+
   **A silent good fixture proves nothing on its own.** Loosen the matcher in a scratch copy of the
   style and confirm the fixture then reports. A near-miss both versions ignore pins nothing.
 
