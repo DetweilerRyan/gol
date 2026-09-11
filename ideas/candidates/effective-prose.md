@@ -39,18 +39,49 @@ Those three are the epic's foundation, and none of them is the largest slice on 
 
 What order turns twenty entries into a sequence where each slice makes the next one cheaper?
 
-## Answer — four waves
+## Answer — four waves, with the first one held as a gate
 
-### Wave 1 — make the tooling sound before extending it
+**Read this before the waves.** Wave 1 is not merely first; it is a **hold**. Work does not proceed to
+Wave 2 until the user judges the tooling **and** the prose surface sound — `prose-linting.md`,
+`doc-comments.md`, and the Vale rules that mechanise them. That call belongs to the user and is made
+by judgement, not by a passing gate.
 
-Nothing here changes a rule. Each one closes a gap that would otherwise silently weaken every later
-wave.
+### Wave 1 — make the tooling AND the process sound before extending either
 
-| Slice                                            | Why first                                                                                                                                                     |
-| ------------------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `prose-lint-runner-is-shell-not-typescript`      | Rewrite in TypeScript. Buys five gates at once, and makes the runner testable at all. `architect` ruled it a defect.                                          |
-| `reference-check-does-not-reach-vale-styles`     | 15 unchecked citations in the linter's own directory. Blocks nothing formally; undermines everything informally.                                              |
-| Decide whether `prose-lint` gets a pipeline home | **Not filed.** A gate change, so it needs a ruling: a `hardener` stage, a role trigger, or deliberately neither. Answer before Wave 2 doubles the rule count. |
+**Wave 1 is a gate, not a phase. Nothing in Waves 2, 3 or 4 starts until the user rules Wave 1
+complete.** That ruling is the user's alone. It is a judgement about whether the surface is sound, not
+a checklist any gate can compute, so no agent may declare it and no green run substitutes for it.
+
+**Soundness here covers the process, not only the programs.** Wave 1 is complete when all three of
+these are true together:
+
+- **The tooling runs, is tested, and is reachable by the gates that police the rest of the repo.**
+- **`prose-linting.md` is instruction, and says correctly where a sentence goes.** It is now the home
+  of the instruction-versus-explanation split, so an error in it propagates into every article and
+  role file written afterwards.
+- **`doc-comments.md` is right about what belongs in a hover**, and agrees with `prose-linting.md`
+  where the two meet. These are the two files every author consults, and the `JsDoc` rules mechanise
+  `doc-comments.md`'s own rules 2, 4 and 5 — so a rule and its article can disagree silently.
+- **The Vale rules match what those two articles actually say.** A rule enforcing a superseded
+  sentence is worse than no rule: it is confidently wrong and it is mechanical.
+
+**The reason this is a gate rather than a preference.** Waves 2 to 4 write rules and remediate at
+scale against whatever the articles say at that moment. Every error still present in the instruction
+surface gets multiplied by the volume of work done under it, and mechanised errors are the expensive
+kind to unwind. Ordering here is cheap; re-remediating is not.
+
+Nothing in the table below changes a rule. Each one closes a gap that would otherwise silently weaken
+every later wave.
+
+| Slice                                               | Why first                                                                                                                                                                   |
+| --------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `prose-lint-runner-is-shell-not-typescript`         | Rewrite in TypeScript. Buys five gates at once, and makes the runner testable at all. `architect` ruled it a defect.                                                        |
+| `reference-check-does-not-reach-vale-styles`        | 15 unchecked citations in the linter's own directory. Blocks nothing formally; undermines everything informally.                                                            |
+| Decide whether `prose-lint` gets a pipeline home    | **Not filed.** A gate change, so it needs a ruling: a `hardener` stage, a role trigger, or deliberately neither. Answer before Wave 2 doubles the rule count.               |
+| Review `prose-linting.md` end to end                | It now owns the instruction-versus-explanation split, so an error in it propagates into everything written afterwards. Unreviewed by anyone but its author since that move. |
+| Review `doc-comments.md` against it                 | The two meet at the hover boundary and must agree. Both are read by every author.                                                                                           |
+| Reconcile the four `JsDoc` rules with both articles | The rules mechanise `doc-comments.md` rules 2, 4 and 5. A rule and its article can disagree in silence, and the rule wins.                                                  |
+| Settle `prose-linting.md`'s size                    | Measured against `main` it grew 27 percent across this slice. Needs a target from the user, not an invented one.                                                            |
 
 ### Wave 2 — run the style over the surface it was built for
 
@@ -108,9 +139,9 @@ construction; Waves 2 to 4 are mostly Markdown.
 
 ## Open questions
 
-- **Is the wave ordering right, or is `ste-over-jsdoc` urgent enough to jump Wave 1?** It is the
-  largest remediation and the one a reader most notices. The argument for holding it is that it would
-  land rules the pipeline still does not run.
+- **Ruled: `ste-over-jsdoc` does not jump Wave 1.** It is the largest remediation and the one a reader
+  most notices, which is exactly why it waits. Landing it against an unsound instruction surface
+  multiplies every error still in that surface, mechanically.
 - **Should `prose-lint` gate?** Three of six enabled rules are prompts needing judgement, so it cannot
   gate on findings. It can gate on _inability to lint_, which it already detects. That is a narrower
   proposal than it first sounds and it is unfiled.
