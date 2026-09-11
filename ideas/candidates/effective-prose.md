@@ -73,15 +73,19 @@ kind to unwind. Ordering here is cheap; re-remediating is not.
 Nothing in the table below changes a rule. Each one closes a gap that would otherwise silently weaken
 every later wave.
 
-| Slice                                               | Why first                                                                                                                                                                   |
-| --------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `prose-lint-runner-is-shell-not-typescript`         | Rewrite in TypeScript. Buys five gates at once, and makes the runner testable at all. `architect` ruled it a defect.                                                        |
-| `reference-check-does-not-reach-vale-styles`        | 15 unchecked citations in the linter's own directory. Blocks nothing formally; undermines everything informally.                                                            |
-| Decide whether `prose-lint` gets a pipeline home    | **Not filed.** A gate change, so it needs a ruling: a `hardener` stage, a role trigger, or deliberately neither. Answer before Wave 2 doubles the rule count.               |
-| Review `prose-linting.md` end to end                | It now owns the instruction-versus-explanation split, so an error in it propagates into everything written afterwards. Unreviewed by anyone but its author since that move. |
-| Review `doc-comments.md` against it                 | The two meet at the hover boundary and must agree. Both are read by every author.                                                                                           |
-| Reconcile the four `JsDoc` rules with both articles | The rules mechanise `doc-comments.md` rules 2, 4 and 5. A rule and its article can disagree in silence, and the rule wins.                                                  |
-| Settle `prose-linting.md`'s size                    | Measured against `main` it grew 27 percent across this slice. Needs a target from the user, not an invented one.                                                            |
+| Slice                                               | Why first                                                                                                                                                                                                                              |
+| --------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `prose-lint-runner-is-shell-not-typescript`         | Rewrite in TypeScript. Buys five gates at once, and makes the runner testable at all. `architect` ruled it a defect.                                                                                                                   |
+| `reference-check-does-not-reach-vale-styles`        | 15 unchecked citations in the linter's own directory. Blocks nothing formally; undermines everything informally.                                                                                                                       |
+| Decide whether `prose-lint` gets a pipeline home    | **Not filed.** A gate change, so it needs a ruling: a `hardener` stage, a role trigger, or deliberately neither. Answer before Wave 2 doubles the rule count.                                                                          |
+| Review `prose-linting.md` end to end                | It now owns the instruction-versus-explanation split, so an error in it propagates into everything written afterwards. Unreviewed by anyone but its author since that move.                                                            |
+| Review `doc-comments.md` against it                 | The two meet at the hover boundary and must agree. Both are read by every author.                                                                                                                                                      |
+| Reconcile the four `JsDoc` rules with both articles | The rules mechanise `doc-comments.md` rules 2, 4 and 5. A rule and its article can disagree in silence, and the rule wins.                                                                                                             |
+| Settle `prose-linting.md`'s size                    | Measured against `main` it grew 27 percent across this slice. Needs a target from the user, not an invented one.                                                                                                                       |
+| `rename-prose-linting-to-match-its-job`             | The article's job is now wider than its name. Cheap, and it is the file every later wave is written against.                                                                                                                           |
+| `orchestrator-prose-has-no-reviewer`                | **Process, not tooling.** Every artifact in the cycle has a reviewer upstream of `hardener` except orchestrator-authored prose. This slice demonstrated the cost twice.                                                                |
+| `a-clean-lint-is-not-evidence-a-block-hovers`       | oxlint sees a JSDoc tag only at line start; TypeScript's hover parser sees any whitespace-preceded `@`. A block passes `npm run lint` while hovering broken, and the `JsDoc` rules lint prose inside blocks that may not hover at all. |
+| `no-md-reference-is-checked-anywhere`               | The mandated `@see {@link ./x.rationale.md}` form is unverified, because a leading-dot token is discarded. That is the citation form the sidecar convention rests on.                                                                  |
 
 ### Wave 2 — run the style over the surface it was built for
 
@@ -95,8 +99,6 @@ every later wave.
 These share one shape: a convention exists, a checker enforces it, and the two stop at different
 boundaries.
 
-- `no-md-reference-is-checked-anywhere` — the mandated `@see {@link ./x.rationale.md}` form is
-  unverified, because a leading-dot token is discarded before any check
 - `reference-check-cannot-see-a-dot-path` — the same discard, from the other side
 - `the-convention-and-its-checker-stop-at-different-boundaries` — README files and module sidecars
 - `features-prose-still-carries-undated-claims` — the one directory no role pruned
@@ -119,11 +121,14 @@ an acceptable outcome; a measured refutation closes a question permanently.
 The doc-comment depth cluster shares vocabulary with this epic and answers a different question —
 _what belongs in a hover_, not _how prose is governed_. Sequence it separately:
 `implementation-comments-that-outgrow-their-line`, `hover-carries-detail-no-reader-asked-for`,
-`a-clean-lint-is-not-evidence-a-block-hovers`, `module-depth-as-a-token-ratio`,
+`module-depth-as-a-token-ratio`,
 `migrate-module-depth-out-of-the-articles`.
 
-`orchestrator-prose-has-no-reviewer` is also adjacent, and is the one entry that would have caught
-several defects this slice found late. It is a pipeline change rather than a prose change.
+Two entries were moved OUT of this group into Wave 1 on a second pass, and the reason is worth
+keeping. `a-clean-lint-is-not-evidence-a-block-hovers` reads as hover depth and is really rule
+soundness. `orchestrator-prose-has-no-reviewer` reads as a pipeline change and is really the process
+half of Wave 1's own gate. Both were misfiled by the shape of their titles rather than by what they
+prevent, which is the failure this epic's own framing warns about.
 
 ### Closed — do not re-open without new evidence
 
