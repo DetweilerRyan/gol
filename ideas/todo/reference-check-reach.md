@@ -61,7 +61,7 @@ and the triage is likely to be the bulk of the work rather than the predicate.
 **Gap 1 has its own unknown: the fixtures are deliberate bait.** They carry prose written to trip a
 Vale rule, and `SelfReferentialOpener.good.ts` contains sentences that exist only to be near-misses.
 Whether any of that reads as a filename-shaped token or a `<file>'s <symbol>` citation is unknown
-until the scan runs. The fixtures are also `.ts`/`.tsx` files that are *entirely* comment plus a stub
+until the scan runs. The fixtures are also `.ts`/`.tsx` files that are _entirely_ comment plus a stub
 declaration, a shape no other scanned directory has.
 
 **One hazard would make the gate depend on machine state.** A fresh worktree has no `.vale/` until
