@@ -178,7 +178,7 @@ Its layout is two levels and no more. **`scripts/<program>/` holds one program's
 
 **Nine programs, and only the four below gate.** Four of the other five are advisory — `scripts/acceptance-mutation/` (owned by `product`, not `hardener`), `scripts/gherkin-dry-checker/`, `scripts/halstead4ts/`, and `scripts/perf-report/` — and **`.claude/agents/articles/quality-tooling.md`** describes them. The acceptance-mutation runner has its own article, **`.claude/agents/articles/acceptance-mutation.md`**.
 
-The fifth non-gating program is `scripts/prose-lint/` (`npm run prose-lint`), which runs Vale over the tracked file list: it never fails on a finding, and fails when it cannot lint. **It is also the only program here that is not TypeScript, which `architect` ruled a defect on 2026-09-10.** A `.sh` reaches none of `test:scripts`, `crap4ts:scripts`, `dry4ts:scripts`, `test:mutation:scripts`, or `reference-check`'s comment scan. `ideas/candidates/prose-lint-runner-is-shell-not-typescript.md` carries the port.
+The fifth non-gating program is `scripts/prose-lint/` (`npm run prose-lint`), which runs Vale over the tracked file list: it never fails on a finding, and fails when it cannot lint. **It is also the only program here that is not TypeScript, which `architect` ruled a defect on 2026-09-10.** A `.sh` reaches none of `test:scripts`, `crap4ts:scripts`, `dry4ts:scripts`, `test:mutation:scripts`, or `reference-check`'s comment scan. `ideas/todo/prose-lint-runner-is-shell-not-typescript.md` carries the port.
 
 The four gating checkers keep their full entries here, because they are what polices `rules/`, `.claude/**`, the comment/doc-comment surface, and the mutation-invariance allowlist itself:
 

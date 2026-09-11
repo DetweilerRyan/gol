@@ -46,7 +46,7 @@ so a later reader does not re-derive the old sequencing and think it still
 holds:
 
 - The ownership slice **has no idea file**. It is a stated intent, and
-  `ideas/todo/intent-driven-layout.md` does not contain it. A gap that waits on
+  `ideas/candidates/intent-driven-layout.md` does not contain it. A gap that waits on
   an unfiled slice waits indefinitely.
 - The unwind cost is **one clause in one role file**, against an unbounded
   wait. If ownership does move later, the duty moves with it.
@@ -101,7 +101,7 @@ them depends on the ownership question.
    **A correction this candidate carried until now:** it described the
    highest-traffic modules as the `_shared` ones. There is no `_shared`
    directory under `features/`. That name comes from
-   `ideas/todo/intent-driven-layout.md`'s **proposed** tree, and it was read
+   `ideas/candidates/intent-driven-layout.md`'s **proposed** tree, and it was read
    back as a description of the live one.
 
 5. **Fix CLAUDE.md's pointer line for `doc-comments.md`**, which scopes the
@@ -114,7 +114,7 @@ them depends on the ownership question.
 `.claude/agents/articles/doc-comments.md`, `.claude/agents/product.md`,
 `.claude/agents/architect.md`, CLAUDE.md's Documentation map pointer, and
 `features/screenplay/*.ts` for the backfill.
-`ideas/todo/intent-driven-layout.md` needs its own correction regardless of
+`ideas/candidates/intent-driven-layout.md` needs its own correction regardless of
 this slice — see the open question below.
 
 Note the backfill would be the first time this convention is applied to code
@@ -146,7 +146,7 @@ genuinely about interfaces or was quietly shaped around `src/`'s idioms.
   convention has no purchase. Probably out, but the article should say so
   rather than leave it ambiguous, since the widened scope otherwise reads as
   covering the whole directory.
-- **`ideas/todo/intent-driven-layout.md` is stale where it matters here.** It
+- **`ideas/candidates/intent-driven-layout.md` is stale where it matters here.** It
   still describes `.feature` files as colocated with `.steps.test.ts(x)`, a
   layer `delete-step-test-layer` removed, and its target tree contains no
   `screenplay/` or `steps/` directory. It is no longer a blocker for this
