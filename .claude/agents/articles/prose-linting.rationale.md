@@ -940,13 +940,27 @@ merits. A tracked rule with an inherited parent makes a synced `.vale/` a hard p
 loading **any** rule, and the fixture harness exists precisely because it needs none: it runs in a
 fresh worktree before `vale sync`.
 
-### `Packages = Std` was measured and declined, 2026-09-10
+### `Packages = Std` was measured and declined for slice 1, 2026-09-10 -- RE-OPENED 2026-09-10
+
+**Status: re-opened by the user, same day, and the decline no longer binds.** Read what follows as the
+measurement that informed a slice-1 scoping decision, not as a closed decision. The re-evaluation is
+`ideas/candidates/mechanise-prose-soundness-with-a-style-package.md`, which widens it to `Google` and
+`Microsoft` as well.
+
+The four reasons below were written as reasons to decline. Three of them survive as **findings about
+the package**, and that is how to use them -- inputs to the new evaluation. Two argue for a shape
+rather than against adoption: reason 2 forbids enabling wholesale and says nothing about enabling a
+rule by name, and reason 3 is a configuration fact with a known fix whose cost was judged against
+slice 1's purchase rather than Wave 1's. Reason 1 is the substantive one and is the thing to test.
+
+The sentence "the first three do not rot" below was too strong. The _findings_ do not rot; the
+_ruling_ built on them did, within a day, because what the repo wanted from a style package changed.
 
 `vale-cli/Std` is 14 rules in six namespaced directories, covering abbreviations, date and time
 formats, two grammar rules, three punctuation rules, readability, and four usage rules. It is not
 installed here and no `Packages` line names it.
 
-Four reasons, and the first three do not rot:
+Four reasons as originally written, retained verbatim:
 
 1. **Nothing in it speaks to this style's premise.** The repo's own rules encode `doc-comments.md`
    invariants — interface altitude, opener form, tag vocabulary, dated-record vocabulary. Its 14 are

@@ -21,9 +21,10 @@ and `Microsoft` style packages in the same registry.
 
 ## Complication
 
-**`Std` has already been measured and declined, and this candidate must not re-open that.** The
-ruling is in `prose-linting.rationale.md` under "`Packages = Std` was measured and declined". Its
-first three reasons are recorded as not rotting:
+**`Std` was measured and declined for slice 1. The user re-opened that evaluation on 2026-09-10, so
+`Std` is fully in scope here.** What re-opens is the _ruling_, not the measurements under it. The
+three findings below are facts about the package and should be treated as inputs to a fresh
+evaluation rather than as reasons it is settled:
 
 1. Nothing in `Std` speaks to this style's premise — its 14 rules are general English style, and this
    repo's rules encode `doc-comments.md` invariants, so there is no parent worth inheriting from.
@@ -32,8 +33,21 @@ first three reasons are recorded as not rotting:
 3. All 14 ship at `suggestion` against this repo's `MinAlertLevel = warning`. Enabled as shipped they
    are **silent and look enabled**.
 
-**So the wholesale question is closed. Two narrower ones are not.**
+**None of those three is a reason not to look again, and two of them argue for a shape rather than
+against adoption.** Reason 2 says do not enable wholesale; it says nothing about enabling a rule by
+name. Reason 3 is a configuration fact with a known fix — re-levelling by name — which the ruling
+priced at 14 lines and judged not worth paying. That is a cost judgement, and a cost judgement is
+exactly the kind that changes when the thing it buys changes. Wave 1's standard now asks for
+soundness enforced by tooling, which is a different purchase from the one that was declined.
 
+Reason 1 is the substantive one and is the question to actually test: does a package aimed at general
+English style have anything to say to a style encoding `doc-comments.md` invariants? Test it rather
+than inherit the answer.
+
+**Three questions, then, not two.**
+
+- **`Std` itself, re-evaluated per rule** rather than as a package, against the current corpus and
+  against Wave 1's standard rather than slice 1's landing constraint.
 - **Two `Std` rules were declined on the landing constraint rather than on merit** — a
   Latin-abbreviation rule and two first-person usage rules. The rationale records them as "legitimate
   candidates for a slice that pairs the rule with its remediation". That pairing is exactly what this
