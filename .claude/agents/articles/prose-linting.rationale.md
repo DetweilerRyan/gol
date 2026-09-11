@@ -970,3 +970,55 @@ or fire on legitimate technical prose.
 two first-person usage rules. Each would land a backlog nobody has triaged, which is what that
 constraint forbids. They stay legitimate candidates for a slice that pairs the rule with its
 remediation.
+
+### Why the running is a script and not an editor hook, researched 2026-09-10
+
+The design pass asked who runs Vale and when, and ruled **two mechanisms, because the surfaces
+differ**. Only one of the two landed. `npm run prose-lint` covers everything; the hook half was
+researched, and installing a plugin is a user action this slice could not perform. The research is
+recorded here so the decision is not re-taken from scratch, and so nobody reads the missing half as an
+oversight.
+
+Measured against `vale-cli/agent-tools` and `vale-cli/vale-ls` on 2026-09-10, by reading the shipped
+hook script and running it directly.
+
+**The hook cannot reach a code comment at all.** It hard-filters to markup extensions — Markdown,
+AsciiDoc, reStructuredText, Org and plain text — and exits 0 on anything else **before** consulting
+any config. Proven by running it against a `.ts` and a `.md` file carrying an identical
+`error`-level finding: the `.md` fired with a full alert and the `.ts` was silent. That filter is the
+whole reason the ruling needs two mechanisms rather than one.
+
+**Three traps, and two of them produce a silence that reads as installed.**
+
+| trap                                                                        | consequence                                                                                                               |
+| --------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------- |
+| its level defaults to `error`, and this repo levels every rule to `warning` | installed as shipped it is **silent forever and looks installed**. It needs its level option set to `warning`             |
+| it exits 0 when its output template is missing from beside it               | a first probe was silent for **both** files for this reason, which would have given the right answer for the wrong reason |
+| its companion rule-authoring tools are behind a paid subscription           | see below                                                                                                                 |
+
+The second trap is the same control-first discipline the fault-injection rules elsewhere demand: the
+control has to fire before a silence means anything.
+
+**The third trap is the one that could retire the fixture harness by mistake.** The project's
+companion server offers rule scaffolding, rule testing and style auditing — the tools that read as
+exactly the harness this repo built by hand. They require a paid Vale subscription. So the
+build-it-ourselves ruling stands with a **named alternative rejected on cost**, rather than never
+considered. Anyone who finds those tools and concludes the hand-built fixtures were redundant should
+read this row first, then the `vale test` sections above, which rule out the free runner on separate
+grounds.
+
+**`vale-ls` was declined.** Its documented capabilities are editor ergonomics: hover documentation,
+`StylesPath` autocomplete, document links and click-to-fix code actions. Agents do not drive an
+editor, and they get the same diagnostics from `--output=JSON`. Its page does not say whether it
+handles source-code comments at all, so even the one plausible gain — autocomplete while authoring a
+rule — is unverified.
+
+**One idea from the hook is worth stealing and has not been taken.** It anchors on the file's own
+config by walking up from the file rather than trusting the working directory, because a path-scoped
+section never matches otherwise. `npm run prose-lint` resolves its file list from the repo root
+instead, which is correct for the way this repo invokes it and would not survive being run from a
+subdirectory.
+
+**What the hook does not solve, if it is ever adopted.** It fires on an agent's edits only. It covers
+no human edit, no CI run and no deliberate audit. So it would narrow the question rather than close
+it, and the script would still carry the rest.

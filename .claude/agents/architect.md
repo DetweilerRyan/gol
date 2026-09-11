@@ -131,7 +131,10 @@ Also read `product`'s **ARIA reach-arounds** — the places its specs had to ass
 
   That is the reason a `rules/*.yml` ships a fixture: a rule matching nothing reports nothing, and is
   indistinguishable from a clean codebase. **Vale's own `vale test` cannot do this job** — `input:` is
-  parsed as Markdown, so a comment-scoped rule never matches it. Read
+  parsed as Markdown, so a comment-scoped rule never matches it. Neither can the upstream
+  rule-authoring server, whose scaffolding and testing tools need a paid subscription. Both were
+  measured and rejected; `prose-linting.rationale.md` carries each. So the hand-built fixtures are a
+  considered choice rather than a gap someone has not noticed yet. Read
   `.claude/agents/articles/prose-linting.md` before authoring one; it carries the one-command fixture
   run.
 
