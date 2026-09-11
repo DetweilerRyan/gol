@@ -1,26 +1,34 @@
-// Four abort guards in sequence, then success -- cyclomatic 5, and there is
-// no headroom for a fifth. This mirrors the four failure branches of the
-// shell script this program replaced (a `command -v vale` check, a `vale
-// ls-config` check, an empty-file-list check, and an `xargs`-status check),
-// with `RunVale`'s `number | null` return folded into "could not lint" only
-// here, in guard 4. That is deliberate: run.ts's spawnSync closure hands
-// back `status` unmodified, so this module -- covered by test:mutation:scripts,
-// unlike run.ts -- is the one place that mapping is actually exercised.
+// Four abort guards in sequence, then success -- cyclomatic 5. A fifth guard
+// would take this to 6, which crap4ts's threshold of 6 still passes but only
+// at exactly 100% coverage, since CRAP collapses to the cyclomatic number
+// only there. Treat a fifth as a design question rather than a free slot.
 //
-// Measured against vale 3.20.0, under `--no-exit`: a clean run and a
-// warning-only run both exit 0; an error-severity alert exits 1, which
-// `--no-exit` turns into 0; a runtime error (an unparseable file, a missing
-// `.vale.ini`) exits 2, which `--no-exit` does NOT suppress. So under
-// `--no-exit`, any nonzero status guard 4 sees means vale could not lint,
-// never that it found something.
+// The four mirror the four failure branches of the shell script this program
+// replaced (a `command -v vale` check, a `vale ls-config` check, an
+// empty-file-list check, and an `xargs`-status check), with `RunVale`'s
+// `number | null` return folded into "could not lint" only here, in guard 4.
+// That is deliberate: run.ts's spawnSync closure hands back `status`
+// unmodified, so this module -- covered by test:mutation:scripts, unlike
+// run.ts -- is the one place that mapping is actually exercised.
+//
+// Measured against vale 3.20.0, and re-derived 2026-09-11 on that same
+// version, under `--no-exit`: a clean run and a warning-only run both exit 0;
+// an error-severity alert exits 1, which `--no-exit` turns into 0; a runtime
+// error exits 2, which `--no-exit` does NOT suppress. Both runtime forms were
+// checked -- E100 for a missing `.vale.ini`, E201 for a `StylesPath` naming a
+// directory that does not exist, which is the fresh-worktree case before
+// `vale sync`. So under `--no-exit`, any nonzero status guard 4 sees means
+// vale could not lint, never that it found something.
 //
 // No ARG_MAX chunking here, unlike the shell version's `xargs`: run.ts
-// passes every selected path as a single spawnSync argv, and the measured
-// tracked-file list (410 paths, 15,622 bytes of argv joined by spaces) is
-// 1.5% of `getconf ARG_MAX`'s 1,048,576-byte ceiling on this machine --
-// `xargs` itself never had to split this list into more than one invocation
-// either. That headroom is why `RunVale` takes the whole file list at once
-// rather than batching it.
+// passes every selected path as a single spawnSync argv. Measured 2026-09-10
+// on this repo's tracked tree, that list was 410 paths and 15,622 bytes of
+// argv joined by spaces -- 1.5% of `getconf ARG_MAX`'s 1,048,576-byte ceiling
+// on that machine, and `xargs` itself never had to split it into more than
+// one invocation either. Re-derive with `npm run prose-lint`'s trailing count
+// against `getconf ARG_MAX` before assuming the margin still holds. That
+// headroom is why `RunVale` takes the whole file list at once rather than
+// batching it.
 
 import type { ValeProbe } from './vale-probe.ts'
 

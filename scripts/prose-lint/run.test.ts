@@ -1,30 +1,73 @@
-// Two integration tests, both vale-free -- vale is a Go binary `npm ci`
-// does not reproduce, so no test here shells out to it. `runCheck` itself
-// is exercised only through decide.test.ts's and vale-probe.test.ts's unit
-// coverage of the modules it wires together. A skipped vale-dependent test
-// would reproduce the exact confident-zero failure this program exists to
-// prevent -- see `.claude/agents/articles/prose-linting.md`.
+// No test here shells out to real vale: it is a Go binary `npm ci` does not
+// reproduce, so a test needing it would be skipped on a fresh checkout --
+// reproducing the exact confident-zero failure this program exists to
+// prevent. See `.claude/agents/articles/prose-linting.md`.
+//
+// The wiring tests below stub it instead. A `vale` script on a prepended
+// PATH is what lets `runCheck` be exercised end to end -- the spawn argv,
+// the `--no-exit` flag, the git pathspecs and the catalyst exclusion -- with
+// no real binary involved. That matters because run.ts is excluded from
+// crap4ts, dry4ts and Stryker by the `**/run.ts` glob every scripts/ config
+// carries, so these tests are the only thing covering its four wiring lines.
 
 import { execFileSync, spawnSync } from 'node:child_process'
-import { mkdtempSync, rmSync } from 'node:fs'
+import { chmodSync, mkdtempSync, readFileSync, realpathSync, rmSync } from 'node:fs'
 import os from 'node:os'
 import path from 'node:path'
 import { afterEach, describe, expect, it } from 'vitest'
 import { initGitRepo, writeFile } from '../test-support.ts'
-import { excludeCatalyst, LINT_PATHSPECS } from './lint-targets.ts'
+import { runCheck } from './run.ts'
 import { classifyProbe } from './vale-probe.ts'
 
-let repoRoot: string | undefined
+let tempDirs: string[] = []
+let savedPath: string | undefined
 
 afterEach(() => {
-  if (repoRoot) rmSync(repoRoot, { recursive: true, force: true })
-  repoRoot = undefined
+  for (const dir of tempDirs) rmSync(dir, { recursive: true, force: true })
+  tempDirs = []
+  if (savedPath !== undefined) process.env.PATH = savedPath
+  savedPath = undefined
 })
 
-function tempRepo(): string {
-  const dir = mkdtempSync(path.join(os.tmpdir(), 'prose-lint-'))
-  repoRoot = dir
+function tempDir(prefix: string): string {
+  const dir = mkdtempSync(path.join(os.tmpdir(), prefix))
+  tempDirs.push(dir)
   return dir
+}
+
+// A repo carrying one file of every shape the selection has to decide on:
+// two that must be linted, one under the vendored boundary that must not,
+// one of an unmatched extension, and one left untracked.
+function seedRepo(): string {
+  const root = tempDir('prose-lint-repo-')
+  initGitRepo(root)
+  writeFile(root, 'CLAUDE.md', 'prose')
+  writeFile(root, 'src/camera.ts', '// ts')
+  writeFile(root, 'src/catalyst/button.tsx', '// vendored, must be excluded')
+  writeFile(root, 'notes.txt', 'not a lint target')
+  writeFile(root, 'untracked.md', 'never added to the index')
+  execFileSync('git', ['add', 'CLAUDE.md', 'src/camera.ts', 'src/catalyst/button.tsx', 'notes.txt'], { cwd: root })
+  execFileSync('git', ['commit', '-q', '-m', 'init'], { cwd: root })
+  return root
+}
+
+// Puts a fake `vale` first on PATH and returns the two files it records its
+// lint invocation into -- the argv it was handed, and the directory it was
+// run from. `ls-config` always succeeds here, so every test below reaches
+// past the two probe guards; `lintStatus` is what the fourth guard reads.
+function stubVale(lintStatus: number): { argvFile: string; cwdFile: string } {
+  const binDir = tempDir('prose-lint-bin-')
+  const argvFile = path.join(binDir, 'argv.txt')
+  const cwdFile = path.join(binDir, 'cwd.txt')
+  writeFile(
+    binDir,
+    'vale',
+    `#!/bin/sh\nif [ "$1" = "ls-config" ]; then echo "StylesPath = vale-styles"; exit 0; fi\nprintf '%s\\n' "$@" > ${argvFile}\npwd > ${cwdFile}\nexit ${lintStatus}\n`,
+  )
+  chmodSync(path.join(binDir, 'vale'), 0o755)
+  savedPath = process.env.PATH
+  process.env.PATH = `${binDir}${path.delimiter}${process.env.PATH ?? ''}`
+  return { argvFile, cwdFile }
 }
 
 describe('spawning a binary absent from PATH', () => {
@@ -40,25 +83,38 @@ describe('spawning a binary absent from PATH', () => {
   })
 })
 
-describe('selecting lint targets against a real git tree', () => {
-  it('picks tracked md/ts/tsx files and drops the vendored catalyst path and the untracked type', () => {
-    const root = tempRepo()
-    initGitRepo(root)
-    writeFile(root, 'CLAUDE.md', 'prose')
-    writeFile(root, 'src/App.tsx', '// tsx')
-    writeFile(root, 'src/camera.ts', '// ts')
-    writeFile(root, 'src/catalyst/button.tsx', '// vendored, must be excluded')
-    writeFile(root, 'notes.txt', 'not a lint target')
-    execFileSync('git', ['add', 'CLAUDE.md', 'src/App.tsx', 'src/camera.ts', 'src/catalyst/button.tsx'], {
-      cwd: root,
+describe('runCheck against a stubbed vale and a real git tree', () => {
+  it('reports exit 0 and a count naming only the files it actually handed to vale', () => {
+    const { argvFile, cwdFile } = stubVale(0)
+    const repoRoot = seedRepo()
+    const result = runCheck(repoRoot)
+
+    // The numeral is the discriminating part. A wiring bug dropping
+    // excludeCatalyst prints 3 here while still exiting 0, which is the
+    // confident-zero shape in miniature.
+    expect(result).toEqual({
+      exitCode: 0,
+      stdout: ['prose-lint: linted 2 tracked file(s). A zero above is a measured zero.'],
+      stderr: [],
     })
-    execFileSync('git', ['commit', '-q', '-m', 'init'], { cwd: root })
+    expect(readFileSync(argvFile, 'utf8').split('\n').filter(Boolean)).toEqual([
+      '--no-exit',
+      '--output=line',
+      'CLAUDE.md',
+      'src/camera.ts',
+    ])
+    // vale resolves `.vale.ini` relative to its own working directory, so a
+    // spawn that inherited this process's instead would lint the repo's
+    // files against whatever config happened to be above the caller.
+    expect(realpathSync(readFileSync(cwdFile, 'utf8').trim())).toBe(realpathSync(repoRoot))
+  })
 
-    const tracked = execFileSync('git', ['ls-files', ...LINT_PATHSPECS], { cwd: root, encoding: 'utf8' })
-    const files = excludeCatalyst(tracked.split('\n').filter((line) => line.length > 0))
+  it('reports exit 1 and names vale’s status when the lint run cannot complete', () => {
+    stubVale(2)
+    const result = runCheck(seedRepo())
 
-    expect(files.sort()).toEqual(['CLAUDE.md', 'src/App.tsx', 'src/camera.ts'])
-    expect(files).not.toContain('src/catalyst/button.tsx')
-    expect(files).not.toContain('notes.txt')
+    expect(result.exitCode).toBe(1)
+    expect(result.stdout).toEqual([])
+    expect(result.stderr[0]).toBe('prose-lint: vale could not lint (vale exit 2), so the output above is not a result.')
   })
 })

@@ -12,9 +12,9 @@
 // `cwd: REPO_ROOT` on both spawns is load-bearing, not incidental: vale
 // resolves `.vale.ini` relative to its own working directory, so a spawn
 // without it would silently lint against whatever directory happened to be
-// current. Passing `repoRoot` through `runCheck` rather than hardcoding
-// `REPO_ROOT` inside the two spawns below is also what lets run.test.ts
-// point this whole shell at a throwaway git tree.
+// current. Threading `repoRoot` through `runCheck` rather than hardcoding
+// `REPO_ROOT` inside the two spawns below is what lets a test point this
+// whole shell at a throwaway tree and read back the directory vale ran in.
 
 import { execFileSync, spawnSync } from 'node:child_process'
 import path from 'node:path'
@@ -28,9 +28,10 @@ const REPO_ROOT = path.resolve(SCRIPT_DIR, '../..')
 
 /**
  * Runs the whole check against `repoRoot` and returns the result, without
- * printing anything or exiting -- what lets a test assert on `exitCode`,
- * `stdout` and `stderr` directly, the way `run.test.ts` does against a
- * throwaway git tree.
+ * printing anything or exiting. Spawns `vale` twice and reads `git ls-files`,
+ * all three against `repoRoot` rather than the current directory, so a caller
+ * may point it at a throwaway tree. Nothing is written to either stream here;
+ * the caller owes `stdout` and `stderr` their own streams -- see `DecideResult`.
  */
 export function runCheck(repoRoot: string): DecideResult {
   const probeResult = spawnSync('vale', ['ls-config'], { cwd: repoRoot, encoding: 'utf8' })
@@ -52,11 +53,11 @@ export function runCheck(repoRoot: string): DecideResult {
   // deletion being staged, and that is exactly the case this program must
   // fail loudly on. Vale itself raises E100 across the whole list when one
   // of several paths is missing (measured: a single missing path is read as
-  // stdin and exits 0 silently instead, but this program is permanently in
-  // the many-paths case at 410 tracked files). A helpful existsSync filter
-  // would quietly turn that loud E100 into a partial lint that still prints
-  // a clean count line -- the confident-zero failure this whole program
-  // exists to prevent.
+  // stdin and exits 0 silently instead, but the tracked-file list this
+  // program selects is permanently in the many-paths case). A helpful
+  // existsSync filter would quietly turn that loud E100 into a partial lint
+  // that still prints a clean count line -- the confident-zero failure this
+  // whole program exists to prevent.
   const tracked = execFileSync('git', ['ls-files', ...LINT_PATHSPECS], { cwd: repoRoot, encoding: 'utf8' })
   const files = excludeCatalyst(tracked.split('\n').filter((line) => line.length > 0))
 
@@ -76,8 +77,8 @@ function main(): void {
 }
 
 // Guards against running main() as a side effect of being imported for
-// tests -- run.test.ts imports runCheck directly, and that should never
-// trigger a real process.exit.
+// tests -- a test imports `runCheck` directly, and that must never trigger a
+// real process.exit.
 if (process.argv[1] === fileURLToPath(import.meta.url)) {
   main()
 }

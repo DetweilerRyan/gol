@@ -681,10 +681,18 @@ split the script's design already claimed. Every rule `.vale.ini` enables is `wa
 middle row is latent rather than live — but the flag is what keeps the script honest if a rule is ever
 re-levelled to `error`, instead of silently converting it into a findings gate.
 
-**The status the script reads is `xargs`', not vale's, and it is platform-dependent.** Measured on
-macOS's BSD `xargs`: a command exit anywhere in 1-125 is reported as **1**; GNU `xargs` reports 123 for
-the same case. Both report 127 for a missing command. So the number is fit to test for zero and unfit
-to print as vale's own, which is why the script's message names it as an xargs status.
+**The shell version read `xargs`' status, not vale's, and it was platform-dependent.** Measured on
+macOS's BSD `xargs`: a command exit anywhere in 1-125 was reported as **1**; GNU `xargs` reported 123
+for the same case. Both report 127 for a missing command. So that number was fit to test for zero and
+unfit to print as vale's own, and the shell script's message named it as an xargs status for that
+reason. `prose-lint-runner-is-shell-not-typescript` replaced the pipeline with a single `spawnSync`
+carrying the whole path list, which removed the indirection: the status the program now reads and
+prints is vale's own.
+
+The four-row table above was re-derived on vale 3.20.0 during that slice's review, and held. The
+runtime row was checked in both its forms -- **E100** for no `.vale.ini` anywhere up the tree, and
+**E201** for a `StylesPath` naming a directory that does not exist. The second is the fresh-worktree
+case before `vale sync`, and it fails the run at the `ls-config` probe rather than mid-lint.
 
 ### `occurrence` counts less than it looks like it counts
 
