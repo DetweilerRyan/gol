@@ -50,6 +50,17 @@ file a role reads before acting is where it belongs.
 What is left when every sentence that is not an instruction leaves the role files, and where does each
 kind of departing sentence go?
 
+## What this file is, and what it is not
+
+**It holds twelve rules and the specification for four remaining strips.** Rules 3 to 9 were ruled by
+the user on 2026-09-11 while `coder.md` was stripped by hand, and they are recorded here rather than
+in `prose-linting.md`.
+
+**That placement is deliberate and it has a known cost: `ideas/` has no gate, no checker, and no role
+reads it.** So a role authoring prose before the remaining strips run will not see these rules. The
+user chose this on 2026-09-11, with the cost stated. **The rules move to `prose-linting.md` when the
+strips that apply them run** — until then, whoever runs a strip reads them here.
+
 ## Sketch
 
 **This is a routing and rewriting job, not a linting job.** Take that as the ruling's operative half.
@@ -96,9 +107,9 @@ and each strip clears its own.
 
 **The rule widened on the same day it was made, and the wider form is the one that binds.**
 
-### 3a. An article never points at its own sidecar either
+### 4. An article never points at its own sidecar either
 
-**Ruled by the user on 2026-09-11, extending 3.** Reading an article is for instruction that guides
+**Ruled by the user on 2026-09-11, extending rule 3.** Reading an article is for instruction that guides
 execution. An agent in a normal pipeline has no reason to read a `.rationale.md` sidecar for an
 article, so the article carries no pointer to one.
 
@@ -112,7 +123,7 @@ rather than changing it. A module sidecar belongs to whoever is **changing that 
 reader has the call site in front of them and the pointer is how they reach the reasoning. So
 `CLAUDE.md`'s branches 4 and 5 keep the mandated `@see {@link ./<name>.rationale.md}` form.
 
-### 3b. Examine every instruction that has an agent updating an article
+### 5. Examine every instruction that has an agent updating an article
 
 **Directed by the user on 2026-09-11.** Agents should not be changing articles. Three places instruct
 it today and each needs a ruling rather than a presumption:
@@ -129,7 +140,7 @@ agents rewrite guidance — they are already told not to. It is whether a factua
 is a fourth thing an agent may do to an article, or whether even that belongs to the seat that owns
 the document. Answer it; do not leave the presumption standing.
 
-### 2b. A role file states no fact about another role's file
+### 6. A role file states no fact about another role's file
 
 **Ruled by the user on 2026-09-11, from a live defect.** `coder.md`'s workflow step 5 said the property
 project is skipped because "only `architect`, `hardener` and `product` need" it, and its Boundaries said
@@ -157,7 +168,7 @@ survives a role rename; "`cleaner`, `architect` and `hardener`" does not.
 **Four edits made to `coder.md` under this ruling**, with the false ones first: step 5's property claim,
 the Boundaries property claim, `cleaner`'s mutant threshold, and the step-3 citation.
 
-### 2c. Three kinds of cross-role mention, and only one drifts
+### 7. Three kinds of cross-role mention, and only one drifts
 
 **Measured 2026-09-11: 110 mentions of another role across the five role files** — `architect.md` 50,
 `product.md` 16, `coder.md` and `hardener.md` 15 each, `cleaner.md` 13. Banning them outright is the
@@ -169,13 +180,13 @@ wrong fix, because two of the three kinds cannot rot.
 | **Handoff**     | "the orchestrating session can then invoke `cleaner`"  | **No.** Fixed by the cycle, and `agent-doc-check`'s check 4 already pins the cycle string byte-identical everywhere. |
 | **Description** | "`cleaner` watches mutant count; 100+ prompts a split" | **Yes.** A second copy of another file's text, and nothing compares them.                                            |
 
-**Only the third kind is the defect**, and rule 2b already forbids it. The property-test error was a
+**Only the third kind is the defect**, and rule 6 already forbids it. The property-test error was a
 description; a prohibition could not have been wrong, because it asserts nothing about the other role.
 
 **So the first line of defence is the rule, not a checker.** Most of the 110 are prohibitions and
 handoffs and should stay.
 
-### 2d. How to stop the third kind coming back
+### 8. How to stop the third kind coming back
 
 **Ruled by the user on 2026-09-11: adopt the first two. The third is too much.**
 
@@ -199,15 +210,14 @@ handoffs and should stay.
 **Why the two adopted rules are sufficient without the third, stated so the decline is defensible.** Rule
 one removes the surface rather than policing it: a prohibition that names no owner has nothing to drift
 against. Rule two moves what genuinely must agree into one file both roles read, which is the
-single-source fix the repo already applies everywhere else. What remains after both is a description
-that someone wrote deliberately in the wrong place, and that is a review finding rather than a gate.
+single-source fix the repo already applies everywhere else. What remains after both is a description that someone wrote deliberately in the wrong place, and that is a review finding rather than a gate.
 
 **What makes the third kind dangerous is worth stating once.** Neither reader of a drifted description
 is the role it describes. `coder` reads a claim about `cleaner` and has no way to check it; `cleaner`
 reads its own file and does not see `coder`'s copy. The wrong fact sat in both files and each reader
 was the wrong person to catch it.
 
-### 2e. A pointer and a restatement are not both needed
+### 9. A pointer and a restatement are not both needed
 
 **Ruled by the user on 2026-09-11, from `coder.md`'s workflow step 9.** That step cited
 "Structural rules (ast-grep)" in `engineering.md` **and then restated it** — the warning-severity
@@ -225,7 +235,7 @@ can drift from the source, and it tempts a reader to skip the source that would 
 output" survives a new rule landing. "Expect manual `useMemo` findings plus `&&`-in-JSX in the
 composition root" does not.
 
-### 3. Keep the one-clause why
+### 10. Keep the one-clause why
 
 **The floor, and it is not "no reasoning".** CLAUDE.md's comment convention already states the rule for
 code: a comment says why, and the why stays beside the thing. The same holds here. What moves is the
@@ -234,7 +244,7 @@ multi-sentence account. What stays is the clause that changes what a reader does
 "Never edit `rules/*.yml` — a dead rule and a satisfied rule look identical" keeps its why and loses
 four sentences.
 
-### 4. Pin what may not be lost
+### 11. Pin what may not be lost
 
 The prior spike built the right instrument for this and it should be reused: **a pre-registered
 constraint census, pinned to the pre-edit file's git blob hash** — every obligation, prohibition,
@@ -243,7 +253,7 @@ the after-file or in its new home. An uncited line is a recorded loss.
 
 That census is what makes an aggressive cut safe, and it is the reason this can be aggressive.
 
-### 5. Then ask what mechanises
+### 12. Then ask what mechanises
 
 **Only after the rewrite**, and on the evidence it produces. A rule that detects an eight-sentence
 paragraph in a role file, or a past-tense narrative sentence, is a plausible guard against
