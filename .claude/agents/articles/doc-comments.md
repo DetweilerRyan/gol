@@ -343,7 +343,7 @@ anywhere in the block. The discipline stays human.
 well-formed braced type. `@throws` and `@see` print it verbatim, so write a `@throws` exception type
 bare. Never open `@throws` or `@returns` with `{@link …}`: it breaks the tag, and `@returns` loses its
 text entirely. Put every other link in the tag's **prose**, where it resolves. Rule 7's
-`@see {@link ./file.md}` is the one sanctioned leading-brace form.
+`@see {@link ./<file>.md}` is the one sanctioned leading-brace form.
 
 Three more. The first is fatal, the second is silent and therefore worse, the third is a coexistence
 ruling:

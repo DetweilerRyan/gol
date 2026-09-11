@@ -68,7 +68,7 @@ TypeScript parses the token after a `@see` as an entity name, which mangles a ba
 | `` @see `./cellTiles.md` ``       | ``@see —  `./cellTiles.md` `` | clean, with stray backticks and a doubled space |
 | **`@see {@link ./cellTiles.md}`** | **`@see — ./cellTiles.md`**   | **exact — this is the mandated form**           |
 
-All five survive `tsc --emitDeclarationOnly` verbatim, so this is purely a hover-rendering ruling. **The plain `@see ./name.md` form was the one predicted to work during planning, and `{@link}` the one predicted to render unresolved for a relative Markdown path. The measurement is the reverse of both.** When `{@link}` _can_ resolve a target it links it, which is why a `{@link Cache.has}` renders as a clickable file link instead.
+All five survive `tsc --emitDeclarationOnly` verbatim, so this is purely a hover-rendering ruling. **The plain `@see ./<name>.md` form was the one predicted to work during planning, and `{@link}` the one predicted to render unresolved for a relative Markdown path. The measurement is the reverse of both.** When `{@link}` _can_ resolve a target it links it, which is why a `{@link Cache.has}` renders as a clickable file link instead.
 
 ## TypeDoc was evaluated against the `@see` ruling, and can be configured to work
 
