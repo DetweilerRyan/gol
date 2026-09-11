@@ -73,6 +73,47 @@ const sharedExclude = [
   // split-mutation-testing-article: `npx vitest list` collected
   // `[unit] .vale/__probe.test.ts` before this entry existed.
   '.vale/**',
+  // The same hazard, closed for the class rather than patched for one more
+  // instance. Every tracked top-level directory not already named above is
+  // reachable by the unrooted default include the same way -- nothing in
+  // this config roots `unit`'s or `property`'s include at src/, so a stray
+  // test-shaped filename anywhere in the tree is collected unless this
+  // array excludes it by name. Measured 2026-09-11 by
+  // vale-styles-is-reachable-by-vitests-default-include: one __probe.test.ts
+  // placed in each of the seven directories below, each individually
+  // confirmed collected into `unit` before its own entry existed and absent
+  // after -- one probe per directory rather than one probe generalised
+  // across all seven. `features/**` is deliberately absent from this list --
+  // it is secured a different way, by stryker.config.json's ignorePatterns
+  // keeping it out of the mutation sandbox entirely, and excluding it here
+  // would suppress a layer that is meant to stay reachable.
+  //
+  // Only vale-styles/** is load-bearing today. It is a tracked directory of
+  // rule and fixture files, the same shape as rules/** and rule-tests/**
+  // above, so it is a plausible next addition to
+  // mutation-invariance.config.json's vitest-exclude tier -- and that
+  // tier's soundness depends on the exclusion this entry provides existing
+  // first. The other six entries answer no live pairing today; adr/**,
+  // patches/**, schemas/** and spikes/** hold no test-shaped filenames, and
+  // perf/**'s only test-shaped files (*.perf.spec.ts) are already excluded
+  // above. They are here to close the class this array's own history shows
+  // to be a recurring gap -- each of the entries above it was added only
+  // once someone noticed the same omission for one more directory.
+  //
+  // public/** deserves its own note: it holds static assets copied by
+  // vite's build as the default publicDir, a mechanism this test.exclude
+  // array has no reach into. So excluding it from vitest test collection
+  // changes nothing about what `npm run build` ships. The same separation
+  // holds for perf/**'s inclusion in tsconfig.app.json's build scope, and
+  // for playwright.perf.config.ts, which sets its own testDir and
+  // testMatch rather than reading anything from vite.config.ts.
+  'adr/**',
+  'patches/**',
+  'perf/**',
+  'public/**',
+  'schemas/**',
+  'spikes/**',
+  'vale-styles/**',
 ]
 
 const domTests = ['src/components/**/*.{test,spec}.?(c|m)[jt]s?(x)', 'src/hooks/**/*.{test,spec}.?(c|m)[jt]s?(x)']
