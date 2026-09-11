@@ -77,10 +77,8 @@ Ask this of each existing line:
 - **Does it explain how the thing works inside, or why it was built that way?** → `//`, below the
   signature.
 
-**Vale lints these blocks.** `vale-styles/JsDoc/` carries rules that mechanically enforce some of
-what follows, and `architect` owns them. See `prose-linting.md`'s "Triaging a finding in a comment"
-for how a finding here differs from one in an article. The remedy is often a **move** rather than a
-rewrite.
+**Vale lints these blocks**, and four of the rules below are machine-checked. See "Four of these
+rules are machine-checked" at the end of Part 1.
 
 ### 2. The first line is one sentence saying what the caller gets
 
@@ -374,6 +372,36 @@ nothing, so settle that one from content instead. Ask whether the block describe
 
 **Where the `*/` hazard usually comes from.** Lines mentioning a glob like `**/run.ts` are the usual
 source. See the commit discipline below.
+
+### Four of these rules are machine-checked
+
+`vale-styles/JsDoc/` lints **multi-line** block comments in every `.ts` and `.tsx` file. It is
+report-only. Each rule mechanises a rule stated above, and each message names the token it matched, so
+the finding tells you which rule you tripped.
+
+| Vale rule                | fires on                                                                   | enforces                                             |
+| ------------------------ | -------------------------------------------------------------------------- | ---------------------------------------------------- |
+| `SelfReferentialOpener`  | a paragraph opening `This function …`                                      | rule 2 — say what the caller gets                    |
+| `ImplementationAltitude` | a word of implementation register, such as `under the hood`                | rule 4 — move the line to a `//` below the signature |
+| `BlockTagVocabulary`     | a line-opening `@tag` outside the five in rule 5, such as `@summary`       | rule 5 — keep the content, drop the tag word         |
+| `DeadIndexical`          | an indexical naming the session that wrote the hover, such as `this slice` | `engineering.md`, "Name the slice, never this slice" |
+
+**Read each rule's own header in `vale-styles/JsDoc/` for its exact trigger.** The examples above are
+one apiece, not the vocabularies.
+
+Three facts that change what you write:
+
+- **Fenced code inside an `@example` is exempt. `@param` and `@returns` prose is not.** Vale reads a
+  comment as Markdown and skips code fences.
+- **A single-line `/** … */` is linted by nothing here**, because the scope is multi-line blocks. Write
+  the multi-line form for anything a rule should see.
+- **Splitting a paragraph spends one of rule 6's roughly fifteen rendered lines; splitting a sentence
+  spends none.** A sentence reflows, and a paragraph inserts a blank ` *` line.
+
+**Check one file with `vale <path>`.** `npm run prose-lint` lints the whole tracked tree, so its count
+is not a report on your slice. **The remedy for a finding here is often a move rather than a
+rewrite.** Take one you think is wrong to `prose-linting.md`'s "Triaging a finding in a comment".
+Authoring or changing a `JsDoc` rule is `architect`'s alone.
 
 ## Part 2 — Reading
 

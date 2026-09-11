@@ -1046,3 +1046,62 @@ up. Row 3 rules out the form somebody will reach for first.
 documented way.** Piping the output to `head` reported exit 0, because a pipe replaces the exit status
 with the pipe's. Redirect to a file and read `$?` on the next line, exactly as the merge protocol says
 for `npm run mutation-invariance`.
+
+## Moved out of the article when it was reduced to instructions, 2026-09-10
+
+The user ruled on 2026-09-10 that `prose-linting.md` carries instructions and this sidecar carries the
+explanation. Five passages had no home here already and were moved rather than deleted. The rest of
+what left the article that day was a restatement of something recorded above, or in `CLAUDE.md`'s
+routing branch 5.
+
+### The `ProcedureLength` classification on a rules article
+
+Measured on `engineering.md`: **56 findings, 56 statements, none acted on** — rule-with-rationale
+bullets, the four test-layer definitions, the per-role command substitutions, and the standing
+verification obligations. That is the measurement behind the article's instruction to classify an
+article's bullet convention once rather than reaching the same verdict 56 times.
+
+The role-file half of that instruction rests on the five role files linted under `lint-the-role-files`.
+Two left genuine steps unacted on purpose, because the remedy separates a step's reasoning from the
+step it qualifies. The divergence is recorded rather than settled; see "The `ProcedureLength`
+divergence, recorded rather than settled" above.
+
+### The `is sanctioned` construction, and how often it has paid
+
+Three instances have been found by the grep the article gives, in three different articles. That is the
+whole of the act-on class for `PassiveVoice` so far, and it is why the article offers the grep as a
+shortcut into the class rather than as a replacement for the pass.
+
+Four residuals fitting none of the five exempt classes were left in `doc-comments.md` deliberately, as
+genuinely arguable. They are the reason the article says to act on such a case or name it in the commit,
+rather than to widen a class.
+
+### The whole-directory count, measured 2026-09-09
+
+After `lint-the-role-files` widened the scope, `vale .claude/agents/` reported over a thousand findings,
+and most of those files had never been worked. The role files were the whole of the newly scoped
+surface and none had been worked. That figure is what the article's "read a big number as unworked"
+instruction is derived from; the figure itself dates and the instruction does not.
+
+### The two typo-shaped confident zeros, and the controls that pinned them
+
+**A misspelled re-levelling line.** `STE.ProcedureLenght = warning` was measured against the correct
+spelling on the same file. The correct spelling fired; the misspelling enabled nothing, disabled
+nothing, emitted no diagnostic and exited 0, leaving the rule at its shipped `suggestion` level.
+
+**A nonexistent scope selector.** The same rule that fired under `text.comment.block.ts` reported
+nothing under `text.comment.documentation.ts`, with no diagnostic and exit 0. There is no documentation
+scope, and Vale does not say so.
+
+<!-- reference-check: allow text.comment.documentation.ts -- a Vale scope selector that does not exist, named here as the measured negative control; not a path -->
+
+### The rule names the first cross-tabulation uses
+
+The design pass wrote its table under earlier names. `NoThisFunction` became `SelfReferentialOpener`,
+`ThisSlice` became `DeadIndexical`, and `MeasurementInDoc` never shipped. `BlockTagVocabulary` arrived
+after that ruling and was ruled separately, in the REVIEW pass. Read the first table in "The per-rule
+extension ruling" above through that mapping.
+
+Each shipped rule records its own extension answer in its own header, in `vale-styles/JsDoc/`. The
+article carried a fourth copy of those answers as a table; the headers and the two cross-tabulations
+above are the record.
