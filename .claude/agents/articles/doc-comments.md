@@ -219,10 +219,10 @@ the landed tree:
   `@see {@link ./cache.rationale.md}` -- the mandated form itself. It now checks only whether the token's
   _basename_ starts with `.`, so `./cache.rationale.md` resolves against `cache.rationale.md` wherever it
   lives. **What this verifies is that the name resolves, not that the relative path in front of it is
-  right** -- `{@link ./<name>.md}` written from any directory resolves against a `<name>.md` anywhere in
-  the repo, the same basename-only matching every other check in this program already made. A sidecar
-  reference no longer needs a parallel `//`-comment repo-relative citation for the checker's sake, though
-  one may still exist for a reader who cannot resolve a relative path from prose alone.
+  right.** `{@link ./<name>.md}` written from any directory resolves against a `<name>.md` anywhere in
+  the repo. That is the same basename-only matching every other check in this program already made. A sidecar
+  reference no longer needs a parallel `//`-comment repo-relative citation for the checker's sake. One may
+  still exist, though, for a reader who cannot resolve a relative path from prose alone.
 - **Matching is by basename, never by full path.** A sidecar moved to another directory still resolves.
   Measured by relocating `src/cache.rationale.md` into `src/hooks/`: green.
 - **The doc surface is now every tracked/untracked-not-ignored `.md` file outside `ideas/**` and
@@ -234,11 +234,11 @@ the landed tree:
 same six STE rules the articles carry. Its `[**/*.rationale.md]` section then exempts the rationale half,
 matching how article rationale is treated.
 
-`reference-check-reach` closed the two scan gaps this used to warn about by hand: a rename that moves a
+`reference-check-reach` closed the two scan gaps this used to warn about by hand. A rename that moves a
 module without moving its `@see {@link ./<module>.rationale.md}` citation now fails
-`file-reference-resolves`, since that citation resolves by basename like any other. What the checker still
-cannot verify is a sidecar's own **contents** -- hold a sidecar to the comment-assertion convention by hand:
-no quoted test titles, no caller rosters, no `<file>:NN`. Nothing will catch one.
+`file-reference-resolves`, because that citation resolves by basename like any other. What the checker
+still cannot verify is a sidecar's own **contents**. Hold a sidecar to the comment-assertion convention by
+hand: no quoted test titles, no caller rosters, no `<file>:NN`. Nothing will catch one.
 
 **Which half a fact goes in is branch 5's test, one tier down: does a caller act on it?** The claim a
 caller acts on belongs in the hover, and its worked-out form in `<module>.md`. The evidence behind that
