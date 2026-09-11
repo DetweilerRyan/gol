@@ -10,6 +10,8 @@ Conway's Game of Life, built as an infinite, pannable/zoomable grid (React 19 + 
 
 `CLAUDE.md` is a **routing index**, not the whole account. It carries the command list, a compact module map, the orchestrating session's own procedures, the conventions, and one pointer per article. The detail lives in `.claude/agents/articles/`, which is **not** auto-loaded — a role reads an article when its own file tells it to.
 
+**This file takes a sidecar of its own.** Its evidence — the measurements, the probe methods, the rejected alternatives and the corrections behind the rulings below — lives in `.claude/agents/articles/CLAUDE.rationale.md`, which no role reads. That is branch 5 below applied to this file. The sidecar sits in `articles/` rather than beside `CLAUDE.md` at the repo root, and it carries the measurement behind that choice.
+
 Three articles are house rules every role reads unconditionally — **and the orchestrating session reads them too.** They were labelled per-role because the seat that invokes the roles has no role file; the content was never role-specific.
 
 - **`.claude/agents/articles/engineering.md`** — design, test-layer placement, property tests, gate scoping, claim discipline. Its evidence lives in the sidecar `engineering.rationale.md`, which no role reads.
@@ -51,6 +53,8 @@ Ten are topic articles, read on the trigger each one names in its own header:
    The test is **does this constrain an action**. A caveat, an unmeasured warning and a closed decision all constrain, so they stay in the article, and only the evidence moves. `archive.md` is the same tier predating the convention, and keeps its name. A rename to fit the convention was considered and declined by the user, since it has no parent article to pair with.
 
    **A role file takes the same pair, and its sidecar lives in `articles/` — that placement is forced, not preferred.** `scripts/agent-doc-check` reads the direct `.md` children of `.claude/agents/` as the agent roster. A sidecar there fails the frontmatter check outright. The only way to pass it is to give a prose file agent frontmatter, which then enrols it as a sixth agent. Measured both ways.
+
+   **`CLAUDE.md` takes the same pair, and its sidecar lives in `articles/` too — that placement is chosen, not forced.** Nothing refuses a root-level `CLAUDE.rationale.md`, and that is the objection to it: `npm run reference-check` and `npm run agent-doc-check` both scan `CLAUDE.md`, `README.md` and `.claude/**/*.md`, and neither reaches a third root-level `.md`. At the root the sidecar would pass both gates by being invisible to them. So it sits beside the articles, where both checkers reach it. `CLAUDE.rationale.md` carries the measurement and the rejected placement.
 
    **Kind decides before mass.** Evidence is a measurement, a probe method, a rejected alternative, or a correction carrying a figure. **Argument never moves at any size**, because it constrains conduct. Then a floor: below roughly 1 KB of genuine evidence, decline. A pair's own framing measures 1.0-1.4 KB across the three landed role pairs, so a smaller sidecar holds less than its own scaffolding. Measured across the five role files plus `orchestration.md`: three earned a sidecar and three did not.
 
