@@ -157,6 +157,47 @@ survives a role rename; "`cleaner`, `architect` and `hardener`" does not.
 **Four edits made to `coder.md` under this ruling**, with the false ones first: step 5's property claim,
 the Boundaries property claim, `cleaner`'s mutant threshold, and the step-3 citation.
 
+### 2c. Three kinds of cross-role mention, and only one drifts
+
+**Measured 2026-09-11: 110 mentions of another role across the five role files** — `architect.md` 50,
+`product.md` 16, `coder.md` and `hardener.md` 15 each, `cleaner.md` 13. Banning them outright is the
+wrong fix, because two of the three kinds cannot rot.
+
+| Kind            | Shape                                                  | Drifts?                                                                                                              |
+| --------------- | ------------------------------------------------------ | -------------------------------------------------------------------------------------------------------------------- |
+| **Prohibition** | "Do not write `features/*.e2e.spec.ts`"                | **No.** It states a fact about _this_ role. It stays true however the other role changes.                            |
+| **Handoff**     | "the orchestrating session can then invoke `cleaner`"  | **No.** Fixed by the cycle, and `agent-doc-check`'s check 4 already pins the cycle string byte-identical everywhere. |
+| **Description** | "`cleaner` watches mutant count; 100+ prompts a split" | **Yes.** A second copy of another file's text, and nothing compares them.                                            |
+
+**Only the third kind is the defect**, and rule 2b already forbids it. The property-test error was a
+description; a prohibition could not have been wrong, because it asserts nothing about the other role.
+
+**So the first line of defence is the rule, not a checker.** Most of the 110 are prohibitions and
+handoffs and should stay.
+
+### 2d. How to stop the third kind coming back
+
+Three options, cheapest first. **None is chosen here; this entry records the analysis so the ruling is
+made on it.**
+
+- **Attribute nothing — say "not yours".** A prohibition needs no owner. "Never edit `rules/*.yml`"
+  carries the whole instruction; "those are `architect`'s" adds only a fact that can rot. This costs
+  nothing, needs no tooling, and removes most of the surface. Where a name is genuinely needed, prefer
+  the cycle position to the name: "later roles in the cycle" survives a rename.
+- **A single source for anything two files must agree on.** The threshold that drifted — mutant count
+  for a split — belongs in one place both roles read, which is an article rather than a role file.
+  `engineering.md` already carries the shared-concern rule and says duplicates drift out of sync.
+- **A checker, on `agent-doc-check`'s check 4 precedent.** That check does not ban the cycle string from
+  appearing in many files; it asserts every copy is byte-identical, builds its role vocabulary from the
+  roles that exist, and fails loudly when it finds none at all. A check on the same shape — every claim
+  about role X appears in X's own file — needs a machine-readable way to tell a description from a
+  prohibition, and nobody has shown that is decidable. **Do not reach for this before the first two.**
+
+**What makes the third kind dangerous is worth stating once.** Neither reader of a drifted description
+is the role it describes. `coder` reads a claim about `cleaner` and has no way to check it; `cleaner`
+reads its own file and does not see `coder`'s copy. The wrong fact sat in both files and each reader
+was the wrong person to catch it.
+
 ### 3. Keep the one-clause why
 
 **The floor, and it is not "no reasoning".** CLAUDE.md's comment convention already states the rule for
