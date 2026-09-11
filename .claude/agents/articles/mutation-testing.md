@@ -352,13 +352,20 @@ failing silently:
 
 **Making a path structurally safe is a precondition for putting it on the allowlist, not a follow-up.**
 `vite.config.ts`'s `unit` project inherits an **unrooted** include, so it reaches every directory
-`sharedExclude` does not name. `perf/`, `patches/` and `public/` are all collected
-today, and none is on the allowlist. That is exactly why they need no exclusion: a diff touching one
-fails the path check and the gate runs. `rules/` and `rule-tests/` were in that same list until
+`sharedExclude` does not name. `rules/` and `rule-tests/` were both collected until
 `the-invariance-allowlist-omits-paths-that-provably-cannot-move-a-mutant` allowlisted them, and it
 added their `sharedExclude` entries **first**, in a separate commit, for exactly this reason.
-**Adding any of the remaining three to the allowlist would likewise mean excluding it from vitest
-before the entry is sound.**
+
+**Do not read that array the other way round, as the set of paths an entry may name.** Most of it is
+now precautionary: `vale-styles-is-reachable-by-vitests-default-include` named every remaining tracked
+top-level directory, and every generated one, whether or not anything pairs with it. So an exclusion
+being present proves only that C1 can pass. It is not an argument that the path belongs on the
+allowlist, and each entry still needs its own.
+
+**`perf/` is the one directory left deliberately collectable, and it sits on the `absent` list.**
+Excluding it would buy nothing, since a diff touching `perf/` fails the path check either way. It
+would also leave a colocated unit test for a `perf/` module running in no project at all. Read the
+ruling off `vite.config.ts`'s own comment before proposing an entry for it.
 
 **Check that the exclusion is actually there.** The order has been got wrong once, and
 `mutation-testing.rationale.md`'s `.vale/**` entry records the slice it happened in.

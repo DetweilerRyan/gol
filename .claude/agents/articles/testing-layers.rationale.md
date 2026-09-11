@@ -311,10 +311,12 @@ figure when the hazard was first written down.
 inherits an unrooted include. Without that subtraction vitest collected the generated specs — measured at
 the time as 63 files instead of 61.
 
-**A stray `.test.ts` dropped into `perf/`, `rules/`, `rule-tests/`, `patches/` or `public/` is still
-collected into `unit` and run in Node.** Those five are deliberately left unexcluded: a name added to
+**A stray `.test.ts` dropped into `perf/` is still collected into `unit` and run in Node**, and after
+`vale-styles-is-reachable-by-vitests-default-include` that directory is the only one of the five this
+sentence used to name. `rules/` and `rule-tests/` were excluded the slice before it, and `patches/`
+and `public/` by it. `perf/` is the one where the cost argument still bites: a name added to
 `sharedExclude` for a directory that might one day hold a legitimate colocated test would exclude it
-silently.
+silently, and `perf/` holds pure TypeScript modules with no other home for such a test.
 
 **With `.features-gen/` absent, Playwright reports the `e2e` project alone** — `Total: 59 tests in 8 files`,
 exit 0, no warning. Measured before the staleness guard in `playwright.config.ts` existed, back when the

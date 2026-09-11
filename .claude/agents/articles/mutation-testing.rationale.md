@@ -455,9 +455,18 @@ either directory — from the pass that found the hole until the pass that cured
 retired.** The invariant now lives in `sharedExclude`, where a config entry holds it rather than a
 per-merge grep nobody can be relied on to run.
 
-**The unrooted include measurably still reaches everywhere else.** Probes dropped into `perf/`, `rules/`,
-`rule-tests/`, `patches/` and `public/` are all collected into `unit` on the landed tree — 66 files
+**The unrooted include measurably reached everywhere else.** Probes dropped into `perf/`, `rules/`,
+`rule-tests/`, `patches/` and `public/` were all collected into `unit` on the tree of that day — 66 files
 against the usual 61.
+
+**Superseded 2026-09-11 by `vale-styles-is-reachable-by-vitests-default-include`**, which named every
+remaining tracked top-level directory in `sharedExclude`, plus the generated directories `.gitignore`
+lists. Of the five probed above only `perf/` still collects. Re-measured under that slice's
+architectural review, on vitest 4.1.10: probes in 22 directories, 20 suppressed, `features/` and
+`perf/` collected, and the collected-file set byte-identical at 70 files before and after. The same
+review measured `configDefaults.exclude` as exactly `node_modules` and `.git`, which is why `dist/`
+needed an entry of its own. The enumeration is a snapshot and no check compares it against the tree,
+so re-probe rather than reading any of this forward.
 
 <!-- reference-check: allow ideas/__probe.test.ts -- a throwaway measurement probe, never committed to git, so it can never resolve -->
 

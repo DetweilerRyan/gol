@@ -73,47 +73,97 @@ const sharedExclude = [
   // split-mutation-testing-article: `npx vitest list` collected
   // `[unit] .vale/__probe.test.ts` before this entry existed.
   '.vale/**',
-  // The same hazard, closed for the class rather than patched for one more
-  // instance. Every tracked top-level directory not already named above is
-  // reachable by the unrooted default include the same way -- nothing in
-  // this config roots `unit`'s or `property`'s include at src/, so a stray
-  // test-shaped filename anywhere in the tree is collected unless this
-  // array excludes it by name. Measured 2026-09-11 by
-  // vale-styles-is-reachable-by-vitests-default-include: one __probe.test.ts
-  // placed in each of the seven directories below, each individually
-  // confirmed collected into `unit` before its own entry existed and absent
-  // after -- one probe per directory rather than one probe generalised
-  // across all seven. `features/**` is deliberately absent from this list --
-  // it is secured a different way, by stryker.config.json's ignorePatterns
-  // keeping it out of the mutation sandbox entirely, and excluding it here
-  // would suppress a layer that is meant to stay reachable.
+  // The tracked half of the same hazard, closed by enumeration rather than by
+  // rule. Every tracked top-level directory is now either named in this array
+  // or deliberately reachable, and the second half of that sentence is the
+  // interesting one -- src/, features/ and perf/ stay reachable on purpose,
+  // each for its own reason below. Measured 2026-09-11 by
+  // vale-styles-is-reachable-by-vitests-default-include, and re-measured
+  // under that slice's architectural review: a throwaway __probe.test.ts in each
+  // directory named here was collected into `unit` before that directory's own
+  // entry existed, and absent after. One probe per directory rather than one
+  // probe generalised across the set.
+  //
+  // NOTHING CHECKS THAT ENUMERATION. It is a snapshot of a date, so a
+  // top-level directory added later is reachable until someone names it here.
+  // Read that as a cost of the shape rather than as a hole in the merge
+  // predicate: the gate-bearing invariant is not this array but check C1 in
+  // scripts/mutation-invariance, which verifies each `vitest-exclude` entry of
+  // mutation-invariance.config.json against every vitest project's own
+  // `exclude`. A directory nobody has named here therefore cannot be secured
+  // that way in the first place, which is the allowlist failing safe.
   //
   // Only vale-styles/** is load-bearing today. It is a tracked directory of
   // rule and fixture files, the same shape as rules/** and rule-tests/**
-  // above, so it is a plausible next addition to
-  // mutation-invariance.config.json's vitest-exclude tier -- and that
-  // tier's soundness depends on the exclusion this entry provides existing
-  // first. The other six entries answer no live pairing today; adr/**,
-  // patches/**, schemas/** and spikes/** hold no test-shaped filenames, and
-  // perf/**'s only test-shaped files (*.perf.spec.ts) are already excluded
-  // above. They are here to close the class this array's own history shows
-  // to be a recurring gap -- each of the entries above it was added only
-  // once someone noticed the same omission for one more directory.
+  // above, so it is a plausible next addition to that `vitest-exclude` tier --
+  // and C1 can only pass for it once this entry exists. The other five answer
+  // no live pairing: adr/**, patches/**, public/**, schemas/** and spikes/**
+  // hold no test-shaped filename today. Each carries the same cost the
+  // trade-off note above names for .claude/, rules/ and rule-tests/ -- a
+  // colocated test placed there later is silently excluded rather than picked
+  // up.
   //
-  // public/** deserves its own note: it holds static assets copied by
-  // vite's build as the default publicDir, a mechanism this test.exclude
-  // array has no reach into. So excluding it from vitest test collection
-  // changes nothing about what `npm run build` ships. The same separation
-  // holds for perf/**'s inclusion in tsconfig.app.json's build scope, and
-  // for playwright.perf.config.ts, which sets its own testDir and
-  // testMatch rather than reading anything from vite.config.ts.
+  // public/** deserves its own note, because it is the one whose contents
+  // reach the shipped build. It is vite's default publicDir (this config sets
+  // none), so its files are copied verbatim into the build output -- a
+  // mechanism a `test.exclude` array has no reach into at all. Excluding it
+  // from test collection changes nothing about what `npm run build` ships.
+  //
+  // Three directories are deliberately NOT named, and the reasons differ:
+  //
+  //   src/ is where the tests live.
+  //
+  //   features/ carries the Gherkin contract and the black-box specs. Its
+  //   allowlist entry rests on stryker.config.json's ignorePatterns keeping
+  //   the whole directory out of the mutation sandbox, not on this array, so
+  //   an entry here would secure nothing that is not already secured. Nothing
+  //   under it is collected today in any case -- the *.e2e.spec.ts suffix is
+  //   subtracted above, and a step module is not test-shaped.
+  //
+  //   perf/ is the render-perf harness, and excluding it was measured and
+  //   then rejected by that same review. Its only test-shaped files are
+  //   *.perf.spec.ts, already subtracted above. It sits on
+  //   mutation-invariance.config.json's `absent` list because it is inside
+  //   tsconfig.app.json's build scope, so no diff touching it can claim
+  //   invariance and no allow entry will ever rest on excluding it. What an
+  //   entry would buy is nothing; what it would cost is real, because perf/
+  //   holds pure TypeScript modules whose natural unit test is a colocated
+  //   *.test.ts with no other home. That file would then run in no project at
+  //   all, which is the single failure the `unit` project's subtract-rather-
+  //   than-include shape exists to prevent.
   'adr/**',
   'patches/**',
-  'perf/**',
   'public/**',
   'schemas/**',
   'spikes/**',
   'vale-styles/**',
+  // The generated half, and the half that has actually bitten: every incident
+  // this array records -- the .stryker-tmp sandbox copy, .features-gen's
+  // generated specs, .vale's synced package -- was a directory a tool wrote
+  // rather than one a person tracked. The entries below are derived from
+  // .gitignore's own directory-shaped entries rather than from anyone's
+  // recollection, and each was probed the same way as the tracked half above.
+  // Each one collected. Unlike the tracked half these cost nothing: no
+  // legitimate colocated test can live in a build artifact or an editor
+  // directory, so the trade-off note above does not apply to them.
+  //
+  // dist/** is the sharp one, because a reader can easily believe vitest
+  // already handles it. It does not -- see the configDefaults note in the
+  // `test` block below.
+  'dist/**',
+  'dist-ssr/**',
+  'dist-perf/**',
+  'coverage/**',
+  'coverage-scripts/**',
+  'reports/**',
+  'playwright-report/**',
+  'blob-report/**',
+  'test-results/**',
+  'test-results-acceptance-mutation/**',
+  '.vitest-attachments/**',
+  '.idea/**',
+  '.vscode/**',
+  'logs/**',
 ]
 
 const domTests = ['src/components/**/*.{test,spec}.?(c|m)[jt]s?(x)', 'src/hooks/**/*.{test,spec}.?(c|m)[jt]s?(x)']
@@ -156,11 +206,19 @@ export default defineConfig({
     // src/'s. See .claude/agents/articles/engineering.md.
     //
     // Claude Code's native worktrees land in .claude/worktrees/, inside this
-    // checkout. configDefaults.exclude covers node_modules/dist/.git but not
-    // .claude, so without sharedExclude's '.claude/**' entry a run from the
-    // primary checkout would collect and run another slice's src/ and
-    // features/ tests as its own -- see that entry's own comment for why it
-    // covers the whole directory rather than just worktrees/.
+    // checkout. configDefaults.exclude does not reach them, so without
+    // sharedExclude's '.claude/**' entry a run from the primary checkout would
+    // collect and run another slice's src/ and features/ tests as its own --
+    // see that entry's own comment for why it covers the whole directory
+    // rather than just worktrees/.
+    //
+    // DO NOT ASSUME configDefaults.exclude COVERS A BUILD DIRECTORY. On
+    // vitest 4.1.10, this repo's installed version, it is exactly two globs:
+    // node_modules and .git. Measured 2026-09-11, after this comment had
+    // claimed for some time that it also covered dist -- a probe placed in
+    // dist/ was collected into `unit`, and the build-output entries in
+    // sharedExclude are what subtract it now. Re-measure rather than reading
+    // this forward; the list is upstream's and has narrowed before.
     //
     // .stryker-tmp*/ is the same failure with a different source. Stryker
     // sandboxes a full copy of the tree there and only removes it on a clean
