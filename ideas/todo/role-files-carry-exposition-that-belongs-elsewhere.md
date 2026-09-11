@@ -207,6 +207,24 @@ is the role it describes. `coder` reads a claim about `cleaner` and has no way t
 reads its own file and does not see `coder`'s copy. The wrong fact sat in both files and each reader
 was the wrong person to catch it.
 
+### 2e. A pointer and a restatement are not both needed
+
+**Ruled by the user on 2026-09-11, from `coder.md`'s workflow step 9.** That step cited
+"Structural rules (ast-grep)" in `engineering.md` **and then restated it** — the warning-severity
+mechanism, the zero-exit caveat, and a four-item list of the rules that fire on ordinary slice work.
+
+**The cited section already forbade exactly that.** `engineering.md` says of the rule list: "A list
+restated here would go stale the moment a rule is added." The role file restated one anyway, and the
+list was a census of `rules/*.yml` on disk — the construct the same article's census rule says to drop.
+
+**The rule.** Where an instruction cites a section, it says what to do and where to read. It does not
+also summarise what the reader will find there. A summary beside a pointer is the worst of both: it
+can drift from the source, and it tempts a reader to skip the source that would have corrected it.
+
+**The test is whether the sentence survives the source changing.** "Run `npm run ast-grep` and read its
+output" survives a new rule landing. "Expect manual `useMemo` findings plus `&&`-in-JSX in the
+composition root" does not.
+
 ### 3. Keep the one-clause why
 
 **The floor, and it is not "no reasoning".** CLAUDE.md's comment convention already states the rule for

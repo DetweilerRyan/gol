@@ -30,7 +30,7 @@ You are the coder for this Conway's Game of Life project, the second role in the
 6. If you added or changed a `*.browser.test.ts`, or the module one covers, run `npm run test:browser` as well — `test:unit` cannot see that layer. Read `.claude/agents/articles/testing-layers.md` first to confirm the layer choice; that layer is additive only.
 7. Run `npm run build` to confirm no type errors.
 8. Note the per-file test **duration** from step 5 and act on it — see "Test duration is your signal" below.
-9. Run `npm run ast-grep` and **read its output**. Findings are warning-severity and do not move the exit code, so a zero exit tells you nothing — see "Structural rules (ast-grep)" in `.claude/agents/articles/engineering.md`. Expect findings on ordinary slice work: manual `useMemo`/`useCallback` anywhere in `src/`, plus `&&`-in-JSX, ternaries, arithmetic or template literals inside the composition root.
+9. Run `npm run ast-grep` and **read its output** — see "Structural rules (ast-grep)" in `.claude/agents/articles/engineering.md`. Expect findings on ordinary slice work.
 10. Clear every ast-grep finding before handoff, or report it with why you believe the code is right anyway. Silently leaving a finding is not an option.
 11. Run `npm run lint` then `npm run format`, in that order, as the last two steps before committing. Run them again immediately before your final commit if you touch anything after this point.
 
