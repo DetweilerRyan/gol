@@ -8,6 +8,7 @@
 // crap4ts:scripts and test:mutation:scripts, since all three are
 // TypeScript-scoped configs, so that shell form could not be reached by any
 // of this program's own siblings' gates.
+// reference-check: allow run.sh -- deleted by prose-lint-runner-is-shell-not-typescript; named here as dated history of what this file replaced
 //
 // `cwd: REPO_ROOT` on both spawns is load-bearing, not incidental: vale
 // resolves `.vale.ini` relative to its own working directory, so a spawn

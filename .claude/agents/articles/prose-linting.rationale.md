@@ -661,6 +661,8 @@ at once, so a mistyped path in a verification command reads as a clean tree. The
 
 ### `--no-exit` separates "cannot lint" from "found something", measured 2026-09-10
 
+<!-- reference-check: allow run.sh -- deleted by prose-lint-runner-is-shell-not-typescript; named here as dated history of the defect this measurement found -->
+
 `scripts/prose-lint/run.sh` declared in its own header that it fails loudly when it cannot lint. It
 did not. The `xargs vale` line discarded its status, and the trailing echo returned 0 unconditionally,
 so a vale abort printed `E100` to stderr and still closed with "A zero above is a measured zero".

@@ -25,6 +25,19 @@ describe('extractFileTokens', () => {
     expect(extractFileTokens('rules/no-foo.yml and sgconfig.yaml')).toEqual(['rules/no-foo.yml', 'sgconfig.yaml'])
   })
 
+  it('finds a .sh token', () => {
+    expect(extractFileTokens('see scripts/prose-lint/run.sh for the deleted shell form')).toEqual([
+      'scripts/prose-lint/run.sh',
+    ])
+  })
+
+  // Boundary case for FILE_TOKEN_SOURCE's trailing negative lookahead: a
+  // longer word merely starting with the .sh extension is not a truncated
+  // match, mirroring the existing .ts/tsconfig and .md/.mdx fixtures above.
+  it('does not report a truncated match for a word starting with sh', () => {
+    expect(extractFileTokens('run.shx is not a real file')).toEqual([])
+  })
+
   it('finds more than one token on the same line', () => {
     expect(extractFileTokens('classify.ts and vitest-runner.ts')).toEqual(['classify.ts', 'vitest-runner.ts'])
   })

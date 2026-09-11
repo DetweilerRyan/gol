@@ -124,6 +124,8 @@ carried over.
 - The Go/Clojure/Java language-tool installation table and per-language framework preferences (Babashka, Speclj, Maven) — this is a single-language TypeScript project; its tools (`dry4ts`, `crap4ts`, Stryker, `scripts/acceptance-mutation`) are already pinned in `package.json`/`scripts/`, nothing needs installing from GitHub at agent startup.
 - `six-pack` branch's own `local-workflow.prompt` was also reviewed for this migration — it's entirely about that branch's tmux/QA-handoff-merge mechanics (`done_with_current.sh`, `merge_and_process QA <commit>`, ignoring wake-ups mid-task), not applicable here, and its one substantive rule (run tests before handoff) duplicates the `local-engineering` rule already captured above.
 
+<!-- reference-check: allow done_with_current.sh -- unclebob/swarm-forge's own file, cited as the source this migration reviewed; never existed in this repo -->
+
 ## The experiment that committed one row and no table
 
 `black-box-acceptance-pilot`'s defect duel published one row's conclusion into `CLAUDE.md` and recorded the table nowhere. When that row turned out to be wrong, nothing said what the other rows were, so none could be re-checked. The error was catchable only because `product` independently re-derived that one row.

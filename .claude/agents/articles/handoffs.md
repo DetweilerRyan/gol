@@ -2,6 +2,10 @@
 
 Adapted from unclebob/swarm-forge's `main`-branch constitution (`swarmforge/constitution/articles/handoffs.prompt`). The source article describes a file-based `git_handoff`/`note` message protocol driven by helper scripts (`swarm_handoff.sh`, `ready_for_next.sh`, `done_with_current.sh`) and tmux wake-ups across per-role worktrees — none of that machinery exists in this repo. Worktrees do, but per **slice** rather than per role (see `workflow.md`), so they carry no handoff traffic: within a slice, every role works in the same worktree and hands off in sequence. What's portable is the underlying discipline:
 
+<!-- reference-check: allow swarm_handoff.sh -- unclebob/swarm-forge's own file, cited as the source this article was adapted from; never existed in this repo -->
+<!-- reference-check: allow ready_for_next.sh -- unclebob/swarm-forge's own file, cited as the source this article was adapted from; never existed in this repo -->
+<!-- reference-check: allow done_with_current.sh -- unclebob/swarm-forge's own file, cited as the source this article was adapted from; never existed in this repo -->
+
 ## Sending a handoff
 
 - Commit your changes to the slice branch first, then report back to the orchestrating session — this is this repo's equivalent of a `git_handoff` message. See each role file's own "Handoff" section for what to report and who's invoked next.

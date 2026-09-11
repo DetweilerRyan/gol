@@ -24,7 +24,19 @@
 // 1,448 backticked `.md` tokens against 4 link-form ones. Every off-the-shelf
 // link checker reads links, so none of them sees the 1,448. See
 // doc-comments.rationale.md for the three tools evaluated and rejected.
-const EXTENSION_ALTERNATION = 'tsx|ts|yaml|yml|md'
+//
+// `sh` was added later: this alternation is an allowlist, and any other
+// extension -- `sh` included, before this -- was invisible to
+// file-reference-resolves and could never trip stale-allow-marker either.
+// prose-lint-runner-is-shell-not-typescript hit exactly that: it deleted
+// scripts/prose-lint's own shell-script predecessor while a sidecar still
+// cited it by name, the gate stayed green, and a ratified allow-marker for
+// the citation turned out to be unsatisfiable -- a marker naming a token
+// this extractor cannot produce is stale on arrival. There are zero tracked
+// .sh files in this repo, so every live `.sh` citation names either dated
+// history (a deleted file, excused by a same-file allow-marker) or another
+// repository's file that never existed here (same remedy).
+const EXTENSION_ALTERNATION = 'tsx|ts|yaml|yml|md|sh'
 // The trailing negative lookahead keeps `.tsconfig` (or any other longer
 // word starting with a real extension) from reporting a truncated token.
 const FILE_TOKEN_SOURCE = `[A-Za-z0-9_.*/-]*\\.(?:${EXTENSION_ALTERNATION})(?![A-Za-z0-9_])`
