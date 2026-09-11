@@ -44,3 +44,20 @@ beside it.
 
 Two consequences the choice itself required, both landed in `CLAUDE.md`: branch 5 records
 this as its second placement exception, and the documentation map carries the pointer line.
+
+## Documentation map
+
+### Branch 1's own correction
+
+Branch 1 used to read "it has no other instruction surface", which
+`document-the-orchestrating-seat` made false by giving the orchestrating seat one.
+
+### Branch 5's roughly-1 KB floor
+
+A pair's own framing measures 1.0-1.4 KB across the three landed role pairs. Measured across
+the five role files plus `orchestration.md`: three earned a sidecar and three did not.
+
+### Branch 5's pair-consistency audit
+
+Measured on the first pair: six editing passes on the article dropped fifteen illustrations
+out of the pair entirely rather than moving them across.
