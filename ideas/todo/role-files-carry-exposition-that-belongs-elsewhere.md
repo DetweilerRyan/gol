@@ -75,6 +75,30 @@ Four destinations, and CLAUDE.md's branches already name three:
   The user named this destination specifically, and it is the least-used of the four today.
 - **Deletion**, where a paragraph defends a rule nobody disputes. Rare, and it needs a reason.
 
+### 3. A role file never points at its own sidecar
+
+**Ruled by the user on 2026-09-11.** A role file carries no reference to its `.rationale.md` sidecar,
+and no instruction about when to read one. A role does not change its own file, so the rationale is
+not addressed to it. A pointer is unnecessary at best and dangerous at worst: it invites the role to
+read material that argues about rules rather than stating them, which is the exposition this whole
+entry exists to remove — reintroduced by the very sentence that routed it away.
+
+**The sidecar's audience is whoever is changing the rule**, and that reader arrives from
+`CLAUDE.md`'s sidecar index, not from the role file.
+
+**Measured 2026-09-11, and it is not one line.** Across the four role files with a sidecar there are
+**21 pointers**: `architect.md` 8, `hardener.md` 7, `cleaner.md` 5, `coder.md` 1. Most take the form
+"the worked example is in `<role>.rationale.md`" or "the measurement is in `<role>.rationale.md`" —
+a sentence whose whole content is that an argument exists elsewhere.
+
+`coder.md`'s was removed when this was ruled. **The other 20 are follow-up work**, one per role file,
+and each strip clears its own.
+
+**This binds the other three sidecar tiers differently, and do not over-apply it.** An article may
+point at its own sidecar, and `CLAUDE.md`'s branches 4 and 5 still mandate the `@see` form for a
+module sidecar. The rule is specific to a role file, because a role file's reader is the only one
+who provably never needs the argument.
+
 ### 3. Keep the one-clause why
 
 **The floor, and it is not "no reasoning".** CLAUDE.md's comment convention already states the rule for
