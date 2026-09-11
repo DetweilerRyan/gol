@@ -652,6 +652,16 @@ guilty until measured on this corpus.
 explicit value. Adding a rule to the package is then a deliberate edit here, not a silent change in what
 gates.
 
+**No landed state may leave a hand-run reporting a backlog nobody has triaged.** That is the
+constraint a new rule has to clear, and it binds harder than precision does. A rule with excellent
+precision can still land 200 findings. Every later run is then unreadable, because nobody can tell its
+output from a regression. So treat a rule and the remediation of what it finds as one piece of
+work, never two. A rule whose findings the slice cannot clear waits for a slice that can.
+
+The design pass deferred two upstream rules on exactly this, rather than on merit — see
+`prose-linting.rationale.md`. Deferring is the right disposition there. Landing the rule and leaving
+the findings is not.
+
 **A rule earns its place by a measured precision count on a real file, not by sounding useful.** Record
 the count and the date in `prose-linting.rationale.md`. Three rules have been rejected on measurement;
 one of them, `STE.Modals`, would have done real damage.
