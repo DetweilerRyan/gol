@@ -129,6 +129,34 @@ agents rewrite guidance — they are already told not to. It is whether a factua
 is a fourth thing an agent may do to an article, or whether even that belongs to the seat that owns
 the document. Answer it; do not leave the presumption standing.
 
+### 2b. A role file states no fact about another role's file
+
+**Ruled by the user on 2026-09-11, from a live defect.** `coder.md`'s workflow step 5 said the property
+project is skipped because "only `architect`, `hardener` and `product` need" it, and its Boundaries said
+"property tests belong to `architect`". **Both were false.** `cleaner.md`'s own Owns list says it adds a
+property test where a unit test really checks an invariant over a range of inputs.
+
+**The defect is structural, not a typo.** A role file that describes another role's responsibilities is a
+second copy of that role's own text, and nothing checks the two agree. `cleaner.md` carries the same
+false claim about itself at its step 4, which is how the error survived: the wrong fact was written in
+two files and neither reader was the role it was about.
+
+**The rule.** A role file may say _what is not yours_ — that is a routing fact the role needs. It may not
+say _whose it is_, _how they do it_, or _what their threshold is_. Three shapes to remove on sight:
+
+- **A threshold owned elsewhere.** `coder.md` quoted `cleaner`'s "roughly 100+ mutants prompts a split"
+  and cited `cleaner.md` beside it. A number with a citation is still a copy.
+- **A step number in another file.** "the scoped mutation scan in particular is `cleaner`'s workflow step
+  3" breaks when that file renumbers, and this slice renumbered `coder.md` 8 → 11.
+- **An attribution where a prohibition would do.** "those are `architect`'s" adds nothing to "never edit
+  them" except a fact that can rot.
+
+**Prefer the cycle over the name where one is needed at all.** "They belong to later roles in the cycle"
+survives a role rename; "`cleaner`, `architect` and `hardener`" does not.
+
+**Four edits made to `coder.md` under this ruling**, with the false ones first: step 5's property claim,
+the Boundaries property claim, `cleaner`'s mutant threshold, and the step-3 citation.
+
 ### 3. Keep the one-clause why
 
 **The floor, and it is not "no reasoning".** CLAUDE.md's comment convention already states the rule for
