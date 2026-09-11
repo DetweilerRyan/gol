@@ -29,12 +29,15 @@ The scan counts moved with it on that date. `reference-check` scanned 422 files 
 sidecar in `articles/` and 421 with it at the root; `agent-doc-check` read 33 doc files
 against 32.
 
-The mechanism is in each checker's own scope module. `reference-check`'s `scan-scope.ts`
-takes `CLAUDE.md` and `README.md` by exact name plus every `.md` under `.claude/`;
-`agent-doc-check`'s `run.ts` globs `.claude/**/*.md` plus `CLAUDE.md`. A third root-level
-`.md` is outside both. So the root placement would have passed every gate **by being
-invisible to all of them** — an unchecked file dense with filename tokens and `npm run`
-references is the drift object those two checkers exist to catch.
+The mechanism was in each checker's own scope module, as of that measurement.
+`reference-check`'s `scan-scope.ts` took `CLAUDE.md` and `README.md` by exact name plus every
+`.md` under `.claude/`; `agent-doc-check`'s `run.ts` globs `.claude/**/*.md` plus `CLAUDE.md`,
+still current. A third root-level `.md` was outside both. So the root placement would have
+passed every gate **by being invisible to all of them** — an unchecked file dense with
+filename tokens and `npm run` references is the drift object those two checkers exist to
+catch. `reference-check-reach` later widened `scan-scope.ts`'s doc surface to every tracked
+`.md` outside `ideas/**`, which reaches a root-level `.md` too; this comparison is a snapshot
+of the state on the date measured, not a claim about the checker's scope today.
 
 Auto-load is a non-discriminator. Neither location is auto-loaded, so it separates nothing
 and the decision does not rest on it.

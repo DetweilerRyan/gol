@@ -58,9 +58,12 @@ function isDiscardedToken(token: string): boolean {
 }
 
 /**
- * Every `<name>.ts`/`.tsx`/`.yml`/`.yaml`/`.sh`-shaped token on `line`, minus
- * glob fragments (any token containing `*`) and dotted-relative noise (any
- * token whose basename starts with `.`).
+ * Every `<name>.ts`/`.tsx`/`.yml`/`.yaml`/`.md`/`.sh`-shaped token on `line`,
+ * minus glob fragments (any token containing `*`) and dotted-relative noise
+ * (any token whose basename starts with `.`). A genuinely relative token
+ * (`./<name>.md`, `../<other>.rationale.md`) is kept and resolved by its own
+ * basename -- this checks that the *name* resolves somewhere in the repo,
+ * not that the relative path in front of it is right.
  */
 export function extractFileTokens(line: string): string[] {
   const matches = line.match(new RegExp(FILE_TOKEN_SOURCE, 'g')) ?? []

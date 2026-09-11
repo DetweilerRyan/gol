@@ -207,31 +207,38 @@ contract is shaped this way. All three live links do exactly that.
 
 **What `reference-check` sees of a sidecar is narrower than "the filename is checked", and the difference
 falls on the one form this rule mandates.** `check-md-references` added `md` to the extractor, so a
-**repo-relative** token names a file the checker resolves. Everything below was measured 2026-09-09 by
-fault injection against the landed tree:
+**repo-relative** token names a file the checker resolves. `reference-check-reach` later closed the two
+gaps this section used to describe as open; what follows is the state after that slice, verified against
+the landed tree:
 
 - **A repo-relative token in doc prose or in a `//` comment is checked.** Rewriting
   `src/cache.rationale.md` to a name that resolves to nothing fails the gate by name and line. Renaming
   both module sidecars redded four such references at once.
-- **A leading-dot token is discarded before it reaches any check.** `references.ts`'s `isDiscardedToken`
-  drops every token starting with `.`, which is dotted-relative noise for its purpose and is also the exact
-  shape of `@see {@link ./cache.rationale.md}`. Breaking that link to a name that resolves to nothing left
-  the run green with the reference count unmoved, so the token was never extracted. **Cite a sidecar
-  repo-relative in a `//` comment for that reason.** The `./` form stays only inside `{@link}`, where
-  hover rendering demands it, and it buys no check there.
+- **A leading-dot token is now checked too, by its own basename.** `references.ts`'s `isDiscardedToken`
+  used to drop every token starting with `.`, which also discarded the exact shape of
+  `@see {@link ./cache.rationale.md}` -- the mandated form itself. It now checks only whether the token's
+  _basename_ starts with `.`, so `./cache.rationale.md` resolves against `cache.rationale.md` wherever it
+  lives. **What this verifies is that the name resolves, not that the relative path in front of it is
+  right** -- `{@link ./<name>.md}` written from any directory resolves against a `<name>.md` anywhere in
+  the repo, the same basename-only matching every other check in this program already made. A sidecar
+  reference no longer needs a parallel `//`-comment repo-relative citation for the checker's sake, though
+  one may still exist for a reader who cannot resolve a relative path from prose alone.
 - **Matching is by basename, never by full path.** A sidecar moved to another directory still resolves.
   Measured by relocating `src/cache.rationale.md` into `src/hooks/`: green.
-- **`src/**/*.md` is outside the checker's scan set.** The source surface is `.ts`/`.tsx`/`.yml`/`.yaml`, and
-  the doc surface is `CLAUDE.md`, `README.md` and `.claude/**/*.md`. A sidecar's own references go unread; a
-  made-up `.ts` token appended to `src/scrollbars.rationale.md` left the run green.
+- **The doc surface is now every tracked/untracked-not-ignored `.md` file outside `ideas/**` and
+  `.claude/worktrees/**`**, not `CLAUDE.md`, `README.md` and `.claude/**/*.md` alone. A sidecar's own
+  references are read directly under this surface -- `src/**/*.md` no longer needs the source surface to
+  reach them.
 
 **Vale does reach the pair, and treats the halves differently.** `.vale.ini` scopes `[src/**/*.md]` to the
 same six STE rules the articles carry. Its `[**/*.rationale.md]` section then exempts the rationale half,
 matching how article rationale is treated.
 
-Until the scan gaps close, treat a rename that moves a module as a rename of both its sidecars. Hold a
-sidecar to the comment-assertion convention by hand as well: no quoted test titles, no caller rosters, no
-`<file>:NN`. Nothing will catch one.
+`reference-check-reach` closed the two scan gaps this used to warn about by hand: a rename that moves a
+module without moving its `@see {@link ./<module>.rationale.md}` citation now fails
+`file-reference-resolves`, since that citation resolves by basename like any other. What the checker still
+cannot verify is a sidecar's own **contents** -- hold a sidecar to the comment-assertion convention by hand:
+no quoted test titles, no caller rosters, no `<file>:NN`. Nothing will catch one.
 
 **Which half a fact goes in is branch 5's test, one tier down: does a caller act on it?** The claim a
 caller acts on belongs in the hover, and its worked-out form in `<module>.md`. The evidence behind that
