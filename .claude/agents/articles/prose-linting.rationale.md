@@ -859,3 +859,48 @@ file only. The two as a list reported both.
 extension at once, which moves the extension decision out of the rule and into `.vale.ini`'s section
 glob. That is precisely what the per-rule ruling forbids, so the list form is the one to write even
 though the bare form is shorter.
+
+### `block` scope never sees a single-line `/** ... */`, measured 2026-09-10
+
+The over-reach half of the scope story is recorded above: `block` means multi-line, so it takes JSX
+and plain `/* ... */` blocks too. The under-reach half went unrecorded through the whole slice.
+
+Measured against the shipped `JsDoc` style, on one file carrying the same sentence twice — once in a
+single-line `/** ... */` and once in a three-line block:
+
+| where the sentence sat   | `SelfReferentialOpener` |
+| ------------------------ | ----------------------- |
+| single-line `/** ... */` | silent                  |
+| multi-line `/** ... */`  | fired                   |
+
+Nothing else differed. So every rule in the style carries this blind spot, and no scope selector
+closes it: `line` would reach the one-liners and every `//` comment with them, which is the untriaged
+backlog that shape of change is not allowed to create.
+
+**The census, on the 264-file `.ts` corpus this sidecar already defines**: 49 single-line `/** ... */`
+blocks against 277 multi-line ones, spread over 22 files. So roughly one JSDoc block in seven is
+outside every rule the style ships.
+
+The design pass recorded 53 single-line blocks with 14 carrying a contraction, over a 104-file corpus
+defined by a different command. The two are not comparable and the earlier pair is superseded rather
+than refuted. The contraction half is not re-derived here, because `STE` does not run over `.ts` at
+all today — that is slice 2's surface.
+
+### The two list-scoped `STE` rules reach a JSDoc, and a tag line defeats them
+
+Measured 2026-09-10 on one `.ts` file, with `STE.ProcedureLength` and `STE.OneInstruction` re-levelled
+to `warning` over a comment carrying the same over-length "and then" chain twice:
+
+| where the chain sat  | `ProcedureLength` | `OneInstruction` |
+| -------------------- | ----------------- | ---------------- |
+| a Markdown list item | fired, 22 words   | fired            |
+| a `@param` tag line  | silent            | silent           |
+
+So the answer to the design pass's open question is yes for a list and no for a tag block, and the
+corpus zeros for both rules are a fact about this repo's JSDoc rather than about reachability.
+
+**Two calibration notes, because both probes first read as refutations.** `ProcedureLength` fires
+above 20 **counted** words, and Vale's count ran one below the raw word count on both fixtures, so a
+21-word item is silent. And a comment-scoped `existence` rule fires with no `[formats]` mapping while
+a `scope: sentence` rule does not, so a single-rule probe cannot tell a missing mapping from a working
+one. Each probe needed its own control before its zero meant anything.

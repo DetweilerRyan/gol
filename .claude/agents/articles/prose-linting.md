@@ -250,6 +250,16 @@ reaches a `.tsx` file. A rule carrying only the `.ts` scope is handed every comp
 nothing, which reports zero and reads exactly like a clean file. `[*.ts]` does not match a `.tsx` file
 either — the suffix has to be named, hence the brace glob.
 
+**`block` scope also under-reaches, and that half is easy to miss.** It never sees a **single-line**
+`/** ... */`. The discriminator is multi-line against single-line: the same sentence that a
+three-line hover polices, a one-line hover does not. No selector means "JSDoc" — a `line` scope would
+reach the one-liners and every `//` comment with them. So a clean `JsDoc` run is evidence about
+multi-line blocks and about nothing else.
+
+**Read that as a reason to prefer the multi-line form for anything a rule should see**, not as a
+reason to widen a scope. Widening to `line` is a design change with its own measurement, and nobody
+has taken it.
+
 ### Each rule declares its own extensions. That is per rule, never per style.
 
 **Ruled by `architect` on 2026-09-10, and enforced again in the REVIEW pass that followed.** A blanket
@@ -364,6 +374,17 @@ files nobody scoped it to.
 
 So `.claude/agents/*.md` and `.claude/agents/**/*.md` reach the same files. `.vale.ini` writes the `**`
 form deliberately, because it reads correctly to someone carrying that narrower intuition.
+
+### Which `STE` rules a JSDoc can actually trip
+
+`ProcedureLength` and `OneInstruction` are both list-scoped, and a JSDoc **can** carry a Markdown
+list, so both are reachable in a hover. Their zeros on the `.ts` corpus are real rather than
+structural: this repo's JSDoc holds no such lists.
+
+**A `@param` or `@returns` tag line is not a Markdown list item and trips neither**, whatever it
+says. One file carried the same over-length "and then" chain twice, in a list item and in a `@param`
+line. The list item fired both rules. The tag line fired neither. So the tag block sits outside those
+two rules, which reach only the prose above it.
 
 ## The six enabled rules, and what to do with each
 
