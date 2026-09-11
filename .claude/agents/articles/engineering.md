@@ -36,16 +36,6 @@ These docs describe the codebase as it currently stands, not a contract that fre
 
   Do not copy either kind into an individual role file. Duplicates drift out of sync, and putting a general concern in one role's file implies that role owns it. A role file carries only what is specific to that role.
 
-## Write instructions, not accounts
-
-An instruction file — a role file, an article's rule text, `CLAUDE.md` — says what to do, when, and
-under what precondition. Keep the why to one clause beside the rule it justifies. Route anything
-longer to the file's `.rationale.md` sidecar: the incident, the measurement, the mechanism, the
-rejected alternative. This binds every role and the orchestrating session at authoring time. No
-setting or inherited style asks any agent for terse prose, so the instruction here is the only
-lever. `.claude/agents/articles/prose-linting.md` owns the split itself and the `Instruction` Vale
-style that guards stripped role files; read it before moving a sentence either way.
-
 ## Which test layer a test belongs in
 
 `testing-layers.md` in this directory describes three test layers, plus the Gherkin contract they answer to. The black-box layer runs as two Playwright projects, and those are **not** two ways of writing the same test. **Place a test by what it verifies, not by what it needs to run.** Three of the four placements below run in a real browser, and none is interchangeable with another:
