@@ -81,6 +81,33 @@ A rule earns a place when the rewrite is shorter and an author reading the after
 same thing. It fails when the rewrite is the same length in different words, or when a reader loses a
 constraint.
 
+**Spike on `coder.md` first, and `architect.md` last. Ruled by the user 2026-09-11.**
+`coder.md` is 1,857 words against `architect.md`'s 4,917, so a constraint lost in a rewrite is
+cheaper to notice there. `architect.md` is also the file whose reasoning most directly produces this
+repo's design calls, which makes it the worst place to discover that a rule strips substance.
+
+**One measurement makes that ordering better than a caution, and it was a surprise.** Probed
+2026-09-11 on the same all-rules config:
+
+| File           | Words | Findings | Per 1000 words |
+| -------------- | ----- | -------- | -------------- |
+| `coder.md`     | 1,857 | 84       | **45.2**       |
+| `architect.md` | 4,917 | 196      | **39.9**       |
+
+**`coder.md` is the denser target, not the thinner one.** The intuition that the biggest file is the
+most verbose is wrong here — `architect.md` is long because it carries four modes, not because its
+prose is loose. So the small file is both the safer place to experiment and the one with more per-word
+signal, and those two usually pull against each other.
+
+**That has a consequence for the spike's scope, and it should be tested rather than assumed.** If
+`architect.md`'s prose is already at the corpus density, then rules will not compress it much, and its
+length is a **routing** problem — four modes in one file — rather than a prose problem. Routing is
+`CLAUDE.md`'s branch question, not Vale's. Measure before concluding, but do not assume a rule set that
+works on `coder.md` will halve `architect.md`.
+
+`coder.md`'s own profile, for the first cohort: `Gerunds` 34, `ProcedureLength` 22, `Dictionary` 13,
+`PassiveVoice` 7, `Modals` 3, `NounClusters` 1, `Ambiguity` 1, `Slop` 3 across three rules.
+
 **The `= NO` four are the first cohort**, because they are the largest measured signal and because
 their disabling was never per-rule. `Gerunds` at 264 is the single biggest lever and also the most
 likely to be noise; measure it first and be willing to reject it loudly.
@@ -131,9 +158,10 @@ sections below it, and nothing checks that.** Read `prose-linting.md` before tou
 - **Which corpus does a rule get judged against?** A rule enabled for the agent files also fires on the
   articles, `CLAUDE.md` and the JSDoc blocks, which have different registers and different audiences.
   `.vale.ini` already sections by glob; decide per rule which sections it belongs to, and record it.
-- **Should the spike touch `architect.md` at all?** It is the largest file at 4,917 words and the most
-  obvious target. It is also the file whose reasoning most directly produces the repo's design calls.
-  Consider spiking on `coder.md` at 1,857 words first, where a lost constraint is cheaper to notice.
+- **Is `architect.md`'s length a prose problem or a routing one?** Its finding density is below
+  `coder.md`'s, which is evidence for routing. Four modes in one file may want four files, or a mode
+  index with the depth behind it. That is a `CLAUDE.md` branch question and it is out of this spike's
+  remit — but the spike is what produces the evidence for it.
 - **Is `Gerunds` at 264 a real finding or a register mismatch?** STE was written for aircraft
   maintenance procedures. An agent file is closer to a specification than to a procedure, and 264 may
   be the rule objecting to a legitimate register rather than to bad prose.
