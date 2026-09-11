@@ -411,8 +411,8 @@ rule is ever lost that way; what goes missing is the example that made a rule le
 
 **The rules above cannot see the defect this style exists for.** `STE.ParagraphLength` treats a
 Markdown list item as no paragraph at all, so a many-sentence numbered step reports zero. Role files
-keep their instructions in lists, so that is exactly where exposition accumulates. The two rules in
-the tracked `vale-styles/Instruction/` style close that hole, and they mechanise the split this
+keep their instructions in lists, so that is exactly where exposition accumulates. The three rules
+in the tracked `vale-styles/Instruction/` style close that hole, and they mechanise the split this
 article states under "Instruction stays. Explanation moves."
 
 **Both are proxies, and they cover each other's blind spot.** A green run is **not** evidence a file
@@ -426,6 +426,13 @@ sentence is where the account of the rule starts. Route the account to the role 
 `.rationale.md` sidecar per the split above — do not split the item in place to clear the count.
 
 **What it misses:** exposition that is short. Three tight sentences of history pass this rule.
+
+### `Instruction.ParagraphSentences` — act on every finding
+
+The plain-paragraph counterpart, at four sentences rather than `STE.ParagraphLength`'s six. The
+extra sentence over the list rule is for the intro shape. Identity, mandate, the house-rules read
+trigger, and the sidecar pointer are four instruction sentences in one paragraph. The remedy is the
+same routing, never a split in place.
 
 ### `Instruction.HistoricalNarration` — act unless the match is a live condition
 

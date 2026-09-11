@@ -1,0 +1,22 @@
+# The plain-paragraph counterpart of ListItemSentences. STE.ParagraphLength
+# caps a paragraph at six sentences, which is calibrated for articles; a role
+# file's paragraphs are intros and section leads, and five or six sentences
+# there is where narration settles in below the STE rule's reach.
+#
+# MAX 4, one above the list rule, and the asymmetry is derived, not guessed.
+# A role file's opening paragraph legitimately carries four instruction
+# sentences: identity, mandate, the house-rules read trigger, and the sidecar
+# pointer. Measured on the stripped coder.md 2026-09-11: 0 findings at max 4,
+# and exactly 1 at max 3 -- that intro. The four unstripped role files carry
+# 33 findings at max 4, which is the backlog that keeps this rule enabled per
+# stripped file only.
+#
+# SURFACE: role files only, and only the ones already stripped -- same
+# scoping and same honesty note as ListItemSentences: a regrowth guard, not a
+# definition of the standard.
+extends: occurrence
+message: "Paragraph has %d sentences. A role-file paragraph gets four; the account of the rule goes to the .rationale.md sidecar (prose-linting.md, 'Instruction stays. Explanation moves.')."
+level: warning
+scope: paragraph
+max: 4
+token: '[.!?]["''’\)\]]*(?:\s|$)'

@@ -1178,3 +1178,13 @@ installed; its 14 rules are general English style (see the re-opened evaluation 
 counts sentences per list item or matches narration vocabulary, so it does not serve this purpose
 either. Adopting a `Std` rule by name stays with
 `ideas/candidates/mechanise-prose-soundness-with-a-style-package.md`.
+
+### `ParagraphSentences` threshold derivation, same date
+
+The paragraph-scoped variant was measured at max 4 after the strip: 0 findings on the stripped
+`coder.md`, and 33 across the four unstripped role files (architect 12, cleaner 9, hardener 10,
+product 2) — real guard value with zero backlog on the enabled surface. At max 3 it fires exactly
+once on the stripped file, on the intro paragraph, whose four sentences are all instruction
+(identity, mandate, the house-rules read trigger, the sidecar pointer). That is the asymmetry
+against `ListItemSentences`' max 3: a role-file paragraph legitimately carries the intro quartet,
+a list item is a single instruction unit.

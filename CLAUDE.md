@@ -14,7 +14,7 @@ Conway's Game of Life, built as an infinite, pannable/zoomable grid (React 19 + 
 
 Three articles are house rules every role reads unconditionally — **and the orchestrating session reads them too.** They were labelled per-role because the seat that invokes the roles has no role file; the content was never role-specific.
 
-- **`.claude/agents/articles/engineering.md`** — design, test-layer placement, property tests, gate scoping, claim discipline. Its evidence lives in the sidecar `engineering.rationale.md`, which no role reads.
+- **`.claude/agents/articles/engineering.md`** — design, test-layer placement, property tests, gate scoping, claim discipline, the instruction-register standard. Its evidence lives in the sidecar `engineering.rationale.md`, which no role reads.
 - **`.claude/agents/articles/workflow.md`** — lint/format, role boundaries, commit messages, worktrees and branches.
 - **`.claude/agents/articles/handoffs.md`** — handoff shape, concurrent slices, defect adjudication, when blocked.
 
