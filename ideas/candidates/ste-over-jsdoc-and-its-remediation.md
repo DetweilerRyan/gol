@@ -50,6 +50,11 @@ Three measured facts that shape the work, all in `prose-linting.rationale.md`:
 
 ## Open questions
 
+- **Does the intersection caveat between `prose-linting.md` and `doc-comments.md` hold?** Still open,
+  inherited from the design pass rather than raised here. The do-not-merge ruling stands and nothing
+  has been found against it: the two articles govern different dimensions, so the design wanted a
+  cross-link rather than a merge. Recovered during the sweep that deleted the design pass's own file,
+  which is the only reason it survived.
 - **Does `@returns` need an exempt class of its own?** A `@returns` noun phrase reads as passive
   ("The value that is returned by the caller") and is conventional rather than wrong. The finding is
   measured; the remedy is not.
