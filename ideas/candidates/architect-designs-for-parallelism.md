@@ -33,6 +33,66 @@ What's missing is the feedback: nothing measures whether a boundary change
 actually bought concurrency. The evidence arrives slices later, as a rebase that
 did or didn't conflict, and by then nobody is looking.
 
+## Measured 2026-09-11 — the first open question, answered in part
+
+The first open question below says to test whether coupling or the serial gate is the binding
+constraint **before building any of this**. Two slices were run end to end on 2026-09-11 and here are
+their role durations.
+
+| Role                  | `vale-styles-…-default-include` | `prose-lint-runner-is-shell-not-typescript` |
+| --------------------- | ------------------------------- | ------------------------------------------- |
+| architect DESIGN      | —                               | 10.7 min                                    |
+| coder                 | 7.5 min                         | 15.8 + 6.9 min                              |
+| cleaner               | skipped, demonstrated           | 9.2 min                                     |
+| architect REVIEW      | 16.6 min                        | 17.8 min                                    |
+| hardener, slice gate  | 16.9 min                        | 20.1 min                                    |
+| hardener, integration | 17.6 min                        | skipped by user ruling                      |
+
+**The band this idea would parallelise — `coder` plus `cleaner` — is 31.9 of roughly 78 minutes on
+the second slice.** Split perfectly in two it saves about 12 minutes, and the two `hardener` runs,
+roughly 34 minutes and mostly mutation, do not move at all. That is consistent with the open
+question's worry rather than against it.
+
+**A second finding the open question does not anticipate: invocation overhead is large and roughly
+fixed relative to slice size.** The port's genuinely independent unit was three pure modules whose
+tests run in 2ms each. Fanning those out to three `coder` invocations multiplies context loading,
+gate runs and the advisor loop to parallelise work that is not where the time is. So the partition
+objective pays only when units are big enough to dominate that fixed cost, which is a sharper
+criterion than "which units can be authored at the same time".
+
+**Two limits on these numbers, stated so they are not over-read.** A subagent's wall time cannot be
+decomposed into thinking versus command execution from outside, so "gates dominate" is an inference
+from the commands each role ran, not a profile. And two slices is a thin sample.
+
+## Registered experiment — `reference-check-reach`
+
+Chosen by the user on 2026-09-11 over promoting this idea directly, so the mechanism is tested before
+it is written into a role file.
+
+`reference-check-reach` bundles four gaps in one program. Its design pass produces a **partition**
+rather than an ordering, fans out `coder` → `cleaner` per unit, and fans back in to a single
+`architect` REVIEW over the union.
+
+**The partition is two units, not four, and that was measured before the slice started.** Gap 1 lives
+in `scan-scope.ts`. Gaps 2, 3 and 4 all live in `references.ts`, where `EXTENSION_ALTERNATION` sits at
+line 27 and `isDiscardedToken` at line 32 — five lines apart, so concurrent branches conflict however
+independent the reasoning is. **`architect` had ruled Gap 4 independent of the other three, and
+semantically it is.** Textual adjacency is the constraint, and no amount of interface design moves it.
+
+That makes this a hard case rather than a favourable one, which is the point: a bundle assembled
+precisely _because_ its parts collide is where a partition objective is least likely to pay.
+
+**Metrics, both readable at merge:** wall time against this slice's serial baseline, and files touched
+by two or more units. Plus one this idea's item 7 predicts and the serial run already demonstrated —
+cross-unit duplication caught only at fan-in. `prose-lint-runner-is-shell-not-typescript` grew an
+`initGitRepo` byte-identical to `reference-check/run.test.ts`'s, and `cleaner` caught it **because**
+the work was serial. Two parallel units would have hidden it until the merge.
+
+**One hazard this idea does not name.** Each gap's real cost is triaging the findings that appear once
+the checker sees more, and those land in shared prose across `.claude/**`, `src/` and the repo root.
+Two units triaging concurrently can both edit the same article — item 7's cross-unit duplication in a
+form `dry4ts` cannot detect, because prose is not code.
+
 ## Sketch
 
 **1. Design mode gains a parallelism objective.** Alongside the ratified file set

@@ -1,6 +1,6 @@
 ---
 name: reference-check-reach
-title: Close reference-check's three reach gaps in one slice, because two of them are one predicate
+title: Close reference-check's four reach gaps in one slice, because three of them live in one file
 created: 2026-09-10
 ---
 
@@ -44,6 +44,34 @@ while the same line inside `state-flow.md` fails it.
 citation of `.vale/STE/ZzzNoSuchRuleFile.yml` produced no finding, while `src/ZzzAlsoMissing.ts` was
 caught. **`.claude/**` is where every article, role file and sidecar lives.**
 
+**Gap 4 — the extension alternation is an allowlist, and `sh` and `json` are not on it.**
+`references.ts`'s `EXTENSION_ALTERNATION` is `tsx|ts|yaml|yml|md`. Every filename-shaped token
+carrying any other extension is never extracted, so `file-reference-resolves` never sees it and
+`stale-allow-marker` can never be satisfied for it. Probed 2026-09-11: `extractFileTokens` returns
+`[]` for a line citing `scripts/prose-lint/run.sh` and the token for the same line citing
+`scripts/prose-lint/run.ts`.
+
+**This gap has already been realized once.** `prose-lint-runner-is-shell-not-typescript` deleted
+`scripts/prose-lint/run.sh` while `prose-linting.rationale.md` still cited it by name, and the gate
+stayed green. That slice's design pass ratified an allow-marker to cover the citation; `coder` added
+it, the gate failed on `stale-allow-marker`, and it was dropped. A marker naming a token the
+extractor cannot produce is unsatisfiable under any placement, so the ratified instruction was
+impossible rather than merely unnecessary.
+
+**Adding `sh` reds the gate immediately, which is why it belongs in this bundle rather than in a
+one-line edit.** There are **zero** tracked `.sh` files in the repo. The live `.sh` citations are all
+historical or foreign: `handoffs.md` names `swarm_handoff.sh`, `ready_for_next.sh` and
+`done_with_current.sh`, which are another repository's files that never existed here;
+`engineering.rationale.md` names `done_with_current.sh` for the same reason; and
+`prose-linting.rationale.md` plus `scripts/prose-lint/run.ts` both name the deleted `run.sh` as dated
+history. So the predicate change is small and the triage is the work, exactly like Gaps 1 to 3.
+
+**Foreign filenames are the new question this gap raises**, and none of the other three raise it. A
+citation of another project's file is legitimate prose that can never resolve. Decide whether that
+wants an allow-marker per citation, an exclusion, or an argument that such extensions stay off the
+allowlist deliberately. Whichever is chosen, record it: the present silence is indistinguishable from
+a decision.
+
 ## Complication
 
 **The two folded ideas disagree with each other, and the bundle exists to settle that.**
@@ -71,7 +99,7 @@ narrowed predicate, and it must be settled before Gap 3 lands.
 
 ## Question
 
-Can all three gaps close in one slice without the gate ever landing red, and what does the leading-dot
+Can all four gaps close in one slice without the gate ever landing red, and what does the leading-dot
 predicate become when the two folded ideas want opposite things from it?
 
 ## Sketch
@@ -93,12 +121,30 @@ predicate become when the two folded ideas want opposite things from it?
    it also wants `src/**/*.md` in the scan set. It may be a fourth step or a separate slice; decide
    with the finding counts in hand, not before.
 
+4. **Add `sh` to `EXTENSION_ALTERNATION` in a scratch run and read the findings.** The count is small
+   and enumerable today, so this step is a triage decision rather than a measurement: the
+   foreign-filename question under Gap 4 is what it settles. Then ask the same question of `json`
+   before deciding whether the alternation stays a list at all.
+
 Order matters: step 2 is a strictly narrower predicate change than step 3, so landing 2 first keeps
-the gate green while step 3 is still a question.
+the gate green while step 3 is still a question. Step 4 is semantically independent of all three and
+can land first or last.
+
+**The achievable partition is two units, not four, and the reason is textual rather than logical.**
+Measured 2026-09-11: Gap 1 lives in `scan-scope.ts`; Gaps 2, 3 and 4 all live in `references.ts`,
+where `EXTENSION_ALTERNATION` sits at line 27 and `isDiscardedToken` at line 32. Five lines apart.
+Two concurrent branches editing both conflict on rebase however independent the reasoning is. So a
+fan-out is `scan-scope.ts` in one unit and the whole of `references.ts` in the other.
+
+**A second hazard the file map does not show.** Each gap's real cost is triaging the findings that
+appear once the checker can see more, and those findings land in shared prose across `.claude/**`,
+`src/` and the repo root. Two units triaging concurrently can both edit the same article — the
+cross-unit duplication problem in a form `dry4ts` cannot detect, because prose is not code.
 
 ## Touches
 
-- `scripts/reference-check/scan-scope.ts` and `references.ts`, plus their tests — a gating checker,
+- `scripts/reference-check/scan-scope.ts` and `references.ts` — the latter for both the discard
+  predicate and the extension alternation — plus their tests — a gating checker,
   CRAP <= 6, and it owes `npm run test:scripts`, `dry4ts:scripts` and `test:mutation:scripts`
 - Possibly `vale-styles/**` comment text, if the widened scan reports real findings
 - Whatever prose the measurements find stale, across `src/`, `.claude/**` and the repo root
