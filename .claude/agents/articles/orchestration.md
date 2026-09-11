@@ -102,8 +102,8 @@ structurally true and does not depend on the ruling being genuine. Three things 
 - **Give the role the refusal right explicitly**, in the prompt. `hardener` may refuse an exemption.
   It may never grant itself one. Naming the flag makes that right easier to exercise, not harder. A
   role that re-tests the claims and cannot falsify them has produced evidence, not a rubber stamp.
-- **Record the skip as a risk acceptance**, never as a predicate discharge, in the handoff and in the
-  tag. The two read identically a month later unless the difference is written down.
+- **Record a skip granted on a ruling as a risk acceptance**, never as a predicate discharge, in the
+  handoff and in the tag. The two read identically a month later unless the difference is written down.
 
 **Give the role the technical claims to re-test rather than to inherit.** On that slice, `hardener`
 proved the `src/` diff comment-only by emitting both files through `tsc --removeComments` and diffing
@@ -118,8 +118,16 @@ UI, so a slice that changes no behaviour gives it nothing to verify.** Ruled by 
 `lint-jsdoc-with-vale`, a documentation and tooling slice whose only `src/` changes were comments.
 
 **Demonstrate it rather than asserting it**, the same way the comment-only mutation exemption is
-claimed per diff. Check three inputs: `features/*.feature`, `features/steps/*.ts`, and whether any
-`src/` change is non-comment. All three empty means a black-box pass has nothing to see.
+claimed per diff. Three inputs are where such a change usually shows. They are `features/*.feature`,
+`features/steps/*.ts`, and whether any `src/` change is non-comment.
+
+**Those three are necessary and not sufficient.** Clearing them is not the demonstration.
+`index.html` moves the UI with no `src/` diff. `features/screenplay/*.ts` moves what VERIFY itself
+observes. Neither one is among the three.
+
+So walk **every** path in the diff and account for it. CLAUDE.md rules the same way on the mutation
+predicate, and for the same reason. A check that lists what to look at fails open. A skipped VERIFY
+then reads exactly like a passing one.
 
 Handle one consequence rather than skipping it silently. **Merge step 8 carries the
 acceptance-mutation figure forward from `product`'s VERIFY handoff.** There is now no such handoff.
