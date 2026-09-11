@@ -1022,3 +1022,27 @@ subdirectory.
 **What the hook does not solve, if it is ever adopted.** It fires on an agent's edits only. It covers
 no human edit, no CI run and no deliberate audit. So it would narrow the question rather than close
 it, and the script would still carry the rest.
+
+### Why two `StylesPath` lines are safe, measured 2026-09-10
+
+`.vale.ini` lists `vale-styles` then `.vale`, and that one ordering does two jobs: lookup is
+first-wins, so the tracked style takes priority, and `vale sync` targets the last path, so it keeps
+writing where `.gitignore` already points. The whole `JsDoc` style rests on Vale accepting a repeated
+key, which its documentation does not describe. **That is worth an argument rather than a shrug, and
+the argument is that the failure is loud.**
+
+| probe                                                         | result                                                                   |
+| ------------------------------------------------------------- | ------------------------------------------------------------------------ |
+| two `StylesPath` lines, `JsDoc` named by a section            | resolves from the **second** listed path while the first is searched too |
+| **the last-only future simulated** — only `.vale` on the path | **E100, `style 'JsDoc' does not exist on StylesPath`, exit 2**           |
+| comma-joined `StylesPath = A, B`                              | **E201, exit 2** — read as one path containing a comma, not as two       |
+
+Row 2 is the one that matters. If a later Vale ever takes the last key only rather than accumulating,
+`BasedOnStyles = JsDoc` aborts the run instead of reporting a confident zero. So the undocumented
+behaviour fails **safe**, and the version pin is a convenience rather than the only thing holding this
+up. Row 3 rules out the form somebody will reach for first.
+
+**Row 3's exit code took two runs to get right, and the first one was wrong in this repo's own
+documented way.** Piping the output to `head` reported exit 0, because a pipe replaces the exit status
+with the pipe's. Redirect to a file and read `$?` on the next line, exactly as the merge protocol says
+for `npm run mutation-invariance`.
