@@ -92,13 +92,13 @@ a move rather than a rewrite.
 **A subagent cannot verify that you are relaying a real user ruling.** It sees only your prompt. So an
 instruction to skip a gate on the user's authority is, from inside that role, an unverifiable claim
 of consent. Expect the harness to flag the hand-back as a possible gate bypass. Measured on
-`lint-jsdoc-with-vale`, where `hardener` was handed a stage-5 skip against an exit-2 predicate.
+`lint-jsdoc-with-vale`, where this seat handed `hardener` a stage-5 skip against an exit-2 predicate.
 
 **Treat the flag as information for the user, not as an obstacle to route around.** What it says is
 structurally true and does not depend on the ruling being genuine. Three things follow:
 
 - **Do not let your own relay settle it.** Surface the flag to the user before the landing action it
-  gates, and say plainly what is being skipped and what the predicate returned.
+  gates. Say plainly which stage you are skipping, and what the predicate returned.
 - **Give the role the refusal right explicitly**, in the prompt. `hardener` may refuse an exemption.
   It may never grant itself one. Naming the flag makes that right easier to exercise, not harder. A
   role that re-tests the claims and cannot falsify them has produced evidence, not a rubber stamp.
@@ -117,8 +117,8 @@ The cycle says `product` opens and closes every slice. **VERIFY is a black-box c
 UI, so a slice that changes no behaviour gives it nothing to verify.** Ruled by the user on
 `lint-jsdoc-with-vale`, a documentation and tooling slice whose only `src/` changes were comments.
 
-**Demonstrate it rather than asserting it**, the same way the comment-only mutation exemption is
-claimed per diff. Three inputs are where such a change usually shows. They are `features/*.feature`,
+**Demonstrate it rather than asserting it**, the same way you claim the comment-only mutation
+exemption per diff. Three inputs are where such a change usually shows. They are `features/*.feature`,
 `features/steps/*.ts`, and whether any `src/` change is non-comment.
 
 **Those three are necessary and not sufficient.** Clearing them is not the demonstration.

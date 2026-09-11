@@ -69,10 +69,11 @@ Options, none obviously right:
 `.claude/agents/architect.md` or `hardener.md`, `.claude/agents/articles/workflow.md`, possibly
 `scripts/agent-doc-check/`, and CLAUDE.md's own routing test.
 
-## Two more instances, from `lint-jsdoc-with-vale`
+## Three more instances, from `lint-jsdoc-with-vale` and the slice that recorded it
 
-Both were orchestrator-authored, both reached a permanent file, and both were caught downstream by
-something that happened to point at them rather than by a reviewer.
+All three were orchestrator-authored and all three reached a permanent file. **They differ in what
+caught them, and that difference is the argument.** Two were caught by a gate, which is the system
+working late rather than not working. One was caught by accident.
 
 **A ratified ruling was contradicted and its negation written into three files.** The slice's own
 design pass had ruled that Vale scope is decided **per rule, not per slice**, and that ruling lived
@@ -87,11 +88,23 @@ discarded `xargs`'s exit status, so a run that could not lint printed its error 
 `A zero above is a measured zero`, exit 0 — the second entry on the confident-zero list the script
 was written against. `hardener` found it at the gate.
 
-**What both have in common** is the argument for this candidate. Neither is a typo or a style lapse,
-so a lint pass would not have caught either. Both are a claim that is wrong, written confidently, by
-the one participant whose output nothing reviews before `hardener`. And in the first case `hardener`
-would not have caught it either: the file was consistent with itself, and only a reader holding the
-prior ruling could see the contradiction.
+**A predicate written to gate a role's invocation failed open.** The slice recording the two above
+added a test for when `product` VERIFY may be skipped: check three inputs, and "all three empty means
+a black-box pass has nothing to see." That is a **blocklist** stated as sufficiency, the direction
+CLAUDE.md rules against for the mutation predicate and for the same reason. `hardener` found two
+tracked counterexamples escaping all three inputs — `index.html` moves the UI with no `src/` diff, and
+`features/screenplay/*.ts` moves what VERIFY itself observes. Caught at the gate, in the commit that
+documented the first two instances.
+
+**What all three have in common** is the argument for this candidate. Neither is a typo or a style lapse,
+so a lint pass would not have caught either. Each is a claim that is wrong, written confidently, by the
+one participant whose output nothing reviews before `hardener`.
+
+**Two of the three argue for a reviewer more strongly than `hardener` being the catch suggests.** The
+ratified-ruling contradiction `hardener` would not have caught at all: the file was consistent with
+itself, and only a reader holding the prior ruling could see it. The fail-open predicate was caught,
+but only because a role was invoked on a two-file documentation diff — which the same slice's own
+reasoning about not running gates that cannot move would have argued against.
 
 ## Open questions
 
