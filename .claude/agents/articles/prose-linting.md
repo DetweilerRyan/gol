@@ -407,6 +407,43 @@ audit the pair by hand after a shortening pass, comparing against the article as
 failure mode is dropping an illustration out of the pair entirely** rather than moving it across. No
 rule is ever lost that way; what goes missing is the example that made a rule legible.
 
+## The `Instruction` style — the regrowth guard on stripped role files
+
+**The rules above cannot see the defect this style exists for.** `STE.ParagraphLength` treats a
+Markdown list item as no paragraph at all, so a many-sentence numbered step reports zero. Role files
+keep their instructions in lists, so that is exactly where exposition accumulates. The two rules in
+the tracked `vale-styles/Instruction/` style close that hole, and they mechanise the split this
+article states under "Instruction stays. Explanation moves."
+
+**Both are proxies, and they cover each other's blind spot.** A green run is **not** evidence a file
+is instruction-only; it is evidence the file has not regrown the two shapes that were measured. Each
+rule's own header carries its measurements.
+
+### `Instruction.ListItemSentences` — act on every finding
+
+A list item gets three sentences: an instruction, its precondition, and its failure mode. A fourth
+sentence is where the account of the rule starts. Route the account to the role file's
+`.rationale.md` sidecar per the split above — do not split the item in place to clear the count.
+
+**What it misses:** exposition that is short. Three tight sentences of history pass this rule.
+
+### `Instruction.HistoricalNarration` — act unless the match is a live condition
+
+Fires on past-reference vocabulary (`used to`, `no longer`, `previously`, `turned out`) that marks
+narration about this repo's own history. State the current rule in the file; the account of how it
+changed goes to the sidecar. **One exempt class:** `no longer` inside a live conditional — "when the
+assumptions `no longer` hold" — is a present-tense rule, not narration. Leave it, and name it in the
+handoff as arguable. **What it misses:** narration that avoids these markers, and it deliberately
+does not match `because` or `since`, which carry the one-clause why that stays.
+
+### Scope: only role files that have been stripped
+
+The style is enabled per file in `.vale.ini`, not on the agent-docs glob. The unstripped role files
+carry a backlog nobody has triaged, and the landing constraint below forbids shipping that. When a
+role file's strip lands, its slice adds the file's own enabling section and clears the findings in
+the same slice. Once all five are stripped, collapse the per-file sections into the agent-docs glob
+with an articles opt-out. Update the edit counts below in the same change.
+
 ## Read a big number as unworked, not as broken
 
 A file is worked when a slice edits it and lints it; every other one carries its findings untriaged.
@@ -440,10 +477,11 @@ are list-scoped, and a JSDoc can carry a Markdown list. A `@param` or `@returns`
 Markdown list item, and trips neither whatever it says. So those two rules reach only the prose above
 the tag block.
 
-**Who owns the rules.** `architect` alone authors or changes a rule in `vale-styles/JsDoc/`. Every
-other role reads the output and reports tensions to it, exactly as with `rules/*.yml`. **The `STE`
-style is a different surface and is not `architect`'s alone**, and that covers the module sidecars.
-No `JsDoc` rule reaches a `.md` file, so a sidecar finding is an `STE` finding.
+**Who owns the rules.** `architect` alone authors or changes a rule in `vale-styles/JsDoc/` or
+`vale-styles/Instruction/`. Every other role reads the output and reports tensions to it, exactly as
+with `rules/*.yml`. **The `STE` style is a different surface and is not `architect`'s alone**, and
+that covers the module sidecars. No `JsDoc` rule reaches a `.md` file, so a sidecar finding is an
+`STE` finding or, on a stripped role file, an `Instruction` one.
 
 ## What is scoped, and what is not
 
@@ -451,6 +489,8 @@ Vale runs over `.claude/agents/**/*.md` — every topic article, the house-rules
 role files — over `CLAUDE.md`, and over `src/**/*.md`, the module sidecars beside the source. Those
 three surfaces get the `STE` style. **Lint a module sidecar exactly like an article**, because whoever
 holds a call site reads it to act. `<module>.md` is in scope and `<module>.rationale.md` is exempt.
+A role file that has been stripped to instruction additionally gets the `Instruction` style, per its
+own section above.
 
 **It runs over every `.ts` and `.tsx` file in the tree as well, under a different style.**
 `[*.{ts,tsx}]` enables `JsDoc`, the tracked style in `vale-styles/JsDoc/`. Each of its rules carries
@@ -501,9 +541,9 @@ mechanism other than a later section.
 
 ## For `architect` only — authoring, enabling and re-levelling a rule
 
-`architect` is the only role that authors or changes a rule in `vale-styles/JsDoc/`, or edits
-`.vale.ini`. Everything above applies to whoever holds a finding; everything here applies to whoever
-holds the rule.
+`architect` is the only role that authors or changes a rule in `vale-styles/JsDoc/` or
+`vale-styles/Instruction/`, or edits `.vale.ini`. Everything above applies to whoever holds a
+finding; everything here applies to whoever holds the rule.
 
 ### Each rule declares its own extensions. That is per rule, never per style.
 
@@ -555,6 +595,13 @@ Four later sections overlap those globs, and must each switch the rule off once 
 below that one switch it off by name. And `doc-comments.md`'s "What Vale checks mechanically" table
 gains a row. `[**/*.rationale.md]` is not one of them, because `[*.{ts,tsx}]` cannot match a `.md`
 file.
+
+**Adding an `Instruction` rule is a seven-place edit today.** The enabling key in each stripped-file
+section — one, while only `coder.md` is stripped. The four defensive off-by-name entries: the three
+bait sections plus `[**/*.rationale.md]`, whose globs do reach `.md`. The fixture pair, and this
+article's own rule section above. The four off entries guard the planned widening to the agent-docs
+glob rather than any section that overlaps today. The count grows by one per stripped role file
+until the collapse the scope section above describes.
 
 **Whenever you enable a rule, switch it off in the sidecar section in the same edit.** That pairing is
 the whole exemption. The test is one command: `vale` on any `*.rationale.md` must report zero.

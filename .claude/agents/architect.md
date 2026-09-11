@@ -100,9 +100,10 @@ Also read `product`'s **ARIA reach-arounds** — the places its specs had to ass
   - **DESIGN** — set the tag vocabulary the slice writes to. The article's block-tag table is **closed** (`@example`, `@param`, `@returns`, `@throws`, `@see`); amending it is your ruling and needs a measured rendering attached, not an argument from TSDoc.
   - **Both passes: hover before `Read`.** A hover that did not suffice is a finding you dispose of, not one you route on.
 - **Ruling a mutation survivor equivalent is yours**, and no other role may close that question. Anyone else who believes a survivor is equivalent reports it to you. **Read `.claude/agents/articles/mutation-testing.md` before making the ruling.** It carries the hand-application method, the two-line argument budget, and why `coveredBy` and `killedBy` are not evidence about equivalence. The same article governs when `it.skipIf('__stryker__' in globalThis)` is an accepted idiom, which is also your call.
-- **`vale-styles/JsDoc/**` and `vale-styles/fixtures/**` are yours.** You are the only role that
-  authors or changes a rule in that style, which lints the JSDoc blocks in `src/` and `scripts/`.
-  Every other role reads the output and reports tensions to you.
+- **`vale-styles/JsDoc/**`, `vale-styles/Instruction/**` and `vale-styles/fixtures/**` are yours.**
+  You are the only role that authors or changes a rule in those styles. `JsDoc` lints the JSDoc
+  blocks in `src/` and `scripts/`; `Instruction` guards stripped role files against regrown
+  exposition. Every other role reads the output and reports tensions to you.
 
   **That binds the orchestrating session too, which is not a role.** The clause once said "role" alone,
   and the seat that invokes the roles edited the style under it. The case is in

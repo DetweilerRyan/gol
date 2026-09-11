@@ -1,0 +1,25 @@
+# A role file is a set of instructions, and its lists are where instructions
+# live -- so its lists are where exposition hides. STE.ParagraphLength cannot
+# see it: Vale's `scope: paragraph` does not treat a Markdown list item as a
+# paragraph, so a 24-sentence numbered step reported zero (measured 2026-09-11,
+# sentinel-verified: the same eight sentences fire as a paragraph and stay
+# silent as a list item). This rule is the list-scoped counterpart.
+#
+# MAX 3, and the number is derived, not guessed. Three sentences fit an
+# instruction, its precondition, and its failure mode -- the exempt classes
+# prose-linting.md's "Instruction stays. Explanation moves." names as part of
+# a rule. A fourth sentence is where the account of the rule starts. Measured
+# on the stripped coder.md: 0 findings at max 3, and the 7 findings at max 2
+# were all rule+precondition+failure-mode items that belong in the file.
+#
+# SURFACE: role files only, and only the ones already stripped -- see the
+# enabling sections in .vale.ini and prose-linting.md's backlog constraint.
+# This is a REGROWTH GUARD, not a definition of the standard: it catches
+# exposition that is long and misses exposition that is short. A green run is
+# not evidence a file is instruction-only.
+extends: occurrence
+message: "List item has %d sentences. An instruction, its precondition and its failure mode fit in three; the account of the rule goes to the .rationale.md sidecar (prose-linting.md, 'Instruction stays. Explanation moves.')."
+level: warning
+scope: list
+max: 3
+token: '[.!?]["''’\)\]]*(?:\s|$)'

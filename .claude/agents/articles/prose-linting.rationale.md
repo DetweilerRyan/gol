@@ -1131,3 +1131,50 @@ extension ruling" above through that mapping.
 Each shipped rule records its own extension answer in its own header, in `vale-styles/JsDoc/`. The
 article carried a fourth copy of those answers as a table; the headers and the two cross-tabulations
 above are the record.
+
+## The `Instruction` style: the measurements behind both rules, 2026-09-11
+
+Authored in `strip-coder-to-instruction`, on the user's same-day ruling that a role file is a set of
+instructions and everything else belongs elsewhere.
+
+### `STE.ParagraphLength` is blind to list items, sentinel-verified
+
+The live config reported zero `ParagraphLength` findings on the pre-strip `coder.md` (1,857 words,
+one 24-sentence numbered procedure). Sentinel: the same eight sentences in one file fire
+`ParagraphLength` as a plain paragraph and stay silent as a numbered list item — only
+`ProcedureLength` (word count, `scope: list`) sees the item. So the corpus's long blocks hid in
+exactly the scope the paragraph rule cannot reach, which is why the earlier rule spike
+(`spike-vale-rules-that-compress-the-agent-files`, branch dropped) found nothing to enable: it
+surveyed sentence-mechanics rules over a corpus whose defect lives in list items.
+
+### `ListItemSentences` threshold derivation
+
+Findings across the five role files by `max`: 2 → 79 (architect 22, cleaner 10, coder 15,
+hardener 13, product 19); 3 → 55 (16/6/13/8/12); 4 → 31 (12/3/5/4/7). On the stripped `coder.md`:
+max 3 → 0, max 2 → 7, and each of the seven is a three-sentence item of the
+rule+precondition+failure-mode shape that "Instruction stays. Explanation moves." names as part of a
+rule. So 3 is the threshold that separates the exempt classes from the account, on this corpus.
+
+### `HistoricalNarration` precision audit
+
+13 marker hits across the five role files: `used to` 8, `no longer` 4, `previously` 1,
+`turned out` 0. Audit: all 8 `used to` and the 1 `previously` are narration about retired
+arrangements. `no longer` is mixed — `hardener.md`'s "the cache's file-level assumptions no longer
+hold" is a live conditional, a genuine arguable finding, kept in the token list per "do not tune a
+rule until it stops producing arguable findings" and named as an exempt class in the article
+instead. The asymmetry that shaped the token list: `because` (13) and `since` (14) carry the
+one-clause why the floor protects, so they are excluded. The idea file claimed a prior
+`HistoricalNarration` YAML was recorded here; it was not — the spike branch died with its records,
+and the rule was re-derived from scratch.
+
+### `Slop` and `Std` dispositions for this slice's purpose
+
+`Slop`, run at `suggestion` over all five role files: 10 findings (Metaphor 4, NegativeParallelism 3,
+EmptyQualifiers 2, EmDash 1) — none narration- or list-length-related, so nothing in it serves the
+regrowth guard. It cannot be dropped from `Packages` without dropping `STE`: the one installed zip
+ships both styles, and `.vale/` is unversioned output that cannot be curated. So `Slop = NO` by name
+remains its disposition, and replacing the package source is a slice of its own. `Std` is not
+installed; its 14 rules are general English style (see the re-opened evaluation above) and none
+counts sentences per list item or matches narration vocabulary, so it does not serve this purpose
+either. Adopting a `Std` rule by name stays with
+`ideas/candidates/mechanise-prose-soundness-with-a-style-package.md`.

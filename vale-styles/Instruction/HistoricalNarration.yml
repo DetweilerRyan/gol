@@ -1,0 +1,28 @@
+# The counterpart blind spot of ListItemSentences: exposition that is SHORT.
+# Three tight sentences of history pass a sentence counter, but narration
+# about this repo's own past has a vocabulary, and these markers carry it.
+#
+# Measured across the five role files 2026-09-11: `used to` hit 8 times, all
+# narration about retired arrangements; `previously` 1/1; `turned out` 0 live
+# hits (fixture-pinned). `no longer` is the arguable one -- 4 hits, of which
+# one ("when the cache's file-level assumptions no longer hold") is a live
+# conditional, not narration. That asymmetry is documented as an exempt class
+# in prose-linting.md rather than tuned out of the rule: a rule with no
+# arguable findings has been tuned until it agrees with its author.
+#
+# NOT in the token list, deliberately: `because` (13 hits) and `since` (14
+# hits) carry the one-clause why the floor protects. A rule matching them
+# attacks exactly what stays.
+#
+# OVER-FIT GUARD: every token is generic English past-reference vocabulary.
+# None quotes this repo's slice names, tool names or incident phrasing, so the
+# rule was not shaped to the corpus it was measured on.
+extends: existence
+message: "'%s' reads as narration about this repo's history. State the current rule; the account of how it changed goes to the .rationale.md sidecar (prose-linting.md, 'Instruction stays. Explanation moves.')."
+level: warning
+ignorecase: true
+tokens:
+  - used to
+  - no longer
+  - previously
+  - turned out
