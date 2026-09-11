@@ -3,10 +3,11 @@
 // pure decision. Mirrors reference-check's/ast-grep-rule-check's run.ts
 // split -- lint-targets.ts, vale-probe.ts and decide.ts are pure, everything
 // here is genuinely I/O (two subprocess spawns, console.log, process.exit).
-// This replaces a shell script that ran the same four checks with no test
-// of its own -- see CLAUDE.md's "Custom quality tooling in scripts/" section
-// for why that shell form could not be reached by any of this program's own
-// siblings' gates.
+// This replaces a shell script (run.sh) that ran the same four checks with
+// no test of its own: a .sh file is unreachable by npm run test:scripts,
+// crap4ts:scripts and test:mutation:scripts, since all three are
+// TypeScript-scoped configs, so that shell form could not be reached by any
+// of this program's own siblings' gates.
 //
 // `cwd: REPO_ROOT` on both spawns is load-bearing, not incidental: vale
 // resolves `.vale.ini` relative to its own working directory, so a spawn

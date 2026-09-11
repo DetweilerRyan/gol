@@ -10,7 +10,7 @@
     "lint": "oxlint",
     "format": "prettier --write .",
     "format:check": "prettier --check .",
-    "prose-lint": "sh scripts/prose-lint/run.sh",
+    "prose-lint": "tsx scripts/prose-lint/run.ts",
     "preview": "vite preview",
     "test": "vitest run",
     "test:unit": "vitest run --project '!property'",
