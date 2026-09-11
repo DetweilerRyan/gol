@@ -1,3 +1,4 @@
+import { execFileSync } from 'node:child_process'
 import { mkdirSync, writeFileSync } from 'node:fs'
 import path from 'node:path'
 
@@ -17,4 +18,14 @@ export function writeFile(root: string, relativePath: string, contents: string):
   const full = path.join(root, relativePath)
   mkdirSync(path.dirname(full), { recursive: true })
   writeFileSync(full, contents)
+}
+
+// Initializes a real git repo at `root` with a committer identity, for a
+// test that shells out to `git` against a throwaway tree rather than
+// mocking it. Extracted for the same reason as `writeFile` above -- a
+// second program produced a byte-identical copy, and dry4ts caught it.
+export function initGitRepo(root: string): void {
+  execFileSync('git', ['init', '-q'], { cwd: root })
+  execFileSync('git', ['config', 'user.email', 'test@example.com'], { cwd: root })
+  execFileSync('git', ['config', 'user.name', 'Test'], { cwd: root })
 }

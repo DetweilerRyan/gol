@@ -3,7 +3,7 @@ import { mkdtempSync, rmSync } from 'node:fs'
 import os from 'node:os'
 import path from 'node:path'
 import { afterEach, describe, expect, it } from 'vitest'
-import { writeFile } from '../test-support.ts'
+import { initGitRepo, writeFile } from '../test-support.ts'
 import { buildFileIndex, gatherCheckInput, listRepoPaths, runCheck } from './run.ts'
 
 let repoRoot: string | undefined
@@ -17,12 +17,6 @@ function tempRepo(): string {
   const dir = mkdtempSync(path.join(os.tmpdir(), 'reference-check-'))
   repoRoot = dir
   return dir
-}
-
-function initGitRepo(root: string): void {
-  execFileSync('git', ['init', '-q'], { cwd: root })
-  execFileSync('git', ['config', 'user.email', 'test@example.com'], { cwd: root })
-  execFileSync('git', ['config', 'user.name', 'Test'], { cwd: root })
 }
 
 describe('listRepoPaths', () => {

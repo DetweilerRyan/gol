@@ -2,9 +2,12 @@ import { describe, expect, it } from 'vitest'
 import { classifyProbe } from './vale-probe.ts'
 
 describe('classifyProbe', () => {
-  it('reads an ENOENT spawn error as vale absent from PATH', () => {
-    const probe = classifyProbe({ error: { code: 'ENOENT' }, status: null, stdout: undefined, stderr: undefined })
-    expect(probe).toEqual({ valeOnPath: false, configLoaded: false, output: '' })
+  it.each<[string, boolean]>([
+    ['ENOENT', false],
+    ['EACCES', true],
+  ])('reads a %s spawn error as valeOnPath=%s', (code, valeOnPath) => {
+    const probe = classifyProbe({ error: { code }, status: null, stdout: undefined, stderr: undefined })
+    expect(probe).toEqual({ valeOnPath, configLoaded: false, output: '' })
   })
 
   it('reads a clean ls-config as vale on PATH with a loaded config', () => {
@@ -25,11 +28,6 @@ describe('classifyProbe', () => {
     expect(probe.valeOnPath).toBe(true)
     expect(probe.configLoaded).toBe(false)
     expect(probe.output).toBe('E100 [.vale.ini not found] Runtime error\n\nno config file found\n')
-  })
-
-  it('reads a non-ENOENT spawn error as vale on PATH but unable to load the config', () => {
-    const probe = classifyProbe({ error: { code: 'EACCES' }, status: null, stdout: undefined, stderr: undefined })
-    expect(probe).toEqual({ valeOnPath: true, configLoaded: false, output: '' })
   })
 
   it('combines stdout and stderr into one output string', () => {
