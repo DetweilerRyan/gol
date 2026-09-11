@@ -25,8 +25,10 @@ export interface ScanScope {
   docFiles: string[]
 }
 
-// Extensions .ts/.tsx/.yml/.yaml only -- see references.ts's
-// FILE_TOKEN_SOURCE, which extracts exactly these four.
+// Extensions .ts/.tsx/.yml/.yaml only -- one short of references.ts's
+// FILE_TOKEN_SOURCE, which also extracts .md. A .md file is scanned as a
+// *doc* rather than a source file (see isDocFile below), so this list is
+// deliberately the extractor's alternation minus its one Markdown entry.
 const SOURCE_EXTENSIONS = ['.ts', '.tsx', '.yml', '.yaml']
 
 // src/catalyst/ is vendored third-party Tailwind Catalyst UI, deliberately
@@ -34,7 +36,7 @@ const SOURCE_EXTENSIONS = ['.ts', '.tsx', '.yml', '.yaml']
 // citing another vendored file is not this program's problem.
 const SOURCE_EXCLUDED_PREFIXES = ['src/catalyst/']
 
-const SOURCE_INCLUDED_PREFIXES = ['src/', 'scripts/', 'features/', 'perf/', 'rules/', 'rule-tests/']
+const SOURCE_INCLUDED_PREFIXES = ['src/', 'scripts/', 'features/', 'perf/', 'rules/', 'rule-tests/', 'vale-styles/']
 
 // Root-level *.ts files earn scope too -- vite.config.ts names a throwaway
 // `__probe.test.ts` measurement probe, and that class of file lives nowhere else.
@@ -50,7 +52,7 @@ function isRootLevelTsFile(path: string): boolean {
 // the array's current length rather than on anything structural, and it
 // becomes a live bug the day a second excluded prefix is added. Routed
 // through here, the quantifier exists once and is pinned by the
-// six-element SOURCE_INCLUDED_PREFIXES call site below.
+// seven-element SOURCE_INCLUDED_PREFIXES call site below.
 function startsWithAny(path: string, prefixes: string[]): boolean {
   return prefixes.some((prefix) => path.startsWith(prefix))
 }
@@ -62,8 +64,6 @@ function isSourceFile(path: string): boolean {
   return startsWithAny(path, SOURCE_INCLUDED_PREFIXES)
 }
 
-const DOC_EXACT_FILES = new Set(['CLAUDE.md', 'README.md'])
-
 // .claude/worktrees/ is a sanctioned slice-worktree location holding whole
 // other checkouts -- their own .claude/, their own node_modules -- rather
 // than this repo's own docs. Same reason agent-doc-check's
@@ -74,9 +74,15 @@ function isInsideExcludedDocDir(path: string): boolean {
   return path.split('/').some((segment) => DOC_EXCLUDED_DIR_SEGMENTS.has(segment))
 }
 
+// Every tracked/untracked-not-ignored .md file is a doc, not an enumerated
+// three-file list plus one directory prefix -- widened so a rule-file
+// directory like vale-styles/JsDoc/README.md is covered the day it lands,
+// with no edit here. ideas/** is excluded for the two reasons scan-scope's
+// own header names: it necessarily names dead references as its own
+// worked examples, and it names files that don't exist *yet* by design.
 function isDocFile(path: string): boolean {
-  if (DOC_EXACT_FILES.has(path)) return true
-  if (!path.startsWith('.claude/') || !path.endsWith('.md')) return false
+  if (!path.endsWith('.md')) return false
+  if (path.startsWith('ideas/')) return false
   return !isInsideExcludedDocDir(path)
 }
 

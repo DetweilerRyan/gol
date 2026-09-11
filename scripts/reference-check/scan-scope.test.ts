@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest'
 import { scanScopeOf } from './scan-scope.ts'
 
 describe('scanScopeOf', () => {
-  it('includes src/**, scripts/**, features/**, perf/**, rules/**, rule-tests/** for the source surface', () => {
+  it('includes src/**, scripts/**, features/**, perf/**, rules/**, rule-tests/**, vale-styles/** for the source surface', () => {
     const paths = [
       'src/cellTiles.ts',
       'scripts/reference-check/run.ts',
@@ -10,6 +10,7 @@ describe('scanScopeOf', () => {
       'perf/harness.ts',
       'rules/no-foo.yml',
       'rule-tests/no-foo-test.yml',
+      'vale-styles/JsDoc/BlockTagVocabulary.yml',
     ]
     expect(scanScopeOf(paths).sourceFiles).toEqual([...paths].sort())
   })
@@ -63,5 +64,29 @@ describe('scanScopeOf', () => {
 
   it('excludes a non-.md file under .claude/**', () => {
     expect(scanScopeOf(['.claude/settings.json']).docFiles).toEqual([])
+  })
+
+  // Gap 1: the doc surface is now every tracked .md outside ideas/** and
+  // .claude/worktrees/**, not an enumerated three-file list plus one
+  // directory prefix -- a rule-file directory like vale-styles/JsDoc/ is
+  // covered without an edit here.
+  it('includes a .md file outside .claude/** and outside CLAUDE.md/README.md', () => {
+    expect(scanScopeOf(['vale-styles/JsDoc/README.md']).docFiles).toEqual(['vale-styles/JsDoc/README.md'])
+    expect(scanScopeOf(['adr/README.md']).docFiles).toEqual(['adr/README.md'])
+    expect(scanScopeOf(['src/cache.rationale.md']).docFiles).toEqual(['src/cache.rationale.md'])
+  })
+
+  it('excludes a non-.md idea file from the doc surface', () => {
+    expect(scanScopeOf(['ideas/x.md']).docFiles).toEqual([])
+  })
+
+  it('excludes a nested .claude/worktrees/** doc file', () => {
+    expect(scanScopeOf(['.claude/worktrees/s/CLAUDE.md']).docFiles).toEqual([])
+  })
+
+  it('classifies a .ts source file as source and not doc', () => {
+    const scope = scanScopeOf(['src/cache.ts'])
+    expect(scope.sourceFiles).toEqual(['src/cache.ts'])
+    expect(scope.docFiles).toEqual([])
   })
 })
