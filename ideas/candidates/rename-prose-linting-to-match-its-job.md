@@ -47,7 +47,7 @@ filenames, so it says nothing either way.
 
 ## Related
 
-[[rename-the-rationale-tier-to-meta]] renames the `*.rationale.md` tier itself. Both are doc renames
+[[rename-the-rationale-tier]] renames the `*.rationale.md` tier itself. Both are doc renames
 that churn citations, so landing them together may beat landing them apart. They are filed separately
 because the arguments differ -- this file's job widened, the tier's term was always narrower than its
 contents -- and because the reach differs by an order of magnitude: ~18 basename citations here

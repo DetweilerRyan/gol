@@ -1,6 +1,6 @@
 ---
-name: rename-the-rationale-tier-to-meta
-title: Rename the *.rationale.md tier, because the term is narrower than what the tier holds
+name: rename-the-rationale-tier
+title: Rename the *.rationale.md tier -- the term is narrower than its contents, and the replacement is undecided
 created: 2026-09-10
 ---
 
@@ -16,13 +16,17 @@ That is not hypothetical. This session produced several measurements whose home 
 about rather than read off the filename, and one rule header now carries a dated measurement
 precisely because nobody could tell whether the sidecar wanted it.
 
-The user proposes `*.meta.md` as the more encompassing term.
+The user proposed `*.meta.md` as the more encompassing term, then re-opened it: `evidence` may be
+better, and **a term nobody has proposed yet may be better than either.** The replacement is an open
+question, not a decision this file records.
 
 ## Complication
 
-**The premise is sound and the proposed term is not obviously the best answer.** `meta` is broader,
-which is the point, but breadth is what the tier already suffers from at its edges. Two specific
-risks:
+**The premise is sound. No replacement term has been chosen, and this candidate does not choose one.**
+Two candidates have been raised and both have a known objection, which is the reason the question
+stays open rather than the reason to pick the less-objectionable one.
+
+`meta` is broader, which is the point, but breadth is what the tier already suffers from at its edges:
 
 - **`meta` reads as `metadata` to most readers**, which is frontmatter, build config and file
   attributes. The tier holds prose.
@@ -30,9 +34,15 @@ risks:
   explanation split works because each half has a shape. If the sidecar becomes "everything else about
   this file", the discipline that keeps arguments out of it goes with the name.
 
-Alternatives worth pricing against `meta` before committing, none of them obviously better either:
-`*.evidence.md` (matches the four contents most exactly, and excludes nothing the tier actually
-holds), `*.notes.md` (honest and flat), `*.background.md`.
+`evidence` matches the four contents more exactly than either — a measurement, a probe method, a
+rejected alternative and a correction carrying a figure are all evidence — and excludes nothing the
+tier holds. Its objection is narrower but real: **a rejected alternative is not obviously evidence** in
+ordinary usage, and it is the entry an author is most likely to be holding when they reach for the
+sidecar.
+
+Others raised and not yet argued: `*.notes.md` (honest and flat, and arguably too flat),
+`*.background.md`, `*.record.md`. **Treat this list as incomplete.** The right term may not be on it,
+and the shape of the answer is a word that names all four contents without naming anything else.
 
 **The reach is the real cost, and it is larger than it looks.** Measured on the slice branch:
 
@@ -73,8 +83,13 @@ which now owns the register rule, `doc-comments.md` rule 7, and the ~50 files ci
 
 ## Open questions
 
-- **Is `meta` the right term, or is `evidence` closer to the four contents?** The user proposed `meta`
-  for breadth. The counter-argument is that breadth is what the tier must not have.
+- **What is the term? Genuinely undecided, and this is the question that gates the rest of the slice.**
+  `meta` was proposed for breadth and `evidence` reads as closer to the four contents, but neither has
+  been argued to a conclusion and **a better term may not have been proposed yet.** Do not treat the
+  two on the table as the shortlist. The test to apply: does the word name all four contents — a
+  measurement, a probe method, a rejected alternative, a correction carrying a figure — without
+  admitting argument, which must never move? Settle this before any file is moved; every other cost in
+  this candidate is incurred once the term is chosen, and incurred again if it changes.
 - **Does this wait for Wave 1's content to settle?** Renaming files whose contents are still moving
   doubles the review surface. Sequencing it late in Wave 1, after `prose-linting.md` and
   `doc-comments.md` are reconciled, is probably cheaper.
