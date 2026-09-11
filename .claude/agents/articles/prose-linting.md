@@ -35,7 +35,7 @@ it does not read as "Vale is not set up here".
 
 **`npm run prose-lint` is the command.** It runs Vale over the tracked file list rather than walking
 the filesystem, and prints how many files it linted. That trailing count is the point. A zero from a
-clean tree and a zero from a run that linted nothing are the same bytes. Four of the eight ways below
+clean tree and a zero from a run that linted nothing are the same bytes. Four of the eleven ways below
 produce exactly that. The script fails when it **cannot** lint — no binary, no `.vale/`, an
 unloadable config, an empty file list — and never on a finding.
 
@@ -66,7 +66,7 @@ worst of the three exit-code readings. Do not take the number from Vale's own cl
 stopped "with code 1" while the process exits 2. Measured on vale 3.20.0; the reproduction is in
 `prose-linting.rationale.md`.
 
-## Eight ways a run reports a confident zero
+## Eleven ways a run reports a confident zero
 
 Check each before you believe one.
 
@@ -94,6 +94,26 @@ Check each before you believe one.
    number 4 reached through a typo in `.vale.ini` rather than through a file's path. Brace expansion
    itself is real — `*.{ts,zzz}` selected the `.ts` fixtures alone and `*.{qqq,zzz}` selected none,
    so an unmatched glob applies no style rather than falling back to everything.
+
+9. **`.vale.ini` carries no `[formats]` mapping for the extension.** The run still reports
+   findings, so it does not look silent, while every rule that needs a Markdown text unit is inert.
+   Measured on Vale 3.20.0, over one config and one `.ts` file
+   carrying both rule shapes. With `ts = md` present, the comment-scoped `existence` rule and the
+   `scope: sentence` rule both fired. With the three lines deleted and nothing else changed, only the
+   comment-scoped one fired. So the mapping is not what puts a comment in scope. It gives the
+   extracted text a structure that `sentence`, `paragraph` and list scopes can find. **This is the worst-shaped entry in the list**,
+   because a partly inert run and a working one are indistinguishable from their output.
+10. **A re-levelling line in `.vale.ini` misspells its rule.** `STE.ProcedureLenght = warning`
+    enables nothing and disables nothing, reports no diagnostic, and exits 0. The rule stays at its
+    shipped `suggestion` level, below `MinAlertLevel`, so this is number 1 reached through a typo.
+    Measured against the correct spelling on the same file, which fired.
+11. **A rule's own `scope:` selector does not exist.** An invalid selector is not an error.
+    Measured: the same rule that fired under `text.comment.block.ts` reported nothing under
+    `text.comment.documentation.ts`, with no diagnostic and exit 0. There is no documentation scope,
+    and Vale does not say so. This is number 8's twin, reached through the rule file rather than
+    through the section header.
+
+<!-- reference-check: allow text.comment.documentation.ts -- a Vale scope selector that does not exist, named here as the measured example; not a path -->
 
 **One more way is not a zero at all, and no rule catches it.** Moving evidence out of a rule strands the
 words that pointed at it. "The split is clean" survived the table it described. "The bullet below"
