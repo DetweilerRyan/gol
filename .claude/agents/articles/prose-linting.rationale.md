@@ -384,7 +384,7 @@ files, so a key written for one never reaches the other two. Row 3 reproduces th
 **The wrong summary of this is "Vale does not inherit per-rule keys", and that sentence reached the
 article for one commit.** Row 3 refutes it. A reader who believes it deletes the six `= NO` lines
 from the sidecar section as redundant, which restores the exact leak the paragraph above them
-documents. Only row 2 is about the four-place edit; row 3 answers a different question, and the two
+documents. Only row 2 is about the exemption-section edit; row 3 answers a different question, and the two
 rows were collapsed into one claim.
 
 ## The incidents behind "How a pass damages the file it cleans"

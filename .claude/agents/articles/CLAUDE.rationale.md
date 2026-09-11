@@ -102,3 +102,41 @@ It long claimed "every name this app ships follows it" while omitting `Appearanc
 outright, and while `Next Generation` shipped in title case.
 `sentence-case-the-next-generation-button` renamed the button, and `hardener` found the
 omission.
+
+## Routing branches answer topic, never register — ruled 2026-09-10
+
+**Ruled by the user, in three steps on one day.** An instruction file carries instructions and its
+`.rationale.md` sidecar carries the explanation. That rule is itself an instruction about writing
+prose, so it lives in `prose-linting.md` rather than here. And these branches acknowledge that the
+pairs exist, as index work, while deferring every routing instruction between a file and its sidecar
+to that article.
+
+**What moved out of branch 5**: the evidence kinds, "does this constrain an action" as a per-sentence
+method, the exempt classes, kind-before-mass, the ~1 KB floor, "argument never moves at any size", and
+the hand-audit obligation. All of it is now stated once, in `prose-linting.md` under "Instruction
+stays. Explanation moves."
+
+**What stayed, and the test that kept it.** A branch stays here when it answers **which file**, and
+goes when it answers **which half of a pair**.
+
+- **Where a sidecar physically sits** stayed. The role-file placement into `articles/` is forced by
+  `agent-doc-check`'s path glob, and `CLAUDE.rationale.md`'s by `reference-check`'s and
+  `agent-doc-check`'s. That is a predicate a checker reads, which is branch 1's own reservation for
+  this file.
+- **Branch 4's module carve-out** stayed. "Is this passage about `scrollbars.ts`, or about
+  `architecture.md`'s rule?" is a subject question, and it is settled before register arises.
+- **Branch 4's register half went.** `<module>.md` against `<module>.rationale.md` is the same
+  instruction-against-explanation cut under different filenames, so `prose-linting.md` states it.
+
+**The precedent this follows** is branch 4 against `doc-comments.md`. That branch already routes module
+depth to a sidecar pair while `doc-comments.md` rule 7 says what may sit in a hover. The article tier
+now works the same way.
+
+**"Argument never moves at any size" was corrected rather than moved.** Read as written it licensed
+keeping any justification, which is what the ruling rejects. The corrected form distinguishes a passage
+that constrains conduct, which never moves, from one that only says why a rule is shaped as it is,
+which never stays.
+
+**The sidecar index above is hand-maintained and nothing checks it.** A cheap extension to
+`agent-doc-check` would glob `*.rationale.md` under `.claude/agents/articles/` and compare it against
+the list. It is not built, and a wrong list fails safe: a reader looks and finds the file anyway.

@@ -425,8 +425,8 @@ JSDoc it may mean the content does not belong in the interface at all. `doc-comm
 implementation detail to `//`, and rule 7 sends overflow to a `<module>.md` sidecar. **Splitting the
 sentence in place is the wrong fix that still clears the finding.** Ask which before rewriting.
 
-**What the four `JsDoc` rules check, and the three writing facts that follow from their scope, are in
-`doc-comments.md` under "Four of these rules are machine-checked".** Read them there rather than here.
+**What the `JsDoc` rules check, and the writing facts that follow from their scope, are in
+`doc-comments.md` under "What Vale checks mechanically".** Read them there rather than here.
 
 **A `@returns` is conventionally a noun phrase**, so a `PassiveVoice` finding on one may want an
 exemption rather than a rewrite.
@@ -552,8 +552,8 @@ Four later sections overlap those globs, and must each switch the rule off once 
 `*.rationale.md` exemption, plus the three that keep bait and other checkouts out of a `vale .` walk.
 
 **Adding a `JsDoc` rule is a five-place edit.** `[*.{ts,tsx}]` enables it. The three exemption sections
-below that one switch it off by name. And `doc-comments.md`'s "Four of these rules are machine-checked"
-table gains a row. `[**/*.rationale.md]` is not one of them, because `[*.{ts,tsx}]` cannot match a `.md`
+below that one switch it off by name. And `doc-comments.md`'s "What Vale checks mechanically" table
+gains a row. `[**/*.rationale.md]` is not one of them, because `[*.{ts,tsx}]` cannot match a `.md`
 file.
 
 **Whenever you enable a rule, switch it off in the sidecar section in the same edit.** That pairing is

@@ -77,8 +77,8 @@ Ask this of each existing line:
 - **Does it explain how the thing works inside, or why it was built that way?** → `//`, below the
   signature.
 
-**Vale lints these blocks**, and four of the rules below are machine-checked. See "Four of these
-rules are machine-checked" at the end of Part 1.
+**Vale lints these blocks**, and some of the rules below are machine-checked. See "What Vale checks
+mechanically" at the end of Part 1.
 
 ### 2. The first line is one sentence saying what the caller gets
 
@@ -373,7 +373,7 @@ nothing, so settle that one from content instead. Ask whether the block describe
 **Where the `*/` hazard usually comes from.** Lines mentioning a glob like `**/run.ts` are the usual
 source. See the commit discipline below.
 
-### Four of these rules are machine-checked
+### What Vale checks mechanically
 
 `vale-styles/JsDoc/` lints **multi-line** block comments in every `.ts` and `.tsx` file. It is
 report-only. Each rule mechanises a rule stated above, and each message names the token it matched, so
