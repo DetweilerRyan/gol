@@ -44,3 +44,11 @@ filenames, so it says nothing either way.
   every role reads, one for the Vale mechanics that only a triaging reader needs.
   That is a larger change and it is the reason this is a candidate rather than a
   todo.
+
+## Related
+
+[[rename-the-rationale-tier-to-meta]] renames the `*.rationale.md` tier itself. Both are doc renames
+that churn citations, so landing them together may beat landing them apart. They are filed separately
+because the arguments differ -- this file's job widened, the tier's term was always narrower than its
+contents -- and because the reach differs by an order of magnitude: ~18 basename citations here
+against 221 occurrences across 50 files there.

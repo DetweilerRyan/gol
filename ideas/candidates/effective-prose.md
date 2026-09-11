@@ -87,6 +87,7 @@ every later wave.
 | `a-clean-lint-is-not-evidence-a-block-hovers`       | oxlint sees a JSDoc tag only at line start; TypeScript's hover parser sees any whitespace-preceded `@`. A block passes `npm run lint` while hovering broken, and the `JsDoc` rules lint prose inside blocks that may not hover at all.                                                             |
 | `no-md-reference-is-checked-anywhere`               | The mandated `@see {@link ./x.rationale.md}` form is unverified, because a leading-dot token is discarded. That is the citation form the sidecar convention rests on.                                                                                                                              |
 | `mechanise-prose-soundness-with-a-style-package`    | Survey `Std`, `Google` and `Microsoft`. The gate's own standard is soundness enforced by tooling rather than by prose someone remembers, and six rules enforce a fraction of what the articles ask for. Wholesale `Std` is already declined; the per-rule and the two unexamined packages are not. |
+| `rename-the-rationale-tier-to-meta`                 | The tier is named for one of the four things it holds, which invites a misfile in one direction. Sequence late in Wave 1, after the contents settle, and consider landing it with the rename above.                                                                                                |
 
 ### Wave 2 — run the style over the surface it was built for
 
