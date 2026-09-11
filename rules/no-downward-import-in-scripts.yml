@@ -25,7 +25,7 @@ files:
 # Metavariables do not interpolate inside string literals, so an import PATH is matched with
 # kind: + regex: rather than with a pattern -- two of this repo's rules were silently inert for
 # exactly that mistake. `[^'"/]+/` after the `./` is what distinguishes a descent
-# (`./program/mod.ts`) from an ordinary sibling import (`./mod.ts`); a bare string naming a
+# (`./<program>/<mod>.ts`) from an ordinary sibling import (`./<mod>.ts`); a bare string naming a
 # nested path is not an import and is not a finding, which the fixture pins. `../` is
 # deliberately NOT matched: an upward import is the sanctioned direction, and the only
 # `../<dir>/` shape available is a program reaching sideways into another program, which is

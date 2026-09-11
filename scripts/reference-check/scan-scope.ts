@@ -75,7 +75,7 @@ function isInsideExcludedDocDir(path: string): boolean {
 }
 
 // Every tracked/untracked-not-ignored .md file is a doc, not an enumerated
-// three-file list plus one directory prefix -- widened so a rule-file
+// two-file list plus one directory prefix -- widened so a rule-file
 // directory like vale-styles/JsDoc/README.md is covered the day it lands,
 // with no edit here. ideas/** is excluded for the two reasons scan-scope's
 // own header names: it necessarily names dead references as its own

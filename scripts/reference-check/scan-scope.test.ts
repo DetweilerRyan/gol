@@ -67,7 +67,7 @@ describe('scanScopeOf', () => {
   })
 
   // Gap 1: the doc surface is now every tracked .md outside ideas/** and
-  // .claude/worktrees/**, not an enumerated three-file list plus one
+  // .claude/worktrees/**, not an enumerated two-file list plus one
   // directory prefix -- a rule-file directory like vale-styles/JsDoc/ is
   // covered without an edit here.
   it('includes a .md file outside .claude/** and outside CLAUDE.md/README.md', () => {
@@ -76,7 +76,7 @@ describe('scanScopeOf', () => {
     expect(scanScopeOf(['src/cache.rationale.md']).docFiles).toEqual(['src/cache.rationale.md'])
   })
 
-  it('excludes a non-.md idea file from the doc surface', () => {
+  it('excludes an .md file sitting directly under ideas/ from the doc surface', () => {
     expect(scanScopeOf(['ideas/x.md']).docFiles).toEqual([])
   })
 

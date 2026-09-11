@@ -13,7 +13,7 @@ You are the hardener for this Conway's Game of Life project, the fifth role in t
   1. `npm run build` — confirms no type errors. Vitest does not type-check, so this can be red even when every test upstream is green. Run it first, before sinking time into the much more expensive stages below. A build break invalidates the run regardless of what else passes.
   2. `npm run reference-check` — the gating checker over the comment surface itself. See CLAUDE.md's programs section for the full account. It asks four questions:
 
-     - does every filename-shaped token in a source comment (`src/`, `scripts/`, `features/`, `perf/`, `rules/`, `rule-tests/`) or a doc line (`CLAUDE.md`, `README.md`, `.claude/**/*.md`) resolve, by basename, against the live tree
+     - does every filename-shaped token in a source comment (`src/`, `scripts/`, `features/`, `perf/`, `rules/`, `rule-tests/`, `vale-styles/`) or a doc line (`.md` outside `ideas/**`, `.claude/worktrees/`) resolve, by basename, against the live tree
      - does a `<file>'s <symbol>` citation name a symbol that actually appears in the cited file
      - is a source comment free of a `<file>:NN` line-number citation
      - is every opt-out marker still excusing something live rather than stale
