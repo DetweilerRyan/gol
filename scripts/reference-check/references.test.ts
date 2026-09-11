@@ -48,6 +48,28 @@ describe('extractFileTokens', () => {
 
   it('drops a dotted-relative token with no filename of its own', () => {
     expect(extractFileTokens('a bare .ts extension')).toEqual([])
+    expect(extractFileTokens('a bare .rationale.md extension')).toEqual([])
+  })
+
+  // Gaps 2 and 3: isDiscardedToken now checks the token's *basename* rather
+  // than the raw token, so a genuinely relative citation resolves by its
+  // filename half instead of being discarded outright just for starting
+  // with a dot (directly, or via an upward `../` segment).
+  it('keeps a genuinely relative token, resolving by its own basename', () => {
+    expect(extractFileTokens('see `./name.md` for the sidecar')).toEqual(['./name.md'])
+    expect(extractFileTokens('see `../scrollbars.rationale.md` for the sidecar')).toEqual([
+      '../scrollbars.rationale.md',
+    ])
+  })
+
+  it('keeps a token under a dot directory, no longer hidden by the leading segment', () => {
+    expect(extractFileTokens('see `.claude/agents/articles/engineering.md`')).toEqual([
+      '.claude/agents/articles/engineering.md',
+    ])
+  })
+
+  it('drops a glob-fragment token even under an included source prefix', () => {
+    expect(extractFileTokens('matches src/*.test.ts everywhere')).toEqual([])
   })
 
   it('does not report a truncated match for a longer word sharing the extension as a prefix', () => {
@@ -93,6 +115,16 @@ describe('extractSymbolCitations', () => {
   it('drops a citation whose file half is a glob fragment', () => {
     expect(extractSymbolCitations("*.test.ts's pairTargets", 1)).toEqual([])
   })
+
+  // Gaps 2 and 3 reach this extractor too, since it shares isDiscardedToken
+  // with extractFileTokens: a genuinely relative file half now keeps its
+  // citation instead of being dropped for starting with a dot.
+  it('keeps a citation whose file half is a genuinely relative token', () => {
+    const citations = extractSymbolCitations("./decide.ts's pairTargets", 1)
+    expect(citations).toEqual([
+      { file: './decide.ts', line: 1, token: "./decide.ts's pairTargets", symbol: 'pairTargets' },
+    ])
+  })
 })
 
 describe('extractLineReferences', () => {
@@ -114,5 +146,13 @@ describe('extractLineReferences', () => {
   // is actually for.
   it('finds every reference on a line, not only the first', () => {
     expect(extractLineReferences('see a.ts:10 and b.ts:20')).toEqual(['a.ts:10', 'b.ts:20'])
+  })
+
+  // Gaps 2 and 3 reach this extractor too, since it shares isDiscardedToken
+  // with extractFileTokens: a genuinely relative token now keeps its
+  // (banned) line reference instead of being dropped for starting with a
+  // dot.
+  it('keeps a genuinely relative token, still banning the line-number suffix', () => {
+    expect(extractLineReferences('see ./decide.ts:10 for the wiring')).toEqual(['./decide.ts:10'])
   })
 })

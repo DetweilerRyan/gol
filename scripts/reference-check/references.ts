@@ -44,18 +44,23 @@ const FILE_TOKEN_SOURCE = `[A-Za-z0-9_.*/-]*\\.(?:${EXTENSION_ALTERNATION})(?![A
 function isDiscardedToken(token: string): boolean {
   // Dropped per the design's measured extraction sweep: a token containing
   // `*` is a glob fragment (`test.ts`, `e2e.spec.ts` matched as literal `*`
-  // wildcards elsewhere), and a token starting with `.` is dotted-relative
-  // noise with no filename of its own (a bare `.ts` matched with a
-  // zero-length prefix).
+  // wildcards elsewhere), and a token whose *basename* starts with `.` is
+  // dotted-relative noise with no filename of its own (a bare `.ts` matched
+  // with a zero-length prefix). Checking the basename rather than the raw
+  // token is the fix for Gaps 2 and 3: a genuinely relative citation like
+  // `./cache.rationale.md` or `../scrollbars.rationale.md` now resolves by
+  // its basename instead of being discarded outright, and a dot *directory*
+  // segment (`.vale/`, `.claude/`) no longer hides everything beneath it --
+  // only a token whose own filename half starts with `.` is still noise.
   // reference-check: allow test.ts -- illustrative glob-fragment example, not a real file
   // reference-check: allow e2e.spec.ts -- illustrative glob-fragment example, not a real file
-  return token.includes('*') || token.startsWith('.')
+  return token.includes('*') || basenameOf(token).startsWith('.')
 }
 
 /**
- * Every `<name>.ts`/`.tsx`/`.yml`/`.yaml`-shaped token on `line`, minus glob
- * fragments (any token containing `*`) and dotted-relative noise (any token
- * starting with `.`).
+ * Every `<name>.ts`/`.tsx`/`.yml`/`.yaml`/`.sh`-shaped token on `line`, minus
+ * glob fragments (any token containing `*`) and dotted-relative noise (any
+ * token whose basename starts with `.`).
  */
 export function extractFileTokens(line: string): string[] {
   const matches = line.match(new RegExp(FILE_TOKEN_SOURCE, 'g')) ?? []

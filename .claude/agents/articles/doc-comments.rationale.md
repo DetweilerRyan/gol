@@ -72,6 +72,8 @@ All five survive `tsc --emitDeclarationOnly` verbatim, so this is purely a hover
 
 ## TypeDoc was evaluated against the `@see` ruling, and can be configured to work
 
+<!-- reference-check: allow useZoomGlide.md -- a quoted probe input in the measurement table below, testing the path form TypeDoc was evaluated against; the sidecar itself is useZoomGlide.rationale.md, and no useZoomGlide.md exists -->
+
 **Do not reopen the mandated form by pointing at TypeDoc.** It was tested on 2026-09-09, at TypeDoc
 0.28.20, and the finding is that a working configuration exists and costs the hover.
 

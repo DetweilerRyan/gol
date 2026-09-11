@@ -551,6 +551,8 @@ one because it was written as a refutation.
 **Claim 1, `8907adf`.** Vale fires on a bare possessive and not on a backticked one, "which is why the
 four landed role files reached zero — they write `product`'s".
 
+<!-- reference-check: allow Contractions.yml -- .vale/ is downloaded by `vale sync` and gitignored, so it never resolves against the tracked tree on any machine -->
+
 **Claim 2, `7bd7388`, offered as a refutation of claim 1.** Derived by reading
 `.vale/STE/Contractions.yml`: the possessive token is `\b\w+['’](?:re|ve|ll|d|s)\b(?!\s)`, "the
 `(?!\s)` is the whole story", and the peers "reached zero because their possessives are followed by
