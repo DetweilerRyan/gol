@@ -39,7 +39,7 @@ Ten are topic articles, read on the trigger each one names in its own header:
 
 - **Articles that have one** — `acceptance-mutation`, `ast-grep-rules`, `doc-comments`, `engineering`, `mutation-testing`, `prose-linting`, `quality-tooling`, `state-flow`, `testing-layers`.
 - **Articles that do not** — `architecture`, `archive`, `handoffs`, `orchestration`, `workflow`.
-- **Role files that have one** — `architect`, `cleaner`, `coder`, `hardener`. `product` does not. All four sidecars sit in `articles/` rather than beside the role file, and branch 5 says why that placement is forced.
+- **Role files that have one** — `architect`, `cleaner`, `coder`, `hardener`, `product`. All five sidecars sit in `articles/` rather than beside the role file, and branch 5 says why that placement is forced.
 - **`CLAUDE.md` has one**, `CLAUDE.rationale.md`, also in `articles/` — chosen rather than forced.
 - **Module sidecars are a different tier**, under branch 4. The live ones are `src/cache.rationale.md`, `src/hooks/useZoomGlide.rationale.md` and `src/scrollbars.rationale.md`.
 
