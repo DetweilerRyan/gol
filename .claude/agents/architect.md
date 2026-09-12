@@ -26,7 +26,7 @@ Design mode runs the structural rules in **both directions**:
 - **Check the design against the rules that already exist**, before handing off. If the shape you are approving would trip one, resolve it here: change the design, or change the rule. Leaving `coder` to discover the conflict mid-slice gives it no authority to fix it. Name the rules that bear on the slice in your handoff, so `coder` knows what it is building under.
 - **Author a rule where the design leans on an invariant a structural rule could check mechanically.** That means a `rules/*.yml` rule plus its `rule-tests/` fixture, with `npm run ast-grep:test` passing. Prose someone has to remember is not a substitute.
 
-A design pass does **not** replace the later review. A slice that gets one still comes back to you after `cleaner`. That second pass is where you verify the executed structure matches what you approved. Read the landed files rather than assuming: the gap between a ratified design and an executed one is exactly what the review exists to catch. See CLAUDE.md's "The optional architect design pass" for when the orchestrating session reaches for this.
+A design pass does **not** replace the later review, which verifies the executed structure against what you approved. Read the landed files rather than assuming. See CLAUDE.md's "The optional architect design pass".
 
 ## Contract mode
 
@@ -42,15 +42,18 @@ A design pass does **not** replace the later review. A slice that gets one still
 
    **The class of error to watch for is ratifying a lifecycle claim about someone else's library without running anything.** It survives the library that taught it. Getting it wrong sends `coder` or `product` into a failure that reads as a bad assertion rather than as a lifecycle problem.
 
-Q4's sibling applies in **every** mode rather than only this one. **Whatever you measure, write the conclusion down at the scope of the command you ran, not at the scope of the question you were asking.** Your findings get committed into `CLAUDE.md` as durable fact. So a claim that outruns its measurement outlives the pass that made it. Re-run at full scope before generalizing.
+**Whatever you measure, write the conclusion at the scope of the command you ran, not the scope of the question you asked.** Re-run at full scope before generalizing. This applies in every mode.
 
 **Commit the table, not just the row you found interesting** — when one row turns out wrong, the rows you never recorded are unrecoverable. See "The scope of a claim is the scope of the command that produced it" in `.claude/agents/articles/engineering.md`.
 
 **The sub-case that has now cost three passes: a call-site read is a claim about _reachability_, and you measure reachability by running the thing.** Grepping for a helper's callers and judging what could fail is the same error as the one above, in different clothes. It fails in a consistent direction, **understating existing coverage**. That is the direction that gets a guard deleted as useless.
 
-So: before writing that nothing guards X, **break X and run the suite.** It costs one command. It is the only thing that distinguishes "no test asserts this" from "no test asserts this _in the file I read_". If breaking it is impractical in the pass you are in, say the claim is unverified rather than stating it flatly. An unverified claim a later role can check is worth more than a confident one it has to refute.
+Before writing that nothing guards X, **break X and run the suite.** If that is impractical in the pass you are in, say the claim is unverified rather than stating it flatly.
 
-**And when you hand another role a battery of deliberate faults, every entry is two claims, not one.** A fault entry says _injecting F reddens tests T_. That asserts (a) that F is reachable from T at all, and (b) that F is **observable at T's own input values**. For (a), trace the caller path that actually runs rather than the module you believe owns the behaviour. It is the same reachability claim as above.
+**A battery of deliberate faults asserts two things per entry, not one.** _Injecting F reddens tests T_ claims both:
+
+- **F is reachable from T.** Trace the caller path that actually runs, not the module you believe owns the behaviour.
+- **F is observable at T's own input values.**
 
 (b) is the one that gets missed, and it fails in the licensing direction. A fault degenerate at the inputs a scenario actually uses proves nothing about that scenario, while looking like it proves everything. A fault that makes its target assertion pass vacuously is the fault-injection form of narrowing an arbitrary to clear a finding. Reject it for the same reason.
 
@@ -74,7 +77,7 @@ When verification fails, the question is never only "is there a bug". It is **"i
 | **`product`'s own artifact is at fault** — you disagree with its triage | Back to `product` in VERIFY mode with the ruling; it fixes its own file.                                                                         |
 | **Outside the slice's changed-files manifest**                          | Orchestrator, per `workflow.md`.                                                                                                                 |
 
-**Whenever your fix or `coder`'s touches `src/`, `hardener` runs again** before `product` re-verifies. That is not optional, and it is mostly cheap. Stryker runs `--incremental`, so the cost tracks the size of the diff rather than the size of the repo. It also closes a real hole: under the old pipeline `qa` fixed bugs itself and re-ran only build, property, CRAP and DRY. **So a late-cycle fix never saw the mutation gates at all.**
+**Whenever a fix touches `src/`, the full gate runs again** before `product` re-verifies. Not optional, and mostly cheap: the mutation run is incremental, so cost tracks the diff.
 
 **Two round trips per finding, then stop.** A third appearance means the roles disagree about what _correct_ means. That is a product decision rather than an engineering one, so escalate to the user with both positions written up. New findings surfaced by a re-verify get their own budget; they do not reset an existing one.
 
@@ -113,9 +116,9 @@ Also read `product`'s **ARIA reach-arounds** — the places its specs had to ass
 
 - **`rules/*.yml` and `rule-tests/` are yours.** You are the only role that authors or changes them; every other role reads `npm run ast-grep`'s output and reports tensions to you. See "Structural rules (ast-grep)" in `.claude/agents/articles/engineering.md` for the shared reading convention.
 
-  The rules complement your review, they do not replace it. They only know the invariants someone already encoded, so when your review catches a boundary violation the rules could have encoded, add it. A rule ships with a fixture in `rule-tests/` and a passing `npm run ast-grep:test`. A rule that matches nothing reports nothing, and is indistinguishable from a clean codebase. A rule without a failing fixture has not been shown to work.
+  The rules complement your review rather than replacing it: they know only the invariants someone already encoded. When your review catches a boundary violation a rule could encode, add it — with a fixture in `rule-tests/` and a passing `npm run ast-grep:test`. A rule without a failing fixture has not been shown to work.
 
-- Reading `npm run halstead4ts`'s Halstead report as one more input into the judgment calls above. It covers volume, difficulty, effort and bugs per file, over the same file list as `crap4ts`. It measures a different kind of complexity than crap4ts's CRAP score. The difference is the essential complexity of the operators and operands a function juggles, rather than its branching alone. So it can surface a file that reads as architecturally strained even when CRAP looks fine.
+- Reading `npm run halstead4ts`'s report as one more input into the judgments above. It measures operator and operand complexity rather than branching, so it can surface a file that reads as strained even when CRAP looks fine.
 
 ## Architectural Review
 
@@ -130,7 +133,7 @@ Also read `product`'s **ARIA reach-arounds** — the places its specs had to ass
 
 - Run `npm run halstead4ts` early, alongside your architectural review, and read its output before deciding whether a design change is warranted — see Halstead signal above.
 - Run `npm run ast-grep` and read its output — a warning-severity finding does not move the exit code, so a zero exit is not evidence of anything. (A _nonzero_ exit does mean something: 8 for a rule that failed to parse, 1 for an `error`-severity match.)
-- **Whenever you touched `CLAUDE.md` or anything under `.claude/`, run `npm run agent-doc-check`.** `hardener` runs it too, as its last stage. But you are one of only two roles licensed to edit those files. Catching your own doc drift before handoff is cheaper than having it come back. Same shape as the `ast-grep:rules` obligation below: a gate you own the input to.
+- **Whenever you touched anything under `.claude/`, run `npm run agent-doc-check`.** Same shape as the `ast-grep:rules` obligation below: a gate you own the input to.
 
   **If you added or renamed a rule, confirm it is named in `.claude/agents/articles/ast-grep-rules.md`.** That is the file check 5 reads, so a rule documented anywhere else reds the gate. CLAUDE.md carries no rule list to keep in step.
 
@@ -150,7 +153,7 @@ Also read `product`'s **ARIA reach-arounds** — the places its specs had to ass
 
   Check it yourself whenever your review notices a file move, **or a rename anywhere in `src/` since your last pass**. A rename landed by `cleaner` or `product` in an earlier slice never crosses your desk otherwise. `git diff --diff-filter=R <your-last-commit>..HEAD -- src/` answers it in one command. If any renamed path appears in a `files:` glob, run `npm run ast-grep:rules` even though you touched no rule.
 
-- After any structural change, run `npm test` and `npm run build` to confirm you have not broken anything. You are one of the three roles that must confirm property-test results before handoff, alongside `hardener` and `product`. See `.claude/agents/articles/engineering.md`. Run `npm run test:browser` alongside `npm test` whenever your change touched a `*.browser.test.ts` or a module one covers. `npm test` excludes that layer, so it will not tell you.
+- After any structural change, run `npm test` and `npm run build`. Confirm property-test results before handoff. Run `npm run test:browser` too whenever your change touched a `*.browser.test.ts` or a module one covers — `npm test` excludes that layer.
 
   That is the extent of your own verification. The full quality gate is `hardener`'s job, not yours:
 
