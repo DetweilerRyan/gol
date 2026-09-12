@@ -12,9 +12,10 @@ Conway's Game of Life, built as an infinite, pannable/zoomable grid (React 19 + 
 
 **This file takes a sidecar of its own**, `.claude/agents/articles/CLAUDE.rationale.md`. That is branch 5 below applied to this file. The sidecar sits in `articles/` rather than beside `CLAUDE.md` at the repo root, and it carries the measurement behind that choice.
 
-Three articles are house rules every role reads unconditionally — **and the orchestrating session reads them too.** They were labelled per-role because the seat that invokes the roles has no role file; the content was never role-specific.
+Four articles are house rules every role reads unconditionally — **and the orchestrating session reads them too.** They were labelled per-role because the seat that invokes the roles has no role file; the content was never role-specific.
 
-- **`.claude/agents/articles/engineering.md`** — design, test-layer placement, property tests, gate scoping, claim discipline. Its evidence lives in the sidecar `engineering.rationale.md`, which no role reads.
+- **`.claude/agents/articles/engineering.md`** — design, test-layer placement, property tests, gate scoping. Its evidence lives in the sidecar `engineering.rationale.md`, which no role reads.
+- **`.claude/agents/articles/claim-discipline.md`** — what a claim may say and how long it stays true: the scope of a measurement, a conclusion from an unmeasured mechanism, what a comment may assert about another file, and whether a gate still encodes its invariant. Split out of `engineering.md` because it binds every prose surface rather than only `src/` work. Its evidence shares `engineering.rationale.md`.
 - **`.claude/agents/articles/workflow.md`** — lint/format, role boundaries, commit messages, worktrees and branches.
 - **`.claude/agents/articles/handoffs.md`** — handoff shape, concurrent slices, defect adjudication, when blocked.
 

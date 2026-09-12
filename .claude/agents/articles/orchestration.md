@@ -8,9 +8,9 @@ The five roles have files. The seat that invokes them does not, and until this a
 
 ## Read these three, unconditionally, the way every role does
 
-`engineering.md`, `workflow.md`, `handoffs.md`. They are labelled "house rules every role reads unconditionally", and this seat is not a role, so nothing used to route it there. But their content is not role-specific. The omission was an accident of the file layout, not a decision.
+`engineering.md`, `workflow.md`, `handoffs.md`, `claim-discipline.md`. They are labelled "house rules every role reads unconditionally", and this seat is not a role, so nothing used to route it there. But their content is not role-specific. The omission was an accident of the file layout, not a decision.
 
-**`engineering.md`'s two claim-discipline sections are the ones this seat most needs.** The first is "The scope of a claim is the scope of the command that produced it". The second is "A conclusion from a plausible mechanism outlives a measurement." Both were written after roles published false conclusions, and they apply here identically. This seat published four in a single five-slice run — see "Prose discipline" below.
+**`claim-discipline.md` is the article this seat most needs.** The first is "The scope of a claim is the scope of the command that produced it". The second is "A conclusion from a plausible mechanism outlives a measurement." Both were written after roles published false conclusions, and they apply here identically. This seat published four in a single five-slice run — see "Prose discipline" below.
 
 Topic articles keep their own triggers, and exactly one names this seat: **`mutation-testing.md`**, on its Audience line and again in its exemption trigger. Read it for a second thing its triggers do _not_ route you to. That is its fourth failure mode: the shell pipeline that eats the exit status of the thing being measured. It is the one place that trap is written down. It bit this seat on a `npm run test:perf` run rather than on anything to do with mutants.
 
@@ -59,7 +59,7 @@ Four lanes terminate in this seat, and each is described only as an outbound pro
 
 ## Prose discipline
 
-`engineering.md`'s two claim-discipline sections cover the general case and are not repeated here. One rule is specific to this seat:
+`claim-discipline.md` covers the general case and is not repeated here. One rule is specific to this seat:
 
 **Restating a subagent's figure propagates its error under your name.** A handoff's numbers are that role's measurement at that role's scope. Re-derive before writing one into CLAUDE.md, an article, a brief, or a summary for the user — `npm ls` for a version, `grep`/`comm` for a count. This seat wrote `playwright-core 1.63.0` into CLAUDE.md on one `hardener`'s authority and a later `hardener` falsified it: 1.62.1.
 

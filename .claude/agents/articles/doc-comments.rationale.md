@@ -283,7 +283,7 @@ that reports it.
 **The named-return arm used to be an exhaustive roster.** It read "every hook in `src/hooks/` except the
 two below", naming `useCamera` and `usePatternPlacement` as the inferred pair. The shape pass replaced it
 with two examples. That is a strict improvement rather than a loss: an exhaustive present-tense roster of
-another directory's files is the form `engineering.md`'s claim discipline forbids, and it would have gone
+another directory's files is the form `claim-discipline.md` forbids, and it would have gone
 stale on the next hook added.
 
 ## The research record, rejections included

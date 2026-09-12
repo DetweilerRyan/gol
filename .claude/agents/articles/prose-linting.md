@@ -305,7 +305,7 @@ construction already seen; the pass is what finds the next one.
 **Five exempt classes — do not "fix" these:**
 
 1. **A dated past-tense record.** "Four `@see` forms were measured and rejected."
-   `engineering.md`'s claim discipline **requires** this construction as the escape hatch that stops a
+   `claim-discipline.md` **requires** this construction as the escape hatch that stops a
    claim rotting, and the actor sits in the sidecar by design. The house rule wins.
 2. **Descriptive prose where the actor is irrelevant.** "How it is computed." STE only _prefers_ active
    in descriptive text; it _requires_ it in procedures. This class is not a defect by the standard's
@@ -401,7 +401,7 @@ arbitrary without them. A reader who wants the why has the pointer.
    it.
 3. **A named wrong answer, where naming it is the prohibition.** "Splitting the sentence in place is the
    wrong fix that still clears the finding" is a rule wearing a story.
-4. **A dated past-tense record that a live claim rests on.** `engineering.md`'s claim discipline
+4. **A dated past-tense record that a live claim rests on.** `claim-discipline.md`
    requires that construction so a present-tense claim cannot rot, and moving it strands an undated
    claim.
 
