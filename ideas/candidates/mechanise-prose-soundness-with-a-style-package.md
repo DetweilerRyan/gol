@@ -279,6 +279,49 @@ It rejects the short sentinel and fires on the long one at the comma's own colum
 rule is not merely possible — it reports 38 percent fewer findings than the proxy it replaces, and
 every one of them is a sentence where the split is available.**
 
+### What carrying a Tengo file costs, researched 2026-09-12
+
+**The marginal cost over a `.yml` rule is smaller than the `.sh` precedent suggests, and there is one
+finding nobody here raised.**
+
+**Gate reach.** A `.tengo` file is invisible to `test:scripts`, `crap4ts`, `dry4ts`, the mutation runs
+and `tsc -b` — but so is every `rules/*.yml` and every `vale-styles/*.yml` already. Rules in this repo
+have never been under those gates. Two real losses, one line each to fix:
+
+- **`prettier`** does not know the extension, so formatting is unenforced.
+- **`reference-check`** does not scan it — `SOURCE_EXTENSIONS` is `.ts/.tsx/.yml/.yaml` — so a comment
+  in the Tengo citing `prose.md` would go stale silently. **That is exactly the defect `run.sh` had**,
+  and `reference-check-reach` already carries the general fix.
+
+**The `.sh` precedent does not transfer, and the difference is the point.** `run.sh` was a _program_
+carrying branching logic, four failure modes and a computed count that nothing tested. A Tengo file is
+a _rule_. The gates it misses are gates no rule in this repo is under.
+
+**Testing is an open question upstream and solved here.** [vale.sh#83](https://github.com/vale-cli/vale.sh/issues/83),
+open since December 2023, asks Vale to document how to test `script`-based styles and records that
+"there's no Vale-native way to import `script` scripts into a test runner." **This repo's fixture
+harness already does it** — measured 2026-09-12: a `.bad.md` fires the rule and a `.good.md` reports
+nothing, through the same `fixtures.vale.ini` the `JsDoc` and `Instruction` styles use. The harness
+was built because `vale test` cannot test a comment-scoped rule, and it turns out to cover this gap
+too.
+
+**The finding nobody raised: `script` is an arbitrary-code-execution surface.**
+[boostsecurity's LOTP entry](https://boostsecurityio.github.io/lotp/tool/vale) documents Vale as a
+living-off-the-pipeline tool. Tengo is sandboxed to `text`, `fmt` and `math`, but that is enough:
+`text.re_find()` reads file contents and `fmt.println()` emits them, and a symlink placed in a repo
+can point the scope at something like `.git/config`. **The vector is running `vale` over an untrusted
+repository**, not authoring a script in your own — so it does not bear on this rule, and it does bear
+on `npm run prose-lint` running in any checkout this repo does not control. Worth knowing before a CI
+job runs Vale over a fork.
+
+**The genuinely new obligation is a second language.** `LongSplit.tengo` is nine lines, and nothing in
+`architect.md` says how to author or review one. Tengo is Go-like and small, but it is one more thing
+a role has to read.
+
+**The alternative remains a `scripts/` checker in TypeScript**: more code, every gate reaches it, no
+new language, and no ACE surface. The trade is roughly nine lines of Tengo against a tenth
+`scripts/` program with its own suite, CRAP budget and mutation score.
+
 ### What this corrects, and the lesson is about method
 
 **This entry previously concluded "Vale cannot express a conjunction of a count and a pattern."** That
