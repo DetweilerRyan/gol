@@ -202,24 +202,17 @@ rules. The column below is what each one still asks of you, which is not the sam
 | `STE.PassiveVoice`          | off by default | see the standing instruction below      |
 
 **A rule is mechanical when its trigger _is_ the defect, and a prompt when it fires on a proxy.**
-Classify a new rule that way rather than by whether it counts something.
+Classify a new rule that way rather than by whether it counts something. **A prompt is often a rule
+looking at the wrong thing rather than an unmechanisable one.** `prose.meta.md` carries the worked
+case: reading the list marker instead of the word count turned the last two prompts mechanical.
 
-**`ProcedureLength` is the worked example of a proxy rule made mechanical, and it is how to fix one.**
-`STE.ProcedureLength` counted words in any list item, so a bullet stood in for a procedure and every
-finding needed a judgement. The replacement reads the **marker**: a numbered item is a procedure, a
-bullet is a statement. Same defect, no proxy, no judgement. The lesson is that a prompt is often a
-rule looking at the wrong thing, not an intrinsically unmechanisable one — see `prose.meta.md`.
-
-**"Mechanical" means no judgement per finding. It does not mean sweepable in one pass.** Two of the
-five interact, so a batch application still needs the order and the re-run described below.
-
-### Order matters in a sweep, even now that every rule is mechanical
+### Mechanical does not mean sweepable
 
 **Bulk reading is not triage, and the finding count cannot tell you which you did.** Both look
 identical afterwards: a number.
 
-Every rule in a default run is mechanical as of 2026-09-12, and **that still does not make the run
-sweepable.** Two things survive the change:
+**"Mechanical" means no judgement per finding. It does not mean sweepable in one pass.** Two things
+survive the 2026-09-12 change that made every rule in a default run mechanical:
 
 - **`Contractions` keeps a per-finding judgement**, and it is the one rule where a sweep does damage.
   `that's` expands to _that is_ or _that has_ by context. See its own section below.
@@ -229,12 +222,12 @@ sweepable.** Two things survive the change:
 So when you report a file as linted, say which half you did. "Zero on the mechanical rules" is a
 different claim from "I read every finding".
 
-**Read each prompt finding against its own exempt classes below, and record the disposition.** Name the
-count in each class and name any finding you left in as arguable. A residual you cannot place is not
-exempt by default.
+**Read each finding that has an exempt class against that class, and record the disposition.** Name
+the count in each class and name any finding you left in as arguable. A residual you cannot place is
+not exempt by default.
 
-**The prompt rules are not noise.** A finding-by-finding pass over one article's prompt findings turned
-up two real defects that a bulk read of the same list had missed.
+**A rule with exempt classes is not noise.** A finding-by-finding pass over one article's findings
+turned up two real defects that a bulk read of the same list had missed.
 
 ### `STE.SentenceLength` — act on every finding
 
@@ -284,11 +277,9 @@ and only the sentence tells you which. Expand this one by hand and read each sit
 discriminator, and a numbered item is a procedure by definition. **Act on every finding** — state one
 instruction per step and move the reasoning to prose below the list.
 
-**This replaced `STE.ProcedureLength` on 2026-09-12, and the old judgement step is gone.** That rule
-capped every list item, so it fired on this repo's house bullet style — a rule carrying its own
-reason. The article then had to tell you to classify a whole file's bullets at once and leave them.
-369 findings became 56. If you are looking for the step-or-statement question, it no longer exists: a
-statement written as a bullet is now silently correct.
+**If you are looking for the step-or-statement question, it no longer exists.** A statement written
+as a bullet is silently correct now. `prose.meta.md` carries what the `STE` rule did instead and why
+it was replaced.
 
 **One exemption survives and it is real.** A numbered item inside a fenced code block is a worked
 example, not an instruction. The rule skips fences, so you should not see one; if you do, that is a
@@ -300,9 +291,8 @@ Fires on `, then` or `and then` **followed by an imperative verb**. That verb is
 two verbs are two actions, and a shared verb is one instruction with an ordering inside it. **Act on
 every finding** — give the second action its own sentence or its own numbered step.
 
-**This replaced `STE.OneInstruction` on 2026-09-12**, which matched the connective alone and so could
-not tell a chain from a list. 11 findings became 4. The three false-positive classes the article used
-to enumerate are now rejected by the rule itself:
+**Three shapes the old `STE` rule flagged are now rejected by this one**, so do not go looking for
+them in a report:
 
 - **A specified order, not two actions.** "Settle SentenceLength first, then ParagraphLength" shares
   one verb. Not flagged.

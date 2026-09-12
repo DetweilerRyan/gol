@@ -1240,3 +1240,37 @@ once on the stripped file, on the intro paragraph, whose four sentences are all 
 (identity, mandate, the house-rules read trigger, the sidecar pointer). That is the asymmetry
 against `ListItemSentences`' max 3: a role-file paragraph legitimately carries the intro quartet,
 a list item is a single instruction unit.
+
+## How the last two prompts were made mechanical, 2026-09-12
+
+`prose.md` states the rule this produced — a prompt is often a rule looking at the wrong thing. This
+is the worked case behind it, and the numbers are the argument.
+
+**`ProcedureLength`.** `STE.ProcedureLength` capped every **list item** at 20 words. A bullet
+therefore stood in for a procedure, and because this repo writes a rule as a bullet carrying its own
+reason, the rule fired on the house style. The article had to tell a reader to classify a whole
+file's bullets once and leave them — a rule asking in advance to be ignored in bulk.
+
+The replacement reads the **marker** instead of the word count: a numbered item is a procedure, a
+bullet is a statement. Same defect, no proxy, no judgement per finding. **369 findings became 56**
+over the 23 enabled `.md` files.
+
+Only `scope: raw` carries the marker. At `scope: list` Vale strips it before the script sees it, so
+`1. Run the thing.` arrives identical to a bullet's text. Measured.
+
+**Why the marker is the only available discriminator.** Both kinds open with imperatives — numbered
+items start with `Run` 14 times and `Read` 3, bullets with `Do` 15 and `Run` 6. Nothing in the text
+separates them.
+
+**`OneInstruction`.** `STE.OneInstruction` matched the **connective** alone, so it could not tell a
+chain from a list. The replacement requires an imperative **verb** after the connective: two verbs
+are two actions, a shared verb is one instruction with an ordering inside it. **11 findings became 4.**
+
+**The step-or-statement judgement the article used to carry is gone with the first of these**, and
+the three false-positive classes it used to enumerate for the second are now rejected by the rule
+rather than by the reader.
+
+**What this case does not license.** `PassiveVoice` was examined in the same session and **not**
+mechanised — its narrow replacement was measured, worked, and was rejected because its precision was
+borrowed from a construction already seen. So "a prompt is often a rule looking at the wrong thing"
+is a prompt to look for the better trigger, not a promise that one exists.
