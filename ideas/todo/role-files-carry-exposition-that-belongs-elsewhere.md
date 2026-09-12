@@ -428,6 +428,38 @@ stale until this session edits it. That is a real regression in freshness, and t
 (`apply-the-census-count-rule-everywhere`) is the thing that would remove the need — a map that
 enumerates without counting goes stale in fewer ways. The two entries are worth sequencing together.
 
+### 9e. Remove role duties from `engineering.md` where the role file already carries them
+
+**Directed by the user on 2026-09-11.** `engineering.md` is a shared house-rules article that every
+role reads unconditionally. It also states what individual roles do, and where a role file says the
+same thing the two are a duplication and a drift surface — the same defect rule 6 names between role
+files, one level up.
+
+**Measured 2026-09-11: 24 lines of `engineering.md` name a role.** They are not one kind and must not
+be swept as one:
+
+| Kind                                                                                                       | Example                                                                         | Keep?                                                                                         |
+| ---------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------- |
+| **A cross-role contract** — a fact only a shared article can state, because it binds several roles at once | "Both e2e placements belong to `product` alone"; the test-layer placement table | **Keep.** No single role file can own it.                                                     |
+| **A substitution table** — what each role runs when working in `scripts/`                                  | "`cleaner` substitutes `npm run crap4ts:scripts` for `npm run crap4ts`"         | **Judgement.** One table beats five copies, but each row duplicates that role's own workflow. |
+| **A duty restated** — the role file already says it                                                        | the retired "may update the docs as part of a split" clause                     | **Remove.** This is the target.                                                               |
+
+**The article already knows the rule and states it three lines above the worst offender.** Its own
+"Where guidance and file names live" says: "Do not copy either kind into an individual role file.
+Duplicates drift out of sync." That was written one-directionally — it forbids article → role file,
+and the reverse copy is what accumulated.
+
+**A live instance was found while measuring, and it was mine.** Line 21 still read "`cleaner` and
+`architect` **may update the docs** as part of a split they perform ... needs no separate
+authorization", four paragraphs of it, including "a factual-correctness exception to `workflow.md`".
+The no-role-edits law (9d) retired that authorisation in the role files and in `CLAUDE.md` **and missed
+the article**, so for an hour the shared article every role reads contradicted the auto-loaded law.
+Retired in the same pass as this note.
+
+**That miss is the argument for the sweep, not an aside.** A duty stated in two places is not merely
+redundant; it is a place a correction can fail to reach. Rule 9d was applied to four files and there
+was a fifth.
+
 ### 10. Keep the one-clause why
 
 **The floor, and it is not "no reasoning".** CLAUDE.md's comment convention already states the rule for
