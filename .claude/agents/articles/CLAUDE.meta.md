@@ -143,3 +143,32 @@ which never stays.
 **The sidecar index above is hand-maintained and nothing checks it.** A cheap extension to
 `agent-doc-check` would glob `*.meta.md` under `.claude/agents/articles/` and compare it against
 the list. It is not built, and a wrong list fails safe: a reader looks and finds the file anyway.
+
+## The `vale-styles/` authorship clause, tested once and upheld
+
+**Ruled by the user 2026-09-12. The clause stands as written**: `architect` alone authors the tracked
+`vale-styles/` styles. Future changes there route through `architect` for the write, with the
+orchestrating session supplying verified content.
+
+**One commit is on record as an exception.** `8560c63` added `vale-styles/Procedure/` — the two Vale
+script rules replacing the last `STE` prompts — authored and committed by the orchestrating session
+on the user's direct instruction. The orchestrating session flagged the conflict before starting and
+put the question to `architect` rather than settling it alone.
+
+**`architect` ruled it a violation and declined to re-commit.** Its reasoning, and the reason the
+exception was allowed to stand: it reviewed the content, found no defect in
+`vale-styles/Procedure/**`, and judged that a corrective re-commit would buy provenance rather than
+correctness. The user then chose to keep the rule and let the one commit stand.
+
+**What the episode says about the clause is that it is about the write, not the measurement.** The
+orchestrating session probed Vale's behaviour extensively — the whole-file semantics of `scope: raw`,
+byte-offset handling under non-ASCII and CRLF, the Go panic on an out-of-range offset — and none of
+that was in dispute. `architect` had already ratified the design and predicted the fence hazard before
+it was measured. The disagreement was over who types the bytes, which is exactly what the clause
+governs and exactly what makes it cheap to honour next time.
+
+**A second reading was available and was not taken.** The orchestrating session is not one of the five
+roles, and "no role edits an article" elsewhere in `CLAUDE.md` turns on that distinction — so the
+clause could have been read as binding the roles alone. `architect` itself offered that reading in its
+first DESIGN pass, then reversed it in review. It is recorded here because a later reader will
+reconstruct the same argument, and the ruling is that it loses.
