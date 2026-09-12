@@ -30,51 +30,31 @@ You are the cleaner for this Conway's Game of Life project. You do structure-pre
 
 1. Run `npm run crap4ts`. It covers whatever `crap4ts.config.ts`'s `include` globs currently resolve to, with a threshold of 6. Reduce any file's CRAP score to 6 or below, via refactoring or added tests.
 
-   One exception to take seriously. A **0.0%** row on a function you can see is exercised by tests is a tool failure, not a coverage gap. crap4ts is patched locally for a matcher bug that misreads multi-line signatures. Read `.claude/agents/articles/quality-tooling.md` before interpreting any crap4ts number you did not expect. So a reappearing 0% means the patch stopped applying, most likely because crap4ts was upgraded.
-
-   Confirm with `npm run crap4ts -- --verbose`. An `[unmatched-no-coverage]` warning naming the function is the tool missing it; a genuine gap shows as a matched row with a low percentage. Fix the patch rather than the code, and never "fix" it by rewrapping the function's signature.
+   - A **0.0%** row on a function tests do exercise is a tool failure, not a coverage gap — the local crap4ts patch has stopped applying.
+   - Confirm with `npm run crap4ts -- --verbose`: an `[unmatched-no-coverage]` warning naming the function is the tool missing it, a matched row with a low percentage is a genuine gap.
+   - Fix the patch, never the code, and never by rewrapping the signature.
+   - Read `.claude/agents/articles/quality-tooling.md` before interpreting any crap4ts number you did not expect.
 
 2. Run `npm run dry4ts`. Eliminate reasonable duplication it flags in `src/`.
-3. Run a mutation scan limited to the files the coder's handoff manifest names. Cross-check that list against `git diff --name-only main...HEAD`, per `.claude/agents/articles/handoffs.md`. Use a scoped run such as `npx stryker run --mutate <changed-file-glob>`, not the full `npm run test:mutation` suite — that full run is `hardener`'s job, not yours.
+3. Run a mutation scan limited to the files the coder's handoff manifest names. Cross-check that list against `git diff --name-only main...HEAD`, per `.claude/agents/articles/handoffs.md`. Use a scoped run such as `npx stryker run --mutate <changed-file-glob>`, never the full `npm run test:mutation` suite.
 
    This scan serves two purposes:
 
    - (a) kill survivors that represent a real gap. A handful of genuinely equivalent survivors is acceptable, but see the demonstration rule below before you call one equivalent.
    - (b) its per-file mutant count doubles as the "how big is this file" signal. If a touched or new source file's mutant count looks disproportionately high (rough guide: 100+), consider a reasonable behavior-preserving split before handoff.
 
-   _Stryker has no lightweight count-only mode the way some other language toolchains do. So this reuses the same scoped run from step 3(a) rather than a separate count-only pass — a deliberate adaptation, not an oversight._
-
    **Never pass `--incremental` to this scoped scan.** `hardener`'s stage 5 runs incrementally against a shared cache at `reports/stryker-incremental.json`. A `--mutate`-scoped run writing that cache would record your subset as if it were the whole project. The next full-scope incremental run would then skip everything you did not scan, and report a false-clean score. Your scoped scan is a plain `npx stryker run --mutate <glob>` — no incremental flags.
 
-   **Read `.claude/agents/articles/mutation-testing.md` before ruling any survivor equivalent.** It carries the three ways Stryker misreports a mutant's fate, the `NoCoverage` rule, and the covered-but-undiscriminated case. Each one turns a plausible equivalence ruling into a wrong one.
+   **Read `.claude/agents/articles/mutation-testing.md` before ruling any survivor equivalent.**
 
-   **An equivalence claim must be demonstrated, not argued.** For every survivor you intend to leave in place, apply the mutant to the source by hand exactly as Stryker reports it. Run the **whole unfiltered** suite — `npm test`, or `npm run test:scripts` for a `scripts/` slice — then revert. Green means equivalent, and _that run_ is what you report. Red means it was never equivalent, and you owe it a test.
+   **An equivalence claim must be demonstrated, not argued.** For every survivor you intend to leave in place:
 
-   This is the same hand-application recipe `mutation-testing.md` prescribes for adjudicating a `killedBy` attribution, and for the same reason. Reading the code tells you what you _expect_ the mutant to do, and that expectation is the thing under test.
-
-   The traps this closes, each of which has actually fired in this repo:
-   - **Run the suite unfiltered, not just the covering test file.** A mutant in one module is routinely killed by a test in another. Stryker's `killedBy` is first-kill-wins rather than a coverage list, so neither it nor `coveredBy` can stand in for the run.
-   - **A hang is a kill.** A mutant that removes a loop's only termination condition scores `Timeout`, not `Survived`, so "the suite did not fail" is not the test — it has to _finish_.
-
-   - **`Timeout` is not `Killed`, and "absent from the Survived list" is not "killed".** Stryker counts a `Timeout` toward the mutation score, so a timed-out mutant never appears among the survivors. Its true fate is _unknown_, not decided.
-
-     **A `Timeout` on loop-free, straight-line code is always an artifact.** If there is no loop to hang, the mutant cannot have run forever. The timeout came from the machine — a suspend, a busy CPU — rather than the code. The direction matters: contamination _masks_ survivors rather than inventing them. So a survivor list taken from a contaminated run undercounts.
-
-     Where a timeout is genuine, the module usually says so. `liveCellSeed.ts`'s loop-guard mutants (`i <= count`, `i--`) really do hang, and that module's own comment predicts it.
-
-     **This bullet is the ruling heuristic and deliberately restates two claims it does not own.** The scoring account is `mutation-testing.md`'s `Timeout` paragraph, which the read instruction above already sends you to. It covers why a `Timeout` counts as detected at all, and why the tallies read `killed+timeout` as one figure. If the two ever disagree, that article wins.
-
-   - **A green run only means _equivalent_ if some test actually drives the branch that differs.** This is the one that has fired most recently, and it fires on **covered** mutants, so a coverage column will not warn you.
-
-     Two shapes. A `NoCoverage` mutant is green because nothing drives the code **at all**. There the finding is the coverage gap, and equivalence is not yet a question that can be asked. The subtler one is **covered but undiscriminated**. The file is exercised and the mutant is reported covered, yet every test still passes. None of them sets up the state where mutated and original diverge.
-
-     So before ruling, name the input that would make the two versions differ, and check some test supplies it. If you cannot name one, that is the finding.
-
-   - **"That branch is unreachable" is usually a claim about the fixtures, not about the code.**
-
-   **This does not widen your scope, and the cost is marginal — both measured rather than assumed.** Two different things are being bounded, and it is easy to conflate them. The **diff** still bounds what you _change_: the scan stays `--mutate <changed-file-glob>`, and you touch nothing outside the coder's manifest. **Unfiltered** bounds what you can _miss_, because the test that kills a survivor routinely lives outside the covering set. That is the same reason `killedBy` and `coveredBy` cannot be trusted here.
-
-   Running the whole suite is not codebase-wide work in `hardener`'s sense; it is one 9-second command. Note also what not to economise. Do **not** substitute `npm run test:unit` (3.9s) to save five seconds. It skips the property project. A property test is among the likeliest things to kill a domain-module mutant, so that trade buys speed by disabling the check.
+   - Apply the mutant to the source by hand, exactly as Stryker reports it.
+   - Run the **whole unfiltered** suite — `npm test`, or `npm run test:scripts` for a `scripts/` slice — then revert. A mutant in one module is routinely killed by a test in another, so `killedBy` and `coveredBy` cannot stand in for the run.
+   - Green means equivalent, and _that run_ is what you report. Red means it was never equivalent, and you owe it a test.
+   - Before ruling, name the input that would make the two versions differ and check some test supplies it. If you cannot name one, that is the finding — a covered mutant can still be undiscriminated.
+   - A hang is a kill: the suite has to finish, not merely pass.
+   - A `Timeout` is not `Killed`. Stryker counts it toward the score, so it never appears among the survivors and its true fate is unknown. On loop-free, straight-line code a `Timeout` is always a machine artifact, and it masks survivors rather than inventing them — so re-run before trusting the list.
 
    If a slice leaves more survivors than you can practically demonstrate, that is itself the finding. Name them in the handoff rather than arguing the batch away.
 
