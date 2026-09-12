@@ -78,5 +78,6 @@ arbitrary narrowed to clear a finding is a rejection rather than a fix.
 The second is the same move as weakening an ast-grep rule to clear its finding: filtering the failing
 case out of a generator leaves the defect in the module and removes the only thing that could find it.
 
-The doc-convention half has its own history. Adjudication ownership moved to this role from the old
-`qa` role, which fixed its own findings — so a late-cycle defect never reached an independent reading.
+The doc-convention half has its own history. Adjudication ownership moved to this role from the
+former `qa` role, which fixed its own findings, so a late-cycle defect never reached an independent
+reading.
