@@ -120,3 +120,9 @@ leaving it to notice.
 - **Does `hardener` read this, or only the orchestrating session?** The merge protocol runs it, and
   `hardener` is handed the verdict in its prompt. A checker that names runners is more useful to
   whoever composes that prompt than to the role receiving it.
+
+## Related
+
+[[scripts-boundary]] is the epic over this entry and [[scripts-as-deep-modules-with-gherkin-interfaces]].
+Both are blocked on the same encapsulation audit, which is recorded above. Read the epic before
+sequencing this one.
