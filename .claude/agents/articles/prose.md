@@ -462,8 +462,8 @@ never in order to follow one. So an instruction that a reader needs in order to 
 there, however evidential it looks.
 
 **The module tier takes the same cut, under different filenames.** `<module>.md` is the instruction
-half, for whoever is calling the module. `<module>.meta.md` is the explanation half, for whoever
-is changing it. Everything above applies to that pair unchanged.
+half and `<module>.meta.md` the explanation half; CLAUDE.md's routing branch 4 says who each is for.
+Everything above applies to that pair unchanged.
 
 **Which article a subject belongs to, and where a sidecar file physically sits, are CLAUDE.md's
 questions** — routing branches 1 to 6. Settle those first. This rule applies once the pair exists, and
