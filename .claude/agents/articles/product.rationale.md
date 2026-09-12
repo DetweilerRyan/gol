@@ -51,3 +51,23 @@ runs no VERIFY, so step 8 has no handoff to read and the merge record says the s
 `product.md` says Prettier covers `.feature` files, so Examples-table alignment is not hand work.
 The role this one replaced claimed the opposite. `prettier-plugin-gherkin` is installed and
 configured, which settles it; the earlier claim predates that plugin landing.
+
+## Why `product` may not adjudicate its own spec
+
+`product.md` tells VERIFY to label a B-or-C reading as a hypothesis and hand the ruling to
+`architect`.
+
+The cheapest way to turn a red test green is to decide the spec meant something else. An author who
+fixes things inline never has to say out loud which of the two they changed — the code or the
+contract. `architect` was not in the room when the contract was written, and that is the point of the
+arrangement rather than a gap in it.
+
+## The reach-around that survived because its finder could route around it
+
+`product.md` requires every ARIA reach-around to be reported, and says the report is the only route to
+someone who can add the affordance.
+
+`e2e-helpers.ts`'s `isAlive()` grepped for a Tailwind class rather than reading an accessible name,
+and survived as long as it did for one reason: the role that tripped over it was the role that could
+quietly work around it. Reporting is the whole mechanism, so a silent workaround is not a smaller
+version of the same outcome — it is the opposite one.
