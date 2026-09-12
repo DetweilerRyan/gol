@@ -1307,3 +1307,37 @@ because nothing points at a gap.
 
 That is why the audit compares against the article **as it stood before** the pass, rather than
 reading the result on its own.
+
+## A concurrent agent changed a rule mid-measurement, and two reported claims were wrong
+
+Recorded 2026-09-12 because the failure is in the method, not the prose, and it produced a confident
+wrong number rather than an obvious error.
+
+**What happened.** The orchestrating session reported the `ParagraphSentences` numbered-prefix defect
+to `architect`, which owns `vale-styles/`. `architect` began probing the fix by editing the tracked
+`ParagraphSentences.yml` directly. While that edit sat uncommitted in the shared working tree, the
+orchestrating session ran `git add -A` and committed it, inside a commit whose own message says the
+defect was **reported** rather than fixed.
+
+**Two claims in that commit were false, and both were measured rather than guessed** — which is the
+point. A measurement taken against a rule that is changing underneath you is not a measurement.
+
+| claim as reported                                      | true                |
+| ------------------------------------------------------ | ------------------- |
+| `ParagraphSentences` on the two files: 30 → 9          | 30 → **16**         |
+| `doc-comments.md` clean of every rule but PassiveVoice | one finding remains |
+
+**The "non-deterministic finding" was retracted in full.** One `doc-comments.md` finding was reported
+once, then came back clean on five consecutive runs over a byte-identical file, and was written up as
+Vale non-determinism. It was not. The file was byte-identical; the **rule** was not. The finding
+returns exactly when the token is reverted. Nothing about Vale is non-deterministic here.
+
+**The lesson is about the working tree, not about either party.** A subagent probing a fix and an
+orchestrating session committing with `git add -A` share one checkout, and neither can see the
+other's uncommitted edits. `git add -A` is unsafe while a subagent is running in the same tree. Stage
+by path, or check `git status` against what you believe you changed, before committing.
+
+`architect` found it, reverted the probe, and disproved the obvious fix on its own terms: requiring a
+character before the terminator collapses the count to at most 1 on any paragraph opening with a
+bold-wrapped numeral, which would blind the rule on exactly this repo's house style for numbered
+points. It carries the argument for a `raw`-scope replacement instead.
