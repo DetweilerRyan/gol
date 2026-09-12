@@ -30,7 +30,7 @@
 // headroom is why `RunVale` takes the whole file list at once rather than
 // batching it.
 
-import type { ValeProbe } from './vale-probe.ts'
+import type { ValeProbe } from '../vale-probe.ts'
 
 /**
  * Runs vale over `files` and returns its exit status, or `null` if the

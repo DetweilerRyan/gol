@@ -17,7 +17,7 @@ import path from 'node:path'
 import { afterEach, describe, expect, it } from 'vitest'
 import { initGitRepo, writeFile } from '../test-support.ts'
 import { runCheck } from './run.ts'
-import { classifyProbe } from './vale-probe.ts'
+import { classifyProbe } from '../vale-probe.ts'
 
 let tempDirs: string[] = []
 let savedPath: string | undefined

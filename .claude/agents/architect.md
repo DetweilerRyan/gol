@@ -115,6 +115,10 @@ Run each fault once yourself before handing the battery over. That is the only t
 
   **If you added or renamed a rule, confirm it is named in `.claude/agents/articles/ast-grep-rules.md`.** That is the file check 5 reads, so a rule documented anywhere else reds the gate. CLAUDE.md carries no rule list to keep in step.
 
+- **Whenever you added or changed anything under `vale-styles/`, run `npm run vale-fixture-check`.** It gates. Five binary facts about the styles you own: a `.bad`/`.good` fixture pair per rule per claimed extension, every `.good` silent, every `.bad` reporting its own rule, at least one rule found, and every style wired into `fixtures.vale.ini`. It fails when `vale` is absent rather than passing, because a missing binary reports zero exactly like a clean fixture set.
+
+  **It cannot tell you whether a `.good` fixture discriminates**, and that judgement is yours. A good fixture proves nothing unless it carries a near-miss the rule declines for the right reason — a long bullet where the rule reads a numbered marker. Check it by hand at REVIEW; no heuristic replaces it.
+
 - **Whenever you added or changed anything under `rules/` or `rule-tests/`, run both gates.** `npm run ast-grep:test` fails on a malformed matcher. `npm run ast-grep:rules` fails on the misconfigurations ast-grep itself accepts in silence:
 
   - a missing fixture, or a fixture carrying no `invalid:` cases

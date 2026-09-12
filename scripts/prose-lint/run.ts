@@ -1,8 +1,12 @@
 #!/usr/bin/env tsx
 // I/O shell for prose-lint: two spawns and one git read, handed to decide()'s
 // pure decision. Mirrors reference-check's/ast-grep-rule-check's run.ts
-// split -- lint-targets.ts, vale-probe.ts and decide.ts are pure, everything
+// split -- lint-targets.ts, decide.ts and the shared ../vale-probe.ts are pure,
+// everything
 // here is genuinely I/O (two subprocess spawns, console.log, process.exit).
+// vale-probe.ts sits at scripts/ root rather than here because a second program,
+// vale-fixture-check, needs the same classifier -- that is the layout rule's
+// "shared by two or more programs" test.
 // This replaces a shell script (run.sh) that ran the same four checks with
 // no test of its own: a .sh file is unreachable by npm run test:scripts,
 // crap4ts:scripts and test:mutation:scripts, since all three are
@@ -23,7 +27,7 @@ import { fileURLToPath } from 'node:url'
 import { parseSingleStringFlag } from '../single-flag-arg.ts'
 import { decide, type DecideResult } from './decide.ts'
 import { excludeCatalyst, pathspecsFor } from './lint-targets.ts'
-import { classifyProbe } from './vale-probe.ts'
+import { classifyProbe } from '../vale-probe.ts'
 
 const SCRIPT_DIR = path.dirname(fileURLToPath(import.meta.url))
 const REPO_ROOT = path.resolve(SCRIPT_DIR, '../..')
