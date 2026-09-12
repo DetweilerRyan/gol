@@ -19,4 +19,4 @@ message: "Paragraph has %d sentences. A role-file paragraph gets four; the accou
 level: warning
 scope: paragraph
 max: 4
-token: '[A-Za-z"''’\)\]][.!?]["''’\)\]]*(?:\s|$)'
+token: '[.!?]["''’\)\]]*(?:\s|$)'
