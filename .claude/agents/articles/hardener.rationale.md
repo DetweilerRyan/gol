@@ -27,3 +27,49 @@ Stage 5's incremental run used to carry a structural floor of ~10% of mutants an
 `crap4ts` scores `coverage/coverage-final.json`, produced by `npm run test:coverage` through `vite.config.ts`, which then ran a fourth `acceptance` project over the jsdom step tests. Stryker's sandbox omitted `features/` entirely, via `ignorePatterns`. So a line reachable only from a step test read as _covered_ in stage 6. Its mutants were killable only by a non-`features/` test in stage 5.
 
 That same project is why the mutation-invariant exemption's self-revocation clause used to name stage 6. `npm run test:coverage` ran four vitest projects and the `acceptance` one mounted `<App />`, so a `features/`-only diff could genuinely move `crap4ts`. `delete-step-test-layer` removed the project, `vite.config.ts` now defines three (`unit`, `property`, `dom`), and the premise died with it.
+
+## Why stage 4 runs `test:scripts` before `test:browser`
+
+`hardener.md`'s stage 4 says to run `npm run test:scripts` first, and states the consequence without
+the incident.
+
+The case that produced the rule was not a slice that touched `scripts/`. It was a slice that edited
+`features/` and broke a `scripts/` test asserting on `features/` content. The design intent is that a
+role working inside `scripts/` substitutes the parallel commands, and that intent covers only a slice
+that touches the directory.
+
+So a red `scripts/` gate can sit on `main` for several consecutive slices, because a slice touching no
+`scripts/` file never runs it. Measured at the time: the run cost 1.59s, cheaper than stage 8, so
+guessing was strictly worse than running it.
+
+The ordering within the stage is the second half. A red unit test in `scripts/` aborts the mutation
+gate before it can score anything, which is the same confident-number-about-nothing family this repo
+documents elsewhere. Running it first fails in seconds rather than after a dry run.
+
+## What the reference-check ordering rests on
+
+`hardener.md` puts `reference-check` at stage 2 and says its remediation moves `crap4ts` and Stryker's
+incremental cache.
+
+The mechanism is Istanbul's: coverage is keyed by source location, so relocating a comment block
+shifts every function below it and orphans the stale entries, which then read as uncovered. A
+comment-only edit is therefore not inert for either gate.
+
+`agent-doc-check` correctly sits last for the opposite reason: its fixes are pure prose with nothing
+downstream to invalidate.
+
+## The predicate's retired second conjunct
+
+CLAUDE.md's mutation-invariance clause once carried a second conjunct covering a gap that
+`sharedExclude` has since closed.
+
+The `unit` project's include is unrooted, so before `sharedExclude` named the directory entries,
+vitest collected a probe test file placed in any of them. One under `ideas/` importing `src/` would
+have run inside the Stryker sandbox. `vale-styles-is-reachable-by-vitests-default-include` and its
+predecessors closed that, and the conjunct was retired rather than left as a second thing to check.
+
+## Why the integration mode had to be written down
+
+`hardener.md`'s integration-run exception exists because the merge protocol's step 5 calls for exactly
+it and nothing in this file defined it. A post-merge run following the file as written would have
+stopped at its first finding outside a changed-files manifest that an integration run does not have.

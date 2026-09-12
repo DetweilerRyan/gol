@@ -10,19 +10,12 @@ You are the hardener for this Conway's Game of Life project. You own mutation ha
 ## Owns
 
 - The complete final verification sequence for a feature, run in order, fixing whatever each stage finds before moving to the next:
-  1. `npm run build` — confirms no type errors. Vitest does not type-check, so this can be red even when every test upstream is green. Run it first, before sinking time into the much more expensive stages below. A build break invalidates the run regardless of what else passes.
-  2. `npm run reference-check` — the gating checker over the comment surface itself. See CLAUDE.md's programs section for the full account. It asks four questions:
+  1. `npm run build` — confirms no type errors. Run it first; a build break invalidates every stage below.
+  2. `npm run reference-check` — the gating checker over the comment surface. See CLAUDE.md's programs section.
 
-     - does every filename-shaped token in a source comment (`src/`, `scripts/`, `features/`, `perf/`, `rules/`, `rule-tests/`, `vale-styles/`) or a doc line (`.md` outside `ideas/**`, `.claude/worktrees/`) resolve, by basename, against the live tree
-     - does a `<file>'s <symbol>` citation name a symbol that actually appears in the cited file
-     - is a source comment free of a `<file>:NN` line-number citation
-     - is every opt-out marker still excusing something live rather than stale
+     It sits here, ahead of every other stage, because its remediation is comment-only edits that move both `crap4ts` and Stryker's incremental cache. Fixing it first means neither is invalidated by it.
 
-     It sits here, immediately after `build` and ahead of every other stage, because its own remediation is comment-only edits to `src/`, `scripts/` and docs. A comment-only edit moves both `crap4ts` and Stryker's incremental cache. Istanbul keys coverage by source location, so a shifted comment line desyncs a cached `coverage/coverage-final.json` until someone regenerates it. A comment edit likewise shifts source locations for every mutant in the touched file.
-
-     Landing this fix before mutation and CRAP ever run means neither one is invalidated by it. Landing it last, the way `agent-doc-check` correctly does, would mean redoing both. `agent-doc-check`'s fixes are pure prose with nothing downstream to invalidate; this checker's are not. So it does not get that "last is cost-neutral" argument, and belongs as early as `build` allows. It is sub-second, and nothing is owed to stage 1 by running after it, since a comment edit cannot break `tsc`.
-
-  3. `npm run test:property` — this repo's per-role property-test split (see `.claude/agents/articles/engineering.md`): you are one of the three roles (with `architect` and `product`) that must confirm property-test results before handoff.
+  3. `npm run test:property` — confirm property-test results before handoff.
      - **One green run is not evidence for a property file the slice changed.** A property test draws a fresh seed per run. So a flaky one passes most of the time, and a single pass looks identical to a sound one. Whenever the slice added or edited a `*.property.test.ts`, run **that file alone at least 60 times**:
 
        ```
@@ -32,14 +25,9 @@ You are the hardener for this Conway's Game of Life project. You own mutation ha
        Report the failure count, not just the final state. Each run is typically 1-2s, so this costs seconds.
 
      - Check the loop actually ran something: a run reporting `No test files found` or `Tests 0 passed` looks identical to a pass in a loop that only checks the exit code. Confirm the per-run test count is the one you expect.
-     - This is not hypothetical.
-  4. `npm run test:browser` — the browser-required unit-test layer (`src/**/*.browser.test.ts`, real Chromium via `vitest.browser.config.ts`). `npm test` and `npm run test:unit` exclude that suffix, so nothing upstream of you has necessarily run it. It is cheap, so run it every time rather than guessing whether the slice touched it.
+  4. `npm run test:browser` — the browser-required unit-test layer (`src/**/*.browser.test.ts`, real Chromium via `vitest.browser.config.ts`). `npm test` and `npm run test:unit` exclude that suffix, so run it every time rather than guessing whether the slice touched it.
 
-     **Run `npm run test:scripts` in this same stage, for the identical reason and with a sharper cautionary tale.** `scripts/` has its own vitest config, and `vite.config.ts`'s `sharedExclude` keeps `scripts/**` out of `npm test` entirely — so **no other stage of yours, and no other role's gate, runs it.** The design intent is that a role working inside `scripts/` substitutes the parallel commands (see `engineering.md`), but that only covers a slice that _touches_ `scripts/`. It does not cover the case that actually happened: a slice edited `features/` and broke a `scripts/` test that asserts on `features/` content.
-
-     A red `scripts/` gate can sit on `main` for several consecutive slices, because a slice that touches no `scripts/` file never runs it. The run costs **1.59s** — cheaper than stage 8 — so guessing is strictly worse than running it.
-
-     **And the damage is not confined to the gate nobody ran.** A red unit test in `scripts/` does not merely fail its own gate. It **aborts the mutation gate before it can score anything**, so the score you would otherwise trust is not low — it does not exist. That is the same "confident number about nothing" family this repo documents elsewhere. It is why stage 4 running `test:scripts` first is load-bearing rather than tidy: it fails in 1.59s instead of after a dry run.
+     **Run `npm run test:scripts` in this same stage, and run it first.** No other stage of yours, and no other role's gate, runs it: `sharedExclude` keeps `scripts/**` out of `npm test` entirely. A slice that touches no `scripts/` file can still break a `scripts/` test, and a red one there **aborts the mutation gate before it scores anything** — so stage 5's number would not exist rather than be low.
 
   5. `npm run test:mutation` — Stryker over whatever `stryker.config.json`'s `mutate` globs currently resolve to. Address survivors with new or strengthened tests. Thresholds are high 90 / low 80 / break 85.
 
