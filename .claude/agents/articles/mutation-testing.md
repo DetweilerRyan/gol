@@ -273,6 +273,12 @@ So a timed-out mutant never appears among survivors. Two consequences to hold to
 - **Contamination therefore masks survivors rather than inventing them.** A run whose timeouts spike is
   not a stricter run; it is a run whose survivor list you cannot trust to be complete.
 
+**Read the code to tell a genuine timeout from an artifact: on loop-free, straight-line code a timeout
+is always an artifact.** With no loop to hang, the mutant cannot have run forever, so the time came
+from the machine — a suspend, a busy CPU — rather than from the mutation. Re-run before trusting that
+survivor list. Where a timeout is genuine the module usually predicts it: `src/liveCellSeed.ts`'s
+loop-guard mutants hang, and its own comment says so.
+
 ## Statement removal: there is a mutator, and it has two blind spots
 
 Stryker **does** have one — `emptyExpressionMutator`, reported as `CallExpression` — which turns a bare

@@ -469,6 +469,33 @@ multi-sentence account. What stays is the clause that changes what a reader does
 "Never edit `rules/*.yml` — a dead rule and a satisfied rule look identical" keeps its why and loses
 four sentences.
 
+### 10a. Audit the destination before compressing, not after
+
+**Directed by the user on 2026-09-11**, after `cleaner.md`'s survivor-demonstration block was cut from
+700 words to seven bullets: check that everything removed actually exists where the pointer sends the
+reader.
+
+**It was mostly there, and one thing was not.** Eleven claims audited against `mutation-testing.md`.
+Nine present, including the hand-application recipe and the `killedBy`/`coveredBy` account. One
+genuinely missing:
+
+> **On loop-free, straight-line code a timeout is always an artifact.** With no loop to hang, the
+> mutant cannot have run forever, so the time came from the machine rather than the mutation.
+
+The article said a timeout "is a wall-clock artifact" in general. The role file carried the
+**discriminator** — a test a reader can apply to their own case — together with its counter-example,
+`src/liveCellSeed.ts`'s loop-guard mutants, which genuinely hang and whose module comment predicts it.
+Added to the article in the same slice.
+
+**The general rule: a pointer is only a route if the destination holds the thing.** Rule 2 says route
+rather than delete, and this is the check that rule 2 actually happened. **Do it per compression, and
+grep for the claim rather than the wording** — two of the eleven read as absent only because the
+article states them in different words, and a careless audit would have duplicated both.
+
+**The failure this prevents is silent.** A compressed file and an article that never received the
+content both look correct on their own. Nothing in the gates compares them, and `reference-check` only
+verifies that the cited file exists.
+
 ### 11. Pin what may not be lost
 
 The prior spike built the right instrument for this and it should be reused: **a pre-registered
