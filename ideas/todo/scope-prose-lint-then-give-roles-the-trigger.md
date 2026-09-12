@@ -59,9 +59,22 @@ same rule the unscoped empty-list branch already follows.
 
 ### 2. Then the trigger, one line per role
 
-**All four implementing roles get it.** `coder`, `cleaner` and `architect` write JSDoc and module
-sidecars. `product` writes `features/steps/*.ts`, `features/screenplay/*.ts` and the Playwright
-specs — 19 tracked TypeScript files, all on a linted surface.
+**All five roles get it.** `coder`, `cleaner` and `architect` write JSDoc and module sidecars.
+`product` writes `features/steps/*.ts`, `features/screenplay/*.ts` and the Playwright specs — 19
+tracked TypeScript files, all on a linted surface.
+
+**`hardener` too, and the reason is remediation rather than authoring.** Its own file says it fixes
+whatever each stage surfaces, and stage 2's remediation is comment-only edits to `src/` and
+`scripts/` — a prose-linted surface. So it can dirty a JSDoc block while clearing a `reference-check`
+finding and hand off without knowing.
+
+**Word `hardener`'s trigger by what it may edit, not by what it may see.** The other four run it over
+what they wrote; `hardener` runs it over what its own remediation touched. A finding in an article or
+in `CLAUDE.md` is reported and not fixed, per CLAUDE.md's Conventions — and that split is worth making
+explicit at the point it would otherwise be crossed, because **`hardener` has crossed it.**
+`reference-check-reach` carries two `hardener` commits, `c5d8a03` and `1c16bd4`, that split
+over-length sentences in `doc-comments.md` and `CLAUDE.md`. Both predate the law and both would be
+forbidden today. A reader following that precedent from the git log would get it wrong.
 
 **Word the trigger as a precondition, not a position**: run it when the slice touched a JSDoc block or
 a module sidecar.
@@ -80,7 +93,7 @@ separately — see the Open questions.
 - `scripts/prose-lint/` — `run.ts`, `lint-targets.ts`, and their tests. A `scripts/` program, so CRAP
   <= 6, `test:scripts`, `dry4ts:scripts` and `test:mutation:scripts` all apply, and the mutation gate
   re-arms by construction.
-- `.claude/agents/coder.md`, `cleaner.md`, `architect.md`, `product.md` — one trigger line each.
+- `.claude/agents/coder.md`, `cleaner.md`, `architect.md`, `product.md`, `hardener.md` — one trigger line each. `hardener`'s is worded differently, per the section above.
 - `ideas/candidates/prose-lint-silently-ignores-its-arguments.md` — closed by the same change.
 
 ## Open questions
