@@ -12,9 +12,9 @@
 > probe methods, the rejected alternatives and the corrections. Read it when you are **changing** a rule
 > below, never in order to follow one. Every rule here is actionable without it.
 
-This article is one loop with two halves. Part 1 is how to write an interface comment. Part 2 is how to
-read one instead of reading a body. They pay off only together. Roles consume hover, so the writing rule is
-worth obeying. Comments are written to the split rule, so the reading habit is worth forming.
+This article is one loop with two halves. Part 1 is how to write an interface comment. Part 2 is how
+to read one instead of reading a body. They pay off only together, because roles consume hover and
+comments are written to the split rule.
 
 ## Scope: who this binds, and who carries a read trigger
 
@@ -26,10 +26,9 @@ roles. The account is in `doc-comments.meta.md`.
 
 **`hardener` is bound but carries no read trigger, deliberately.** It reaches the governing rule through
 `engineering.md`'s "Where a comment goes is a design decision too" line, which every role reads
-unconditionally. Rules 1–9 govern any remediation of its own that adds or changes an export under `src/`
-or `scripts/`, exactly as they govern `coder`'s work. Its pass is a _gate_ rather than an authoring pass, so Part 2 §4
-applies to it as it does to `coder`. Report an insufficient hover as a finding. Do not fix it inside the
-gate.
+unconditionally. Rules 1–9 govern any remediation of its own that adds or changes an export under
+`src/` or `scripts/`, exactly as they govern `coder`'s work. Its pass is a _gate_, not an authoring
+pass, so Part 2 §4 binds it: report, never fix.
 
 **`features/**` TypeScript: every mechanical fact here applies to it, but no role file assigns the
 _duty_.** Part 1's placement rules and Part 2's reading habit hold in `features/screenplay/*.ts` exactly
@@ -152,9 +151,9 @@ prose.
 **Prose paragraphs go _before_ the first block tag.** Summary, then prose, then tags. A paragraph written
 after a block tag renders inside that tag's block.
 
-**Part of this is mechanised. The larger part is not.** `.oxlintrc.json`'s `jsdoc/check-tag-names` gates
-a misspelled tag, a non-JSDoc tag and the TypeScript-redundant family. It cannot enforce the table, so
-the rest of standard JSDoc still passes the gate. This ruling forbids it anyway. See
+**Part of this is mechanised, and the larger part is not.** `.oxlintrc.json`'s `jsdoc/check-tag-names`
+gates a misspelled tag, a non-JSDoc tag and the TypeScript-redundant family. It cannot enforce the
+table, so the rest of standard JSDoc passes the gate and this ruling forbids it anyway. See
 `quality-tooling.md`'s JSDoc-tier section.
 
 **Amending the table is an `architect` ruling with a measured rendering attached.** Propose a row. Do not
@@ -199,9 +198,9 @@ That gives a three-tier escalation: **hover for the contract, sidecar for the de
 when changing it.**
 
 **Write the reference as `@see {@link ./useZoomGlide.meta.md}`.** Hover mangles a bare path after
-`@see`. The braced form renders exactly. Point the hover at whichever half that declaration's reader needs,
-and at both when both exist. Point it at `<module>.meta.md` when what the reader most needs is why the
-contract is shaped this way. All three live links do exactly that.
+`@see`, while the braced form renders exactly. Point the hover at whichever half the reader needs, and at
+both when both exist. Point it at `<module>.meta.md` when the reader most needs why the contract is
+shaped this way.
 
 > Four alternative `@see` forms were measured and rejected. See `doc-comments.meta.md`.
 
@@ -211,19 +210,16 @@ falls on the one form this rule mandates.** The state of the landed tree:
 - **A repo-relative token in doc prose or in a `//` comment is checked.** Rewriting
   `src/cache.meta.md` to a name that resolves to nothing fails the gate by name and line. Renaming
   both module sidecars redded four such references at once.
-- **A leading-dot token is checked too, by its own basename.** `./cache.meta.md` resolves against
-  `cache.meta.md` wherever it lives, so the mandated `@see {@link ./<name>.meta.md}` form is covered.
-  **What this verifies is that the name resolves, not that the relative path in front of it is
-  right.** `{@link ./<name>.md}` written from any directory resolves against a `<name>.md` anywhere in
-  the repo. That is the same basename-only matching every other check in this program already made. A sidecar
-  reference no longer needs a parallel `//`-comment repo-relative citation for the checker's sake. One may
-  still exist, though, for a reader who cannot resolve a relative path from prose alone.
+- **A leading-dot token is checked too, by its own basename**, so the mandated
+  `@see {@link ./<name>.meta.md}` form is covered. **What this verifies is that the name resolves, not
+  the relative path in front of it.** So a sidecar reference needs no parallel `//`-comment citation
+  for the checker's sake.
 - **Matching is by basename, never by full path.** A sidecar moved to another directory still resolves.
   Measured by relocating `src/cache.meta.md` into `src/hooks/`: green.
 - **The doc surface is now every tracked/untracked-not-ignored `.md` file outside `ideas/**` and
   `.claude/worktrees/**`**, not `CLAUDE.md`, `README.md` and `.claude/**/*.md` alone. A sidecar's own
-  references are read directly under this surface -- `src/**/*.md` no longer needs the source surface to
-  reach them.
+  references are read directly under this surface, so `src/**/*.md` reaches them without the source
+  surface.
 
 **Vale does reach the pair, and treats the halves differently.** `.vale.ini` scopes `[src/**/*.md]` to the
 same six STE rules the articles carry. Its `[**/*.meta.md]` section then exempts the meta half,
@@ -243,8 +239,8 @@ float-divergence measurement that establishes it sits in the meta half.
 ### 8. Scope: exported declarations **and** interface/type members
 
 Both. **An interface's own JSDoc does not reach a member hover.** A fact about a member, written on the
-containing interface, is invisible where the member is used. Members are legitimate placement targets.
-For a callback bag or a store interface they are the _only_ correct target.
+containing interface, is invisible where the member is used. Members are legitimate placement targets, and for a
+callback bag or a store interface they are the _only_ correct target.
 
 **The unit of work is the existing comment blocks, not the export list.** Documenting every undocumented
 export is not this convention. An export whose signature already says everything gets no JSDoc: a
@@ -261,8 +257,8 @@ kinds of block, even when the ruling is "stays `//`":
 
 Budget the whole comment surface. The counts behind the 3x are in `doc-comments.meta.md`.
 
-**A hook that returns an object.** Two facts, and keep them apart. The first says what breaks. The second
-says where to write instead. They are not scoped alike.
+**A hook that returns an object.** Two facts, kept apart: the first says what breaks, the second says
+where to write instead. They are not scoped alike.
 
 **What severs: _any_ return type annotation.** Named, inline type literal, `async` or sync. Under one, a
 doc above the implementing declaration and a doc on the `return { … }` property are **both severed**. The
@@ -286,17 +282,15 @@ position, but nothing measured says a doc on it reaches. Do not reason from the 
 
 **Ruling: never add a named return interface to a hook in order to create a documentation site.** A
 hook's return type is part of its public API, so changing one is an API change rather than comment work.
-An annotation added for hover reasons blanks every doc already written on the implementing
-declarations _and_ on the return literal. It does so at every call site, with no error and no lint
-finding. A named return type
-earns its place when the _type_ is what wants naming: reuse across modules, a controller or a store
-handed around. Then its members are where the docs go.
+An annotation added for hover reasons silently blanks every doc on the implementing declarations
+_and_ on the return literal, at every call site. A named return type earns its place only when the
+_type_ itself wants naming, and then its members are the documentation site.
 
 **Two docs on one action means one of them is dead.** Nothing renders the loser, anywhere, at any call
 site. If you find a pair, delete the one that does not reach. Do not leave a reader to guess which of the
 two they are looking at.
 
-**A re-export line is not a documentation site. The original declaration is.** A value re-export carries
+**A re-export line is not a documentation site; the original declaration is.** A value re-export carries
 the original's block through untouched. The destructured form (`export const { a, b } = bag`) has exactly
 one site: the source object's own longhand property. Where the original is third-party there is no site
 at all, which is why `scripts/acceptance-mutation/gherkin-document.ts` leaves both of its blocks `//`.
@@ -304,7 +298,7 @@ at all, which is why `scripts/acceptance-mutation/gherkin-document.ts` leaves bo
 **This is the one claim in this article a machine can check, and it now does.**
 `rules/no-dead-doc-on-annotated-return-literal.yml` matches a JSDoc block standing inside an annotated
 function's return literal. It covers all six function kinds and the arrow's parenthesised expression-body
-form. It never judges prose. See `ast-grep-rules.md` for its matcher.
+form, and never judges prose. See `ast-grep-rules.md` for its matcher.
 
 > **Four things here are deliberately unmeasured. Do not assume either way, in either direction:**
 >
@@ -341,10 +335,10 @@ only at the start of a JSDoc line, and is blind to a mid-line one. TypeScript's 
 anywhere in the block. The discipline stays human.
 
 **A brace in a block tag's leading position is a _type slot_.** `@param` and `@returns` strip a
-well-formed braced type. `@throws` and `@see` print it verbatim, so write a `@throws` exception type
-bare. Never open `@throws` or `@returns` with `{@link …}`: it breaks the tag, and `@returns` loses its
-text entirely. Put every other link in the tag's **prose**, where it resolves. Rule 7's
-`@see {@link ./<file>.md}` is the one sanctioned leading-brace form.
+well-formed braced type, while `@throws` and `@see` print it verbatim — so write a `@throws` exception
+type bare. Never open `@throws` or `@returns` with `{@link …}`: it breaks the tag, and `@returns` loses its
+text entirely. Put every other link in the tag's **prose**, where it resolves — rule 7's
+`@see {@link ./<file>.md}` being the one sanctioned leading-brace form.
 
 Three more. The first is fatal, the second is silent and therefore worse, the third is a coexistence
 ruling:
@@ -412,8 +406,8 @@ carry `LSP`.
 ### 1. Hover before Read
 
 To _use_ an abstraction — call it, wire it, review a call to it — `LSP hover` the symbol **at the call
-site**, not at its declaration. If the hover answers your question, stop. Do not open the defining file.
-That is the entire return on this convention.
+site**, not at its declaration. If the hover answers your question, stop without opening the defining
+file. That is the entire return on this convention.
 
 ### 2. `documentSymbol` before `Read` when you need a module's shape
 
@@ -445,8 +439,8 @@ does something different with that:
 Roles fall back to `Grep`/`Read` **silently** when the language server is absent. So a hover returning
 only a signature is ambiguous: _no JSDoc here_, or _no server at all_.
 
-**The probe:** hover `isStrictEqual` in `src/equality/is-strict-equal.ts`. It must return prose plus an
-`@see` link. A bare signature means the server is missing and every other hover this session is
+**The probe:** hover `isStrictEqual` in `src/equality/is-strict-equal.ts`, which must return prose
+plus an `@see` link. A bare signature means the server is missing and every other hover this session is
 worthless. Report that, not that the codebase is undocumented. If a later slice ever strips that block,
 re-pin the probe on another documented export in the same pass rather than deleting it.
 

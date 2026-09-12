@@ -26,12 +26,12 @@ sidecar, or a JSDoc block in `src/` or `scripts/`
 
 These hold whether or not a checker fires. Vale's rules below are a partial and lagging check on them.
 
-- **Write instructions in the active voice. Name who acts.** "The between-position is sanctioned"
-  hides the actor; "Use the between-position freely" does not. Nothing sweeps for this: see
+- **Write instructions in the active voice, naming who acts.** "The between-position is sanctioned"
+  hides the actor; "Use the between-position freely" does not. Nothing sweeps for this — see
   "`STE.PassiveVoice`" below for why, for the exempt classes, and for how to ask on demand.
-- **Write instructions, not accounts.** State what to do, when, and under what precondition. Route
-  the incident, the measurement and the rejected alternative to the `.meta.md` sidecar. See
-  "Instruction stays. Explanation moves." below.
+- **Write instructions, not accounts.** State what to do, when, and under what precondition; route
+  the incident, the measurement and the rejected alternative to the `.meta.md` sidecar. The section
+  below headed "Instruction stays" carries the full rule.
 
 ## Setup
 
@@ -51,15 +51,14 @@ Keep `.vale/` in `.prettierignore` as well as `.gitignore`. Prettier does not co
 without the second entry `npm run format` rewrites third-party YAML in place.
 
 **`npm run prose-lint` is the command, and `-- --scope <path>` narrows it to one directory.** Every
-role's trigger uses the scoped form: a role reads findings in files it wrote rather than in the ~238
-under `.claude/**` and `CLAUDE.md` that only the orchestrating session may edit. A scope matching no
-file exits 1 rather than printing a clean count, which is the same refusal an empty tracked set gets.
+role's trigger uses the scoped form. A role reads findings in files it wrote, not in the ~238 under
+`.claude/**` and `CLAUDE.md` that only the orchestrating session may edit. A scope matching no file
+exits 1 rather than printing a clean count — the same refusal an empty tracked set gets.
 
-**`npm run prose-lint` is the command.** It lints the tracked file list rather than walking the
-filesystem, and prints how many files it linted. **Read that trailing count.** A zero from a clean tree
-and a zero from a run that linted nothing are the same bytes. Several of the ways below produce exactly
-that. The script fails when it **cannot** lint — no binary, no `.vale/`, an unloadable config,
-an empty file list, a mid-run abort — and never on a finding.
+**`npm run prose-lint` is the command.** It lints the tracked file list and prints how many files it
+linted. **Read that trailing count**: a zero from a clean tree and a zero from a run that linted
+nothing are the same bytes. The script fails only when it **cannot** lint — no binary, no `.vale/`, an
+unloadable config, an empty file list, a mid-run abort.
 
 Run it after editing `.claude/**`, `CLAUDE.md`, a module sidecar, or a JSDoc block. No role owns the
 running, because four seats do the editing.
@@ -92,9 +91,8 @@ Check each before you believe one.
 2. **A file failed to parse and aborted the run.** Vale parses YAML front matter with a real YAML
    parser, and one unparseable file aborts the whole invocation rather than skipping that file.
 3. **Vale is not installed, or `.vale/` is absent.** See Setup.
-4. **The file matches no section glob in `.vale.ini`.** Vale applies no style, reports 0, and exits 0.
-   A scratch copy of a file placed outside the globs is how a reviewer re-deriving a baseline hits
-   this. Put the copy at an in-scope path instead.
+4. **The file matches no section glob in `.vale.ini`.** Vale applies no style, reports 0 and exits 0.
+   Keep every scratch copy at an in-scope path.
 5. **Vale read a mistyped path as stdin.** The tell is **in stdin** where a file count belongs. Name a
    path list in every verification.
 6. **An `occurrence` rule counted nothing.** It never fires at `max: 0`, so "at most zero" is not
@@ -104,20 +102,18 @@ Check each before you believe one.
    passing. That is the missing-fixture hazard `npm run ast-grep:rules` catches, in a checker that has
    none.
 8. **A malformed section glob matched nothing, silently.** A header of `[*.{ts]` reports 0 findings and
-   exits 0, with no diagnostic. This is number 4 reached through a typo in `.vale.ini` rather than
-   through a file's path. Brace expansion itself is real, and an unmatched glob applies no style rather
-   than falling back to everything.
-9. **`.vale.ini` carries no `[formats]` mapping for the extension.** **This is the worst-shaped entry
-   in the list**, because the run still reports findings and so does not look silent. The mapping is
-   not what puts a comment in scope. It gives the extracted text a structure that `sentence`,
-   `paragraph` and list scopes can find. Without it those rules are inert, while a comment-scoped
-   `existence` rule still fires.
+   exits 0, with no diagnostic — number 4 reached through a typo in `.vale.ini` rather than through a
+   file's path. Brace expansion is real, and an unmatched glob applies no style rather than falling
+   back to everything.
+9. **`.vale.ini` carries no `[formats]` mapping for the extension.** **The worst-shaped entry here**,
+   because the run still reports findings and so does not look silent. Without the mapping, every
+   scope-based rule is inert while a comment-scoped `existence` rule still fires.
 10. **A re-levelling line in `.vale.ini` misspells its rule.** `STE.ProcedureLenght = warning` enables
     nothing and disables nothing, reports no diagnostic, and exits 0. The rule stays at its shipped
     level, below `MinAlertLevel`, so this is number 1 reached through a typo.
-11. **A rule's own `scope:` selector does not exist.** An invalid selector is not an error. There is no
+11. **A rule's own `scope:` selector does not exist.** An invalid selector is not an error: there is no
     `text.comment.documentation.ts` scope, and a rule carrying it reports nothing, with no diagnostic
-    and exit 0. This is number 8's twin, reached through the rule file rather than through the section
+    and exit 0. Number 8's twin, reached through the rule file rather than through the section
     header.
 
 <!-- reference-check: allow text.comment.documentation.ts -- a Vale scope selector that does not exist, named here as the measured example; not a path -->
@@ -147,9 +143,9 @@ readily as it drops one — a plain enumeration becomes "in this order", asserti
 argued.
 
 **2. So diff the tokens, not your memory.** Take a full tokenize-and-frequency diff against the
-pre-edit copy. **Diff the pair rather than the file** whenever the pass also moved content to a
-sidecar. A file-only diff reads every moved sentence as a loss. Account for every non-zero
-delta as a split, a move, a deliberate edit, or a defect.
+pre-edit copy. **Diff the pair rather than the file** whenever the pass moved content to a sidecar,
+since a file-only diff reads every move as a loss. Account for every non-zero delta
+as a split, a move, a deliberate edit, or a defect.
 
 A fixed word list is the fallback for a file too large to diff whole. Such a list must include the
 causal connectives `because`, `since` and `so`. A lost causal link reads as two adjacent facts, and no
@@ -161,7 +157,7 @@ sufficiency that was never true. Obligation words go **up**, not down, because t
 verb. Read every split of a sentence saying when something is finished, permitted or sufficient.
 
 **4. Splitting a sentence also widens definitions.** Detaching a restrictive clause — a `because`, an
-`only if` — leaves a definition covering cases it used to exclude. The token diff cannot see this one
+`only if` — leaves a definition covering cases the restriction excluded. The token diff cannot see this one
 either, because the detached clause survives as an adjacent sentence. Read every definition whose
 sentence you split.
 
@@ -277,8 +273,8 @@ and only the sentence tells you which. Expand this one by hand and read each sit
 discriminator, and a numbered item is a procedure by definition. **Act on every finding** — state one
 instruction per step and move the reasoning to prose below the list.
 
-**If you are looking for the step-or-statement question, it no longer exists.** A statement written
-as a bullet is silently correct now. `prose.meta.md` carries what the `STE` rule did instead and why
+**Do not reopen the step-or-statement question.** A statement written as a bullet is silently
+correct. `prose.meta.md` carries what the `STE` rule did instead and why
 it was replaced.
 
 **One exemption survives and it is real.** A numbered item inside a fenced code block is a worked
@@ -305,7 +301,7 @@ them in a report:
 Both fixtures in `vale-styles/fixtures/` pin these: `OneInstruction.good.md` carries the list and
 specified-order shapes verbatim, and reports nothing.
 
-### `STE.PassiveVoice` — write in the active voice; the rule no longer sweeps
+### `STE.PassiveVoice` — write in the active voice; the rule does not sweep
 
 **Write instructions in the active voice. Name who acts.** That is the standing instruction, and it
 binds at authoring time. "The between-position is sanctioned" is wrong; "Use the between-position
@@ -346,11 +342,11 @@ weight now.
 **Five exempt classes — do not "fix" these:**
 
 1. **A dated past-tense record.** "Four `@see` forms were measured and rejected."
-   `claim-discipline.md` **requires** this construction as the escape hatch that stops a
-   claim rotting, and the actor sits in the sidecar by design. The house rule wins.
-2. **Descriptive prose where the actor is irrelevant.** "How it is computed." STE only _prefers_ active
-   in descriptive text; it _requires_ it in procedures. This class is not a defect by the standard's
-   own terms.
+   `claim-discipline.md` **requires** this construction as the escape hatch that stops a claim
+   rotting, the actor sits in the sidecar by design, and the house rule wins.
+2. **Descriptive prose where the actor is irrelevant**, as in "how it is computed". STE only _prefers_
+   active in descriptive text and _requires_ it in procedures, so this class is not a defect by the
+   standard's own terms.
 3. **A predicate adjective the tagger read as a past participle.** "The between form is broken."
 4. **A passive that already names its agent.** "Staleness is not bounded _by your own session's edits_"
    is reported with the message "name the agent", which the sentence does.
@@ -386,9 +382,9 @@ already scanned past.
 ## Instruction stays. Explanation moves.
 
 **An instruction file carries instructions. Its `.meta.md` sidecar carries the explanation.** That
-governs every article, every role file and every module sidecar, not only the file you reached it from.
-Apply it whenever acting on a finding makes you shorten something. Every mechanical rule here is
-satisfied by moving something out.
+governs every article, every role file and every module sidecar, not only the file you reached it
+from. Apply it whenever acting on a finding makes you shorten something, because every mechanical rule
+here is satisfied by moving something out.
 
 ### What an instruction file may not carry
 
@@ -397,16 +393,15 @@ judgement call:
 
 - **A pointer to its own `.meta.md` sidecar.** A role never changes its own file, and an article's
   reader is following a rule rather than changing it. Only a module sidecar keeps its `@see` pointer,
-  because that reader is changing the module. Measured before the strips: 21 such pointers across the
-  role files, 64 across the articles.
+  because that reader is changing the module.
 - **A fact about another role's file** — whose a duty is, how they do it, or what their threshold is.
   Saying _what is not yours_ is a routing fact the role needs and stays. The rest is a second copy
   nothing compares. The property-test ownership error survived in three files this way.
 - **A restatement of a section it cites.** Say what to do and where to read. A summary beside a pointer
   drifts from its source and tempts the reader to skip the source that would have corrected it.
-- **The execution order.** `CLAUDE.md` is the source of truth for the cycle. A role never chooses what
-  runs next, and a `description:` should state the precondition that makes this agent the right one,
-  not its position in a sequence.
+- **The execution order.** `CLAUDE.md` is the source of truth for the cycle, and a role never chooses
+  what runs next. A `description:` states the precondition that makes this agent the right one, never
+  its position in a sequence.
 
 **Prefer nested bullets to a packed sentence.** One instruction per line, under a bolded lead. That is
 a review call — `Instruction.ListItemSentences` counts sentences and cannot see a bullet carrying three
@@ -462,18 +457,17 @@ never in order to follow one. So an instruction that a reader needs in order to 
 there, however evidential it looks.
 
 **The module tier takes the same cut, under different filenames.** `<module>.md` is the instruction
-half and `<module>.meta.md` the explanation half; CLAUDE.md's routing branch 4 says who each is for.
-Everything above applies to that pair unchanged.
+half, `<module>.meta.md` the explanation half. CLAUDE.md's routing branch 4 says who each is for, and
+everything above applies to that pair unchanged.
 
 **Which article a subject belongs to, and where a sidecar file physically sits, are CLAUDE.md's
 questions** — routing branches 1 to 6. Settle those first. This rule applies once the pair exists, and
 says only what may sit on each side of it.
 
-**Nothing checks the pair.** `reference-check` and `agent-doc-check` both stay green while an article
-and its sidecar drift, because every filename still resolves and no checker reads for absent prose. So
-audit the pair by hand after a shortening pass, comparing against the article as it stood before. **The
-failure mode is dropping an illustration out of the pair entirely** rather than moving it across. No
-rule is ever lost that way; what goes missing is the example that made a rule legible.
+**Nothing checks the pair.** `reference-check` and `agent-doc-check` stay green while an article and
+its sidecar drift, because every filename resolves and no checker reads for absent prose. So audit the
+pair by hand after a shortening pass. **The failure mode is dropping an illustration entirely** rather
+than moving it across.
 
 ## The `Instruction` style — the regrowth guard on stripped role files
 
@@ -508,7 +502,7 @@ Fires on past-reference vocabulary (`used to`, `no longer`, `previously`, `turne
 narration about this repo's own history. State the current rule in the file; the account of how it
 changed goes to the sidecar. **One exempt class:** `no longer` inside a live conditional — "when the
 assumptions `no longer` hold" — is a present-tense rule, not narration. Leave it, and name it in the
-handoff as arguable. **What it misses:** narration that avoids these markers, and it deliberately
+handoff as arguable. **What it misses:** narration that avoids these markers; it deliberately
 does not match `because` or `since`, which carry the one-clause why that stays.
 
 ### Scope: the role files and `architect/`'s mode files
@@ -523,9 +517,9 @@ whether these rules bind an article at all is filed.
 
 ## Read a big number as unworked, not as broken
 
-A file is worked when a slice edits it and lints it; every other one carries its findings untriaged.
-Most of the scoped corpus has never been worked. So a four-figure count over the whole directory says
-nothing about the corpus, and nothing about the rules.
+A file is worked when a slice edits it and lints it. Every other one carries its findings untriaged,
+and most of the scoped corpus has never been worked. So a four-figure count over the whole directory
+says nothing about the corpus, and nothing about the rules.
 
 **Lint the file you are editing**, not the directory, until a rollout has been through the rest.
 
@@ -674,8 +668,8 @@ gains a row. `[**/*.meta.md]` is not one of them, because `[*.{ts,tsx}]` cannot 
 file.
 
 **Two of the places in each count are article prose, and `architect` does not edit them.** The
-`doc-comments.md` row and this article's own rule section are edits the orchestrating session makes;
-`architect` authors the rule and its fixture pair, and reports the doc change at handoff. See
+`doc-comments.md` row and this article's own rule section are the orchestrating session's edits.
+`architect` authors the rule and its fixture pair, then reports the doc change at handoff. See
 CLAUDE.md's Conventions.
 
 **Adding an `Instruction` rule is a seven-place edit.** One enabling key in the

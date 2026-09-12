@@ -1274,3 +1274,36 @@ rather than by the reader.
 mechanised — its narrow replacement was measured, worked, and was rejected because its precision was
 borrowed from a construction already seen. So "a prompt is often a rule looking at the wrong thing"
 is a prompt to look for the better trigger, not a promise that one exists.
+
+## Sidecar pointers removed from instruction files
+
+`prose.md` rules that a role file and an article carry no `@see` pointer to their own `.meta.md`,
+because neither reader is changing the rule. Only a module sidecar keeps one.
+
+Measured before the role-file strips: **21 such pointers across the five role files, 64 across the
+articles.**
+
+## What the `[formats]` mapping actually does
+
+`prose.md`'s confident-zero item 9 says a missing `[formats]` entry leaves every scope-based rule
+inert. The mechanism, which the article does not need in order to act on it:
+
+The mapping is **not** what puts a comment in scope. It gives the extracted text a structure that the
+`sentence`, `paragraph` and list scopes can find. Without it, those rules have nothing to match
+against, while a comment-scoped `existence` rule still fires normally — which is why the run reports
+findings and does not look silent.
+
+Measured: 212 findings without the mapping, 1,480 with it.
+
+## What is lost when an illustration is dropped rather than moved
+
+`prose.md` names the failure mode of a shortening pass: an illustration dropped out of the pair
+entirely rather than moved across.
+
+No **rule** is ever lost that way — a rule is short and a shortening pass keeps it. What goes missing
+is the worked example that made the rule legible, and its absence is invisible in both files. The
+article reads as complete because every rule is still stated, and the sidecar reads as complete
+because nothing points at a gap.
+
+That is why the audit compares against the article **as it stood before** the pass, rather than
+reading the result on its own.
