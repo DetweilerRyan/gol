@@ -24,7 +24,7 @@ opportunity.
 
 ## What was prototyped, 2026-09-12
 
-**Two rules work. One is blocked by a scope limitation, and the block is measured rather than assumed.**
+**All three prompts were examined. Two are mechanised and measured; the third is the hardest and was left.**
 
 ### `OneInstruction` — works, and is far more precise
 
@@ -46,16 +46,45 @@ if found {
 **2 findings corpus-wide against `STE`'s 11.** It rejects both false-positive shapes above and keeps
 the genuine chain.
 
-### `ProcedureLength` — blocked, and the reason is a Vale scope limitation
+### `ProcedureLength` — works at `scope: raw`. The earlier "blocked" finding was wrong.
 
-The real condition needs to know whether a list item is a **numbered step** or a **bullet**. Measured
-by printing the scope from a Tengo script: **Vale strips the marker before the script sees it.**
-`1. Run the thing.` arrives as `Run the thing.`, identical to a bullet's text.
+**First measured as blocked, then refuted by web research on the user's direction.** At
+`scope: list`, Vale strips the marker before the script sees it: `1. Run the thing.` arrives as
+`Run the thing.`, identical to a bullet's text. That measurement is correct and the conclusion drawn
+from it was not.
 
-The corpus does not separate them another way. Numbered items start with imperatives — `Run` 14,
-`Read` 3 — but so do bullets: `Do` 15, `Run` 6, `Report` 3. **So this one cannot be mechanised at
-`scope: list`**, and the next thing to try is `scope: raw`, which the `script` docs say receives
-unparsed text. Not tried.
+**`scope: raw` receives the unprocessed markup**, markers intact — confirmed by printing the scope:
+
+```
+RAW=[1. Run the thing.
+2. Read the other thing.
+
+- A bullet item here.
+]
+```
+
+So the rule walks the raw lines, counts words only in a numbered item, and ignores bullets:
+
+```
+offset := 0
+for line in text.split(scope, "\n") {
+  if text.re_match("^[0-9]+\\.\\s", line) {
+    words := text.split(text.trim_space(line), " ")
+    if len(words) > 20 {
+      matches = append(matches, {begin: offset, end: offset + len(line)})
+    }
+  }
+  offset = offset + len(line) + 1
+}
+```
+
+**Verified on a fixture carrying a long numbered step and an equally long bullet: one finding, on the
+step.** Corpus-wide it reports **57 against `STE.ProcedureLength`'s 367** — an 84 percent reduction,
+and the sampled findings are genuine numbered steps that run long.
+
+**Why the marker is the only available discriminator.** Both kinds start with imperatives —
+numbered items open with `Run` 14 times and `Read` 3, bullets with `Do` 15 and `Run` 6 — so nothing in
+the text separates them. The marker does, and only `scope: raw` carries it.
 
 ### `PassiveVoice` — not attempted
 
@@ -76,6 +105,27 @@ rule. That is the hardest of the three and the least likely to reduce to a regex
 - **Vale lints its own `StylesPath`.** A finding whose path is the rule file reads exactly like a
   finding on the target.
 
+## The method finding, and it fired twice in one session
+
+**Both times a rule was called impossible, the claim came from testing the shapes this repo already
+uses and generalising to the tool.**
+
+- "Vale cannot express a count joined to a pattern" — reached by testing `existence`, `occurrence` and
+  `sequence`, which are the three extension points in use here. Vale has **twelve**, and `script`
+  expresses it.
+- "`ProcedureLength` cannot be mechanised" — reached by testing `scope: list`, which is the scope
+  `STE.ProcedureLength` uses. `scope: raw` carries the marker.
+
+Each was a correct measurement with an unearned generalisation attached, and
+`.claude/agents/articles/claim-discipline.md` already names the shape: **the scope of a claim is the
+scope of the command that produced it.** Both would have stood unchallenged without the user asking
+for a web search.
+
+**So the operative rule for this slice: before recording that Vale cannot do something, name the
+extension points and scopes tried, and check that list against the documentation.** A negative result
+about a tool needs the tool's own surface enumerated; a negative result about three of its twelve
+surfaces is a different and much smaller claim.
+
 ## Sketch
 
 1. **Land the `Instruction` style's first `script` rule** — `LongSplit`, already prototyped and
@@ -83,8 +133,9 @@ rule. That is the hardest of the three and the least likely to reduce to a regex
 2. **Add `OneInstruction`**, and rule on whether `STE.OneInstruction` is then switched off. Two rules
    reporting the same defect at different precisions is the drift shape this repo already avoids
    elsewhere.
-3. **Try `scope: raw` for `ProcedureLength`**, or record the refutation with the marker-stripping
-   measurement.
+3. **Land `ProcedureLength` on `scope: raw`**, already prototyped at 57 findings against `STE`'s 367.
+   Note it is the only one of the three that needs `raw`, so it reads the whole file rather than one
+   block — worth confirming the cost on the full corpus before enabling.
 4. **Leave `PassiveVoice` alone** until the first two have landed and the maintenance cost is real
    rather than projected.
 
