@@ -27,6 +27,10 @@
       "securedBy": "vitest-exclude"
     },
     {
+      "path": "vale-styles/**",
+      "securedBy": "vitest-exclude"
+    },
+    {
       "path": "CLAUDE.md",
       "securedBy": "written-argument",
       "argument": "Tracked, and therefore copied into Stryker's sandbox, but never mutated (mutate is src/**) and consulted by no test, build, or lint config; a fixed filename can never itself become a test glob match. Verified by grepping vite.config.ts, vitest.scripts.config.ts, src/test-setup.ts, fast-check-stryker-seed.ts and both Stryker configs for a live (non-comment) reference, plus scanning scripts/ test files for a readFileSync of the real CLAUDE.md rather than a throwaway mkdtempSync fixture -- agent-doc-check's and reference-check's own tests, which do read CLAUDE.md in production, build a temp repo per case.",
