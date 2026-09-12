@@ -449,7 +449,7 @@ The style is enabled per file in `.vale.ini`, not on the agent-docs glob. The un
 carry a backlog nobody has triaged, and the landing constraint below forbids shipping that. When a
 role file's strip lands, its slice adds the file's own enabling section and clears the findings in
 the same slice. Once all five are stripped, collapse the per-file sections into the agent-docs glob
-with an articles opt-out. Update the edit counts below in the same change.
+with an articles opt-out. The edit counts below move in the same change, and the orchestrating session makes that edit.
 
 ## Read a big number as unworked, not as broken
 
@@ -602,6 +602,11 @@ Four later sections overlap those globs, and must each switch the rule off once 
 below that one switch it off by name. And `doc-comments.md`'s "What Vale checks mechanically" table
 gains a row. `[**/*.rationale.md]` is not one of them, because `[*.{ts,tsx}]` cannot match a `.md`
 file.
+
+**Two of the places in each count are article prose, and `architect` does not edit them.** The
+`doc-comments.md` row and this article's own rule section are edits the orchestrating session makes;
+`architect` authors the rule and its fixture pair, and reports the doc change at handoff. See
+CLAUDE.md's Conventions.
 
 **Adding an `Instruction` rule is a seven-place edit.** One enabling key in the
 `[.claude/agents/**/*.md]` section. Five off-by-name entries: the three bait sections,

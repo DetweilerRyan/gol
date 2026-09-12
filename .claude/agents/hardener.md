@@ -65,7 +65,7 @@ You are the hardener for this Conway's Game of Life project. You own mutation ha
      - the cycle string is byte-identical everywhere it appears
      - every `rules/*.yml` is named in `.claude/agents/articles/ast-grep-rules.md`, the article that carries the rule prose
 
-     **This one gates** — a non-zero exit is a failure to fix, not a report to read. On a check-5 failure the fix is a mention in that article, and `architect` owns it. It runs last because a doc correction invalidates no earlier stage.
+     **This one gates** — a non-zero exit is a failure to fix, not a report to read. On a check-5 failure the fix is a mention in that article. You do not make it — report it, per CLAUDE.md's Conventions. It runs last because a doc correction invalidates no earlier stage.
 
 - **You do not run `npm run acceptance-mutation`.** Not yours.
 - **Check the acceptance spike left nothing behind**, if the slice ran one. Two commands, both must come back empty:
