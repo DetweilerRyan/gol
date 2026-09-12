@@ -59,9 +59,9 @@ same rule the unscoped empty-list branch already follows.
 
 ### 2. Then the trigger, one line per role
 
-`coder`, `cleaner` and `architect` write JSDoc and module sidecars. `product` writes
-`features/steps/*.ts`, which the JSDoc rules do not reach today — decide whether it gets the trigger
-or an explicit note that it does not.
+**All four implementing roles get it.** `coder`, `cleaner` and `architect` write JSDoc and module
+sidecars. `product` writes `features/steps/*.ts`, `features/screenplay/*.ts` and the Playwright
+specs — 19 tracked TypeScript files, all on a linted surface.
 
 **Word the trigger as a precondition, not a position**: run it when the slice touched a JSDoc block or
 a module sidecar.
@@ -80,14 +80,16 @@ separately — see the Open questions.
 - `scripts/prose-lint/` — `run.ts`, `lint-targets.ts`, and their tests. A `scripts/` program, so CRAP
   <= 6, `test:scripts`, `dry4ts:scripts` and `test:mutation:scripts` all apply, and the mutation gate
   re-arms by construction.
-- `.claude/agents/coder.md`, `cleaner.md`, `architect.md` — one trigger line each.
+- `.claude/agents/coder.md`, `cleaner.md`, `architect.md`, `product.md` — one trigger line each.
 - `ideas/candidates/prose-lint-silently-ignores-its-arguments.md` — closed by the same change.
 
 ## Open questions
 
-- **Does `product` get the trigger?** It writes `features/steps/*.ts`, and `.vale.ini`'s
-  `[*.{ts,tsx}]` section does reach those files. Check whether the `JsDoc` rules fire there before
-  deciding; the answer is a measurement, not a judgement.
+- ~~**Does `product` get the trigger?**~~ **Answered 2026-09-12: yes.** The measurement the entry
+  called for was taken. `.vale.ini`'s `[*.{ts,tsx}]` section reaches `features/**`, `prose-lint`
+  already reads 27 files there, and a planted JSDoc violation in `features/steps/appearance-preference.ts`
+  is reported — so the rules fire rather than merely being configured. `product` writes 19 TypeScript
+  files on that surface and has no trigger today.
 - **What scopes a role's run in practice?** The changed-files manifest is the obvious input, and
   `cleaner` already works from one. A role that has to name paths by hand will get it wrong.
 - **The orchestrating session's own half is untouched by this.** That seat is now the only writer of
