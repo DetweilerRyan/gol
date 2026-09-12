@@ -19,6 +19,78 @@ rules.
 Three published rule sets are candidates for the mechanical half: Vale's own `Std`, and the `Google`
 and `Microsoft` style packages in the same registry.
 
+## The question changed on 2026-09-12: soundness before adoption
+
+**Directed by the user**, before any rule is applied in bulk: be confident the rules we have are
+solid. That reorders this entry. Surveying `Std`, `Google` and `Microsoft` adds rules; **this entry
+now begins by auditing the rules already enabled.**
+
+### What the corpus actually reports
+
+Measured 2026-09-12 over 435 tracked files.
+
+| Rule                              | Findings | Class                   |
+| --------------------------------- | -------- | ----------------------- |
+| `STE.PassiveVoice`                | 490      | prompt, needs judgement |
+| `STE.ProcedureLength`             | 367      | prompt, needs judgement |
+| `Instruction.ParagraphSentences`  | 270      | ours                    |
+| `Instruction.HistoricalNarration` | 254      | ours                    |
+| `Instruction.ListItemSentences`   | 155      | ours                    |
+| `STE.SentenceLength`              | 64       | mechanical              |
+| `STE.Contractions`                | 34       | mechanical              |
+| `STE.OneInstruction`              | 11       | prompt                  |
+| `STE.ParagraphLength`             | 2        | mechanical              |
+| `JsDoc.*` (three rules)           | 7        | ours                    |
+
+**Two `STE` rules are 88 percent of the `STE` total, and both need judgement.** So the corpus is
+dominated by findings nobody can act on mechanically. Any mass application runs into that first.
+
+**Our own three `Instruction` rules report 679 across the corpus.** The `.vale.ini` opt-out currently
+scopes them to the five role files and `architect/`, where they report zero — so that zero is a
+statement about scope, not about the rules.
+
+### The finding that matters: a rule's precision does not travel
+
+`Instruction.HistoricalNarration` was measured at **8 of 8** on `hardener.md` when it was written. On
+`src/`, a surface it was never tuned against, three sampled hits gave **one true positive and two
+false**:
+
+- `// That sentence used to cite ~180-200ms at min zoom` — narration. **True positive.**
+- `// screenToWorld (used to resolve taps and hover back to a world cell)` — "used to" meaning
+  _employed to_. **False positive**, and a different sense of the phrase entirely.
+- `// the iterator is no longer stable` — a live invariant about runtime state. **False positive**,
+  the same arguable class the rule's own header documents.
+
+**A rule verified on one surface is verified for that surface.** Every precision figure this repo
+holds was taken where the rule was authored, and `.claude/agents/articles/claim-discipline.md` already
+states the general form: the scope of a claim is the scope of the command that produced it. The rules
+were measured honestly and then read wider than the measurement.
+
+### What to do before adopting anything new
+
+1. **Re-measure each enabled rule on each surface it reaches**, not once. Five surfaces exist —
+   role files, articles, `CLAUDE.md`, module sidecars, and JSDoc in `src/` and `scripts/` — and
+   `.vale.ini` already sections by them, so the measurement is per section.
+2. **Sample precision per surface, and record the sample.** A rule at 8/8 on one surface and 1/3 on
+   another is two different rules wearing one name. The remedy may be a narrower scope rather than a
+   better matcher.
+3. **Only then survey the packages.** A new rule inherits the same problem, and adding rules before the
+   existing ones have per-surface figures compounds it.
+
+**A measured refutation closes a rule permanently**, and that is an acceptable outcome for any of the
+ten. `Instruction.HistoricalNarration` on `src/` may be one.
+
+### One method note, because it cost four errors today
+
+Every measurement error in the 2026-09-11 and 2026-09-12 sessions produced a **false negative** — a
+confident "nothing here". `grep -c` on prettier-wrapped prose, `grep -vc` counting non-matching lines,
+and `xargs -a` which BSD `xargs` does not accept, with the error hidden by `2>/dev/null`. That last
+one reported zero findings for all seven of our rules across the whole corpus, when the true figure is 686.
+
+**So every count in this entry must be taken with the error stream visible and a sentinel in the
+run.** A rule audit that under-reports is worse than no audit: it licenses mass application on the
+strength of a number that was never measured.
+
 ## Complication
 
 **`Std` was measured and declined for slice 1. The user re-opened that evaluation on 2026-09-10, so
