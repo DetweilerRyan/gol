@@ -155,6 +155,47 @@ per 1,000 words:
 So the compounds predate the rule and have declined under it. The style is how this repo names its
 concepts, not an artifact of gaming a word count.
 
+### The forcing-function question, asked 2026-09-12, and the honest answer is split
+
+**The user's question is not whether `Std` counts correctly. It is whether adopting it would force
+prose that is necessary and sufficient** — for humans and agents both. A rule that is technically
+wrong about word counts can still be right about outcomes, and that has to be answered on its own
+evidence.
+
+**What the compounds are, measured.** 1,384 distinct compounds across `.claude/**` and `CLAUDE.md`.
+Only 41 are literal filename stems, so "they are all identifiers" is false. But the most-used ones are
+overwhelmingly names the repo cannot shorten — `ast-grep` 136, `acceptance-mutation` 93,
+`reference-check` 76, `doc-comments` 57 — and the non-identifier tail is domain vocabulary rather than
+padding: `acceptance-spike`, `framework-free`, `hand-written`, `fail-open`.
+
+**So the rule would fall unevenly.** A sentence naming three commands pays three extra words for
+nothing a rewrite can recover. A sentence joining two clauses pays for something a rewrite can.
+
+**Of the 149, 53 contain a splittable clause boundary** — `, and`, `, but`, `, so`, `, which`,
+`, rather than`. Those are the ones where the rule would do the work the user is asking about. Two
+read in full:
+
+> Do not reach for `extends:`. A child's key replaces the parent's rather than merging, **and** a
+> parent that is not on the search path aborts the whole run at E201.
+
+That is two independent traps in one sentence, and splitting it is a real improvement — a reader
+scanning for the second trap currently has to finish the first.
+
+**The other 96 have no such boundary.** They are single clauses that happen to name two or three
+hyphenated things. Splitting them means inventing a break, and the likely outcome is worse prose, not
+shorter prose.
+
+**So the answer is: it would force better prose in roughly a third of the cases it flags, and
+arbitrary edits in the rest.** That ratio is the finding, and it is what a decision should rest on
+rather than on whether `\b(\w+)\b` is the right tokenizer.
+
+**A cheaper instrument gets the same benefit without the noise.** The 53 splittable sentences are
+findable directly — a rule matching a clause boundary inside an over-long sentence is more precise
+than a rule matching every sentence of 26 words. That is a bespoke rule this repo could author, in the
+`Instruction` style, and it targets the forcing function the user actually wants rather than
+approximating it with a word count. **File it as the successor question if the split ratio holds on a
+second sample.**
+
 **The residual question is worth one line rather than a slice.** If `STE`'s tokenizer is the right one,
 `STE`'s own cap of 25 may be slightly generous for this corpus — but that is a threshold question about
 a rule we already have, not an adoption question about one we do not.
