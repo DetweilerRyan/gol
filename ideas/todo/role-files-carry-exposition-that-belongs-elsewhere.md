@@ -300,14 +300,30 @@ orchestration order, and it is a driftable surface in five files.
 arrived approved, and who to hand to — both live in the Handoff section. A role never chooses what
 runs next; the orchestrating session does.
 
-**One qualification, so the removal is made on the right grounds.** The cycle string is the _least_
-driftable cross-role mention in the corpus: `agent-doc-check`'s check 4 asserts every copy is
-byte-identical and fails loudly when it finds none anywhere. So this is not a drift fix — it is a
-relevance fix. **The string is safe; it is simply not addressed to the reader.**
+**The string is not merely irrelevant. It is already false, and the user caught this.** `CLAUDE.md`'s
+"The optional architect design pass" says the orchestrating session may invoke `architect` **before
+`coder`**, to ratify a file set and an interface, and that it still runs its normal post-`cleaner` slot
+afterwards. So `architect` appears twice in some slices and the sequence the string asserts does not
+hold. **Both slices in the 2026-09-11 session ran that way.**
+
+**`agent-doc-check`'s check 4 does not catch this, and cannot.** It asserts every copy of the cycle
+string is byte-identical and fails when it finds none anywhere. Over a false claim, that guarantees only
+that the falsehood is uniform in five files. **A consistency check is not a correctness check**, and
+this is the worked example: the one cross-role fact carrying a mechanical guard is also the one that was
+wrong.
+
+Read the removal on those grounds. It is not a drift fix — the string could not drift. It is wrong, and
+it was never addressed to the reader.
 
 **Check 4 keeps working after all five removals.** The string survives in `CLAUDE.md` twice and in
 `handoffs.md` once — files whose audience is the seat that sequences the roles. Verified after
 `coder.md`'s removal: `npm run agent-doc-check` exits 0.
+
+**Those three survivors carry the same false sequence, and this entry does not settle that.**
+`CLAUDE.md` states both the cycle and the design-pass exception, so a reader there has the correction in
+front of them. Whether the string should say what actually happens, or whether check 4 should retire
+with it, belongs to the seat that owns the orchestration docs. **Filed so the removal does not read as
+having handled it.**
 
 **One consequence to handle in the same edit.** Rule 8 prefers "later roles in the cycle" to naming
 roles — and that phrase is unmoored once the file stops stating the cycle. `coder.md`'s became
