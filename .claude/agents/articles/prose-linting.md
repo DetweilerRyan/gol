@@ -603,12 +603,15 @@ below that one switch it off by name. And `doc-comments.md`'s "What Vale checks 
 gains a row. `[**/*.rationale.md]` is not one of them, because `[*.{ts,tsx}]` cannot match a `.md`
 file.
 
-**Adding an `Instruction` rule is a seven-place edit today.** The enabling key in each stripped-file
-section — one, while only `coder.md` is stripped. The four defensive off-by-name entries: the three
-bait sections plus `[**/*.rationale.md]`, whose globs do reach `.md`. The fixture pair, and this
-article's own rule section above. The four off entries guard the planned widening to the agent-docs
-glob rather than any section that overlaps today. The count grows by one per stripped role file
-until the collapse the scope section above describes.
+**Adding an `Instruction` rule is a seven-place edit.** One enabling key in the
+`[.claude/agents/**/*.md]` section. Five off-by-name entries: the three bait sections,
+`[**/*.rationale.md]`, and `[.claude/agents/articles/**]`. The fixture pair, and this article's own
+rule section above.
+
+The per-stripped-file sections collapsed into that one glob once all five role files were stripped,
+which is what the scope section above describes. The articles are off by name because they carry an
+untriaged backlog and are a different register; `.vale.ini` records the measured count beside the
+section.
 
 **Whenever you enable a rule, switch it off in the sidecar section in the same edit.** That pairing is
 the whole exemption. The test is one command: `vale` on any `*.rationale.md` must report zero.
