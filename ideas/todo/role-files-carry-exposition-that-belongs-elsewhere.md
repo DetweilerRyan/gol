@@ -254,6 +254,41 @@ item, so a three-instruction bullet reads as one item near the threshold while s
 read as clean. **Structure the file the way the rule measures it**, or the rule scores prose that is
 already correct and misses prose that is not.
 
+#### 9a is a review-time rule. Mechanising it is REFUTED, measured 2026-09-11.
+
+**Do not spend a slice on a Vale rule for this.** Three measurements, in the order they were taken:
+
+- **A max-1-sentence list rule moves the wrong way.** Probed against `coder.md` before and after the
+  Owns restructure: **20 findings on the packed original, 22 on the split version.** Splitting a packed
+  bullet creates _more_ list items, each still one or two sentences, so the counter rewards the defect
+  and penalises the fix.
+- **`STE.OneInstruction` reports zero on the packed original.** It matches explicit chaining —
+  `and then`, `, then`, `after which`, `while …ing`. The packed bullets chained with full stops
+  instead, which is the form that reads as clean.
+- **`Instruction.ListItemSentences` cannot see it either**, and this is by construction rather than by
+  threshold. A packed bullet is _N instructions in one or two sentences_. The defect lives **below**
+  sentence granularity, and every counting rule available measures at or above it.
+
+**The structural reason, stated so nobody re-opens this on a hunch.** A rule that flags packing must
+count **instructions**, which means deciding what an instruction is. That is the same wall that refuted
+the symmetric instruction-versus-explanation detector during the Vale spike. This repo's rules work
+when a defect has a **surface form** — a sentence count, a token, a scope. `HistoricalNarration` works
+because narration has vocabulary. **Packing has no surface form: the same words in the same order are
+correct as three bullets and wrong as one.**
+
+**What a rule could do instead, and why neither is worth landing.** Flag a list item over N words as a
+_candidate_ for splitting — a prompt to look, firing on plenty of correct single-instruction bullets.
+Or extend `OneInstruction`'s token list, which only ever catches the chaining form that was already
+absent here.
+
+**The compensation, and it is real.** The nested form makes `ListItemSentences` _more_ accurate. Seven
+one-line items read as clean, where one three-instruction bullet read as a single item sitting near the
+threshold. So the guard you already have improves on a well-structured file even though it cannot
+demand the structure.
+
+**Re-open only with new evidence**, and the evidence is a rule that discriminates the two `coder.md`
+versions in the right direction — not an argument that one could exist.
+
 ### 10. Keep the one-clause why
 
 **The floor, and it is not "no reasoning".** CLAUDE.md's comment convention already states the rule for
