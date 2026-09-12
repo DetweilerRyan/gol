@@ -297,3 +297,42 @@ stale on the next hook added.
 ## Provenance of the commit discipline
 
 The partition sweep's commit sequence is adapted from `split-claude-md`'s "this commit only COPIES" rule.
+
+## What `reference-check` used to miss about a sidecar citation
+
+`doc-comments.md` rule 7 states what the checker verifies today. This is how it got there, and it
+matters because the gap fell on the **one citation form the rule mandates**.
+
+**`check-md-references` added `md` to the extractor**, which made a repo-relative token resolvable.
+That left the leading-dot form still unchecked.
+
+**`references.ts`'s `isDiscardedToken` dropped every token starting with `.`.** That also discarded
+the exact shape of `@see {@link ./cache.meta.md}` — the mandated form itself. So the rule required a
+citation the checker was blind to, and a sidecar reference needed a parallel repo-relative `//`
+comment purely for the checker's sake.
+
+`reference-check-reach` closed both. The function now tests whether the token's **basename** starts
+with `.`, so `./cache.meta.md` resolves against `cache.meta.md` wherever it lives. The parallel
+comment is no longer needed for the checker, though one may still help a reader who cannot resolve a
+relative path from prose alone.
+
+That slice also widened the doc surface to every tracked `.md` file outside `ideas/**` and
+`.claude/worktrees/**`, replacing an enumerated `CLAUDE.md` / `README.md` / `.claude/**/*.md` list. A
+sidecar's own references are read directly under that surface, so `src/**/*.md` no longer depends on
+the source surface to reach them.
+
+## A quoted-heading citation is not machine-checked, and one went stale
+
+Found 2026-09-12 while reviewing this article. `vale-styles/JsDoc/DeadIndexical.yml` cited
+`engineering.md`, "Name the slice, never this slice" in three places — its header, an inline comment,
+and the user-facing message — and this article's Vale table cited it in a fourth. That rule moved to
+`claim-discipline.md` when it was split out of `engineering.md`, and all four citations stayed
+pointing at the old file.
+
+**Nothing caught it, and the reason is worth knowing.** `npm run reference-check` resolves
+`engineering.md` as a filename, and it does. Its `cited-symbol-exists` check covers the
+`<file>'s <symbol>` form, not a quoted heading. So a citation can name a real file and a claim that
+file no longer carries, and pass.
+
+The article split is the general hazard: moving a rule between articles leaves every citation of it
+pointing at the file it left. `ideas/candidates/` carries the proposal to check a quoted heading.

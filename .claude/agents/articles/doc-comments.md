@@ -107,7 +107,7 @@ These are the things the type cannot state, and this repo is dense with them:
 - cross-references into another module's internals
 
 **This rule settles the channel, not the shelf life.** The `//` channel permits a measured finding and a
-cross-reference alike. `engineering.md`'s "A comment may state why; it may not state an undated
+cross-reference alike. `claim-discipline.md`'s "A comment may state why; it may not state an undated
 present-tense fact about another file" still governs both. Four forms that rule requires:
 
 - cite the command, not the number
@@ -206,19 +206,14 @@ contract is shaped this way. All three live links do exactly that.
 > Four alternative `@see` forms were measured and rejected. See `doc-comments.meta.md`.
 
 **What `reference-check` sees of a sidecar is narrower than "the filename is checked", and the difference
-falls on the one form this rule mandates.** `check-md-references` added `md` to the extractor, so a
-**repo-relative** token names a file the checker resolves. `reference-check-reach` later closed the two
-gaps this section used to describe as open; what follows is the state after that slice, verified against
-the landed tree:
+falls on the one form this rule mandates.** The state of the landed tree:
 
 - **A repo-relative token in doc prose or in a `//` comment is checked.** Rewriting
   `src/cache.meta.md` to a name that resolves to nothing fails the gate by name and line. Renaming
   both module sidecars redded four such references at once.
-- **A leading-dot token is now checked too, by its own basename.** `references.ts`'s `isDiscardedToken`
-  used to drop every token starting with `.`, which also discarded the exact shape of
-  `@see {@link ./cache.meta.md}` -- the mandated form itself. It now checks only whether the token's
-  _basename_ starts with `.`, so `./cache.meta.md` resolves against `cache.meta.md` wherever it
-  lives. **What this verifies is that the name resolves, not that the relative path in front of it is
+- **A leading-dot token is checked too, by its own basename.** `./cache.meta.md` resolves against
+  `cache.meta.md` wherever it lives, so the mandated `@see {@link ./<name>.meta.md}` form is covered.
+  **What this verifies is that the name resolves, not that the relative path in front of it is
   right.** `{@link ./<name>.md}` written from any directory resolves against a `<name>.md` anywhere in
   the repo. That is the same basename-only matching every other check in this program already made. A sidecar
   reference no longer needs a parallel `//`-comment repo-relative citation for the checker's sake. One may
@@ -234,10 +229,9 @@ the landed tree:
 same six STE rules the articles carry. Its `[**/*.meta.md]` section then exempts the meta half,
 matching how article meta prose is treated.
 
-`reference-check-reach` closed the two scan gaps this used to warn about by hand. A rename that moves a
-module without moving its `@see {@link ./<module>.meta.md}` citation now fails
+A rename that moves a module without moving its `@see {@link ./<module>.meta.md}` citation fails
 `file-reference-resolves`, because that citation resolves by basename like any other. What the checker
-still cannot verify is a sidecar's own **contents**. Hold a sidecar to the comment-assertion convention by
+cannot verify is a sidecar's own **contents**. Hold a sidecar to the comment-assertion convention by
 hand: no quoted test titles, no caller rosters, no `<file>:NN`. Nothing will catch one.
 
 **Which half a fact goes in is branch 5's test, one tier down: does a caller act on it?** The claim a
@@ -386,12 +380,12 @@ source. See the commit discipline below.
 report-only. Each rule mechanises a rule stated above, and each message names the token it matched, so
 the finding tells you which rule you tripped.
 
-| Vale rule                | fires on                                                                   | enforces                                             |
-| ------------------------ | -------------------------------------------------------------------------- | ---------------------------------------------------- |
-| `SelfReferentialOpener`  | a paragraph opening `This function …`                                      | rule 2 — say what the caller gets                    |
-| `ImplementationAltitude` | a word of implementation register, such as `under the hood`                | rule 4 — move the line to a `//` below the signature |
-| `BlockTagVocabulary`     | a line-opening `@tag` outside the five in rule 5, such as `@summary`       | rule 5 — keep the content, drop the tag word         |
-| `DeadIndexical`          | an indexical naming the session that wrote the hover, such as `this slice` | `engineering.md`, "Name the slice, never this slice" |
+| Vale rule                | fires on                                                                   | enforces                                                  |
+| ------------------------ | -------------------------------------------------------------------------- | --------------------------------------------------------- |
+| `SelfReferentialOpener`  | a paragraph opening `This function …`                                      | rule 2 — say what the caller gets                         |
+| `ImplementationAltitude` | a word of implementation register, such as `under the hood`                | rule 4 — move the line to a `//` below the signature      |
+| `BlockTagVocabulary`     | a line-opening `@tag` outside the five in rule 5, such as `@summary`       | rule 5 — keep the content, drop the tag word              |
+| `DeadIndexical`          | an indexical naming the session that wrote the hover, such as `this slice` | `claim-discipline.md`, "Name the slice, never this slice" |
 
 **Read each rule's own header in `vale-styles/JsDoc/` for its exact trigger.** The examples above are
 one apiece, not the vocabularies.
