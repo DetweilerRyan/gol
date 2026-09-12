@@ -1,0 +1,56 @@
+# Replaces STE.ProcedureLength, which applies a 20-word cap to every LIST ITEM and
+# so cannot tell a numbered step from a bullet. Its own header concedes it. This
+# repo writes a rule as a bullet carrying its own reason, so the STE rule fires on
+# the house style: prose.md tells a reader to classify the article's bullets once
+# and leave them, which is a rule that asks to be ignored in bulk.
+#
+# A numbered marker is a procedure; a bullet is a statement. That is the whole
+# discriminator, and only `scope: raw` carries it -- at `scope: list` Vale strips
+# the marker before the script sees it, so `1. Run the thing.` arrives identical
+# to a bullet's text. Measured.
+#
+# Measured 2026-09-12 over the 23 enabled .md files: STE 369 findings, this rule
+# 56. The sampled findings are genuine numbered steps that run long.
+#
+# WHY THE MARKER IS THE ONLY AVAILABLE DISCRIMINATOR: both kinds open with
+# imperatives. Numbered items start with `Run` 14 times and `Read` 3; bullets
+# start with `Do` 15 and `Run` 6. Nothing in the TEXT separates them.
+#
+# The fence guard drops one measured false positive, product.md's step list drawn
+# inside a ``` block. 57 findings without it, 56 with.
+#
+# OFFSET ARITHMETIC IS VERIFIED, NOT ASSUMED. `raw` hands the script the whole
+# file, and Vale reads the returned offsets as whole-file byte offsets, so the
+# `len(line) + 1` walk reconstructs them exactly. Probed 2026-09-12 against the two
+# ways it could have been wrong: a file with em dashes and curly quotes on lines
+# ABOVE the violation still reports 5:1, so Tengo's len() and Vale's offsets are
+# both byte-based; a CRLF file also reports 5:1, since the \r stays inside `line`
+# and only the \n is added back.
+#
+# See OneInstruction.yml in this directory for the shared authoring hazards.
+#
+# OVER-FIT GUARD: the rule matches a generic ordered-list marker and counts words.
+# It encodes nothing specific to this corpus.
+extends: script
+message: 'Numbered step is too long. STE caps procedural text at 20 words.'
+level: warning
+scope: raw
+script: |
+  text := import("text")
+  fmt := import("fmt")
+  matches := []
+  offset := 0
+  fenced := false
+  for line in text.split(scope, "\n") {
+    if text.has_prefix(text.trim_space(line), "```") {
+      fenced = !fenced
+    } else if !fenced {
+      if text.re_match("^[0-9]+\\.\\s", line) {
+        words := text.split(text.trim_space(line), " ")
+        if len(words) > 20 {
+          matches = append(matches, {begin: offset, end: offset + len(line), message: fmt.sprintf("Numbered step is %d words. STE caps procedural text at 20.", len(words))})
+        }
+      }
+    }
+    offset = offset + len(line) + 1
+  }

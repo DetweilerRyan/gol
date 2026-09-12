@@ -191,26 +191,33 @@ Five surface in a default run. `PassiveVoice` is the sixth, held at `suggestion`
 
 Three apply mechanically. Three are prompts to look. Know which you are holding.
 
-| rule                  | treat it as    | act on a finding?                       |
-| --------------------- | -------------- | --------------------------------------- |
-| `STE.SentenceLength`  | mechanical     | yes — split the sentence                |
-| `STE.ParagraphLength` | mechanical     | yes — split the paragraph               |
-| `STE.Contractions`    | mechanical     | yes, unless the text **names** the word |
-| `STE.ProcedureLength` | a prompt       | only if the list item is a **step**     |
-| `STE.OneInstruction`  | a prompt       | only if it chains two **actions**       |
-| `STE.PassiveVoice`    | off by default | see the standing instruction below      |
+| rule                        | treat it as    | act on a finding?                       |
+| --------------------------- | -------------- | --------------------------------------- |
+| `STE.SentenceLength`        | mechanical     | yes — split the sentence                |
+| `STE.ParagraphLength`       | mechanical     | yes — split the paragraph               |
+| `STE.Contractions`          | mechanical     | yes, unless the text **names** the word |
+| `Procedure.ProcedureLength` | mechanical     | yes — split the step                    |
+| `Procedure.OneInstruction`  | mechanical     | yes — one action per step               |
+| `STE.PassiveVoice`          | off by default | see the standing instruction below      |
 
 **A rule is mechanical when its trigger _is_ the defect, and a prompt when it fires on a proxy.**
-Classify a new rule that way rather than by whether it counts something. `ProcedureLength` counts and
-is still a prompt, because a list item is a stand-in for a procedure.
+Classify a new rule that way rather than by whether it counts something.
+
+**`ProcedureLength` is the worked example of a proxy rule made mechanical, and it is how to fix one.**
+`STE.ProcedureLength` counted words in any list item, so a bullet stood in for a procedure and every
+finding needed a judgement. The replacement reads the **marker**: a numbered item is a procedure, a
+bullet is a statement. Same defect, no proxy, no judgement. The lesson is that a prompt is often a
+rule looking at the wrong thing, not an intrinsically unmechanisable one — see `prose.meta.md`.
 
 **"Mechanical" means no judgement per finding. It does not mean sweepable in one pass.** Two of the
-three interact, so a batch application still needs the order and the re-run described below.
+five interact, so a batch application still needs the order and the re-run described below.
 
-### Triage the prompts one at a time. A sweep cannot clear them.
+### Order matters in a sweep, even now that every rule is mechanical
 
 **Bulk reading is not triage, and the finding count cannot tell you which you did.** A sweep clears the
-three mechanical rules. It cannot clear the two prompts, because each needs a judgement per finding.
+five mechanical rules, and as of 2026-09-12 every rule in a default run is mechanical. No rule here
+needs a judgement per finding any more. What a sweep still cannot do is reorder the interacting pair —
+see "`SentenceLength` and `ParagraphLength` trade against each other" below.
 Both look identical afterwards: a number.
 
 So when you report a file as linted, say which half you did. "Zero on the mechanical rules" is a
@@ -265,42 +272,42 @@ tell you this, because the regex never sees what the Markdown scoper removed fir
 **Never put `that's` through a mechanical sweep.** It expands to _that is_ or _that has_ by context,
 and only the sentence tells you which. Expand this one by hand and read each site.
 
-### `STE.ProcedureLength` — act only on genuine steps
+### `Procedure.ProcedureLength` — act on every finding
 
-20-word cap, applied to list items. **The rule's own header concedes that Vale cannot tell procedural
-from descriptive text.** It uses list items as a proxy, and over-counts a multi-sentence item.
+20-word cap on a **numbered** list item. A bullet is never flagged, however long: the marker is the
+discriminator, and a numbered item is a procedure by definition. **Act on every finding** — state one
+instruction per step and move the reasoning to prose below the list.
 
-Ask of each finding: **is this bullet a step, or a statement?**
+**This replaced `STE.ProcedureLength` on 2026-09-12, and the old judgement step is gone.** That rule
+capped every list item, so it fired on this repo's house bullet style — a rule carrying its own
+reason. The article then had to tell you to classify a whole file's bullets at once and leave them.
+369 findings became 56. If you are looking for the step-or-statement question, it no longer exists: a
+statement written as a bullet is now silently correct.
 
-- **A step** — a numbered procedure, an ordered instruction. Act: state one instruction per item and
-  move the reasoning to prose below the list.
-- **A statement** — a definition, a ruling, a hazard, a role's disposition. Leave it. Forcing a ruling
-  under 20 words drops the qualifiers that carry it, which is worse prose bought with a cleaner number.
+**One exemption survives and it is real.** A numbered item inside a fenced code block is a worked
+example, not an instruction. The rule skips fences, so you should not see one; if you do, that is a
+defect in the rule rather than prose to fix.
 
-**Classify the article's bullet convention first, once, and record the count.** On a rules article the
-answer is usually "statement" for every finding at once. This repo writes a rule as a bullet carrying
-its own reason, so the rule fires on the house style. Do not reach the same verdict fifty-six times.
+### `Procedure.OneInstruction` — act on every finding
 
-**A role file is where this rule and landed practice disagree, and the disagreement is open.** You may
-leave a genuine step unacted there, because the remedy separates a step's reasoning from the step it
-qualifies. Record the classification and the count in your commit if you do. **Do not settle
-the tension inside one file**: the ruling belongs at article level, and a silent unilateral divergence
-is the worst option.
+Fires on `, then` or `and then` **followed by an imperative verb**. That verb is the discriminator:
+two verbs are two actions, and a shared verb is one instruction with an ordering inside it. **Act on
+every finding** — give the second action its own sentence or its own numbered step.
 
-### `STE.OneInstruction` — act only on genuine chains
+**This replaced `STE.OneInstruction` on 2026-09-12**, which matched the connective alone and so could
+not tell a chain from a list. 11 findings became 4. The three false-positive classes the article used
+to enumerate are now rejected by the rule itself:
 
-Fires on `and then`, `, then`, `after that/which`, `while …ing`, `at the same time`, in list items.
+- **A specified order, not two actions.** "Settle SentenceLength first, then ParagraphLength" shares
+  one verb. Not flagged.
+- **A plain list.** "modules, then hooks, then components" has no verb after the connective. Not
+  flagged.
+- **A prohibition on concurrency.** "Do not run X and Y at the same time" — the old rule's advice
+  would have **inverted** it by splitting one prohibition into two instructions. The token is no
+  longer matched at all.
 
-Three false-positive classes, and the second is dangerous rather than noisy:
-
-1. **A specified order, not two actions.** "Write JSDoc, then `// prettier-ignore`, then the
-   declaration" is one instruction whose content **is** the ordering. Splitting it destroys the rule.
-   Where it fires like this, reach for the other rule — state the sequence as a numbered list.
-2. **A prohibition on concurrency.** "Do not run `npm run test:mutation` and `npx playwright test` at
-   the same time" trips the token, and this rule's advice would turn one prohibition into two
-   instructions, **inverting it**. Following the tool here is worse than ignoring it.
-3. **Descriptive prose in a bullet.** The rule's scope is list items, not instructions, so a `while
-…ing` gerund describing how something works is flagged though it instructs nobody.
+Both fixtures in `vale-styles/fixtures/` pin these: `OneInstruction.good.md` carries the list and
+specified-order shapes verbatim, and reports nothing.
 
 ### `STE.PassiveVoice` — write in the active voice; the rule no longer sweeps
 

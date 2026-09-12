@@ -71,8 +71,8 @@ Two habits that caught more than care did:
 Why this matters more here than elsewhere: every other artifact has a reviewer upstream of `hardener`. `features/` has `architect` CONTRACT and `product` VERIFY. `src/` has `cleaner` and `architect` REVIEW. `rules/` has its own fixture. Documentation authored from this seat has none. **A green gate is not evidence a comment is true**: a false `.feature` step reds, a false comment never does.
 
 **`npm run prose-lint` is the mechanical half of this.** Vale is report-only. Nothing reads its exit
-code. Of its six enabled rules, five surface in a default run — three to obey and two prompts to look
-— and `PassiveVoice` sits below `MinAlertLevel`. So the script fails only when it **cannot lint**.
+code. Of its six enabled rules, five surface in a default run and all five are mechanical;
+`PassiveVoice` sits below `MinAlertLevel`. So the script fails only when it **cannot lint**.
 
 That means no binary, no `.vale/`, a config that will not load, or
 an empty file list. A run that cannot lint reports zero. That zero reads exactly like a clean pass,

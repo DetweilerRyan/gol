@@ -1,0 +1,62 @@
+# Replaces STE.OneInstruction, which matches the CONNECTIVE alone and so fires on
+# any `, then` / `and then`. Read in full, most of its findings are false: a plain
+# list (`modules, then hooks, then components`) and a specified order (`Settle
+# SentenceLength first, then ParagraphLength`) are not two actions, and prose.md
+# says so. The discriminator is an IMPERATIVE VERB after the connective.
+#
+# Measured 2026-09-12 over the 23 enabled .md files: STE 11 findings, this rule 4.
+# The four are `Commit ... first, then report back` and three of `... then stop`,
+# all genuine two-verb chains.
+#
+# SCOPE IS `raw` AND THAT IS LOAD-BEARING, NOT A PREFERENCE. Vale interprets the
+# offsets a script returns as offsets into the WHOLE FILE. Under `scope: sentence`
+# the script receives one sentence, so sentence-relative offsets are misread: a
+# finding on line 3 was reported at 1:43, and two matches computing the same begin
+# collapsed to one finding. Both failures are silent. Measured, and the reason the
+# first version of this rule reported 2 rather than 4.
+#
+# The fence guard is not decorative: a numbered or chained line inside a ``` block
+# is a worked example, not an instruction. Measured on the sibling rule, one of 57
+# findings was exactly that.
+#
+# AUTHORING NOTES for anyone editing the Tengo below, each of which cost a probe:
+#   - `re_find`'s argument order is (pattern, text, count). Reversing it produces
+#     out-of-range offsets, and Vale answers those with a Go PANIC and a stack
+#     trace rather than a clean error.
+#   - A Tengo string literal consumes one backslash level, so `\s` must be written
+#     `\\s`. Written singly the rule silently matches nothing and reports clean.
+#   - A nested group inside an alternation raises `slice bounds out of range`. The
+#     flat 19-branch alternation below is fine.
+#   - A rule-level `message` with `%s` interpolates the MATCHED SPAN, never a
+#     count. A per-match `message` key overrides the rule message; the sibling
+#     rule uses it for its word count.
+#
+# OVER-FIT GUARD: the verb list is generic imperative English. It quotes no slice
+# name, tool name or incident phrasing from this repo, so the rule was not shaped
+# to the corpus it was measured on.
+extends: script
+# The message deliberately names no rule. It once cited the STE rule this replaces,
+# which made every finding match a grep for that now-disabled name -- and did so in
+# the author's own measurement of whether the swap had worked.
+message: 'Two instructions chained. State one action per step; the second belongs in its own sentence or step.'
+level: warning
+scope: raw
+script: |
+  text := import("text")
+  matches := []
+  pat := "(?i)(,\\s+then|and\\s+then)\\s+(run|read|write|report|commit|split|add|remove|fix|check|confirm|use|keep|record|stop|apply|move|delete|revert|rerun)\\b"
+  offset := 0
+  fenced := false
+  for line in text.split(scope, "\n") {
+    if text.has_prefix(text.trim_space(line), "```") {
+      fenced = !fenced
+    } else if !fenced {
+      found := text.re_find(pat, line, 100)
+      if found {
+        for m in found {
+          matches = append(matches, {begin: offset + m[0].begin, end: offset + m[0].end})
+        }
+      }
+    }
+    offset = offset + len(line) + 1
+  }
