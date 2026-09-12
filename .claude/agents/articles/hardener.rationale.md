@@ -101,3 +101,33 @@ The inverse is what matters and is what the rule keeps. Incremental mode fails s
 than needed and never falsely reuses a stale result — so a fast run is never evidence that something
 was checked. The cache lives at `reports/stryker-incremental.json` and is gitignored, so a fresh clone
 pays full cost on its first run. That is the safe default rather than a misconfiguration.
+
+## What mid-cycle re-invocation closes
+
+`hardener.md` says the role may be re-invoked when an adjudicated fix touches `src/`.
+
+The hole it closes belonged to the old four-pack pipeline. Under it, `qa` fixed its own findings and
+re-ran only build, property, CRAP and DRY — so a late-cycle fix never saw the mutation gates at all.
+Re-invoking the whole sequence is what makes an adjudicated fix as gated as the original
+implementation.
+
+## Why the spike check is two commands rather than a judgement
+
+`hardener.md` tells the role to run `git status --porcelain -- src/ scripts/` and
+`git log --grep='[spike]' -- src/ scripts/`, and to stop if either returns anything.
+
+A spike implementation satisfies a **provisional** contract — one still being drafted when the spike
+ran. Nobody commits one. The failure the pair prevents is un-gated code reaching `main` behind a
+contract that was never ratified, which is not a thing a later stage can detect: the code compiles,
+the tests pass, and nothing records that the contract it answers was a draft.
+
+## Why stage 8 runs last, and stage 2 does not
+
+Both positions are about what a stage's own remediation invalidates.
+
+`agent-doc-check`'s fixes are prose in `.claude/**` and `CLAUDE.md`, with nothing downstream to
+invalidate, so it is safe last. Measured at the time: about 1s wall, of which the checking itself is
+sub-100ms and the rest is `tsx` startup.
+
+`reference-check`'s fixes are comment-only edits to `src/` and `scripts/`, which move both `crap4ts`
+and Stryker's incremental cache, so it has to precede them.
