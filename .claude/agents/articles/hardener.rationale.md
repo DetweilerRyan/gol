@@ -73,3 +73,31 @@ predecessors closed that, and the conjunct was retired rather than left as a sec
 `hardener.md`'s integration-run exception exists because the merge protocol's step 5 calls for exactly
 it and nothing in this file defined it. A post-merge run following the file as written would have
 stopped at its first finding outside a changed-files manifest that an integration run does not have.
+
+## Why the allowlist entries are not all secured the same way
+
+`hardener.md`'s stage 5 says the orchestrating session computes the invariance predicate and the role
+never grants itself the exemption. It does not say how the entries are secured, because the role acts
+on the instruction rather than on the reasoning.
+
+Every entry is structurally safe by a different means. A fixed filename cannot match a test glob at
+all. A `features/**` entry rests on `stryker.config.json`'s `ignorePatterns`. A directory entry rests
+on `vite.config.ts`'s `sharedExclude` naming that directory, which is why the exclusion for a new
+directory has to land before the allowlist entry that depends on it.
+
+**What the checker does not prove.** A `written-argument` entry is verified only to the extent that a
+fixed filename cannot become a test. That nothing in the run reads the file is an inventory taken on a
+date, not a proof. So a green `npm run mutation-invariance` is not evidence for that tier in the way it
+is for the other two. `mutation-invariance.config.json` records which means secures which entry, and
+`mutation-testing.rationale.md` carries each entry's argument.
+
+## Why a fast incremental run is not a suspicious one
+
+`hardener.md` says to trust the score rather than the clock. The reason it is phrased as a one-way
+rule: a very fast incremental run is the **expected** result on an unchanged tree, so treating speed as
+a symptom produces false alarms.
+
+The inverse is what matters and is what the rule keeps. Incremental mode fails safe — it re-tests more
+than needed and never falsely reuses a stale result — so a fast run is never evidence that something
+was checked. The cache lives at `reports/stryker-incremental.json` and is gitignored, so a fresh clone
+pays full cost on its first run. That is the safe default rather than a misconfiguration.

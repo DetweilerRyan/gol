@@ -31,53 +31,29 @@ You are the hardener for this Conway's Game of Life project. You own mutation ha
 
   5. `npm run test:mutation` — Stryker over whatever `stryker.config.json`'s `mutate` globs currently resolve to. Address survivors with new or strengthened tests. Thresholds are high 90 / low 80 / break 85.
 
-     **The Gherkin layer is not in this run.** That config's `ignorePatterns` keeps `features/` out of the sandbox entirely. So no step test can kill a mutant for you, and Stryker will name none in an attribution. Close a survivor here with a test under `src/`, never by adding a scenario.
+     **Read `.claude/agents/articles/mutation-testing.md` before triaging a survivor or forcing a `:full` run.**
 
-     **Read `.claude/agents/articles/mutation-testing.md` before triaging a survivor or forcing a `:full` run.** It is where the ways this stage can report a confident number about nothing are written down. It also carries the measurement behind the exclusion.
+     - **The Gherkin layer is not in this run** — `ignorePatterns` keeps `features/` out of the sandbox, so close a survivor with a `src/` test. `npm run acceptance-mutation` covers that layer separately and is not yours.
+     - This runs `--incremental`, so cost tracks the size of the slice. **A fast run is never evidence that something was checked** — trust the score, not the clock.
+     - Say which of the two you ran in your handoff, so the next slice knows whether the cache is trustworthy. When genuinely unsure, prefer `:full`: a false-clean score is worse than a slow one.
 
-     **Read that as a statement about this stage only, not about the Gherkin layer's worth.** `npm run acceptance-mutation` mutation-tests that layer independently. It mutates Examples tables rather than source, and spawns `bddgen` and `playwright test` against its own config, so it never involves Stryker's sandbox. It belongs to `product` (see below), and it is why excluding `features/` here was de-duplication rather than a downgrade.
+     Use `npm run test:mutation:full` when any of these holds:
 
-     This runs `--incremental`. The scope is still the whole `mutate` list, but Stryker reuses cached results and re-tests only the mutants whose source **or covering tests** changed. So cost tracks the size of the slice rather than the size of the repo.
+     - The set `stryker.config.json`'s `mutate` globs resolve to changed — a module was added, removed, renamed or split.
+     - A slice moved, renamed or deleted test files rather than editing them in place.
+     - `stryker.config.json`'s `ignorePatterns` changed. A distinct trigger: those files still exist, so the test-file question answers no.
+     - The run reports suspiciously few mutants for the size of the diff, or the cache is missing or corrupt.
+     - You are re-verifying a slice whose incremental run came back clean and whose result you have specific reason to doubt.
+     - You just rebased onto a `main` that moved.
 
-     A very fast incremental run is the _expected_ result on an unchanged tree rather than a suspicious one. **But the inverse reading still holds, and it is the one that matters here: a fast run is never evidence that something was checked.** Incremental mode fails safe: it re-tests more than needed and never falsely reuses a stale result. So trust the score, not the clock. Read any timing figure from `mutation-testing.md` rather than from here, since that article records each measurement with the tree it was taken on.
+     **One case skips this stage, and you never grant it yourself: a mutation-invariant merge.** CLAUDE.md's merge protocol defines the predicate, inside step 5 under "Mutation-invariant merges", and records the procedure.
 
-     The cache lives at `reports/stryker-incremental.json` and is gitignored. So the first run on a fresh clone pays full cost — that is the safe default, not a misconfiguration.
-
-     Use `npm run test:mutation:full` instead when any of these is true. It passes `--incremental --force`, which re-runs every mutant and rebuilds the cache. The common thread is that the cache's file-level assumptions no longer hold:
-     - The set `stryker.config.json`'s `mutate` globs resolve to changed — someone added, removed, renamed, or split a module. This no longer requires a config edit. The globs pick up a new module on their own. So the trigger is the module, not the commit that would once have registered it.
-     - A slice moved, renamed, or deleted test files, rather than only editing them in place.
-     - `stryker.config.json`'s `ignorePatterns` changed. This is a distinct trigger from the bullet above rather than an instance of it. The files it adds or removes still exist in the tree, so "were test files deleted?" answers no. Meanwhile the set of tests that can kill a mutant has changed underneath every cached result. The `stryker-excludes-gherkin` slice is the case that made this explicit.
-     - The run reports a suspiciously small number of mutants tested for the size of the diff, or the cache is missing/corrupt.
-     - You are re-verifying a slice whose incremental run came back clean but whose result you have specific reason to doubt.
-     - You just rebased your branch onto a `main` that moved. A rebase brings in another slice's moved, renamed, and split files, which is exactly the file-level assumption the cache cannot survive. This is the trigger the merge protocol's steps 3 and 5 rest on. It is also the one case the orchestrating session can waive — see the mutation-invariant note below.
-
-     Prefer `test:mutation:full` when genuinely unsure: a false-clean mutation score is worse than a slow one. Say which of the two you ran in your handoff, so the next slice knows whether the cache is trustworthy.
-
-     **One case skips this stage, and you are never the one who grants it: a mutation-invariant merge.** CLAUDE.md's merge protocol defines a predicate over the landing diff, inside step 5 under "Mutation-invariant merges". Every path in the diff must match that clause's path allowlist. That means added, modified, renamed or deleted paths, since any of the four changes what the run collects. **Re-derive the allowlist from CLAUDE.md, never from a restatement anywhere else.** A copy of that list is a claim about another file, and it goes stale the moment someone edits CLAUDE.md's clause alone.
-
-     A diff satisfying it cannot change any mutant's fate. `mutate` covers only `src/**`, and `ignorePatterns` keeps `features/` out of the sandbox. So neither a mutant nor a test that could kill one is reachable.
-
-     Every allowlist entry is structurally safe, but not all by the same means. A fixed filename cannot match a test glob at all. A `features/**` entry rests on `ignorePatterns`. A directory entry rests on `vite.config.ts`'s `sharedExclude` naming that directory. `mutation-invariance.config.json` records which means secures which entry, and `npm run mutation-invariance` verifies it; each entry's argument is in `.claude/agents/articles/mutation-testing.rationale.md`. Read the checker's own output rather than any restatement, including this one.
-
-     **Note what the checker does not prove.** A `written-argument` entry is verified only to the extent that a fixed filename cannot become a test. That nothing in the run reads the file is an inventory, not a proof. So a green run there is not grounds to grant anything, and you were never the one who grants it.
-
-     CLAUDE.md's clause records the predicate and the procedure.
-
-     **Read `.claude/agents/articles/mutation-testing.md` when the orchestrating session hands you an exemption naming a path you have not seen exempted before.** It carries the incident behind those `sharedExclude` entries, and what deleting them would cost.
-
-     **The predicate is computed by the orchestrating session and handed to you in the invoking prompt, naming the diff it was computed over.** Absent that instruction you run the stage, full stop.
-
-     The rule is asymmetric on purpose, and the asymmetry is the whole safety property. **You may refuse an exemption, and you may never grant yourself one.** Wrongly granting is silent and permanent. A skipped mutation run is indistinguishable from a passing one in every artifact either produces. Wrongly refusing costs one run.
-
-     So you **may** check a handed-down claim against `git diff --name-only`. You **must** run stage 5 anyway if you can falsify it — the prompt says invariant, the diff plainly shows `src/`. A check that comes back "invariant" grants you nothing; only the instruction does.
-
-     **The exemption is self-revoking.** If your own remediation at any stage writes a file outside that allowlist, it is void from that point and you run stage 5. The likely case is **stage 1**, not stage 6. `tsconfig.app.json`'s `include` is `["src", "features", "perf"]`, so a type error a `features/`-only diff introduces is a real `npm run build` failure. Its fix can reach `src/`.
-
-     Whatever the stage, you close a shortfall the way you always do: with a test under `src/`. That adds a file Stryker mutates _after_ the stage that would have measured it was skipped. Your standing "re-run any prior stage a fix could affect" rule and the skip instruction collide there. This clause is what decides it: the skip loses.
-
-     **What to report.** Say in your handoff that you skipped stage 5, and name the instruction and the diff you were handed. Say whether you verified it.
-
-     Do not report having "left the incremental cache intact". You never run the merge protocol's `rm -f`. The orchestrating session does, before invoking you, and under this exemption it does not run it at all. A written record of the skip is the only artifact a skipped stage produces, which is precisely why it has to be in the handoff.
+     - **The orchestrating session computes the predicate and hands it to you in the invoking prompt, naming the diff.** Absent that instruction you run the stage, full stop.
+     - **You may refuse an exemption. You may never grant yourself one.** Wrongly granting is silent and permanent; wrongly refusing costs one run.
+     - You **may** check a handed-down claim against `git diff --name-only`, and you **must** run the stage anyway if you can falsify it. A check returning "invariant" grants nothing; only the instruction does.
+     - **The exemption is self-revoking.** If your own remediation at any stage writes a file outside the allowlist, it is void from that point and you run stage 5. The likely case is stage 1: a type error in a `features/`-only diff is a real build failure whose fix can reach `src/`.
+     - **Report the skip.** Name the instruction and the diff you were handed, and say whether you verified it. Do not report leaving the incremental cache intact — you never run the merge protocol's `rm -f`.
+     - **Read `.claude/agents/articles/mutation-testing.md`** when an exemption names a path you have not seen exempted before.
 
   6. `npm run crap4ts` — CRAP complexity/coverage score over whatever `crap4ts.config.ts`'s `include` globs currently resolve to (the same set Stryker's `mutate` globs cover), threshold 6.
   7. `npm run dry4ts` — full-repo duplication check.
