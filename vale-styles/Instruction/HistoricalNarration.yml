@@ -18,7 +18,7 @@
 # None quotes this repo's slice names, tool names or incident phrasing, so the
 # rule was not shaped to the corpus it was measured on.
 extends: existence
-message: "'%s' reads as narration about this repo's history. State the current rule; the account of how it changed goes to the .rationale.md sidecar (prose.md, 'Instruction stays. Explanation moves.')."
+message: "'%s' reads as narration about this repo's history. State the current rule; the account of how it changed goes to the .meta.md sidecar (prose.md, 'Instruction stays. Explanation moves.')."
 level: warning
 ignorecase: true
 tokens:

@@ -84,7 +84,7 @@ them depends on the ownership question.
    today are observability, missing affordance, altitude, and what the runner
    compiles a scenario into. Add: **does the contract document itself?** Review
    the JSDoc on the drafted step and screenplay modules, and any
-   `<module>.md` / `<module>.rationale.md` sidecar the draft carries, against
+   `<module>.md` / `<module>.meta.md` sidecar the draft carries, against
    `doc-comments.md`'s rules — the interface/implementation split, the hover
    budget, the information test, and the sidecar tier's own placement rule.
    Keep the mode's existing boundary intact: `architect` writes no code and no

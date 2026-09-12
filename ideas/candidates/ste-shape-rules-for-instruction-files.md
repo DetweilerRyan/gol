@@ -26,7 +26,7 @@ around that — read the sections below with the following corrections in front 
 **So what remains here is the vocabulary, and the question of whether a shape rule can be stated well
 enough for a second author to apply.** On the second, the sweep returned a narrower answer than this
 file assumes: of twelve rules, exactly three apply mechanically and three more need a reader. That is
-recorded in `prose.rationale.md` and it is the strongest evidence against this candidate's own
+recorded in `prose.meta.md` and it is the strongest evidence against this candidate's own
 premise, so read it before promoting any part of this.
 
 ## Context
@@ -278,7 +278,7 @@ MinAlertLevel = suggestion
 [.claude/agents/**/*.md]
 BasedOnStyles = Vale, STE
 
-[**/*.rationale.md]
+[**/*.meta.md]
 BasedOnStyles = Vale
 ```
 
@@ -415,7 +415,7 @@ growing `engineering.md` would be.
 - **It is authored when this candidate's slice lands, not before.** An article describing a convention nothing yet
   follows documents an intention, and this repo has measured what undated present-tense claims about the
   tree cost it.
-- **It ships as `<name>.md` plus `<name>.rationale.md`** — written under the tier
+- **It ships as `<name>.md` plus `<name>.meta.md`** — written under the tier
   `rationale-sidecar-pilot` establishes. That is deliberate: the cheapest available test of whether the split is workable is to write
   something new in it, where there is no entangled prose to rewrite and nothing to lose if the answer is
   no.
@@ -444,7 +444,7 @@ Every open tool above states it approximates ASD-STE100 and is not ASD-certified
 `architecture.md` (the two demonstration paragraphs), `CLAUDE.md`'s conventions list (one pointer
 sentence, per the routing test). The Vale side widens `.vale.ini` and adds
 `.vale/config/vocabularies/<name>/{accept,reject}.txt`. A new article, working name `prose.md`,
-shipped as an instruction file plus its own `.rationale.md` sidecar, together with its pointer line in
+shipped as an instruction file plus its own `.meta.md` sidecar, together with its pointer line in
 CLAUDE.md and a read trigger in each role file that needs one. If the vocabulary staleness check is
 built, `scripts/agent-doc-check/`. If `jyooi/agent-simple-english` is adopted as a Claude Code plugin
 instead, `.claude/settings.json` rather than the Vale paths.

@@ -161,7 +161,7 @@ that is the axis that matters, not implementation cost.
 1. **Write the mechanism down — LANDED, and no longer part of this slice.**
    `doc-comments.md` Part 2 §7's first hover hazard now names the write path rather than
    recency, gives the refresh idiom, and records that a `Read` does not enrol a file. The
-   measurements sit in `doc-comments.rationale.md`, the register they belong to and one
+   measurements sit in `doc-comments.meta.md`, the register they belong to and one
    exempt from every Vale rule. `workflow.md` carries a peer rule under its own
    "Language server" heading, because that file is read unconditionally by all five roles
    and by the orchestrating session while `doc-comments.md` is trigger-read by three —

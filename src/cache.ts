@@ -1,5 +1,5 @@
 // Deliberately MUTABLE rather than immutable, and that is a performance
-// ruling rather than an oversight. See src/cache.rationale.md for the argument in full.
+// ruling rather than an oversight. See src/cache.meta.md for the argument in full.
 
 type KeyPath = unknown[]
 
@@ -357,7 +357,7 @@ export interface Cache<TKeyPath extends unknown[], T> extends ReadonlyCache<TKey
  * @throws CacheError if `initialEntries` contains two entries at the same
  * key path -- seeding inserts them one at a time.
  *
- * @see {@link ./cache.rationale.md}
+ * @see {@link ./cache.meta.md}
  */
 export function createCache<TKeyPath extends unknown[], T>(
   initialEntries?: Iterable<[TKeyPath, T]>,

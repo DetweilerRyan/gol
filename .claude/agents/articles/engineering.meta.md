@@ -74,7 +74,7 @@ files rather than inside one sentence.** Dropping the numeral ended it without e
 
 **Eighteen edits across the two split slices established the three classes.** Ten in
 `quality-tooling.md` and eight in `testing-layers.md`. The per-slice edit lists are in
-`quality-tooling.rationale.md` and `testing-layers.rationale.md`, under the heading each carries about the
+`quality-tooling.meta.md` and `testing-layers.meta.md`, under the heading each carries about the
 ruling.
 
 **One edit is worth naming here, because it shows the class is not obvious.** `testing-layers.md` said
@@ -130,7 +130,7 @@ carried over.
 
 `black-box-acceptance-pilot`'s defect duel published one row's conclusion into `CLAUDE.md` and recorded the table nowhere. When that row turned out to be wrong, nothing said what the other rows were, so none could be re-checked. The error was catchable only because `product` independently re-derived that one row.
 
-`architect.rationale.md` records the same duel from the other side, as a conclusion written down at a wider scope than the command that produced it. Read the scope half there rather than restating it here.
+`architect.meta.md` records the same duel from the other side, as a conclusion written down at a wider scope than the command that produced it. Read the scope half there rather than restating it here.
 
 ## The six published mechanism errors
 

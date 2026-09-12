@@ -23,7 +23,7 @@
 // backticked filename rather than a Markdown link -- measured 2026-09-09 at
 // 1,448 backticked `.md` tokens against 4 link-form ones. Every off-the-shelf
 // link checker reads links, so none of them sees the 1,448. See
-// doc-comments.rationale.md for the three tools evaluated and rejected.
+// doc-comments.meta.md for the three tools evaluated and rejected.
 //
 // `sh` was added later: this alternation is an allowlist, and any other
 // extension -- `sh` included, before this -- was invisible to
@@ -48,7 +48,7 @@ function isDiscardedToken(token: string): boolean {
   // dotted-relative noise with no filename of its own (a bare `.ts` matched
   // with a zero-length prefix). Checking the basename rather than the raw
   // token is the fix for Gaps 2 and 3: a genuinely relative citation like
-  // `./cache.rationale.md` or `../scrollbars.rationale.md` now resolves by
+  // `./cache.meta.md` or `../scrollbars.meta.md` now resolves by
   // its basename instead of being discarded outright, and a dot *directory*
   // segment (`.vale/`, `.claude/`) no longer hides everything beneath it --
   // only a token whose own filename half starts with `.` is still noise.
@@ -61,7 +61,7 @@ function isDiscardedToken(token: string): boolean {
  * Every `<name>.ts`/`.tsx`/`.yml`/`.yaml`/`.md`/`.sh`-shaped token on `line`,
  * minus glob fragments (any token containing `*`) and dotted-relative noise
  * (any token whose basename starts with `.`). A genuinely relative token
- * (`./<name>.md`, `../<other>.rationale.md`) is kept and resolved by its own
+ * (`./<name>.md`, `../<other>.meta.md`) is kept and resolved by its own
  * basename -- this checks that the *name* resolves somewhere in the repo,
  * not that the relative path in front of it is right.
  */

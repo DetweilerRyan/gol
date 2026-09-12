@@ -84,7 +84,7 @@ instruction-versus-explanation rule is the right idea at the wrong granularity f
 
 Four destinations, and CLAUDE.md's branches already name three:
 
-- **A role's own `.rationale.md` sidecar.** `architect`, `cleaner` and `hardener` have one; `coder` and
+- **A role's own `.meta.md` sidecar.** `architect`, `cleaner` and `hardener` have one; `coder` and
   `product` do not and would gain one. This is the default destination and takes the arguments.
 - **A shared article**, when the reasoning binds more than one role.
 - **A `scripts/` sidecar**, when the explanation is really about a program rather than about a role.
@@ -93,7 +93,7 @@ Four destinations, and CLAUDE.md's branches already name three:
 
 ### 3. A role file never points at its own sidecar
 
-**Ruled by the user on 2026-09-11.** A role file carries no reference to its `.rationale.md` sidecar,
+**Ruled by the user on 2026-09-11.** A role file carries no reference to its `.meta.md` sidecar,
 and no instruction about when to read one. A role does not change its own file, so the rationale is
 not addressed to it. A pointer is unnecessary at best and dangerous at worst: it invites the role to
 read material that argues about rules rather than stating them, which is the exposition this whole
@@ -104,7 +104,7 @@ entry exists to remove — reintroduced by the very sentence that routed it away
 
 **Measured 2026-09-11, and it is not one line.** Across the four role files with a sidecar there are
 **21 pointers**: `architect.md` 8, `hardener.md` 7, `cleaner.md` 5, `coder.md` 1. Most take the form
-"the worked example is in `<role>.rationale.md`" or "the measurement is in `<role>.rationale.md`" —
+"the worked example is in `<role>.meta.md`" or "the measurement is in `<role>.meta.md`" —
 a sentence whose whole content is that an argument exists elsewhere.
 
 `coder.md`'s was removed when this was ruled. **The other 20 are follow-up work**, one per role file,
@@ -115,7 +115,7 @@ and each strip clears its own.
 ### 4. An article never points at its own sidecar either
 
 **Ruled by the user on 2026-09-11, extending rule 3.** Reading an article is for instruction that guides
-execution. An agent in a normal pipeline has no reason to read a `.rationale.md` sidecar for an
+execution. An agent in a normal pipeline has no reason to read a `.meta.md` sidecar for an
 article, so the article carries no pointer to one.
 
 **Measured 2026-09-11: 64 pointers across nine articles.** `engineering.md` 11;
@@ -126,7 +126,7 @@ article, so the article carries no pointer to one.
 holding. A role or an article sidecar argues about a rule, and the reader is following the rule
 rather than changing it. A module sidecar belongs to whoever is **changing that module** — the
 reader has the call site in front of them and the pointer is how they reach the reasoning. So
-`CLAUDE.md`'s branches 4 and 5 keep the mandated `@see {@link ./<name>.rationale.md}` form.
+`CLAUDE.md`'s branches 4 and 5 keep the mandated `@see {@link ./<name>.meta.md}` form.
 
 ### 5. Examine every instruction that has an agent updating an article
 
@@ -520,7 +520,7 @@ correct finding on the strength of an unrelated normalisation. The fact took thr
 
 **The same mechanism breaks `agent-doc-check`'s check 3**, which is line-anchored by design: a retired
 role name and its historical qualifier must share a line, and a prettier reflow separates them. That
-fired twice this session, on `product.rationale.md` and `architect.rationale.md`.
+fired twice this session, on `product.meta.md` and `architect.meta.md`.
 
 **A false negative here is the dangerous direction.** It says a claim was lost when it was routed, and
 the fix is to write it a second time — leaving two copies to drift, which is the defect this whole
@@ -540,14 +540,14 @@ That census is what makes an aggressive cut safe, and it is the reason this can 
 **Only after the rewrite**, and on the evidence it produces. A rule that detects an eight-sentence
 paragraph in a role file, or a past-tense narrative sentence, is a plausible guard against
 re-accumulation. `HistoricalNarration` — deferred by the prior spike at precision 8/9 — is the
-existing candidate and its YAML and fixtures are recorded in `prose.rationale.md`.
+existing candidate and its YAML and fixtures are recorded in `prose.meta.md`.
 
 **A guard against regrowth is worth more here than a compression tool**, because the files did not
 arrive verbose. They grew that way one good paragraph at a time.
 
 ## Touches
 
-`.claude/agents/*.md` — all five. New `coder.rationale.md` and `product.rationale.md` in
+`.claude/agents/*.md` — all five. New `coder.meta.md` and `product.meta.md` in
 `articles/`, which is where a role sidecar is forced to live. Possibly `scripts/*/` sidecars.
 `prose.md`, whose instruction-versus-explanation section this refines at a coarser
 granularity. `CLAUDE.md`'s documentation map, if a sidecar is added.

@@ -1,4 +1,4 @@
-# CLAUDE.rationale.md
+# CLAUDE.meta.md
 
 Evidence behind the rulings in `CLAUDE.md`, under the sidecar convention that file's own
 "Where new documentation goes" branch 5 states. **Nothing here constrains an action.** Every
@@ -14,16 +14,16 @@ rule in `CLAUDE.md` is being changed, never in order to follow one.
 reads the direct `.md` children of `.claude/agents/` as the agent roster, so a prose file
 there fails the frontmatter check outright. No comparable mechanism reaches a root-level
 `.md`. Branch 5's literal wording — a sidecar goes _beside the article_ — would have put
-this one at `CLAUDE.rationale.md` in the repo root, and nothing would have refused it.
+this one at `CLAUDE.meta.md` in the repo root, and nothing would have refused it.
 
 The repo root was rejected on **checker reach**, measured 2026-09-10 by writing a file
 carrying one deliberately unresolvable filename token and one deliberately unresolvable
 `npm run` reference, then running both gates from each location in turn:
 
-| Placement                                     | `npm run reference-check`        | `npm run agent-doc-check`        |
-| --------------------------------------------- | -------------------------------- | -------------------------------- |
-| `.claude/agents/articles/CLAUDE.rationale.md` | scanned; reported the bad token  | checked; reported the bad script |
-| `CLAUDE.rationale.md` (repo root)             | not scanned; reported no failure | not checked; reported no failure |
+| Placement                                | `npm run reference-check`        | `npm run agent-doc-check`        |
+| ---------------------------------------- | -------------------------------- | -------------------------------- |
+| `.claude/agents/articles/CLAUDE.meta.md` | scanned; reported the bad token  | checked; reported the bad script |
+| `CLAUDE.meta.md` (repo root)             | not scanned; reported no failure | not checked; reported no failure |
 
 The scan counts moved with it on that date. `reference-check` scanned 422 files with the
 sidecar in `articles/` and 421 with it at the root; `agent-doc-check` read 33 doc files
@@ -42,7 +42,7 @@ of the state on the date measured, not a claim about the checker's scope today.
 Auto-load is a non-discriminator. Neither location is auto-loaded, so it separates nothing
 and the decision does not rest on it.
 
-Vale is a non-discriminator too. `.vale.ini`'s final `[**/*.rationale.md]` section reaches
+Vale is a non-discriminator too. `.vale.ini`'s final `[**/*.meta.md]` section reaches
 both, so this file is exempt from every rule either way, the same as the article sidecars
 beside it.
 
@@ -109,7 +109,7 @@ omission.
 ## Routing branches answer topic, never register — ruled 2026-09-10
 
 **Ruled by the user, in three steps on one day.** An instruction file carries instructions and its
-`.rationale.md` sidecar carries the explanation. That rule is itself an instruction about writing
+`.meta.md` sidecar carries the explanation. That rule is itself an instruction about writing
 prose, so it lives in `prose.md` rather than here. And these branches acknowledge that the
 pairs exist, as index work, while deferring every routing instruction between a file and its sidecar
 to that article.
@@ -123,12 +123,12 @@ stays. Explanation moves."
 goes when it answers **which half of a pair**.
 
 - **Where a sidecar physically sits** stayed. The role-file placement into `articles/` is forced by
-  `agent-doc-check`'s path glob, and `CLAUDE.rationale.md`'s by `reference-check`'s and
+  `agent-doc-check`'s path glob, and `CLAUDE.meta.md`'s by `reference-check`'s and
   `agent-doc-check`'s. That is a predicate a checker reads, which is branch 1's own reservation for
   this file.
 - **Branch 4's module carve-out** stayed. "Is this passage about `scrollbars.ts`, or about
   `architecture.md`'s rule?" is a subject question, and it is settled before register arises.
-- **Branch 4's register half went.** `<module>.md` against `<module>.rationale.md` is the same
+- **Branch 4's register half went.** `<module>.md` against `<module>.meta.md` is the same
   instruction-against-explanation cut under different filenames, so `prose.md` states it.
 
 **The precedent this follows** is branch 4 against `doc-comments.md`. That branch already routes module
@@ -141,5 +141,5 @@ that constrains conduct, which never moves, from one that only says why a rule i
 which never stays.
 
 **The sidecar index above is hand-maintained and nothing checks it.** A cheap extension to
-`agent-doc-check` would glob `*.rationale.md` under `.claude/agents/articles/` and compare it against
+`agent-doc-check` would glob `*.meta.md` under `.claude/agents/articles/` and compare it against
 the list. It is not built, and a wrong list fails safe: a reader looks and finds the file anyway.

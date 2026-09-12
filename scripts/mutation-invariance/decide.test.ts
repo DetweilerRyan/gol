@@ -62,7 +62,7 @@ function baseInput(overrides: Partial<DecideInput> = {}): DecideInput {
     vitestProjects: [{ name: 'unit', exclude: [] }],
     strykerIgnorePatterns: ['/features'],
     trackedFiles: new Set(['CLAUDE.md']),
-    rationaleText: 'features/** CLAUDE.md src/**',
+    metaDocText: 'features/** CLAUDE.md src/**',
     ...overrides,
   }
 }

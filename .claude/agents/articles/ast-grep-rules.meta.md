@@ -40,7 +40,7 @@ a script name and a marker name rather than slices, so the real figure is zero.
 The **pair grew** by 6,098 bytes, 42,467 to 48,565 — **+14.4%**, the largest growth of any split so far.
 The enumeration moved without shrinking, this file's framing prose is new, and closing `architect`'s
 findings added a further 751 bytes to the article. That is consistent with the finding recorded in
-`prose.rationale.md`: this tier redistributes rather than shortens, and only the instruction
+`prose.meta.md`: this tier redistributes rather than shortens, and only the instruction
 file's size moves in the intended direction.
 
 **This split moved rather than rewrote, and that was forced by the material.** 29,809 of the article's

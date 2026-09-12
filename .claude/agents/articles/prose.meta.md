@@ -188,7 +188,7 @@ error severity. The empty form is undemonstrated in Vale's own documentation and
 yield zero findings.
 
 **Emptying `BasedOnStyles` does not disable an explicitly-levelled rule.** Measured 2026-09-08: the
-sidecar section carried only `BasedOnStyles =` and leaked 78 findings onto `doc-comments.rationale.md`.
+sidecar section carried only `BasedOnStyles =` and leaked 78 findings onto `doc-comments.meta.md`.
 The exemption had genuinely worked earlier, when no rule carried an explicit level and the style list was
 the only thing turning rules on. It broke the moment rules were named individually — an explicit
 `STE.Rule = warning` activates that rule on its own, and `BasedOnStyles` replaces the style list rather
@@ -354,7 +354,7 @@ both before reaching for this fix on a third file.**
 
 **The scope change is one glob, and the sidecar exemption still wins because it is still last.** Verified in
 one invocation after the change: a role file reports findings, an article reports findings, a
-`*.rationale.md` sidecar reports zero, and no file reports `E201`.
+`*.meta.md` sidecar reports zero, and no file reports `E201`.
 
 **Widening the scope creates no obligation to fix what it revealed.** This article's own rule is to lint the
 file you are editing rather than the directory, so each role file is worked by the slice that edits it.

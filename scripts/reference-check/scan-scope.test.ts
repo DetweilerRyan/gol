@@ -73,7 +73,7 @@ describe('scanScopeOf', () => {
   it('includes a .md file outside .claude/** and outside CLAUDE.md/README.md', () => {
     expect(scanScopeOf(['vale-styles/JsDoc/README.md']).docFiles).toEqual(['vale-styles/JsDoc/README.md'])
     expect(scanScopeOf(['adr/README.md']).docFiles).toEqual(['adr/README.md'])
-    expect(scanScopeOf(['src/cache.rationale.md']).docFiles).toEqual(['src/cache.rationale.md'])
+    expect(scanScopeOf(['src/cache.meta.md']).docFiles).toEqual(['src/cache.meta.md'])
   })
 
   it('excludes an .md file sitting directly under ideas/ from the doc surface', () => {

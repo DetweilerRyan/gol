@@ -89,7 +89,7 @@ directory has to land before the allowlist entry that depends on it.
 fixed filename cannot become a test. That nothing in the run reads the file is an inventory taken on a
 date, not a proof. So a green `npm run mutation-invariance` is not evidence for that tier in the way it
 is for the other two. `mutation-invariance.config.json` records which means secures which entry, and
-`mutation-testing.rationale.md` carries each entry's argument.
+`mutation-testing.meta.md` carries each entry's argument.
 
 ## Why a fast incremental run is not a suspicious one
 

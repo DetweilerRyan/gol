@@ -55,7 +55,7 @@ CLAUDE.md itself was shrunk on exactly that logic. On that reading, the uncondit
 to split **hardest**. The two positions were not reconciled when this was written, and `engineering.md`
 — then 18,043 bytes of rationale, the largest mass in the corpus — was what hung on it. **Settled
 2026-09-09 by the user, for the second position**, and `split-engineering-article` acted on it. The
-ruling and what it did not concede are in `engineering.rationale.md`. The reconciling argument is
+ruling and what it did not concede are in `engineering.meta.md`. The reconciling argument is
 mandate 1: a closed-decision marker keeps the settled fact in the unconditionally-read file while the
 argument moves out, so the first position's concern is answered rather than overridden.
 
@@ -147,8 +147,8 @@ The pilot established these, and they are not optional. Seven, and mandates 4 th
    question moves out. One line per closed decision, naming the question and pointing at the sidecar,
    carrying the fact and never the argument.
 2. **Verify the sidecar is exempt — do not edit `.vale.ini`.** The exemption is glob-scoped to
-   `.claude/agents/articles/**/*.rationale.md`, so it already covers every future sidecar on creation.
-   Confirm it with one command: `vale <new>.rationale.md` must report zero. **An earlier version of this
+   `.claude/agents/articles/**/*.meta.md`, so it already covers every future sidecar on creation.
+   Confirm it with one command: `vale <new>.meta.md` must report zero. **An earlier version of this
    mandate said to edit that file, which is wrong** — `split-mutation-testing-article` correctly diverged
    from it, and a second author following it literally would either make a no-op edit or, reading "in
    that section" as licence, author a redundant per-file section. The two-part pairing it described is
@@ -172,7 +172,7 @@ The pilot established these, and they are not optional. Seven, and mandates 4 th
    in the one artifact whose whole job is to be accurate. Name the unit: article bytes before, article and sidecar bytes after, rationale-only
    bytes, entanglement, backticked slice-slug counts, and Vale findings on the article. **State the
    absolute rationale figure, not the share** — the share is a ratio and moves the wrong way, which is
-   recorded in `prose.rationale.md`. This is the mandate the first split skipped, because it
+   recorded in `prose.meta.md`. This is the mandate the first split skipped, because it
    named an obligation without naming the measurement or where it goes.
 
    **A "before" figure taken at any point after the work began is not a before figure.** The third split
@@ -249,7 +249,7 @@ The pilot established these, and they are not optional. Seven, and mandates 4 th
 
 ## Touches
 
-Per slice: one `.claude/agents/articles/<name>.md` and a new `<name>.rationale.md` beside it. **Not
+Per slice: one `.claude/agents/articles/<name>.md` and a new `<name>.meta.md` beside it. **Not
 `.vale.ini`** — see mandate 2. CLAUDE.md only if the article's pointer line needs rewording.
 
 **Sizing.** One article per slice, and that is a real constraint rather than caution: entanglement runs
@@ -263,7 +263,7 @@ this candidate read the pre-amendment list and called the claim false.
 - ~~**Is the unconditional-read argument sound?**~~ **Settled 2026-09-09, for the routing preamble.**
   Auto-loading is a cost rather than a distribution channel, and mandate 1's closed-decision markers
   reconcile the two positions rather than overriding one. `split-engineering-article` acted on the
-  ruling; `engineering.rationale.md` records it, including what was **not** conceded — a future split
+  ruling; `engineering.meta.md` records it, including what was **not** conceded — a future split
   that drops the markers revives the objection in full. **The ruling covers `engineering.md` only.** The
   other three protected files have independent defences, so nothing here licenses splitting them.
 - **Is there a floor below which a split is not worth it?** Ask it in bytes, not shares. `archive.md`
@@ -272,7 +272,7 @@ this candidate read the pre-amendment list and called the claim false.
   the one question the rewrite first missed. The pilot's file carried far more, so nothing measured yet
   speaks to the low end.
 - **What happens to `archive.md`?** It is already a rationale-only file with no read trigger — the tier
-  before the tier existed. It may need renaming to `<something>.rationale.md` for consistency, or it may
+  before the tier existed. It may need renaming to `<something>.meta.md` for consistency, or it may
   be a deliberate exception worth keeping as is.
 - **Do the role files get the same treatment?** `architect.md` at 35% and `product.md` at 33% carry real
   rationale, but they are not articles, Vale does not lint them (their front matter aborts the parser),

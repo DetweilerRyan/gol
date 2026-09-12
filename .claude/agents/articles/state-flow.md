@@ -2,7 +2,7 @@
 
 **Audience:** coder, cleaner, architect. **Read when:** before touching a hook or a composition root, before relocating state, and at the start of every architect REVIEW or DESIGN pass.
 
-> The measurements behind every ruling here are in `state-flow.rationale.md`. It holds the identity-churn measurements, the perf attribution, the resubscribe counts, and the readings later corrected. Read it when you are **changing** a ruling below, never in order to follow one.
+> The measurements behind every ruling here are in `state-flow.meta.md`. It holds the identity-churn measurements, the perf attribution, the resubscribe counts, and the readings later corrected. Read it when you are **changing** a ruling below, never in order to follow one.
 
 ### The standing preference for frequently-changing state
 
@@ -22,7 +22,7 @@ Two rulings come with it.
 
 **Use `isShallowEqual` only for small, known-shallow projected state**, per the scope contract in its own JSDoc. It never descends into nested containers, and every call allocates. **Never reach for it to compare two `liveCells` Sets.** Write a dedicated comparison instead.
 
-<!-- Closed decision: why the contract is bounded by allocation rather than by complexity class, and why the O(n²) fallback is `isDeepEqual`'s rather than this module's, are in `state-flow.rationale.md`. -->
+<!-- Closed decision: why the contract is bounded by allocation rather than by complexity class, and why the O(n²) fallback is `isDeepEqual`'s rather than this module's, are in `state-flow.meta.md`. -->
 
 ### State flow
 
@@ -34,7 +34,7 @@ Two rulings come with it.
 
   `App.tsx`'s one optional prop, `initialLiveCells`, exists solely for the perf harness. `undefined`, which is every normal boot, means the ordinary empty grid.
 
-<!-- Closed decision: what the retired per-cell subscription cost, the mount counts on either side of the trade, and the `useImmer` design it replaced, are in `state-flow.rationale.md`. -->
+<!-- Closed decision: what the retired per-cell subscription cost, the mount counts on either side of the trade, and the `useImmer` design it replaced, are in `state-flow.meta.md`. -->
 
 - `src/components/GenerationHud.tsx` owns the `generation` count and the Next generation button. It advances only via that button's own click and keyboard handling, and there is no global keyboard shortcut for it. It takes `onAdvance`, wired to `store.advance`, and holds no live-cell data, so a tick re-renders the counter and nothing else above the grid.
 
@@ -54,7 +54,7 @@ Two rulings come with it.
 
   **`useMatchMedia.ts`'s `subscribe` and `getSnapshot` are inline closures over `query`**, not module-level named functions. So their identity stability, and therefore `useSyncExternalStore`'s resubscribe avoidance, is **provided by React Compiler rather than being structural**. `useMatchMedia.test.ts` pins it with an `it.skipIf(underStryker)` no-resubscribe assertion, plus an **unskipped companion built on a changing query** which resubscribes in both configs.
 
-<!-- Closed decision: the measured add and remove counts with and without the compiler, why the companion is not built from a fresh closure, and why `listenerCount()` cannot serve, are in `state-flow.rationale.md`. -->
+<!-- Closed decision: the measured add and remove counts with and without the compiler, why the companion is not built from a fresh closure, and why `listenerCount()` cannot serve, are in `state-flow.meta.md`. -->
 
 **`useZoomGlide.ts`'s returned controller is identity-stable across renders.** That is a contract with named guards, rather than an incidental property. What keeps it stable is that the controller closes over nothing that varies per render. `onCamera` and the reduced-motion preference are both read through refs, reassigned in the hook's single dependency-array-free effect, which is what lets React Compiler memoize it.
 
@@ -64,7 +64,7 @@ Three guards pin it, each `it.skipIf(underStryker)`. Stryker's per-expression in
 
 `useZoomGlide.test.ts` pins controller identity across a re-render. `useCamera.test.ts` pins the whole returned surface. It also pins all seven actions across a pan. `LifeBoard.test.tsx` pins no `wheel` re-registration during a six-frame drag pan.
 
-<!-- Closed decision: the churn measured in both directions, the two fault arms every guard was verified against, and the perf regression this was chased down for, are in `state-flow.rationale.md`. -->
+<!-- Closed decision: the churn measured in both directions, the two fault arms every guard was verified against, and the perf regression this was chased down for, are in `state-flow.meta.md`. -->
 
 **The general contract, established by `stable-hook-identities`: a hook-returned function must not capture render-varying state it only needs at call time. Where such a function crosses a component boundary as a prop, a test asserts its identity.**
 
@@ -82,7 +82,7 @@ Three exemptions stand. `useGridFocus.moveFocus` and `jumpToEdge` reach only a D
 
 **Identity is a property of compiled output, so tests are the only instrument that can see it.** The discriminator is forward reference, which is scope analysis rather than a syntax pattern.
 
-<!-- Closed decision: why the obvious structural proxy is backwards on this codebase, what each exemption measured, and why a shared `useLatestRef` helper was proposed and declined, are in `state-flow.rationale.md`. -->
+<!-- Closed decision: why the obvious structural proxy is backwards on this codebase, what each exemption measured, and why a shared `useLatestRef` helper was proposed and declined, are in `state-flow.meta.md`. -->
 
 - `src/components/LifeBoard.tsx` is the composition root for the camera and placement state. It calls `useCamera` and `usePatternPlacement`, derives `previewPositions` and `armedPattern` from already-tested pure functions, and supplies `Grid`'s `renderOverlays` render prop with the ruler, zoom percentage, scrollbars, toolbar, and pattern-library modal.
 
@@ -116,4 +116,4 @@ Three exemptions stand. `useGridFocus.moveFocus` and `jumpToEdge` reach only a D
 
   `Grid.tsx` has its own unit tests in `Grid.test.tsx`, scoped to that composition: the DOM layering contract, the place-versus-toggle dispatch, and one thin wiring test per hook. The hooks and pure modules it composes, and the four inverted overlay components, are each tested on their own.
 
-<!-- Closed decision: what `Grid.test.tsx` used to cost before that rescoping, and the mount counts the tile-slot design paid, are in `state-flow.rationale.md`. -->
+<!-- Closed decision: what `Grid.test.tsx` used to cost before that rescoping, and the mount counts the tile-slot design paid, are in `state-flow.meta.md`. -->

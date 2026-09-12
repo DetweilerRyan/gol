@@ -11,9 +11,9 @@ describe('extractFileTokens', () => {
   })
 
   it('finds .md tokens, the dominant citation form in this corpus', () => {
-    expect(extractFileTokens('see `engineering.md` and `src/hooks/useZoomGlide.rationale.md`')).toEqual([
+    expect(extractFileTokens('see `engineering.md` and `src/hooks/useZoomGlide.meta.md`')).toEqual([
       'engineering.md',
-      'src/hooks/useZoomGlide.rationale.md',
+      'src/hooks/useZoomGlide.meta.md',
     ])
   })
 
@@ -48,7 +48,7 @@ describe('extractFileTokens', () => {
 
   it('drops a dotted-relative token with no filename of its own', () => {
     expect(extractFileTokens('a bare .ts extension')).toEqual([])
-    expect(extractFileTokens('a bare .rationale.md extension')).toEqual([])
+    expect(extractFileTokens('a bare .meta.md extension')).toEqual([])
   })
 
   // Gaps 2 and 3: isDiscardedToken now checks the token's *basename* rather
@@ -57,9 +57,7 @@ describe('extractFileTokens', () => {
   // with a dot (directly, or via an upward `../` segment).
   it('keeps a genuinely relative token, resolving by its own basename', () => {
     expect(extractFileTokens('see `./name.md` for the sidecar')).toEqual(['./name.md'])
-    expect(extractFileTokens('see `../scrollbars.rationale.md` for the sidecar')).toEqual([
-      '../scrollbars.rationale.md',
-    ])
+    expect(extractFileTokens('see `../scrollbars.meta.md` for the sidecar')).toEqual(['../scrollbars.meta.md'])
   })
 
   it('keeps a token under a dot directory, no longer hidden by the leading segment', () => {

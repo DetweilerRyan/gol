@@ -8,7 +8,7 @@
 - on an `agent-doc-check` check-5 failure
 - before acting on an ast-grep finding
 
-> The per-rule arguments are in `ast-grep-rules.rationale.md`. It holds what each rule matches, how each
+> The per-rule arguments are in `ast-grep-rules.meta.md`. It holds what each rule matches, how each
 > was verified, and why each is scoped as it is. It also holds the two rules documented outside the main
 > enumeration.
 > Narrowing or widening a rule **is** changing one, so that is when to open it.

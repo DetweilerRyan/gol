@@ -9,7 +9,7 @@ import type { ContentBounds } from './gameOfLife'
 //
 // How a caller sizes the track it hands computeThumbGeometry is not decided
 // here: SCROLLBAR_THICKNESS_PX and the clamp that applies it both live in
-// Scrollbar.tsx. See src/scrollbars.rationale.md before changing either, or
+// Scrollbar.tsx. See src/scrollbars.meta.md before changing either, or
 // before changing how the scrollbar tests assert -- it carries the
 // two-directional guard argument and the measurements behind it.
 

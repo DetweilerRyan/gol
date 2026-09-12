@@ -8,7 +8,7 @@
 
 CLAUDE.md's compact module map names the framework-free modules, the hooks and the unit-tested components. **This article does not restate that list.** The map is the routing index. This article is the account of how those modules depend on each other, and what each one may not do.
 
-**What a single module owns is its own hover.** Read the JSDoc above a declaration for its contract, and its sidecars beside the source where they exist — `<module>.md` for worked depth, `<module>.rationale.md` for the evidence. What follows is only what no single hover can hold.
+**What a single module owns is its own hover.** Read the JSDoc above a declaration for its contract, and its sidecars beside the source where they exist — `<module>.md` for worked depth, `<module>.meta.md` for the evidence. What follows is only what no single hover can hold.
 
 ### Cross-module contracts
 
@@ -37,7 +37,7 @@ Two guards can see such a defect:
 - the parameter's own name, which is why a rename is part of the fix rather than cosmetics
 - an observation of the rendered result
 
-So before concluding a module is well covered because a property quantifies its invariants, ask what its callers actually pass. `src/scrollbars.rationale.md` carries the worked case behind this rule.
+So before concluding a module is well covered because a property quantifies its invariants, ask what its callers actually pass. `src/scrollbars.meta.md` carries the worked case behind this rule.
 
 **The framework-free modules form a small acyclic graph, and keeping it acyclic is the point of the split.**
 The edges, as they stand:

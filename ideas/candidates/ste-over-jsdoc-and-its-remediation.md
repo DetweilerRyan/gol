@@ -34,7 +34,7 @@ article lint pass. An over-long sentence in an article gets split. In a hover it
 does not belong in the interface at all: `doc-comments.md` rule 4 sends implementation detail to `//`
 and rule 7 sends overflow to a sidecar. Splitting in place clears the finding and leaves the defect.
 
-Three measured facts that shape the work, all in `prose.rationale.md`:
+Three measured facts that shape the work, all in `prose.meta.md`:
 
 - `ProcedureLength` and `OneInstruction` reach a Markdown list inside a hover and reach a `@param` or
   `@returns` tag line not at all.
@@ -63,7 +63,7 @@ Three measured facts that shape the work, all in `prose.rationale.md`:
   forward. Re-derive before scoping, and record the command with the number.
 - **Does `STE.SentenceLength` need a comment scope, and can it have one?** This is the trap:
   `extends:` with an added scope destroys the parent's `scope: sentence` and the counter silently
-  starts measuring whole blocks. Measured, and recorded in `prose.rationale.md`.
+  starts measuring whole blocks. Measured, and recorded in `prose.meta.md`.
 - **Is the `.test.ts` register a problem here?** Closed for the `JsDoc` rules, open for this one —
   those rules yielded too few findings for the question to bite.
 - **Does the volume want its own orchestration answer?** Comment-only edits at this scale look closer

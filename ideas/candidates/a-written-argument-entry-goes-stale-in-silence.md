@@ -49,7 +49,7 @@ signal fires, but by luck: the clause was falsified by `package.json` and a new 
 `scripts/`.
 
 A stronger form would bind each argument to the specific facts it asserts, the way check C4 already
-binds an entry to prose in `mutation-testing.rationale.md`. An argument that names "no npm run
+binds an entry to prose in `mutation-testing.meta.md`. An argument that names "no npm run
 script invokes it" could carry that as a structured, checkable predicate rather than as a sentence.
 That is a bigger design and may not be worth it for three entries.
 
@@ -57,7 +57,7 @@ That is a bigger design and may not be worth it for three entries.
 
 - `mutation-invariance.config.json`, and `schemas/` if `verifiedOn` gains a meaning
 - `scripts/mutation-invariance/` — a new pure checker plus its fixtures, held to CRAP <= 6
-- `.claude/agents/articles/mutation-testing.rationale.md`, which carries each entry's argument
+- `.claude/agents/articles/mutation-testing.meta.md`, which carries each entry's argument
 - CLAUDE.md's `scripts/mutation-invariance/` entry, which enumerates the checks
 
 Both config and schema are on the `absent` list, so this slice re-arms the full mutation run in its

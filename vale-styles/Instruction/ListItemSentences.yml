@@ -18,7 +18,7 @@
 # exposition that is long and misses exposition that is short. A green run is
 # not evidence a file is instruction-only.
 extends: occurrence
-message: "List item has %d sentences. An instruction, its precondition and its failure mode fit in three; the account of the rule goes to the .rationale.md sidecar (prose.md, 'Instruction stays. Explanation moves.')."
+message: "List item has %d sentences. An instruction, its precondition and its failure mode fit in three; the account of the rule goes to the .meta.md sidecar (prose.md, 'Instruction stays. Explanation moves.')."
 level: warning
 scope: list
 max: 3

@@ -29,7 +29,7 @@ export interface DecideInput {
   vitestProjects: VitestProject[]
   strykerIgnorePatterns: string[]
   trackedFiles: Set<string>
-  rationaleText: string
+  metaDocText: string
   diff?: DiffInput
 }
 
@@ -85,7 +85,7 @@ export function decide(input: DecideInput): DecideResult {
     vitestProjects: input.vitestProjects,
     strykerIgnorePatterns: input.strykerIgnorePatterns,
     trackedFiles: input.trackedFiles,
-    rationaleText: input.rationaleText,
+    metaDocText: input.metaDocText,
   })
   if (checkFailures.length > 0) {
     return { exitCode: 1, lines: formatFailureLines('config unsound', checkFailures) }

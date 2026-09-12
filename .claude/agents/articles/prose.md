@@ -5,7 +5,7 @@ sidecar, or a JSDoc block in `src/` or `scripts/`
 
 **Read when:**
 
-- **before moving a sentence between an instruction file and its `.rationale.md` sidecar** — this
+- **before moving a sentence between an instruction file and its `.meta.md` sidecar** — this
   article owns that split, and CLAUDE.md's routing branches deliberately do not
 - before acting on a Vale finding, so you know which ones to act on
 - before enabling, disabling or re-levelling a rule in `.vale.ini`
@@ -14,10 +14,10 @@ sidecar, or a JSDoc block in `src/` or `scripts/`
 
 > **Two questions, two files.** CLAUDE.md's routing branches answer **which article** a subject belongs
 > to. This article answers **which register** a sentence is in. Given that it belongs to some article,
-> does it go in the instruction file, or in that file's `.rationale.md` sidecar? See "Instruction stays.
+> does it go in the instruction file, or in that file's `.meta.md` sidecar? See "Instruction stays.
 > Explanation moves." below, which governs every instruction file including this one.
 >
-> So this article carries instructions, and `prose.rationale.md` carries the measurements, the
+> So this article carries instructions, and `prose.meta.md` carries the measurements, the
 > dates, the probe methods, the incidents, and the rules tried and rejected. Read the sidecar when you
 > are **changing** a rule below, never in order to follow one. **Do not fold a reason back into this
 > file.**
@@ -344,7 +344,7 @@ already scanned past.
 
 ## Instruction stays. Explanation moves.
 
-**An instruction file carries instructions. Its `.rationale.md` sidecar carries the explanation.** That
+**An instruction file carries instructions. Its `.meta.md` sidecar carries the explanation.** That
 governs every article, every role file and every module sidecar, not only the file you reached it from.
 Apply it whenever acting on a finding makes you shorten something. Every mechanical rule here is
 satisfied by moving something out.
@@ -354,7 +354,7 @@ satisfied by moving something out.
 Ruled 2026-09-11 while the five role files were stripped. Each is a shape to remove on sight, not a
 judgement call:
 
-- **A pointer to its own `.rationale.md` sidecar.** A role never changes its own file, and an article's
+- **A pointer to its own `.meta.md` sidecar.** A role never changes its own file, and an article's
   reader is following a rule rather than changing it. Only a module sidecar keeps its `@see` pointer,
   because that reader is changing the module. Measured before the strips: 21 such pointers across the
   role files, 64 across the articles.
@@ -381,7 +381,7 @@ dispositions, and only one is a deletion:
 
 - **It says what to do, what not to do, when, or under what precondition** → **instruction.** It stays.
 - **It says why the rule is shaped that way, and the reader's next action is the same either way** →
-  **explanation.** Move it to the `.rationale.md` sidecar.
+  **explanation.** Move it to the `.meta.md` sidecar.
 - **It restates something said better nearby** → **delete it.** This is the only legitimate deletion,
   and it is rarer than it feels mid-edit.
 
@@ -413,7 +413,7 @@ stays.
 **Kind decides before mass.** Evidence is a measurement, a probe method, a rejected alternative, or a
 correction carrying a figure. Settle kind first by the three dispositions above. Then apply a floor:
 **below roughly 1 KB of genuine evidence, decline the sidecar.** A smaller one holds less than its own
-framing, which measures 1.0–1.4 KB. `CLAUDE.rationale.md` carries the census of which files cleared
+framing, which measures 1.0–1.4 KB. `CLAUDE.meta.md` carries the census of which files cleared
 that floor.
 
 **A sidecar carries no read trigger, and that is the point.** It is read when a rule is being changed,
@@ -421,7 +421,7 @@ never in order to follow one. So an instruction that a reader needs in order to 
 there, however evidential it looks.
 
 **The module tier takes the same cut, under different filenames.** `<module>.md` is the instruction
-half, for whoever is calling the module. `<module>.rationale.md` is the explanation half, for whoever
+half, for whoever is calling the module. `<module>.meta.md` is the explanation half, for whoever
 is changing it. Everything above applies to that pair unchanged.
 
 **Which article a subject belongs to, and where a sidecar file physically sits, are CLAUDE.md's
@@ -450,7 +450,7 @@ rule's own header carries its measurements.
 
 A list item gets three sentences: an instruction, its precondition, and its failure mode. A fourth
 sentence is where the account of the rule starts. Route the account to the role file's
-`.rationale.md` sidecar per the split above — do not split the item in place to clear the count.
+`.meta.md` sidecar per the split above — do not split the item in place to clear the count.
 
 **What it misses:** exposition that is short. Three tight sentences of history pass this rule.
 
@@ -524,7 +524,7 @@ that covers the module sidecars. No `JsDoc` rule reaches a `.md` file, so a side
 Vale runs over `.claude/agents/**/*.md` — every topic article, the house-rules articles, and the five
 role files — over `CLAUDE.md`, and over `src/**/*.md`, the module sidecars beside the source. Those
 three surfaces get the `STE` style. **Lint a module sidecar exactly like an article**, because whoever
-holds a call site reads it to act. `<module>.md` is in scope and `<module>.rationale.md` is exempt.
+holds a call site reads it to act. `<module>.md` is in scope and `<module>.meta.md` is exempt.
 A role file that has been stripped to instruction additionally gets the `Instruction` style, per its
 own section above.
 
@@ -558,7 +558,7 @@ Markdown front matter. A scalar containing an apostrophe is the exception and ke
 double-quoted scalar processes `\b` as a backspace escape, so `"\bword\b"` is not the regex it looks
 like, and Prettier leaves such a scalar alone.
 
-**`*.rationale.md` sidecars are exempt from every rule, and the exemption is two things.** The last
+**`*.meta.md` sidecars are exempt from every rule, and the exemption is two things.** The last
 section of `.vale.ini` sets `BasedOnStyles` to an empty value **and** switches each enabled rule off by
 name. An empty `BasedOnStyles` is not enough on its own. An explicit `STE.Rule = warning` in any
 earlier matching section **activates that rule by itself**, and survives into the later one.
@@ -625,11 +625,11 @@ the six-rule enable block three times: the agent-docs glob, `[CLAUDE.md]`, and `
 section's per-rule key reaches a file that section's own glob does not match.
 
 Four later sections overlap those globs, and must each switch the rule off once by name. They are the
-`*.rationale.md` exemption, plus the three that keep bait and other checkouts out of a `vale .` walk.
+`*.meta.md` exemption, plus the three that keep bait and other checkouts out of a `vale .` walk.
 
 **Adding a `JsDoc` rule is a five-place edit.** `[*.{ts,tsx}]` enables it. The three exemption sections
 below that one switch it off by name. And `doc-comments.md`'s "What Vale checks mechanically" table
-gains a row. `[**/*.rationale.md]` is not one of them, because `[*.{ts,tsx}]` cannot match a `.md`
+gains a row. `[**/*.meta.md]` is not one of them, because `[*.{ts,tsx}]` cannot match a `.md`
 file.
 
 **Two of the places in each count are article prose, and `architect` does not edit them.** The
@@ -639,13 +639,13 @@ CLAUDE.md's Conventions.
 
 **Adding an `Instruction` rule is a seven-place edit.** One enabling key in the
 `[.claude/agents/**/*.md]` section. Five off-by-name entries: the three bait sections,
-`[**/*.rationale.md]`, and `[.claude/agents/articles/**]`. The fixture pair, and this article's own
+`[**/*.meta.md]`, and `[.claude/agents/articles/**]`. The fixture pair, and this article's own
 rule section above.
 
 The scope section above says where each of those keys lives.
 
 **Whenever you enable a rule, switch it off in the sidecar section in the same edit.** That pairing is
-the whole exemption. The test is one command: `vale` on any `*.rationale.md` must report zero.
+the whole exemption. The test is one command: `vale` on any `*.meta.md` must report zero.
 
 **Every rule carries its own `scope:` in its own rule file, never from `.vale.ini`.** The
 `Rule[param] = value` form works; do not use it. `RuleToParams` is global rather than per-section, so a
@@ -671,7 +671,7 @@ A rule whose findings the slice cannot clear waits for a slice that can. Deferri
 right disposition; landing it and leaving the findings is not.
 
 **A rule earns its place by a measured precision count on a real file, not by sounding useful.** Record
-the count and the date in `prose.rationale.md`.
+the count and the date in `prose.meta.md`.
 
 **Treat a part-of-speech-driven rule as guilty until measured on this corpus.** Imperative-heavy
 technical prose is outside the tagger's training data, and two such rules say so in their own headers.
@@ -684,6 +684,6 @@ jargon.
 tuned until it agrees with its author, which makes it a mirror rather than a check.
 
 **Six of the style's twelve rules are off**, each on a recorded reason rather than by omission:
-`Dictionary`, `Modals`, `Ambiguity`, `NounClusters`, `Articles` and `Gerunds`. `prose.rationale.md`
+`Dictionary`, `Modals`, `Ambiguity`, `NounClusters`, `Articles` and `Gerunds`. `prose.meta.md`
 carries the reason for each, and the `Slop` style's sixteen rules are off untried. Read a reason there
 before re-proposing one.

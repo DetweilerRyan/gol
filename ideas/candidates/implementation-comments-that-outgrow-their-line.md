@@ -1,13 +1,13 @@
 ---
 name: implementation-comments-that-outgrow-their-line
-title: Move implementation comments that do not need their line into <module>.rationale.md
+title: Move implementation comments that do not need their line into <module>.meta.md
 created: 2026-09-09
 ---
 
 ## Situation
 
 `migrate-architecture-depth` made the per-module sidecar a **pair**, split by filename:
-`<module>.md` holds interface depth for whoever is calling, `<module>.rationale.md` holds
+`<module>.md` holds interface depth for whoever is calling, `<module>.meta.md` holds
 measurements, rejected alternatives and corrections for whoever is changing. CLAUDE.md branch 4
 and `doc-comments.md` rule 7 define it.
 
@@ -66,7 +66,7 @@ Proposed test, to be ratified by `architect` before any comment moves:
 2. It warns against an edit at that spot — "do not reorder these two, pointer capture releases first"
 3. It is shorter than the code it explains, and so is colocated by construction
 
-**Moves to `<module>.rationale.md` if:**
+**Moves to `<module>.meta.md` if:**
 
 1. It argues a module-wide decision that no single line owns
 2. It records a measurement, a benchmark, a fuzzing run, or a rejected alternative
@@ -89,7 +89,7 @@ rather than sweeping 39 files in one diff.
 - `.claude/agents/articles/doc-comments.md` — rule 7 gains the stay/move test and the stub rule.
   **This is the deliverable that outlives the slice**; the relocations are its first application.
 - `CLAUDE.md` branch 4 — one clause, only if the test changes what branch 4 already says
-- `src/` modules in the table above, plus their new `<module>.rationale.md` files
+- `src/` modules in the table above, plus their new `<module>.meta.md` files
 - Comment-only edits throughout, so no mutant is created or re-fated. Confirm per diff that no
   **directive** comment moved, since that carve-out is what makes the ruling per-diff rather than
   per-path.

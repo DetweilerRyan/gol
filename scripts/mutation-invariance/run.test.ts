@@ -26,7 +26,7 @@
 //     own `absent` list, so no allowlist entry rests on the claim that any
 //     of them goes unread by the scripts/ suite -- editing one is already
 //     defined to re-arm the gate.
-//   - .claude/agents/articles/mutation-testing.rationale.md (read for C4):
+//   - .claude/agents/articles/mutation-testing.meta.md (read for C4):
 //     falls under the `.claude/**` allow[] entry, securedBy vitest-exclude.
 //   - `git ls-files` output (read for C3, which checks the tracked-ness of
 //     every `written-argument` entry): each such entry falls under its own

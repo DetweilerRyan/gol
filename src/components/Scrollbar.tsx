@@ -21,7 +21,7 @@ interface ScrollbarDragState {
 // they're the same fact.
 //
 // Before changing this value, and before deleting the Math.max clamp below as
-// dead defensive code, read src/scrollbars.rationale.md -- it carries the
+// dead defensive code, read src/scrollbars.meta.md -- it carries the
 // two-directional guard argument for the value's coupling to the h-2.5/w-2.5
 // classes, and the dated measurement of what guards the clamp.
 const SCROLLBAR_THICKNESS_PX = 10

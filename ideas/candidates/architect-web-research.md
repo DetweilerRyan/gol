@@ -14,7 +14,7 @@ researched by hand, once, and never revisited:
   "in maintenance mode pending a Rust-backed v2 rebuild, so it may never land."
   If that PR ever merges, `patches/crap4ts+1.0.1.patch` can be dropped and the
   exact-version pin lifted. Nothing re-checks it.
-- **`.claude/agents/articles/mutation-testing.rationale.md`** — "The interaction has no public
+- **`.claude/agents/articles/mutation-testing.meta.md`** — "The interaction has no public
   report — the nearest analogue is `stryker-js#2704`." An **absence** claim about
   a public issue tracker is the most decay-prone kind there is: true the day it
   was written, and unfalsifiable from inside the repo thereafter.

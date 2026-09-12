@@ -2,7 +2,7 @@
 
 **Audience:** product. **Read when:** before your first `npm run acceptance-mutation` in a slice.
 
-> The measurements behind every ruling here are in `acceptance-mutation.rationale.md`. It holds the delimiter runs, the decimal regression, the per-assertion measurement and the readings later corrected. Read it when you are **changing** a ruling below, never in order to follow one.
+> The measurements behind every ruling here are in `acceptance-mutation.meta.md`. It holds the delimiter runs, the decimal regression, the per-assertion measurement and the readings later corrected. Read it when you are **changing** a ruling below, never in order to follow one.
 
 ## What it is, and who owns it
 
@@ -27,7 +27,7 @@ Each of the run's two phases — baseline, then mutants — does exactly one `bd
 
 **That split is load-bearing rather than tidy.** Classification looks a result up by the mutant's filename. A record whose name and text came from different sites would misattribute a kill or a survivor. Nothing in the output would notice it.
 
-<!-- Closed decision: the cost measurement that ratified the batched form over a per-mutant spawn is in `acceptance-mutation.rationale.md`. -->
+<!-- Closed decision: the cost measurement that ratified the batched form over a per-mutant spawn is in `acceptance-mutation.meta.md`. -->
 
 ## The parser adapter, and the registry behind it
 
@@ -43,7 +43,7 @@ It hands back real `Scenario` nodes **with their steps, examples and locations i
 
 **A kind needing a new traversal root widens the adapter too, and that is the sanctioned direction. Widen the adapter rather than reaching around it** — the rule's own `note:` says so.
 
-<!-- Closed decision: what the registry cost to extend, measured with a throwaway kind, and which files did not change, are in `acceptance-mutation.rationale.md`. -->
+<!-- Closed decision: what the registry cost to extend, measured with a throwaway kind, and which files did not change, are in `acceptance-mutation.meta.md`. -->
 
 ## Three guards, each closing a way to report a confident number about nothing
 
@@ -59,7 +59,7 @@ There is then no trustworthy spec count to compare its mutants against. Proceedi
 - A mismatched count, or any skipped spec, is `error` instead.
 - A matching, unskipped count with zero failures is `survived`.
 
-<!-- Closed decision: the classifier defect this repaired, where a suite broken at import scored a kill on every mutant, is in `acceptance-mutation.rationale.md`. -->
+<!-- Closed decision: the classifier defect this repaired, where a suite broken at import scored a kill on every mutant, is in `acceptance-mutation.meta.md`. -->
 
 ## A vacuous hundred percent is a designed state, and the reading to avoid
 
@@ -71,7 +71,7 @@ Running the tool scoped to a table-less feature is routine rather than a mistake
 
 A target excluded by `--feature` is filtered before it becomes a plan, so it is never in that list. The label says only what it can actually observe.
 
-<!-- Closed decision: the measured case where a feature with every scenario red still printed 100.0% at exit 0 is in `acceptance-mutation.rationale.md`. -->
+<!-- Closed decision: the measured case where a feature with every scenario red still printed 100.0% at exit 0 is in `acceptance-mutation.meta.md`. -->
 
 ## The temp tree is flat, and two constraints follow
 
@@ -85,7 +85,7 @@ Nothing enforces this at authoring time and nothing needs to. `product` runs thi
 
 **Second, and only until `intent-driven-layout` lands: discovery is recursive but execution is not.** A nested `.feature` would be mutated by this runner and never run by `npm run test:e2e` at all. `npm run gherkin-lint` does recurse, so `product`'s lint gate is not part of the gap. **`intent-driven-layout` owns `playwright.config.ts`; until it lands, keep `features/` flat.**
 
-<!-- Closed decision: why the flattening rejects rather than encodes, and the planted probe that measured the execution gap, are in `acceptance-mutation.rationale.md`. -->
+<!-- Closed decision: why the flattening rejects rather than encodes, and the planted probe that measured the execution gap, are in `acceptance-mutation.meta.md`. -->
 
 ## Two structural mutation classes, and why the mutant count does not move
 
@@ -102,7 +102,7 @@ It emits two classes, chosen by a first draw that is taken unconditionally, so t
 
 **Swap is why the class was worth adding, and the reason is an assertion rather than a shape.** A component-change is caught by "every cell the table names is on screen". A swap whose transpose is already a live cell passes that check vacuously. Only the reverse assertion catches it: "and nothing else is". **That is what makes `features/steps/pattern-library.ts`'s bidirectionality load-bearing rather than belt-and-braces.**
 
-<!-- Closed decision: the per-pattern swap measurement, and the deleted paren-shaving patch it replaced, are in `acceptance-mutation.rationale.md`. -->
+<!-- Closed decision: the per-pattern swap measurement, and the deleted paren-shaving patch it replaced, are in `acceptance-mutation.meta.md`. -->
 
 ## The honest residual, which is narrower than "parens are handled"
 
@@ -123,7 +123,7 @@ The last of those is pinned rather than claimed: `mutation-rules.test.ts`'s PINN
 - **From `product`'s side:** an Examples cell that is paren-delimited and carries a non-integer numeric component. No cell in `features/` carries a fractional value today. `.gherkin-lintrc`'s `no-restricted-patterns` also bans `\boffset ?[xy]\b`, so the one genuinely fractional quantity this app has is precluded from the contract rather than merely absent from it.
 - **From `scripts/`' side:** any widening of `TUPLE_LIST_SHAPE`'s integer components, or of the step's PAIR regex. **The three deliberately-mirrored copies must move in one slice or silently disagree.**
 
-<!-- Closed decision: the two independent measurement runs, the three things that narrowed the finding, why a decimal column and this trigger are disjoint, and the cost of each rejected remedy -- widening the grammar, and restoring paren-awareness in the fall-through -- are in `acceptance-mutation.rationale.md`. -->
+<!-- Closed decision: the two independent measurement runs, the three things that narrowed the finding, why a decimal column and this trigger are disjoint, and the cost of each rejected remedy -- widening the grammar, and restoring paren-awareness in the fall-through -- are in `acceptance-mutation.meta.md`. -->
 
 ## Three copies of the coordinate grammar exist, deliberately
 
@@ -159,4 +159,4 @@ What such a change buys is **which assertion earns the score**. A mutation score
 
 **It generalises: when a fix changes the _kind_ of mutant a generator emits rather than how many die, no mutation score can see it.**
 
-<!-- Closed decision: the three-run measurement of which assertion reports which class, and the framing error made twice while the slice was in flight, are in `acceptance-mutation.rationale.md`. -->
+<!-- Closed decision: the three-run measurement of which assertion reports which class, and the framing error made twice while the slice was in flight, are in `acceptance-mutation.meta.md`. -->

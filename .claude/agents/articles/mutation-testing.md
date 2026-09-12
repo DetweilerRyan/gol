@@ -8,7 +8,7 @@
 - at `hardener` stage 5
 - when granting a mutation-invariant merge exemption
 
-> The measurements behind every rule here are in `mutation-testing.rationale.md`: the slices each was
+> The measurements behind every rule here are in `mutation-testing.meta.md`: the slices each was
 > found in, the figures, the source files read, and the readings later corrected. Read it when you are
 > **changing** a rule below, never in order to follow one.
 
@@ -99,13 +99,13 @@ A surviving mutant is either a missing test or an equivalent mutant, and only on
 
 **A property test used to kill in the suite and be unable to kill in the gate. That gap is closed, and the habit it taught is the part to keep.** `pin-stryker-seed-to-unblind-the-mutation-gate` closed it for this repo's property tests, by pinning the seed when and only when the process runs under Stryker. Three things survive the fix. **One**: the general shape does — a runner that varies a test's _title_ between runs is invisible to a filter that matches by name. **Two**: the deterministic `it.each` twin is **not** made redundant, because `killedBy` is first-kill-wins, so a property beating a twin to the report says nothing about whether the twin was needed. **Three**: a pinned run freezes one draw, so a green gate is evidence about that draw and not about the arbitrary's whole range. Still say which run you mean, and still prefer a twin when a specific survivor needs specific inputs named.
 
-<!-- Closed decision: how the seed-title gap was found, the 0-to-420 measurement, and the control run that showed the twin killing alone, are in `mutation-testing.rationale.md`. -->
+<!-- Closed decision: how the seed-title gap was found, the 0-to-420 measurement, and the control run that showed the twin killing alone, are in `mutation-testing.meta.md`. -->
 
 **The corollary is the useful half: an argument that doesn't fit in two lines is not comment material, it is a warning.** The budget is on the **argument**, not on the comment: a measurement cited beside it ("forcing this operand true leaves all 654 of `npm run test:scripts` green") is evidence, and evidence is always welcome — it is the _reasoning_ that has to compress. Equivalence claims that stay local — this literal is unreachable, this bound is rejected one line later, this regex anchor is redundant because `.` matches no newline — compress honestly. A claim that has to reason about what callers pass, or about a value space shared between two functions, is the shape that has been wrong here. Treat "I can't state this in two lines" as a signal to write a test or find a counterexample, not to write a longer comment.
 
 **The warning fires on an argument that is long because it is _unresolved_, not on one that is long because it is documented.** A long comment that closes its argument about a value space the file itself defines, and that carries the measurement settling it, is not the shape being warned against.
 
-<!-- Closed decision: the 23-survivor triage that established both halves, and the counter-shape that forced the refinement above, are in `mutation-testing.rationale.md`. -->
+<!-- Closed decision: the 23-survivor triage that established both halves, and the counter-shape that forced the refinement above, are in `mutation-testing.meta.md`. -->
 
 ## Skipping a test under the mutation runner
 
@@ -124,7 +124,7 @@ The abuse shape is the mirror image: skipping a test _because_ it kills a mutant
 
 Only the file-wide form works, and it costs every mutant in the file. Worse, it costs them _silently_: Stryker still creates the mutants, reports them as ignored, and scores the file `n/a` — so the file leaves the denominator without the score dropping. A skipped test kills no mutants but removes none either; a file-wide disable removes them all while looking clean. Prefer the skip.
 
-<!-- Closed decision: the three-way measurement, the two landed cases it was taken on, and why no upstream fix is coming, are in `mutation-testing.rationale.md`. -->
+<!-- Closed decision: the three-way measurement, the two landed cases it was taken on, and why no upstream fix is coming, are in `mutation-testing.meta.md`. -->
 
 ## When to reach for `npm run test:mutation:full`
 
@@ -161,7 +161,7 @@ made some test start killing, which reports it too _low_.
 
 > **`coverageAnalysis: off` was tried as a lever against this and rejected — it is inert with this
 > runner.** The vitest runner reads mutant coverage unconditionally, so the option changes nothing.
-> See `mutation-testing.rationale.md` before reaching for it.
+> See `mutation-testing.meta.md` before reaching for it.
 
 ## The seed pin, and what it does not license
 
@@ -301,7 +301,7 @@ It does **not** reach two cases:
 
 **A checker owns the allowlist now, and this section no longer lists it.** The entries live in
 `mutation-invariance.config.json`, and `npm run mutation-invariance` verifies each one against the
-tree. Every entry's argument lives in `mutation-testing.rationale.md`, bound to the config by the
+tree. Every entry's argument lives in `mutation-testing.meta.md`, bound to the config by the
 checker's own C4. This section used to carry a copy of the list, and that copy was wrong: it said
 seven when the predicate had ten.
 
@@ -345,7 +345,7 @@ command that produced it, and re-run rather than reading either forward.
 **The `scripts/` suite is a separate question, and the answer is different.** `vite.config.ts`
 excludes `scripts/**`, so no `scripts/` test runs under `npm run test:mutation` at all and none of
 them can reach this. Under `npm run test:mutation:scripts` several do read the live tree —
-`scripts/mutation-invariance/run.test.ts` reads four config files and the rationale sidecar, and two
+`scripts/mutation-invariance/run.test.ts` reads four config files and the meta sidecar, and two
 `acceptance-mutation` tests read `features/`. That is precisely why the config's own `scope` field
 declares the predicate for the `src/` run only, and why the candidate
 `the-invariance-predicate-does-not-say-which-mutation-run-it-covers` is still open.
@@ -378,7 +378,7 @@ would also leave a colocated unit test for a `perf/` module running in no projec
 ruling off `vite.config.ts`'s own comment before proposing an entry for it.
 
 **Check that the exclusion is actually there.** The order has been got wrong once, and
-`mutation-testing.rationale.md`'s `.vale/**` entry records the slice it happened in.
+`mutation-testing.meta.md`'s `.vale/**` entry records the slice it happened in.
 
 **Gitignored paths cannot reach this predicate at all**, which is a different fact from being excluded
 from vitest. `.stryker-tmp*/**` and `.features-gen/**` need `sharedExclude` entries yet want no allowlist

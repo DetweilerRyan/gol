@@ -46,7 +46,7 @@ is `product`'s.
 
 The claim that a JSDoc block on a `return { … }` literal, or on the implementing declaration of an
 annotated return type, is silently severed from every caller was established by measurement, not
-style preference. The measurements live in `doc-comments.rationale.md`; the role file carries only
+style preference. The measurements live in `doc-comments.meta.md`; the role file carries only
 the resulting placement rule and its acceptance test.
 
 ## A sentence deleted rather than moved

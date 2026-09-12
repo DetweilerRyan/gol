@@ -1,6 +1,6 @@
 ---
 name: rename-the-rationale-tier
-title: Rename the *.rationale.md tier -- the term is narrower than its contents, and the replacement is undecided
+title: Rename the *.meta.md tier -- the term is narrower than its contents, and the replacement is undecided
 created: 2026-09-10
 ---
 
@@ -9,7 +9,7 @@ created: 2026-09-10
 The sidecar tier is named for one of the four things it holds. `prose.md` defines the
 contents as **a measurement, a probe method, a rejected alternative, or a correction carrying a
 figure.** Only the third of those is naturally called rationale. A measured finding is evidence, not
-reasoning, and calling the file that holds it `*.rationale.md` invites a misfile in one specific
+reasoning, and calling the file that holds it `*.meta.md` invites a misfile in one specific
 direction: an author with a measurement and no argument attached to it wonders whether it belongs.
 
 That is not hypothetical. This session produced several measurements whose home had to be reasoned
@@ -75,12 +75,12 @@ and the shape of the answer is a word that names all four contents without namin
 | occurrences of the token `rationale.md` |   221 |
 | files mentioning it                     |    50 |
 
-Three of the sixteen sit beside source rather than beside an article — `src/cache.rationale.md`,
-`src/hooks/useZoomGlide.rationale.md`, `src/scrollbars.rationale.md` — so the rename crosses the
+Three of the sixteen sit beside source rather than beside an article — `src/cache.meta.md`,
+`src/hooks/useZoomGlide.meta.md`, `src/scrollbars.meta.md` — so the rename crosses the
 `.claude/**` boundary into `src/`.
 
 **One machine-readable coupling, and it fails in the dangerous direction.** `.vale.ini` carries
-`[**/*.rationale.md]`, the section that exempts the tier from linting. A rename that misses it leaves
+`[**/*.meta.md]`, the section that exempts the tier from linting. A rename that misses it leaves
 sixteen files newly linted, or — if the section is renamed and a file is not — leaves a file exempt
 that should not be. Neither shows up as an error. `agent-doc-check` and `reference-check` both stay
 green through a half-done rename, because every filename still resolves.

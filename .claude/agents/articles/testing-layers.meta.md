@@ -356,7 +356,7 @@ those moves the figure. That is the fact to reason from rather than "no `.featur
 
 **Ruled 2026-09-09 by the user, during `split-testing-layers-article`:** reduce the driftable surface area by decoupling the
 article's prose from counts of files. **The rule itself now lives in `engineering.md`**, under the
-count clause it narrows, and its evidence in `engineering.rationale.md`. Read it there rather than here.
+count clause it narrows, and its evidence in `engineering.meta.md`. Read it there rather than here.
 This section keeps only what is local to this slice: which sentences changed, and what replaced them.
 
 What went, and what replaced it: the pairing-state tallies, replaced by their own lists;

@@ -70,7 +70,7 @@ Property tests (`@fast-check/vitest`, `*.property.test.ts`) cover every framewor
 
 **A property states a law that a whole family of implementations satisfies. A unit test names one member of that family.** Neither does the other's job, and the choice follows from which kind of claim you have.
 
-**The division between the two layers is clean, and it generalizes.** The properties caught every change to the _shape_ of the relationship and none to its _calibration_. The unit tests caught exactly the reverse. The fault-injection run behind that claim is in `engineering.rationale.md`.
+**The division between the two layers is clean, and it generalizes.** The properties caught every change to the _shape_ of the relationship and none to its _calibration_. The unit tests caught exactly the reverse. The fault-injection run behind that claim is in `engineering.meta.md`.
 
 So:
 
@@ -87,7 +87,7 @@ So:
 
 **Accept a property whose failure mode is a float boundary on a repeated run, never on a run.** This is an acceptance standard rather than a third authoring rule. One green run is no evidence about a defect the arbitrary hits a fraction of a percent of the time. `slice/smooth-zoom-transitions` settled on 120 to 150 repeated runs of the file, plus a bulk replay of that file's own arbitraries. It found a real overshoot in `zoomGlide.ts` that each single run had roughly a 0.35% chance of catching.
 
-<!-- Closed decision: the eight-fault run that established the property/unit split, the arbitrary whose draws crowded toward zero, and the Invalid Date defect that paid for both rules, are in `engineering.rationale.md`. -->
+<!-- Closed decision: the eight-fault run that established the property/unit split, the arbitrary whose draws crowded toward zero, and the Invalid Date defect that paid for both rules, are in `engineering.meta.md`. -->
 
 **Two sections about the mutation runner used to sit here and now live in `mutation-testing.md`.** They
 cover how to rule a survivor equivalent, and when `it.skipIf('__stryker__' in globalThis)` is an accepted
@@ -127,7 +127,7 @@ Do not generalize "the `scripts/` tools are advisory" to any of these four.
 
 **A new program in `scripts/` is picked up automatically.** `crap4ts.scripts.config.ts`'s `include` and `stryker.scripts.config.json`'s `mutate` are glob-minus-exclusion rather than hand-maintained lists, and each config states its own reasoning. **What you must still do by hand is add an exclusion** when a new file genuinely should not be measured. The failure then shows up as a loud threshold breach rather than as silence.
 
-<!-- Closed decision: why those lists stopped being enumerated, and why `.dry4tsrc.json`'s `**/run.ts` exclusion is deliberately broader than its intent, are in `engineering.rationale.md`. -->
+<!-- Closed decision: why those lists stopped being enumerated, and why `.dry4tsrc.json`'s `**/run.ts` exclusion is deliberately broader than its intent, are in `engineering.meta.md`. -->
 
 - Work performed inside `scripts/` runs the scripts-scoped pipeline: `npm run test:scripts`, `npm run test:coverage:scripts`, `npm run crap4ts:scripts`, `npm run dry4ts:scripts`, `npm run test:mutation:scripts`. The `src/`-scoped commands (`npm test`, `npm run test:unit`, `npm run crap4ts`, `npm run dry4ts`, `npm run test:mutation`) cannot see `scripts/` at all — `vite.config.ts` excludes it, and the three tool configs are scoped to `src/`. The reverse holds too: do not reach for the `:scripts` commands when your change was in `src/`/`features/`; they would report on code you did not touch.
 - `coder` substitutes `npm run test:scripts` for `npm run test:unit`. There is no fast/slow split to make here. `scripts/` has no separate property vitest _project_, so whatever property tests it holds already run inside `test:scripts` — both the fast path and the whole path.
@@ -156,7 +156,7 @@ Ported from swarm-forge's six-pack branch's own `local-engineering.prompt`, whic
 
 - Every role except `product` in SPECIFY mode must run the relevant tests before handoff and fix any failures. (SPECIFY runs before any implementation exists, so there is nothing yet to verify; `product` in VERIFY mode runs everything.) In this repo that is `npm run test:unit` (fast path — unit tests + Gherkin acceptance tests, excludes property tests) unless a role's own file specifies the full `npm test` instead.
 - `architect`, `hardener` and `product` must also confirm property-test results before handoff, with `npm run test:property` or the property-test portion of a full `npm test` run. They are the only roles that own that layer. `coder` and `cleaner` never need to run property tests, and nor does `product` in SPECIFY mode. That is a deliberate speed tradeoff, so the fast TDD and cleanup loop does not pay for property-test runtime on every iteration.
-- Every role except `product` in SPECIFY mode must run `npm run build` before handoff, **every time**. Not just "when you happen to touch something that looks type-sensitive." Vitest does not type-check, so tests can stay fully green while `tsc -b` is red. This is not hypothetical: the case where a build break sat undetected for a full role is in `engineering.rationale.md`. Each role's own file names the exact step where `npm run build` belongs. Treat it as load-bearing, not optional.
+- Every role except `product` in SPECIFY mode must run `npm run build` before handoff, **every time**. Not just "when you happen to touch something that looks type-sensitive." Vitest does not type-check, so tests can stay fully green while `tsc -b` is red. This is not hypothetical: the case where a build break sat undetected for a full role is in `engineering.meta.md`. Each role's own file names the exact step where `npm run build` belongs. Treat it as load-bearing, not optional.
 - Run the relevant local verification command before handoff, whenever this repo has one for what you touched. `CLAUDE.md`'s Commands section carries the full list and what each covers. `npm run ast-grep` is the cheap one and applies to any code change. See "Structural rules (ast-grep)" above for why its exit code is not the signal.
 - Whole-suite commands are safe to run concurrently **across worktrees**. Each slice's worktree has its own ports, its own `node_modules`, and its own `coverage/`, `reports/`, `test-results/`, `.stryker-tmp*`, `dist/` and `dist-perf/`. `dev-port.ts` derives a dev-server, Vitest-browser-API and `vite preview` port per checkout.
 - Inside a **single** worktree the old rule stands unchanged. Avoid running whole-suite test commands concurrently when their outputs could interfere. Do not run `npm run test:mutation` and `npx playwright test` at the same time against the same dev server. Do not run `npm run test:coverage` while `npm run crap4ts` is reading `coverage/coverage-final.json`. `crap4ts` auto-discovers that path with no `--coverage` flag, unlike `crap4ts:scripts`, so a concurrent coverage run leaves it scoring a half-written report.

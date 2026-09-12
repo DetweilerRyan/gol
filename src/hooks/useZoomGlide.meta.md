@@ -40,4 +40,4 @@ you there. Read them before changing the unmount path or the ref-syncing effect.
   `state-flow.md`, the cross-hook constraint list.
 - **The returned controller's identity stability, and the silent failure if the ref-syncing effect is
   declared above `useReducedMotion()`** — `state-flow.md`'s identity-contract section, with the churn
-  measurements in `state-flow.rationale.md`.
+  measurements in `state-flow.meta.md`.

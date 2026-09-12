@@ -24,7 +24,7 @@ export interface CheckInput {
   vitestProjects: VitestProject[]
   strykerIgnorePatterns: string[]
   trackedFiles: Set<string>
-  rationaleText: string
+  metaDocText: string
 }
 
 function entriesSecuredBy(allow: AllowEntry[], securedBy: AllowEntry['securedBy']): AllowEntry[] {
@@ -123,13 +123,13 @@ export function checkWrittenArgumentTracked(
     }))
 }
 
-/** C4: every `allow[].path` and every `absent[].path` appears verbatim in the rationale text -- the per-entry arguments, which run.ts's RATIONALE_PATH resolves to `.claude/agents/articles/mutation-testing.rationale.md`. */
-export function checkMentionedInRationale(config: MutationInvarianceConfig, rationaleText: string): GateFailure[] {
+/** C4: every `allow[].path` and every `absent[].path` appears verbatim in the rationale text -- the per-entry arguments, which run.ts's META_DOC_PATH resolves to `.claude/agents/articles/mutation-testing.meta.md`. */
+export function checkMentionedInMetaDoc(config: MutationInvarianceConfig, metaDocText: string): GateFailure[] {
   const paths = [...config.allow.map((entry) => entry.path), ...config.absent.map((entry) => entry.path)]
   return paths
-    .filter((path) => !rationaleText.includes(path))
+    .filter((path) => !metaDocText.includes(path))
     .map((path) => ({
-      check: 'mentioned-in-rationale',
+      check: 'mentioned-in-meta-doc',
       file: path,
       message: `${path} does not appear verbatim in the rationale text`,
     }))
@@ -223,7 +223,7 @@ export function checkAll(input: CheckInput): GateFailure[] {
     ...checkVitestExcludeCoverage(input.config, input.vitestProjects),
     ...checkStrykerIgnoreCoverage(input.config, input.strykerIgnorePatterns),
     ...checkWrittenArgumentTracked(input.config, input.trackedFiles),
-    ...checkMentionedInRationale(input.config, input.rationaleText),
+    ...checkMentionedInMetaDoc(input.config, input.metaDocText),
     ...checkNoDuplicatePaths(input.config),
     ...checkAllowAbsentDisjoint(input.config),
   ]

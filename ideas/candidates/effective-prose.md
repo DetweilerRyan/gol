@@ -197,6 +197,6 @@ construction; Waves 2 to 4 are mostly Markdown.
   slice, from 28,902 to 36,856 bytes, after an instruction-only pass cut roughly 10.9 KB. A further
   cut needs a target, and `architect` correctly declined to invent one.
 - **Does the hook belong here?** Installing the `agent-tools` plugin with `VALE_HOOK_LEVEL=warning`
-  is a user action, so it is recorded in `prose.rationale.md` rather than filed as a slice.
+  is a user action, so it is recorded in `prose.meta.md` rather than filed as a slice.
 - **Is this epic itself a lane the board should have?** `ideas/` is two lanes by design, and an epic
   is neither. It sits in `candidates/` as an index rather than as work.

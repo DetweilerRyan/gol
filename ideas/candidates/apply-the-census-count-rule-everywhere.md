@@ -29,8 +29,8 @@ So the counts to fix first are the ones a normal slice moves:
 
 - `CLAUDE.md`'s **"Twenty framework-free modules"**, **"Sixteen hooks"**, **"Thirteen unit-tested
   components"** — a slice that adds one module falsifies all the sentences that quote them.
-- `state-flow.rationale.md`'s **"sixteen hooks"** and **"fifteen of sixteen"**.
-- `ast-grep-rules.rationale.md`'s **"all sixteen hooks are `src/hooks/*.ts`"**.
+- `state-flow.meta.md`'s **"sixteen hooks"** and **"fifteen of sixteen"**.
+- `ast-grep-rules.meta.md`'s **"all sixteen hooks are `src/hooks/*.ts`"**.
 
 And the counts that can wait, because only unusual work moves them: the role count (five), the rule
 count (31), the article count (ten), the program count (nine). **A slice that changes those is a slice
@@ -159,7 +159,7 @@ the sweeper is looking for them.
   becomes permanent maintenance. The honest prior is that this is convention by construction, like the
   roster and quoted-title halves of the claim-discipline rule that `slice/comment-reference-checks` scoped
   out for the same reason. **A negative answer is a real deliverable here** — write it down in
-  `engineering.rationale.md` so the question is closed rather than reopened annually.
+  `engineering.meta.md` so the question is closed rather than reopened annually.
 - **Is the module map a census or a premise?** Stated above as the deliverable of the `CLAUDE.md` decision,
   not settled here.
 - **Does "Ten are topic articles" survive the sidecar rollout?** It counts `.claude/agents/articles/`

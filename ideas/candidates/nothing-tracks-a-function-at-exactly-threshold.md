@@ -40,7 +40,7 @@ nothing, so it cannot break a build; it turns an invisible edge into a line some
 
 The `crap4ts` patch in `patches/` is where this would live, or a wrapper. Note the weight: a wrapper
 under `scripts/` owes CRAP <= 6, its own vitest suite, `dry4ts:scripts` and mutation testing, which is
-a lot of machinery for a comparison. Read `quality-tooling.rationale.md` on the existing patch first.
+a lot of machinery for a comparison. Read `quality-tooling.meta.md` on the existing patch first.
 
 ## Open questions
 

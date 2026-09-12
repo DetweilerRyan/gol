@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest'
 import {
   checkAll,
   checkAllowAbsentDisjoint,
-  checkMentionedInRationale,
+  checkMentionedInMetaDoc,
   checkNoDuplicatePaths,
   checkNonEmptyInputs,
   checkStrykerIgnoreCoverage,
@@ -27,7 +27,7 @@ function input(overrides: Partial<CheckInput> = {}): CheckInput {
     vitestProjects: [{ name: 'unit', exclude: ['features/**'] }],
     strykerIgnorePatterns: ['/features'],
     trackedFiles: new Set(['CLAUDE.md']),
-    rationaleText: 'features/** CLAUDE.md',
+    metaDocText: 'features/** CLAUDE.md',
     ...overrides,
   }
 }
@@ -130,25 +130,25 @@ describe('checkWrittenArgumentTracked (C3)', () => {
   })
 })
 
-describe('checkMentionedInRationale (C4)', () => {
+describe('checkMentionedInMetaDoc (C4)', () => {
   it('passes when every allow and absent path appears verbatim', () => {
     const cfg = config({ allow: [allowEntry({ path: 'features/**' })], absent: [{ path: 'src/**', reason: 'x' }] })
-    const failures = checkMentionedInRationale(cfg, 'features/** and src/** are both discussed')
+    const failures = checkMentionedInMetaDoc(cfg, 'features/** and src/** are both discussed')
     expect(failures).toHaveLength(0)
   })
 
   it('fails a path missing from the rationale text', () => {
     const cfg = config({ allow: [allowEntry({ path: 'features/**' })] })
-    const failures = checkMentionedInRationale(cfg, 'no mention here')
+    const failures = checkMentionedInMetaDoc(cfg, 'no mention here')
     expect(failures).toHaveLength(1)
-    expect(failures[0].check).toBe('mentioned-in-rationale')
+    expect(failures[0].check).toBe('mentioned-in-meta-doc')
     expect(failures[0].file).toBe('features/**')
     expect(failures[0].message).toBe('features/** does not appear verbatim in the rationale text')
   })
 
   it('checks absent paths too, independently of allow', () => {
     const cfg = config({ absent: [{ path: 'src/**', reason: 'x' }] })
-    const failures = checkMentionedInRationale(cfg, 'nothing here')
+    const failures = checkMentionedInMetaDoc(cfg, 'nothing here')
     expect(failures).toHaveLength(1)
     expect(failures[0].file).toBe('src/**')
   })
@@ -259,7 +259,7 @@ describe('checkAll', () => {
       absent: [{ path: 'src/**', reason: 'x' }],
     })
     const failures = checkAll(
-      input({ config: cfg, rationaleText: 'features/** and src/** are both discussed in the merge protocol' }),
+      input({ config: cfg, metaDocText: 'features/** and src/** are both discussed in the merge protocol' }),
     )
     expect(failures).toEqual([])
   })

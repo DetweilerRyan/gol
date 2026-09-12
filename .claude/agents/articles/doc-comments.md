@@ -8,7 +8,7 @@
 - before adding a JSDoc block to a new export
 - whenever a hover did not tell you enough to use a thing
 
-> The evidence for every rule here is in `doc-comments.rationale.md`. It holds the measurements, the
+> The evidence for every rule here is in `doc-comments.meta.md`. It holds the measurements, the
 > probe methods, the rejected alternatives and the corrections. Read it when you are **changing** a rule
 > below, never in order to follow one. Every rule here is actionable without it.
 
@@ -22,7 +22,7 @@ Three roles name this article in their own files: `coder`, `cleaner`, `architect
 
 **That is the trigger list, not the binding list.** The `jsdoc-standing-rule` DESIGN pass made both
 rulings below on 2026-09-06, on the user's direction to split the standing duty across those three
-roles. The account is in `doc-comments.rationale.md`.
+roles. The account is in `doc-comments.meta.md`.
 
 **`hardener` is bound but carries no read trigger, deliberately.** It reaches the governing rule through
 `engineering.md`'s "Where a comment goes is a design decision too" line, which every role reads
@@ -47,7 +47,7 @@ JSDoc, forever, and hover renders everything including tags. **There is no trunc
 volume by writing less, not by tagging it differently.
 
 > `@remarks` was rejected as a truncation lever, and again as a tag at all. See
-> `doc-comments.rationale.md`.
+> `doc-comments.meta.md`.
 
 ## Part 1 — Writing
 
@@ -142,7 +142,7 @@ content and drop the tag word, moving it into the prose above the block tags.
 
 > The closure is a ruling with an argument behind it, not a preference. A block tag's hover payload is
 > its own label, and a label earns its rendered line only when it says something the prose could not.
-> Read `doc-comments.rationale.md` before proposing a sixth row. `@deprecated` is the likeliest
+> Read `doc-comments.meta.md` before proposing a sixth row. `@deprecated` is the likeliest
 > candidate and still needs its measurement.
 
 **`{@link}` is an _inline_ tag, and rule 7 mandates it.** `src/cache.ts` and `src/cellTiles.ts` use it
@@ -177,13 +177,13 @@ When an abstraction genuinely needs more than the budget, keep a lighter overvie
 depth into Markdown beside the source. That depth splits across two files, by filename, so a reader knows
 which register they opened before reading a word.
 
-| File                    | Holds                                             | Read when                                        |
-| ----------------------- | ------------------------------------------------- | ------------------------------------------------ |
-| `<module>.md`           | extended examples, use cases, best-practice notes | the hover was not enough, and you are calling it |
-| `<module>.rationale.md` | measurements, rejected alternatives, corrections  | you are changing it                              |
+| File               | Holds                                             | Read when                                        |
+| ------------------ | ------------------------------------------------- | ------------------------------------------------ |
+| `<module>.md`      | extended examples, use cases, best-practice notes | the hover was not enough, and you are calling it |
+| `<module>.meta.md` | measurements, rejected alternatives, corrections  | you are changing it                              |
 
 Either file may be absent, and usually one is. All three live instances are rationale:
-`src/cache.rationale.md`, `src/hooks/useZoomGlide.rationale.md` and `src/scrollbars.rationale.md`. Read the
+`src/cache.meta.md`, `src/hooks/useZoomGlide.meta.md` and `src/scrollbars.meta.md`. Read the
 `useZoomGlide` one as the precedent.
 
 This mirrors the article tier on purpose, so one convention covers both. Separating by filename rather than
@@ -198,12 +198,12 @@ each other, is CLAUDE.md's branch 5 drift one tier down.
 That gives a three-tier escalation: **hover for the contract, sidecar for the depth, implementation only
 when changing it.**
 
-**Write the reference as `@see {@link ./useZoomGlide.rationale.md}`.** Hover mangles a bare path after
+**Write the reference as `@see {@link ./useZoomGlide.meta.md}`.** Hover mangles a bare path after
 `@see`. The braced form renders exactly. Point the hover at whichever half that declaration's reader needs,
-and at both when both exist. Point it at `<module>.rationale.md` when what the reader most needs is why the
+and at both when both exist. Point it at `<module>.meta.md` when what the reader most needs is why the
 contract is shaped this way. All three live links do exactly that.
 
-> Four alternative `@see` forms were measured and rejected. See `doc-comments.rationale.md`.
+> Four alternative `@see` forms were measured and rejected. See `doc-comments.meta.md`.
 
 **What `reference-check` sees of a sidecar is narrower than "the filename is checked", and the difference
 falls on the one form this rule mandates.** `check-md-references` added `md` to the extractor, so a
@@ -212,39 +212,39 @@ gaps this section used to describe as open; what follows is the state after that
 the landed tree:
 
 - **A repo-relative token in doc prose or in a `//` comment is checked.** Rewriting
-  `src/cache.rationale.md` to a name that resolves to nothing fails the gate by name and line. Renaming
+  `src/cache.meta.md` to a name that resolves to nothing fails the gate by name and line. Renaming
   both module sidecars redded four such references at once.
 - **A leading-dot token is now checked too, by its own basename.** `references.ts`'s `isDiscardedToken`
   used to drop every token starting with `.`, which also discarded the exact shape of
-  `@see {@link ./cache.rationale.md}` -- the mandated form itself. It now checks only whether the token's
-  _basename_ starts with `.`, so `./cache.rationale.md` resolves against `cache.rationale.md` wherever it
+  `@see {@link ./cache.meta.md}` -- the mandated form itself. It now checks only whether the token's
+  _basename_ starts with `.`, so `./cache.meta.md` resolves against `cache.meta.md` wherever it
   lives. **What this verifies is that the name resolves, not that the relative path in front of it is
   right.** `{@link ./<name>.md}` written from any directory resolves against a `<name>.md` anywhere in
   the repo. That is the same basename-only matching every other check in this program already made. A sidecar
   reference no longer needs a parallel `//`-comment repo-relative citation for the checker's sake. One may
   still exist, though, for a reader who cannot resolve a relative path from prose alone.
 - **Matching is by basename, never by full path.** A sidecar moved to another directory still resolves.
-  Measured by relocating `src/cache.rationale.md` into `src/hooks/`: green.
+  Measured by relocating `src/cache.meta.md` into `src/hooks/`: green.
 - **The doc surface is now every tracked/untracked-not-ignored `.md` file outside `ideas/**` and
   `.claude/worktrees/**`**, not `CLAUDE.md`, `README.md` and `.claude/**/*.md` alone. A sidecar's own
   references are read directly under this surface -- `src/**/*.md` no longer needs the source surface to
   reach them.
 
 **Vale does reach the pair, and treats the halves differently.** `.vale.ini` scopes `[src/**/*.md]` to the
-same six STE rules the articles carry. Its `[**/*.rationale.md]` section then exempts the rationale half,
-matching how article rationale is treated.
+same six STE rules the articles carry. Its `[**/*.meta.md]` section then exempts the meta half,
+matching how article meta prose is treated.
 
 `reference-check-reach` closed the two scan gaps this used to warn about by hand. A rename that moves a
-module without moving its `@see {@link ./<module>.rationale.md}` citation now fails
+module without moving its `@see {@link ./<module>.meta.md}` citation now fails
 `file-reference-resolves`, because that citation resolves by basename like any other. What the checker
 still cannot verify is a sidecar's own **contents**. Hold a sidecar to the comment-assertion convention by
 hand: no quoted test titles, no caller rosters, no `<file>:NN`. Nothing will catch one.
 
 **Which half a fact goes in is branch 5's test, one tier down: does a caller act on it?** The claim a
 caller acts on belongs in the hover, and its worked-out form in `<module>.md`. The evidence behind that
-claim belongs in `<module>.rationale.md`. `useZoomGlide` is the live example. Its hover states that the
+claim belongs in `<module>.meta.md`. `useZoomGlide` is the live example. Its hover states that the
 completion frame is bit-identical to an instantaneous zoom, because a caller can rely on that. The
-float-divergence measurement that establishes it sits in the rationale half.
+float-divergence measurement that establishes it sits in the meta half.
 
 ### 8. Scope: exported declarations **and** interface/type members
 
@@ -265,7 +265,7 @@ kinds of block, even when the ruling is "stays `//`":
 - blocks above module-private constants
 - in-body blocks
 
-Budget the whole comment surface. The counts behind the 3x are in `doc-comments.rationale.md`.
+Budget the whole comment surface. The counts behind the 3x are in `doc-comments.meta.md`.
 
 **A hook that returns an object.** Two facts, and keep them apart. The first says what breaks. The second
 says where to write instead. They are not scoped alike.
@@ -320,12 +320,12 @@ form. It never judges prose. See `ast-grep-rules.md` for its matcher.
 > - `{@link}` inside `@param`'s own type slot (`@param {@link X} value`)
 > - `@example` in every respect
 >
-> The probe methods are in `doc-comments.rationale.md`. The constraint is here because it binds what you
+> The probe methods are in `doc-comments.meta.md`. The constraint is here because it binds what you
 > may write.
 
 > A presence-only rule — "every export carries a doc" — was proposed alongside the ast-grep rule above
 > and rejected. It cannot tell whether a summary says anything, and an empty `/** */` satisfies it. Read
-> `doc-comments.rationale.md` before re-proposing it.
+> `doc-comments.meta.md` before re-proposing it.
 
 ### 9. Syntax hazards
 

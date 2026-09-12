@@ -2,7 +2,7 @@
 
 **Audience:** product, coder, architect. **Read when:** authoring a .feature, a step module, or an e2e spec. Also when adding a \*.browser.test.ts, and in architect CONTRACT mode.
 
-> The measurements behind every ruling here are in `testing-layers.rationale.md`. It holds the test-count history, the barrel curation figures, the fault runs, and the readings later corrected. Read it when you are **changing** a ruling below, never in order to follow one.
+> The measurements behind every ruling here are in `testing-layers.meta.md`. It holds the test-count history, the barrel curation figures, the fault runs, and the readings later corrected. Read it when you are **changing** a ruling below, never in order to follow one.
 
 ### Testing structure (three test layers plus the contract they answer to, deliberately separate)
 
@@ -52,7 +52,7 @@
 
    Two claims of this shape can look identical and behave differently under the same fault. Only running the fault tells them apart. The hand-written tests this ruling retires recorded neither. The headers they carried before `correct-hand-written-spec-headers` both asserted the claim was unstateable.
 
-<!-- Closed decision: the fault run that separated the canary from the non-canary, and why the layout fact stays prose rather than becoming a precondition step, are in `testing-layers.rationale.md`. -->
+<!-- Closed decision: the fault run that separated the canary from the non-canary, and why the layout fact stays prose rather than becoming a precondition step, are in `testing-layers.meta.md`. -->
 
 **Every hand-written test carries a header naming the claim it uniquely holds**, and that header is what licenses the test to keep existing. `triage-paired-specs` generalized the `feature-prose-honesty` pattern from `.feature` prose to this layer, and this is the durable form of that triage. The reverse obligation comes with it: do not delete a test here without restating its claim in `features/**`.
 
@@ -72,7 +72,7 @@ Note that (b) and (c) are what `engineering.md`'s three placement questions prod
 
 That is why this obligation attaches to editing rather than to authoring. A header found inaccurate is `product`'s to correct, the whole directory being its manifest.
 
-<!-- Closed decision: the 33-test header audit that produced this obligation, and one worked example of each decay mode, are in `testing-layers.rationale.md`. -->
+<!-- Closed decision: the 33-test header audit that produced this obligation, and one worked example of each decay mode, are in `testing-layers.meta.md`. -->
 
 **Two Playwright projects, one directory, both alive.** `playwright.config.ts` defines `e2e` and `bdd`. `e2e` carries `testDir` `features/` and `testMatch` `**/*.e2e.spec.ts`, the hand-written specs above. `bdd` uses `defineBddProject` from playwright-bdd 9.2.0, which compiles `features/*.feature` against the step definitions in `features/steps/*.ts` and writes generated specs into `.features-gen/bdd/features/`. **Every `features/*.feature` generates**: the `pattern-library-steps` slice wrote the step module the last one was missing.
 
@@ -100,13 +100,13 @@ The convention that keeps this legible: **define a step shared by several featur
 
 **The method has a trap, and it is what made those two instruments disagree. A matcher that converts cucumber expressions to regular expressions by hand over-matches**, because `{word}` naively becomes `(\S+)`, and it then picks among multiple hits arbitrarily. **bddgen is the tie-breaker.** It exits 0 on this tree, which proves the real registry has no ambiguous step text. **So any multi-hit your matcher reports is your matcher's artifact, rather than a fact about the layer.** Resolve one by hand against the step pattern's literal text.
 
-<!-- Closed decision: the map as it stood, its two corrections, and the unresolved disagreement between two instruments, are in `testing-layers.rationale.md`. -->
+<!-- Closed decision: the map as it stood, its two corrections, and the unresolved disagreement between two instruments, are in `testing-layers.meta.md`. -->
 
 **A step's `Given`/`When`/`Then` keyword is not part of its identity here.** That is a config default rather than a property of the runner. playwright-bdd matches by step text alone, and filters by keyword only when `matchKeywords` is set, which this repo does not set. So a step registered with `When(...)` matches from a `Given` position and vice versa, and `features/pattern-library.feature` leans on that.
 
 **Do not reach for the option when a keyword reads oddly. Reword the step, and that is `product`'s call.** Turning `matchKeywords` on breaks one keyword-position use while leaving other uses of the same step untouched. Because bddgen is all-or-nothing, the whole `bdd` project then stops generating.
 
-<!-- Closed decision: the reading of playwright-bdd's own source behind that ruling, and why a `Given` twin of an existing `When` is not an available fix, are in `testing-layers.rationale.md`. -->
+<!-- Closed decision: the reading of playwright-bdd's own source behind that ruling, and why a `Given` twin of an existing `When` is not an available fix, are in `testing-layers.meta.md`. -->
 
 **`features/e2e-helpers.ts` is the single module a step module may import.** That is mandated rather than conventional: `rules/no-domain-imports-in-bdd-steps.yml`'s allowlist is exactly `playwright-bdd`, `@playwright/test` and `../e2e-helpers`. Anything a step needs that it cannot reach through that module is **added to the `features/screenplay/` module that owns it, then re-exported from the barrel**. Never import around it. `e2e-helpers.ts` is now a pure re-export file, so writing a function body in it would be the wrong fix in the other direction.
 
@@ -114,7 +114,7 @@ The convention that keeps this legible: **define a step shared by several featur
 
 The rule records its invalidating conditions rather than a deletion trigger. **No count of the barrel's exports is kept here.** It grows with the layer, and the figure has gone stale four times. Count it when you need it.
 
-<!-- Closed decision: the four measurements behind the re-ratification, and the objection that the barrel would die with the paired specs, are in `testing-layers.rationale.md`. -->
+<!-- Closed decision: the four measurements behind the re-ratification, and the objection that the barrel would die with the paired specs, are in `testing-layers.meta.md`. -->
 
 The screenplay layer is shared with the hand-written `*.e2e.spec.ts` specs — same layer, same rules. It is also where this layer's ARIA reach-arounds are confined whenever one exists. **The confinement is the discipline, and it is general rather than a note attached to whichever one is outstanding.** A reach-around lives in exactly one function, never as an idiom several call sites reach for. It carries a **deletion trigger** beside it, naming the slice that will retire it. **Every one filed so far has been paid off**, so expect none outstanding and treat a new one as debt from the day it lands.
 
@@ -122,7 +122,7 @@ The screenplay layer is shared with the hand-written `*.e2e.spec.ts` specs — s
 
 `patternCategoryInLibrary` is the worked distinction. It reads document order that _is_ the affordance heading navigation gives an AT user. So it has no idea filed, and should not grow one. Adding attributes for query convenience is a test hook wearing an affordance's name.
 
-<!-- Closed decision: the two reach-arounds that were paid off, what the second one's retirement removed downstream, and why `patternCategoryInLibrary` is not a third, are in `testing-layers.rationale.md`. -->
+<!-- Closed decision: the two reach-arounds that were paid off, what the second one's retirement removed downstream, and why `patternCategoryInLibrary` is not a third, are in `testing-layers.meta.md`. -->
 
 **`features/e2e-helpers.ts` has been split, and survives the split as a re-exporting barrel.** The `screenplay-e2e-decomposition` slice moved its contents into `features/screenplay/`, one module per Screenplay-pattern role. `viewport.ts` holds the fixed camera and viewport facts and imports nothing. `notepad.ts` holds scenario-scoped scratch state, keyed by the `page` fixture since this suite has no Actors. `elements.ts` holds the PageElements — how a thing is reached.
 
@@ -140,7 +140,7 @@ _Third, a `fireEvent.click` on a cell in the deleted step layer was **not** the 
 
 The e2e layer drives both the pointer route and the keyboard one. The deleted layer drove only the keyboard route, and never exercised hit-testing at all. What survives of this is the narrow half only. It is now a warning about a layer nobody can run. **A green jsdom run was never evidence about hit-testing**, which is exactly what it could not see.
 
-<!-- Closed decision: the mutation run behind the harness ruling, the fault injection that measured the two activation routes, and the commit whose opposite conclusion this corrects, are in `testing-layers.rationale.md`. -->
+<!-- Closed decision: the mutation run behind the harness ruling, the fault injection that measured the two activation routes, and the commit whose opposite conclusion this corrects, are in `testing-layers.meta.md`. -->
 
 There is no single default jsdom run any more. `vite.config.ts`'s `test.projects` splits the main vitest config into `unit`/`property` in Node and `dom` in jsdom — see CLAUDE.md's compact module map, and `architecture.md`. All three projects still exclude `**/*.e2e.spec.ts`, `**/*.browser.test.ts` and `**/*.perf.spec.ts` via the shared `exclude` list. So the three runners never collide: this config, `vitest.browser.config.ts`, and Playwright.
 
@@ -152,6 +152,6 @@ That same shared list also subtracts whole **directories**, and they outnumber t
 
 **Be aware a vitest project whose `include` glob matches nothing simply reports 0 files and exits 0.** There is no warning. If `dom`'s globs — `src/components/**` and `src/hooks/**` — ever stop matching anything because one of those directories gets renamed, `npm test` stays green while quietly running none of that project's files. See the comment in `vite.config.ts` for the other files that same rename would need to update.
 
-<!-- Closed decision: the measured collection counts behind these three hazards are in `testing-layers.rationale.md`. -->
+<!-- Closed decision: the measured collection counts behind these three hazards are in `testing-layers.meta.md`. -->
 
 `perf/` is a fifth top-level directory of Playwright specs, and deliberately **not** a fifth test layer. It measures render cost and asserts nothing about performance — see `perf/README.md`. It is outside every quality gate on purpose, which is why the split described in `quality-tooling.md` matters: the numbers themselves are computed in `scripts/perf-report/`, which is gated.

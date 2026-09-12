@@ -25,24 +25,24 @@ const REPO_ROOT = path.resolve(SCRIPT_DIR, '../..')
 
 const CONFIG_PATH = 'mutation-invariance.config.json'
 const SCHEMA_PATH = 'schemas/mutation-invariance.schema.json'
-const RATIONALE_PATH = '.claude/agents/articles/mutation-testing.rationale.md'
+const META_DOC_PATH = '.claude/agents/articles/mutation-testing.meta.md'
 
 function readRepoFile(repoRoot: string, relativePath: string): string {
   return readFileSync(path.join(repoRoot, relativePath), 'utf8')
 }
 
 // Same existsSync-guard-that-throws-by-name idiom as agent-doc-check's
-// RULE_DOC_PATH: a moved or renamed rationale file must fail loudly rather
+// RULE_DOC_PATH: a moved or renamed meta file must fail loudly rather
 // than produce a clean run over nothing. Without this guard, a missing file
-// would make checkMentionedInRationale (C4) fail every allow[]/absent[]
+// would make checkMentionedInMetaDoc (C4) fail every allow[]/absent[]
 // path as "not mentioned" -- still a failure, but the wrong one, and one
 // that gives no hint the file itself moved rather than the prose in it.
-function readRationaleFile(repoRoot: string): string {
-  const fullPath = path.join(repoRoot, RATIONALE_PATH)
+function readMetaDocFile(repoRoot: string): string {
+  const fullPath = path.join(repoRoot, META_DOC_PATH)
   if (!existsSync(fullPath)) {
-    throw new Error(`Rationale file not found: ${RATIONALE_PATH} -- checkMentionedInRationale (C4) has nothing to read`)
+    throw new Error(`Meta doc not found: ${META_DOC_PATH} -- checkMentionedInMetaDoc (C4) has nothing to read`)
   }
-  return readRepoFile(repoRoot, RATIONALE_PATH)
+  return readRepoFile(repoRoot, META_DOC_PATH)
 }
 
 /**
@@ -107,7 +107,7 @@ export async function gatherDecideInput(repoRoot: string, range: string | undefi
     vitestProjects: await loadVitestProjects(),
     strykerIgnorePatterns: loadStrykerIgnorePatterns(repoRoot),
     trackedFiles: loadTrackedFiles(repoRoot),
-    rationaleText: readRationaleFile(repoRoot),
+    metaDocText: readMetaDocFile(repoRoot),
     diff: range === undefined ? undefined : loadDiff(repoRoot, range),
   }
 }

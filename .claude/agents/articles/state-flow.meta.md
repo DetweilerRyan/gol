@@ -205,7 +205,7 @@ classifier is not runnable from here. Read them as the shape of the split, not a
 | Backticked slice slugs             |      5 |      2 |
 | Vale mechanical findings           |     67 |      0 |
 
-**Read the rationale-bytes and entanglement rows with the confound `testing-layers.rationale.md` records.**
+**Read the rationale-bytes and entanglement rows with the confound `testing-layers.meta.md` records.**
 A block-level classifier cannot compare a file against itself across a pass that changes paragraph
 granularity, and mandate 6 changes it drastically. The byte count is the row that compares.
 

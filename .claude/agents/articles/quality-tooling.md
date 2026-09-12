@@ -2,7 +2,7 @@
 
 **Audience:** cleaner, architect, hardener. **Read when:** on an unexpected crap4ts number, when touching .gherkin-lintrc or `.oxlintrc.json`, on a `jsdoc/*` lint finding, or at hardener stages 6-8.
 
-> The measurements behind every ruling here are in `quality-tooling.rationale.md`. It holds the patch mechanism, the probe methods, the declined-rule roster and the readings later corrected. Read it when you are **changing** a ruling below, never in order to follow one.
+> The measurements behind every ruling here are in `quality-tooling.meta.md`. It holds the patch mechanism, the probe methods, the declined-rule roster and the readings later corrected. Read it when you are **changing** a ruling below, never in order to follow one.
 
 ## crap4ts is patched locally
 
@@ -24,7 +24,7 @@ This is broader than a missing entry for a newly-landed file. _Any_ line-shiftin
 
 The many `[unmatched-no-ast]` warnings under `--verbose` are unrelated and expected. They are coverage entries in files outside crap4ts's `include` list, plus nested functions crap4ts does not score.
 
-<!-- Closed decision: the overlap-threshold mechanism, the upstream PR it mirrors, and the exact chunk filenames the patch targets are in `quality-tooling.rationale.md`. -->
+<!-- Closed decision: the overlap-threshold mechanism, the upstream PR it mirrors, and the exact chunk filenames the patch targets are in `quality-tooling.meta.md`. -->
 
 ## The `scripts/` project and its layout
 
@@ -42,7 +42,7 @@ The shared root modules are these. `scripts/feature-files.ts` exports `listFeatu
 
 **Imports run program → shared and never the reverse.** That is what keeps the shared file safe to change. A root module reaching back into a program directory would couple every other program to that program's internals. `rules/no-downward-import-in-scripts.yml` checks it mechanically, firing on any relative import under `scripts/` that descends through a directory segment.
 
-<!-- Closed decision: why `listFeatureFiles` throws twice, the duplication that produced each shared module, and the probe behind the import-direction rule are in `quality-tooling.rationale.md`. -->
+<!-- Closed decision: why `listFeatureFiles` throws twice, the duplication that produced each shared module, and the probe behind the import-direction rule are in `quality-tooling.meta.md`. -->
 
 ### The advisory programs
 
@@ -65,7 +65,7 @@ The shared root modules are these. `scripts/feature-files.ts` exports `listFeatu
 
 Two consequences follow. There is **no** scripts-scoped property command, and no role gains an obligation — see `engineering.md`'s "Working inside `scripts/`". And do **not** "fix" the apparent inconsistency by widening the src-side `property` project to reach `scripts/`.
 
-<!-- Closed decision: why widening that project is the wrong fix, and why its `sharedExclude` entry is not one the merge protocol's predicate leans on, are in `quality-tooling.rationale.md`. -->
+<!-- Closed decision: why widening that project is the wrong fix, and why its `sharedExclude` entry is not one the merge protocol's predicate leans on, are in `quality-tooling.meta.md`. -->
 
 ## `.gherkin-lintrc`
 
@@ -80,7 +80,7 @@ Four facts about the library are easy to get wrong, all measured against the ins
 - **`no-restricted-patterns` compiles every pattern with `new RegExp(pattern, 'i')`, unconditionally.** Case is therefore not available as a signal, so the list has to be an enumerated vocabulary rather than a shape.
 - **It reads names, descriptions and step text, and never Examples headers or cells.** That is not a hole in practice: `no-unused-variables` forces every header to appear in some step's `<placeholder>`, so the two rules together reach the whole table.
 
-<!-- Closed decision: the finding counts behind the default-cap and case-insensitivity rulings, and how each cap was derived, are in `quality-tooling.rationale.md`. -->
+<!-- Closed decision: the finding counts behind the default-cap and case-insensitivity rulings, and how each cap was derived, are in `quality-tooling.meta.md`. -->
 
 ### `no-restricted-patterns`' list belongs to `architect`
 
@@ -94,7 +94,7 @@ Its failure mode is someone widening the list to clear a finding. That is the sa
 
 **Delete the probe feature in the same command that runs the lint.** A `.feature` with no step definitions makes `bddgen` exit 1 having generated nothing at all. So a probe left behind takes down every feature's generated spec, rather than its own.
 
-<!-- Closed decision: the two categories the list holds, which slice added which entries, why `ctrl key` and `shift key` were rejected, and why verbs and `live cells` stay unrestricted, are in `quality-tooling.rationale.md`. -->
+<!-- Closed decision: the two categories the list holds, which slice added which entries, why `ctrl key` and `shift key` were rejected, and why verbs and `live cells` stay unrestricted, are in `quality-tooling.meta.md`. -->
 
 ## The oxlint JSDoc tier — `.oxlintrc.json`'s `jsdoc/*` rules
 
@@ -109,7 +109,7 @@ Its failure mode is someone widening the list to clear a finding. That is the sa
 
 **Enabling the plugin also activates a default rule set at `warn`**, and since `warn` exits 0 that set gates nothing. So the explicit severities are what make this tier real, not decoration.
 
-<!-- Closed decision: the inertness measurements, the severity battery, and the default rules that fire unnamed are in `quality-tooling.rationale.md`. -->
+<!-- Closed decision: the inertness measurements, the severity battery, and the default rules that fire unnamed are in `quality-tooling.meta.md`. -->
 
 ### The enabled rules, and what each catches
 
@@ -128,7 +128,7 @@ Its failure mode is someone widening the list to clear a finding. That is the sa
 
 **The `scripts/**` override does not shield any of this, and neither does `features/`.** That override declares its own `plugins` array omitting `jsdoc`, but a top-level plugin plus a top-level rule fires inside it anyway. So does the top-level `settings` block. This tier binds `product`'s TypeScript exactly as it binds `src/`.
 
-<!-- Closed decision: the 2-of-5 to 5-of-5 measurement, why `definedTags` cannot express a restrictive form, and the planted tags that proved the override shields nothing are in `quality-tooling.rationale.md`. -->
+<!-- Closed decision: the 2-of-5 to 5-of-5 measurement, why `definedTags` cannot express a restrictive form, and the planted tags that proved the override shields nothing are in `quality-tooling.meta.md`. -->
 
 ### The limit that matters most: oxlint sees only line-leading tags
 
@@ -144,4 +144,4 @@ So prose like `* Uses the @fast-check/vitest package` passes `npm run lint` sile
 
 That is why this tier is complementary to `scripts/reference-check/` rather than a substitute for it. That checker covers the file and symbol halves of the motivating problem. The test-title half was scoped out at design time and remains a gap this tier does not close either.
 
-<!-- Closed decision: the declined rules, the groups they fall into, their finding counts, and the one to reopen if a parser change lands are in `quality-tooling.rationale.md`. -->
+<!-- Closed decision: the declined rules, the groups they fall into, their finding counts, and the one to reopen if a parser change lands are in `quality-tooling.meta.md`. -->

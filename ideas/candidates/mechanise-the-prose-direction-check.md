@@ -55,7 +55,7 @@ decision under CLAUDE.md branch 3, not a wording change.
 
 ## Touches
 
-- `.claude/agents/articles/prose.md`, and its `.rationale.md` if a measurement lands
+- `.claude/agents/articles/prose.md`, and its `.meta.md` if a measurement lands
 - possibly `.claude/agents/articles/engineering.md`, if decision 2 says the rules generalise
 - possibly a new `scripts/` program, which is the expensive branch
 - Documentation-only unless a checker is built.

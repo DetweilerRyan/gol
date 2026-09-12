@@ -4,7 +4,7 @@ Why this module and `Scrollbar.tsx` are guarded the way they are. Read this befo
 changing `SCROLLBAR_THICKNESS_PX`, before changing how the scrollbar tests assert,
 or before deleting anything in `Scrollbar.tsx` that reads as defensive.
 
-This is a rationale sidecar: evidence, measurements and closed rulings, not
+This is a meta sidecar: evidence, measurements and closed rulings, not
 instructions. The rule these cases were generalized into lives in
 `.claude/agents/articles/architecture.md`. Nothing here restates it.
 

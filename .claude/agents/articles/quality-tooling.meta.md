@@ -323,7 +323,7 @@ the third of the three reference classes that motivated the work.
 
 **Ruled 2026-09-09 by the user, during `split-quality-tooling-article`:** reduce the driftable surface area by decoupling the
 article's prose from counts of files. **The rule itself now lives in `engineering.md`**, under the
-count clause it narrows, and its evidence in `engineering.rationale.md`. Read it there rather than here.
+count clause it narrows, and its evidence in `engineering.meta.md`. Read it there rather than here.
 This section keeps only what is local to this slice: which sentences changed, and what replaced them.
 
 What went, and what replaced it: "two shared root modules exist", replaced by naming them; the
@@ -374,7 +374,7 @@ The standing conclusion is unchanged: the tier redistributes an enumeration far 
 redistributes argument, and this article held more of the former than the other two prose articles did.
 
 **The rationale-bytes row rose again, 5,742 to 8,837, and it is confounded exactly as
-`testing-layers.rationale.md` records.** Mandate 6 took the block count from 41 to 73. A block-level
+`testing-layers.meta.md` records.** Mandate 6 took the block count from 41 to 73. A block-level
 classifier calls a block rationale when no sentence in it carries a directive, and smaller blocks are
 likelier to hold none, so the same prose reclassifies without a word of it changing. **A block-level
 classifier cannot compare a file against itself across a pass that changes paragraph granularity.** The

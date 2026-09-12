@@ -85,16 +85,16 @@ is failure mode 1 in `prose.md`'s own list.
 
 **Enabling `Slop` at all requires closing a leak, and the leak is real rather than theoretical.**
 Measured during this candidate's own preparation: adding `Slop` to the agent-docs section leaked it
-into the exempt `*.rationale.md` sidecars, because that exemption section disables the six **STE**
+into the exempt `*.meta.md` sidecars, because that exemption section disables the six **STE**
 rules by name and knows nothing about Slop. Findings read **105** with the leak and **47** with it
 closed — so more than half of what a naive enable reports comes from files that are supposed to be
-exempt. The 58-finding difference is **entirely** the nine `.rationale.md` sidecars; the delta on
+exempt. The 58-finding difference is **entirely** the nine `.meta.md` sidecars; the delta on
 non-exempt files is exactly zero. Closing it costs one `= NO` line per adopted rule.
 
 **And the edit is four-place.** `.vale.ini` carries three enable sections — the agent-docs glob,
 `[CLAUDE.md]`, `[src/**/*.md]` — because Vale does not inherit per-rule keys across a later
 `BasedOnStyles`. Every adopted rule is three enables plus one disable. Note `[src/**/*.md]` reaches
-**no live file today** — the only `.md` files under `src/` are three `.rationale.md`, all exempted by
+**no live file today** — the only `.md` files under `src/` are three `.meta.md`, all exempted by
 the later section — so it is three live places plus one precautionary.
 
 ## Question
@@ -110,7 +110,7 @@ rule, one at a time; nothing is adopted by default and nothing is rejected by vo
 
 **Pilot: `.claude/agents/articles/testing-layers.md`.** Chosen for reasons that survive stating:
 it is a large topic article (29,812 bytes) with the full register mix — read triggers, measured
-facts, procedures, closed decisions; it has a `.rationale.md` sidecar, so the pilot also exercises
+facts, procedures, closed decisions; it has a `.meta.md` sidecar, so the pilot also exercises
 the exemption the leak above threatens; and it is one of the three files at the three-rule ceiling.
 
 **`prose.md` is disqualified as pilot**, but not for the reason first written here. Its four
@@ -201,7 +201,7 @@ is the follow-up, and its size is knowable only once the set is chosen.
 - `.vale.ini` — the adopted set, four places per rule
 - `.claude/agents/articles/prose.md` — each adopted rule needs its mechanical-or-prompt
   classification and its exempt classes, in the form the six STE rules already have
-- `prose.rationale.md` — the rulings and the rejected set, per branch 5
+- `prose.meta.md` — the rulings and the rejected set, per branch 5
 - No `src/`, no `scripts/`. Documentation-only.
 
 ## Open questions
@@ -218,7 +218,7 @@ is the follow-up, and its size is knowable only once the set is chosen.
   (`EmptyQualifiers` 2, `EmDash` 1) each fire two rules. The sites are already enumerated, so a
   confirmation pass is cheap.
 - **`CLAUDE.md` is measured now, and it is the widest-spread file in the corpus**: six rules, ten
-  findings. It is a routing index rather than an article, it has no `.rationale.md` sidecar, and it
+  findings. It is a routing index rather than an article, it has no `.meta.md` sidecar, and it
   is auto-loaded into every session. It cannot be _the_ pilot, since it cannot exercise the sidecar
   exemption, but it should be sampled alongside one.
 - **Should any adopted rule gate?** Every STE rule is `warning`, so none moves an exit code. `Slop`'s

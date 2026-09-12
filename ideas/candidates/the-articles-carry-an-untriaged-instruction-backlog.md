@@ -20,7 +20,7 @@ glob. Measured 2026-09-11 with the opt-out removed in a scratch config:
 | `ListItemSentences`   | 69                           |
 | **total**             | **329**                      |
 
-The `.rationale.md` sidecars are exempt by a separate section and are outside that count.
+The `.meta.md` sidecars are exempt by a separate section and are outside that count.
 
 ## Complication
 
@@ -70,6 +70,6 @@ its own thresholds.
 - **Is `HistoricalNarration` right for an article at all?** 74 hits. An article is where a dated record
   legitimately lives — `engineering.md`'s claim-discipline sections are largely about how to write
   one. The rule may be inverted for this tier rather than merely loose.
-- **Do the sidecars stay exempt?** They are exempt today by the `**/*.rationale.md` section, which
+- **Do the sidecars stay exempt?** They are exempt today by the `**/*.meta.md` section, which
   predates this style. That exemption was argued for `STE`, not for `Instruction`, and nobody has
   re-derived it.

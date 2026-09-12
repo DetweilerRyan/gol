@@ -30,7 +30,7 @@ number forward from this file without re-deriving it.**
 
 **The slug count is the cleanest signal.** A backticked slice name is history by definition, and 20 of
 the 22 moved to this file. The rationale _share_ went up rather than down, which is the ratio artifact
-recorded in `prose.rationale.md`: removing rationale removes total bytes too, so only the
+recorded in `prose.meta.md`: removing rationale removes total bytes too, so only the
 absolute figure moves in the direction the split intends.
 
 ## The Vale triage, done finding by finding

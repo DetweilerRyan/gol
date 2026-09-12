@@ -65,7 +65,7 @@ interface TupleMatch {
 // shatters the punctuation instead of proposing a same-length numeric
 // mutant. That is a measured REGRESSION against the pre-tuple-grammar code
 // for this one shape, not just a shape that "may" break like the rest of
-// the fall-through -- see acceptance-mutation.rationale.md's decimal-regression
+// the fall-through -- see acceptance-mutation.meta.md's decimal-regression
 // section for the before/after mutant rates. Two things kept the widening from being
 // the obvious fix anyway. First, three copies of this grammar are
 // deliberately mirrored -- this regex, the step's PAIR regex in
