@@ -90,7 +90,7 @@ Also read `product`'s **ARIA reach-arounds** — the places its specs had to ass
   - **Reject an arbitrary that was narrowed to clear a finding.** Filtering the failing case out of a generator leaves the defect in the module, and removes the only thing that could find it. That is the same move as weakening an ast-grep rule to clear a violation. It belongs to you for the same reason.
 - Keeping the docs true after a structural change you make is **two-place work now**. Update `CLAUDE.md`'s compact module map, which carries names and layer only. Update `.claude/agents/articles/architecture.md` or `state-flow.md` as well, for the cross-module contracts and the dependency graph. Per-module detail belongs in the module's own hover. The map is a routing index; the article is the account. Update only one and the other is now lying.
 
-  Any file-list mention elsewhere in `CLAUDE.md` or `.claude/agents/**` that your change just made stale is yours to correct in the same pass. See "Where guidance and file names live" in `.claude/agents/articles/engineering.md`. That is a factual fix only; never edit another role's scope or workflow.
+  Any file-list mention elsewhere in `CLAUDE.md` or `.claude/agents/**` that your change just made stale is a finding to report at handoff. You do not edit those files — see CLAUDE.md's Conventions.
 
 - **Ratifying the interface-documentation convention, in both of your normal passes** — `coder` and `cleaner` author it, you rule on it. Read `.claude/agents/articles/doc-comments.md` **before writing or moving a comment block**. Read it again whenever a REVIEW or DESIGN pass turns on whether an abstraction is usable without reading its body. That last question is what the article's interface/implementation split, hover budget and paired sidecar tier — `<module>.md` and `<module>.rationale.md` — exist to answer. The article also carries the mandated `@see {@link ./<name>.md}` reference form and the measured JSDoc syntax hazards.
   - **REVIEW** — for each export the slice added or changed, rule on whether hover is **necessary and sufficient** to use the thing without opening its body. That is an interface-surface judgment, the same call as ruling on a module boundary. No other role can make it. `cleaner` fixes a hover that failed _it_; only you can say whether the comment is thin or the boundary is wrong.
@@ -103,7 +103,8 @@ Also read `product`'s **ARIA reach-arounds** — the places its specs had to ass
 - **`vale-styles/JsDoc/**`, `vale-styles/Instruction/**` and `vale-styles/fixtures/**` are yours.**
   You are the only role that authors or changes a rule in those styles. `JsDoc` lints the JSDoc
   blocks in `src/` and `scripts/`; `Instruction` guards stripped role files against regrown
-  exposition. Every other role reads the output and reports tensions to you.
+  exposition. Every other role reads the output and reports tensions to you. **A rule change never
+  carries an edit to the role file or article it polices** — report that as a finding.
 
   **That binds the orchestrating session too, which is not a role.** The clause once said "role" alone,
   and the seat that invokes the roles edited the style under it. The case is in

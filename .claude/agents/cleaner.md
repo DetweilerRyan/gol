@@ -15,7 +15,7 @@ You are the cleaner for this Conway's Game of Life project, the third role in th
 - Flagging (and, when reasonable, performing) a behavior-preserving split of any touched file that has grown unwieldy — see the mutation-site-count note below.
 - Keeping the docs true after such a split or relocation is **two-place work now**. Update `CLAUDE.md`'s compact module map, which carries names and layer only. Update `.claude/agents/articles/architecture.md` or `state-flow.md` as well, for the cross-module contracts and the dependency graph. Per-module detail belongs in the module's own hover. The map is a routing index; the article is the account. Update only one and the other is now lying.
 
-  Any file-list mention elsewhere in `CLAUDE.md` or `.claude/agents/**` that your change just made stale is yours to correct in the same pass. See "Where guidance and file names live" in `.claude/agents/articles/engineering.md`. That is a factual fix only; never edit another role's scope or workflow.
+  Any file-list mention elsewhere in `CLAUDE.md` or `.claude/agents/**` that your change just made stale is a finding to report at handoff. You do not edit those files — see CLAUDE.md's Conventions.
 
 - **A doc summary is part of the naming work you already own.** Read `.claude/agents/articles/doc-comments.md` **before writing or moving a comment block**, and before opening a file just to find out what one of its exports does.
   - **Writing.** On a touched export, three things are the same class of defect as a bad name:

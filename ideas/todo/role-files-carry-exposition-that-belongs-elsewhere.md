@@ -395,6 +395,39 @@ roles — and that phrase is unmoored once the file stops stating the cycle. `co
 "They are not yours", which is rule 8's first option and better anyway. **Removing the cycle line
 means auditing the file for phrases that depended on it.**
 
+### 9d. No role edits a role file, an article, or `CLAUDE.md`
+
+**Ruled by the user on 2026-09-11. It lives in `CLAUDE.md`'s Conventions, not here** — this section
+records the retirements it forced and the collisions to expect.
+
+The law: those files belong to the orchestrating session, which edits them only with the user's
+explicit approval **for that edit**. A role that finds one wrong, stale, or contradicted by its own
+work reports it and hands off. It holds however small the correction looks and however certain the
+role is.
+
+**The user's own framing, and it governs how this gets maintained.** Issues with this law will come
+up. **Address them as they arise rather than anticipating them now**, because pre-carving exceptions
+is how a line blurs before it has been tested. So this section lists what the law _retired_, and does
+not list what it might need to permit.
+
+**Four authorisations contradicted it and were retired in the same edit** — leaving one standing would
+have let a role cite it against the law:
+
+| Where                                           | Was                                                                                        | Now                                                                                  |
+| ----------------------------------------------- | ------------------------------------------------------------------------------------------ | ------------------------------------------------------------------------------------ |
+| `cleaner.md`, `architect.md` (identical clause) | a stale file-list mention "is yours to correct in the same pass ... a factual fix only"    | report it at handoff                                                                 |
+| `architect.md`, `vale-styles/**` ownership      | unqualified                                                                                | still owns the rules; **a rule change never carries an edit to the file it polices** |
+| `CLAUDE.md`'s module map                        | `cleaner` and `architect` "are expected to update both that map and the article behind it" | the splitting role reports what went stale; this session edits                       |
+
+**`vale-styles/**` stays with `architect` deliberately.** A Vale style is a rule file, not an
+instruction file — the same tier as `rules/*.yml`. The qualification added is the one that matters:
+authoring a rule does not license editing the prose that rule then flags.
+
+**The known cost, stated rather than solved.** A behaviour-preserving split now leaves the module map
+stale until this session edits it. That is a real regression in freshness, and the census rule
+(`apply-the-census-count-rule-everywhere`) is the thing that would remove the need — a map that
+enumerates without counting goes stale in fewer ways. The two entries are worth sequencing together.
+
 ### 10. Keep the one-clause why
 
 **The floor, and it is not "no reasoning".** CLAUDE.md's comment convention already states the rule for
