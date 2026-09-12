@@ -56,6 +56,7 @@ You are the cleaner for this Conway's Game of Life project. You do structure-pre
    - Run the **whole unfiltered** suite — `npm test`, or `npm run test:scripts` for a `scripts/` slice — then revert. A mutant in one module is routinely killed by a test in another, so `killedBy` and `coveredBy` cannot stand in for the run.
    - Green means equivalent, and _that run_ is what you report. Red means it was never equivalent, and you owe it a test.
    - Before ruling, name the input that would make the two versions differ and check some test supplies it. If you cannot name one, that is the finding — a covered mutant can still be undiscriminated.
+   - **"That branch is unreachable" is usually a claim about the fixtures, not about the code.**
    - A hang is a kill: the suite has to finish, not merely pass.
    - A `Timeout` is not `Killed`. Stryker counts it toward the score, so it never appears among the survivors and its true fate is unknown. On loop-free, straight-line code a `Timeout` is always a machine artifact, and it masks survivors rather than inventing them — so re-run before trusting the list.
 

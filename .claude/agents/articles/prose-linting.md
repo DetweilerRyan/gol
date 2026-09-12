@@ -349,6 +349,33 @@ governs every article, every role file and every module sidecar, not only the fi
 Apply it whenever acting on a finding makes you shorten something. Every mechanical rule here is
 satisfied by moving something out.
 
+### What an instruction file may not carry
+
+Ruled 2026-09-11 while the five role files were stripped. Each is a shape to remove on sight, not a
+judgement call:
+
+- **A pointer to its own `.rationale.md` sidecar.** A role never changes its own file, and an article's
+  reader is following a rule rather than changing it. Only a module sidecar keeps its `@see` pointer,
+  because that reader is changing the module. Measured before the strips: 21 such pointers across the
+  role files, 64 across the articles.
+- **A fact about another role's file** — whose a duty is, how they do it, or what their threshold is.
+  Saying _what is not yours_ is a routing fact the role needs and stays. The rest is a second copy
+  nothing compares. The property-test ownership error survived in three files this way.
+- **A restatement of a section it cites.** Say what to do and where to read. A summary beside a pointer
+  drifts from its source and tempts the reader to skip the source that would have corrected it.
+- **The execution order.** `CLAUDE.md` is the source of truth for the cycle. A role never chooses what
+  runs next, and a `description:` should state the precondition that makes this agent the right one,
+  not its position in a sequence.
+
+**Prefer nested bullets to a packed sentence.** One instruction per line, under a bolded lead. That is
+a review call — `Instruction.ListItemSentences` counts sentences and cannot see a bullet carrying three
+instructions in one, which is measured and recorded in
+`ideas/todo/role-files-carry-exposition-that-belongs-elsewhere.md`.
+
+**Audit the destination after compressing.** Routing is only routing if the claim arrived. Grep the
+destination with newlines collapsed — `tr '\n' ' ' < <file> | grep` — because prettier wraps prose and
+a line-anchored grep returns false negatives.
+
 **Sentence by sentence, ask what the sentence does to the reader's next action.** There are three
 dispositions, and only one is a deletion:
 
@@ -443,13 +470,15 @@ assumptions `no longer` hold" — is a present-tense rule, not narration. Leave 
 handoff as arguable. **What it misses:** narration that avoids these markers, and it deliberately
 does not match `because` or `since`, which carry the one-clause why that stays.
 
-### Scope: only role files that have been stripped
+### Scope: the role files and `architect/`'s mode files
 
-The style is enabled per file in `.vale.ini`, not on the agent-docs glob. The unstripped role files
-carry a backlog nobody has triaged, and the landing constraint below forbids shipping that. When a
-role file's strip lands, its slice adds the file's own enabling section and clears the findings in
-the same slice. Once all five are stripped, collapse the per-file sections into the agent-docs glob
-with an articles opt-out. The edit counts below move in the same change, and the orchestrating session makes that edit.
+The style is enabled on `.vale.ini`'s `[.claude/agents/**/*.md]` glob. Vale's `*` crosses `/`, so that
+reaches the articles and the sidecars too; both are switched off by name below it.
+
+The articles are off because they carry a backlog nobody has triaged, and the landing constraint below
+forbids shipping that. `.vale.ini` records the measured count beside the opt-out, and
+`ideas/candidates/the-articles-carry-an-untriaged-instruction-backlog.md` is where the question of
+whether these rules bind an article at all is filed.
 
 ## Read a big number as unworked, not as broken
 
@@ -613,10 +642,7 @@ CLAUDE.md's Conventions.
 `[**/*.rationale.md]`, and `[.claude/agents/articles/**]`. The fixture pair, and this article's own
 rule section above.
 
-The per-stripped-file sections collapsed into that one glob once all five role files were stripped,
-which is what the scope section above describes. The articles are off by name because they carry an
-untriaged backlog and are a different register; `.vale.ini` records the measured count beside the
-section.
+The scope section above says where each of those keys lives.
 
 **Whenever you enable a rule, switch it off in the sidecar section in the same edit.** That pairing is
 the whole exemption. The test is one command: `vale` on any `*.rationale.md` must report zero.

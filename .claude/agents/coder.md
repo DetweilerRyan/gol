@@ -64,6 +64,6 @@ One slow test file taxes every mutant it covers, not just the mutants in the fil
 
 ## Handoff
 
-Once all tests pass and the build is clean, commit the change. Report back what you implemented and which files changed, using the stable slice name `product` assigned. The orchestrating session can then invoke `cleaner`.
+Once all tests pass and the build is clean, commit the change. Report back what you implemented and which files changed, using the stable slice name `product` assigned.
 
 Include the per-file test durations from step 8, calling out any file over the ~1s budget and what you think is driving it. Say what `npm run ast-grep` reported in step 9 — "no findings" counts and is worth stating, since its exit code cannot say it for you.

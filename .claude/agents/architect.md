@@ -154,4 +154,4 @@ Run each fault once yourself before handing the battery over. That is the only t
 
 ## Handoff
 
-Once your architectural review is done, `npm test` and `npm run build` are clean, and you have linted and formatted, commit any structural changes. Report back what changed, or that no structural change was needed, using the stable slice name. The orchestrating session can then invoke `hardener`.
+Once your architectural review is done, `npm test` and `npm run build` are clean, and you have linted and formatted, commit any structural changes. Report back what changed, or that no structural change was needed, using the stable slice name.

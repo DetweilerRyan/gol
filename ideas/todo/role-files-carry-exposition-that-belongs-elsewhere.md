@@ -56,10 +56,15 @@ kind of departing sentence go?
 the user on 2026-09-11 while `coder.md` was stripped by hand, and they are recorded here rather than
 in `prose-linting.md`.
 
-**That placement is deliberate and it has a known cost: `ideas/` has no gate, no checker, and no role
-reads it.** So a role authoring prose before the remaining strips run will not see these rules. The
-user chose this on 2026-09-11, with the cost stated. **The rules move to `prose-linting.md` when the
-strips that apply them run** — until then, whoever runs a strip reads them here.
+**The binding half has moved, as planned.** All five strips have run, and
+`prose-linting.md`'s "What an instruction file may not carry" now states the rules a later author has
+to follow: no self-sidecar pointer, no fact about another role's file, no restatement beside a
+pointer, no execution order, nested bullets over packed sentences, and the destination audit.
+
+**What stays here is what that section deliberately does not carry**: the measurements behind each
+rule, the three-kinds analysis and the declined checker, the two refutations, and the open item —
+rule 5, whether an agent may ever correct an article's file list. Read this file when changing one of
+those rules, not to follow one.
 
 ## Sketch
 
