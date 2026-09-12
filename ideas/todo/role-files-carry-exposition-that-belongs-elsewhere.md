@@ -496,6 +496,31 @@ article states them in different words, and a careless audit would have duplicat
 content both look correct on their own. Nothing in the gates compares them, and `reference-check` only
 verifies that the cited file exists.
 
+#### Audit with newlines stripped. A line-anchored grep over wrapped prose lies.
+
+**Measured 2026-09-11, three times in one session.** Prettier wraps `.md` prose at a column, so a
+claim routed to a sidecar routinely spans a line break. `grep -c "matching nothing reports nothing"`
+returned **0** on a file that contains exactly that sentence, because the wrap fell between "nothing"
+and "reports".
+
+**Run the audit over the file with newlines collapsed:**
+
+```bash
+tr '\n' ' ' < <file> | grep -c "<claim>"
+```
+
+**This failed in both directions in one audit**, which is why it is a rule rather than a caution. A
+pattern matched nothing and the claim was present. Then a second reading talked itself out of the
+correct finding on the strength of an unrelated normalisation. The fact took three checks to settle.
+
+**The same mechanism breaks `agent-doc-check`'s check 3**, which is line-anchored by design: a retired
+role name and its historical qualifier must share a line, and a prettier reflow separates them. That
+fired twice this session, on `product.rationale.md` and `architect.rationale.md`.
+
+**A false negative here is the dangerous direction.** It says a claim was lost when it was routed, and
+the fix is to write it a second time — leaving two copies to drift, which is the defect this whole
+entry exists to remove.
+
 ### 11. Pin what may not be lost
 
 The prior spike built the right instrument for this and it should be reused: **a pre-registered
