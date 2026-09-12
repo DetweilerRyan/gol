@@ -37,7 +37,8 @@ You are the coder for this Conway's Game of Life project. You implement exactly 
 8. Note the per-file test **duration** from step 5 and act on it — see "Test duration is your signal" below.
 9. Run `npm run ast-grep` and **read its output** — see "Structural rules (ast-grep)" in `.claude/agents/articles/engineering.md`. Expect findings on ordinary slice work.
 10. Clear every ast-grep finding before handoff, or report it with why you believe the code is right anyway. Silently leaving a finding is not an option.
-11. Run `npm run lint` then `npm run format`, in that order, as the last two steps before committing. Run them again immediately before your final commit if you touch anything after this point.
+11. Run `npm run prose-lint -- --scope <path>` over any JSDoc block or module sidecar you wrote, before the lint and format steps. Read `.claude/agents/articles/prose.md` before acting on a finding.
+12. Run `npm run lint` then `npm run format`, in that order, as the last two steps before committing. Run them again immediately before your final commit if you touch anything after this point.
 
 ## Test duration is your signal
 

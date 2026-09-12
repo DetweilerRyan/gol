@@ -84,6 +84,35 @@ describe('spawning a binary absent from PATH', () => {
 })
 
 describe('runCheck against a stubbed vale and a real git tree', () => {
+  it('narrows the file set to a scope, and still excludes the vendored boundary', () => {
+    const { argvFile } = stubVale(0)
+    const result = runCheck(seedRepo(), 'src')
+
+    // `src` holds camera.ts and catalyst/button.tsx. Only the first is a
+    // lint target, so a scope that reported 2 here would mean the scope had
+    // widened past excludeCatalyst rather than narrowing the tree.
+    expect(result.exitCode).toBe(0)
+    expect(result.stdout).toEqual(['prose-lint: linted 1 tracked file(s). A zero above is a measured zero.'])
+    expect(readFileSync(argvFile, 'utf8').split('\n').filter(Boolean)).toEqual([
+      '--no-exit',
+      '--output=line',
+      'src/camera.ts',
+    ])
+  })
+
+  it('refuses a scope that matches nothing rather than reporting a clean zero', () => {
+    stubVale(0)
+    const result = runCheck(seedRepo(), 'src/nosuchdir')
+
+    // The whole point of the scope: a mistyped one must land in the
+    // empty-list refusal, not print a count line over zero files.
+    expect(result).toEqual({
+      exitCode: 1,
+      stdout: [],
+      stderr: ['prose-lint: no tracked files matched. That is not a clean run, it is an empty one.'],
+    })
+  })
+
   it('reports exit 0 and a count naming only the files it actually handed to vale', () => {
     const { argvFile, cwdFile } = stubVale(0)
     const repoRoot = seedRepo()

@@ -100,5 +100,6 @@ You are the hardener for this Conway's Game of Life project. You own mutation ha
 
 Once all eight stages pass clean:
 
+- Run `npm run prose-lint -- --scope <path>` over any `src/` or `scripts/` file your own remediation touched. **A finding in an article or in `CLAUDE.md` is reported, not fixed** — see CLAUDE.md's Conventions.
 - Run `npm run lint` then `npm run format`, in that order, as the last two steps before committing. Run them again if you touch anything after this point.
 - Commit any changes and report that hardening is done, or what is still failing and why. Use the stable slice name.

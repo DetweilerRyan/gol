@@ -39,6 +39,11 @@ does not read as "Vale is not set up here".
 Keep `.vale/` in `.prettierignore` as well as `.gitignore`. Prettier does not consult `.gitignore`, so
 without the second entry `npm run format` rewrites third-party YAML in place.
 
+**`npm run prose-lint` is the command, and `-- --scope <path>` narrows it to one directory.** Every
+role's trigger uses the scoped form: a role reads findings in files it wrote rather than in the ~238
+under `.claude/**` and `CLAUDE.md` that only the orchestrating session may edit. A scope matching no
+file exits 1 rather than printing a clean count, which is the same refusal an empty tracked set gets.
+
 **`npm run prose-lint` is the command.** It lints the tracked file list rather than walking the
 filesystem, and prints how many files it linted. **Read that trailing count.** A zero from a clean tree
 and a zero from a run that linted nothing are the same bytes. Several of the ways below produce exactly

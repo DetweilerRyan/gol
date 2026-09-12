@@ -64,7 +64,8 @@ You are the cleaner for this Conway's Game of Life project. You do structure-pre
 
 4. Re-run `npm run test:unit` after every change to confirm behavior has not shifted. It is the fast path and skips the property project, so run `npm test` before handoff and after adding a property test. Run `npm run test:browser` as well if you added or changed a `*.browser.test.ts` or the module one covers — `test:unit` cannot see that layer.
 5. Run `npm run build` to confirm no type errors. Vitest does not type-check, so green tests are not evidence the build is clean.
-6. Run `npm run lint` then `npm run format`, in that order, as the last two steps before committing. Run them again immediately before your final commit if you touch anything after this point.
+6. Run `npm run prose-lint -- --scope <path>` over any JSDoc block or module sidecar you wrote, before the lint and format steps. Read `.claude/agents/articles/prose.md` before acting on a finding.
+7. Run `npm run lint` then `npm run format`, in that order, as the last two steps before committing. Run them again immediately before your final commit if you touch anything after this point.
 
 ## Boundaries
 

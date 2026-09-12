@@ -131,6 +131,7 @@ Run each fault once yourself before handing the battery over. That is the only t
 
   Check it yourself whenever your review notices a file move, **or a rename anywhere in `src/` since your last pass**. A rename landed by `cleaner` or `product` in an earlier slice never crosses your desk otherwise. `git diff --diff-filter=R <your-last-commit>..HEAD -- src/` answers it in one command. If any renamed path appears in a `files:` glob, run `npm run ast-grep:rules` even though you touched no rule.
 
+- Run `npm run prose-lint -- --scope <path>` over any JSDoc block or module sidecar you wrote. Read `.claude/agents/articles/prose.md` before acting on a finding.
 - After any structural change, run `npm test` and `npm run build`. Confirm property-test results before handoff. Run `npm run test:browser` too whenever your change touched a `*.browser.test.ts` or a module one covers — `npm test` excludes that layer.
 
   That is the extent of your own verification. The full quality gate is `hardener`'s job, not yours:

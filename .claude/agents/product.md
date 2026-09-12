@@ -145,6 +145,8 @@ Run them in this order, as the last thing before every commit — and again if y
 3. **`npm run lint`** (oxlint) — covers your `.ts`: the `features/steps/*.ts` step modules, `features/screenplay/*.ts`, `e2e-helpers.ts`, the Playwright specs. `features/` is not in `.oxlintrc.json`'s ignore list, so the linter treats these like any other source.
 4. **`npm run format`** (Prettier) — **and it does cover `.feature` files.** `prettier-plugin-gherkin` is installed and configured, so Examples-table alignment is Prettier's job, not something to hand-align. `prettier-plugin-tailwindcss` also sorts class strings, so do not hand-order Tailwind classes in a spec's expectations.
 
+5. Run `npm run prose-lint -- --scope <path>` over any JSDoc block you wrote. Read `.claude/agents/articles/prose.md` before acting on a finding.
+
 ## Handoff
 
 Report the two file lists every handoff carries (see `handoffs.md`): the slice's changed-files manifest, and the subset your own pass touched.

@@ -12,6 +12,28 @@
 export const LINT_PATHSPECS: readonly string[] = ['*.md', '*.ts', '*.tsx']
 
 /**
+ * The pathspecs for one run: the whole tree, or `scope` narrowed to the
+ * three linted extensions. Pass verbatim to `git ls-files`.
+ *
+ * @param scope A directory or pathspec to lint instead of the whole tree.
+ * @returns Pathspecs for `git ls-files`, always extension-bounded.
+ */
+export function pathspecsFor(scope: string | undefined): string[] {
+  if (scope === undefined) return [...LINT_PATHSPECS]
+  // Each extension is appended to the scope rather than the scope being
+  // passed alone, so a scope naming a directory cannot widen the file set
+  // past the three extensions Vale is configured for.
+  //
+  // The resulting pathspec is recursive, which is what a scope has to be:
+  // git's `*` crosses `/` in a pathspec, unlike a shell glob. Measured --
+  // `git ls-files 'src/*.md'` returns `src/hooks/useZoomGlide.meta.md`, two
+  // directories down. lint-targets.test.ts pins that shape, since the
+  // opposite reading would silently lint only a directory's own children.
+  const base = scope.endsWith('/') ? scope.slice(0, -1) : scope
+  return LINT_PATHSPECS.map((pattern) => `${base}/${pattern}`)
+}
+
+/**
  * Drops every path under the vendored `src/catalyst/` library boundary --
  * see CLAUDE.md's compact module map.
  */

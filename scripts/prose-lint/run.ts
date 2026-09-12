@@ -20,21 +20,25 @@
 import { execFileSync, spawnSync } from 'node:child_process'
 import path from 'node:path'
 import { fileURLToPath } from 'node:url'
+import { parseSingleStringFlag } from '../single-flag-arg.ts'
 import { decide, type DecideResult } from './decide.ts'
-import { excludeCatalyst, LINT_PATHSPECS } from './lint-targets.ts'
+import { excludeCatalyst, pathspecsFor } from './lint-targets.ts'
 import { classifyProbe } from './vale-probe.ts'
 
 const SCRIPT_DIR = path.dirname(fileURLToPath(import.meta.url))
 const REPO_ROOT = path.resolve(SCRIPT_DIR, '../..')
 
 /**
- * Runs the whole check against `repoRoot` and returns the result, without
- * printing anything or exiting. Spawns `vale` twice and reads `git ls-files`,
- * all three against `repoRoot` rather than the current directory, so a caller
- * may point it at a throwaway tree. Nothing is written to either stream here;
- * the caller owes `stdout` and `stderr` their own streams -- see `DecideResult`.
+ * Runs the check against `repoRoot` and returns the result, without printing
+ * anything or exiting. Spawns `vale` twice and reads `git ls-files`, all three
+ * against `repoRoot` rather than the current directory, so a caller may point
+ * it at a throwaway tree. Nothing is written to either stream here; the caller
+ * owes `stdout` and `stderr` their own streams -- see `DecideResult`.
+ *
+ * @param repoRoot Directory every subprocess runs in.
+ * @param scope Lint only this directory or pathspec. Omit for the whole tree.
  */
-export function runCheck(repoRoot: string): DecideResult {
+export function runCheck(repoRoot: string, scope?: string): DecideResult {
   const probeResult = spawnSync('vale', ['ls-config'], { cwd: repoRoot, encoding: 'utf8' })
   // `SpawnSyncReturns.error` is typed as the bare `Error`, but Node actually
   // sets a `NodeJS.ErrnoException` with a `.code` at runtime -- narrowing it
@@ -59,7 +63,11 @@ export function runCheck(repoRoot: string): DecideResult {
   // existsSync filter would quietly turn that loud E100 into a partial lint
   // that still prints a clean count line -- the confident-zero failure this
   // whole program exists to prevent.
-  const tracked = execFileSync('git', ['ls-files', ...LINT_PATHSPECS], { cwd: repoRoot, encoding: 'utf8' })
+  // A scope that matches nothing falls through to decide()'s empty-list
+  // branch and exits 1. That is the same refusal an empty tracked set gets,
+  // and it is the one that matters under a scope: `--scope src/nosuch` must
+  // not print a clean count line over zero files.
+  const tracked = execFileSync('git', ['ls-files', ...pathspecsFor(scope)], { cwd: repoRoot, encoding: 'utf8' })
   const files = excludeCatalyst(tracked.split('\n').filter((line) => line.length > 0))
 
   return decide({ probe, files }, (paths) => {
@@ -71,7 +79,8 @@ export function runCheck(repoRoot: string): DecideResult {
 }
 
 function main(): void {
-  const { exitCode, stdout, stderr } = runCheck(REPO_ROOT)
+  const scope = parseSingleStringFlag(process.argv.slice(2), 'scope', '--scope <path>')
+  const { exitCode, stdout, stderr } = runCheck(REPO_ROOT, scope)
   for (const line of stdout) console.log(line)
   for (const line of stderr) console.error(line)
   process.exit(exitCode)
