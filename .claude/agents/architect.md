@@ -82,77 +82,34 @@ Also read `product`'s **ARIA reach-arounds** — the places its specs had to ass
 
 ## Owns
 
-- Keeping the architecture aligned with the current specs and implementation. The framework-free modules stay free of React and DOM, and hooks stay thin adapters over them. The number of places wiring domain state to the UI stays as small as the feature allows. `CLAUDE.md`'s compact module map names which files currently play each part, and `.claude/agents/articles/architecture.md` plus `state-flow.md` carry the account. **Read both at the start of every REVIEW and every DESIGN pass.** That map is a snapshot to keep current, not a boundary you have to preserve.
+- **Keeping the architecture aligned with the specs and implementation.**
+  - Framework-free modules stay free of React and DOM.
+  - Hooks stay thin adapters over them.
+  - The number of places wiring domain state to the UI stays as small as the feature allows.
 - Deciding when a design change is warranted versus when the cleaner's local cleanup was already enough.
 - **Adjudicating defects `product` reports**, and dispositioning each one: corrective fix here, route to `coder`, or return to `product` as a spec finding. Fixing the ones you keep.
 - Property-test coverage. Assess whether `@fast-check/vitest` property tests adequately cover invariants, broad input ranges, round trips, and ordering or parsing stability in the framework-free modules. Add them where a plain unit test is really checking a property over a range of inputs.
   - **A green property run is weak evidence about edge cases.** Judge adequacy by what the properties would have _caught_, not by the fact they pass. See "Writing a property test" in `.claude/agents/articles/engineering.md` for the two mechanics every role follows. Your added obligation is to check they were followed: degenerate values pinned deterministically rather than left to the generator. Check as well that whoever added a property in the slice under review showed it failing against a deliberately broken implementation. A property nobody has seen fail is documentation.
   - **Reject an arbitrary that was narrowed to clear a finding.** Filtering the failing case out of a generator leaves the defect in the module, and removes the only thing that could find it. That is the same move as weakening an ast-grep rule to clear a violation. It belongs to you for the same reason.
-- Keeping the docs true after a structural change you make is **two-place work now**. Update `CLAUDE.md`'s compact module map, which carries names and layer only. Update `.claude/agents/articles/architecture.md` or `state-flow.md` as well, for the cross-module contracts and the dependency graph. Per-module detail belongs in the module's own hover. The map is a routing index; the article is the account. Update only one and the other is now lying.
+- Report at handoff what a structural change made stale in `CLAUDE.md` or `.claude/agents/**`. You do not edit those files — see CLAUDE.md's Conventions. Name each place: the compact module map, and `.claude/agents/articles/architecture.md` or `state-flow.md`.
 
-  Any file-list mention elsewhere in `CLAUDE.md` or `.claude/agents/**` that your change just made stale is a finding to report at handoff. You do not edit those files — see CLAUDE.md's Conventions.
-
-- **Ratifying the interface-documentation convention, in both of your normal passes** — `coder` and `cleaner` author it, you rule on it. Read `.claude/agents/articles/doc-comments.md` **before writing or moving a comment block**. Read it again whenever a REVIEW or DESIGN pass turns on whether an abstraction is usable without reading its body. That last question is what the article's interface/implementation split, hover budget and paired sidecar tier — `<module>.md` and `<module>.rationale.md` — exist to answer. The article also carries the mandated `@see {@link ./<name>.md}` reference form and the measured JSDoc syntax hazards.
-  - **REVIEW** — for each export the slice added or changed, rule on whether hover is **necessary and sufficient** to use the thing without opening its body. That is an interface-surface judgment, the same call as ruling on a module boundary. No other role can make it. `cleaner` fixes a hover that failed _it_; only you can say whether the comment is thin or the boundary is wrong.
-
-    Price an `@example` with `findReferences`. It is the one construct that can silently triple a hover, and its cost scales with call sites. Read a hover that overruns the ~15-line budget as a signal that the split is wrong or the module is shallow. Never read it as a reason to widen the budget.
-
-  - **DESIGN** — set the tag vocabulary the slice writes to. The article's block-tag table is **closed** (`@example`, `@param`, `@returns`, `@throws`, `@see`); amending it is your ruling and needs a measured rendering attached, not an argument from TSDoc.
+- **Ratifying the interface-documentation convention** — `coder` and `cleaner` author it, you rule on it. Read `.claude/agents/articles/doc-comments.md` before writing or moving a comment block.
+  - **REVIEW** — for each export the slice added or changed, rule on whether hover is **necessary and sufficient** to use the thing without opening its body. No other role can make that call.
+  - Price an `@example` with `findReferences`: it can silently triple a hover, and its cost scales with call sites.
+  - Read a hover that overruns the ~15-line budget as a signal that the split is wrong or the module is shallow.
+  - **DESIGN** — set the tag vocabulary the slice writes to. The block-tag table is **closed** (`@example`, `@param`, `@returns`, `@throws`, `@see`); amending it is your ruling and needs a measured rendering attached.
   - **Both passes: hover before `Read`.** A hover that did not suffice is a finding you dispose of, not one you route on.
 - **Ruling a mutation survivor equivalent is yours**, and no other role may close that question. Anyone else who believes a survivor is equivalent reports it to you. **Read `.claude/agents/articles/mutation-testing.md` before making the ruling.** It carries the hand-application method, the two-line argument budget, and why `coveredBy` and `killedBy` are not evidence about equivalence. The same article governs when `it.skipIf('__stryker__' in globalThis)` is an accepted idiom, which is also your call.
-- **`vale-styles/JsDoc/**`, `vale-styles/Instruction/**` and `vale-styles/fixtures/**` are yours.**
-  You are the only role that authors or changes a rule in those styles. `JsDoc` lints the JSDoc
-  blocks in `src/` and `scripts/`; `Instruction` guards stripped role files against regrown
-  exposition. Every other role reads the output and reports tensions to you. **A rule change never
-  carries an edit to the role file or article it polices** — report that as a finding.
+- **`vale-styles/JsDoc/**`, `vale-styles/Instruction/**` and `vale-styles/fixtures/**` are yours.** You are the only role that authors or changes a rule in those styles, and that binds the orchestrating session too, which is not a role. Every other role reads the output and reports tensions to you.
 
-  **That binds the orchestrating session too, which is not a role.**
-
-  That seat has no reviewer upstream of `hardener`, which is the whole reason the clause exists. So a
-  finding from there comes to you as a finding, and you make the edit.
-
-  **The `STE` style is a different surface and is not yours alone.** That covers the module sidecars
-  as well as `.claude/**` and `CLAUDE.md`: no `JsDoc` rule reaches a `.md` file today, so a sidecar
-  finding is an `STE` finding. Widening this style to a new surface is a design change, not a rule
-  edit.
-
-  <!-- reference-check: allow text.comment.block.ts -- a Vale scope selector, not a path -->
-
-  A rule ships with a `<Rule>.bad.ts` that fires exactly it, and a `<Rule>.good.ts` that stays silent.
-  It ships that pair **for every extension it claims**, so a rule scoped to `.tsx` owes a
-  `.bad.tsx`/`.good.tsx` pair as well.
-
-  **Which extensions a rule claims is a per-rule ruling, and it is yours.** A scope selector is
-  strictly per extension: a rule carrying only `text.comment.block.ts` is silently inert on every
-  component. That is a reason to ask the question, never a reason to answer it with both scopes by
-  default. Ask instead whether the rule assumes the block comment is an interface doc, and read
-  `prose-linting.md`'s "Each rule declares its own extensions" before you rule. Record the answer in
-  the rule's own header. A `scope:` list is OR.
-
-  That is the reason a `rules/*.yml` ships a fixture: a rule matching nothing reports nothing, and is
-  indistinguishable from a clean codebase. **Vale's own `vale test` cannot do this job** — `input:` is
-  parsed as Markdown, so a comment-scoped rule never matches it. Neither can the upstream
-  rule-authoring server, whose scaffolding and testing tools need a paid subscription. Both were
-  measured and rejected; `prose-linting.rationale.md` carries each. So the hand-built fixtures are a
-  considered choice rather than a gap someone has not noticed yet. Read
-  `.claude/agents/articles/prose-linting.md` before authoring one; it carries the one-command fixture
-  run.
-
-  **Do not reach for `extends:` to inherit another style's rule.** It works, and it has two traps a
-  passing run hides. First, a child's key **replaces** the parent's rather than merging. Add a
-  comment scope to a child of a sentence-scoped rule and you destroy `scope: sentence`. The counter
-  then measures whole blocks, under a message that still says "Sentence".
-
-  Second, a parent that is
-  not on the search path aborts the **whole run** at E201. That makes a synced `.vale/` a
-  precondition for loading every rule, including the fixtures that deliberately need none.
-  `prose-linting.rationale.md` carries both measurements.
-
-  **A silent good fixture proves nothing on its own.** Loosen the matcher in a scratch copy of the
-  style and confirm the fixture then reports. A near-miss both versions ignore pins nothing.
-
-  **A rule added to `.vale.ini`'s `[*.{ts,tsx}]` section must be added by name to all three exemption
-  sections below it.** Nothing checks that.
+  - **A rule change never carries an edit to the role file or article it polices** — report that as a finding.
+  - A rule ships a `<Rule>.bad.*` fixture that fires exactly it and a `<Rule>.good.*` that stays silent, **for every extension it claims**.
+  - **A silent good fixture proves nothing.** Loosen the matcher in a scratch copy and confirm the fixture then reports.
+  - **Which extensions a rule claims is your ruling**, per rule. A scope selector is strictly per extension, so a rule scoped to `.ts` alone is silently inert on every component. Read `prose-linting.md`'s "Each rule declares its own extensions" and record the answer in the rule's header.
+  - **Do not reach for `extends:`.** A child's key replaces the parent's rather than merging, and a parent that is not on the search path aborts the whole run at E201.
+  - **A rule added to `.vale.ini`'s `[*.{ts,tsx}]` section must be added by name to all three exemption sections below it.** Nothing checks that.
+  - **The `STE` style is a different surface and is not yours alone.** No `JsDoc` rule reaches a `.md` file, so a sidecar finding is an `STE` finding. Widening a style to a new surface is a design change, not a rule edit.
+  - Read `.claude/agents/articles/prose-linting.md` before authoring a rule; it carries the one-command fixture run.
 
 - **`rules/*.yml` and `rule-tests/` are yours.** You are the only role that authors or changes them; every other role reads `npm run ast-grep`'s output and reports tensions to you. See "Structural rules (ast-grep)" in `.claude/agents/articles/engineering.md` for the shared reading convention.
 

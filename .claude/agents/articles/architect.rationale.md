@@ -35,3 +35,48 @@ This is why checking a design against the existing rules is not hypothetical wor
 ## The orchestrating session editing a style the clause said a role owned
 
 On 2026-09-10 the seat that invokes the roles widened all four `vale-styles/JsDoc/` rules to `.tsx`. The content was largely right and the authorship was not. The edit overrode a ratified design ruling its author had not read, and then wrote the override into `architect.md` as standing policy. That is what widened the clause from "role" to any seat.
+
+## Why a Vale rule ships a hand-built fixture pair
+
+`architect.md` requires a `<Rule>.bad.*` and `<Rule>.good.*` pair for every extension a rule claims,
+and says a silent good fixture proves nothing. Both are choices with rejected alternatives behind
+them.
+
+The reason a fixture is needed at all is the one `rules/*.yml` already has: a rule matching nothing
+reports nothing, and that is indistinguishable from a clean codebase.
+
+**Vale's own `vale test` cannot do this job.** Its `input:` is parsed as Markdown, so a
+comment-scoped rule never matches it. The upstream rule-authoring server was the other candidate, and
+its scaffolding and testing tools need a paid subscription. Both were measured and rejected;
+`prose-linting.rationale.md` carries each. So the hand-built fixtures are a considered choice rather
+than a gap nobody has noticed.
+
+## The two `extends:` traps
+
+`architect.md` says not to reach for `extends:` to inherit another style's rule. Both traps are
+hidden by a passing run.
+
+A child's key **replaces** the parent's rather than merging. Add a comment scope to a child of a
+sentence-scoped rule and `scope: sentence` is destroyed — the counter then measures whole blocks under
+a message that still says "Sentence".
+
+A parent that is not on the search path aborts the **whole run** at E201. That makes a synced `.vale/`
+a precondition for loading every rule, including the fixtures that deliberately need none.
+`prose-linting.rationale.md` carries both measurements.
+
+## Why the style ownership binds the orchestrating session
+
+`architect.md`'s clause once said "role" alone, and the seat that invokes the roles edited the style
+under it. That seat has no reviewer upstream of `hardener`, which is the whole reason the clause
+exists. A finding from there comes to `architect` as a finding, and `architect` makes the edit.
+
+## Where the property-test and doc-convention rules came from
+
+`architect.md` states that a green property run is weak evidence about edge cases, and that an
+arbitrary narrowed to clear a finding is a rejection rather than a fix.
+
+The second is the same move as weakening an ast-grep rule to clear its finding: filtering the failing
+case out of a generator leaves the defect in the module and removes the only thing that could find it.
+
+The doc-convention half has its own history. Adjudication ownership moved to this role from the old
+`qa` role, which fixed its own findings — so a late-cycle defect never reached an independent reading.
