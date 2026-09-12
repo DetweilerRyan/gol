@@ -40,6 +40,7 @@ Ten are topic articles, read on the trigger each one names in its own header:
 - **Articles that have one** — `acceptance-mutation`, `ast-grep-rules`, `doc-comments`, `engineering`, `mutation-testing`, `prose-linting`, `quality-tooling`, `state-flow`, `testing-layers`.
 - **Articles that do not** — `architecture`, `archive`, `handoffs`, `orchestration`, `workflow`.
 - **Role files that have one** — `architect`, `cleaner`, `coder`, `hardener`, `product`. All five sidecars sit in `articles/` rather than beside the role file, and branch 5 says why that placement is forced.
+- **A role may also hold mode files in its own subdirectory**, read on the trigger the invoking prompt names rather than unconditionally. `.claude/agents/architect/` holds `contract-mode.md` and `adjudicate-mode.md`. **The subdirectory is safe where a sidecar beside the role file is not**: `scripts/agent-doc-check`'s roster scan filters on `entry.isFile()`, so it never descends. A mode file therefore needs no agent frontmatter. `.vale.ini` gives the subdirectory its own `Instruction` section.
 - **`CLAUDE.md` has one**, `CLAUDE.rationale.md`, also in `articles/` — chosen rather than forced.
 - **Module sidecars are a different tier**, under branch 4. The live ones are `src/cache.rationale.md`, `src/hooks/useZoomGlide.rationale.md` and `src/scrollbars.rationale.md`.
 
