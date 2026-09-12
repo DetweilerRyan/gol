@@ -231,30 +231,70 @@ measurements settle that:
   `'deliberately long'` never matches, while two tokens `'deliberately'` then `'long'` match the same
   text. So the length gap cannot be written as a repetition inside one token either.
 
-**That exhausts the three extension points for this rule.** `occurrence` counts tokens in a scope and
-cannot require a pattern — pointed at a word pattern with `max: 25` it _is_ `STE.SentenceLength`.
-`existence` matches a pattern and cannot count. `sequence` matches an ordered token series and can
-only bound the gap from above.
+**That exhausts `existence`, `occurrence` and `sequence` — but not Vale.** A web search on 2026-09-12
+corrected this entry: **Vale has twelve extension points, not three.** The two that matter here were
+never tried.
 
-**Conclusion: Vale cannot express "a long sentence that also contains a clause boundary."** Not by
-tuning, and not by choosing a different extension point. The conjunction of a count and a pattern is
-outside all three.
+- **`metric`** evaluates a formula over a block's counts — `words`, `sentences`, `syllables` — and
+  reports when a condition holds. It has no pattern matching, so it cannot express this rule either.
+- **`script`** runs a [Tengo](https://github.com/d5/tengo) program over the scope and returns match
+  positions. It has regex, arbitrary control flow, and the scope's raw text. **It can express this
+  rule, and does.**
 
-**What that leaves, in order of cost:**
+### The rule exists. Prototyped and measured 2026-09-12.
 
-- **Accept the proxy.** `STE.SentenceLength` flags long sentences, a third of which are splittable, and
-  a reader triages. That is what happens today.
-- **Two rules and a human join.** `SentenceLength` and a conjunction rule both report; a finding on the
-  same line from both is the useful third. No new rule shape is needed, and `prose-lint`'s output would
-  need to make the coincidence visible.
-- **A `scripts/` checker rather than a Vale rule.** The predicate is two lines of TypeScript over a
-  sentence split, and this repo already runs nine such programs with their own gates. **That is the
-  shape that actually fits**, and it sidesteps Vale's expressiveness entirely.
+```yaml
+extends: script
+message: 'Long sentence with a clause boundary. Split it.'
+level: warning
+scope: sentence
+script: LongSplit.tengo
+```
 
-**The third option is the recommendation if the forcing function is wanted.** It also explains why the
-built-in rules are simplistic in the way the user observed: Vale's model is one pattern or one count
-per rule, so every rule in every published package is a single-predicate rule, and prose defects that
-are conjunctions of two conditions are invisible to all of them.
+```
+text := import("text")
+matches := []
+words := text.split(text.trim_space(scope), " ")
+if len(words) > 25 {
+  idx := text.re_find(",\\s+(and|but|so)\\s+", scope, 1)
+  if idx {
+    m := idx[0][0]
+    matches = append(matches, {begin: m.begin, end: m.end})
+  }
+}
+```
+
+The Tengo file lives in `<StylesPath>/config/scripts/`, which is a directory this repo does not have
+yet.
+
+**Measured, against the same 435 files:**
+
+| Rule                               | Findings |
+| ---------------------------------- | -------- |
+| Bare conjunction at sentence scope | 2,881    |
+| `STE.SentenceLength`, unexempted   | 1,253    |
+| **This rule**                      | **770**  |
+
+It rejects the short sentinel and fires on the long one at the comma's own column. **So the precise
+rule is not merely possible — it reports 38 percent fewer findings than the proxy it replaces, and
+every one of them is a sentence where the split is available.**
+
+### What this corrects, and the lesson is about method
+
+**This entry previously concluded "Vale cannot express a conjunction of a count and a pattern."** That
+was wrong, and it was reached by testing three extension points and generalising to the tool. The
+three tested are the three this repo already uses — so the conclusion was really "the shapes we have
+seen cannot do this", stated as a fact about Vale.
+
+`claim-discipline.md` names this exactly: a conclusion from a plausible mechanism outlives a
+measurement. The mechanism was real — `existence` genuinely cannot count — and the generalisation from
+it was not checked against the documentation until the user asked for a search.
+
+**One consequence worth keeping: the observation that every published rule is a single predicate still
+holds, and now has a better explanation.** `Std`, `Google`, `Microsoft` and `STE` are written in the
+simple extension points because those are portable and fast. `script` is available to a repo willing
+to carry a Tengo file, which is why a bespoke rule can be better here than any package rule — not
+because the packages are careless.
 
 **What this does not license.** The spike measured that the obvious forms fail; it did not measure that
 a good rule is impossible. Three probe errors in one sitting, every one reading as a clean zero, is
