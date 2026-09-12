@@ -196,6 +196,41 @@ than a rule matching every sentence of 26 words. That is a bespoke rule this rep
 approximating it with a word count. **File it as the successor question if the split ratio holds on a
 second sample.**
 
+### Authoring our own: spiked 2026-09-12, and the honest result is "harder than it looks"
+
+**The user's direction: if the built-in rules are too simplistic — false positives and missed
+negatives — explore writing our own.** That is the right instinct and this repo already acts on it
+elsewhere; `vale-styles/JsDoc` and `vale-styles/Instruction` exist for exactly that reason.
+
+A rule targeting the useful third was prototyped: _a clause boundary inside an over-long sentence_,
+which is the defect, rather than _any sentence over 25 words_, which is the proxy.
+
+**What the spike established, and none of it is a reason to stop:**
+
+- **The naive form is worse than what it replaces.** `extends: existence` on `,\s+(and|but|so)\s+`
+  at `scope: sentence` reports **2,881** corpus-wide against `SentenceLength`'s 1,253. A conjunction is
+  not a defect; a conjunction in a long sentence is.
+- **The compound form needs a length predicate in the same regex**, because Vale's `existence` has no
+  way to say "and the sentence is over N words". `occurrence` counts tokens but cannot also require a
+  pattern; `existence` matches a pattern but cannot count. **Neither extension point expresses the
+  conjunction of the two**, which is the finding that matters.
+- **A hand-rolled `(?:\S+\s+){20,},` cannot work**, because `\S+` is greedy and consumes the comma
+  the pattern then tries to match. That is an ordinary regex bug rather than a Vale limit, and it cost
+  three probes to see.
+- **Vale lints its own `StylesPath`.** A probe reporting a finding whose path is the rule file reads
+  exactly like a finding on the target. Two of this spike's readings were that, and both looked like
+  results.
+
+**So authoring the precise rule is a slice, not an afternoon.** The shape that would work is probably
+`extends: sequence` — the form `STE.PassiveVoice` uses — which matches an ordered series of tokens and
+can carry a POS tag, so "twenty-plus words, then a comma, then a coordinating conjunction" is
+expressible where `existence` cannot express it. **That is the thing to prototype next**, and it was
+not tried here.
+
+**What this does not license.** The spike measured that the obvious forms fail; it did not measure that
+a good rule is impossible. Three probe errors in one sitting, every one reading as a clean zero, is
+also the reason to hold the conclusion loosely — see the method note above.
+
 **The residual question is worth one line rather than a slice.** If `STE`'s tokenizer is the right one,
 `STE`'s own cap of 25 may be slightly generous for this corpus — but that is a threshold question about
 a rule we already have, not an adoption question about one we do not.
