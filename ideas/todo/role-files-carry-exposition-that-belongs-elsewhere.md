@@ -193,7 +193,8 @@ handoffs and should stay.
 - **ADOPTED — attribute nothing; say "not yours".** A prohibition needs no owner. "Never edit `rules/*.yml`"
   carries the whole instruction; "those are `architect`'s" adds only a fact that can rot. This costs
   nothing, needs no tooling, and removes most of the surface. Where a name is genuinely needed, prefer
-  the cycle position to the name: "later roles in the cycle" survives a rename.
+  the cycle position to the name — but see rule 9b: once a role file stops stating the cycle, "later
+  roles in the cycle" has nothing to refer to, and "not yours" is the better form.
 - **ADOPTED — a single source for anything two files must agree on.** The threshold that drifted — mutant count
   for a split — belongs in one place both roles read, which is an article rather than a role file.
   `engineering.md` already carries the shared-concern rule and says duplicates drift out of sync.
@@ -288,6 +289,30 @@ demand the structure.
 
 **Re-open only with new evidence**, and the evidence is a rule that discriminates the two `coder.md`
 versions in the right direction — not an argument that one could exist.
+
+### 9b. A role file does not state the cycle order
+
+**Ruled by the user on 2026-09-11.** Every role file opens by naming its position in
+`product → coder → cleaner → architect → hardener → product`. No role benefits from knowing the
+orchestration order, and it is a driftable surface in five files.
+
+**What a role actually needs is narrower and already stated elsewhere in the file.** That a spec
+arrived approved, and who to hand to — both live in the Handoff section. A role never chooses what
+runs next; the orchestrating session does.
+
+**One qualification, so the removal is made on the right grounds.** The cycle string is the _least_
+driftable cross-role mention in the corpus: `agent-doc-check`'s check 4 asserts every copy is
+byte-identical and fails loudly when it finds none anywhere. So this is not a drift fix — it is a
+relevance fix. **The string is safe; it is simply not addressed to the reader.**
+
+**Check 4 keeps working after all five removals.** The string survives in `CLAUDE.md` twice and in
+`handoffs.md` once — files whose audience is the seat that sequences the roles. Verified after
+`coder.md`'s removal: `npm run agent-doc-check` exits 0.
+
+**One consequence to handle in the same edit.** Rule 8 prefers "later roles in the cycle" to naming
+roles — and that phrase is unmoored once the file stops stating the cycle. `coder.md`'s became
+"They are not yours", which is rule 8's first option and better anyway. **Removing the cycle line
+means auditing the file for phrases that depended on it.**
 
 ### 10. Keep the one-clause why
 
