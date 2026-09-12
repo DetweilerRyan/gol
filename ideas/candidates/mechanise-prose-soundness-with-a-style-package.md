@@ -132,6 +132,29 @@ strict improvement on this pair and the measurement does not support it. What `S
 findings on sentences a reader would call 26 words and `STE` calls 25, on a corpus whose vocabulary is
 built from compounds.
 
+**One alternative explanation was raised and refuted, and it is worth keeping because it would have
+inverted the recommendation.** The user asked whether the corpus is hyphen-dense _because_ hyphenating
+was an easy way to shorten sentences past `STE.SentenceLength` — the rule manufacturing the compounds
+it then under-counts. If true, `STE`'s tokenizer would be rewarding an evasion and `Std`'s would be
+the honest count.
+
+Measured 2026-09-12 against the commit before Vale landed (`01d9ac0`, 2026-09-08), as compound hyphens
+per 1,000 words:
+
+| File                | Pre-Vale | Today |
+| ------------------- | -------- | ----- |
+| `CLAUDE.md`         | 47.4     | 46.1  |
+| `engineering.md`    | 38.0     | 32.0  |
+| `testing-layers.md` | 64.7     | 46.0  |
+| `architecture.md`   | 46.3     | 42.6  |
+
+**Density is flat or down in all four, never up.** And `CLAUDE.md` was densest at its birth — 59.8 on
+2026-08-18, three weeks before Vale existed — falling to 47.4 by the time the rule was enabled and
+46.1 today. `src/`'s comments and code sit at 26.7 for scale.
+
+So the compounds predate the rule and have declined under it. The style is how this repo names its
+concepts, not an artifact of gaming a word count.
+
 **The residual question is worth one line rather than a slice.** If `STE`'s tokenizer is the right one,
 `STE`'s own cap of 25 may be slightly generous for this corpus — but that is a threshold question about
 a rule we already have, not an adoption question about one we do not.
