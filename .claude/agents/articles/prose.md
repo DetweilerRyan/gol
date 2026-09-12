@@ -423,8 +423,8 @@ dispositions, and only one is a deletion:
 
 **Explanation is explanation whatever shape the sentence takes.** How a rule was found, what was
 measured to establish it, which slice tripped over it, and what was tried and rejected all move. So
-does the account of a correction. They move however short they are, and even where the rule reads as
-arbitrary without them. A reader who wants the why has the pointer.
+does the account of a correction. They move however short they are, even where the rule reads as
+arbitrary without them, because a reader who wants the why has the pointer.
 
 **Four exempt classes. Each one reads as explanation and is instruction, so keep it:**
 
@@ -447,10 +447,10 @@ conduct never moves, whatever its size.** A passage that only says why a rule is
 stays.
 
 **Kind decides before mass.** Evidence is a measurement, a probe method, a rejected alternative, or a
-correction carrying a figure. Settle kind first by the three dispositions above. Then apply a floor:
+correction carrying a figure. Settle kind first by the three dispositions above, then apply a floor:
 **below roughly 1 KB of genuine evidence, decline the sidecar.** A smaller one holds less than its own
-framing, which measures 1.0–1.4 KB. `CLAUDE.meta.md` carries the census of which files cleared
-that floor.
+framing, which measures 1.0–1.4 KB; `CLAUDE.meta.md` carries the census of which files cleared that
+floor.
 
 **A sidecar carries no read trigger, and that is the point.** It is read when a rule is being changed,
 never in order to follow one. So an instruction that a reader needs in order to act can never live
@@ -473,9 +473,9 @@ than moving it across.
 
 **The rules above cannot see the defect this style exists for.** `STE.ParagraphLength` treats a
 Markdown list item as no paragraph at all, so a many-sentence numbered step reports zero. Role files
-keep their instructions in lists, so that is exactly where exposition accumulates. The three rules
-in the tracked `vale-styles/Instruction/` style close that hole, and they mechanise the split this
-article states under "Instruction stays. Explanation moves."
+keep their instructions in lists, exactly where exposition accumulates. The three rules in the
+tracked `vale-styles/Instruction/` style close that hole, mechanising the split this article states
+under "Instruction stays".
 
 **Both are proxies, and they cover each other's blind spot.** A green run is **not** evidence a file
 is instruction-only; it is evidence the file has not regrown the two shapes that were measured. Each
@@ -528,10 +528,10 @@ says nothing about the corpus, and nothing about the rules.
 Vale lints JSDoc blocks in `src/` and `scripts/`, and a finding there is **not** the same act as a
 finding in an article.
 
-**The remedy is often placement, not prose.** In an article an over-long sentence gets split. In a
+**The remedy is often placement, not prose.** In an article an over-long sentence gets split; in a
 JSDoc it may mean the content does not belong in the interface at all. `doc-comments.md` rule 4 sends
 implementation detail to `//`, and rule 7 sends overflow to a `<module>.md` sidecar. **Splitting the
-sentence in place is the wrong fix that still clears the finding.** Ask which before rewriting.
+sentence in place is the wrong fix that still clears the finding**, so ask which before rewriting.
 
 **What the `JsDoc` rules check, and the writing facts that follow from their scope, are in
 `doc-comments.md` under "What Vale checks mechanically".** Read them there rather than here.
@@ -550,9 +550,9 @@ the tag block.
 
 **Who owns the rules.** `architect` alone authors or changes a rule in `vale-styles/JsDoc/` or
 `vale-styles/Instruction/`. Every other role reads the output and reports tensions to it, exactly as
-with `rules/*.yml`. **The `STE` style is a different surface and is not `architect`'s alone**, and
-that covers the module sidecars. No `JsDoc` rule reaches a `.md` file, so a sidecar finding is an
-`STE` finding or, on a stripped role file, an `Instruction` one.
+with `rules/*.yml`. **The `STE` style is a different surface and is not `architect`'s alone.** That
+covers the module sidecars. No `JsDoc` rule reaches a `.md` file, so a sidecar finding is an `STE`
+finding or, on a stripped role file, an `Instruction` one.
 
 ## What is scoped, and what is not
 

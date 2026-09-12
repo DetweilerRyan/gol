@@ -1341,3 +1341,34 @@ by path, or check `git status` against what you believe you changed, before comm
 character before the terminator collapses the count to at most 1 on any paragraph opening with a
 bold-wrapped numeral, which would blind the rule on exactly this repo's house style for numbered
 points. It carries the argument for a `raw`-scope replacement instead.
+
+## What the 2026-09-12 lint of `prose.md` and `doc-comments.md` actually settled
+
+Re-measured against the reverted rule, after the incident above.
+
+| rule                  | before | after | note                                       |
+| --------------------- | ------ | ----- | ------------------------------------------ |
+| `HistoricalNarration` | 5      | 0     |                                            |
+| `ListItemSentences`   | 11     | 1     |                                            |
+| `SentenceLength`      | 3      | 0     |                                            |
+| `Contractions`        | 4      | 4     | all mentions, exempt by the article's rule |
+| `ParagraphSentences`  | 30     | 12    | 6 numbered-prefix artifact, 6 genuine      |
+
+**The six genuine `ParagraphSentences` findings are evidence about the threshold, not a backlog.**
+The rule's own message says "a role-file paragraph gets four", and it was calibrated on role files.
+Bringing an article paragraph under it was attempted repeatedly and failed the same way each time:
+merging two sentences to reach four pushed the merged sentence past `SentenceLength`'s 25-word cap.
+That happened **seven separate times** across this pass, on seven different paragraphs, and each was
+reverted to the split form.
+
+`prose.md` already names the interaction under "`SentenceLength` and `ParagraphLength` trade against
+each other", and says to settle `SentenceLength` first. Following that order is what leaves these six
+standing.
+
+**So the question the backlog candidate asks — whether these rules bind an article at all — now has
+evidence on one side.** A four-sentence cap and a 25-word cap are jointly satisfiable only if the
+paragraph carries four facts or fewer. An article paragraph that carries five, each of which is
+genuine instruction, cannot satisfy both without moving one to the sidecar — and for these six, the
+fifth fact is instruction a reader acts on rather than evidence.
+
+Nothing here argues the rule is wrong on a role file, which is the surface it was written for.
