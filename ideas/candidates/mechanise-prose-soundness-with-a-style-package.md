@@ -221,11 +221,40 @@ which is the defect, rather than _any sentence over 25 words_, which is the prox
   exactly like a finding on the target. Two of this spike's readings were that, and both looked like
   results.
 
-**So authoring the precise rule is a slice, not an afternoon.** The shape that would work is probably
-`extends: sequence` — the form `STE.PassiveVoice` uses — which matches an ordered series of tokens and
-can carry a POS tag, so "twenty-plus words, then a comma, then a coordinating conjunction" is
-expressible where `existence` cannot express it. **That is the thing to prototype next**, and it was
-not tried here.
+**`extends: sequence` was then tried, on the user's direction, and it cannot express it either.** Two
+measurements settle that:
+
+- **`skip` is a maximum, not a minimum.** `STE.PassiveVoice`'s `skip: 2` permits up to two intervening
+  tokens; it does not require them. A sequence of _word_, _comma_ with `skip: 20`, _conjunction_ fires
+  on `Short one, and another.` — twice — because twenty is a ceiling the short sentence sits under.
+- **A sequence token matches one token, never a span.** Measured directly: a single token
+  `'deliberately long'` never matches, while two tokens `'deliberately'` then `'long'` match the same
+  text. So the length gap cannot be written as a repetition inside one token either.
+
+**That exhausts the three extension points for this rule.** `occurrence` counts tokens in a scope and
+cannot require a pattern — pointed at a word pattern with `max: 25` it _is_ `STE.SentenceLength`.
+`existence` matches a pattern and cannot count. `sequence` matches an ordered token series and can
+only bound the gap from above.
+
+**Conclusion: Vale cannot express "a long sentence that also contains a clause boundary."** Not by
+tuning, and not by choosing a different extension point. The conjunction of a count and a pattern is
+outside all three.
+
+**What that leaves, in order of cost:**
+
+- **Accept the proxy.** `STE.SentenceLength` flags long sentences, a third of which are splittable, and
+  a reader triages. That is what happens today.
+- **Two rules and a human join.** `SentenceLength` and a conjunction rule both report; a finding on the
+  same line from both is the useful third. No new rule shape is needed, and `prose-lint`'s output would
+  need to make the coincidence visible.
+- **A `scripts/` checker rather than a Vale rule.** The predicate is two lines of TypeScript over a
+  sentence split, and this repo already runs nine such programs with their own gates. **That is the
+  shape that actually fits**, and it sidesteps Vale's expressiveness entirely.
+
+**The third option is the recommendation if the forcing function is wanted.** It also explains why the
+built-in rules are simplistic in the way the user observed: Vale's model is one pattern or one count
+per rule, so every rule in every published package is a single-predicate rule, and prose defects that
+are conjunctions of two conditions are invisible to all of them.
 
 **What this does not license.** The spike measured that the obvious forms fail; it did not measure that
 a good rule is impossible. Three probe errors in one sitting, every one reading as a clean zero, is
