@@ -139,6 +139,41 @@ hand. The options are:
 **Ruling needed, and it is the user's**: this is the only one of the three prompts where the
 measurement argues against the rule rather than for a better version of it.
 
+### What the web research added, 2026-09-12
+
+**A fourth option, and it is the cheapest.** Demote `STE.PassiveVoice` to `severity: suggestion`.
+`.vale.ini` sets `MinAlertLevel = warning`, so a suggestion is filtered out of the sweep entirely
+while the rule stays named in the config and reachable with `vale --minAlertLevel=suggestion`. That
+is [GitLab's own practice](https://docs.gitlab.com/development/documentation/testing/vale/) for a
+rule needing refactoring rather than a fix: "set it to suggestion-level so it displays in local
+editors only."
+
+Read the difference from retiring honestly. GitLab's version rests on an editor integration that
+surfaces suggestions to an author mid-edit. This repo has no editor tier -- `npm run prose-lint` is
+the only runner, and it is a sweep. So here the option is "off in the sweep, available on demand",
+which is weaker than GitLab's but still not the same as `= NO`.
+
+Note `.vale.ini` already carries the **reverse** move as precedent: "ProcedureLength is re-levelled
+from its shipped `suggestion`, which MinAlertLevel would otherwise filter into silence."
+
+**GitLab's criteria corroborate the measurement, and reach further than option 3.** Their test for
+whether a rule is worth keeping is "how often an author might ignore it because it's acceptable in
+the context. If the rule is too subjective, it cannot be adequately enforced and creates unnecessary
+additional warnings." Their own configuration runs no passive-voice rule at all.
+
+**One caveat that cuts the other way, and it narrows the claim rather than the finding.** The
+research on passive detection notes that a tool's measured accuracy is "germane to the texts
+analyzed, not all possible texts and topics". So **1.8 percent is a fact about this corpus**, not a
+general indictment of `STE.PassiveVoice`. The corpus is unusually heavy in exactly the two classes
+`prose.md` exempts -- dated records and agent-naming prose. The ruling should rest on the local
+number, and should not be written up as a finding about the rule in general.
+
+**What no source offers is a better mechanism at this tier.** The accurate tools
+([PassivePy](https://myscp.onlinelibrary.wiley.com/doi/10.1002/jcpy.1377) and its peers) use
+part-of-speech tagging and dependency parsing. Tengo is sandboxed to `text`, `fmt` and `math`, so
+none of that is reachable from a Vale `script` check. The choice is between a regex and no rule --
+which is what makes the narrow-rule option genuinely limited rather than merely imperfect.
+
 ## Tengo facts worth carrying, each of which cost a probe
 
 - **Backslashes are doubled.** A Tengo string literal consumes one level, so `\\s` reaches the regex
