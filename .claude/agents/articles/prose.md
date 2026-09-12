@@ -189,7 +189,8 @@ recalled mid-pass reads low.
 Five surface in a default run. `PassiveVoice` is the sixth, held at `suggestion` and so below
 `MinAlertLevel`.
 
-Three apply mechanically. Three are prompts to look. Know which you are holding.
+All five apply mechanically as of 2026-09-12, when the last two prompts were replaced by script
+rules. The column below is what each one still asks of you, which is not the same question.
 
 | rule                        | treat it as    | act on a finding?                       |
 | --------------------------- | -------------- | --------------------------------------- |
@@ -214,11 +215,16 @@ five interact, so a batch application still needs the order and the re-run descr
 
 ### Order matters in a sweep, even now that every rule is mechanical
 
-**Bulk reading is not triage, and the finding count cannot tell you which you did.** A sweep clears the
-five mechanical rules, and as of 2026-09-12 every rule in a default run is mechanical. No rule here
-needs a judgement per finding any more. What a sweep still cannot do is reorder the interacting pair —
-see "`SentenceLength` and `ParagraphLength` trade against each other" below.
-Both look identical afterwards: a number.
+**Bulk reading is not triage, and the finding count cannot tell you which you did.** Both look
+identical afterwards: a number.
+
+Every rule in a default run is mechanical as of 2026-09-12, and **that still does not make the run
+sweepable.** Two things survive the change:
+
+- **`Contractions` keeps a per-finding judgement**, and it is the one rule where a sweep does damage.
+  `that's` expands to _that is_ or _that has_ by context. See its own section below.
+- **`SentenceLength` and `ParagraphLength` interact**, so a batch application needs the order and the
+  re-run described below.
 
 So when you report a file as linted, say which half you did. "Zero on the mechanical rules" is a
 different claim from "I read every finding".

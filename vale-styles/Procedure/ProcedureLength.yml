@@ -31,6 +31,9 @@
 #
 # OVER-FIT GUARD: the rule matches a generic ordered-list marker and counts words.
 # It encodes nothing specific to this corpus.
+# SCOPE LIMIT, known and accepted: the fence guard toggles on ``` only, never on
+# the ~~~ form. No ~~~ fence exists in this corpus. A file introducing one would
+# be scanned inside the fence.
 extends: script
 message: 'Numbered step is too long. STE caps procedural text at 20 words.'
 level: warning

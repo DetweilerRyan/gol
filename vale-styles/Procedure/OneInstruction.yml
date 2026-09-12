@@ -34,6 +34,9 @@
 # OVER-FIT GUARD: the verb list is generic imperative English. It quotes no slice
 # name, tool name or incident phrasing from this repo, so the rule was not shaped
 # to the corpus it was measured on.
+# SCOPE LIMIT, known and accepted: the fence guard toggles on ``` only, never on
+# the ~~~ form. No ~~~ fence exists in this corpus. A file introducing one would
+# be scanned inside the fence.
 extends: script
 # The message deliberately names no rule. It once cited the STE rule this replaces,
 # which made every finding match a grep for that now-disabled name -- and did so in
