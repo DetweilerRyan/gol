@@ -234,7 +234,7 @@ substitute for the pass, and this slice is the evidence.**
 once rather than 56 times: this repo writes a rule as a bullet carrying its own reason, so the rule fires
 on the house style. They divide as 34 rule-with-rationale bullets, 9 per-role command substitutions, 6
 standing verification obligations, 4 test-layer definitions, and 3 numbered decision questions. That
-lesson is now in `prose-linting.md`.
+lesson is now in `prose.md`.
 
 **The 45 remaining `PassiveVoice` findings** divide across the article's five documented exempt classes,
 with one residual left in as arguable: "None may be skipped on the grounds that it cannot fail" is a

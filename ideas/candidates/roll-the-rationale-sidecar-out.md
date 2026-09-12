@@ -7,7 +7,7 @@ created: 2026-09-08
 ## Situation
 
 `rationale-sidecar-pilot` proved the tier on one file and Ryan signed it off. `doc-comments.md` is split,
-`prose-linting.md` and its own sidecar were then written under the tier from scratch, and CLAUDE.md's
+`prose.md` and its own sidecar were then written under the tier from scratch, and CLAUDE.md's
 routing test carries a branch for it. `.claude/agents/articles/` holds fourteen articles and two sidecars;
 two of the fourteen are done.
 
@@ -89,7 +89,7 @@ creation threshold now stated in CLAUDE.md's routing branch 5 came out of those 
 
 **This file was retired by `ratify-the-rationale-tier` and restored in the same slice's REVIEW pass.**
 The retirement was premature on one measured ground: six landed files cite the mandates below **by
-number** — `prose-linting.md`, an instruction-tier article, plus the `ast-grep-rules`, `engineering`,
+number** — `prose.md`, an instruction-tier article, plus the `ast-grep-rules`, `engineering`,
 `quality-tooling`, `state-flow` and `testing-layers` sidecars — and after the deletion nothing in the
 tree defined them. `reference-check` cannot see an ordinal reference into another file, so the loss was
 silent. Retire this file once those mandates have a durable home and `architecture.md` is split or
@@ -152,7 +152,7 @@ The pilot established these, and they are not optional. Seven, and mandates 4 th
    mandate said to edit that file, which is wrong** — `split-mutation-testing-article` correctly diverged
    from it, and a second author following it literally would either make a no-op edit or, reading "in
    that section" as licence, author a redundant per-file section. The two-part pairing it described is
-   real but belongs to enabling a _rule_, not to adding a sidecar; `prose-linting.md` carries it.
+   real but belongs to enabling a _rule_, not to adding a sidecar; `prose.md` carries it.
    **This mandate covers the sidecar only — mandate 6 covers linting the article.**
 3. **An audit of the pair afterwards**, by hand, against the article as it stood before. Nothing checks
    this — `reference-check` and `agent-doc-check` both stay green while a pair drifts, because every
@@ -172,7 +172,7 @@ The pilot established these, and they are not optional. Seven, and mandates 4 th
    in the one artifact whose whole job is to be accurate. Name the unit: article bytes before, article and sidecar bytes after, rationale-only
    bytes, entanglement, backticked slice-slug counts, and Vale findings on the article. **State the
    absolute rationale figure, not the share** — the share is a ratio and moves the wrong way, which is
-   recorded in `prose-linting.rationale.md`. This is the mandate the first split skipped, because it
+   recorded in `prose.rationale.md`. This is the mandate the first split skipped, because it
    named an obligation without naming the measurement or where it goes.
 
    **A "before" figure taken at any point after the work began is not a before figure.** The third split
@@ -218,8 +218,8 @@ The pilot established these, and they are not optional. Seven, and mandates 4 th
    both substantive findings on the first split were exactly that shape: "every entry on the allowlist"
    naming five of seven, and "the exposure is bidirectional" describing one direction. An audit preserves
    those faithfully because they were preserved faithfully.
-6. **Run Vale over the new instruction file, and act on it per `prose-linting.md`.** The split rewrites
-   the article, so the article is the file you are editing — and `prose-linting.md` says to lint that
+6. **Run Vale over the new instruction file, and act on it per `prose.md`.** The split rewrites
+   the article, so the article is the file you are editing — and `prose.md` says to lint that
    rather than the directory. Three rules are mechanical and every finding gets acted on:
    `STE.SentenceLength`, `STE.ParagraphLength` and `STE.Contractions`, the last unless the text is
    quoted or named. Three are prompts a person reads rather than obeys: `STE.ProcedureLength`,

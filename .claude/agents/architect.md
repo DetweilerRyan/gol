@@ -81,11 +81,11 @@ Run each fault once yourself before handing the battery over. That is the only t
   - **A rule change never carries an edit to the role file or article it polices** — report that as a finding.
   - A rule ships a `<Rule>.bad.*` fixture that fires exactly it and a `<Rule>.good.*` that stays silent, **for every extension it claims**.
   - **A silent good fixture proves nothing.** Loosen the matcher in a scratch copy and confirm the fixture then reports.
-  - **Which extensions a rule claims is your ruling**, per rule. A scope selector is strictly per extension, so a rule scoped to `.ts` alone is silently inert on every component. Read `prose-linting.md`'s "Each rule declares its own extensions" and record the answer in the rule's header.
+  - **Which extensions a rule claims is your ruling**, per rule. A scope selector is strictly per extension, so a rule scoped to `.ts` alone is silently inert on every component. Read `prose.md`'s "Each rule declares its own extensions" and record the answer in the rule's header.
   - **Do not reach for `extends:`.** A child's key replaces the parent's rather than merging, and a parent that is not on the search path aborts the whole run at E201.
   - **A rule added to `.vale.ini`'s `[*.{ts,tsx}]` section must be added by name to all three exemption sections below it.** Nothing checks that.
   - **The `STE` style is a different surface and is not yours alone.** No `JsDoc` rule reaches a `.md` file, so a sidecar finding is an `STE` finding. Widening a style to a new surface is a design change, not a rule edit.
-  - Read `.claude/agents/articles/prose-linting.md` before authoring a rule; it carries the one-command fixture run.
+  - Read `.claude/agents/articles/prose.md` before authoring a rule; it carries the one-command fixture run.
 
 - **`rules/*.yml` and `rule-tests/` are yours.** You are the only role that authors or changes them; every other role reads `npm run ast-grep`'s output and reports tensions to you. See "Structural rules (ast-grep)" in `.claude/agents/articles/engineering.md` for the shared reading convention.
 

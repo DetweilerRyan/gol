@@ -66,7 +66,7 @@ Shipped levels across the sixteen: **one `error`** (`Assistant`), **seven `warni
 
 **No single file can carry this spike, and that is measured rather than assumed.** The widest spread
 among the **articles and role files** is **three of sixteen rules** — `testing-layers.md`,
-`prose-linting.md` and `acceptance-mutation.md` each hit that ceiling. `CLAUDE.md` is the outlier at
+`prose.md` and `acceptance-mutation.md` each hit that ceiling. `CLAUDE.md` is the outlier at
 **six of sixteen**, twice any article, and is the widest-spread file in the corpus. Six is still not
 sixteen, so the conclusion holds either way: a single-file pilot can inform a judgement on at most
 six rules, and says nothing about the other ten.
@@ -81,7 +81,7 @@ drift". That is a different question and needs no pilot.
 including **five of the nine rules that actually fire** (`EmDash`, `Ceremony`, `Anthropomorphism`,
 `Overused`, `Headers`). A
 spike that enables a rule without re-levelling it measures nothing and reports a confident zero. This
-is failure mode 1 in `prose-linting.md`'s own list.
+is failure mode 1 in `prose.md`'s own list.
 
 **Enabling `Slop` at all requires closing a leak, and the leak is real rather than theoretical.**
 Measured during this candidate's own preparation: adding `Slop` to the agent-docs section leaked it
@@ -113,7 +113,7 @@ it is a large topic article (29,812 bytes) with the full register mix — read t
 facts, procedures, closed decisions; it has a `.rationale.md` sidecar, so the pilot also exercises
 the exemption the leak above threatens; and it is one of the three files at the three-rule ceiling.
 
-**`prose-linting.md` is disqualified as pilot**, but not for the reason first written here. Its four
+**`prose.md` is disqualified as pilot**, but not for the reason first written here. Its four
 `Slop` findings were checked one at a time, and **all four are uses, none is a mention** — the
 self-reference effect is not present today. The real reasons are two. It is the spike's own
 deliverable (see Touches), so remediating it during the pilot conflates the sample with the output.
@@ -164,7 +164,7 @@ a per-format-section key, so it repeats in the same three live sections the `= N
 for") is folded into step 1.
 
 Corpus-wide each of these is four sites rather than one: `EmDash` in `testing-layers.md` (1),
-`mutation-testing.md` (2) and `coder.md` (1); `Ceremony` in `testing-layers.md`, `prose-linting.md`,
+`mutation-testing.md` (2) and `coder.md` (1); `Ceremony` in `testing-layers.md`, `prose.md`,
 `doc-comments.md` and `CLAUDE.md` (1 each).
 
 For each, in isolation: re-level to `warning`, run on **every site the rule fires at** — four each for `EmDash` and `Ceremony` — show the user **the finding,
@@ -199,9 +199,9 @@ is the follow-up, and its size is knowable only once the set is chosen.
 ## Touches
 
 - `.vale.ini` — the adopted set, four places per rule
-- `.claude/agents/articles/prose-linting.md` — each adopted rule needs its mechanical-or-prompt
+- `.claude/agents/articles/prose.md` — each adopted rule needs its mechanical-or-prompt
   classification and its exempt classes, in the form the six STE rules already have
-- `prose-linting.rationale.md` — the rulings and the rejected set, per branch 5
+- `prose.rationale.md` — the rulings and the rejected set, per branch 5
 - No `src/`, no `scripts/`. Documentation-only.
 
 ## Open questions

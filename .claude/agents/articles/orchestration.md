@@ -83,7 +83,7 @@ sidecar, or a JSDoc block. This seat edits the first two constantly. That is why
 written here and in the role files both.
 
 **No role owns the running, because four seats do the editing.** What `architect` owns is the
-**rules** under `vale-styles/JsDoc/`. Read `prose-linting.md` before acting on any finding. Read its
+**rules** under `vale-styles/JsDoc/`. Read `prose.md` before acting on any finding. Read its
 "Triaging a finding in a comment" section when the finding sits in a JSDoc. The remedy there is often
 a move rather than a rewrite.
 

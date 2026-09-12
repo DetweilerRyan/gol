@@ -29,7 +29,7 @@
 # second-sentence opener in is-strict-equal.ts. That hover was rewritten in the
 # same review pass, so the narrower rule is not what cleared the finding.
 #
-# EXTENSIONS: .ts AND .tsx. Ruled per rule on 2026-09-10, under prose-linting.md's
+# EXTENSIONS: .ts AND .tsx. Ruled per rule on 2026-09-10, under prose.md's
 # "Each rule declares its own extensions".
 #
 # This rule does NOT assume the block comment is an interface doc. A hover-shaped

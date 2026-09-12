@@ -435,14 +435,14 @@ measured against a tree three splits old. Re-derive before planning against it.
 
 **The Vale baseline was taken on the untouched file, before the first edit, as mandate 4 now requires.**
 122 mechanical findings: 107 `SentenceLength`, 8 `ParagraphLength`, 7 `Contractions`. Reaching zero took
-four passes rather than the two `prose-linting.md` predicts, and the two length rules traded against each
+four passes rather than the two `prose.md` predicts, and the two length rules traded against each
 other in both directions on the way.
 
 **One measurement hazard is worth recording, because it nearly produced a false zero here.** The first
 Vale run against this article reported no findings at all. The run was real and the file was in scope; a
 second identical invocation minutes later reported all 198. The cause was not diagnosed. What caught it
 was checking the zero against a file known to be non-empty, which is the habit
-`prose-linting.md`'s confident-zero section argues for. That section is a numbered list, so it is cited
+`prose.md`'s confident-zero section argues for. That section is a numbered list, so it is cited
 by name here rather than by count -- it has grown twice. **Never record a Vale
 zero without confirming the same invocation reports findings on a file that has them.** A worktree makes
 this likelier rather than less: `.vale/` is gitignored, so a new worktree cannot lint until that directory

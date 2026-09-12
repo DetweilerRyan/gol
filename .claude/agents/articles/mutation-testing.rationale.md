@@ -30,7 +30,7 @@ number forward from this file without re-deriving it.**
 
 **The slug count is the cleanest signal.** A backticked slice name is history by definition, and 20 of
 the 22 moved to this file. The rationale _share_ went up rather than down, which is the ratio artifact
-recorded in `prose-linting.rationale.md`: removing rationale removes total bytes too, so only the
+recorded in `prose.rationale.md`: removing rationale removes total bytes too, so only the
 absolute figure moves in the direction the split intends.
 
 ## The Vale triage, done finding by finding
@@ -42,7 +42,7 @@ rather than in bulk.
 **`STE.ProcedureLength`, 12 findings, 12 exempt.** Every one is a statement rather than a step: the three
 misreporting modes, two `:full` trigger conditions, two equivalence practical notes, two `ignorePatterns`
 hazards, the two `Timeout` consequences, and two allowlist what-secures-each facts. None is a procedure,
-so `prose-linting.md`'s test — is this bullet a step, or a statement — exempts all twelve.
+so `prose.md`'s test — is this bullet a step, or a statement — exempts all twelve.
 
 **`STE.PassiveVoice`, 24 findings, 24 exempt.** By the five classes: 11 descriptive prose where the actor
 is a tool and irrelevant, 4 passives that already name their agent ("killed **by a test in another**",
@@ -58,7 +58,7 @@ the rule is inert here.
 
 **One finding is genuinely arguable and was left in.** Line 108's "No current run-cost figure is recorded
 in either file" could be "Neither file records one". The passive fronts the missing figure, which is the
-subject, so it stays — but it is the closest call of the 36, and `prose-linting.md` is explicit that a
+subject, so it stays — but it is the closest call of the 36, and `prose.md` is explicit that a
 residual fitting no class is not automatically exempt.
 
 ## The three misreporting modes, and where each was measured

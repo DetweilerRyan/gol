@@ -12,4 +12,4 @@ own `scope:` claims.
 
 **Which extensions a rule claims is a per-rule ruling**, and a rule records its answer in its own
 header. The test is whether the rule assumes the block comment is an interface doc. See
-`.claude/agents/articles/prose-linting.md`, "Each rule declares its own extensions".
+`.claude/agents/articles/prose.md`, "Each rule declares its own extensions".

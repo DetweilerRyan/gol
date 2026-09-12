@@ -48,7 +48,7 @@ reports nothing, and that is indistinguishable from a clean codebase.
 **Vale's own `vale test` cannot do this job.** Its `input:` is parsed as Markdown, so a
 comment-scoped rule never matches it. The upstream rule-authoring server was the other candidate, and
 its scaffolding and testing tools need a paid subscription. Both were measured and rejected;
-`prose-linting.rationale.md` carries each. So the hand-built fixtures are a considered choice rather
+`prose.rationale.md` carries each. So the hand-built fixtures are a considered choice rather
 than a gap nobody has noticed.
 
 ## The two `extends:` traps
@@ -62,7 +62,7 @@ a message that still says "Sentence".
 
 A parent that is not on the search path aborts the **whole run** at E201. That makes a synced `.vale/`
 a precondition for loading every rule, including the fixtures that deliberately need none.
-`prose-linting.rationale.md` carries both measurements.
+`prose.rationale.md` carries both measurements.
 
 ## Why the style ownership binds the orchestrating session
 

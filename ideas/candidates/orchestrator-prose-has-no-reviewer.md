@@ -78,7 +78,7 @@ working late rather than not working. One was caught by accident.
 **A ratified ruling was contradicted and its negation written into three files.** The slice's own
 design pass had ruled that Vale scope is decided **per rule, not per slice**, and that ruling lived
 only in the slice's candidate file. The orchestrating session did not read it, widened all four rules
-uniformly, and wrote the opposite rule into `prose-linting.md`, `architect.md` and `.vale.ini`. The
+uniformly, and wrote the opposite rule into `prose.md`, `architect.md` and `.vale.ini`. The
 candidate was scheduled for deletion at landing, so the negation would have survived alone. `architect`
 caught it only because the orchestrator later mentioned the file in an unrelated question.
 

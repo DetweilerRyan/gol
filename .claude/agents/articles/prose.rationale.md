@@ -1,10 +1,10 @@
 # Rationale: Prose Linting
 
-**Audience:** whoever is changing a ruling in `prose-linting.md`. **Read when:** you are enabling,
+**Audience:** whoever is changing a ruling in `prose.md`. **Read when:** you are enabling,
 disabling or re-levelling a Vale rule, or arguing with one of that article's exemptions — never in order
 to follow one.
 
-No role carries a read trigger for this file. `prose-linting.md` is written to be actionable alone; this
+No role carries a read trigger for this file. `prose.md` is written to be actionable alone; this
 holds the measurements behind it, so a ruling can be argued with rather than only obeyed. Everything
 below is history: what was measured, when, and what was rejected.
 
@@ -30,7 +30,7 @@ correction.
 | `Dictionary`      | no  |                             7 | not ASD's wordset — see below                          |
 | `Modals`          | no  |                             4 | would do damage — see below                            |
 | `NounClusters`    | no  |                             2 | fails its own example — see below                      |
-| `Contractions`    | yes |                         2 → 0 | mechanical; the residue is in `prose-linting.md`       |
+| `Contractions`    | yes |                         2 → 0 | mechanical; the residue is in `prose.md`               |
 | `Ambiguity`       | no  |                             2 | slash token false-positives — see below                |
 | `Articles`        | no  |                             0 | aerospace verb list; 0 of 4 corpus-wide — see below    |
 | `ParagraphLength` | yes |                             0 | mechanical, no tagger; 41 corpus-wide are all real     |
@@ -41,7 +41,7 @@ Ambiguity 58, ParagraphLength 41, OneInstruction 10, Articles 4.
 
 ## The two tried on 2026-09-08 after the article landed
 
-**`STE.Contractions` — adopted.** Three findings across `doc-comments.md` and `prose-linting.md`. Two
+**`STE.Contractions` — adopted.** Three findings across `doc-comments.md` and `prose.md`. Two
 were headings and both improved on expansion: "A hover that doesn't suffice" and "Don't spend a hover"
 became "does not" and "Do not", which reads as more weight rather than more words at the head of an
 instruction. The third is a **quotation** of `engineering.md`'s text, where expanding would misquote the
@@ -63,14 +63,14 @@ inverted precision. Its four-consecutive-noun-tag matcher depends entirely on th
 ## The two mechanical rules interact, measured on this article
 
 Recorded 2026-09-08, during the corrective pass that followed `architect`'s REVIEW of
-`ste-shape-rules-on-doc-comments`. A 35-word sentence in `prose-linting.md` was split to clear
+`ste-shape-rules-on-doc-comments`. A 35-word sentence in `prose.md` was split to clear
 `STE.SentenceLength`; the paragraph it sat in then reported **7 sentences** against
 `STE.ParagraphLength`'s cap of six. Splitting the paragraph cleared both, and no wording was reverted.
 
 **One instance, not two.** Commit `7bc35fa`'s message says the trade happened twice in that pass. It
 happened once. The second apparent instance was the same finding surviving a failed edit, not a new one.
 
-The interaction is why `prose-linting.md` states an order — sentences first, then paragraphs — and why it
+The interaction is why `prose.md` states an order — sentences first, then paragraphs — and why it
 says to re-run rather than trusting a single pass. Two rules that are individually mechanical are not
 jointly mechanical, which is a narrower claim than "three rules apply mechanically" makes on its own.
 
@@ -160,7 +160,7 @@ treatment the other two prompt-rules already carried.
 ## What a missing `.vale/` actually reports, measured 2026-09-10
 
 Taken in the `ratify-the-rationale-tier` worktree on vale 3.20.0, by moving `.vale/` aside and running
-`vale .claude/agents/articles/prose-linting.md` with the two streams redirected separately.
+`vale .claude/agents/articles/prose.md` with the two streams redirected separately.
 
 | what                | value                                                                             |
 | ------------------- | --------------------------------------------------------------------------------- |
@@ -193,7 +193,7 @@ The exemption had genuinely worked earlier, when no rule carried an explicit lev
 the only thing turning rules on. It broke the moment rules were named individually — an explicit
 `STE.Rule = warning` activates that rule on its own, and `BasedOnStyles` replaces the style list rather
 than the per-rule keys. Nothing reported the change. The fix is to switch each enabled rule off by name
-in the sidecar section too, and the pairing is now stated as a rule in `prose-linting.md`.
+in the sidecar section too, and the pairing is now stated as a rule in `prose.md`.
 
 **The role files abort the run.** Pointing Vale at `.claude/agents/` rather than
 `.claude/agents/articles/` fails, because `architect.md` and `coder.md` carry a literal `": "` in their
@@ -525,7 +525,7 @@ not quoted prose.
 
 The article claims `npm run reference-check` leaves the referent half of a citation unchecked for doc
 prose, because its citation matcher never reaches the backticked form. Verified 2026-09-10 by
-injecting two citations of a symbol that does not exist in `camera.ts` into `prose-linting.md`, and
+injecting two citations of a symbol that does not exist in `camera.ts` into `prose.md`, and
 running the gate. The unbackticked one reported a `cited-symbol-exists` failure. The one written the
 way this corpus writes it, with each half in its own code span, reported nothing: `references.ts`'s
 `CITATION_PATTERN` requires the possessive to abut the filename token, and the closing backtick sits
@@ -1075,7 +1075,7 @@ for `npm run mutation-invariance`.
 
 ## Moved out of the article when it was reduced to instructions, 2026-09-10
 
-The user ruled on 2026-09-10 that `prose-linting.md` carries instructions and this sidecar carries the
+The user ruled on 2026-09-10 that `prose.md` carries instructions and this sidecar carries the
 explanation. Five passages had no home here already and were moved rather than deleted. The rest of
 what left the article that day was a restatement of something recorded above, or in `CLAUDE.md`'s
 routing branch 5.

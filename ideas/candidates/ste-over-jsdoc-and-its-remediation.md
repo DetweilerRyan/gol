@@ -7,7 +7,7 @@ created: 2026-09-10
 > Carried out of `lint-jsdoc-with-vale`'s design before that candidate was deleted. That slice shipped
 > the plumbing and the four repo-authored `JsDoc` rules; this is the half it deliberately descoped.
 > **The design pass ratified the split and the ordering**, so this is not a fresh proposal — read
-> `.claude/agents/articles/prose-linting.md` and its rationale sidecar first, which carry every
+> `.claude/agents/articles/prose.md` and its rationale sidecar first, which carry every
 > measurement that survived.
 
 ## Context
@@ -18,7 +18,7 @@ sentence-length cap, no contraction check, no paragraph-length cap, on prose a r
 as any article.
 
 The design pass measured the yield and then refused to land the section alone, because the section
-alone is a backlog nobody has triaged — the constraint now written into `prose-linting.md` under
+alone is a backlog nobody has triaged — the constraint now written into `prose.md` under
 "Enabling, disabling or re-levelling a rule". That is what makes this a slice rather than a config
 line.
 
@@ -34,7 +34,7 @@ article lint pass. An over-long sentence in an article gets split. In a hover it
 does not belong in the interface at all: `doc-comments.md` rule 4 sends implementation detail to `//`
 and rule 7 sends overflow to a sidecar. Splitting in place clears the finding and leaves the defect.
 
-Three measured facts that shape the work, all in `prose-linting.rationale.md`:
+Three measured facts that shape the work, all in `prose.rationale.md`:
 
 - `ProcedureLength` and `OneInstruction` reach a Markdown list inside a hover and reach a `@param` or
   `@returns` tag line not at all.
@@ -46,11 +46,11 @@ Three measured facts that shape the work, all in `prose-linting.rationale.md`:
 ## Touches
 
 `.vale.ini` (one section), and comment-only edits across `src/` and `scripts/`. Possibly
-`prose-linting.md` for a `@returns` exempt class. No `src/` logic.
+`prose.md` for a `@returns` exempt class. No `src/` logic.
 
 ## Open questions
 
-- **Does the intersection caveat between `prose-linting.md` and `doc-comments.md` hold?** Still open,
+- **Does the intersection caveat between `prose.md` and `doc-comments.md` hold?** Still open,
   inherited from the design pass rather than raised here. The do-not-merge ruling stands and nothing
   has been found against it: the two articles govern different dimensions, so the design wanted a
   cross-link rather than a merge. Recovered during the sweep that deleted the design pass's own file,
@@ -63,7 +63,7 @@ Three measured facts that shape the work, all in `prose-linting.rationale.md`:
   forward. Re-derive before scoping, and record the command with the number.
 - **Does `STE.SentenceLength` need a comment scope, and can it have one?** This is the trap:
   `extends:` with an added scope destroys the parent's `scope: sentence` and the counter silently
-  starts measuring whole blocks. Measured, and recorded in `prose-linting.rationale.md`.
+  starts measuring whole blocks. Measured, and recorded in `prose.rationale.md`.
 - **Is the `.test.ts` register a problem here?** Closed for the `JsDoc` rules, open for this one —
   those rules yielded too few findings for the question to bite.
 - **Does the volume want its own orchestration answer?** Comment-only edits at this scale look closer

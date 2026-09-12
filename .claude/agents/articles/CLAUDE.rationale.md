@@ -110,13 +110,13 @@ omission.
 
 **Ruled by the user, in three steps on one day.** An instruction file carries instructions and its
 `.rationale.md` sidecar carries the explanation. That rule is itself an instruction about writing
-prose, so it lives in `prose-linting.md` rather than here. And these branches acknowledge that the
+prose, so it lives in `prose.md` rather than here. And these branches acknowledge that the
 pairs exist, as index work, while deferring every routing instruction between a file and its sidecar
 to that article.
 
 **What moved out of branch 5**: the evidence kinds, "does this constrain an action" as a per-sentence
 method, the exempt classes, kind-before-mass, the ~1 KB floor, "argument never moves at any size", and
-the hand-audit obligation. All of it is now stated once, in `prose-linting.md` under "Instruction
+the hand-audit obligation. All of it is now stated once, in `prose.md` under "Instruction
 stays. Explanation moves."
 
 **What stayed, and the test that kept it.** A branch stays here when it answers **which file**, and
@@ -129,7 +129,7 @@ goes when it answers **which half of a pair**.
 - **Branch 4's module carve-out** stayed. "Is this passage about `scrollbars.ts`, or about
   `architecture.md`'s rule?" is a subject question, and it is settled before register arises.
 - **Branch 4's register half went.** `<module>.md` against `<module>.rationale.md` is the same
-  instruction-against-explanation cut under different filenames, so `prose-linting.md` states it.
+  instruction-against-explanation cut under different filenames, so `prose.md` states it.
 
 **The precedent this follows** is branch 4 against `doc-comments.md`. That branch already routes module
 depth to a sidecar pair while `doc-comments.md` rule 7 says what may sit in a hover. The article tier

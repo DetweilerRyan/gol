@@ -1,7 +1,7 @@
 // No test here shells out to real vale: it is a Go binary `npm ci` does not
 // reproduce, so a test needing it would be skipped on a fresh checkout --
 // reproducing the exact confident-zero failure this program exists to
-// prevent. See `.claude/agents/articles/prose-linting.md`.
+// prevent. See `.claude/agents/articles/prose.md`.
 //
 // The wiring tests below stub it instead. A `vale` script on a prepended
 // PATH is what lets `runCheck` be exercised end to end -- the spawn argv,

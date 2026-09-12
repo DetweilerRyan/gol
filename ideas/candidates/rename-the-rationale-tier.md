@@ -6,7 +6,7 @@ created: 2026-09-10
 
 ## Context
 
-The sidecar tier is named for one of the four things it holds. `prose-linting.md` defines the
+The sidecar tier is named for one of the four things it holds. `prose.md` defines the
 contents as **a measurement, a probe method, a rejected alternative, or a correction carrying a
 figure.** Only the third of those is naturally called rationale. A measured finding is evidence, not
 reasoning, and calling the file that holds it `*.rationale.md` invites a misfile in one specific
@@ -51,7 +51,7 @@ tier holds. Its objection is narrower but real: **a rejected alternative is not 
 ordinary usage, and it is the entry an author is most likely to be holding when they reach for the
 sidecar.
 
-**The four contents are not settled, so a test built on them is provisional.** `prose-linting.md`
+**The four contents are not settled, so a test built on them is provisional.** `prose.md`
 enumerates a measurement, a probe method, a rejected alternative, and a correction carrying a figure.
 That list is one slice old, it has already moved once, and Wave 1 exists partly to re-examine the
 article that defines it. A fifth content could be added, or two could merge.
@@ -100,7 +100,7 @@ Mechanical, and that is the trap: a rename this wide is easy to do and easy to d
 
 ## Touches
 
-All sixteen sidecars, `.vale.ini`, CLAUDE.md's routing branches and doc-map index, `prose-linting.md`
+All sixteen sidecars, `.vale.ini`, CLAUDE.md's routing branches and doc-map index, `prose.md`
 which now owns the register rule, `doc-comments.md` rule 7, and the ~50 files citing the term.
 `src/**` is touched by three renames, which re-arms the full mutation run by construction.
 
@@ -122,12 +122,12 @@ which now owns the register rule, `doc-comments.md` rule 7, and the ~50 files ci
   term is chosen, and incurred again if it changes.
 
 - **Does this wait for Wave 1's content to settle?** Renaming files whose contents are still moving
-  doubles the review surface. Sequencing it late in Wave 1, after `prose-linting.md` and
+  doubles the review surface. Sequencing it late in Wave 1, after `prose.md` and
   `doc-comments.md` are reconciled, is probably cheaper.
-- **Should it land with [[rename-prose-linting-to-match-its-job]]?** Both are doc renames and both
-  churn citations. One disruption may beat two. They are filed separately because their arguments
-  differ and their blast radii differ by an order of magnitude, not because they must be sequenced
-  apart.
+- **Landing it with the article rename is no longer an option.** That rename landed on 2026-09-12 as
+  `prose.md`, so this tier rename stands alone and pays its own citation churn. The pairing argument
+  was that one disruption beats two; it is spent, and the blast radii differed by an order of
+  magnitude anyway — 119 citations across 38 files there, against 221 across 50 here.
 - **Is the `.vale.ini` coupling worth a check?** A half-done rename is silent today. A one-line
   assertion that every tier file matches the exemption glob would catch it, and belongs with whatever
   checker work Wave 1 settles.

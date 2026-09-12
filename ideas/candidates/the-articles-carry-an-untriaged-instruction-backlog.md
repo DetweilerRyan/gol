@@ -24,7 +24,7 @@ The `.rationale.md` sidecars are exempt by a separate section and are outside th
 
 ## Complication
 
-**The opt-out is correct and is not the finding.** `prose-linting.md`'s landing constraint forbids
+**The opt-out is correct and is not the finding.** `prose.md`'s landing constraint forbids
 shipping an enabled rule whose findings nobody has triaged, and 329 is well past what a strip slice
 could clear. Switching it off by name is what that constraint requires.
 
@@ -62,7 +62,7 @@ triage prose that is about to move.
 
 ## Touches
 
-`.claude/agents/articles/**`, `.vale.ini`'s opt-out section, and `prose-linting.md` if the tier gets
+`.claude/agents/articles/**`, `.vale.ini`'s opt-out section, and `prose.md` if the tier gets
 its own thresholds.
 
 ## Open questions

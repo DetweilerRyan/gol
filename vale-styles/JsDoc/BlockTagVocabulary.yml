@@ -27,7 +27,7 @@
 # at-rule. Widening the pattern to guess at intent would cost the rule its one
 # job.
 #
-# EXTENSIONS: .ts AND .tsx. Ruled per rule on 2026-09-10, under prose-linting.md's
+# EXTENSIONS: .ts AND .tsx. Ruled per rule on 2026-09-10, under prose.md's
 # "Each rule declares its own extensions".
 #
 # This rule DOES assume the block comment is an interface doc: a line-opening
@@ -48,7 +48,7 @@
 # is the rule's actual job.
 #
 # REOPEN THIS on two or more JSX hits, or on one no backtick can clear. That is
-# the ruling's discriminator, not a fresh judgement. prose-linting.rationale.md
+# the ruling's discriminator, not a fresh judgement. prose.rationale.md
 # carries both cross-tabulations.
 extends: existence
 message: "'%s' is outside doc-comments.md rule 5's closed block-tag table (@example, @param, @returns, @throws, @see). Keep the content and drop the tag word, or move the line to a `//` comment. In a JSX comment, where no block tag exists, backtick it instead."

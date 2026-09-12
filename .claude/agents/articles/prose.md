@@ -17,7 +17,7 @@ sidecar, or a JSDoc block in `src/` or `scripts/`
 > does it go in the instruction file, or in that file's `.rationale.md` sidecar? See "Instruction stays.
 > Explanation moves." below, which governs every instruction file including this one.
 >
-> So this article carries instructions, and `prose-linting.rationale.md` carries the measurements, the
+> So this article carries instructions, and `prose.rationale.md` carries the measurements, the
 > dates, the probe methods, the incidents, and the rules tried and rejected. Read the sidecar when you
 > are **changing** a rule below, never in order to follow one. **Do not fold a reason back into this
 > file.**
@@ -671,7 +671,7 @@ A rule whose findings the slice cannot clear waits for a slice that can. Deferri
 right disposition; landing it and leaving the findings is not.
 
 **A rule earns its place by a measured precision count on a real file, not by sounding useful.** Record
-the count and the date in `prose-linting.rationale.md`.
+the count and the date in `prose.rationale.md`.
 
 **Treat a part-of-speech-driven rule as guilty until measured on this corpus.** Imperative-heavy
 technical prose is outside the tagger's training data, and two such rules say so in their own headers.
@@ -684,6 +684,6 @@ jargon.
 tuned until it agrees with its author, which makes it a mirror rather than a check.
 
 **Six of the style's twelve rules are off**, each on a recorded reason rather than by omission:
-`Dictionary`, `Modals`, `Ambiguity`, `NounClusters`, `Articles` and `Gerunds`. `prose-linting.rationale.md`
+`Dictionary`, `Modals`, `Ambiguity`, `NounClusters`, `Articles` and `Gerunds`. `prose.rationale.md`
 carries the reason for each, and the `Slop` style's sixteen rules are off untried. Read a reason there
 before re-proposing one.

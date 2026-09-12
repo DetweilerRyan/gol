@@ -19,14 +19,14 @@ around that — read the sections below with the following corrections in front 
 | ---------------------------------- | --------------------------------------------------------------------------------------- |
 | the shape rules themselves         | **applied** to `doc-comments.md` by `ste-shape-rules-on-doc-comments`                   |
 | the tool question                  | **settled** — Vale, six rules on, six off, all twelve tried or ruled on                 |
-| the `prose-linting.md` article     | **landed**, with its own sidecar, plus a CLAUDE.md pointer and routing branch           |
+| the `prose.md` article             | **landed**, with its own sidecar, plus a CLAUDE.md pointer and routing branch           |
 | the sidecar rollout to other files | **moved out** to `roll-the-rationale-sidecar-out`, which carries `architect`'s ordering |
 | the accept/reject vocabulary       | **still open** — the guards below stand, and nothing has been built                     |
 
 **So what remains here is the vocabulary, and the question of whether a shape rule can be stated well
 enough for a second author to apply.** On the second, the sweep returned a narrower answer than this
 file assumes: of twelve rules, exactly three apply mechanically and three more need a reader. That is
-recorded in `prose-linting.rationale.md` and it is the strongest evidence against this candidate's own
+recorded in `prose.rationale.md` and it is the strongest evidence against this candidate's own
 premise, so read it before promoting any part of this.
 
 ## Context
@@ -420,7 +420,7 @@ growing `engineering.md` would be.
   something new in it, where there is no entangled prose to rewrite and nothing to lose if the answer is
   no.
 
-A working name is `prose-linting.md`. Note **not** `prose-discipline.md`: `orchestration.md` already has a
+A working name is `prose.md`. Note **not** `prose-discipline.md`: `orchestration.md` already has a
 "Prose discipline" section about claim accuracy, and two surfaces a role could confuse is the thing the
 routing test exists to prevent.
 
@@ -443,7 +443,7 @@ Every open tool above states it approximates ASD-STE100 and is not ASD-certified
 `.claude/agents/articles/engineering.md` (a new shape-rules section), `state-flow.md` and
 `architecture.md` (the two demonstration paragraphs), `CLAUDE.md`'s conventions list (one pointer
 sentence, per the routing test). The Vale side widens `.vale.ini` and adds
-`.vale/config/vocabularies/<name>/{accept,reject}.txt`. A new article, working name `prose-linting.md`,
+`.vale/config/vocabularies/<name>/{accept,reject}.txt`. A new article, working name `prose.md`,
 shipped as an instruction file plus its own `.rationale.md` sidecar, together with its pointer line in
 CLAUDE.md and a read trigger in each role file that needs one. If the vocabulary staleness check is
 built, `scripts/agent-doc-check/`. If `jyooi/agent-simple-english` is adopted as a Claude Code plugin

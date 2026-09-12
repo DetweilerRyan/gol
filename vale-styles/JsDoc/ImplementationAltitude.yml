@@ -16,7 +16,7 @@
 # `internal` and `recursive` are adjectives that can carry an interface fact,
 # and ImplementationAltitude.good.ts uses both to pin that they stay silent.
 #
-# EXTENSIONS: .ts AND .tsx. Ruled per rule on 2026-09-10, under prose-linting.md's
+# EXTENSIONS: .ts AND .tsx. Ruled per rule on 2026-09-10, under prose.md's
 # "Each rule declares its own extensions".
 #
 # This rule DOES assume the block comment is an interface doc: rule 4's remedy is

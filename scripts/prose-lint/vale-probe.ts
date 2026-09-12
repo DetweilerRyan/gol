@@ -28,7 +28,7 @@ export interface ValeProbe {
  * Classifies one `spawnSync('vale', ['ls-config'], ...)` result. An ENOENT
  * spawn error means the binary itself is absent from PATH; any other spawn
  * error, or a nonzero exit status, means it was found but its config would
- * not load -- see `.claude/agents/articles/prose-linting.md`'s Setup
+ * not load -- see `.claude/agents/articles/prose.md`'s Setup
  * section for what `vale sync` fixes.
  */
 export function classifyProbe(result: {

@@ -6,7 +6,7 @@ created: 2026-09-10
 
 ## Situation
 
-`prose-linting.md` now carries "How a pass damages the file it cleans", six rules derived from six
+`prose.md` now carries "How a pass damages the file it cleans", six rules derived from six
 files linted in one session, each with an independent review that found a defect the pass had
 introduced.
 
@@ -42,7 +42,7 @@ Should either check become a command, and does the direction check reach beyond 
 
 Two decisions, and the second may make the first cheaper.
 
-**1. The form, not the fact.** The options are a documented one-liner in `prose-linting.md`, a
+**1. The form, not the fact.** The options are a documented one-liner in `prose.md`, a
 `scripts/` program paying full freight, or a git alias or hook. A documented one-liner may be the
 honest answer for rule 2, since the reader has to interpret every delta anyway. Rule 4 is a pure
 count with a yes-or-no answer and is the stronger candidate for a real check.
@@ -55,7 +55,7 @@ decision under CLAUDE.md branch 3, not a wording change.
 
 ## Touches
 
-- `.claude/agents/articles/prose-linting.md`, and its `.rationale.md` if a measurement lands
+- `.claude/agents/articles/prose.md`, and its `.rationale.md` if a measurement lands
 - possibly `.claude/agents/articles/engineering.md`, if decision 2 says the rules generalise
 - possibly a new `scripts/` program, which is the expensive branch
 - Documentation-only unless a checker is built.
@@ -73,7 +73,7 @@ decision under CLAUDE.md branch 3, not a wording change.
   condition.
 - **Is `ProcedureLength`'s actionable condition right while its application is wrong?** Six linted
   files now hold findings recorded as act-on shape but not acted on, each time because the remedy
-  separates a step's reasoning from the step it qualifies. `prose-linting.md` records that
+  separates a step's reasoning from the step it qualifies. `prose.md` records that
   disagreement as open, so **do not re-file the divergence itself** — one open question, one home.
   What is unrecorded is the narrower question: whether "act only on a genuine step" is the wrong
   test, or the right test applied badly.

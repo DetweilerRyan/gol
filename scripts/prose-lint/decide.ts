@@ -78,7 +78,7 @@ export function decide(input: ProseLintInput, runVale: RunVale): DecideResult {
       exitCode: 1,
       stdout: [],
       stderr: [
-        'prose-lint: vale is not on PATH. See .claude/agents/articles/prose-linting.md, Setup.',
+        'prose-lint: vale is not on PATH. See .claude/agents/articles/prose.md, Setup.',
         'prose-lint: a machine without it lints nothing, which reads exactly like a clean run.',
       ],
     }
@@ -111,7 +111,7 @@ export function decide(input: ProseLintInput, runVale: RunVale): DecideResult {
       stdout: [],
       stderr: [
         `prose-lint: vale could not lint (vale exit ${status}), so the output above is not a result.`,
-        "prose-lint: with --no-exit a finding cannot cause this. See prose-linting.md's confident-zero list.",
+        "prose-lint: with --no-exit a finding cannot cause this. See prose.md's confident-zero list.",
       ],
     }
   }

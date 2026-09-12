@@ -40,7 +40,7 @@ a script name and a marker name rather than slices, so the real figure is zero.
 The **pair grew** by 6,098 bytes, 42,467 to 48,565 — **+14.4%**, the largest growth of any split so far.
 The enumeration moved without shrinking, this file's framing prose is new, and closing `architect`'s
 findings added a further 751 bytes to the article. That is consistent with the finding recorded in
-`prose-linting.rationale.md`: this tier redistributes rather than shortens, and only the instruction
+`prose.rationale.md`: this tier redistributes rather than shortens, and only the instruction
 file's size moves in the intended direction.
 
 **This split moved rather than rewrote, and that was forced by the material.** 29,809 of the article's
@@ -66,7 +66,7 @@ time. Ryan asked whether the file had actually had a lint pass, and it had not h
 
 **16 findings. 14 exempt, and 2 genuinely act-on.**
 
-The two were the same construction, and it is the one `prose-linting.md` gives as **the** example of its
+The two were the same construction, and it is the one `prose.md` gives as **the** example of its
 act-on class: a permission written passively, where naming who may act makes it actionable.
 
 - "reading the DOM is sanctioned" became "**you may read the DOM**, and this repo does".

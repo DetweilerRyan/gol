@@ -15,7 +15,7 @@
 # scoping and same honesty note as ListItemSentences: a regrowth guard, not a
 # definition of the standard.
 extends: occurrence
-message: "Paragraph has %d sentences. A role-file paragraph gets four; the account of the rule goes to the .rationale.md sidecar (prose-linting.md, 'Instruction stays. Explanation moves.')."
+message: "Paragraph has %d sentences. A role-file paragraph gets four; the account of the rule goes to the .rationale.md sidecar (prose.md, 'Instruction stays. Explanation moves.')."
 level: warning
 scope: paragraph
 max: 4

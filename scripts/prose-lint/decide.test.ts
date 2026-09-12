@@ -16,7 +16,7 @@ describe('decide', () => {
     expect(result.exitCode).toBe(1)
     expect(result.stdout).toEqual([])
     expect(result.stderr).toEqual([
-      'prose-lint: vale is not on PATH. See .claude/agents/articles/prose-linting.md, Setup.',
+      'prose-lint: vale is not on PATH. See .claude/agents/articles/prose.md, Setup.',
       'prose-lint: a machine without it lints nothing, which reads exactly like a clean run.',
     ])
   })
@@ -57,7 +57,7 @@ describe('decide', () => {
     expect(result.stdout).toEqual([])
     expect(result.stderr).toEqual([
       'prose-lint: vale could not lint (vale exit 2), so the output above is not a result.',
-      "prose-lint: with --no-exit a finding cannot cause this. See prose-linting.md's confident-zero list.",
+      "prose-lint: with --no-exit a finding cannot cause this. See prose.md's confident-zero list.",
     ])
   })
 
@@ -66,7 +66,7 @@ describe('decide', () => {
     expect(result.exitCode).toBe(1)
     expect(result.stderr).toEqual([
       'prose-lint: vale could not lint (vale exit null), so the output above is not a result.',
-      "prose-lint: with --no-exit a finding cannot cause this. See prose-linting.md's confident-zero list.",
+      "prose-lint: with --no-exit a finding cannot cause this. See prose.md's confident-zero list.",
     ])
   })
 

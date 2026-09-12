@@ -6,7 +6,7 @@ created: 2026-09-10
 
 ## Situation
 
-`prose-linting.md` and `doc-comments.md` state a large number of rules about how agent-facing prose
+`prose.md` and `doc-comments.md` state a large number of rules about how agent-facing prose
 is written. Six Vale rules enforce a fraction of them. Everything else relies on an agent reading the
 instruction and following it.
 
@@ -79,7 +79,7 @@ Three properties decide adoption, and they are already established here:
   argument.
 - **Does it contradict a house rule?** `Std.Contractions` is the worked example.
 - **Can it land with its remediation in the same slice?** The no-untriaged-backlog constraint is in
-  `prose-linting.md`. A rule with 200 findings and no remediation budget does not land.
+  `prose.md`. A rule with 200 findings and no remediation budget does not land.
 
 **Do not adopt a package wholesale.** The precedent from the `Std` pass is per-rule enablement with
 explicit re-levelling, because a `suggestion`-level rule under `MinAlertLevel = warning` is inert and
@@ -101,7 +101,7 @@ first entry on the confident-zero list.
 - **Is the real deliverable a package, or the rules it teaches us to write?** Reason 1 of the `Std`
   ruling may hold for all three. If so the output is a survey plus some house rules modelled on what
   the packages do well, which is a legitimate and cheaper result than adoption.
-- **How much of `prose-linting.md` is mechanisable at all?** The honest prior is: not much. Its
+- **How much of `prose.md` is mechanisable at all?** The honest prior is: not much. Its
   rules are about register and altitude, which Vale's scoping cannot express — a fact already recorded
   for the instruction-versus-explanation split. Name the mechanisable subset before promising it.
 - **Does this belong inside Wave 1's gate or immediately after it?** It is filed in Wave 1 because

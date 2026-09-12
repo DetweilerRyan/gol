@@ -407,7 +407,7 @@ Three facts that change what you write:
 
 **Check one file with `vale <path>`.** `npm run prose-lint` lints the whole tracked tree, so its count
 is not a report on your slice. **The remedy for a finding here is often a move rather than a
-rewrite.** Take one you think is wrong to `prose-linting.md`'s "Triaging a finding in a comment".
+rewrite.** Take one you think is wrong to `prose.md`'s "Triaging a finding in a comment".
 Authoring or changing a `JsDoc` rule is `architect`'s alone.
 
 ## Part 2 — Reading

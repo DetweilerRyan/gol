@@ -54,10 +54,10 @@ kind of departing sentence go?
 
 **It holds twelve rules and the specification for four remaining strips.** Rules 3 to 9 were ruled by
 the user on 2026-09-11 while `coder.md` was stripped by hand, and they are recorded here rather than
-in `prose-linting.md`.
+in `prose.md`.
 
 **The binding half has moved, as planned.** All five strips have run, and
-`prose-linting.md`'s "What an instruction file may not carry" now states the rules a later author has
+`prose.md`'s "What an instruction file may not carry" now states the rules a later author has
 to follow: no self-sidecar pointer, no fact about another role's file, no restatement beside a
 pointer, no execution order, nested bullets over packed sentences, and the destination audit.
 
@@ -77,7 +77,7 @@ or not. An instruction tells a role what to do, what not to do, or when. Everyth
 argument for it, the incident that produced it, the measurement that supports it, the mechanism that
 makes it true — is exposition.
 
-**Deliberately a coarser cut than `prose-linting.md`'s sentence-level split.** That article's
+**Deliberately a coarser cut than `prose.md`'s sentence-level split.** That article's
 instruction-versus-explanation rule is the right idea at the wrong granularity for this job.
 
 ### 2. Route what leaves, and do not delete it
@@ -120,7 +120,7 @@ article, so the article carries no pointer to one.
 
 **Measured 2026-09-11: 64 pointers across nine articles.** `engineering.md` 11;
 `acceptance-mutation.md`, `quality-tooling.md` and `testing-layers.md` 9 each; `doc-comments.md` 8;
-`mutation-testing.md` and `state-flow.md` 7 each; `prose-linting.md` 3; `ast-grep-rules.md` 1.
+`mutation-testing.md` and `state-flow.md` 7 each; `prose.md` 3; `ast-grep-rules.md` 1.
 
 **Module sidecars are the one tier that keeps its pointer**, and the distinction is what a reader is
 holding. A role or an article sidecar argues about a rule, and the reader is following the rule
@@ -540,7 +540,7 @@ That census is what makes an aggressive cut safe, and it is the reason this can 
 **Only after the rewrite**, and on the evidence it produces. A rule that detects an eight-sentence
 paragraph in a role file, or a past-tense narrative sentence, is a plausible guard against
 re-accumulation. `HistoricalNarration` — deferred by the prior spike at precision 8/9 — is the
-existing candidate and its YAML and fixtures are recorded in `prose-linting.rationale.md`.
+existing candidate and its YAML and fixtures are recorded in `prose.rationale.md`.
 
 **A guard against regrowth is worth more here than a compression tool**, because the files did not
 arrive verbose. They grew that way one good paragraph at a time.
@@ -549,7 +549,7 @@ arrive verbose. They grew that way one good paragraph at a time.
 
 `.claude/agents/*.md` — all five. New `coder.rationale.md` and `product.rationale.md` in
 `articles/`, which is where a role sidecar is forced to live. Possibly `scripts/*/` sidecars.
-`prose-linting.md`, whose instruction-versus-explanation section this refines at a coarser
+`prose.md`, whose instruction-versus-explanation section this refines at a coarser
 granularity. `CLAUDE.md`'s documentation map, if a sidecar is added.
 
 ## Open questions
