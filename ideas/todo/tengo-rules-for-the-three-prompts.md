@@ -24,7 +24,7 @@ opportunity.
 
 ## What was prototyped, 2026-09-12
 
-**All three prompts were examined. Two are mechanised and measured; the third is the hardest and was left.**
+**All three prompts were examined and measured. Two are mechanised. The third produced a finding about the existing rule rather than a replacement for it.**
 
 ### `OneInstruction` — works, and is far more precise
 
@@ -86,10 +86,58 @@ and the sampled findings are genuine numbered steps that run long.
 numbered items open with `Run` 14 times and `Read` 3, bullets with `Do` 15 and `Run` 6 — so nothing in
 the text separates them. The marker does, and only `scope: raw` carries it.
 
-### `PassiveVoice` — not attempted
+### `PassiveVoice` — a rule exists, and the measurement argues for retiring the `STE` one instead
 
-Its real condition is "a rule whose actor is hidden", which needs to know that the sentence **is** a
-rule. That is the hardest of the three and the least likely to reduce to a regex.
+**Dug into on the user's direction 2026-09-12, and the finding is not the rule. It is the ratio.**
+
+`prose.md` already did this analysis: five exempt classes, and **"one construction accounts for every
+act-on finding so far, and it is greppable"** — a permission stated as `is sanctioned`, `is permitted`
+or `is allowed`, naming no one who may act.
+
+Measured against the 490 live findings:
+
+| Shape                                               | Count |
+| --------------------------------------------------- | ----- |
+| Total `STE.PassiveVoice` findings                   | 490   |
+| Class 1, a dated record (`was`/`were` + participle) | 80    |
+| Class 4, already names its agent (`… -ed by …`)     | 38    |
+| **The act-on construction**                         | **9** |
+
+**The defect is rare and the exemptions are common**, which is the inverse of what a useful rule looks
+like. A rule matching only the act-on class was prototyped and works:
+
+```
+found := text.re_find("(?i)\\b(is|are)\\s+(sanctioned|permitted|allowed)\\b", scope, 1)
+```
+
+**5 findings corpus-wide against 490.** It flags `The between-position is sanctioned` and ignores both
+`Staleness is not bounded by your own edits` and `Four forms were measured and rejected`.
+
+**But that precision is borrowed, and `prose.md` says so in advance:** "That grep is a shortcut into
+the act-on class, not a replacement for the pass. It finds the construction already seen; the pass is
+what finds the next one." A rule matching three adjectives is a rule that cannot generalise.
+
+**Two attempts to widen it both failed, and the residual is why.** After removing classes 1 and 4,
+**380 findings remain**. Sampling them, every one is class 2 or 3 — descriptive prose (`is invisible
+where the member is used`, `are derived from the exact default camera`) or a predicate adjective
+(`are inverted`, `is patched`). Narrowing by a directive marker in the same sentence — `must`,
+`never`, `always`, `do not` — leaves **73**, and sampling those shows the modal usually governs a
+different clause than the passive: `is excluded from that scan`, `can be expressed as pure logic`,
+`can never be scored off a previous run`.
+
+**So the honest conclusion is about `STE.PassiveVoice` rather than about a replacement.** At 490
+findings for 9 real ones, it is a **1.8 percent** precision rule that every reader is told to triage by
+hand. The options are:
+
+- **Replace it with the narrow rule**, accepting that it finds one construction and misses the next.
+  `prose.md`'s own sentence is the argument against.
+- **Keep it as a prompt and stop pretending a sweep can clear it**, which is what the article already
+  says and what the corpus already does.
+- **Retire it.** 490 findings nobody acts on is a rule training its readers to skim, and that cost
+  falls on every other rule in the same run.
+
+**Ruling needed, and it is the user's**: this is the only one of the three prompts where the
+measurement argues against the rule rather than for a better version of it.
 
 ## Tengo facts worth carrying, each of which cost a probe
 
