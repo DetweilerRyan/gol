@@ -4,6 +4,29 @@ title: Keep the test suite necessary and sufficient — measure unit/property ov
 created: 2026-09-02
 ---
 
+## The permission half is SETTLED, 2026-09-11
+
+**Ruled by the user: `cleaner` writes property tests**, for the reason this entry was filed with on
+2026-09-02 — to kill a surviving mutant a unit test cannot reach, and to bring CRAP down.
+
+Three files carried the contradiction and all three are corrected:
+
+- `cleaner.md` step 4 said the property project is skipped because "only `architect`/`hardener`/`product`
+  need" it. It now runs `npm test` before handoff and after adding a property test.
+- `engineering.md` said "**`architect` writes them**" and carried the standing note that `cleaner.md`'s
+  Owns list contradicted it. Now "`architect` and `cleaner` write them", and the note is gone.
+- `coder.md` said property tests "belong to `architect`". Now a plain prohibition with no attribution.
+
+**The contradiction was known, filed, and unsettled for nine days.** `engineering.md` named this entry
+by slug and said "is not settled here", which is the honest form — but it meant every role read a live
+contradiction in the article they all read unconditionally, and `cleaner.md` disagreed with itself
+three lines apart: its own step 3 says "a property test is among the likeliest things to kill a
+domain-module mutant", which is why it runs the whole suite.
+
+**What remains open is the second half this entry was widened to cover**: measuring unit-versus-property
+overlap and cutting redundant coverage so the suite stays necessary and sufficient. Nothing above
+touches that.
+
 ## Context
 
 Raised in two parts. First: _"allow `cleaner` to write property tests, not just `architect` — primarily

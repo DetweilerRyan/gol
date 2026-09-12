@@ -66,9 +66,7 @@ Never substitute a browser-required test for a jsdom one. Deleting a jsdom asser
 
 ## Writing a property test
 
-Property tests (`@fast-check/vitest`, `*.property.test.ts`) cover every framework-free module, and **`architect` writes them**. `coder` writes focused unit tests and never property tests, which is why its fast path (`npm run test:unit`) skips that layer entirely. `hardener` and `product` confirm the results but do not author them. Two rules apply whenever `architect` adds or changes one.
-
-`cleaner.md`'s Owns list also grants property tests, which this paragraph and `coder.md` both contradict. That inconsistency is filed as `cleaner-property-tests-and-layer-overlap` and is not settled here.
+Property tests (`@fast-check/vitest`, `*.property.test.ts`) cover every framework-free module. **`architect` and `cleaner` write them** — `cleaner` to raise coverage and to kill a surviving mutant a unit test cannot reach, `architect` in its review pass. `coder` writes focused unit tests and never property tests, which is why its fast path (`npm run test:unit`) skips that layer entirely. `hardener` and `product` confirm the results but do not author them. Two rules apply whenever a property test is added or changed.
 
 ### Which layer states which claim
 

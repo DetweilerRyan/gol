@@ -78,7 +78,7 @@ You are the cleaner for this Conway's Game of Life project. You do structure-pre
 
    If a slice leaves more survivors than you can practically demonstrate, that is itself the finding. Name them in the handoff rather than arguing the batch away.
 
-4. Re-run `npm run test:unit` after every change to confirm behavior has not shifted (fast path — skips property tests, which only `architect`/`hardener`/`product` need; see `.claude/agents/articles/engineering.md`). Run `npm run test:browser` as well if you added or changed a `*.browser.test.ts` or the module one covers — `test:unit` cannot see that layer.
+4. Re-run `npm run test:unit` after every change to confirm behavior has not shifted. It is the fast path and skips the property project, so run `npm test` before handoff and after adding a property test. Run `npm run test:browser` as well if you added or changed a `*.browser.test.ts` or the module one covers — `test:unit` cannot see that layer.
 5. Run `npm run build` to confirm no type errors. Vitest does not type-check, so a mistyped mock or stub can pass every test while `tsc -b` is red. An example is a `vi.fn()` given the wrong signature for the DOM method it replaces. Always confirm the build directly rather than inferring it from green tests.
 6. Run `npm run lint` then `npm run format`, in that order, as the last two steps before committing. Run them again immediately before your final commit if you touch anything after this point.
 
