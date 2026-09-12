@@ -325,6 +325,32 @@ front of them. Whether the string should say what actually happens, or whether c
 with it, belongs to the seat that owns the orchestration docs. **Filed so the removal does not read as
 having handled it.**
 
+**The other four carry it and each strip removes its own.** Verbatim, so a later reader does not have
+to re-find them — all on line 8, and the replacement is to delete the clause between the project name
+and the role's own statement of what it does:
+
+| File           | The clause to remove                                                                                        |
+| -------------- | ----------------------------------------------------------------------------------------------------------- |
+| `architect.md` | ", the fourth role in the five-role cycle: `product → coder → cleaner → architect → hardener → product`"    |
+| `cleaner.md`   | ", the third role in the five-role cycle: `product → coder → cleaner → architect → hardener → product`"     |
+| `hardener.md`  | ", the fifth role in the five-role cycle: `product → coder → cleaner → architect → hardener → product`"     |
+| `product.md`   | "You open and close the five-role cycle: **`product → coder → cleaner → architect → hardener → product`**." |
+
+**`product.md` is the one that needs judgement rather than deletion.** Opening and closing the cycle in
+SPECIFY and VERIFY is a fact about `product`'s own two modes, not about sequence — so the mode
+distinction stays and only the chain goes.
+
+**Audit each file for phrases that depended on the line**, the way `coder.md`'s "later roles in the
+cycle" did. `architect.md` carries "that is `hardener`'s job, next after you" in the same sentence;
+rules 6 and 8 already cover it, and "not yours" is the replacement.
+
+**Leave the frontmatter `description:` fields alone unless a later ruling says otherwise.** Two of them
+carry sequence language — `hardener.md`'s opens "Use this agent after the architect's structural
+review", and `architect.md`'s names its slot in the cycle. **That field's audience is the orchestrating
+session choosing which agent to invoke, not the role reading its own instructions.** Sequence is
+exactly what that reader needs. Removing it there would be applying this rule to the one place the
+information is addressed to someone who uses it.
+
 **One consequence to handle in the same edit.** Rule 8 prefers "later roles in the cycle" to naming
 roles — and that phrase is unmoored once the file stops stating the cycle. `coder.md`'s became
 "They are not yours", which is rule 8's first option and better anyway. **Removing the cycle line
