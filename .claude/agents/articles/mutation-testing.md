@@ -273,6 +273,10 @@ So a timed-out mutant never appears among survivors. Two consequences to hold to
 - **Contamination therefore masks survivors rather than inventing them.** A run whose timeouts spike is
   not a stricter run; it is a run whose survivor list you cannot trust to be complete.
 
+**Take any timing figure from this article, never from a role file or a handoff.** Each measurement here
+records the tree it was taken on, so it can be checked and re-derived. A figure quoted forward into an
+instruction file is stale the moment the tree moves and reads as current forever.
+
 **Read the code to tell a genuine timeout from an artifact: on loop-free, straight-line code a timeout
 is always an artifact.** With no loop to hang, the mutant cannot have run forever, so the time came
 from the machine — a suspend, a busy CPU — rather than from the mutation. Re-run before trusting that
