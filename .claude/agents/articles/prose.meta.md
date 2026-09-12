@@ -247,6 +247,58 @@ and rare**: one class, quotation or mention, recognisable on sight. The three pr
 and one class, and each needs a judgement per finding. Exempt-class count is the sharper discriminator;
 trigger-versus-proxy is the reason behind it rather than a replacement for it.
 
+**`PassiveVoice` was the fourth rule this test should have rejected, and it took a count to see it.**
+Ruled 2026-09-12 by the user: re-levelled to `suggestion`, so it sits below `MinAlertLevel` and no
+longer appears in a default run. The trigger-versus-proxy test already classified it a prompt, and it
+carries the most exempt classes of any rule here — five. What the test did not carry was a magnitude,
+and the magnitude is the whole argument.
+
+Measured 2026-09-12 across the tracked file list:
+
+| quantity                                     | value |
+| -------------------------------------------- | ----- |
+| `STE.PassiveVoice` findings                  | 490   |
+| of those, the act-on class the article names | 9     |
+| precision                                    | 1.8%  |
+| every other rule's findings combined         | 478   |
+| `PassiveVoice` as a share of the whole run   | 51%   |
+
+Two attempts to salvage a narrower rule failed, and both are worth recording because each looked
+promising. Removing the dated-record class (80) and the names-its-agent class (38) leaves **380**, and
+every sample of those is class 2 or 3 — descriptive prose or a predicate adjective. Narrowing by a
+directive marker (`must`, `never`, `always`, `do not`) leaves **73**, and sampling shows the modal
+usually governs a different clause than the passive: "is excluded from that scan", "can be expressed
+as pure logic".
+
+A Tengo rule matching only the act-on construction was prototyped and works — 5 findings corpus-wide,
+correctly flagging "The between-position is sanctioned" while ignoring "Staleness is not bounded by
+your own edits". It was **not** adopted, because its precision is borrowed from a construction already
+seen. The article's own sentence is the argument: the grep finds the construction already seen; the
+pass is what finds the next one. A rule that can only ever re-find what a grep already finds adds a
+maintenance surface and no reach.
+
+**What replaced it is an authoring instruction rather than a rule**, in `prose.md`'s "Standing
+instructions". That is a deliberate downgrade in enforcement, and the honest reading is that nothing
+mechanical now catches a newly-written passive rule. The trade was ruled worth it at 1.8 percent.
+
+**Two things the web research on 2026-09-12 contributed, one of which narrows the claim above.**
+[GitLab's Vale criteria](https://docs.gitlab.com/development/documentation/testing/vale/) supply the
+mechanism used here — "if the rule is difficult to implement directly in the merge request, set it to
+suggestion-level so it displays in local editors only" — and their own configuration runs no
+passive-voice rule at all. But their version rests on an editor integration that surfaces suggestions
+mid-edit, and this repo has none; `prose-lint` is a sweep. So here the rule is off in the sweep and
+reachable on demand, which is weaker than the practice it borrows from.
+
+The narrowing: research on passive detection notes a tool's measured accuracy is "germane to the texts
+analyzed, not all possible texts and topics". **So 1.8 percent is a fact about this corpus**, which is
+unusually heavy in exactly the two classes the article exempts. It is not a finding about
+`STE.PassiveVoice` in general, and should not be cited as one.
+
+`PassivePy` and its peers reach accuracy with part-of-speech tagging and dependency parsing. Tengo is
+sandboxed to `text`, `fmt` and `math`, so none of that is reachable from a Vale `script` check. The
+choice here was a regex or no rule, which is why the narrow-rule option was limited rather than merely
+imperfect.
+
 **That test predicts four of the six rejections, and naming the two it misses is what keeps it honest.**
 `Modals`, `Ambiguity`, `NounClusters` and — in part — `Articles` each fire on a proxy that does not hold
 here: three on part-of-speech tags, one on a slash that usually joins a compound term.

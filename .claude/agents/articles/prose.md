@@ -22,6 +22,17 @@ sidecar, or a JSDoc block in `src/` or `scripts/`
 > are **changing** a rule below, never in order to follow one. **Do not fold a reason back into this
 > file.**
 
+## Standing instructions, which bind at authoring time
+
+These hold whether or not a checker fires. Vale's rules below are a partial and lagging check on them.
+
+- **Write instructions in the active voice. Name who acts.** "The between-position is sanctioned"
+  hides the actor; "Use the between-position freely" does not. Nothing sweeps for this: see
+  "`STE.PassiveVoice`" below for why, for the exempt classes, and for how to ask on demand.
+- **Write instructions, not accounts.** State what to do, when, and under what precondition. Route
+  the incident, the measurement and the rejected alternative to the `.meta.md` sidecar. See
+  "Instruction stays. Explanation moves." below.
+
 ## Setup
 
 ```bash
@@ -175,16 +186,19 @@ recalled mid-pass reads low.
 
 ## The six enabled rules, and what to do with each
 
+Five surface in a default run. `PassiveVoice` is the sixth, held at `suggestion` and so below
+`MinAlertLevel`.
+
 Three apply mechanically. Three are prompts to look. Know which you are holding.
 
-| rule                  | treat it as | act on a finding?                       |
-| --------------------- | ----------- | --------------------------------------- |
-| `STE.SentenceLength`  | mechanical  | yes — split the sentence                |
-| `STE.ParagraphLength` | mechanical  | yes — split the paragraph               |
-| `STE.Contractions`    | mechanical  | yes, unless the text **names** the word |
-| `STE.ProcedureLength` | a prompt    | only if the list item is a **step**     |
-| `STE.OneInstruction`  | a prompt    | only if it chains two **actions**       |
-| `STE.PassiveVoice`    | a prompt    | only if a **rule** hides its actor      |
+| rule                  | treat it as    | act on a finding?                       |
+| --------------------- | -------------- | --------------------------------------- |
+| `STE.SentenceLength`  | mechanical     | yes — split the sentence                |
+| `STE.ParagraphLength` | mechanical     | yes — split the paragraph               |
+| `STE.Contractions`    | mechanical     | yes, unless the text **names** the word |
+| `STE.ProcedureLength` | a prompt       | only if the list item is a **step**     |
+| `STE.OneInstruction`  | a prompt       | only if it chains two **actions**       |
+| `STE.PassiveVoice`    | off by default | see the standing instruction below      |
 
 **A rule is mechanical when its trigger _is_ the defect, and a prompt when it fires on a proxy.**
 Classify a new rule that way rather than by whether it counts something. `ProcedureLength` counts and
@@ -196,7 +210,7 @@ three interact, so a batch application still needs the order and the re-run desc
 ### Triage the prompts one at a time. A sweep cannot clear them.
 
 **Bulk reading is not triage, and the finding count cannot tell you which you did.** A sweep clears the
-three mechanical rules. It cannot clear the three prompts, because each needs a judgement per finding.
+three mechanical rules. It cannot clear the two prompts, because each needs a judgement per finding.
 Both look identical afterwards: a number.
 
 So when you report a file as linted, say which half you did. "Zero on the mechanical rules" is a
@@ -288,24 +302,43 @@ Three false-positive classes, and the second is dangerous rather than noisy:
 3. **Descriptive prose in a bullet.** The rule's scope is list items, not instructions, so a `while
 …ing` gerund describing how something works is flagged though it instructs nobody.
 
-### `STE.PassiveVoice` — act only when a rule hides its actor
+### `STE.PassiveVoice` — write in the active voice; the rule no longer sweeps
 
-The noisiest rule enabled. **The test: if the sentence tells a reader what to do, say who does it. If
-it tells them how something behaves, leave it.**
+**Write instructions in the active voice. Name who acts.** That is the standing instruction, and it
+binds at authoring time. "The between-position is sanctioned" is wrong; "Use the between-position
+freely" is right.
 
-**Act on this class:** a rule or instruction written passively, where naming the actor makes it
-actionable. "The between-position is sanctioned" becomes "Use the between-position freely."
+**The test: if the sentence tells a reader what to do, say who does it. If it tells them how something
+behaves, leave it.** Descriptive prose and dated records keep the passive — see the five exempt
+classes below, which are what the instruction does _not_ reach.
+
+**The rule is held at `suggestion` and does not appear in a default run.** Ruled by the user
+2026-09-12. Measured that day: 490 findings, of which 9 were the act-on class — **1.8 percent**, and
+**51 percent of every finding the whole corpus produced**. A rule nobody can clear teaches its readers
+to skim, and that cost falls on every other rule in the same run.
+
+**Reach it on demand.** It stays named in `.vale.ini` rather than disabled, so the question can still
+be asked of a file you are about to land:
+
+```bash
+vale --minAlertLevel=suggestion .claude/agents/articles/<file>.md
+```
+
+Expect to exempt most of what comes back. Do not sweep the result, and do not treat a count from it as
+a backlog.
 
 **One construction accounts for every act-on finding so far, and it is greppable.** A permission stated
 as `is sanctioned`, `is permitted` or `is allowed` names no one who may act. Rewrite it as `you may …`.
-Search for the phrase before reading the findings one by one:
+This is the cheaper check of the two, and unlike the rule it is nearly all signal:
 
 ```bash
 grep -rn "is sanctioned\|is permitted\|is allowed" .claude/agents/articles/
 ```
 
 That grep is a shortcut into the act-on class, not a replacement for the pass. It finds the
-construction already seen; the pass is what finds the next one.
+construction already seen; the pass is what finds the next one. **With the rule below `MinAlertLevel`,
+nothing mechanical finds the next one at all** — the standing instruction above is what carries that
+weight now.
 
 **Five exempt classes — do not "fix" these:**
 

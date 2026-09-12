@@ -24,7 +24,7 @@ opportunity.
 
 ## What was prototyped, 2026-09-12
 
-**All three prompts were examined and measured. Two are mechanised. The third produced a finding about the existing rule rather than a replacement for it.**
+**All three prompts were examined and measured. Two are mechanised and are this slice's scope. The third, `PassiveVoice`, produced a finding about the existing rule rather than a replacement for it, and was ruled out of scope on 2026-09-12 by demoting it to `suggestion`.**
 
 ### `OneInstruction` — works, and is far more precise
 
@@ -136,8 +136,13 @@ hand. The options are:
 - **Retire it.** 490 findings nobody acts on is a rule training its readers to skim, and that cost
   falls on every other rule in the same run.
 
-**Ruling needed, and it is the user's**: this is the only one of the three prompts where the
-measurement argues against the rule rather than for a better version of it.
+**RULED 2026-09-12 by the user: demote to `suggestion`.** `STE.PassiveVoice` now sits below
+`MinAlertLevel` and does not appear in a default run, stays named in `.vale.ini` rather than disabled,
+and is reachable with `vale --minAlertLevel=suggestion`. The narrow Tengo rule below was **not**
+adopted. An authoring instruction in `prose.md`'s "Standing instructions" replaces the sweep.
+Measured after landing: the corpus run went from 968 findings to 478. `prose.meta.md` carries the
+argument. **Nothing remains for this slice to do on `PassiveVoice`** — it covers `ProcedureLength`
+and `OneInstruction` only.
 
 ### What the web research added, 2026-09-12
 

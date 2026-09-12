@@ -188,7 +188,7 @@ construction; Waves 2 to 4 are mostly Markdown.
 - **Ruled: `ste-over-jsdoc` does not jump Wave 1.** It is the largest remediation and the one a reader
   most notices, which is exactly why it waits. Landing it against an unsound instruction surface
   multiplies every error still in that surface, mechanically.
-- **Should `prose-lint` gate?** Three of six enabled rules are prompts needing judgement, so it cannot
+- **Should `prose-lint` gate?** Two of the five rules in a default run are prompts needing judgement, so it cannot
   gate on findings. It can gate on _inability to lint_, which it already detects. That is a narrower
   proposal than it first sounds and it is unfiled.
 - **Is `prose.md` now the right size?** Measured against `main` it grew 27 percent across this
