@@ -336,3 +336,44 @@ file no longer carries, and pass.
 
 The article split is the general hazard: moving a rule between articles leaves every citation of it
 pointing at the file it left. `ideas/candidates/` carries the proposal to check a quoted heading.
+
+## Which writes reach the language server, measured 2026-09-12
+
+Part 2's rule 7 asserts that only `Edit` and `Write` update the server's copy of a file, and names
+three operations that do not: `git checkout`, `git rebase` and `npm run format`. `architect` flagged
+that only the first half had a recorded measurement behind it, and that the three named operations
+read as inferred from the closed-world claim rather than separately tested. Correct, so they were
+tested.
+
+<!-- reference-check: allow src/__lsp-probe.ts -- a throwaway probe file, deleted when the measurement finished; naming it is how the method stays reproducible -->
+
+**Method.** A throwaway `src/__lsp-probe.ts` carrying a JSDoc line reading `VERSION ONE`, created
+with `Write` so the harness enrolled it. Then each candidate operation was applied and the symbol
+hovered again. A stale hover is the one still reporting `VERSION ONE` while the disk says otherwise.
+
+| operation                            | disk after      | hover after        | reaches the server |
+| ------------------------------------ | --------------- | ------------------ | ------------------ |
+| `Write` (baseline)                   | `VERSION ONE`   | `VERSION ONE`      | yes                |
+| `sed -i` (a plain shell write)       | `VERSION TWO`   | `VERSION ONE`      | no                 |
+| `npx prettier --write`               | `VERSION THREE` | `VERSION ONE`      | no                 |
+| `git checkout --` (separate probe)   | marker removed  | marker still there | no                 |
+| `Edit`, on a line far from the JSDoc | marker removed  | marker removed     | yes                |
+
+**The prettier run is the one worth describing, because a careless version of it proves nothing.**
+The file was first rewritten to carry a semicolon and eight-space indentation, so `prettier --write`
+genuinely rewrote it rather than exiting as a no-op. The rewrite landed on disk, and the hover did
+not move.
+
+**The `git checkout` probe used a tracked file** — `src/equality/is-strict-equal.ts` — since an
+untracked probe file has nothing to check out. A `PROBEMARKER` token was added to its JSDoc with
+`Edit`, confirmed present in the hover, then removed by `git checkout --`. The disk lost the token;
+the hover kept it.
+
+**`git rebase` was not tested, and the article should not claim more than this.** It writes files the
+same way `git checkout` does, so the inference is a strong one — but it is still an inference, and
+the distinction between a measured claim and a confident one is the thing this whole epic is about.
+
+**The refresh idiom in the same rule is confirmed, including the part that makes it cheap.** After
+`git checkout` left a stale hover, one `Edit` to the `return` statement — line 11, nowhere near the
+JSDoc on lines 1 to 9 — brought the hover back in step. The re-sync replaces the whole file, so the
+edit need not touch the lines being read.

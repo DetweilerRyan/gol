@@ -467,9 +467,10 @@ Three hover hazards defeat that test, and each has a rule:
 - **A hover that reveals a defect is not a defect until you have read the source.**
 - **Pass `LSP` an absolute path, always.**
 
-On the first: only `Edit` and `Write` update the server's copy of a file. A shell write does not reach
-it. Neither does `git checkout`, `git rebase`, or `npm run format`. That copy then answers every later
-hover on the file, for the whole session.
+On the first: only `Edit` and `Write` update the server's copy of a file. A plain shell write does not
+reach it, and neither does `git checkout` or `npm run format` — all three measured. `git rebase`
+writes files the same way `git checkout` does and is **inferred, not tested**. That copy then answers
+every later hover on the file, for the whole session.
 
 Refresh the file with any trivial `Edit` before you trust a hover on it. The refresh replaces the whole
 copy, so it need not touch the lines you care about. A `Read` does not enrol a file, so a file you have
