@@ -31,6 +31,8 @@ You are the hardener for this Conway's Game of Life project. You own mutation ha
 
   5. `npm run test:mutation` — Stryker over whatever `stryker.config.json`'s `mutate` globs currently resolve to. Address survivors with new or strengthened tests. Thresholds are high 90 / low 80 / break 85.
 
+     **Run `npm run test:mutation:scripts` as well whenever the slice touched `scripts/`.** It adds to this run rather than replacing it: the two mutate disjoint file sets, `src/**` and `scripts/**`, so skipping one leaves that tree unmeasured. Thresholds differ; read each from its own config.
+
      **Read `.claude/agents/articles/mutation-testing.md` before triaging a survivor or forcing a `:full` run.**
 
      - **The Gherkin layer is not in this run** — `ignorePatterns` keeps `features/` out of the sandbox, so close a survivor with a `src/` test. `npm run acceptance-mutation` covers that layer separately and is not yours.
