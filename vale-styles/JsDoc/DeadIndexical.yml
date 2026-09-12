@@ -1,4 +1,4 @@
-# engineering.md, "Name the slice, never this slice": a hover is a RECORD. It
+# claim-discipline.md, "Name the slice, never this slice": a hover is a RECORD. It
 # outlives the session that wrote it, so an indexical pointing at that session
 # names a referent nobody can recover without a `git log -S` the writer could
 # have spent one token avoiding.
@@ -19,12 +19,12 @@
 # EXTENSIONS: .ts AND .tsx. Ruled per rule on 2026-09-10, under prose.md's
 # "Each rule declares its own extensions".
 #
-# This rule does NOT assume the block comment is an interface doc. engineering.md
+# This rule does NOT assume the block comment is an interface doc. claim-discipline.md
 # bans a dead indexical in any record, and a JSX `{/* ... */}` block is as much a
 # record as a hover. So the premise question does not arise, and .tsx costs
 # nothing. Measured over the tracked components on the same date: 0 findings.
 extends: existence
-message: "'%s' names a referent that died with the session that wrote it. A hover is a record: name the slice (engineering.md, 'Name the slice, never this slice')."
+message: "'%s' names a referent that died with the session that wrote it. A hover is a record: name the slice (claim-discipline.md, 'Name the slice, never this slice')."
 level: warning
 ignorecase: true
 scope:
