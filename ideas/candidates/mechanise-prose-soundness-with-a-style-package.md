@@ -109,10 +109,32 @@ block-tag table **is closed**", "**is owned** by `product`". That is the failure
 candidate for moving. `PassiveVoice` is not, and the reason is a real quality difference rather than
 inertia — which is the opposite of the conclusion "they duplicate, so consolidate" would have reached.
 
-**What is still unmeasured, and it decides `SentenceLength`.** Nobody has sampled the 149 `Std`-only
-findings. If they are sentences a reader agrees are long, `Std` is simply better here. If they are
-segmentation artifacts — a list item read as one sentence, an abbreviation ending a sentence early —
-then `STE` is right and the 149 are noise. **Sample before moving.**
+**The 149 were sampled on 2026-09-12, and the answer is neither of the two expected.**
+
+They are not segmentation artifacts and they are not sentences `STE` misses. **Every one is 26 to 29
+words against a cap of 25** — 100 at exactly 26, 33 at 27, 12 at 28, 2 at 29. Not one is far over.
+
+The cause is the **tokenizer**, not the segmenter. `STE` counts `[\w''’-]+`, so a hyphen and an
+apostrophe sit inside a word. `Std` counts `\b(\w+)\b`, so `call-site` is two tokens and `child's` is
+two. Confirmed rather than inferred: **104 of the 149 contain a hyphenated word or a possessive.**
+
+So the two rules apply the same 25-word policy to a different count of the same sentence, and every
+disagreement is a sentence within four words of the line. **Neither is wrong; they answer different
+questions.** `STE` asks how many words a reader parses. `Std` asks how many `\w+` runs there are.
+
+**That makes the move a judgement about this corpus rather than about rule quality**, and this corpus
+is unusually hyphen-dense: `call-site`, `report-only`, `fail-open`, `changed-files`, `role-file`.
+Compound modifiers are how its prose names its own concepts. Counting each as two words measures
+something that is not sentence difficulty here.
+
+**Recommendation: do not move `SentenceLength` either.** The entry opened expecting `Std` to be a
+strict improvement on this pair and the measurement does not support it. What `Std` buys is 149
+findings on sentences a reader would call 26 words and `STE` calls 25, on a corpus whose vocabulary is
+built from compounds.
+
+**The residual question is worth one line rather than a slice.** If `STE`'s tokenizer is the right one,
+`STE`'s own cap of 25 may be slightly generous for this corpus — but that is a threshold question about
+a rule we already have, not an adoption question about one we do not.
 
 **One configuration fact either way.** `Std`'s rules ship at `suggestion` against this repo's
 `MinAlertLevel = warning`, so an adopted rule must be re-levelled by name or it is **silent and looks
