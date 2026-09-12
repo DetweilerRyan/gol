@@ -66,6 +66,58 @@ holds was taken where the rule was authored, and `.claude/agents/articles/claim-
 states the general form: the scope of a claim is the scope of the command that produced it. The rules
 were measured honestly and then read wider than the measurement.
 
+### The overlap measured, 2026-09-12 — and the two rules answer differently
+
+**The user asked to explore moving duplicate rules from `STE` to `Std`, excluding `Contractions`.**
+`Std` was synced into a scratch tree and both pairs measured over the same 435 files. These counts are
+**unexempted** — the probe config carries none of `.vale.ini`'s section exemptions — so they compare to
+each other, not to `npm run prose-lint`'s output.
+
+`Std` ships 14 rules and exactly three overlap the enabled six: `Grammar/Contractions` (excluded by
+the user, and it inverts the house rule), `Grammar/PassiveVoice`, and `Readability/SentenceLength`.
+
+**`SentenceLength` — `Std` is a strict superset, and the case for moving is strong.**
+
+|                 | Findings |
+| --------------- | -------- |
+| Flagged by both | 1,118    |
+| `STE` only      | **2**    |
+| `Std` only      | 149      |
+
+Both cap at **25 words**, so the gap is not policy — it is sentence segmentation. `Std` finds 149
+sentences `STE`'s segmenter does not end where `Std` does. Two `STE`-only findings is close enough to
+zero that moving loses almost nothing, and the question becomes whether those 149 are real.
+
+**`PassiveVoice` — the two disagree in both directions, and moving is not indicated.**
+
+|                 | Findings  |
+| --------------- | --------- |
+| Flagged by both | 1,576     |
+| `STE` only      | **367**   |
+| `Std` only      | **1,348** |
+
+They use different mechanisms rather than different thresholds. `STE` is `extends: sequence` over a
+part-of-speech tag (`VBN`), so it asks a tagger whether the word is a past participle. `Std` is
+`extends: existence` over a hardcoded list plus `[\w]+ed`, so it matches any `-ed` word after a
+be-verb.
+
+Three sampled `Std`-only hits are all **adjectives, not passives**: "if that **is impractical**", "the
+block-tag table **is closed**", "**is owned** by `product`". That is the failure mode a hardcoded
+`-ed` list has and a tagger does not.
+
+**So the honest answer to the user's question is per rule, not per package.** `SentenceLength` is a
+candidate for moving. `PassiveVoice` is not, and the reason is a real quality difference rather than
+inertia — which is the opposite of the conclusion "they duplicate, so consolidate" would have reached.
+
+**What is still unmeasured, and it decides `SentenceLength`.** Nobody has sampled the 149 `Std`-only
+findings. If they are sentences a reader agrees are long, `Std` is simply better here. If they are
+segmentation artifacts — a list item read as one sentence, an abbreviation ending a sentence early —
+then `STE` is right and the 149 are noise. **Sample before moving.**
+
+**One configuration fact either way.** `Std`'s rules ship at `suggestion` against this repo's
+`MinAlertLevel = warning`, so an adopted rule must be re-levelled by name or it is **silent and looks
+enabled** — the confident-zero shape, arriving through configuration.
+
 ### What to do before adopting anything new
 
 1. **Re-measure each enabled rule on each surface it reaches**, not once. Five surfaces exist —
