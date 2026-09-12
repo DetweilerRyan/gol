@@ -344,12 +344,51 @@ distinction stays and only the chain goes.
 cycle" did. `architect.md` carries "that is `hardener`'s job, next after you" in the same sentence;
 rules 6 and 8 already cover it, and "not yours" is the replacement.
 
-**Leave the frontmatter `description:` fields alone unless a later ruling says otherwise.** Two of them
-carry sequence language — `hardener.md`'s opens "Use this agent after the architect's structural
-review", and `architect.md`'s names its slot in the cycle. **That field's audience is the orchestrating
-session choosing which agent to invoke, not the role reading its own instructions.** Sequence is
-exactly what that reader needs. Removing it there would be applying this rule to the one place the
-information is addressed to someone who uses it.
+### 9c. One file is the source of truth for execution order
+
+**Ruled by the user on 2026-09-11, extending 9b to the frontmatter.** `CLAUDE.md` is that file: line
+301 states the cycle and the section below it states the design-pass exception. Every other statement
+of execution order is a copy of half of it.
+
+**The `description:` fields were exempted a paragraph ago and the user overruled that.** The argument
+for exempting them was real — that field's reader is the orchestrating session choosing which agent to
+invoke, so sequence is what it needs. The argument against is stronger: **it is a driftable surface and
+it is probably already wrong**, in the same way the body line was. `architect.md`'s description says
+REVIEW is "invoke after the cleaner's pass, once coder and cleaner have both finished", which the
+design pass contradicts by construction.
+
+All five carry a sequence claim today:
+
+| File           | The claim in `description:`                                                                       |
+| -------------- | ------------------------------------------------------------------------------------------------- |
+| `architect.md` | "invoke after the cleaner's pass, once coder and cleaner have both finished"; "next in the cycle" |
+| `cleaner.md`   | "the step between the coder and the architect"                                                    |
+| `coder.md`     | "Invoke it after `product` (SPECIFY mode) has produced an approved, committed .feature file"      |
+| `hardener.md`  | "after the architect's structural review"; "once the architect has finished and tests are green"  |
+| `product.md`   | "at both ends of the cycle"                                                                       |
+
+**The complication, and it is why this is not a plain deletion.** A `description:` has a real job: it
+tells the invoking seat _when this agent is the right one_. That is a **trigger**, and a trigger is not
+an order. The two are easy to conflate because most triggers here are phrased as sequence.
+
+So rewrite each to state its **precondition** instead of its **position**:
+
+- `coder.md` — "after an approved, committed `.feature` file exists" rather than "after `product`
+  (SPECIFY mode) has produced one". Same trigger; no claim about who ran when.
+- `hardener.md` — "when a slice is ready for final verification" rather than "after the architect's
+  structural review".
+- `architect.md`'s REVIEW — "to review landed code once tests are green" rather than "after the
+  cleaner's pass".
+
+**A precondition is checkable by the reader; a position is a claim about a sequence the reader may not
+be following.** That is the whole distinction, and it survives the design pass, a re-invocation after
+an adjudicated fix, and any future reordering.
+
+**Check 4 is now a live question rather than a note.** After 9b and 9c the cycle string survives only in
+`CLAUDE.md` (twice) and `handoffs.md` (once). Check 4 fails when it finds none anywhere, so it does not
+break — but it will be pinning three copies of a sequence that `CLAUDE.md` itself immediately qualifies.
+**Decide whether it should instead assert the cycle string appears in `CLAUDE.md` and nowhere else.**
+That is the shape that would enforce this ruling rather than merely tolerate it.
 
 **One consequence to handle in the same edit.** Rule 8 prefers "later roles in the cycle" to naming
 roles — and that phrase is unmoored once the file stops stating the cycle. `coder.md`'s became
