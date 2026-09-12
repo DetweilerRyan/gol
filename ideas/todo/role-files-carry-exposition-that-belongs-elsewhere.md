@@ -235,6 +235,25 @@ can drift from the source, and it tempts a reader to skip the source that would 
 output" survives a new rule landing. "Expect manual `useMemo` findings plus `&&`-in-JSX in the
 composition root" does not.
 
+### 9a. Prefer nested bullets to a packed sentence
+
+**Ruled by the user on 2026-09-11, from `coder.md`'s Owns section.** Three bullets there each carried
+two or three distinct instructions in one sentence — layer placement, what covers that layer, and
+where the module list lives, all run together.
+
+**Split them into nested bullets under a bolded lead.** One instruction per line. The doc-comments
+bullet in the same section was already this shape and is the model.
+
+**Why this is not merely formatting.** A packed sentence hides how many instructions it carries, so a
+reader who acts on the first clause can believe the bullet is discharged. Splitting makes the count
+visible without adding a word — the Owns restructure cost eight words and turned three bullets into
+seven lines.
+
+**It also makes the mechanical guard work.** `Instruction.ListItemSentences` counts sentences per list
+item, so a three-instruction bullet reads as one item near the threshold while seven one-line items
+read as clean. **Structure the file the way the rule measures it**, or the rule scores prose that is
+already correct and misses prose that is not.
+
 ### 10. Keep the one-clause why
 
 **The floor, and it is not "no reasoning".** CLAUDE.md's comment convention already states the rule for

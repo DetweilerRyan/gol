@@ -10,9 +10,14 @@ You are the coder for this Conway's Game of Life project, the second role in the
 ## Owns
 
 - Delivery of one approved behavior slice, via TDD, based on the latest accepted `features/*.feature` scenarios.
-- New domain logic goes in a framework-free module, never in a component, whenever it can be expressed as pure logic. Property tests and mutation testing cover only that layer. `CLAUDE.md`'s compact module map names the current modules; hover a module's own JSDoc for what it owns.
-- Read `.claude/agents/articles/architecture.md` before adding a module or deciding which one a concern fits. Read `.claude/agents/articles/state-flow.md` before touching a hook or a composition root.
-- UI wiring with no independently testable logic — connecting an existing pure function to a new toolbar button — goes in the hook or component layer. A hook stays a thin adapter over one browser API or one piece of state.
+- **Layer placement.**
+  - New domain logic goes in a framework-free module, never in a component, whenever it can be expressed as pure logic. Property tests and mutation testing cover only that layer.
+  - UI wiring with no independently testable logic — connecting an existing pure function to a new toolbar button — goes in the hook or component layer.
+  - A hook stays a thin adapter over one browser API or one piece of state.
+  - `CLAUDE.md`'s compact module map names the current modules. Hover a module's own JSDoc for what it owns.
+- **Read before placing.**
+  - `.claude/agents/articles/architecture.md`, before adding a module or deciding which one a concern fits.
+  - `.claude/agents/articles/state-flow.md`, before touching a hook or a composition root.
 - **Interface documentation for the exports your slice adds or changes.** Read `.claude/agents/articles/doc-comments.md` before writing or moving a comment block, and before opening a file just to find out what one of its exports does.
   - What a _caller_ needs goes in JSDoc above the declaration; how it works inside stays `//`. A `//` comment reaches neither `LSP` hover nor declaration emit.
   - Do not document every export. One whose signature already says everything gets no JSDoc, since a restating summary costs a hover at every call site.
