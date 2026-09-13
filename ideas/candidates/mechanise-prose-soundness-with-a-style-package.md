@@ -27,6 +27,18 @@ now begins by auditing the rules already enabled.**
 
 ### What the corpus actually reports
 
+> **Superseded on 2026-09-13, and the headline finding below no longer holds.** The two rules this
+> table identifies as dominating the corpus were both dealt with that day. `STE.ProcedureLength` and
+> `STE.OneInstruction` were replaced by the `Procedure` style's script rules, and `STE.PassiveVoice`
+> was re-levelled to `suggestion` and so sits below `MinAlertLevel`. **Every rule in a default run is
+> now mechanical.** The default run reports **158 findings over 453 files**: `STE.SentenceLength` 61,
+> `Procedure.ProcedureLength` 56, `STE.Contractions` 34, `Procedure.OneInstruction` 5,
+> `STE.ParagraphLength` 2.
+>
+> The table is kept because the **audit method** it records is what produced that outcome, and
+> because the per-rule figures are the baseline the replacements were measured against. Read it as a
+> dated record, not as the current state.
+
 Measured 2026-09-12 over 435 tracked files.
 
 | Rule                              | Findings | Class                   |
@@ -40,14 +52,25 @@ Measured 2026-09-12 over 435 tracked files.
 | `STE.Contractions`                | 34       | mechanical              |
 | `STE.OneInstruction`              | 11       | prompt                  |
 | `STE.ParagraphLength`             | 2        | mechanical              |
-| `JsDoc.*` (three rules)           | 7        | ours                    |
+| `JsDoc.*` (three of four rules)   | 7        | ours                    |
 
 **Two `STE` rules are 88 percent of the `STE` total, and both need judgement.** So the corpus is
 dominated by findings nobody can act on mechanically. Any mass application runs into that first.
 
+> **This was the finding that drove the slice, and acting on it removed it.** Both rules are gone from
+> the default run as of 2026-09-13. What the finding got right is that the blocker was _judgement per
+> finding_ rather than volume — and the fix was a better trigger, not a better matcher. `prose.md`
+> carries that as a rule: a prompt is often a rule looking at the wrong thing.
+
 **Our own three `Instruction` rules report 679 across the corpus.** The `.vale.ini` opt-out currently
 scopes them to the five role files and `architect/`, where they report zero — so that zero is a
 statement about scope, not about the rules.
+
+> **Re-measured 2026-09-13 over `.claude/**`, `CLAUDE.md` and `src/**/*.md`: 243** —
+> `ParagraphSentences` 121, `ListItemSentences` 79, `HistoricalNarration` 43. Still suppressed on the
+> articles by the same opt-out. Note **6 of the `ParagraphSentences` findings on `prose.md` and
+> `doc-comments.md` alone are a known artifact**: the rule counts a numbered-list prefix as a
+> sentence. `architect` disproved the obvious regex fix and recommends a `raw`-scope replacement.
 
 ### The finding that matters: a rule's precision does not travel
 
@@ -393,8 +416,13 @@ enabled** — the confident-zero shape, arriving through configuration.
 3. **Only then survey the packages.** A new rule inherits the same problem, and adding rules before the
    existing ones have per-surface figures compounds it.
 
-**A measured refutation closes a rule permanently**, and that is an acceptable outcome for any of the
-ten. `Instruction.HistoricalNarration` on `src/` may be one.
+**A measured refutation closes a rule permanently**, and that is an acceptable outcome for any rule
+here. `Instruction.HistoricalNarration` on `src/` may be one — the three-hit sample above is the
+start of that case, not the end of it.
+
+**The count has moved and no longer matches this entry's older "ten".** As of 2026-09-13 there are
+**four tracked styles** — `JsDoc`, `Instruction`, `Procedure`, plus the vendored `STE` — and 25
+per-rule keys in `.vale.ini`. Recount before quoting a total.
 
 ### One method note, because it cost four errors today
 
