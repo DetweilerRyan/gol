@@ -264,8 +264,39 @@ if len(words) > 25 {
 }
 ```
 
-The Tengo file lives in `<StylesPath>/config/scripts/`, which is a directory this repo does not have
-yet.
+**Two corrections to the sketch above, both learned by landing the `Procedure` style on 2026-09-12.**
+
+The `script:` key holds the Tengo **inline in the `.yml`**. There is no `LongSplit.tengo` file and no
+`<StylesPath>/config/scripts/` directory; writing a filename there makes Vale execute the filename as
+source.
+
+**`scope: sentence` is wrong for this rule, and the reason is a measured defect.** Vale reads the
+offsets a script returns as offsets into the **whole file**, but `scope: sentence` hands the script
+one sentence. Sentence-relative offsets are then misread: a finding on line 3 reports at 1:43, and two
+matches computing the same `begin` collapse to one. Both failures are silent, and the second means a
+`scope: sentence` script rule **under-reports**. `Procedure.OneInstruction` lost half its findings to
+exactly this before it was rewritten at `scope: raw`.
+
+### So the 770 figure needs redoing before this slice is scoped
+
+**It was measured at `scope: sentence`, so it is an undercount of unknown size.** That is not a reason
+to distrust the design; it is a reason not to plan against the number.
+
+A quick `scope: raw` reimplementation on 2026-09-12 reported **155** against `STE.SentenceLength`'s
+**61** over the 23 enabled `.md` files — a narrower rule finding _more_ than the broad one, which is
+incoherent. The cause is the reimplementation rather than the rule: walking raw text and splitting on
+`.` does not segment sentences the way Vale does, so it concatenates across a heading and the prose
+below it and splits inside `src/**/*.md`. Its longest segment measured 44 words.
+
+**So the real design problem the slice must solve is stated here rather than discovered later: the
+rule needs `raw` scope for correct offsets AND Vale-quality sentence segmentation, and the Tengo walk
+has to supply the second itself.** Neither 770 nor 155 is a figure to carry forward.
+
+**What the prototype did settle, on the narrow question it was asked.** Of seven sentences merged
+during the 2026-09-12 lint of `prose.md` and `doc-comments.md` — each merged to satisfy
+`ParagraphSentences` and each reverted for breaching `SentenceLength` — **six would still be flagged
+by `LongSplit`**, because each carried a `, and` / `, but` / `, so` boundary. The more precise rule
+agrees with the blunt one on 6 of 7. That is a real result and it does not depend on the corpus count.
 
 **Measured, against the same 435 files:**
 
