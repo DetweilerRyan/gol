@@ -1372,3 +1372,21 @@ genuine instruction, cannot satisfy both without moving one to the sidecar — a
 fifth fact is instruction a reader acts on rather than evidence.
 
 Nothing here argues the rule is wrong on a role file, which is the surface it was written for.
+
+## Why `.claude/skills/**` got its own `.vale.ini` section (2026-09-14)
+
+Measured 2026-09-13, while planning the first skill: no `.vale.ini` section glob matched a path
+under `.claude/skills/`. `[.claude/agents/**/*.md]` requires the literal `agents` segment. So Vale
+opened a probe file there and applied **zero rules**, while `prose-lint`'s trailing line still
+counted it — 0 findings on the probe against 14 on `product.md` as the control. That is the
+no-matching-section zero, the same class as the `[formats]` mapping's failure mode, on a surface
+that was about to hold instruction files.
+
+The section landed with the first skill file (`idea-capture`) rather than before or after it, in
+either order one side is a confident zero: a section matching no files, or files no section
+matches.
+
+The overlap cost was measured at three places, not the seven the enabling-a-rule arithmetic
+predicts: the four later sections that overlap the new glob — fixtures, worktrees, the Stryker
+sandbox, and `**/*.meta.md` — already carried `= NO` for every rule the section enables, for
+reasons unrelated to skills.

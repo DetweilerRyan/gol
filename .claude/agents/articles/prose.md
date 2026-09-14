@@ -563,6 +563,11 @@ holds a call site reads it to act. `<module>.md` is in scope and `<module>.meta.
 A role file that has been stripped to instruction additionally gets the `Instruction` style, per its
 own section above.
 
+A skill file under `.claude/skills/` is an instruction file in the role-file register. It gets the
+same styles as a role file: `STE`, `Procedure`, and `Instruction`. The surface is authored under the
+rule from the start, so it carries no backlog. `prose.meta.md` carries the measured zero that made
+the section necessary.
+
 **It runs over every `.ts` and `.tsx` file in the tree as well, under a different style.**
 `[*.{ts,tsx}]` enables `JsDoc`, the tracked style in `vale-styles/JsDoc/`. Each of its rules carries
 both block-comment scopes as a **list**, which Vale reads as OR. So it reaches block comments in
