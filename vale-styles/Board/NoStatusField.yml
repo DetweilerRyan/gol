@@ -1,0 +1,35 @@
+# An idea file must not carry a `status:` frontmatter key. The directory IS the
+# status -- CLAUDE.md's Idea board section, "one fact, one home" -- and this rule
+# is that prohibition mechanised, previously checked by nothing.
+#
+# Measured 2026-09-14: 0 findings over the whole board (64 .md files under
+# ideas/, case-insensitive), so the rule lands with no backlog.
+#
+# `extends: existence`, deliberately not `occurrence` with max 0: an occurrence
+# rule never fires at max 0, so "at most zero" is not expressible there --
+# prose.md's confident-zero list, entry 6.
+#
+# `scope: raw` because the key lives in YAML frontmatter, which no prose scope
+# reaches. `nonword: true` because the token ends in `:`, and the default \b
+# wrapping requires a word character after it -- `status: done` has a space
+# there, so a word-bounded token can never match the shape it exists to catch.
+#
+# `ignorecase: true`: a `Status:` key is the same second home for the same fact,
+# and YAML keys being case-sensitive does not make the duplicate harmless.
+#
+# EXTENSION CLAIM: .md only, the board's one surface. The rule reads raw text
+# and carries no interface-doc premise, so the JsDoc extension question does
+# not arise.
+#
+# SCOPE LIMIT, known and accepted: raw scope sees inside fenced code blocks, so
+# a worked example carrying a column-0 `status:` line would fire. No board file
+# carries one (same 2026-09-14 measurement); an idea file that needs the example
+# can indent it, which the line anchor declines.
+extends: existence
+message: "An idea file must not carry a '%s' key: the lane directory is the status (CLAUDE.md, 'Idea board'). Delete the key; move the file to change its status."
+level: warning
+scope: raw
+ignorecase: true
+nonword: true
+tokens:
+  - '(?m)^status:'
