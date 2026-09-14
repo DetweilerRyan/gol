@@ -100,6 +100,9 @@ A migration slice must update all three; this list exists so it finds them.
 
 ## First run of the rubric (2026-09-14)
 
+<!-- reference-check: allow the-vale-fixture-harness-is-gated-by-nothing.md -- deleted 2026-09-14
+     when the run below ruled it landed work; this dated record legitimately names the dead file -->
+
 The epic's stop condition: hand-assess three candidates chosen to exercise the exits, and stop
 before child 3 if no disposition changes a decision the user would otherwise have made. The
 three chosen: `effective-prose.md` (expected epic), `architect-designs-for-parallelism.md`

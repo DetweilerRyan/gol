@@ -10,11 +10,11 @@ Promotion from `ideas/candidates/` to `ideas/todo/` is this repo's Definition of
 
 Ask `orchestration.md`'s own question first: would a `product` VERIFY pass have anything to observe?
 
-- **Contract-bearing** — the finished state is reachable through the accessible tree. It gets Gherkin.
-- **Checker-bearing** — the finished state is a command's output or exit code. VERIFY does not run.
-- **Knowledge-bearing** — a readiness spike. The finished state is a recorded answer to a named question.
+- **Contract-bearing** (SAFe: user story) — the finished state is reachable through the accessible tree. It gets Gherkin.
+- **Checker-bearing** (SAFe: architecture or infrastructure enabler) — the finished state is a command's output or exit code. VERIFY does not run.
+- **Knowledge-bearing** (SAFe: exploration enabler) — a readiness spike. The finished state is a recorded answer to a named question.
 
-Score V and T against the kind's own column below. Never score a checker-bearing idea against user-visible value. The sidecar carries the provenance for this split, and the mapping for a reader arriving with SAFe's enabler vocabulary.
+Score V and T against the kind's own column below. Never score a checker-bearing idea against user-visible value. The sidecar carries the provenance for this split and for the SAFe labels above. An assessment record's kind row carries the label, so a reader oriented by SAFe never has to look the mapping up. Ruled by the user 2026-09-14.
 
 ## Question 0b — is it a slice at all?
 
