@@ -103,5 +103,28 @@ A migration slice must update all three; this list exists so it finds them.
 The epic's stop condition: hand-assess three candidates chosen to exercise the exits, and stop
 before child 3 if no disposition changes a decision the user would otherwise have made. The
 three chosen: `effective-prose.md` (expected epic), `architect-designs-for-parallelism.md`
-(expected spike), `the-vale-fixture-harness-is-gated-by-nothing.md` (expected ready). The
-readings and the user's ruling are recorded here when the run completes.
+(expected spike), `the-vale-fixture-harness-is-gated-by-nothing.md` (expected ready).
+
+The judge's readings, run 2026-09-14 by the orchestrating seat against the landed article:
+
+1. **`effective-prose.md` — epic, via question 0b.** A self-declared index with waves and its own
+   hold; caught before any letter was scored. Confirms the expected disposition and the existing
+   handling. No decision changed.
+2. **`architect-designs-for-parallelism.md` — spike, via V.** The file's own first open question
+   concedes the premise may be capped by the serial landing gate, and names the unrun
+   measurement: how often a rebase actually conflicted across recent slices. V=2 with that
+   finding — the score cannot be raised by editing, so the disposition is a spike targeting V
+   and I. Converts a stalled 299-line design into one cheap named measurement.
+3. **`the-vale-fixture-harness-is-gated-by-nothing.md` — NOT ready, against expectation.** T's
+   checker-bearing anchor 4 asks for the command's reading today. Read: the program exists and
+   gates — `scripts/vale-fixture-check/` landed 2026-09-12 in `1f9229c`, the same day the
+   candidate was filed, and passed in both of that week's merge gates. The candidate is stale
+   work-already-landed, on the board because the slice never came through the promote flow, so
+   the delete-your-own-file rule never fired. Disposition: close as done and delete. An earlier
+   survey had ranked this file the board's most ready candidate, so the anchor question is what
+   stopped a dead promotion.
+
+**Stop-condition verdict: the rubric changed a decision** (reading 3), so the epic's children 3
+and 4 stay live. Secondary finding: the board can hold landed-but-undeleted candidates, a
+hygiene class the assessment's T anchor detects for free. The user's per-letter agree-or-differ
+ruling on these three records is pending and completes the first calibration pair.
