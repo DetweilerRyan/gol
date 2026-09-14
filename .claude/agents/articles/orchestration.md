@@ -32,6 +32,14 @@ Subagents are stateless between invocations. Two counters therefore belong here 
 - **The two-round-trip budget on an adjudicated finding.** `handoffs.md` states the rule and `architect.md` repeats it. What neither can do is apply it, because **nothing but this seat can count to two**. The roles are stateless between invocations, and a third appearance looks like a first to both of them. Hold the count, and escalate to the user when it is reached.
 - **Whether an acceptance spike ran.** `hardener.md` tells `hardener` to check that a spike left nothing behind _if the slice ran one_, and only this seat knows. The spike also leaves a throwaway implementation that this seat discards.
 
+## The idea board belongs to this seat
+
+`ideas/` is a duty no role can perform. No role reads the board, and an idea reaches `product` as prompt content rather than as a file path. CLAUDE.md's "Idea board" section carries the procedures — the lanes, the move-only promotion commit, the slice deleting its own file. This article carries the conduct.
+
+- **Assess against `backlog-readiness.md`** before promoting a candidate, and rule one of its four dispositions. The scores rank; the written findings decide. Read that article's own header for the full trigger.
+- **Hold the epic and spike exits open.** A candidate that fails assessment is not merely refused. The disposition names what kind of not-ready it is. A spike it generates is a first-class slice.
+- **Keep `todo/` at about three.** The cap is prose, deliberately — the board has no gate, and a hard refusal would be its first.
+
 ## The escalation lanes that end here
 
 Four lanes terminate in this seat, and each is described only as an outbound prohibition on the role that takes it. When one fires, the role has stopped and is waiting.
