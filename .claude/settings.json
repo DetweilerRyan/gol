@@ -2,5 +2,28 @@
   "worktree": {
     "baseRef": "head"
   },
-  "outputStyle": "Brief"
+  "outputStyle": "Brief",
+  "hooks": {
+    "PostToolUse": [
+      {
+        "matcher": "Write|Edit",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "sh \"$CLAUDE_PROJECT_DIR/.claude/skills/idea-assess/layer1.sh\" --hook",
+            "timeout": 10,
+            "statusMessage": "Layer 1: checking the idea file's shape",
+            "if": "Write(ideas/**)"
+          },
+          {
+            "type": "command",
+            "command": "sh \"$CLAUDE_PROJECT_DIR/.claude/skills/idea-assess/layer1.sh\" --hook",
+            "timeout": 10,
+            "statusMessage": "Layer 1: checking the idea file's shape",
+            "if": "Edit(ideas/**)"
+          }
+        ]
+      }
+    ]
+  }
 }

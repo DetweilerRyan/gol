@@ -1390,3 +1390,19 @@ The overlap cost was measured at three places, not the seven the enabling-a-rule
 predicts: the four later sections that overlap the new glob — fixtures, worktrees, the Stryker
 sandbox, and `**/*.meta.md` — already carried `= NO` for every rule the section enables, for
 reasons unrelated to skills.
+
+## Why `ideas/**` got one Vale rule and no register rules (2026-09-14)
+
+The board's lanes are defined against linting: `candidates/` is "raw and unjudged" by CLAUDE.md's
+own definition, and a shape rule there would land roughly 30 findings the enabling slice could
+not clear — 22 of 61 files open with SCQA instead of the template's `Context`, and 12 use
+`Answer` for `Sketch` (measured 2026-09-13). That fails the landing constraint outright, so no
+register rule reaches the board.
+
+`Board.NoStatusField` is the exception because its corpus measured clean: 0 `status:` keys over
+the whole board (2026-09-13, re-derived at landing by `architect` — the rule's own header carries
+the landing count). A rule with a measured zero-finding corpus lands on both lanes with no
+remediation, so the landing constraint is satisfied by measurement rather than by scoping.
+
+The rule reports through `npm run prose-lint`, which never fails on a finding. The board stays
+ungated, per the user's 2026-09-13 ruling recorded in `backlog-readiness.md`.

@@ -568,6 +568,12 @@ same styles as a role file: `STE`, `Procedure`, and `Instruction`. The surface i
 rule from the start, so it carries no backlog. `prose.meta.md` carries the measured zero that made
 the section necessary.
 
+The idea board is the deliberate exception. `ideas/**` gets exactly one rule, the tracked `Board`
+style's `NoStatusField`, and no register rule at all. A candidate is raw by definition, so linting
+its prose would contradict the lane. The one rule mechanises a structural prohibition instead —
+CLAUDE.md's "one fact, one home" rule on the `status:` key. Nothing that reports on the board
+gates it.
+
 **It runs over every `.ts` and `.tsx` file in the tree as well, under a different style.**
 `[*.{ts,tsx}]` enables `JsDoc`, the tracked style in `vale-styles/JsDoc/`. Each of its rules carries
 both block-comment scopes as a **list**, which Vale reads as OR. So it reaches block comments in
