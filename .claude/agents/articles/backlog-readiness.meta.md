@@ -126,5 +126,14 @@ The judge's readings, run 2026-09-14 by the orchestrating seat against the lande
 
 **Stop-condition verdict: the rubric changed a decision** (reading 3), so the epic's children 3
 and 4 stay live. Secondary finding: the board can hold landed-but-undeleted candidates, a
-hygiene class the assessment's T anchor detects for free. The user's per-letter agree-or-differ
-ruling on these three records is pending and completes the first calibration pair.
+hygiene class the assessment's T anchor detects for free.
+
+**The human ruling, 2026-09-14: agree on all three records.** Per letter, for the calibration
+count: record 1, disposition agreed (no letters scored); record 2, V and I agreed; record 3, T
+agreed. First calibration pair complete — 3 of 3 dispositions agreed, no letter divergent, no
+anchor rewrite indicated at this sample size.
+
+One observation from the ruling: the records named the kinds in house vocabulary and never said
+"enabler", although all three are enablers in SAFe's terms. The mapping sits in this sidecar by
+design, but the reader had to look it up. Whether every record's kind row should carry the
+one-line SAFe orientation is an open article question for the user.
