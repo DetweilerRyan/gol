@@ -64,8 +64,13 @@ a size-clues prompt) stand only as fallbacks if the reshape stalls.
   predicates (solutioning-in-the-problem is N, vague-appetite is E's spirit), which confirms the
   finding set independently; and its section-walking interaction is prior art for a capture-time
   SCQA walk, if `/idea-capture` grows one with this reshape. `rjs/shaping-skills` — shaping and
-  breadboarding skills published by Shape Up's own author — is the primary source if the reshape
-  ever wants deeper shaping technique.
+  breadboarding skills published by Shape Up's own author — was compared the same day: no
+  conflicts with the board's design, because it improves ideas rather than judging them, and its
+  own README calls it non-evaluative. Not adopted as-is (personal-skill install sits outside the
+  checkers), but it is the named technique source for executing shaping-type spikes — the
+  Negotiable spike's compare-two-approaches is its shaping skill, and the contract-bearing
+  Testable spike's probe-for-the-observable is its breadboarding, which independently converges
+  on the affordance vocabulary the anchors already use.
 
 ## Touches
 
