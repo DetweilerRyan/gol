@@ -76,8 +76,12 @@ a size-clues prompt) stand only as fallbacks if the reshape stalls.
 
 - `ideas/TEMPLATE.md`
 - `.claude/references/definition-of-ready.md` — the anchors that read size off the file
-- The board's existing files only if the prompt rewording invalidates their sections, which it
-  should not
+- The idea-assess skill's Layer 1 shell check — its section-presence checks read the template's
+  section names literally, so renamed sections move the checker
+- `.claude/skills/idea-capture/SKILL.md` — it files candidates in the template's shape, so its
+  rules follow the reshape
+- **The sweep of existing board files is a no-go.** The reshape binds future candidates; the
+  assessment reads either opener already, and rewriting 60 files buys nothing it can read
 
 ## Open questions
 
@@ -88,5 +92,5 @@ a size-clues prompt) stand only as fallbacks if the reshape stalls.
   helps? The Definition of Ready asks at promotion either way.
 - Does the sizing job move to the design pass entirely, leaving candidates with no size section
   at all? That trades the conflict for unscorable size letters on every assessment.
-- The section is named in many board files today; a reshape binds only future candidates unless
-  a sweep is worth it — is it?
+- The sweep question is settled as a no-go in Touches, per the 2026-09-15 assessment's
+  promotion-edit note.
