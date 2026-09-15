@@ -6,7 +6,7 @@ created: 2026-09-15
 
 ## Situation
 
-Child 2 of `claim-discipline-remedies.md`. Some claim-discipline violations leave phrase-level
+Child 2 of `prose-discipline-remedies.md`. Some claim-discipline violations leave phrase-level
 fingerprints a deterministic rule can match: an audience roster tends to open "The audience
 is", a wording-identity attribution says "own words", an unmeasured census often fronts a
 sentence with "Most". Measured 2026-09-15: all three appeared in the audited reference.

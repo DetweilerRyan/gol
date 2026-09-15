@@ -1,6 +1,6 @@
 ---
-name: claim-discipline-remedies
-title: Claim-discipline remedies — the epic over the judged pass and the Claim style
+name: prose-discipline-remedies
+title: Prose-discipline remedies — the epic over the judged pass, the Claim style, and the write-time loop
 created: 2026-09-15
 ---
 

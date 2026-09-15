@@ -6,7 +6,7 @@ created: 2026-09-15
 
 ## Situation
 
-Child 3 of `claim-discipline-remedies.md`. Vale rules exist per surface and report through
+Child 3 of `prose-discipline-remedies.md`. Vale rules exist per surface and report through
 `npm run prose-lint` on demand; a `PostToolUse` hook already runs the board's Layer 1 shell
 check on `ideas/**` writes. `post-write-quality-hooks.md` is the standing sibling for the
 TypeScript half, with the measured timings and the rewrite-desync warning.

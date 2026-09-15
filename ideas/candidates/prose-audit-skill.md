@@ -6,7 +6,7 @@ created: 2026-09-15
 
 ## Situation
 
-Child 1 of `claim-discipline-remedies.md`. The claim rules bind every prose surface and are
+Child 1 of `prose-discipline-remedies.md`. The claim rules bind every prose surface and are
 unmechanised by design; every mechanical gate can be green while a file violates them. Three
 dated instances sit in the parent index.
 
