@@ -32,6 +32,9 @@ These hold whether or not a checker fires. Vale's rules below are a partial and 
 - **Write instructions, not accounts.** State what to do, when, and under what precondition; route
   the incident, the measurement and the rejected alternative to the `.meta.md` sidecar. The section
   below headed "Instruction stays" carries the full rule.
+- **Run the prose-audit skill on instruction prose before landing it.** It is the judged pass over
+  this article's split and `claim-discipline.md`'s forms. A green mechanical run is not evidence
+  the claims are sound. Fix what it finds, record in hand, before the commit.
 
 ## Setup
 
