@@ -1,6 +1,6 @@
 # Definition of Ready
 
-**Read before assessing a candidate, promoting an idea, or ruling a disposition on the board.** The audience is the orchestrating seat and the `idea-*` skills. No role reads the board, and no role file names this reference.
+**Read before assessing a candidate, promoting an idea, or ruling a disposition on the board.** Who reads this file is a routing question, and CLAUDE.md answers it.
 
 Promotion from `ideas/candidates/` to `ideas/todo/` is this repo's Definition of Ready, in the Agile Alliance glossary sense. Assessing a candidate is the board's backlog refinement, in the same vocabulary. This file carries the assessment: two pre-questions, six predicates, anchored scores, and four dispositions. The word "ready" elsewhere in this repo names other things — a slice ready for final verification, a scenario ready for `coder` — and neither is this subject.
 
@@ -142,7 +142,7 @@ Every assessment ends in exactly one. The disposition comes from the written fin
 
 ## The three layers, and what runs today
 
-- **Layer 1 — deterministic.** Frontmatter facts, section presence, lane counts, dependency mentions. Today this is read by hand from the file; prettier already formats the board. The `idea-assess-skill` child of the epic mechanises it. Nothing in this layer judges.
+- **Layer 1 — deterministic.** Frontmatter facts, section presence, lane counts, dependency mentions. Measurements arrive with the assessment rather than being asked for; absent them, stop rather than judge. Nothing in this layer judges.
 - **Layer 2 — the judged pass.** The anchors above, applied per letter, each score with its finding text.
 - **Layer 3 — calibration.** Below.
 
