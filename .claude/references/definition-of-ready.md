@@ -6,7 +6,14 @@ Promotion from `ideas/candidates/` to `ideas/todo/` is this repo's Definition of
 
 **Nothing here gates.** Ruled by the user 2026-09-13: CLAUDE.md's decision that `ideas/` has no gate stands unreversed. Every check reports, and none can fail anything. `definition-of-ready.meta.md` carries the ruling's account and every measurement behind this file.
 
-## Question 0a — which kind is this?
+## The slice check — is it a slice at all?
+
+Run this before the kind check; an exempt file never reaches it. Two classes are exempt from assessment. Scoring one is a finding against the assessor, not the file.
+
+- **A verdict record** — the title or first heading rules the idea out: `REFUTED`, `DECLINED`, "Do not build this". It is the board's memory, and its job is to stop a re-proposal.
+- **An index** — the file says of itself that it is not work. An epic is neither lane; it lives in `candidates/` as an index. Route it to a split.
+
+## The kind check — which kind is this?
 
 Ask first: would a `product` VERIFY pass have anything to observe?
 
@@ -15,13 +22,6 @@ Ask first: would a `product` VERIFY pass have anything to observe?
 - **Knowledge-bearing** (SAFe: exploration enabler) — a readiness spike. The finished state is a recorded answer to a named question.
 
 Score V and T against the kind's own column below. Never score a checker-bearing idea against user-visible value. The sidecar carries the provenance for this split and for the SAFe labels above. An assessment record's kind row carries the label, so a reader oriented by SAFe never has to look the mapping up. Ruled by the user 2026-09-14.
-
-## Question 0b — is it a slice at all?
-
-Two classes are exempt from assessment. Scoring one is a finding against the assessor, not the file.
-
-- **A verdict record** — the title or first heading rules the idea out: `REFUTED`, `DECLINED`, "Do not build this". It is the board's memory, and its job is to stop a re-proposal.
-- **An index** — the file says of itself that it is not work. An epic is neither lane; it lives in `candidates/` as an index. Route it to a split.
 
 ## The six predicates
 
@@ -127,7 +127,7 @@ Every assessment ends in exactly one. The disposition comes from the written fin
 | **Spike**           | A blocking finding turns on knowledge nobody has | Name the spike; it is its own slice                                        |
 | **Not worth doing** | V's finding rules it out on its own terms        | Record the decline in-file: a `REFUTED` or `DECLINED` title, dated         |
 
-**Epic — the test.** Would splitting produce children that each score better? If yes, split. If the children would inherit the same low scores, the file is under-examined, and the disposition is spike or revision. Question 0b catches a self-declared index; this catches one that reveals itself through its scores.
+**Epic — the test.** Would splitting produce children that each score better? If yes, split. If the children would inherit the same low scores, the file is under-examined, and the disposition is spike or revision. The slice check catches a self-declared index; this catches one that reveals itself through its scores.
 
 **Spike — the test.** Can the score be raised by editing the file? If yes, the answer exists and nobody wrote it down: revise. If no, nobody has the answer: spike. A low letter names its own spike:
 

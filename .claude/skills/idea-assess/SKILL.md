@@ -23,12 +23,12 @@ Then:
 
 1. Read `.claude/references/definition-of-ready.md` in full.
 2. Read the target file in full.
-3. Apply the article: questions 0a and 0b, then the six letters.
+3. Apply the article: the slice check, the kind check, then the six letters.
 4. Rule exactly one disposition.
 
 Rules that bind the record:
 
-- Name the kind with its SAFe orientation label, as the article's 0a section writes it.
+- Name the kind with its SAFe orientation label, as the article's kind check writes it.
 - Give every scored letter its 1–5 number and its finding text together. A number never travels alone.
 - No total, no average, no cross-kind ranking.
 - Fold the Layer 1 findings above into the record; they are measurements, not scores.

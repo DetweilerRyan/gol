@@ -111,7 +111,7 @@ three chosen: `effective-prose.md` (expected epic), `architect-designs-for-paral
 
 The judge's readings, run 2026-09-14 by the orchestrating seat against the landed article:
 
-1. **`effective-prose.md` — epic, via question 0b.** A self-declared index with waves and its own
+1. **`effective-prose.md` — epic, via the slice check.** A self-declared index with waves and its own
    hold; caught before any letter was scored. Confirms the expected disposition and the existing
    handling. No decision changed.
 2. **`architect-designs-for-parallelism.md` — spike, via V.** The file's own first open question
