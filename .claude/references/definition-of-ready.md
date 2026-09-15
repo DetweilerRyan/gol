@@ -36,7 +36,7 @@ The letters keep INVEST as the mnemonic. Each predicate is phrased in this repo'
 | S      | **split signal**       | What does that checklist return?                                          |
 | T      | **observability**      | How is the finished state checked?                                        |
 
-**T is Testable in the mnemonic only.** It is not `engineering.md`'s _independently testable_, which means pure logic extractable into a framework-free module. A slice can score T=5 here and contain no extractable logic at all. Most checker-bearing slices do.
+**T is Testable in the mnemonic only.** T never asks whether logic is extractable into a framework-free module — that question is `engineering.md`'s. A slice can score T=5 here and contain no extractable logic at all.
 
 **E is not an effort estimate.** This repo estimates effort nowhere, and E asks only whether Touches supports a size judgment. E and S are two questions: E asks whether the checklist can be run, S asks what it returns. An empty Touches scores E=1 and leaves S **unscorable** — the one place a letter declines, and the declination is the finding.
 
@@ -138,7 +138,7 @@ Every assessment ends in exactly one. The disposition comes from the written fin
 - **N** — explore two approaches and return the comparison.
 - **E** — never spikes; an empty Touches is a writing task.
 
-**A readiness spike is a first-class slice.** It gets its own candidate file, branch, and `slice/` tag. Its file names the parent idea and the letters it intends to move. It closes by re-assessing the parent; throwaway artifacts go to `spikes/`, outside every gate. A spike that moves no letter is itself a finding — the letter was low for a reason the spike did not address. It is **not** `product`'s acceptance spike, which is a contract feedback loop inside SPECIFY.
+**A readiness spike is a first-class slice.** It gets its own candidate file, branch, and `slice/` tag. Its file names the parent idea and the letters it intends to move. It closes by re-assessing the parent; throwaway artifacts go to `spikes/`, outside every gate. A spike that moves no letter is itself a finding — the letter was low for a reason the spike did not address. It is **not** `product`'s acceptance spike; `product.md` owns that term.
 
 ## The three layers, and what runs today
 
