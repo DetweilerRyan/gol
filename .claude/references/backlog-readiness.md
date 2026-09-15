@@ -1,6 +1,6 @@
 # Backlog readiness
 
-**Read before assessing a candidate, promoting an idea, or ruling a disposition on the board.** The audience is the orchestrating seat. No role reads the board, and no role file names this article.
+**Read before assessing a candidate, promoting an idea, or ruling a disposition on the board.** The audience is the orchestrating seat and the `idea-*` skills. No role reads the board, and no role file names this reference.
 
 Promotion from `ideas/candidates/` to `ideas/todo/` is this repo's Definition of Ready. This article carries the assessment: two pre-questions, six predicates, anchored scores, and four dispositions.
 

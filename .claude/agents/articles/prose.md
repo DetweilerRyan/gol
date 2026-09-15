@@ -565,7 +565,8 @@ own section above.
 
 A skill file under `.claude/skills/` is an instruction file in the role-file register. It gets the
 same styles as a role file: `STE`, `Procedure`, and `Instruction`. The surface is authored under the
-rule from the start, so it carries no backlog. `prose.meta.md` carries the measured zero that made
+rule from the start, so it carries no backlog. A reference pair under `.claude/references/` is
+scoped the same way, and its `.meta.md` half keeps the sidecar exemption. `prose.meta.md` carries the measured zero that made
 the section necessary.
 
 The idea board is the deliberate exception. `ideas/**` gets exactly one rule, the tracked `Board`
