@@ -21,6 +21,20 @@
             "timeout": 10,
             "statusMessage": "Layer 1: checking the idea file's shape",
             "if": "Edit(ideas/**)"
+          },
+          {
+            "type": "command",
+            "command": "sh \"$CLAUDE_PROJECT_DIR/.claude/skills/prose-audit/on-edit.sh\"",
+            "timeout": 15,
+            "statusMessage": "Prose loop: Vale on the edited file",
+            "if": "Write(.claude/**)"
+          },
+          {
+            "type": "command",
+            "command": "sh \"$CLAUDE_PROJECT_DIR/.claude/skills/prose-audit/on-edit.sh\"",
+            "timeout": 15,
+            "statusMessage": "Prose loop: Vale on the edited file",
+            "if": "Edit(.claude/**)"
           }
         ]
       }

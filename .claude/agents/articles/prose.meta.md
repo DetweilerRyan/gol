@@ -1432,3 +1432,25 @@ carve-outs are enable-ready rather than a backlog: the wording attribution in `o
 was dropped, `engineering.md`'s gating roster was completed and its census front removed, and
 `mutation-testing.md`'s characterization now follows its provenance. Enabling the two carved-out
 rules on `articles/` is the recorded follow-up, `architect`'s to flip.
+
+## The write-time hook's shape ruling (2026-09-15)
+
+The `vale-findings-reach-the-editing-agent` slice pre-registered a fork on the legacy-findings
+problem and the orchestrating seat ruled it at slice open: **scope-to-zero-baseline**. The hook
+fires on `.claude/skills/**` and `.claude/references/**` — both measured-zero surfaces — and
+stays off the articles and CLAUDE.md until their backlog is triaged; on clean surfaces the
+noise problem the candidate named does not exist. Diff-aware reporting was declined per the
+promotion's S condition: it is a `scripts/` program and its own slice. The widening trigger is
+the articles-backlog candidate.
+
+**One hazard the slice's own probe caught before landing:** Vale matches `.vale.ini` section
+globs against the path as given. Run with an absolute path, a file in a scoped directory
+matches no section, zero rules apply, and the reading is a false clean — measured 2026-09-15
+with a contraction-bearing probe that reported 0 findings absolute and 1 finding
+repo-relative. The hook therefore relativizes against the file's own repo root before Vale
+runs, and its header records the hazard. The same hazard is worth knowing anywhere else Vale
+is ever handed a path.
+
+**Standing verification, shared:** the hook cannot be live-fired in the session that lands it,
+since settings load at session start. One fresh-session run answers this hook, the Layer 1
+board hook, and the does-a-subagent-fire question together.
