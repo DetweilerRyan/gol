@@ -2,13 +2,13 @@
 
 **Read before assessing a candidate, promoting an idea, or ruling a disposition on the board.** Who reads this file is a routing question, and CLAUDE.md answers it.
 
-Promotion from `ideas/candidates/` to `ideas/todo/` is this repo's Definition of Ready, in the Agile Alliance glossary sense. Assessing a candidate is the board's backlog refinement, in the same vocabulary. This file carries the assessment: two pre-questions, six predicates, anchored scores, and four dispositions. The word "ready" elsewhere in this repo names other things — a slice ready for final verification, a scenario ready for `coder` — and neither is this subject.
+Promotion from `ideas/candidates/` to `ideas/todo/` is this repo's Definition of Ready, in the Agile Alliance glossary sense. Assessing a candidate is the board's backlog refinement, in the same vocabulary. This file carries the assessment: two pre-questions, six predicates, anchored scores, and four dispositions. In this file, "ready" means the board's promotion bar and nothing else; the word carries other senses elsewhere, and none is this subject.
 
-**Nothing here gates.** Ruled by the user 2026-09-13: CLAUDE.md's decision that `ideas/` has no gate stands unreversed. Every check reports, and none can fail anything. `definition-of-ready.meta.md` carries the ruling's account and every measurement behind this article.
+**Nothing here gates.** Ruled by the user 2026-09-13: CLAUDE.md's decision that `ideas/` has no gate stands unreversed. Every check reports, and none can fail anything. `definition-of-ready.meta.md` carries the ruling's account and every measurement behind this file.
 
 ## Question 0a — which kind is this?
 
-Ask `orchestration.md`'s own question first: would a `product` VERIFY pass have anything to observe?
+Ask first: would a `product` VERIFY pass have anything to observe?
 
 - **Contract-bearing** (SAFe: user story) — the finished state is reachable through the accessible tree. It gets Gherkin.
 - **Checker-bearing** (SAFe: architecture or infrastructure enabler) — the finished state is a command's output or exit code. VERIFY does not run.
@@ -21,20 +21,20 @@ Score V and T against the kind's own column below. Never score a checker-bearing
 Two classes are exempt from assessment. Scoring one is a finding against the assessor, not the file.
 
 - **A verdict record** — the title or first heading rules the idea out: `REFUTED`, `DECLINED`, "Do not build this". It is the board's memory, and its job is to stop a re-proposal.
-- **An index** — the file says of itself that it is not work. `scripts-boundary.md` is the precedent: an epic is neither lane, and sits in `candidates/` as an index. Route it to a split.
+- **An index** — the file says of itself that it is not work. An epic is neither lane; it lives in `candidates/` as an index. Route it to a split.
 
 ## The six predicates
 
 The letters keep INVEST as the mnemonic. Each predicate is phrased in this repo's own vocabulary, and none redefines a loaded term.
 
-| Letter | Name here              | Asks                                                                                           |
-| ------ | ---------------------- | ---------------------------------------------------------------------------------------------- |
-| I      | **lands alone**        | Does the file name every slice it waits on, and has each of those landed?                      |
-| N      | **need, not solution** | Does Context state the problem rather than a chosen implementation? `TEMPLATE.md`'s own words. |
-| V      | **worth doing**        | Per kind — see the anchor table. `TEMPLATE.md`'s own phrase.                                   |
-| E      | **size is judgeable**  | Is Touches populated enough to run the design-pass checklist at all?                           |
-| S      | **split signal**       | What does that checklist return?                                                               |
-| T      | **observability**      | How is the finished state checked?                                                             |
+| Letter | Name here              | Asks                                                                      |
+| ------ | ---------------------- | ------------------------------------------------------------------------- |
+| I      | **lands alone**        | Does the file name every slice it waits on, and has each of those landed? |
+| N      | **need, not solution** | Does Context state the problem rather than a chosen implementation?       |
+| V      | **worth doing**        | Per kind — see the anchor table.                                          |
+| E      | **size is judgeable**  | Is Touches populated enough to run the design-pass checklist at all?      |
+| S      | **split signal**       | What does that checklist return?                                          |
+| T      | **observability**      | How is the finished state checked?                                        |
 
 **T is Testable in the mnemonic only.** It is not `engineering.md`'s _independently testable_, which means pure logic extractable into a framework-free module. A slice can score T=5 here and contain no extractable logic at all. Most checker-bearing slices do.
 
@@ -108,7 +108,7 @@ Score each letter 1–5 against its anchor. Every level names what the file says
 
 ## What the number may do
 
-The score **ranks and never decides**. This repo grades nothing else on a scale, and carries recorded rulings against a deciding score. Five bounds keep the number inside what those rulings license:
+The score **ranks and never decides**. The sidecar carries the recorded rulings this rests on. Five bounds keep the number inside what those rulings license:
 
 - **A. Six numbers, never a total.** No sum, no average, no composite readiness score.
 - **B. Never rank across kinds.** A checker-bearing T=4 and a contract-bearing T=4 answer different questions.
@@ -146,7 +146,7 @@ Every assessment ends in exactly one. The disposition comes from the written fin
 - **Layer 2 — the judged pass.** The anchors above, applied per letter, each score with its finding text.
 - **Layer 3 — calibration.** Below.
 
-**The judge is not reproducible, and the anchors are the only thing constraining it.** Skill and agent invocations expose no temperature control, so the source architecture's determinism guarantee does not transfer. Treat two divergent judge runs as evidence about the anchors, not as noise to average away.
+**The judge is not reproducible, and the anchors are the only thing constraining it.** Measured 2026-09-13: skill invocations exposed `model` and `effort` only, no temperature control, so the source architecture's determinism guarantee did not transfer. Treat two divergent judge runs as evidence about the anchors, not as noise to average away.
 
 ## Layer 3 — the calibration record
 
@@ -156,6 +156,6 @@ A promotion commit carries **two records in order**. First the judge's six lette
 
 Declines keep the existing in-file practice: a dated `REFUTED` or `DECLINED` record. An epic's trace is its index sections and children. A spike's trace is its own candidate file.
 
-A calibration pass counts agreement per letter, never a total. Disposition agreement is primary; score delta says where the divergence sits. A letter below roughly two-in-three disposition agreement has wrong anchors — the same threshold this repo already ruled fine for ranking, not for deciding. Run the pass at ten dispositions of any kind, or a full `todo/` turnover, and record the counts in the sidecar.
+A calibration pass counts agreement per letter, never a total. Disposition agreement is primary; score delta says where the divergence sits. A letter below roughly two-in-three disposition agreement has wrong anchors — the threshold the sidecar's recorded ruling licenses for ranking, not deciding. Run the pass at ten dispositions of any kind, or a full `todo/` turnover, and record the counts in the sidecar.
 
 **Stated risk:** dispositions accumulate slowly, so the scale may run unvalidated for months. That is the strongest standing argument against having one. Bound E above is what expires it honestly when the evidence arrives.
