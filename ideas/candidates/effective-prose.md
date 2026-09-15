@@ -52,6 +52,10 @@ by judgement, not by a passing gate.
 complete.** That ruling is the user's alone. It is a judgement about whether the surface is sound, not
 a checklist any gate can compute, so no agent may declare it and no green run substitutes for it.
 
+**Ruled moot by the user, 2026-09-15.** Wave 1's substance landed by other routes — the fixture gate,
+the role triggers, the strip-and-lint passes, the style-package finding overtaken — and later-wave
+work may proceed without a completeness ruling. The paragraph above stays as the design's record.
+
 **Soundness here covers the process, not only the programs.** Wave 1 is complete when all three of
 these are true together:
 
@@ -148,6 +152,10 @@ boundaries.
 `reference-check-cannot-see-a-dot-path` was the fourth entry here and is **no longer in this wave**. It edits the same predicate as a Wave 1 entry, so it was folded into `reference-check-reach` and pulled forward. The user ruled that on 2026-09-11, accepting the wave crossing, because two slices cannot hold one predicate between them.
 
 ### Wave 4 — mechanise the claim discipline
+
+**The Vale-rule half of this wave moved to `prose-discipline-remedies.md`, 2026-09-15.** That epic's
+`claim-vale-style.md` mechanises the fingerprinted claim forms, and its landing answers the census
+line's mechanisable question for that form. This wave keeps only what that epic does not claim.
 
 The most speculative wave, and the one most likely to produce refutations rather than slices. That is
 an acceptable outcome; a measured refutation closes a question permanently.

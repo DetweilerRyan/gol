@@ -28,6 +28,10 @@ one rule per surviving fingerprint, each with a discriminating fixture pair. The
 precision run is the slice's first step, inside the slice, per the rule-authoring discipline —
 measurement is part of authoring, not a prior spike.
 
+**The effective-prose interaction, checked 2026-09-15:** that epic's Wave 4 claimed this
+territory behind its Wave 1 gate; the user ruled the gate moot the same day, and its Wave 4 now
+routes claim mechanisation here. No dependency remains.
+
 **The census-count interaction, checked 2026-09-15:** `apply-the-census-count-rule-everywhere.md`
 states of itself that it "does not add a Vale rule" — it is a remediation sweep, so it cannot
 absorb the "Most" fingerprint. The interaction is ordering only: a sweep landing first reduces
