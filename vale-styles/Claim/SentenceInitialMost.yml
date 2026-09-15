@@ -1,0 +1,43 @@
+# A sentence fronted with "Most" asserts an unmeasured majority -- a census
+# nobody counted, in claim-discipline.md's bare-count family ("Name which,
+# not how many", and a majority is a count wearing a vaguer hat). Measure it
+# and name which, or drop the census front.
+#
+# Measured 2026-09-15 over the instruction corpus (.claude/agents/**,
+# .claude/skills/**, .claude/references/**, CLAUDE.md; *.meta.md exempt):
+# a full `\bMost\b` census returned 2 hits, both sentence-initial, both in
+# articles/ -- one a census whose adjacent gate-list enumeration had already
+# drifted (the exact rot this form invites), one arguable with its
+# provenance named in the next clause. Zero clean false positives, zero hits
+# on every enabled surface. .vale.ini switches this rule off by name for
+# articles/ with that count recorded beside the key. The known-bad
+# historical form is definition-of-ready.md's "Most checker-bearing slices
+# do.", measured present at caea56f and removed by f34824d ("references:
+# apply the two held rewrites"), before this rule landed.
+#
+# `scope: sentence` is the discriminator: the anchor fires on the sentence's
+# first word only, so "costs most of the saving" and "the most common shape"
+# never match. Probed 2026-09-15 on vale 3.20.0: the anchor fires in
+# headings, in list items, and on a second sentence inside a bullet, and
+# declines mid-sentence "most" and "Mostly" (the \b).
+#
+# `ignorecase: false`, deliberately: sentence-initial position capitalises
+# the word, and a lowercase "most" is by construction mid-sentence.
+#
+# EXTENSION CLAIM: .md only -- same 2026-09-15 src/scripts measurement as
+# AudienceRoster.yml's header; the one code hit sits in a `//` line comment
+# no block scope reaches.
+#
+# CONFIDENT ZERO: two beyond the style-wide pair in AudienceRoster.yml's
+# header. A misspelled `scope:` selector is not an error -- the rule reports
+# nothing, with no diagnostic (prose.md's confident-zero list, entry 11).
+# And `nonword: true` is load-bearing: without it Vale wraps the token as
+# \b^Most\b, which can never match, and the rule is silently inert.
+extends: existence
+message: "A sentence fronted with '%s' asserts an unmeasured majority. Measure it and name which, or drop the census front (claim-discipline.md's bare-count family)."
+level: warning
+scope: sentence
+nonword: true
+ignorecase: false
+tokens:
+  - '^Most\b'

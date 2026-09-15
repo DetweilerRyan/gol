@@ -1,0 +1,40 @@
+# A prose surface must not name its own consumers. "The audience is X and Y"
+# is a caller roster in prose form -- claim-discipline.md's "Never enumerate
+# call sites", which nothing checks and every new consumer falsifies. Who
+# reads a file is a routing question, and CLAUDE.md's Documentation map is
+# its one home.
+#
+# Measured 2026-09-15 over the instruction corpus (.claude/agents/**,
+# .claude/skills/**, .claude/references/**, CLAUDE.md; *.meta.md exempt):
+# `audience is`, case-insensitive, hit 2 lines, both in CLAUDE.md. Neither is
+# a defect there: one is the routing entry the commit "references: remove the
+# audience roster from definition-of-ready" (3e0a897) kept as the roster's
+# one home, the other characterises a tier's reader without naming a
+# consumer. Zero hits on every enabled surface, so the rule lands with no
+# backlog. The known-bad form is the reference-tier roster that same commit
+# removed; the .bad fixture pins it.
+#
+# CLAUDE.md is therefore deliberately NOT enabled for this rule in .vale.ini
+# -- the sanctioned home would be the rule's only finding.
+#
+# The structured `**Audience:**` header the articles open with does not
+# match, deliberately: it is the house header convention, and it carries no
+# "is". The rule targets the prose-roster opener.
+#
+# EXTENSION CLAIM: .md only, the instruction surfaces. Measured 2026-09-15
+# over src/ and scripts/ comments: the Claim fingerprints hit nothing this
+# form could reach in a block comment, and the JsDoc block scopes never see
+# `//` lines, so claiming .ts/.tsx would buy nothing measurable. Re-ask when
+# a hover grows a consumer roster.
+#
+# CONFIDENT ZERO: this rule's zero is real only when the run was real. The
+# absent `vale` binary reports zero through prose-lint's pipeline exactly
+# like a clean tree; `npm run vale-fixture-check` is what fails loudly on the
+# missing binary. A misspelled per-rule key in .vale.ini enables nothing and
+# reports nothing (prose.md's confident-zero list, entry 10).
+extends: existence
+message: "'%s' opens a consumer roster. Who reads this file is a routing question CLAUDE.md answers (claim-discipline.md, 'Never enumerate call sites'). State the precondition for reading it instead."
+level: warning
+ignorecase: true
+tokens:
+  - audience is

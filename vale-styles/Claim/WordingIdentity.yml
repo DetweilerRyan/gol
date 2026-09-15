@@ -1,0 +1,38 @@
+# A claim that another file uses exactly these words -- "'full stop', in its
+# own words" -- is a wording-identity attribution. It rots the moment the
+# quoted file rewords, and nothing reports it: claim-discipline.md's "Cite a
+# test by what it guards, not by its quoted title", generalised past test
+# titles. State what the clause requires, or date the quotation as history.
+#
+# Measured 2026-09-15 over the instruction corpus (.claude/agents/**,
+# .claude/skills/**, .claude/references/**, CLAUDE.md; *.meta.md exempt):
+# 1 hit, orchestration.md's undated "in its own words" attribution of a
+# quoted phrase to another file's text -- the form this rule exists for, and
+# an article finding this repo routes to the orchestrating session rather
+# than fixing in a rule slice. Zero hits on every enabled surface.
+# .vale.ini switches this rule off by name for articles/ with that count
+# recorded beside the key.
+#
+# THIRD-PERSON ONLY, and that is the discriminator: `its`, `their`, `his`,
+# `her`, or a possessive-s noun before "own words". "Restate the rule in
+# your own words" is an instruction to the reader, claims nothing about
+# another file, and must not fire. RE2 has no lookbehind, so the exclusion
+# is written as an allowlist of third-person openers rather than a
+# second-person veto.
+#
+# EXTENSION CLAIM: .md only -- same 2026-09-15 src/scripts measurement and
+# the same reasoning as AudienceRoster.yml's header.
+#
+# CONFIDENT ZERO: same as AudienceRoster.yml's header -- an absent `vale`
+# binary or a misspelled per-rule key reports zero exactly like a clean
+# tree, and `npm run vale-fixture-check` is the loud failure for the first.
+#
+# The token is single-quoted so YAML does not process escapes -- prose.md's
+# `tokens:` rule.
+extends: existence
+message: "'%s' asserts another file's exact wording, which rots silently when that file rewords. State what the clause requires, or date the quotation as history (claim-discipline.md)."
+level: warning
+ignorecase: true
+nonword: true
+tokens:
+  - '(?:\w+[''’]s|its|their|his|her) own (?:words|phrase|phrasing)'
