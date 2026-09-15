@@ -1,65 +1,41 @@
 ---
-name: claim-audit-skill
-title: Flag claim-discipline violations — architect's Vale rules where deterministic, /claim-audit for the rest
+name: claim-discipline-remedies
+title: Claim-discipline remedies — the epic over the judged pass and the Claim style
 created: 2026-09-15
 ---
 
 ## Situation
 
-The claim rules are unmechanised by design — `claim-discipline.md` says a roster in free prose
-is not a syntactic pattern, and to apply the rules while writing rather than sweeping
-afterwards. Every mechanical gate can be green while a file violates them.
+An **index, not work** — split by the 2026-09-15 assessment's Epic ruling, human-agreed the
+same day. The claim rules are unmechanised by design, and the record holds three dated
+instances of the confident-green failure class: ten violations in `definition-of-ready.md` at
+authoring, the repair's own two banned sidecar pointers from a one-rulebook pass, and the
+`mutation-testing.meta.md` rot caught by a `hardener`'s care rather than any procedure.
 
 ## Complication
 
-Nothing makes that application a procedure, so it depends on recall under a green-gates halo,
-and the record now holds three instances. Measured 2026-09-15: a hand audit of
-`definition-of-ready.md` found ten violations in a file whose every gate was green at authoring,
-written by a seat that had skipped `claim-discipline.md`'s unconditional read. The same day, the
-audit's own repair introduced two sidecar pointers — the first shape on `prose.md`'s banned
-list — because it checked one rulebook and not the other. And the day's third catch, a rotted
-Vale premise in `mutation-testing.meta.md`, was found by a `hardener` reading carefully during
-an unrelated gate: luck, not procedure. The seat also has no prose reviewer, which
-`orchestrator-prose-has-no-reviewer.md` already records.
+The remedy was one candidate, and the assessment found two deliverables inside it: different
+owners, different landing constraints, different readiness. Its children score better apart —
+the judged pass waits on nothing and is authorable today; the Vale style opens with a corpus
+precision run and belongs to `architect`.
 
 ## Question
 
-What turns applying the claim rules into a procedure that runs every time prose lands, rather
-than recall the green gates quietly replace?
+In what order do the two children land, and what does each need that the other does not?
 
 ## Answer
 
-Shaped, not specified: two halves by mechanisability, one landing intent.
+The children, in order:
 
-`architect` authors a tracked `Claim` Vale style for the forms that leave phrase-level
-fingerprints — an audience roster tends to open "The audience is", a wording-identity
-attribution says "own words", an unmeasured census often fronts a sentence with "Most". Each
-rule clears `prose.md`'s rule-authoring discipline first: measured precision on the real corpus,
-dated; the rule and its findings' remediation as one piece of work; no tuning past arguable
-findings.
+1. **`claim-audit-skill.md`** — the judged pass alone, both rulebooks, no dependency on child 2.
+   It covers the whole surface interim, including what the style later mechanises.
+2. **`claim-vale-style.md`** — `architect` authors the tracked `Claim` style, corpus precision
+   run first, inside the slice per the rule-authoring discipline.
 
-A `/claim-audit` skill covers the unmechanisable remainder as a judged pass — fork context, no
-Write, self-invocable by the seat before landing prose. It reads **both rulebooks**,
-`claim-discipline.md` and `prose.md`'s instruction-versus-explanation split, then the target,
-and returns findings with the offending line quoted. The both-rulebooks requirement is measured,
-not preferred: the one-rulebook repair above is the instance.
-
-## No-gos
-
-- Not a reviewer. It narrows what a missing reviewer has to catch; the reviewer question stays
-  with `orchestrator-prose-has-no-reviewer.md`.
-- Nothing gates. Findings report and route; the prose surfaces stay advisory, per the standing
-  ruling on the board and the judged pass's own non-reproducibility.
+Each child deletes its own file on landing; this index is deleted when the last child lands or
+the epic is abandoned.
 
 ## Open questions
 
-- Which fingerprints survive the precision measurement? Sentence-initial "Most" is the shakiest
-  — it needs a corpus run before it is worth a fixture.
-- Do the two halves land as one slice or two? The Vale half drags its own landing constraint and
-  could trail the skill.
-- Which surfaces does the skill take by default — instruction files only, or every doc the
-  landing touches?
-- Should `/idea-promote` name a clean claim-audit as a precondition for the files a promotion
-  edits, or does that begin to gate the board?
-- Does the census-count question in `apply-the-census-count-rule-everywhere.md` absorb the count
-  fingerprint, leaving the style two rules rather than three?
+- None blocking child 1. The calibration record for this split is the promotion-era trace: the
+  judge's Epic ruling and the human agreement live in the board history of 2026-09-15.
