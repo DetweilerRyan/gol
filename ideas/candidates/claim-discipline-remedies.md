@@ -31,6 +31,9 @@ The children, in order:
    It covers the whole surface interim, including what the style later mechanises.
 2. **`claim-vale-style.md`** — `architect` authors the tracked `Claim` style, corpus precision
    run first, inside the slice per the rule-authoring discipline.
+3. **`vale-findings-reach-the-editing-agent.md`** — the write-time loop: a hook runs Vale on
+   edited instruction files and routes findings into child 1's skill, whichever agent edits.
+   Its route-to-skill half waits on child 1; its findings half could land earlier.
 
 Each child deletes its own file on landing; this index is deleted when the last child lands or
 the epic is abandoned.
