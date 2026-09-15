@@ -180,3 +180,32 @@ Three substantive changes rode with the renames:
 - **S's top anchor stopped rewarding a closed file set.** "Every path exists today" paid
   candidates to write contracts; the anchor now rewards a reach bounded tightly enough that a
   split would have nothing to separate.
+
+## The fitness-function precedent for checker-bearing T (2026-09-15)
+
+Researched at the user's direction after the letter review, asking what Testable looks like for
+an enabler in existing practice. Two precedents found:
+
+- **SAFe's enabler acceptance criteria** are lists of tool-checkable outcomes — builds passing,
+  coverage figures, a rollback tested — with the guidance that technical stories need more
+  precise criteria than user stories, not less. Confirms the column's direction; supplies no
+  ladder.
+- **Architectural fitness functions** (Ford, Parsons and Kua, _Building Evolutionary
+  Architectures_; Thoughtworks' fitness-function-driven development) — an objective, automated
+  assessment of an architectural characteristic, written the way TDD writes tests for features.
+  This repo's gating checkers, mutation floor, and ast-grep rules are all triggered, atomic
+  fitness functions in that taxonomy, and the checker-bearing T anchors were already a
+  fitness-function ladder without the name: name the check, its reading, the reading before and
+  after, prove it can fail.
+
+Two consequences were adopted the same day. The kind check's checker-bearing line carries the
+orientation label, matching the SAFe-labels pattern. And the anchor cells widened from
+"command" to "check": the taxonomy's triggered-versus-continual axis covers a finished state
+held by a standing measurement rather than a per-run command — this repo's render-perf stance
+(held by the architecture, measured when the orchestrating seat judges a slice perf-relevant)
+is the live instance.
+
+One confirmation worth recording: the top anchor's "names what would make the reading a
+confident zero" is independently required by the fitness-function literature — a check that
+cannot fail measures nothing — and is the same principle the repo's bad-fixture discipline
+enforces. House practice and published precedent converged on it separately.

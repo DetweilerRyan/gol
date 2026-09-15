@@ -18,7 +18,7 @@ Run this before the kind check; an exempt file never reaches it. Two classes are
 Ask first: would a `product` VERIFY pass have anything to observe?
 
 - **Contract-bearing** (SAFe: user story) — the finished state is reachable through the accessible tree. It gets Gherkin.
-- **Checker-bearing** (SAFe: architecture or infrastructure enabler) — the finished state is a command's output or exit code. VERIFY does not run.
+- **Checker-bearing** (SAFe: architecture or infrastructure enabler) — the finished state is a check's reading, usually a command's output or exit code. VERIFY does not run. Its acceptance criteria are fitness functions, in the evolutionary-architecture sense.
 - **Knowledge-bearing** (SAFe: exploration enabler) — a readiness spike. The finished state is a recorded answer to a named question.
 
 Score V and T against the kind's own column below. Never score a checker-bearing idea against user-visible value. An assessment record's kind row carries the label, so a reader oriented by SAFe never has to look the mapping up. Ruled by the user 2026-09-14.
@@ -98,13 +98,13 @@ Score each letter 1–5 against its anchor. Every level names what the file says
 
 **T — Testable**
 
-|     | Contract-bearing                                                                               | Checker-bearing                                               | Knowledge-bearing                                          |
-| --- | ---------------------------------------------------------------------------------------------- | ------------------------------------------------------------- | ---------------------------------------------------------- |
-| 1   | Names no finished state.                                                                       | Names no command.                                             | Names no question.                                         |
-| 2   | Finished state is internal only — a return value, a config key. Say which layer it belongs in. | Names a command, not its output.                              | Question named, answer shape unstated.                     |
-| 3   | User-visible state, no affordance named for reaching it.                                       | Names command and direction of change, no current reading.    | Names the question and what a checkable answer looks like. |
-| 4   | Names the state and its affordance, and the affordance exists in the accessible tree today.    | Names command, its reading today, and its reading afterwards. | As 3, and names the probe method.                          |
-| 5   | As 4, stated in domain words per `contract-mode.md`.                                           | As 4, and names what would make the reading a confident zero. | As 4, and says where the record will live.                 |
+|     | Contract-bearing                                                                               | Checker-bearing                                                 | Knowledge-bearing                                          |
+| --- | ---------------------------------------------------------------------------------------------- | --------------------------------------------------------------- | ---------------------------------------------------------- |
+| 1   | Names no finished state.                                                                       | Names no check.                                                 | Names no question.                                         |
+| 2   | Finished state is internal only — a return value, a config key. Say which layer it belongs in. | Names a check, not its reading.                                 | Question named, answer shape unstated.                     |
+| 3   | User-visible state, no affordance named for reaching it.                                       | Names the check and direction of change, no current reading.    | Names the question and what a checkable answer looks like. |
+| 4   | Names the state and its affordance, and the affordance exists in the accessible tree today.    | Names the check, its reading today, and its reading afterwards. | As 3, and names the probe method.                          |
+| 5   | As 4, stated in domain words per `contract-mode.md`.                                           | As 4, and names what would make the reading a confident zero.   | As 4, and says where the record will live.                 |
 
 ## What the number may do
 
