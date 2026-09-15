@@ -67,7 +67,10 @@ This repo grades nothing else on a scale. Four recorded precedents bound the des
    files, not for deciding blocks" — the license the design uses, and the source of the
    calibration threshold.
 
-Bounds A–E in the article are what those four jointly require. A composite total was designed
+Bounds A–E in the article are what those four jointly require. The unvalidated-first-life risk
+was ranked the strongest standing argument against having a scale at all; the ranking moved
+here 2026-09-15 on the prose-audit probe's finding, since it is an account rather than a
+constraint — the risk statement and bound E's expiry mechanism stay in the reference. A composite total was designed
 and rejected: six independent errors compounding into one unauditable ordering is precedent 3's
 exact shape.
 

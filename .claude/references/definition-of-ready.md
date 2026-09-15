@@ -18,7 +18,7 @@ Run this before the kind check; an exempt file never reaches it. Two classes are
 Ask first: would a `product` VERIFY pass have anything to observe?
 
 - **Contract-bearing** (SAFe: user story) — the finished state is reachable through the accessible tree. It gets Gherkin.
-- **Checker-bearing** (SAFe: architecture or infrastructure enabler) — the finished state is a check's reading, usually a command's output or exit code. VERIFY does not run. Its acceptance criteria are fitness functions, in the evolutionary-architecture sense.
+- **Checker-bearing** (SAFe: architecture or infrastructure enabler) — the finished state is a check's reading, usually a command's output or exit code. A VERIFY pass therefore has nothing to observe. Its acceptance criteria are fitness functions, in the evolutionary-architecture sense.
 - **Knowledge-bearing** (SAFe: exploration enabler) — a readiness spike. The finished state is a recorded answer to a named question.
 
 Score V and T against the kind's own column below. Never score a checker-bearing idea against user-visible value. An assessment record's kind row carries the label, so a reader oriented by SAFe never has to look the mapping up. Ruled by the user 2026-09-14.
@@ -138,7 +138,7 @@ Every assessment ends in exactly one. The disposition comes from the written fin
 - **N** — explore two approaches and return the comparison.
 - **E** — never spikes; an unbounded size is a writing task.
 
-**A readiness spike is a first-class slice.** It gets its own candidate file, branch, and `slice/` tag. Its file names the parent idea and the letters it intends to move. It closes by re-assessing the parent; throwaway artifacts go to `spikes/`, outside every gate. A spike that moves no letter is itself a finding — the letter was low for a reason the spike did not address. It is **not** `product`'s acceptance spike; `product.md` owns that term.
+**A readiness spike is a first-class slice.** It gets its own candidate file, branch, and `slice/` tag. Its file names the parent idea and the letters it intends to move. It closes by re-assessing the parent; throwaway artifacts go to `spikes/`. A spike that moves no letter is itself a finding — the letter was low for a reason the spike did not address. It is **not** `product`'s acceptance spike; `product.md` owns that term.
 
 ## The three layers, and what runs today
 
@@ -158,4 +158,4 @@ Declines keep the existing in-file practice: a dated `REFUTED` or `DECLINED` rec
 
 A calibration pass counts agreement per letter, never a total. Disposition agreement is primary; score delta says where the divergence sits. A letter below roughly two-in-three disposition agreement has wrong anchors. Run the pass at ten dispositions of any kind, or a full `todo/` turnover, and record the counts in the sidecar.
 
-**Stated risk:** dispositions accumulate slowly, so the scale may run unvalidated for months. That is the strongest standing argument against having one. Bound E above is what expires it honestly when the evidence arrives.
+**Stated risk:** dispositions accumulate slowly, so the scale may run unvalidated for months. Bound E above is what expires it honestly when the evidence arrives.
