@@ -18,8 +18,9 @@ Rules that bind the file:
 
 - Set `name` to the file's own basename, `title` to one imperative line, and `created` to today.
 - Do not add a `status:` field. The directory is the status.
-- Record the thought under Context as a problem, not a chosen solution.
-- A candidate may leave Sketch thin.
+- Put agreed facts under Situation and the need under Complication. State the need, never a chosen implementation.
+- Pose the core as one explicit Question. Subsidiary decisions go under Open questions, not there.
+- Answer is optional, and a raw candidate often has none. When present, keep it shaped, not specified — no file list.
 - Leave at least one line under Open questions. An idea with nothing there is usually under-examined rather than simple.
 - Date any measured claim. Write no second person.
 

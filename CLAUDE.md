@@ -295,7 +295,7 @@ That is why `coder` runs `npm run ast-grep` in its own workflow rather than wait
 - **`ideas/candidates/`** — raw and unjudged, no limit. An idea lands here the moment it is worth not forgetting.
 - **`ideas/todo/`** — examined, and concrete enough to hand to `product`. The orchestrating session owns this board: no role reads it, and an idea reaches `product` as prompt content rather than as a file path. Keep this to about three, matching the two-or-three concurrent-slice ceiling below. A `todo/` lane longer than the number of slices you can actually run is a candidates lane wearing a different hat. Promotion is assessed against `.claude/references/definition-of-ready.md` — advisory, since this board has no gate.
 
-`ideas/TEMPLATE.md` is the file shape: frontmatter (`name`, `title`, `created`) over Context / Sketch / Touches / Open questions.
+`ideas/TEMPLATE.md` is the file shape: frontmatter (`name`, `title`, `created`) over Situation / Complication / Question, an optional shaped Answer and No-gos, then Open questions.
 
 **There is deliberately no `doing/` or `done/` lane.** `git worktree list` already says what is in flight, and `git tag -l 'slice/*'` already lists what is finished. A lane duplicating either is a second source of truth that can disagree with the first.
 

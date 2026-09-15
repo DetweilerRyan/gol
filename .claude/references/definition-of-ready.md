@@ -54,7 +54,7 @@ Score each letter 1–5 against its anchor. Every level names what the file says
 | 2   | Depends on an unlanded slice that is at least on the board.              |
 | 3   | Names a dependency whose blocking status is asserted, not checked.       |
 | 4   | Names its dependencies, and each has landed or is demonstrably optional. |
-| 5   | States it waits on nothing, and Touches supports that.                   |
+| 5   | States it waits on nothing, and the stated reach supports that.          |
 
 **N — Negotiable**
 
@@ -136,7 +136,7 @@ Every assessment ends in exactly one. The disposition comes from the written fin
 - **S** — read the tree and return a file set.
 - **I** — check whether the named dependency actually blocks.
 - **N** — explore two approaches and return the comparison.
-- **E** — never spikes; an empty Touches is a writing task.
+- **E** — never spikes; an unbounded size is a writing task.
 
 **A readiness spike is a first-class slice.** It gets its own candidate file, branch, and `slice/` tag. Its file names the parent idea and the letters it intends to move. It closes by re-assessing the parent; throwaway artifacts go to `spikes/`, outside every gate. A spike that moves no letter is itself a finding — the letter was low for a reason the spike did not address. It is **not** `product`'s acceptance spike; `product.md` owns that term.
 

@@ -18,9 +18,10 @@ echo "$fm" | grep -q "^name: $base\$" || { echo "name: does not match basename '
 echo "$fm" | grep -q '^title: ..*' || { echo "title: missing or empty"; f=$((f+1)); }
 echo "$fm" | grep -Eq '^created: [0-9]{4}-[0-9]{2}-[0-9]{2}$' || { echo "created: not a YYYY-MM-DD date"; f=$((f+1)); }
 echo "$fm" | grep -q '^status:' && { echo "status: present -- the directory is the status"; f=$((f+1)); }
-for h in '## Touches' '## Open questions'; do
+if grep -q '^## Situation$' "$path"; then era=scqa; s1='## Question'; else era=legacy; s1='## Touches'; fi
+for h in "$s1" '## Open questions'; do
   grep -q "^$h\$" "$path" || { echo "section missing: $h"; f=$((f+1)); }
 done
-echo "lane $(basename "$(dirname "$path")"), $(wc -l < "$path" | tr -d ' ') lines, $(grep -ci 'depends on' "$path") depends-on mention(s)"
+echo "lane $(basename "$(dirname "$path")"), $era shape, $(wc -l < "$path" | tr -d ' ') lines, $(grep -ci 'depends on' "$path") depends-on mention(s)"
 echo "LAYER1 $path: 6 checks, $f findings"
 exit 0

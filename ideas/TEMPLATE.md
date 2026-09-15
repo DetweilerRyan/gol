@@ -4,23 +4,33 @@ title: One line, imperative, what the slice would deliver
 created: YYYY-MM-DD
 ---
 
-## Context
+## Situation
 
-Why this is worth doing — the problem or need, not the solution. If a slice
-already exposed this, say which one.
+What is true today that a reader already accepts. Ground it in the tree or a dated measurement,
+not in opinion.
 
-## Sketch
+## Complication
 
-Rough approach. A candidate may leave this thin; a todo should be concrete
-enough that `product` can write Gherkin from it without guessing.
+What changed, fails, or costs — the reason this file exists. State the need, never a chosen
+implementation.
 
-## Touches
+## Question
 
-Modules, config, or docs likely in scope. Enough to judge the slice's size —
-the design pass triggers in CLAUDE.md ("The optional architect design pass")
-are the checklist worth reading against.
+The one open question this idea poses. An explicit question is what keeps a candidate a proposal
+rather than a contract. Subsidiary decisions go under Open questions, not here.
+
+## Answer
+
+Optional, and a candidate may leave it out entirely. When present, keep it shaped, not
+specified: the approach at fat-marker altitude, never a file list. A todo-lane Answer should be
+concrete enough to hand to `product` without guessing.
+
+## No-gos
+
+Optional. What this idea deliberately does not cover, so a later reader does not re-propose the
+exclusion as scope.
 
 ## Open questions
 
-What needs deciding before implementation starts. An idea with nothing here is
-usually under-examined rather than simple.
+Subsidiary decisions to make before implementation starts. An idea with nothing here is usually
+under-examined rather than simple.

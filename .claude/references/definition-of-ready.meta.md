@@ -209,3 +209,43 @@ One confirmation worth recording: the top anchor's "names what would make the re
 confident zero" is independently required by the fitness-function literature — a check that
 cannot fail measures nothing — and is the same principle the repo's bad-fixture discipline
 enforces. House practice and published precedent converged on it separately.
+
+## The template reshape and its provenance (2026-09-15)
+
+<!-- reference-check: allow the-touches-section-fights-negotiable.md -- the slice deleted its own
+     idea file on landing, per the board's rule; this dated record legitimately names it -->
+
+`ideas/TEMPLATE.md` moved from Context / Sketch / Touches / Open questions to SCQA — Situation,
+Complication, Question, an optional shaped Answer, an optional No-gos, then Open questions. The
+slice was `the-touches-section-fights-negotiable`, whose idea file carried the research and was
+deleted on landing per the board's rule; this section preserves the evidence.
+
+**The conflict that forced it.** The old Touches prompt asked a raw candidate for a file set —
+a solution committed before any implementer looked, which the Negotiable predicate reads as a
+contract. The template rewarded on one section what the rubric penalised on another. Surfaced
+2026-09-15 while re-founding the Estimable predicate off the template.
+
+**Why SCQA.** Three facts: 22 of 61 board files had already drifted to SCQA openers (measured
+2026-09-13); the Question section is negotiability by shape — an explicit open question is a
+proposal; and the rubric's E and S had been re-founded off the template by name the same day,
+so the reshape cost the assessment machinery nothing.
+
+**The precedent research, condensed.** SCQA proper is Minto's Pyramid Principle structure with
+consulting pedigree and no found backlog-template precedent — the claim is transfer, not
+adoption. Shape Up's pitch (Problem, Appetite, Solution, Rabbit Holes, No-Gos) is the closest
+engineering cousin: its Appetite exists instead of an estimate, matching this rubric's
+Estimable ruling and Wake's retrospective independently. Two imports were taken: the
+shaped-not-specified register for the optional Answer, and No-gos as a named section the board
+already grew organically. One divergence is deliberate: Shape Up insists problem and solution
+travel together, and an optional Answer is more negotiable than it allows. Two tool
+comparisons were run and declined: a pitch-walker plugin (gates against the board's no-gate
+ruling; pitch directories against the name-is-identity chain) and Shape Up's author's own
+shaping skills (non-evaluative, no conflicts, named as the technique source for shaping-type
+spikes rather than adopted).
+
+**What moved with the template.** The assess skill's Layer 1 shell check became era-aware: a
+file opening with Situation is checked for Question and Open questions; a legacy file for
+Touches and Open questions — the sweep of the 60 legacy board files was ruled a no-go, so both
+shapes stay live. The capture skill's rules follow the new shape. Two residual section
+references in `definition-of-ready.md` were re-founded, and CLAUDE.md's file-shape line
+follows the template it describes.
