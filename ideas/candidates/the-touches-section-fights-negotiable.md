@@ -55,6 +55,17 @@ a size-clues prompt) stand only as fallbacks if the reshape stalls.
 - **One deliberate divergence to record.** Shape Up insists problem and solution travel
   together; SCQA with an optional Answer is more negotiable than Shape Up allows. Keeping the
   Answer optional is a stance beyond the precedent, not covered by it.
+- **Tooling prior art, compared 2026-09-15 and declined.** The `abreed05/claude-shapeup` plugin
+  walks a raw idea through the five pitch sections and hard-stops on discipline violations.
+  Declined for adoption on three grounds: it gates, and the board's no-gate ruling stands; its
+  pitch directories break the one-file, name-is-identity chain; and a marketplace plugin sits
+  outside every checker this repo's skills were deliberately brought inside. Two things worth
+  keeping from the comparison: its violation catalog maps letter-for-letter onto the readiness
+  predicates (solutioning-in-the-problem is N, vague-appetite is E's spirit), which confirms the
+  finding set independently; and its section-walking interaction is prior art for a capture-time
+  SCQA walk, if `/idea-capture` grows one with this reshape. `rjs/shaping-skills` — shaping and
+  breadboarding skills published by Shape Up's own author — is the primary source if the reshape
+  ever wants deeper shaping technique.
 
 ## Touches
 
