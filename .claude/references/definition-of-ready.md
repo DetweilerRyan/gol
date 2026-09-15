@@ -27,18 +27,18 @@ Score V and T against the kind's own column below. Never score a checker-bearing
 
 The letters keep INVEST as the mnemonic. Each predicate is phrased in this repo's own vocabulary, and none redefines a loaded term.
 
-| Letter | Name here              | Asks                                                                      |
-| ------ | ---------------------- | ------------------------------------------------------------------------- |
-| I      | **lands alone**        | Does the file name every slice it waits on, and has each of those landed? |
-| N      | **need, not solution** | Does Context state the problem rather than a chosen implementation?       |
-| V      | **worth doing**        | Per kind — see the anchor table.                                          |
-| E      | **size is judgeable**  | Is Touches populated enough to run the design-pass checklist at all?      |
-| S      | **split signal**       | What does that checklist return?                                          |
-| T      | **observability**      | How is the finished state checked?                                        |
+| Letter | INVEST name     | Asks                                                                                        |
+| ------ | --------------- | ------------------------------------------------------------------------------------------- |
+| I      | **Independent** | Does it land as one slice without waiting on another, and has each named dependency landed? |
+| N      | **Negotiable**  | Is the file a proposal rather than a contract — does the solution stay open?                |
+| V      | **Valuable**    | Is it worth doing? Per kind — see the anchor table.                                         |
+| E      | **Estimable**   | Can the size be bounded cheaply from what the file says, with the blocking unknowns named?  |
+| S      | **Small**       | Does it fit one slice? The design-pass checklist's return is the split signal.              |
+| T      | **Testable**    | How is the finished state checked, per kind?                                                |
 
-**T is Testable in the mnemonic only.** T never asks whether logic is extractable into a framework-free module — that question is `engineering.md`'s. A slice can score T=5 here and contain no extractable logic at all.
+**T is never `engineering.md`'s _independently testable_.** Extractability of logic is not a question this file asks. A slice can score T=5 and contain no extractable logic at all.
 
-**E is not an effort estimate.** This repo estimates effort nowhere, and E asks only whether Touches supports a size judgment. E and S are two questions: E asks whether the checklist can be run, S asks what it returns. An empty Touches scores E=1 and leaves S **unscorable** — the one place a letter declines, and the declination is the finding.
+**E is not an effort estimate.** This repo estimates effort nowhere; E asks whether the size can be bounded from what the file says, wherever it says it. E and S are two questions: E asks whether a bound exists, S asks what the bound trips. A file that bounds nothing scores E=1 and leaves S **unscorable** — the one place a letter declines, and the declination is the finding.
 
 **E, S and T cite rather than restate.** The checklist is CLAUDE.md's "The optional architect design pass". The contract questions are `contract-mode.md`'s. A second copy here would drift from its source.
 
@@ -46,7 +46,7 @@ The letters keep INVEST as the mnemonic. Each predicate is phrased in this repo'
 
 Score each letter 1–5 against its anchor. Every level names what the file says, so a reading is checkable against the file.
 
-**I — lands alone**
+**I — Independent**
 
 |     |                                                                          |
 | --- | ------------------------------------------------------------------------ |
@@ -56,17 +56,17 @@ Score each letter 1–5 against its anchor. Every level names what the file says
 | 4   | Names its dependencies, and each has landed or is demonstrably optional. |
 | 5   | States it waits on nothing, and Touches supports that.                   |
 
-**N — need, not solution**
+**N — Negotiable**
 
-|     |                                                                            |
-| --- | -------------------------------------------------------------------------- |
-| 1   | Context is a chosen implementation with no stated problem.                 |
-| 2   | Context names a solution and gestures at a problem.                        |
-| 3   | Problem and solution are both present and entangled.                       |
-| 4   | Context states the problem; the solution stays in Sketch.                  |
-| 5   | As 4, and Context says what closing it as not-worth-doing would look like. |
+|     |                                                                         |
+| --- | ----------------------------------------------------------------------- |
+| 1   | The file is a chosen implementation with no stated problem.             |
+| 2   | Names a solution and gestures at a problem.                             |
+| 3   | Problem and solution both present; the solution reads as decided.       |
+| 4   | States the need; the solution is offered as open rather than committed. |
+| 5   | As 4, and says what would rule the idea out on its own terms.           |
 
-**V — worth doing**
+**V — Valuable**
 
 |     | Contract-bearing              | Checker-bearing                                                   | Knowledge-bearing                                      |
 | --- | ----------------------------- | ----------------------------------------------------------------- | ------------------------------------------------------ |
@@ -76,27 +76,27 @@ Score each letter 1–5 against its anchor. Every level names what the file says
 | 4   | As 3, with the cost stated.   | As 3, with a live instance cited.                                 | As 3, and says what each answer would change.          |
 | 5   | As 4, dated and measured.     | As 4, dated and measured.                                         | As 4, and the parent idea's blocked letters are named. |
 
-**E — size is judgeable**
+**E — Estimable**
 
-|     |                                                               |
-| --- | ------------------------------------------------------------- |
-| 1   | Touches is absent or empty. S is unscorable.                  |
-| 2   | Touches names areas, not files or modules.                    |
-| 3   | Touches names modules; config and docs reach is unstated.     |
-| 4   | Touches names files and modules, enough to run the checklist. |
-| 5   | As 4, and names which checklist triggers it expects to trip.  |
+|     |                                                                          |
+| --- | ------------------------------------------------------------------------ |
+| 1   | Nothing in the file bounds the size. S is unscorable.                    |
+| 2   | Names areas, not surfaces — the bound is a gesture.                      |
+| 3   | Bounds the reach in modules or surfaces; config and docs reach unstated. |
+| 4   | Bounds the size well enough to run the design-pass checklist.            |
+| 5   | As 4, and names the unknowns that could move the bound.                  |
 
-**S — split signal**
+**S — Small**
 
-|     |                                                                                                        |
-| --- | ------------------------------------------------------------------------------------------------------ |
-| 1   | An index or epic: Touches names more than one slice's work with no ordering. Route to a split.         |
-| 2   | Touches trips two or more design-pass triggers, and no ordering of behavior-preserving steps is named. |
-| 3   | Touches trips exactly one trigger, and the file names which.                                           |
-| 4   | Touches trips no trigger.                                                                              |
-| 5   | As 4, and the file set is closed: every path exists today, or the file says why a new one is needed.   |
+|     |                                                                                                          |
+| --- | -------------------------------------------------------------------------------------------------------- |
+| 1   | An index or epic: the stated reach spans more than one slice's work with no ordering. Route to a split.  |
+| 2   | The reach trips two or more design-pass triggers, and no ordering of behavior-preserving steps is named. |
+| 3   | Trips exactly one trigger, and the file names which.                                                     |
+| 4   | Trips no trigger.                                                                                        |
+| 5   | As 4, and the reach is bounded tightly enough that a split would have nothing to separate.               |
 
-**T — observability**
+**T — Testable**
 
 |     | Contract-bearing                                                                               | Checker-bearing                                               | Knowledge-bearing                                          |
 | --- | ---------------------------------------------------------------------------------------------- | ------------------------------------------------------------- | ---------------------------------------------------------- |

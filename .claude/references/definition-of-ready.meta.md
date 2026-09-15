@@ -45,11 +45,11 @@ Words this repo had already defined, which the article therefore avoids or discl
 | ----------- | ----------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------- |
 | altitude    | Gherkin domain register (mechanised in `.gherkin-lintrc`); JSDoc register           | never used                                                                                                                                     |
 | observable  | reachable through the accessible tree                                               | reused in exactly that sense                                                                                                                   |
-| testable    | "independently testable": pure logic extractable into a framework-free module       | T disclaims it by name                                                                                                                         |
-| independent | independently-testable logic; `product` VERIFY as independent gate                  | I renamed "lands alone"                                                                                                                        |
+| testable    | "independently testable": pure logic extractable into a framework-free module       | T keeps the INVEST name; the collision is disclaimed in the letter’s own line (ruled 2026-09-15)                                               |
+| independent | independently-testable logic; `product` VERIFY as independent gate                  | I keeps the INVEST name; both taken senses are compounds, so bare "Independent" reads cleanly (ruled 2026-09-15)                               |
 | scope       | a file set, or a claim's validity range                                             | never used for breadth                                                                                                                         |
-| estimable   | absent — this repo does no effort estimation                                        | E disclaims it by name                                                                                                                         |
-| worth doing | `TEMPLATE.md`'s own value phrase                                                    | V adopts it                                                                                                                                    |
+| estimable   | absent — this repo does no effort estimation                                        | E keeps the INVEST name with the not-an-effort-estimate disclaimer; predicate re-founded off the template (ruled 2026-09-15)                   |
+| worth doing | `TEMPLATE.md`'s own value phrase                                                    | lives in V’s anchors and the decline disposition, not in name position (ruled 2026-09-15)                                                      |
 | spike       | `product`'s acceptance spike; `spikes/` throwaway work                              | readiness spike disclaims the former, matches the latter                                                                                       |
 | epic        | `scripts-boundary.md`: "an epic is neither; this sits in `candidates/` as an index" | adopted whole                                                                                                                                  |
 | ready       | `hardener`'s "ready for final verification"; `product`'s "scenarios are ready"      | disposition name, and since the 2026-09-15 rename the filename too — the collision moved from avoidance to a disclaimer at the definition site |
@@ -154,3 +154,29 @@ INVEST as the foundation matrix, and readiness as the team's standing to push ba
 ill-defined work — which is what the four dispositions mechanise. Definition of Done is the exit
 checklist in that vocabulary; this repo's is `hardener`'s stages plus the merge protocol, and it
 is not this file's subject.
+
+## The letter-name review (2026-09-15)
+
+Ruled by the user, one letter at a time: every letter keeps its INVEST name. The adapted names
+the rubric shipped with ("lands alone", "need, not solution", "worth doing", "size is
+judgeable", "split signal", "observability") demote into the predicates and anchors, where the
+operational tests survive unchanged. The pattern is the same one the file's own rename set:
+standard vocabulary primary, collisions disclaimed at the definition site rather than avoided.
+
+Three substantive changes rode with the renames:
+
+- **N re-anchored to INVEST proper.** The letter now asks whether the file is a proposal rather
+  than a contract; need-versus-solution is the observable evidence, not the definition. Directed
+  by the user with the instruction to be accurate to INVEST, not to `TEMPLATE.md`.
+- **E re-founded off the template.** The old predicate read a named template section, and that
+  coupling had two defects: it dangles if the template reshapes, and the section it leaned on
+  rewards the pre-negotiated file set N penalises (captured as
+  `the-touches-section-fights-negotiable.md`). E now asks whether size can be bounded from what
+  the file says, wherever it says it. Bill Wake's own retrospective was researched first: he
+  calls Estimable the most-abused letter and would re-pick "E = External" — declined here as a
+  duplicate of V, since his External derives from his Valuable discussion and this rubric's
+  per-kind V columns already point value outside the work (xp123.com, "Estimable Stories in the
+  INVEST Model").
+- **S's top anchor stopped rewarding a closed file set.** "Every path exists today" paid
+  candidates to write contracts; the anchor now rewards a reach bounded tightly enough that a
+  split would have nothing to separate.
