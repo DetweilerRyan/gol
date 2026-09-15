@@ -6,7 +6,7 @@ created: 2026-09-14
 
 ## Context
 
-A readiness spike, ruled 2026-09-14 under `backlog-readiness.md`'s first run. Parent idea:
+A readiness spike, ruled 2026-09-14 under `definition-of-ready.md`'s first run. Parent idea:
 `architect-designs-for-parallelism.md`, targeting its V and I letters.
 
 The parent's own first open question concedes its premise may be capped by something no module

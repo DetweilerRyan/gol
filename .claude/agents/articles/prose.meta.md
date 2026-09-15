@@ -1405,11 +1405,11 @@ the landing count). A rule with a measured zero-finding corpus lands on both lan
 remediation, so the landing constraint is satisfied by measurement rather than by scoping.
 
 The rule reports through `npm run prose-lint`, which never fails on a finding. The board stays
-ungated, per the user's 2026-09-13 ruling recorded in `backlog-readiness.md`.
+ungated, per the user's 2026-09-13 ruling recorded in `definition-of-ready.md`.
 
 ## Why `.claude/references/**` got its own `.vale.ini` section (2026-09-15)
 
-The tier was created by moving the backlog-readiness pair out of `articles/`, and the move took
+The tier was created by moving the definition-of-ready pair out of `articles/`, and the move took
 the pair out of `[.claude/agents/**/*.md]`'s glob — the same no-matching-section zero the skills
 surface had, measured there 2026-09-13. The section landed in the same commit sequence as the
 move for the same reason as before: in either order, one side is a confident zero. The rule

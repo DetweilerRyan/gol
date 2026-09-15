@@ -1,7 +1,8 @@
-# backlog-readiness.meta.md
+# definition-of-ready.meta.md
 
-Evidence and provenance behind `backlog-readiness.md`. Nothing here is instruction; read the
-article to act.
+Evidence and provenance behind `definition-of-ready.md`, named for the Agile Alliance glossary
+term since 2026-09-15 — the ruling is recorded at the end of this file. Nothing here is
+instruction; read the reference to act.
 
 ## Provenance (researched 2026-09-13)
 
@@ -40,18 +41,18 @@ board, which is what made the discriminator mandatory rather than decorative.
 
 Words this repo had already defined, which the article therefore avoids or disclaims:
 
-| Term        | Taken meaning here                                                                  | Rubric's move                                            |
-| ----------- | ----------------------------------------------------------------------------------- | -------------------------------------------------------- |
-| altitude    | Gherkin domain register (mechanised in `.gherkin-lintrc`); JSDoc register           | never used                                               |
-| observable  | reachable through the accessible tree                                               | reused in exactly that sense                             |
-| testable    | "independently testable": pure logic extractable into a framework-free module       | T disclaims it by name                                   |
-| independent | independently-testable logic; `product` VERIFY as independent gate                  | I renamed "lands alone"                                  |
-| scope       | a file set, or a claim's validity range                                             | never used for breadth                                   |
-| estimable   | absent — this repo does no effort estimation                                        | E disclaims it by name                                   |
-| worth doing | `TEMPLATE.md`'s own value phrase                                                    | V adopts it                                              |
-| spike       | `product`'s acceptance spike; `spikes/` throwaway work                              | readiness spike disclaims the former, matches the latter |
-| epic        | `scripts-boundary.md`: "an epic is neither; this sits in `candidates/` as an index" | adopted whole                                            |
-| ready       | `hardener`'s "ready for final verification"; `product`'s "scenarios are ready"      | used only as a disposition name                          |
+| Term        | Taken meaning here                                                                  | Rubric's move                                                                                                                                  |
+| ----------- | ----------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------- |
+| altitude    | Gherkin domain register (mechanised in `.gherkin-lintrc`); JSDoc register           | never used                                                                                                                                     |
+| observable  | reachable through the accessible tree                                               | reused in exactly that sense                                                                                                                   |
+| testable    | "independently testable": pure logic extractable into a framework-free module       | T disclaims it by name                                                                                                                         |
+| independent | independently-testable logic; `product` VERIFY as independent gate                  | I renamed "lands alone"                                                                                                                        |
+| scope       | a file set, or a claim's validity range                                             | never used for breadth                                                                                                                         |
+| estimable   | absent — this repo does no effort estimation                                        | E disclaims it by name                                                                                                                         |
+| worth doing | `TEMPLATE.md`'s own value phrase                                                    | V adopts it                                                                                                                                    |
+| spike       | `product`'s acceptance spike; `spikes/` throwaway work                              | readiness spike disclaims the former, matches the latter                                                                                       |
+| epic        | `scripts-boundary.md`: "an epic is neither; this sits in `candidates/` as an index" | adopted whole                                                                                                                                  |
+| ready       | `hardener`'s "ready for final verification"; `product`'s "scenarios are ready"      | disposition name, and since the 2026-09-15 rename the filename too — the collision moved from avoidance to a disclaimer at the definition site |
 
 ## Why the score ranks and never decides
 
@@ -140,3 +141,16 @@ One observation from the ruling: the records named the kinds in house vocabulary
 "enabler", although all three are enablers in SAFe's terms. The mapping sits in this sidecar by
 design, but the reader had to look it up. Whether every record's kind row should carry the
 one-line SAFe orientation is an open article question for the user.
+
+## The rename to the glossary term (2026-09-15)
+
+Ruled by the user: use Agile Alliance glossary vocabulary when possible
+(agilealliance.org/agile101/agile-glossary/). The pair was filed as a house coinage to keep the
+loaded word "ready" out of a filename; the user reaffirmed the glossary direction after hearing
+that argument, so the protection inverted — the glossary name stands, and the reference's header
+now disclaims the repo's other senses of "ready" at the definition site. The glossary's own DoR
+entry (agilealliance.org/glossary/definition-of-ready) matches this file's shape on two points:
+INVEST as the foundation matrix, and readiness as the team's standing to push back on
+ill-defined work — which is what the four dispositions mechanise. Definition of Done is the exit
+checklist in that vocabulary; this repo's is `hardener`'s stages plus the merge protocol, and it
+is not this file's subject.

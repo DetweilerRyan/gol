@@ -27,6 +27,6 @@ The commit body carries **two records, in this order**:
 - The judge's six letters, verbatim from the assessment — each score with its finding text. Never edit this half after the fact.
 - The human's ruling, per letter: agree, or differ with the reason.
 
-A number never travels without its finding text, and the body carries no total. `backlog-readiness.md` says why the order matters: the judge's half written first is what keeps the human label uncontaminated for calibration.
+A number never travels without its finding text, and the body carries no total. `definition-of-ready.md` says why the order matters: the judge's half written first is what keeps the human label uncontaminated for calibration.
 
 Report the commit hash and the new path.

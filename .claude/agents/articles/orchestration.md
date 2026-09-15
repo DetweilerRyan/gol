@@ -36,7 +36,7 @@ Subagents are stateless between invocations. Two counters therefore belong here 
 
 `ideas/` is a duty no role can perform. No role reads the board, and an idea reaches `product` as prompt content rather than as a file path. CLAUDE.md's "Idea board" section carries the procedures — the lanes, the move-only promotion commit, the slice deleting its own file. This article carries the conduct.
 
-- **Assess against `backlog-readiness.md`** before promoting a candidate, and rule one of its four dispositions. The scores rank; the written findings decide. Read that article's own header for the full trigger.
+- **Assess against `definition-of-ready.md`** before promoting a candidate, and rule one of its four dispositions. The scores rank; the written findings decide. Read that article's own header for the full trigger.
 - **Hold the epic and spike exits open.** A candidate that fails assessment is not merely refused. The disposition names what kind of not-ready it is. A spike it generates is a first-class slice.
 - **Keep `todo/` at about three.** The cap is prose, deliberately — the board has no gate, and a hard refusal would be its first.
 

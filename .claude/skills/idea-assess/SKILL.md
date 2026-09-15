@@ -21,7 +21,7 @@ Layer 1 ran before this text reached you. Its output:
 
 Then:
 
-1. Read `.claude/references/backlog-readiness.md` in full.
+1. Read `.claude/references/definition-of-ready.md` in full.
 2. Read the target file in full.
 3. Apply the article: questions 0a and 0b, then the six letters.
 4. Rule exactly one disposition.

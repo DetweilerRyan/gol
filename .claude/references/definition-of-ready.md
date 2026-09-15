@@ -1,10 +1,10 @@
-# Backlog readiness
+# Definition of Ready
 
 **Read before assessing a candidate, promoting an idea, or ruling a disposition on the board.** The audience is the orchestrating seat and the `idea-*` skills. No role reads the board, and no role file names this reference.
 
-Promotion from `ideas/candidates/` to `ideas/todo/` is this repo's Definition of Ready. This article carries the assessment: two pre-questions, six predicates, anchored scores, and four dispositions.
+Promotion from `ideas/candidates/` to `ideas/todo/` is this repo's Definition of Ready, in the Agile Alliance glossary sense. Assessing a candidate is the board's backlog refinement, in the same vocabulary. This file carries the assessment: two pre-questions, six predicates, anchored scores, and four dispositions. The word "ready" elsewhere in this repo names other things — a slice ready for final verification, a scenario ready for `coder` — and neither is this subject.
 
-**Nothing here gates.** Ruled by the user 2026-09-13: CLAUDE.md's decision that `ideas/` has no gate stands unreversed. Every check reports, and none can fail anything. `backlog-readiness.meta.md` carries the ruling's account and every measurement behind this article.
+**Nothing here gates.** Ruled by the user 2026-09-13: CLAUDE.md's decision that `ideas/` has no gate stands unreversed. Every check reports, and none can fail anything. `definition-of-ready.meta.md` carries the ruling's account and every measurement behind this article.
 
 ## Question 0a — which kind is this?
 

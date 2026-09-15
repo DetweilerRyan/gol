@@ -38,7 +38,7 @@ Ten are topic articles, read on the trigger each one names in its own header:
 
 **One tier sits outside `agents/` because its consumers span tiers: `.claude/references/`.** A file lands there when skills, roles, and the orchestrating seat may all name it as a read trigger. An article's audience is roles and the seat; a skill's supporting file belongs to that skill alone. The pair convention carries over unchanged: `<name>.md` is the instruction half, `<name>.meta.md` the evidence half, and every `*.meta.md` exemption applies. One entry today:
 
-- **`.claude/references/backlog-readiness.md`** — the idea board's readiness assessment: the kind discriminator, the six anchored predicates, the four dispositions, and the calibration record. Its sidecar carries the provenance, the vocabulary-collision census, and the rejected alternatives. The audience is the orchestrating seat and the three `idea-*` skills — no role reads the board. Read before assessing a candidate, promoting an idea, or ruling a disposition.
+- **`.claude/references/definition-of-ready.md`** — the idea board's readiness assessment: the kind discriminator, the six anchored predicates, the four dispositions, and the calibration record. Its sidecar carries the provenance, the vocabulary-collision census, and the rejected alternatives. The audience is the orchestrating seat and the three `idea-*` skills — no role reads the board. Read before assessing a candidate, promoting an idea, or ruling a disposition.
 
 **Which files have a sidecar today, and nothing checks this list.** A sidecar is named `<name>.meta.md` and sits beside its instruction file, except where a checker's path glob forces it elsewhere. No role file names one as a read trigger. **This is the index of which pairs exist. It does not say what fills them** — that is `.claude/agents/articles/prose.md`'s question, under "Instruction stays. Explanation moves.", and no line here should begin to answer it.
 
@@ -290,10 +290,10 @@ That is why `coder` runs `npm run ast-grep` in its own workflow rather than wait
 
 ## Idea board
 
-`ideas/` is a two-lane kanban of slices not yet started — one Markdown file per idea, and the lane is the directory:
+`ideas/` is a two-lane kanban of slices not yet started — one Markdown file per idea, and the lane is the directory. It is the product backlog, in Agile Alliance terms:
 
 - **`ideas/candidates/`** — raw and unjudged, no limit. An idea lands here the moment it is worth not forgetting.
-- **`ideas/todo/`** — examined, and concrete enough to hand to `product`. The orchestrating session owns this board: no role reads it, and an idea reaches `product` as prompt content rather than as a file path. Keep this to about three, matching the two-or-three concurrent-slice ceiling below. A `todo/` lane longer than the number of slices you can actually run is a candidates lane wearing a different hat. Promotion is assessed against `.claude/references/backlog-readiness.md` — advisory, since this board has no gate.
+- **`ideas/todo/`** — examined, and concrete enough to hand to `product`. The orchestrating session owns this board: no role reads it, and an idea reaches `product` as prompt content rather than as a file path. Keep this to about three, matching the two-or-three concurrent-slice ceiling below. A `todo/` lane longer than the number of slices you can actually run is a candidates lane wearing a different hat. Promotion is assessed against `.claude/references/definition-of-ready.md` — advisory, since this board has no gate.
 
 `ideas/TEMPLATE.md` is the file shape: frontmatter (`name`, `title`, `created`) over Context / Sketch / Touches / Open questions.
 
@@ -307,7 +307,7 @@ Two rules keep the board honest:
 
   Git records a move made in its own commit as a rename, and the history survives. It records a move plus a rewrite as delete-plus-add, and the history does not. `CLAUDE.meta.md` carries the similarity scores. (You need `--follow` to read across the move either way; a plain `git log -- ideas/todo/<name>.md` starts at the promotion regardless.)
 
-  The move commit's body carries the promotion's two records, in order: the judge's assessment, then the human's per-letter ruling. `.claude/references/backlog-readiness.md` states the record shapes and why the order matters. `/idea-promote` executes this whole bullet.
+  The move commit's body carries the promotion's two records, in order: the judge's assessment, then the human's per-letter ruling. `.claude/references/definition-of-ready.md` states the record shapes and why the order matters. `/idea-promote` executes this whole bullet.
 
 - **The slice deletes its own idea file.** Run `git rm ideas/todo/<name>.md` as part of the slice's work. The deletion then lands on the branch alongside the change it describes. The `slice/<name>` tag in merge-protocol step 6 then marks a tree that no longer carries it. The tag is the permanent record and carries its own message. A file left behind becomes a third lane nobody maintains.
 
