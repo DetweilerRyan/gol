@@ -27,7 +27,16 @@ for any Vale rule to exist?
 A `/prose-audit` skill on the `/idea-assess` shape: fork context, no Write, self-invocable by
 the seat before landing prose. It reads **both rulebooks** — `claim-discipline.md` and
 `prose.md`'s instruction-versus-explanation split — then the target, and returns findings with
-the offending line quoted. Shaped, not specified; the skill's own rules follow at authoring.
+the offending line quoted. Shaped, not specified; the skill's own rules follow at authoring,
+and two acceptance facts bind that authoring:
+
+- **The known-bad probe exists in history.** The reference between the 2026-09-15 repair and
+  the pointer strip — retrievable as the file `definition-of-ready.md` at the repair commit,
+  `git show caea56f` — carries the three sidecar-pointer lines the strip removed. The skill is
+  not done until a run over that state quotes them.
+- **A run must prove both rulebooks loaded.** A pass that read neither reports clean exactly
+  like a clean file, so the record carries proof of the load, and the caller treats a record
+  without it as not-run — the same guard the assessment skill's own injection line carries.
 
 ## No-gos
 
