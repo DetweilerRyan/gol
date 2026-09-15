@@ -26,7 +26,7 @@ into the fix procedure — regardless of which agent made the edit?
 
 Shaped, not specified. A `PostToolUse` hook on Write and Edit over the instruction surfaces
 runs Vale on the edited file with the repo config. On findings, the hook's output names them
-and directs the acting agent to load the claim-audit skill (child 1) and fix before proceeding.
+and directs the acting agent to load the prose-audit skill (child 1) and fix before proceeding.
 Advisory by the event's own mechanics — `PostToolUse` cannot block. A missing Vale binary is
 reported loudly as not-run, never read as clean; the probe discipline `prose-lint` carries is
 the model.

@@ -116,8 +116,9 @@ sections, wording-identity attributions — in a file authored by this seat days
 record: the seat skipped `claim-discipline.md`'s unconditional read, and the write-lint-fix loop
 trained attention on the mechanical subset, which is exactly the halo this file's Context
 predicts. The remedy was filed the same day and folded into one candidate on the
-user's direction: `claim-audit-skill.md` — architect-authored Vale rules for the lintable
-minority, a judged `/claim-audit` pass for the rest. It is not a reviewer; it narrows what a
+user's direction: the claim-discipline remedies epic — architect-authored Vale rules for the
+lintable minority, a judged `/prose-audit` pass for the rest (renamed from claim-audit
+2026-09-15; the epic split the halves the same day). It is not a reviewer; it narrows what a
 missing reviewer has to catch.
 
 ## Open questions

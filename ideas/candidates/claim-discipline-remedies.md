@@ -27,7 +27,7 @@ In what order do the two children land, and what does each need that the other d
 
 The children, in order:
 
-1. **`claim-audit-skill.md`** — the judged pass alone, both rulebooks, no dependency on child 2.
+1. **`prose-audit-skill.md`** — the judged pass alone, both rulebooks, no dependency on child 2.
    It covers the whole surface interim, including what the style later mechanises.
 2. **`claim-vale-style.md`** — `architect` authors the tracked `Claim` style, corpus precision
    run first, inside the slice per the rule-authoring discipline.

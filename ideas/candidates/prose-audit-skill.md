@@ -1,6 +1,6 @@
 ---
-name: claim-audit-skill
-title: Add /claim-audit — the judged pass over both prose rulebooks, as a named procedure
+name: prose-audit-skill
+title: Add /prose-audit — the judged pass over both prose rulebooks, as a named procedure
 created: 2026-09-15
 ---
 
@@ -24,7 +24,7 @@ for any Vale rule to exist?
 
 ## Answer
 
-A `/claim-audit` skill on the `/idea-assess` shape: fork context, no Write, self-invocable by
+A `/prose-audit` skill on the `/idea-assess` shape: fork context, no Write, self-invocable by
 the seat before landing prose. It reads **both rulebooks** — `claim-discipline.md` and
 `prose.md`'s instruction-versus-explanation split — then the target, and returns findings with
 the offending line quoted. Shaped, not specified; the skill's own rules follow at authoring.
@@ -39,5 +39,5 @@ the offending line quoted. Shaped, not specified; the skill's own rules follow a
 ## Open questions
 
 - Which surfaces by default — instruction files only, or every doc the landing touches?
-- Should `/idea-promote` name a clean claim-audit as a precondition for the files a promotion
+- Should `/idea-promote` name a clean prose-audit as a precondition for the files a promotion
   edits, or does that begin to gate the board?
