@@ -76,7 +76,7 @@ Run each fault once yourself before handing the battery over. That is the only t
   - **DESIGN** — set the tag vocabulary the slice writes to. The block-tag table is **closed** (`@example`, `@param`, `@returns`, `@throws`, `@see`); amending it is your ruling and needs a measured rendering attached.
   - **Both passes: hover before `Read`.** A hover that did not suffice is a finding you dispose of, not one you route on.
 - **Ruling a mutation survivor equivalent is yours**, and no other role may close that question. Anyone else who believes a survivor is equivalent reports it to you. **Read `.claude/agents/articles/mutation-testing.md` before making the ruling**, which also governs when `it.skipIf('__stryker__' in globalThis)` is an accepted idiom.
-- **`vale-styles/JsDoc/**`, `vale-styles/Instruction/**` and `vale-styles/fixtures/**` are yours.** You are the only role that authors or changes a rule in those styles, and that binds the orchestrating session too, which is not a role. Every other role reads the output and reports tensions to you.
+- **Every tracked style under `vale-styles/**` is yours, fixtures included.** You are the only role that authors or changes a rule there, and that binds the orchestrating session too, which is not a role. Every other role reads the output and reports tensions to you.
 
   - **A rule change never carries an edit to the role file or article it polices** — report that as a finding.
   - A rule ships a `<Rule>.bad.*` fixture that fires exactly it and a `<Rule>.good.*` that stays silent, **for every extension it claims**.
