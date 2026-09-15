@@ -115,9 +115,10 @@ sections, wording-identity attributions — in a file authored by this seat days
 `prose-lint`, `reference-check` and `agent-doc-check` all clean at landing. Two causes on the
 record: the seat skipped `claim-discipline.md`'s unconditional read, and the write-lint-fix loop
 trained attention on the mechanical subset, which is exactly the halo this file's Context
-predicts. Two remedies were filed the same day as siblings: `claim-audit-skill.md` (the judged
-pass as a named procedure) and `vale-claim-style.md` (phrase rules for the lintable minority).
-Neither is a reviewer; both narrow what a missing reviewer has to catch.
+predicts. The remedy was filed the same day and folded into one candidate on the
+user's direction: `claim-audit-skill.md` — architect-authored Vale rules for the lintable
+minority, a judged `/claim-audit` pass for the rest. It is not a reviewer; it narrows what a
+missing reviewer has to catch.
 
 ## Open questions
 
