@@ -36,6 +36,26 @@ Sketch, with Open questions kept for subsidiary decisions. Three facts back the 
 The earlier directions (reword the prompt toward reach; make the section optional below `todo/`;
 a size-clues prompt) stand only as fallbacks if the reshape stalls.
 
+### Precedent, researched 2026-09-15
+
+- **SCQA proper is Minto's Pyramid Principle structure**, built for memos and executive
+  summaries. No external precedent was found for SCQA as a backlog-item template, so the honest
+  claim is transfer, not adoption: the external pedigree covers the communication shape, and the
+  backlog application's precedent is this board's own drift.
+- **Shape Up's pitch is the closest engineering-native cousin** — Problem, Appetite, Solution,
+  Rabbit Holes, No-Gos, decided at a betting table. Problem maps to Situation plus Complication,
+  Rabbit Holes to Open questions, the betting table to promotion. Its Appetite exists explicitly
+  instead of an estimate — the same stance the Definition of Ready's Estimable ruling and Wake's
+  retrospective took independently.
+- **Two imports worth taking.** The solution register: Shape Up's Solution is shaped, not
+  specified — rough, right-altitude, no file-set commitment — which is what an optional Answer
+  section should ask for, and how the board's existing Answer sections already behave. And
+  No-Gos: an explicit exclusions section the board already grows organically ("What this epic
+  does not claim"); the reshape can name what practice invented.
+- **One deliberate divergence to record.** Shape Up insists problem and solution travel
+  together; SCQA with an optional Answer is more negotiable than Shape Up allows. Keeping the
+  Answer optional is a stance beyond the precedent, not covered by it.
+
 ## Touches
 
 - `ideas/TEMPLATE.md`
