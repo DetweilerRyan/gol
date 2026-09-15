@@ -1414,3 +1414,21 @@ the pair out of `[.claude/agents/**/*.md]`'s glob — the same no-matching-secti
 surface had, measured there 2026-09-13. The section landed in the same commit sequence as the
 move for the same reason as before: in either order, one side is a confident zero. The rule
 treatment and the Instruction measurement are in the section's own header.
+
+## The Claim style's precision run (2026-09-15)
+
+Measured by `architect` at authoring, corpus = the instruction surfaces (`.claude/agents/**`,
+`.claude/skills/**`, `.claude/references/**`, `CLAUDE.md`), `*.meta.md` excluded. All three
+fingerprints survived; the per-rule headers duplicate these counts.
+
+| fingerprint                              | hits              | true | arguable | false                   | ruling                                                                      |
+| ---------------------------------------- | ----------------- | ---- | -------- | ----------------------- | --------------------------------------------------------------------------- |
+| "audience is" (case-insensitive)         | 2, both CLAUDE.md | 0    | 0        | 2 sanctioned or generic | lands; CLAUDE.md excluded — the routing map is the audience fact's one home |
+| third-person "own words/phrase/phrasing" | 1                 | 1    | 0        | 0                       | lands; articles off by name until the one finding's triage                  |
+| sentence-initial "Most"                  | 2                 | 1    | 1        | 0                       | lands — rare, no clean false positive; articles off by name                 |
+
+The three article findings were triaged the same day in the landing slice, so the articles
+carve-outs are enable-ready rather than a backlog: the wording attribution in `orchestration.md`
+was dropped, `engineering.md`'s gating roster was completed and its census front removed, and
+`mutation-testing.md`'s characterization now follows its provenance. Enabling the two carved-out
+rules on `articles/` is the recorded follow-up, `architect`'s to flip.

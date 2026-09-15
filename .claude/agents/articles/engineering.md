@@ -114,7 +114,7 @@ rather than closing the question.
 
 `scripts/` is a separate TypeScript project from `src/` and `features/`. It has its own vitest config, coverage directory, CRAP config and Stryker config. `quality-tooling.md` in this directory describes the advisory programs, and CLAUDE.md carries the full entry for each gating one. It counted seven when eight had landed, so count the directories under `scripts/` rather than trusting a figure in prose. It is the tooling every other role's quality gate runs on, so it is held to the same bar as `src/`. Use the parallel set of commands, never the `src/`-scoped ones.
 
-Most are report-only. **These are the exceptions and genuinely gate:** `npm run ast-grep:rules`, `npm run agent-doc-check`, `npm run reference-check` and `npm run mutation-invariance`. Each exits non-zero on what it checks:
+Five gate and the rest are report-only. **The gating five:** `npm run ast-grep:rules`, `npm run agent-doc-check`, `npm run reference-check`, `npm run mutation-invariance` and `npm run vale-fixture-check`. Each exits non-zero on what it checks:
 
 - a misconfigured rule file
 - docs that state something mechanically false

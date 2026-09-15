@@ -366,9 +366,10 @@ failing silently:
 `the-invariance-allowlist-omits-paths-that-provably-cannot-move-a-mutant` allowlisted them, and it
 added their `sharedExclude` entries **first**, in a separate commit, for exactly this reason.
 
-**Do not read that array the other way round, as the set of paths an entry may name.** Most of it is
-now precautionary: `vale-styles-is-reachable-by-vitests-default-include` named every remaining tracked
-top-level directory, and every generated one, whether or not anything pairs with it. So an exclusion
+**Do not read that array the other way round, as the set of paths an entry may name.**
+`vale-styles-is-reachable-by-vitests-default-include` named every remaining tracked top-level
+directory, and every generated one, whether or not anything pairs with it. Much of the array is
+therefore precautionary rather than paired. So an exclusion
 being present proves only that C1 can pass. It is not an argument that the path belongs on the
 allowlist, and each entry still needs its own.
 

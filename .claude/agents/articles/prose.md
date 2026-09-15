@@ -551,8 +551,8 @@ are list-scoped, and a JSDoc can carry a Markdown list. A `@param` or `@returns`
 Markdown list item, and trips neither whatever it says. So those two rules reach only the prose above
 the tag block.
 
-**Who owns the rules.** `architect` alone authors or changes a rule in `vale-styles/JsDoc/` or
-`vale-styles/Instruction/`. Every other role reads the output and reports tensions to it, exactly as
+**Who owns the rules.** `architect` alone authors or changes a rule in any tracked style under
+`vale-styles/`. Every other role reads the output and reports tensions to it, exactly as
 with `rules/*.yml`. **The `STE` style is a different surface and is not `architect`'s alone.** That
 covers the module sidecars. No `JsDoc` rule reaches a `.md` file, so a sidecar finding is an `STE`
 finding or, on a stripped role file, an `Instruction` one.
@@ -627,8 +627,8 @@ mechanism other than a later section.
 
 ## For `architect` only — authoring, enabling and re-levelling a rule
 
-`architect` is the only role that authors or changes a rule in `vale-styles/JsDoc/` or
-`vale-styles/Instruction/`, or edits `.vale.ini`. Everything above applies to whoever holds a
+`architect` is the only role that authors or changes a rule in any tracked style under
+`vale-styles/`, or edits `.vale.ini`. Everything above applies to whoever holds a
 finding; everything here applies to whoever holds the rule.
 
 ### Each rule declares its own extensions. That is per rule, never per style.
