@@ -1,6 +1,7 @@
 ---
 name: idea-capture
 description: File a raw thought as a candidate on the ideas/ board, in the template's shape.
+when_to_use: When the user voices an idea, a "we should", a defect worth a slice, or any problem worth not forgetting -- capture it the moment it appears rather than letting it die in conversation.
 argument-hint: '[the thought]'
 allowed-tools: Read, Write
 ---

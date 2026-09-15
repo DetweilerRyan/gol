@@ -2,17 +2,20 @@
 name: idea-assess
 description: Assess one ideas/ board file against the readiness rubric and rule a disposition.
 argument-hint: '[ideas/candidates/<name>.md]'
+arguments: [target]
 disable-model-invocation: true
 context: fork
 agent: general-purpose
-allowed-tools: Read, Bash, Grep, Glob
+allowed-tools: Read, Bash(git *), Grep, Glob
 ---
 
 # Assess an idea
 
+Target: $target
+
 Layer 1 ran before this text reached you. Its output:
 
-!`sh "${CLAUDE_SKILL_DIR}/layer1.sh" $0`
+!`sh "${CLAUDE_SKILL_DIR}/layer1.sh" $target`
 
 **Absent a `LAYER1` count line directly above, Layer 1 did not run. Stop and say so. Do not assess.**
 
