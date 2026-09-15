@@ -4,7 +4,7 @@
 
 Promotion from `ideas/candidates/` to `ideas/todo/` is this repo's Definition of Ready, in the Agile Alliance glossary sense. Assessing a candidate is the board's backlog refinement, in the same vocabulary. This file carries the assessment: two pre-questions, six predicates, anchored scores, and four dispositions. In this file, "ready" means the board's promotion bar and nothing else; the word carries other senses elsewhere, and none is this subject.
 
-**Nothing here gates.** Ruled by the user 2026-09-13: CLAUDE.md's decision that `ideas/` has no gate stands unreversed. Every check reports, and none can fail anything. `definition-of-ready.meta.md` carries the ruling's account and every measurement behind this file.
+**Nothing here gates.** Ruled by the user 2026-09-13: CLAUDE.md's decision that `ideas/` has no gate stands unreversed. Every check reports, and none can fail anything.
 
 ## The slice check — is it a slice at all?
 
@@ -21,7 +21,7 @@ Ask first: would a `product` VERIFY pass have anything to observe?
 - **Checker-bearing** (SAFe: architecture or infrastructure enabler) — the finished state is a command's output or exit code. VERIFY does not run.
 - **Knowledge-bearing** (SAFe: exploration enabler) — a readiness spike. The finished state is a recorded answer to a named question.
 
-Score V and T against the kind's own column below. Never score a checker-bearing idea against user-visible value. The sidecar carries the provenance for this split and for the SAFe labels above. An assessment record's kind row carries the label, so a reader oriented by SAFe never has to look the mapping up. Ruled by the user 2026-09-14.
+Score V and T against the kind's own column below. Never score a checker-bearing idea against user-visible value. An assessment record's kind row carries the label, so a reader oriented by SAFe never has to look the mapping up. Ruled by the user 2026-09-14.
 
 ## The six predicates
 
@@ -108,7 +108,7 @@ Score each letter 1–5 against its anchor. Every level names what the file says
 
 ## What the number may do
 
-The score **ranks and never decides**. The sidecar carries the recorded rulings this rests on. Five bounds keep the number inside what those rulings license:
+The score **ranks and never decides**. Five bounds hold that:
 
 - **A. Six numbers, never a total.** No sum, no average, no composite readiness score.
 - **B. Never rank across kinds.** A checker-bearing T=4 and a contract-bearing T=4 answer different questions.
@@ -156,6 +156,6 @@ A promotion commit carries **two records in order**. First the judge's six lette
 
 Declines keep the existing in-file practice: a dated `REFUTED` or `DECLINED` record. An epic's trace is its index sections and children. A spike's trace is its own candidate file.
 
-A calibration pass counts agreement per letter, never a total. Disposition agreement is primary; score delta says where the divergence sits. A letter below roughly two-in-three disposition agreement has wrong anchors — the threshold the sidecar's recorded ruling licenses for ranking, not deciding. Run the pass at ten dispositions of any kind, or a full `todo/` turnover, and record the counts in the sidecar.
+A calibration pass counts agreement per letter, never a total. Disposition agreement is primary; score delta says where the divergence sits. A letter below roughly two-in-three disposition agreement has wrong anchors. Run the pass at ten dispositions of any kind, or a full `todo/` turnover, and record the counts in the sidecar.
 
 **Stated risk:** dispositions accumulate slowly, so the scale may run unvalidated for months. That is the strongest standing argument against having one. Bound E above is what expires it honestly when the evidence arrives.

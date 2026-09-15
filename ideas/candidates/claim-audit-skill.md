@@ -34,7 +34,10 @@ judge, with the article as the only constraint.
 ## Open questions
 
 - Should it also check `prose.md`'s instruction-versus-explanation split, or stay one article
-  deep? A two-article judge risks vaguer findings.
+  deep? A two-article judge risks vaguer findings. **Evidence arrived 2026-09-15, same day:** the
+  claim-discipline audit of `definition-of-ready.md` repaired two censuses by introducing two
+  sidecar pointers — the first shape on `prose.md`'s banned list. A one-article judge fixes
+  violations of its own rulebook by violating the other.
 - Which surfaces by default — instruction files only, or every doc the landing touches?
 - Should `/idea-promote` name a clean claim-audit as a precondition for the files a promotion
   edits, or does that begin to gate the board?
