@@ -304,6 +304,8 @@ Two rules keep the board honest:
 
   Git records a move made in its own commit as a rename, and the history survives. It records a move plus a rewrite as delete-plus-add, and the history does not. `CLAUDE.meta.md` carries the similarity scores. (You need `--follow` to read across the move either way; a plain `git log -- ideas/todo/<name>.md` starts at the promotion regardless.)
 
+  The move commit's body carries the promotion's two records, in order: the judge's assessment, then the human's per-letter ruling. `.claude/agents/articles/backlog-readiness.md` states the record shapes and why the order matters. `/idea-promote` executes this whole bullet.
+
 - **The slice deletes its own idea file.** Run `git rm ideas/todo/<name>.md` as part of the slice's work. The deletion then lands on the branch alongside the change it describes. The `slice/<name>` tag in merge-protocol step 6 then marks a tree that no longer carries it. The tag is the permanent record and carries its own message. A file left behind becomes a third lane nobody maintains.
 
 <!-- reference-check: allow Backlog.md -- an external project on GitHub, linked by URL on the same line; not a file in this repo -->
