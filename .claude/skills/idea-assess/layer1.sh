@@ -11,6 +11,8 @@ if [ "$1" = "--hook" ]; then
 else
   path=$1
 fi
+# A bare board slug resolves by exact basename -- name is identity, so the lookup is not a guess.
+[ -f "$path" ] || { for d in ideas/candidates ideas/todo; do [ -f "$d/${path%.md}.md" ] && path="$d/${path%.md}.md"; done; }
 [ -n "$path" ] && [ -f "$path" ] || { echo "LAYER1 ${path:-(no path)}: 0 checks, 1 findings -- path missing or unreadable"; exit 0; }
 base=$(basename "$path" .md); f=0
 fm=$(sed -n '2,/^---$/p' "$path")
