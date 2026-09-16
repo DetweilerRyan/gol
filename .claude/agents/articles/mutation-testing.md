@@ -354,7 +354,7 @@ declares the predicate for the `src/` run only, and why the candidate
 run. The checker verifies them, so deleting one now reds `npm run mutation-invariance` rather than
 failing silently:
 
-- Deleting `sharedExclude`'s `'ideas/**'` or `'.claude/**'` re-opens a hole that a per-merge grep would
+- Deleting `sharedExclude`'s `'backlog/**'` or `'.claude/**'` re-opens a hole that a per-merge grep would
   otherwise have to cover.
 - Deleting `ignorePatterns`' `/features` breaks the allowlist a different way. No extra check would
   help, because the Gherkin layer would simply be back in the sandbox. **That failure is silent, and it

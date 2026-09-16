@@ -7,10 +7,6 @@
       "securedBy": "stryker-ignore-patterns"
     },
     {
-      "path": "ideas/**",
-      "securedBy": "vitest-exclude"
-    },
-    {
       "path": "backlog/**",
       "securedBy": "vitest-exclude"
     },

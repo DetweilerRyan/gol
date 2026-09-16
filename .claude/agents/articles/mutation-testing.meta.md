@@ -518,7 +518,7 @@ The shared argument: `stryker.config.json`'s `mutate` list is `src/**` only, so 
 
 The checker verifies the second half against each project's own `exclude`, not against the shared constant. That distinction is deliberate: a project that stopped spreading the constant into its own list would keep the constant correct while collecting the directory again.
 
-**`ideas/**`** and **`.claude/**`** — added by `shared-exclude-covers-docs-dirs`, which measured the hole first. Probes in both were collected into the `unit` project, and the `ideas/` one imported `src/gameOfLife`, so it would have run inside the sandbox.
+**`ideas/**`** (retired) and **`.claude/**`** — added by `shared-exclude-covers-docs-dirs`, which measured the hole first. Probes in both were collected into the `unit` project, and the `ideas/` one imported `src/gameOfLife`, so it would have run inside the sandbox. `backlog-board-migration` retired the `ideas/**` entry and its `sharedExclude` line together on 2026-09-16, when the directory itself was deleted; the paragraph stays as the dated measurement behind its successor.
 
 **`backlog/**`** — the idea board's successor location, added by `backlog-board-migration` with its own fresh measurement rather than by inheriting the `ideas/**` one. Verified 2026-09-16: a throwaway `backlog/__probe.test.ts` importing `src/gameOfLife` was collected as `[unit] backlog/__probe.test.ts` with no `backlog/**` entry in `sharedExclude`, and collected by no project once the entry was in place, with the collected-file count at 70 both before the probe and after its deletion. The entry was pre-armed before `backlog/` held any file, the same reviewed-precondition order `vale-styles/**` records below.
 

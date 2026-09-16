@@ -17,15 +17,18 @@ const sharedExclude = [
   // unrooted default include (**/*.{test,spec}.?(c|m)[jt]s?(x)) and nothing
   // above subtracts it -- any directory in the repo is reachable unless
   // something in this array excludes it by name. Measured with throwaway
-  // probes: `.claude/__probe.test.ts` and `ideas/__probe.test.ts` were both
+  // probes, 2026-09-08, when the board still lived at ideas/:
+  // `.claude/__probe.test.ts` and `ideas/__probe.test.ts` were both
   // collected into `unit` before these entries existed, and the ideas/ probe
   // imported src/gameOfLife -- so it would have run inside Stryker's sandbox
-  // too. A probe placed in each of rules/ and rule-tests/ was collected the
+  // too. (backlog-board-migration retired the ideas/** entry with the
+  // directory; the backlog/** entry below is its measured successor.) A probe
+  // placed in each of rules/ and rule-tests/ was collected the
   // same way, both of them, measured 2026-09-08 by
   // `the-invariance-allowlist-omits-paths-that-provably-cannot-move-a-mutant`
   // before it added those two entries. These four entries are what make
   // CLAUDE.md's merge-protocol mutation-invariant clause's path-allowlist
-  // predicate sound for ideas/, .claude/, rules/ and rule-tests/: without
+  // predicate sound for backlog/, .claude/, rules/ and rule-tests/: without
   // them, a stray test file in any of those directories runs inside
   // Stryker's sandbox while the path check still answers "invariant."
   // `.claude/worktrees/**`, the narrower entry this replaces, is subsumed
@@ -51,7 +54,6 @@ const sharedExclude = [
   // `[unit] backlog/__probe.test.ts` before this entry existed, and collected
   // by no project with it in place.
   'backlog/**',
-  'ideas/**',
   '.claude/**',
   'rules/**',
   'rule-tests/**',
@@ -64,14 +66,14 @@ const sharedExclude = [
   // measured by adopt-playwright-bdd, which read 63 collected files against
   // that tree's usual 61. The leading dot on the directory name
   // protects nothing (a non-dot directory was collected identically in the
-  // same probe); this is the same hazard CLAUDE.md documents for
-  // ideas/__probe.test.ts. Belongs in sharedExclude, not `unit`'s own list,
+  // same probe); this is the same unrooted-include hazard the board-directory
+  // probes in the block above measured. Belongs in sharedExclude, not `unit`'s own list,
   // for the same reason .stryker-tmp*/** is here rather than scoped to one
   // project.
   '.features-gen/**',
   // .vale/ holds Vale's synced style package -- a downloaded artifact, gitignored,
   // and third-party YAML this repo does not author. It needs this entry for the same
-  // reason ideas/** and .claude/** do, and for one more that makes it sharper: the
+  // reason backlog/** and .claude/** do, and for one more that makes it sharper: the
   // mutation-invariant merge allowlist in CLAUDE.md's step 5 names `.vale/**`, added
   // by rationale-sidecar-pilot. Without this exclusion a `git add -f`'d test file
   // under .vale/ would be tracked, MATCH that allowlist so stage 5 is skipped, and
