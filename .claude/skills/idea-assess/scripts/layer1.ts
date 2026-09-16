@@ -10,10 +10,26 @@ import { existsSync, readFileSync } from 'node:fs'
 import { basename, dirname } from 'node:path'
 
 const say = (line: string) => process.stdout.write(line + '\n')
+// Delivery, measured 2026-09-16: only the hookSpecificOutput envelope reaches the acting
+// agent -- main context and subagent alike -- while flat additionalContext, systemMessage,
+// and exit-0 stderr all vanish. Stderr keeps the full log; the envelope goes to stdout only
+// when there is something to act on, so a clean write stays silent in the agent's context.
+const deliver = (lines: string[]) => {
+  if (lines.length === 0) return
+  process.stdout.write(
+    JSON.stringify({
+      hookSpecificOutput: { hookEventName: 'PostToolUse', additionalContext: lines.join('\n') },
+    }),
+  )
+}
 let path = ''
 if (process.argv[2] === '--hook') {
   // Everything to stderr in hook mode, as the shell's exec 1>&2 did.
-  const write = (line: string) => process.stderr.write(line + '\n')
+  const collected: string[] = []
+  const write = (line: string) => {
+    collected.push(line)
+    process.stderr.write(line + '\n')
+  }
   let payload: unknown
   try {
     payload = JSON.parse(readFileSync(0, 'utf8'))
@@ -24,16 +40,20 @@ if (process.argv[2] === '--hook') {
   path = typeof fp === 'string' ? fp : ''
   if (path === '') {
     write('LAYER1 (no path): 0 checks, 1 findings -- extraction returned empty')
+    deliver(collected)
     process.exit(0)
   }
   if (!(path.includes('/ideas/') || path.startsWith('ideas/'))) process.exit(0)
-  run(path, write)
+  const result = run(path, write)
+  if (result.actionable) deliver(collected)
+  process.exit(0)
 } else {
   path = process.argv[2] ?? ''
   run(path, say)
+  process.exit(0)
 }
 
-function run(target: string, out: (line: string) => void): void {
+function run(target: string, out: (line: string) => void): { actionable: boolean } {
   // Bare-slug resolution: candidates checked first, todo second, last hit wins.
   if (!existsSync(target)) {
     for (const lane of ['ideas/candidates', 'ideas/todo']) {
@@ -43,7 +63,7 @@ function run(target: string, out: (line: string) => void): void {
   }
   if (target === '' || !existsSync(target)) {
     out(`LAYER1 ${target === '' ? '(no path)' : target}: 0 checks, 1 findings -- path missing or unreadable`)
-    process.exit(0)
+    return { actionable: true }
   }
   const text = readFileSync(target, 'utf8')
   const lines = text.split('\n')
@@ -85,5 +105,5 @@ function run(target: string, out: (line: string) => void): void {
   const depends = lines.filter((l) => l.toLowerCase().includes('depends on')).length
   out(`lane ${basename(dirname(target))}, ${era} shape, ${newlines} lines, ${depends} depends-on mention(s)`)
   out(`LAYER1 ${target}: 6 checks, ${findings} findings`)
-  process.exit(0)
+  return { actionable: findings > 0 }
 }

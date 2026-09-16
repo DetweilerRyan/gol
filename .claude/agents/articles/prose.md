@@ -36,8 +36,9 @@ These hold whether or not a checker fires. Vale's rules below are a partial and 
   this article's split and `claim-discipline.md`'s forms. A green mechanical run is not evidence
   the claims are sound. Fix what it finds, record in hand, before the commit.
 - **A write-time hook runs Vale on the zero-baseline instruction surfaces and names that skill.**
-  It reports and cannot block, so this instruction binds whether or not the hook fires.
-  `prose.meta.md` carries the hook's shape ruling and its scope.
+  Its findings reach the acting agent as hook context; a clean write stays silent. It cannot
+  block, so this instruction binds whether or not the hook fires. `prose.meta.md` carries the
+  hook's shape ruling, its scope, and the measured delivery channel.
 
 ## Setup
 

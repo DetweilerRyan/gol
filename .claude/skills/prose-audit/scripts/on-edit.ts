@@ -13,7 +13,23 @@ import { accessSync, constants, readFileSync } from 'node:fs'
 import { delimiter, dirname, join } from 'node:path'
 import { execFileSync, spawnSync } from 'node:child_process'
 
-const write = (line: string) => process.stderr.write(line + '\n')
+// Delivery, measured 2026-09-16: only the hookSpecificOutput envelope reaches the acting
+// agent -- main context and subagent alike -- while flat additionalContext, systemMessage,
+// and exit-0 stderr all vanish. Stderr keeps the full log; the envelope carries findings and
+// NOT-RUN warnings, and a clean zero stays silent in the agent's context.
+const collected: string[] = []
+const write = (line: string) => {
+  collected.push(line)
+  process.stderr.write(line + '\n')
+}
+const deliver = () => {
+  if (collected.length === 0) return
+  process.stdout.write(
+    JSON.stringify({
+      hookSpecificOutput: { hookEventName: 'PostToolUse', additionalContext: collected.join('\n') },
+    }),
+  )
+}
 let payload: unknown
 try {
   payload = JSON.parse(readFileSync(0, 'utf8'))
@@ -24,6 +40,7 @@ const fp = (payload as { tool_input?: { file_path?: unknown } })?.tool_input?.fi
 const path = typeof fp === 'string' ? fp : ''
 if (path === '') {
   write('PROSEHOOK (no path): extraction returned empty')
+  deliver()
   process.exit(0)
 }
 let root = ''
@@ -37,6 +54,7 @@ try {
 }
 if (root === '') {
   write(`PROSEHOOK ${path}: no repo root found -- NOT RUN`)
+  deliver()
   process.exit(0)
 }
 const rel = path.startsWith(root + '/') ? path.slice(root.length + 1) : path
@@ -53,6 +71,7 @@ const valePresent = (process.env.PATH ?? '').split(delimiter).some((dir) => {
 })
 if (!valePresent) {
   write(`PROSEHOOK ${rel}: vale absent -- NOT RUN`)
+  deliver()
   process.exit(0)
 }
 // spawnSync, never execFileSync: vale exits nonzero on findings, and the shell's $() captured
@@ -61,8 +80,11 @@ const vale = spawnSync('vale', ['--output=line', rel], { cwd: root, encoding: 'u
 const out = (vale.stdout ?? '') + (vale.stderr ?? '')
 const findings = out.split('\n').filter((l) => l.includes(':')).length
 if (findings > 0) {
-  process.stderr.write(out.endsWith('\n') ? out : out + '\n')
+  const valeText = out.endsWith('\n') ? out.slice(0, -1) : out
+  process.stderr.write(valeText + '\n')
+  collected.push(valeText)
   write(`PROSEHOOK ${rel}: ${findings} finding(s) -- run /prose-audit on this file, and fix before landing`)
+  deliver()
 } else {
   write(`PROSEHOOK ${rel}: 0 findings`)
 }

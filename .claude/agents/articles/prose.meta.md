@@ -1454,3 +1454,27 @@ is ever handed a path.
 **Standing verification, shared:** the hook cannot be live-fired in the session that lands it,
 since settings load at session start. One fresh-session run answers this hook, the Layer 1
 board hook, and the does-a-subagent-fire question together.
+
+## The hooks' delivery channel, measured (2026-09-16)
+
+Three sentinel-instrumented fresh-session runs first proved the write-time hook machinery fires
+end to end — main-agent and subagent writes alike, the bare-node handler under the harness
+environment — while the acting agent observed nothing, because exit-0 stderr goes nowhere an
+agent looks. A fourth set of runs measured the delivery shapes directly, three envelope
+variants against one write:
+
+| shape                                                           | reached the agent?                                 |
+| --------------------------------------------------------------- | -------------------------------------------------- |
+| flat top-level additionalContext                                | no                                                 |
+| hookSpecificOutput wrapping hookEventName and additionalContext | yes, rendered neutrally as hook additional context |
+| systemMessage                                                   | no                                                 |
+| decision block with reason                                      | yes, rendered as a hook blocking error             |
+
+The wrapped additionalContext form was adopted: neutral name, neutral rendering, advisory
+mechanics, and the subagent run quoted its sentinel from inside the subagent's own context. The
+blocking-flavored form was declined on its rendering alone — the mechanics were equally
+advisory, but a finding delivered as a "blocking error" reads as a gate on a board the user
+ruled ungated. Both hook scripts now emit the envelope on stdout when the output carries a
+finding or a NOT-RUN warning, keep the full log on stderr byte-identically, and stay silent in
+the agent's context on a clean write. End-to-end proof: a fresh worktree session's agent quoted
+a planted missing-section finding verbatim from the real handler chain.
