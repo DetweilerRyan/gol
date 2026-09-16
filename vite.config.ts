@@ -11,6 +11,7 @@ const sharedExclude = [
   '**/*.browser.test.ts?(x)',
   'scripts/**',
   // reference-check: allow ideas/__probe.test.ts -- a throwaway measurement probe, never committed to git, so it can never resolve
+  // reference-check: allow backlog/__probe.test.ts -- the same class of throwaway probe, run 2026-09-16 for the backlog/ entry below
   //
   // The four entries below exist because vitest's `unit` project inherits the
   // unrooted default include (**/*.{test,spec}.?(c|m)[jt]s?(x)) and nothing
@@ -43,6 +44,13 @@ const sharedExclude = [
   // be excluded here, and belongs under scripts/ast-grep-rule-check/ with
   // the rest of that checker's suite. That cost is the price of the
   // allowlist entry -- an exclusion a future author must not quietly drop.
+  //
+  // backlog/** is the idea board's successor location (backlog-board-migration)
+  // and holds the same argument by its own measurement, 2026-09-16: a throwaway
+  // backlog/__probe.test.ts importing src/gameOfLife was collected as
+  // `[unit] backlog/__probe.test.ts` before this entry existed, and collected
+  // by no project with it in place.
+  'backlog/**',
   'ideas/**',
   '.claude/**',
   'rules/**',

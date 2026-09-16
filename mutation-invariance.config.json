@@ -11,6 +11,10 @@
       "securedBy": "vitest-exclude"
     },
     {
+      "path": "backlog/**",
+      "securedBy": "vitest-exclude"
+    },
+    {
       "path": ".claude/**",
       "securedBy": "vitest-exclude"
     },

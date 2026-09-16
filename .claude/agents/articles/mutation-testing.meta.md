@@ -520,6 +520,10 @@ The checker verifies the second half against each project's own `exclude`, not a
 
 **`ideas/**`** and **`.claude/**`** — added by `shared-exclude-covers-docs-dirs`, which measured the hole first. Probes in both were collected into the `unit` project, and the `ideas/` one imported `src/gameOfLife`, so it would have run inside the sandbox.
 
+**`backlog/**`** — the idea board's successor location, added by `backlog-board-migration` with its own fresh measurement rather than by inheriting the `ideas/**` one. Verified 2026-09-16: a throwaway `backlog/__probe.test.ts` importing `src/gameOfLife` was collected as `[unit] backlog/__probe.test.ts` with no `backlog/**` entry in `sharedExclude`, and collected by no project once the entry was in place, with the collected-file count at 70 both before the probe and after its deletion. The entry was pre-armed before `backlog/` held any file, the same reviewed-precondition order `vale-styles/**` records below.
+
+<!-- reference-check: allow backlog/__probe.test.ts -- a throwaway measurement probe, never committed to git, so it can never resolve -->
+
 **`rules/**`** and **`rule-tests/**`** — both directories hold `.yml` and nothing else today, but the predicate is evaluated over a future diff, so the exclusion is what makes the entry sound rather than the current contents. Measured 2026-09-08: a probe in each was collected into the `unit` project, both of them.
 
 **`vale-styles/**`** — the tracked Vale styles and their fixtures, the same shape as `rules/**`: rule files plus the fixtures that prove each rule fires. Secured the same way, and the exclusion landed first on purpose. `vale-styles-is-reachable-by-vitests-default-include` added it to `vite.config.ts`'s `sharedExclude` in its own slice, and deliberately did not add this entry, so the precondition the `vitest-exclude` tier rests on was reviewed before the entry that rests on it. The fixtures are `.md`, `.ts` and `.tsx` files that are entirely comment plus a stub declaration; none can match a test glob, and the exclusion is what makes that irrelevant rather than load-bearing.
