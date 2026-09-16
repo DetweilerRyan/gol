@@ -6,9 +6,11 @@ rather than `scripts/`, because `scripts/` carries CRAP ≤ 6, its own vitest su
 paying that freight — see "If this graduates" below.
 
 **`spikes/` itself is provisional.** It was ruled an acceptable top-level directory for
-now, with `ideas/candidates/intent-driven-layout.md` expected to fold it into a permanent
-layout — possibly by dropping the directory entirely and letting a spike's findings
-survive in its ADR. Do not build anything that assumes this path is stable.
+now. The permanent ruling was deferred at the 2026-09-16 reevaluation of
+`backlog-board-redesign.md` (the renamed successor of `intent-driven-layout`) until this
+spike's own parent slice lands — the leading shape is top-level plus retrospective
+garbage collection, and dropping the directory once an ADR carries the findings is still
+on the table. Do not build anything that assumes this path is stable.
 
 ## The problem
 

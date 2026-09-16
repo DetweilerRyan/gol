@@ -236,9 +236,10 @@ mechanism wins, because none of them makes the hazard legible to a reader on its
 **Neutral / deferred**
 
 - The prototype lives in a new top-level `spikes/` directory. That was **ruled acceptable
-  provisionally**, on the understanding that `ideas/todo/intent-driven-layout.md` is where
-  it gets folded into a permanent layout; that file now carries the open question of where
-  it should end up, including the possibility that the directory disappears and a spike's
+  provisionally**. The permanent ruling was deferred at the 2026-09-16 reevaluation of
+  `backlog-board-redesign.md` (the renamed successor of `intent-driven-layout`) until this
+  ADR's own parent slice lands; that epic index carries the open question of where the
+  directory should end up, including the possibility that it disappears and a spike's
   findings survive only in its ADR. Recorded here because it means this ADR's own
   supporting artifact may move or be deleted — the reasoning above has to stand without
   it.

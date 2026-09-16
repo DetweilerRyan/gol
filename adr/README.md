@@ -39,8 +39,9 @@ still moving and the ADR is tracking it, which is what a `Proposed` one is for.
 Sequential, four digits, never reused.
 
 **`0001` is deliberately reserved and not yet written.** It belongs to the
-`intent-driven-layout` slice on the idea board, whose own plan specifies `adr/`
-scaffolding with `0001` recording the decision to adopt that layout — its
-Options-considered section is the rejection table already drafted in
-`ideas/todo/intent-driven-layout.md`. This directory was created ahead of that slice
-because a decision needed recording sooner; the gap is intentional, not a lost file.
+`wire-in-the-adr-tier` slice on the idea board, a child of the `backlog-board-redesign.md`
+epic (the renamed successor of `intent-driven-layout`). Its scope was re-ruled at the
+2026-09-16 reevaluation: `0001` records the adoption of the backlog board layout, with
+that reevaluation's declined alternatives as its Options considered. This directory was
+created ahead of that work because a decision needed recording sooner; the gap is
+intentional, not a lost file.
