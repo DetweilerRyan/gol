@@ -2,6 +2,7 @@
 name: backlog-board-migration
 title: Migrate the idea board to backlog/ with per-item artifact folders and a done/ retrospective queue
 created: 2026-09-16
+kind: enabler
 ---
 
 Child of `backlog-board-redesign`, the epic index. The design below is not open — it was ruled

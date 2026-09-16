@@ -575,7 +575,7 @@ rule from the start, so it carries no backlog. A reference pair under `.claude/r
 scoped the same way, and its `.meta.md` half keeps the sidecar exemption. `prose.meta.md` carries the measured zero that made
 the section necessary.
 
-The idea board is the deliberate exception. `ideas/**` gets exactly one rule, the tracked `Board`
+The idea board is the deliberate exception. `backlog/**` gets exactly one rule, the tracked `Board`
 style's `NoStatusField`, and no register rule at all. A candidate is raw by definition, so linting
 its prose would contradict the lane. The one rule mechanises a structural prohibition instead —
 CLAUDE.md's "one fact, one home" rule on the `status:` key. Nothing that reports on the board

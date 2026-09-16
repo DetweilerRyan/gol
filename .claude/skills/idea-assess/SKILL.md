@@ -1,7 +1,7 @@
 ---
 name: idea-assess
-description: Assess one ideas/ board file against the readiness rubric and rule a disposition.
-argument-hint: '[ideas/candidates/<name>.md]'
+description: Assess one backlog/ board file against the readiness rubric and rule a disposition.
+argument-hint: '[backlog/ideas/<name>.md]'
 arguments: [target]
 disable-model-invocation: true
 context: fork

@@ -13,14 +13,14 @@
             "command": "node \"$CLAUDE_PROJECT_DIR/.claude/skills/idea-assess/scripts/layer1.ts\" --hook",
             "timeout": 10,
             "statusMessage": "Layer 1: checking the idea file's shape",
-            "if": "Write(ideas/**)"
+            "if": "Write(backlog/**)"
           },
           {
             "type": "command",
             "command": "node \"$CLAUDE_PROJECT_DIR/.claude/skills/idea-assess/scripts/layer1.ts\" --hook",
             "timeout": 10,
             "statusMessage": "Layer 1: checking the idea file's shape",
-            "if": "Edit(ideas/**)"
+            "if": "Edit(backlog/**)"
           },
           {
             "type": "command",

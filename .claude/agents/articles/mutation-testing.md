@@ -323,7 +323,7 @@ so** — the report prints one line, and it is the same line either way. Read th
 **The same gap reaches the `vitest-exclude` tier, and it is the one an ordinary slice opens.** C1
 proves the directory is collected by no vitest project. It does **not** prove that some test which
 _is_ collected reads the directory out of the sandbox. Stryker's sandbox is populated from tracked
-files, so `ideas/`, `.claude/`, `rules/` and `rule-tests/` are all present inside it. Take a test
+files, so `backlog/`, `.claude/`, `rules/` and `rule-tests/` are all present inside it. Take a test
 that runs under `npm run test:mutation` and reads one of them with a single `readFileSync`. A diff
 in that directory could then change a mutant's fate, while the checker stayed green.
 

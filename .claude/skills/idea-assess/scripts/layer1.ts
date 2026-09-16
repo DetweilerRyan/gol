@@ -43,7 +43,7 @@ if (process.argv[2] === '--hook') {
     deliver(collected)
     process.exit(0)
   }
-  if (!(path.includes('/ideas/') || path.startsWith('ideas/'))) process.exit(0)
+  if (!(path.includes('/backlog/') || path.startsWith('backlog/'))) process.exit(0)
   const result = run(path, write)
   if (result.actionable) deliver(collected)
   process.exit(0)
@@ -54,10 +54,11 @@ if (process.argv[2] === '--hook') {
 }
 
 function run(target: string, out: (line: string) => void): { actionable: boolean } {
-  // Bare-slug resolution: candidates checked first, todo second, last hit wins.
+  // Bare-slug resolution: ideas checked first, ready second, last hit wins. A ready
+  // item is a folder, so its file is <lane>/<slug>/proposal.md rather than <slug>.md.
   if (!existsSync(target)) {
-    for (const lane of ['ideas/candidates', 'ideas/todo']) {
-      const candidate = `${lane}/${target.replace(/\.md$/, '')}.md`
+    const slug = target.replace(/\.md$/, '')
+    for (const candidate of [`backlog/ideas/${slug}.md`, `backlog/ready/${slug}/proposal.md`]) {
       if (existsSync(candidate)) target = candidate
     }
   }
@@ -67,7 +68,10 @@ function run(target: string, out: (line: string) => void): { actionable: boolean
   }
   const text = readFileSync(target, 'utf8')
   const lines = text.split('\n')
-  const base = basename(target, '.md')
+  // In the folder lanes the file is always proposal.md, so the identity the name:
+  // field must match is the folder's basename, not the file's.
+  const stem = basename(target, '.md')
+  const base = stem === 'proposal' ? basename(dirname(target)) : stem
   let findings = 0
   // The frontmatter window is sed -n '2,/^---$/p' exactly: line 2 through the first
   // bare --- at or after it, inclusive; to EOF when no closer exists.
@@ -103,7 +107,11 @@ function run(target: string, out: (line: string) => void): { actionable: boolean
   // wc -l counts newline bytes; grep -ci counts matching lines, case-insensitively.
   const newlines = (text.match(/\n/g) ?? []).length
   const depends = lines.filter((l) => l.toLowerCase().includes('depends on')).length
-  out(`lane ${basename(dirname(target))}, ${era} shape, ${newlines} lines, ${depends} depends-on mention(s)`)
+  // The lane is the path segment after backlog/ -- dirname's basename would report the
+  // item's own folder name for the ready/ and done/ forms.
+  const afterRoot = target.includes('/backlog/') ? target.split('/backlog/')[1] : target.replace(/^backlog\//, '')
+  const lane = afterRoot.includes('/') ? afterRoot.split('/')[0] : basename(dirname(target))
+  out(`lane ${lane}, ${era} shape, ${newlines} lines, ${depends} depends-on mention(s)`)
   out(`LAYER1 ${target}: 6 checks, ${findings} findings`)
   return { actionable: findings > 0 }
 }

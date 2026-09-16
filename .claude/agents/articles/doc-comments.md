@@ -216,7 +216,7 @@ falls on the one form this rule mandates.** The state of the landed tree:
   for the checker's sake.
 - **Matching is by basename, never by full path.** A sidecar moved to another directory still resolves.
   Measured by relocating `src/cache.meta.md` into `src/hooks/`: green.
-- **The doc surface is now every tracked/untracked-not-ignored `.md` file outside `ideas/**` and
+- **The doc surface is now every tracked/untracked-not-ignored `.md` file outside `backlog/**` and
   `.claude/worktrees/**`**, not `CLAUDE.md`, `README.md` and `.claude/**/*.md` alone. A sidecar's own
   references are read directly under this surface, so `src/**/*.md` reaches them without the source
   surface.

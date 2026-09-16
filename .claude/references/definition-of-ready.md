@@ -2,7 +2,7 @@
 
 **Read before assessing a candidate, promoting an idea, or ruling a disposition on the board.** Who reads this file is a routing question, and CLAUDE.md answers it.
 
-Promotion from `ideas/candidates/` to `ideas/todo/` is this repo's Definition of Ready, in the Agile Alliance glossary sense. Assessing a candidate is the board's backlog refinement, in the same vocabulary. This file carries the assessment: two pre-questions, six predicates, anchored scores, and four dispositions. In this file, "ready" means the board's promotion bar and nothing else; the word carries other senses elsewhere, and none is this subject.
+Promotion from `backlog/ideas/` to `backlog/ready/` is this repo's Definition of Ready, in the Agile Alliance glossary sense — the lane is even named for it. The kind check below also yields the file's frontmatter `kind:` label. The judging pass rules the label, the orchestrating seat writes it when recording the ruling, and the seat reads it to plan the role cycle. Assessing a candidate is the board's backlog refinement, in the same vocabulary. This file carries the assessment: two pre-questions, six predicates, anchored scores, and four dispositions. In this file, "ready" means the board's promotion bar and nothing else; the word carries other senses elsewhere, and none is this subject.
 
 **Nothing here gates.** Ruled by the user 2026-09-13: CLAUDE.md's decision that `ideas/` has no gate stands unreversed. Every check reports, and none can fail anything.
 
@@ -11,7 +11,7 @@ Promotion from `ideas/candidates/` to `ideas/todo/` is this repo's Definition of
 Run this before the kind check; an exempt file never reaches it. Two classes are exempt from assessment. Scoring one is a finding against the assessor, not the file.
 
 - **A verdict record** — the title or first heading rules the idea out: `REFUTED`, `DECLINED`, "Do not build this". It is the board's memory, and its job is to stop a re-proposal.
-- **An index** — the file says of itself that it is not work. An epic is neither lane; it lives in `candidates/` as an index. Route it to a split.
+- **An index** — the file says of itself that it is not work. An epic gets no `ready/` folder; it lives in the `ideas/` lane as an index. Route it to a split.
 
 ## The kind check — which kind is this?
 
@@ -120,12 +120,12 @@ The score **ranks and never decides**. Five bounds hold that:
 
 Every assessment ends in exactly one. The disposition comes from the written findings, never from the numbers — a numeric floor would be the number deciding.
 
-| Disposition         | When                                             | What happens                                                               |
-| ------------------- | ------------------------------------------------ | -------------------------------------------------------------------------- |
-| **Ready**           | No letter carries a blocking finding             | Promote                                                                    |
-| **Epic**            | A finding says it is more than one slice         | Split into child candidates; the parent stays in `candidates/` as an index |
-| **Spike**           | A blocking finding turns on knowledge nobody has | Name the spike; it is its own slice                                        |
-| **Not worth doing** | V's finding rules it out on its own terms        | Record the decline in-file: a `REFUTED` or `DECLINED` title, dated         |
+| Disposition         | When                                             | What happens                                                                   |
+| ------------------- | ------------------------------------------------ | ------------------------------------------------------------------------------ |
+| **Ready**           | No letter carries a blocking finding             | Promote                                                                        |
+| **Epic**            | A finding says it is more than one slice         | Split into child candidates; the parent stays in the `ideas/` lane as an index |
+| **Spike**           | A blocking finding turns on knowledge nobody has | Name the spike; it is its own slice                                            |
+| **Not worth doing** | V's finding rules it out on its own terms        | Record the decline in-file: a `REFUTED` or `DECLINED` title, dated             |
 
 **Epic — the test.** Would splitting produce children that each score better? If yes, split. If the children would inherit the same low scores, the file is under-examined, and the disposition is spike or revision. The slice check catches a self-declared index; this catches one that reveals itself through its scores.
 
@@ -156,6 +156,6 @@ A promotion commit carries **two records in order**. First the judge's six lette
 
 Declines keep the existing in-file practice: a dated `REFUTED` or `DECLINED` record. An epic's trace is its index sections and children. A spike's trace is its own candidate file.
 
-A calibration pass counts agreement per letter, never a total. Disposition agreement is primary; score delta says where the divergence sits. A letter below roughly two-in-three disposition agreement has wrong anchors. Run the pass at ten dispositions of any kind, or a full `todo/` turnover, and record the counts in the sidecar.
+A calibration pass counts agreement per letter, never a total. Disposition agreement is primary; score delta says where the divergence sits. A letter below roughly two-in-three disposition agreement has wrong anchors. Run the pass at ten dispositions of any kind, or a full `ready/` turnover, and record the counts in the sidecar.
 
 **Stated risk:** dispositions accumulate slowly, so the scale may run unvalidated for months. Bound E above is what expires it honestly when the evidence arrives.
