@@ -28,7 +28,7 @@ describe('scanScopeOf', () => {
   })
 
   it('excludes a file outside every included source prefix', () => {
-    expect(scanScopeOf(['coverage/index.ts', 'ideas/todo/foo.ts']).sourceFiles).toEqual([])
+    expect(scanScopeOf(['coverage/index.ts', 'ideas/todo/foo.ts', 'backlog/todo/foo.ts']).sourceFiles).toEqual([])
   })
 
   // Mutation regression: an included prefix alone isn't enough -- the
@@ -56,8 +56,13 @@ describe('scanScopeOf', () => {
     expect(scanScopeOf(['.claude/worktrees/some-slice/CLAUDE.md']).docFiles).toEqual([])
   })
 
-  it('excludes ideas/** from both surfaces', () => {
-    const scope = scanScopeOf(['ideas/todo/some-idea.md', 'ideas/candidates/other.md'])
+  it('excludes ideas/** and backlog/** from both surfaces', () => {
+    const scope = scanScopeOf([
+      'ideas/todo/some-idea.md',
+      'ideas/candidates/other.md',
+      'backlog/todo/some-idea.md',
+      'backlog/candidates/other.md',
+    ])
     expect(scope.sourceFiles).toEqual([])
     expect(scope.docFiles).toEqual([])
   })
@@ -76,8 +81,9 @@ describe('scanScopeOf', () => {
     expect(scanScopeOf(['src/cache.meta.md']).docFiles).toEqual(['src/cache.meta.md'])
   })
 
-  it('excludes an .md file sitting directly under ideas/ from the doc surface', () => {
+  it('excludes an .md file sitting directly under ideas/ or backlog/ from the doc surface', () => {
     expect(scanScopeOf(['ideas/x.md']).docFiles).toEqual([])
+    expect(scanScopeOf(['backlog/x.md']).docFiles).toEqual([])
   })
 
   it('excludes a nested .claude/worktrees/** doc file', () => {

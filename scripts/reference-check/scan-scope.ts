@@ -80,9 +80,14 @@ function isInsideExcludedDocDir(path: string): boolean {
 // with no edit here. ideas/** is excluded for the two reasons scan-scope's
 // own header names: it necessarily names dead references as its own
 // worked examples, and it names files that don't exist *yet* by design.
+// backlog/** carries the same two reasons -- it is the board's incoming
+// home during the ideas/ -> backlog/ migration, and this list drops the
+// ideas/ prefix once that migration retires the directory.
+const DOC_EXCLUDED_PREFIXES = ['ideas/', 'backlog/']
+
 function isDocFile(path: string): boolean {
   if (!path.endsWith('.md')) return false
-  if (path.startsWith('ideas/')) return false
+  if (startsWithAny(path, DOC_EXCLUDED_PREFIXES)) return false
   return !isInsideExcludedDocDir(path)
 }
 
