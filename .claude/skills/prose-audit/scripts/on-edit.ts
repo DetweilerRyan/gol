@@ -40,20 +40,17 @@ if (root === '') {
   process.exit(0)
 }
 const rel = path.startsWith(root + '/') ? path.slice(root.length + 1) : path
-const inScope =
-  (rel.startsWith('.claude/skills/') || rel.startsWith('.claude/references/')) && rel.endsWith('.md')
+const inScope = (rel.startsWith('.claude/skills/') || rel.startsWith('.claude/references/')) && rel.endsWith('.md')
 if (!inScope || rel.endsWith('.meta.md')) process.exit(0)
 // The faithful port of command -v: a PATH scan for an executable, no execution.
-const valePresent = (process.env.PATH ?? '')
-  .split(delimiter)
-  .some((dir) => {
-    try {
-      accessSync(join(dir, 'vale'), constants.X_OK)
-      return true
-    } catch {
-      return false
-    }
-  })
+const valePresent = (process.env.PATH ?? '').split(delimiter).some((dir) => {
+  try {
+    accessSync(join(dir, 'vale'), constants.X_OK)
+    return true
+  } catch {
+    return false
+  }
+})
 if (!valePresent) {
   write(`PROSEHOOK ${rel}: vale absent -- NOT RUN`)
   process.exit(0)

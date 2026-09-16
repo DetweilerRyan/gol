@@ -56,14 +56,29 @@ function run(target: string, out: (line: string) => void): void {
     fm.push(lines[i])
     if (lines[i] === '---') break
   }
-  if (!fm.includes(`name: ${base}`)) { out(`name: does not match basename '${base}'`); findings++ }
-  if (!fm.some((l) => /^title: ./.test(l))) { out('title: missing or empty'); findings++ }
-  if (!fm.some((l) => /^created: [0-9]{4}-[0-9]{2}-[0-9]{2}$/.test(l))) { out('created: not a YYYY-MM-DD date'); findings++ }
-  if (fm.some((l) => l.startsWith('status:'))) { out('status: present -- the directory is the status'); findings++ }
+  if (!fm.includes(`name: ${base}`)) {
+    out(`name: does not match basename '${base}'`)
+    findings++
+  }
+  if (!fm.some((l) => /^title: ./.test(l))) {
+    out('title: missing or empty')
+    findings++
+  }
+  if (!fm.some((l) => /^created: [0-9]{4}-[0-9]{2}-[0-9]{2}$/.test(l))) {
+    out('created: not a YYYY-MM-DD date')
+    findings++
+  }
+  if (fm.some((l) => l.startsWith('status:'))) {
+    out('status: present -- the directory is the status')
+    findings++
+  }
   const era = lines.includes('## Situation') ? 'scqa' : 'legacy'
   const first = era === 'scqa' ? '## Question' : '## Touches'
   for (const heading of [first, '## Open questions']) {
-    if (!lines.includes(heading)) { out(`section missing: ${heading}`); findings++ }
+    if (!lines.includes(heading)) {
+      out(`section missing: ${heading}`)
+      findings++
+    }
   }
   // wc -l counts newline bytes; grep -ci counts matching lines, case-insensitively.
   const newlines = (text.match(/\n/g) ?? []).length
