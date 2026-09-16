@@ -67,7 +67,7 @@ note: >-
 # their text is not a name and bracing it would buy a mutant guarding nothing this rule cares
 # about. Adding the capitalised name to the enumeration would report all four. That leaves the
 # visible strings 'Reset' and 'Patterns' asserted by nothing anywhere, which is a real gap and a
-# DIFFERENT one -- it is filed as ideas/candidates/toolbar-button-text-is-unasserted.md, and the
+# DIFFERENT one -- it is filed as backlog/ideas/toolbar-button-text-is-unasserted.md, and the
 # fix there is a test, not a brace. Subheading is the nearest current non-member for the other
 # reason: it renders a heading but PatternLibraryModal.tsx uses it for a category label inside a
 # dialog already named by its title.

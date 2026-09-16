@@ -13,7 +13,7 @@ valid:
   - <button aria-label={'Reset view'}>Reset</button>
   - <button aria-label="Open pattern library">Patterns</button>
   # Catalyst's capitalised <Button> is outside the enumeration by decision, not by accident --
-  # see the rule's own note, and ideas/candidates/toolbar-button-text-is-unasserted.md.
+  # see the rule's own note, and backlog/ideas/toolbar-button-text-is-unasserted.md.
   - <Button plain>Patterns</Button>
   # Non-enumerated elements. Double-quoted because a plain YAML scalar containing ": " parses as a
   # mapping -- measured on the sibling fixture, an unquoted one aborts `ast-grep test`.
