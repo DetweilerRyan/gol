@@ -29,17 +29,20 @@ mechanism becoming the board's first gate?
 
 ## Answer
 
-Shaped, not specified. The event's documented channel for agent-visible text is JSON output
-carrying a decision-and-reason pair. The mechanics fit the standing rulings — the write is not
-undone, nothing fails — but the field wears the name "block", a vocabulary tension with the
-nothing-gates ruling that wants the user's explicit ruling recorded before adoption, and the
-reason text should carry the same findings the stderr form carries today, byte-comparable
-where possible.
+Shaped, not specified. Researched 2026-09-16: the vocabulary tension dissolved on reading the
+current event documentation — no blocking field exists for this event at all. The documented
+agent-visible channels are additionalContext and systemMessage, both neutrally named, both
+landing in the acting agent's context, so the mechanics and the vocabulary now agree with the
+nothing-gates ruling without any adoption decision. The context text carries the same findings
+the stderr form carries today, byte-comparable where possible. One caution rides along: two
+readings of the same documentation page disagreed on the field set, so the slice's first step
+is the verify-by-running the open questions already mandate — emit the field, sentinel-check
+the agent reports seeing it.
 
 ## Open questions
 
-- Does the decision-field form fire the same way for subagent writes, or does the reason text
-  route only to the main context? Verify by running, with the sentinel method this candidate
+- Does the context field route to a subagent's own context when the subagent's write fired the
+  hook, or only to the main agent? Verify by running, with the sentinel method this candidate
   inherited.
 - The Layer 1 injection path is unaffected — the assess skill reads its output directly — so
   the change touches only the hook handlers. Does the injection contract stay byte-identical?
