@@ -1,6 +1,6 @@
 ---
 name: skill-helpers-sit-outside-every-gate
-title: Move the skill shell helpers into gated TypeScript
+title: Move the skill shell helpers into typed scripts subfolders
 created: 2026-09-16
 ---
 
@@ -41,6 +41,11 @@ quadruple the hook; node-run TypeScript adds an imperceptible ~40ms against the 
 **Rust was asked about and declined on the same numbers:** it saves ~40ms over node-run
 TypeScript on a vale-dominated path, and costs a toolchain the repo does not carry, per-platform
 binaries, and a parallel quality stack for two small programs.
+
+**The finished-state check, manual by the same acceptance:** after the move, re-invoke both
+hooks on the same inputs and compare output byte-for-byte — the Layer 1 count line and the
+prose hook's emission, unchanged. No gate reaches the subfolder to say this, so the slice says
+it itself, in its landing record.
 
 **The honest consequence of the in-skill reading, accepted rather than hidden:** no gate reaches
 `.claude/skills/` in any language — vitest, both tsconfig projects, CRAP and mutation all stop
