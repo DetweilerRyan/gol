@@ -58,3 +58,9 @@ to reach the subfolder is its own decision, not this slice's.
 - The reverted-then-refiled reference-check question rides along: does the conversion make the
   shell-comments gap moot, or do the new TypeScript files' comments stay equally unscanned
   under the `.claude/**` exclusions?
+- Can any of Layer 1 move into Vale instead? Ruled mostly no at the assess-skill design
+  (2026-09-13) and re-examined 2026-09-16: Vale exposes no filename to a rule, emits findings
+  rather than measurements, and must not be the layer that runs where the binary is absent.
+  What remains for the design pass: does the era-aware section check stay in the converted
+  script alone, or also become a Tengo rule on the belt-and-braces precedent the status check
+  set?
