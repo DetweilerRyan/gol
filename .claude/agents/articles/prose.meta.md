@@ -1524,3 +1524,16 @@ question answered far past the original sketch by the Instruction style, the jud
 audit, the Claim style, and the write-time delivery loop. The two residuals — the engineering
 role-duty sweep and the sequence-carrying role descriptions — were recaptured as their own
 candidate the same day.
+
+## The shared-surfaces sweep's outcome (2026-09-16)
+
+The triage ran over `engineering.md`'s 21 role-naming lines with the preserved three-kinds
+table as the rule. Nearly all were the keep kinds — cross-role contracts and single-source
+ownership facts, several being the recorded fix for the original property-ownership drift.
+One removal: the manifest rule's trailing sentence restating two roles' duties as "the two
+cases". The substitution table stayed as the single source on a measurement, not a preference:
+the role files carry no duplicate rows — their few scripts-scoped mentions are each role's own
+duty in its own file. Four of five descriptions were rewritten: the sequence enumeration and
+position phrase left `hardener`'s, the second copy of that same stage list left `architect`'s,
+the three-role gate attribution in `coder`'s became the adopted not-yours form, and the
+implementing-roles sequence phrase left `product`'s. `cleaner`'s was clean as written.

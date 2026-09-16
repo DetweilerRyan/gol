@@ -148,7 +148,7 @@ Inside a worktree, the whole-repo gates (`crap4ts`, `dry4ts`, `test:mutation`, `
 
 - Your slice's diff is `git diff --name-only main...HEAD` — the changed-files manifest from `handoffs.md`. A finding on a file in that list is yours to fix.
 - A finding on a file outside it is pre-existing on `main`, or was inherited from a rebase. Report it; do not fix it. See `workflow.md`'s failure conditions.
-- Anywhere a role's instructions say "the files the previous role touched", the file list comes from that manifest. Never from `git status`, and never from `git diff HEAD~1`. `cleaner`'s scoped mutation scan and `coder`'s per-file test-duration budget are the two cases.
+- Anywhere a role's instructions say "the files the previous role touched", the file list comes from that manifest. Never from `git status`, and never from `git diff HEAD~1`.
 
 ## Verification before handoff
 

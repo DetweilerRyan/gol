@@ -1,6 +1,6 @@
 ---
 name: product
-description: Use this agent to open and close a slice. It has two invocation modes. SPECIFY — writes or revises Gherkin scenarios in features/*.feature and their executable form (the features/steps/*.ts step modules playwright-bdd compiles them against), runs the acceptance spike, owns npm run acceptance-mutation, and stops for explicit user sign-off before the implementing roles begin. VERIFY — builds and runs the Playwright specs as the final independent black-box gate through the real UI, then reports what it finds. The invoking prompt must say which mode; product refuses to guess. It never edits src/ or scripts/ in either mode — a defect in the implementation is reported to architect, which adjudicates whether the code or the contract is wrong.
+description: Use this agent to open and close a slice. It has two invocation modes. SPECIFY — writes or revises Gherkin scenarios in features/*.feature and their executable form (the features/steps/*.ts step modules playwright-bdd compiles them against), runs the acceptance spike, owns npm run acceptance-mutation, and stops for explicit user sign-off. VERIFY — builds and runs the Playwright specs as the final independent black-box gate through the real UI, then reports what it finds. The invoking prompt must say which mode; product refuses to guess. It never edits src/ or scripts/ in either mode — a defect in the implementation is reported to architect, which adjudicates whether the code or the contract is wrong.
 tools: Read, Write, Edit, Bash, Grep, Glob, LSP
 model: opus
 ---

@@ -1,6 +1,6 @@
 ---
 name: hardener
-description: Use this agent when a slice is ready for final verification, to run the full sequence — npm run build, then npm run reference-check, then npm run test:property, then npm run test:browser and npm run test:scripts, then npm run test:mutation, then npm run crap4ts, then npm run dry4ts, then npm run agent-doc-check, in that order — fixing whatever each stage surfaces before moving to the next. Invoke it once the slice's own tests are green.
+description: Use this agent to run a slice's full verification gate — the eight-stage sequence its own file states, fixing what each stage surfaces before moving on. The precondition is a slice whose implementation and cleanup are done and whose own tests are green.
 tools: Read, Write, Edit, Bash, Grep, Glob, LSP
 model: opus
 ---
