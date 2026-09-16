@@ -138,7 +138,7 @@ So prose like `* Uses the @fast-check/vitest package` passes `npm run lint` sile
 
 **A clean `npm run lint` is therefore not evidence that a JSDoc block hovers as written.** **Backtick every `@`-prefixed token.** That remains the only guard on the mid-line half, and it stays a human discipline.
 
-**The alpha tier is deliberately not here.** Several `eslint-plugin-jsdoc` rules have no native oxlint port, and reaching them means oxlint's alpha JS-plugin API plus an alias. That is a separate evaluation with a real dependency cost, filed as `ideas/candidates/a-clean-lint-is-not-evidence-a-block-hovers.md`. None of it is needed to hold what this tier holds.
+**The alpha tier is deliberately not here.** Several `eslint-plugin-jsdoc` rules have no native oxlint port, and reaching them means oxlint's alpha JS-plugin API plus an alias. That is a separate evaluation with a real dependency cost, filed as `backlog/ideas/a-clean-lint-is-not-evidence-a-block-hovers.md`. None of it is needed to hold what this tier holds.
 
 **What no lint rule here reaches at all:** the dead file, symbol and test-title references in `//` comments that motivated this work. Every rule above operates **inside a JSDoc block**, and those references are overwhelmingly in `//` comments.
 

@@ -518,7 +518,7 @@ reaches the articles and the sidecars too; both are switched off by name below i
 
 The articles are off because they carry a backlog nobody has triaged, and the landing constraint below
 forbids shipping that. `.vale.ini` records the measured count beside the opt-out, and
-`ideas/candidates/the-articles-carry-an-untriaged-instruction-backlog.md` is where the question of
+`backlog/ideas/the-articles-carry-an-untriaged-instruction-backlog.md` is where the question of
 whether these rules bind an article at all is filed.
 
 ## Read a big number as unworked, not as broken

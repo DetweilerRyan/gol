@@ -65,7 +65,7 @@ Six forms, worst first:
 
   **The sweep has not reached `CLAUDE.md`'s own module map, and whether it should is open.** It is the worked
   example above, and it is also a census of files on disk. Do not read the example as an exemption, and do
-  not sweep the map on the strength of this rule alone. `ideas/candidates/apply-the-census-count-rule-everywhere.md`
+  not sweep the map on the strength of this rule alone. `backlog/ideas/apply-the-census-count-rule-everywhere.md`
   carries the question.
 
   **The enumeration validates the count, not the claim.** A reader can count six names beside "Six of the

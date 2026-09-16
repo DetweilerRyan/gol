@@ -68,7 +68,7 @@ export default defineConfig({
     baseURL,
     // On, deliberately, even though ~55 of this run's specs fail ON PURPOSE.
     // The run's failure mode that matters is the baseline phase aborting
-    // under parallel load (see ideas/candidates/
+    // under parallel load (see backlog/ideas/
     // pattern-library-e2e-flakes-under-load.md), which is not reproducible
     // on demand -- ~1,300 pattern-library executions across nine load models
     // produced zero failures. An opt-in flag is therefore worthless here:

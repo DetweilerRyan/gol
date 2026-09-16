@@ -110,7 +110,7 @@
     },
     {
       "path": ".gitignore",
-      "reason": "Governs what is tracked and therefore copied into Stryker's sandbox; deliberately left out of the vitest/stryker-exclude reasoning that covers ideas/**, .claude/** and rules/**/rule-tests/**."
+      "reason": "Governs what is tracked and therefore copied into Stryker's sandbox; deliberately left out of the vitest/stryker-exclude reasoning that covers backlog/**, .claude/** and rules/**/rule-tests/**."
     },
     {
       "path": ".prettierignore",
