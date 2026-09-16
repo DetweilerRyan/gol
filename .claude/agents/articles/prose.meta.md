@@ -1478,3 +1478,49 @@ ruled ungated. Both hook scripts now emit the envelope on stdout when the output
 finding or a NOT-RUN warning, keep the full log on stderr byte-identically, and stay silent in
 the agent's context on a clean write. End-to-end proof: a fresh worktree session's agent quoted
 a planted missing-section finding verbatim from the real handler chain.
+
+## The evidence behind "What an instruction file may not carry" (routed 2026-09-16)
+
+<!-- reference-check: allow role-files-carry-exposition-that-belongs-elsewhere.md -- the todo
+     file was closed as landed 2026-09-16 and deleted; this dated record names it, and the full
+     568-line analysis is retrievable from the deletion commit -->
+
+The rules that section states were ruled 2026-09-11 during the five role-file strips, and their
+evidence lived in `role-files-carry-exposition-that-belongs-elsewhere.md` until a 2026-09-16
+audit found nearly all of its work landed. The distilled record, with the full text at the
+deletion commit:
+
+**The motivating measurement (coder.md, 2026-09-11):** 1,857 words; of 18 prose paragraphs, 6
+ran to five or more sentences, the largest a 24-sentence numbered procedure with justification
+woven into each step. The accumulated prose was correct and well argued — each paragraph
+defended a rule someone once got wrong — which is why it accumulated and why sentence-mechanics
+rules could not touch it.
+
+**The three kinds of cross-role mention (measured 2026-09-11: 110 across the five files —
+architect 50, product 16, coder and hardener 15 each, cleaner 13).** A prohibition ("do not
+write X") states a fact about this role and cannot rot. A handoff mention is pinned by
+agent-doc-check's cycle-string check. A description of another role's thresholds or workflow is
+a second copy nothing compares — the only kind that drifts, and the kind rule 6 bans. Most of
+the 110 were the safe kinds and stayed.
+
+**Two adopted defences and one declined checker (ruled 2026-09-11).** Adopted: attribute
+nothing — "not yours" carries the instruction without an ownership fact that can rot; and a
+single source for anything two files must agree on. Declined: a byte-identity checker on the
+cycle-string precedent, because it would need to decide mechanically what is a description
+versus a prohibition, and nobody showed that is decidable. Re-open only on a drifted
+description that survived both adopted rules.
+
+**The packing refutation (measured 2026-09-11).** Mechanising the nested-bullets preference is
+refuted three ways: a max-one-sentence list rule scored the fixed file worse than the defective
+one (20 findings before, 22 after); the chaining-token rule read the packed form as clean; and
+the sentence-counting rule cannot see below sentence granularity, where packing lives. Packing
+has no surface form — the same words are correct as three bullets and wrong as one. Re-open
+only with a rule that discriminates the two measured versions in the right direction.
+
+**What the audit found landed (2026-09-16):** the five strips; the rules as instruction in this
+article; rule 5 answered — even a factual file-list fix belongs to the orchestrating seat, and
+all three passages that said otherwise are gone; all five role sidecars; and the mechanisation
+question answered far past the original sketch by the Instruction style, the judged prose
+audit, the Claim style, and the write-time delivery loop. The two residuals — the engineering
+role-duty sweep and the sequence-carrying role descriptions — were recaptured as their own
+candidate the same day.

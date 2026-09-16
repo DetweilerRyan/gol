@@ -412,8 +412,7 @@ judgement call:
 
 **Prefer nested bullets to a packed sentence.** One instruction per line, under a bolded lead. That is
 a review call — `Instruction.ListItemSentences` counts sentences and cannot see a bullet carrying three
-instructions in one, which is measured and recorded in
-`ideas/todo/role-files-carry-exposition-that-belongs-elsewhere.md`.
+instructions in one, which is measured; `prose.meta.md` carries the packing refutation.
 
 **Audit the destination after compressing.** Routing is only routing if the claim arrived. Grep the
 destination with newlines collapsed — `tr '\n' ' ' < <file> | grep` — because prettier wraps prose and
