@@ -210,6 +210,38 @@ check. The standing gates reach the new file for free: `agent-doc-check`'s
 npm-script, retired-role, and cycle-string checks all cover `.claude/**`, and
 `reference-check` scans every line of every `.md`.
 
+**Gates and the role-file boundary — ruled 2026-09-16, extending point 8.**
+The ownership principle: a role file states the within-invocation facts — its
+own gates, its craft, its boundaries, and its side of the invocation
+contract; the pipeline reference states the between-invocation facts —
+ordering, kind applicability, what the prompt carries, and where handoffs
+route. Two rulings follow, each user 2026-09-16:
+
+- **The step table's gates cell is a citation, never a list.** "Runs its own
+  verification, see `hardener.md`" — restating a role's gate list is the
+  drift this candidate keeps finding. Only commands the seat itself runs and
+  no role file states appear literally: `mutation-invariance`,
+  `test:perf` + `perf-report`, and the merge-protocol commands. Both sides of
+  an invocation contract existing is **not** duplication — `architect.md`'s
+  "absent a mode you are reviewing" is the role's side, `pipelines.md`'s "the
+  prompt must name the mode" is the seat's.
+- **Two role-file migrations, from a scan of all five files.**
+  `product.md`'s six-step acceptance-spike sequence — a cross-role pipeline
+  choreographing `architect` CONTRACT, `coder`'s throwaway spike, and the
+  orchestrator's discard — moves to the story pipeline in `pipelines.md`;
+  `product.md` keeps its conduct rules (refinement may only strengthen,
+  approval once at the end, commit-provisional). `architect.md`'s verbatim
+  quote of hardener's eight-stage sequence trims to a pointer at
+  `hardener.md`; the instruction around it (do not run the gate even to check
+  your own work) stays. The scan found `coder.md`, `cleaner.md`, and
+  `hardener.md` clean — their gate lists are their own and their sequencing
+  content is one-clause orientation, below the threshold worth moving.
+  `hardener.md` is the model: its mutation-invariance block already cites the
+  merge protocol as source of truth rather than restating it. Frontmatter
+  descriptions that restate pipeline facts (architect's trigger list, coder's
+  precondition) are harness-facing selection summaries — left alone, for the
+  slice to thin or keep.
+
 **Two parts of this landed early, and this slice inherits them rather than creating
 them.** Both arrived with the `only-harness-writes-reach-the-language-server` work, which
 needed a decision record before this slice was anywhere near ready:
