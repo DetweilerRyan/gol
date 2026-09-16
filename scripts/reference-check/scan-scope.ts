@@ -4,7 +4,7 @@
 // classified lists -- no filesystem access here, so a test can hand this a
 // literal array.
 //
-// `ideas/**` is excluded from both surfaces, deliberately, for two
+// `backlog/**` is excluded from both surfaces, deliberately, for two
 // independent reasons -- either alone would justify the exclusion:
 //
 //  1. A document about dead references necessarily *names* dead references.
@@ -12,12 +12,12 @@
 //     ideas/doc-references-are-checked-by-nothing.md itself scores 19
 //     unresolved tokens against this checker's own extractor, every one
 //     deliberate (the dead filenames it uses as its own worked examples).
-//  2. An idea file's normal mode is naming a file that does not exist *yet*
+//  2. A board file's normal mode is naming a file that does not exist *yet*
 //     -- a module it proposes creating -- which this checker cannot
 //     distinguish from a defect (a module that existed and was deleted).
 //
 // Both are load-bearing: (1) is a false-positive problem specific to this
-// one file; (2) would recur on every future idea file that sketches a new
+// one file; (2) would recur on every future board file that sketches a new
 // module by name.
 
 export interface ScanScope {
@@ -77,13 +77,10 @@ function isInsideExcludedDocDir(path: string): boolean {
 // Every tracked/untracked-not-ignored .md file is a doc, not an enumerated
 // two-file list plus one directory prefix -- widened so a rule-file
 // directory like vale-styles/JsDoc/README.md is covered the day it lands,
-// with no edit here. ideas/** is excluded for the two reasons scan-scope's
+// with no edit here. backlog/** is excluded for the two reasons scan-scope's
 // own header names: it necessarily names dead references as its own
 // worked examples, and it names files that don't exist *yet* by design.
-// backlog/** carries the same two reasons -- it is the board's incoming
-// home during the ideas/ -> backlog/ migration, and this list drops the
-// ideas/ prefix once that migration retires the directory.
-const DOC_EXCLUDED_PREFIXES = ['ideas/', 'backlog/']
+const DOC_EXCLUDED_PREFIXES = ['backlog/']
 
 function isDocFile(path: string): boolean {
   if (!path.endsWith('.md')) return false

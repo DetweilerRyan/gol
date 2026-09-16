@@ -28,7 +28,7 @@ describe('scanScopeOf', () => {
   })
 
   it('excludes a file outside every included source prefix', () => {
-    expect(scanScopeOf(['coverage/index.ts', 'ideas/todo/foo.ts', 'backlog/todo/foo.ts']).sourceFiles).toEqual([])
+    expect(scanScopeOf(['coverage/index.ts', 'backlog/todo/foo.ts']).sourceFiles).toEqual([])
   })
 
   // Mutation regression: an included prefix alone isn't enough -- the
@@ -56,13 +56,8 @@ describe('scanScopeOf', () => {
     expect(scanScopeOf(['.claude/worktrees/some-slice/CLAUDE.md']).docFiles).toEqual([])
   })
 
-  it('excludes ideas/** and backlog/** from both surfaces', () => {
-    const scope = scanScopeOf([
-      'ideas/todo/some-idea.md',
-      'ideas/candidates/other.md',
-      'backlog/todo/some-idea.md',
-      'backlog/candidates/other.md',
-    ])
+  it('excludes backlog/** from both surfaces', () => {
+    const scope = scanScopeOf(['backlog/todo/some-idea.md', 'backlog/candidates/other.md'])
     expect(scope.sourceFiles).toEqual([])
     expect(scope.docFiles).toEqual([])
   })
@@ -71,7 +66,7 @@ describe('scanScopeOf', () => {
     expect(scanScopeOf(['.claude/settings.json']).docFiles).toEqual([])
   })
 
-  // Gap 1: the doc surface is now every tracked .md outside ideas/** and
+  // Gap 1: the doc surface is now every tracked .md outside backlog/** and
   // .claude/worktrees/**, not an enumerated two-file list plus one
   // directory prefix -- a rule-file directory like vale-styles/JsDoc/ is
   // covered without an edit here.
@@ -81,8 +76,7 @@ describe('scanScopeOf', () => {
     expect(scanScopeOf(['src/cache.meta.md']).docFiles).toEqual(['src/cache.meta.md'])
   })
 
-  it('excludes an .md file sitting directly under ideas/ or backlog/ from the doc surface', () => {
-    expect(scanScopeOf(['ideas/x.md']).docFiles).toEqual([])
+  it('excludes an .md file sitting directly under backlog/ from the doc surface', () => {
     expect(scanScopeOf(['backlog/x.md']).docFiles).toEqual([])
   })
 

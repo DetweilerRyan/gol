@@ -164,7 +164,7 @@ function mutateDecimal(value: string, rand: RandomFn): string {
   // rather than a tidy-up: answering it re-pins every decimal row in
   // mutation-rules.test.ts's PINNED table. No .feature carries a decimal
   // column today, so nothing observable moves either way. Filed as
-  // ideas/candidates/decimal-mutant-magnitude-is-precision-independent.md.
+  // backlog/ideas/decimal-mutant-magnitude-is-precision-independent.md.
   // The three mutants on this line are equivalent *as written* and are
   // expected to survive the mutation gate; that survival is the defect's
   // only remaining signal, so don't collapse this to a literal 1.
