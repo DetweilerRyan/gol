@@ -23,8 +23,9 @@ harness itself. The live-harness run has since been done and it passed.
 role is told that if the hover answers its question it should stop, and not open the
 defining file. That instruction is only safe if a hover tells the truth.
 
-It does not, reliably. Measured 2026-09-08 (full ruling and arm-by-arm evidence in
-`ideas/todo/only-harness-writes-reach-the-language-server.md`):
+It does not, reliably. Measured 2026-09-08 (full ruling and arm-by-arm evidence in the
+`only-harness-writes-reach-the-language-server` proposal on the idea board — a board file
+is transient, so at that slice's tag the record lives in its history):
 
 > Once a file has been touched by an LSP operation, every later answer about it is served
 > from a snapshot the harness holds. Only a write through the harness's own `Edit`/`Write`
