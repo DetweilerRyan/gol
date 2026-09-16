@@ -28,20 +28,33 @@ reach them?
 
 ## Answer
 
-Direction chosen by the user, 2026-09-16: move both scripts into the standard scripts location
-for skills, then convert them to TypeScript. Shaped, not specified — the conversion follows the
-prose-lint runner's precedent, and the callers (one injection line, four hook handlers) follow
-the new invocation form.
+Direction chosen by the user, 2026-09-16: move both scripts into the scripts subfolder inside
+each skill directory — the official skills-layout reading, ruled the same day — then convert
+them to TypeScript. Shaped, not specified — the conversion follows the prose-lint runner's
+precedent, and the callers (one injection line, four hook handlers) follow the new invocation
+form.
+
+**The runner is node directly, never tsx — measured 2026-09-16 on this machine.** Startup best
+of three: sh 5ms, node 25ms, node running TypeScript via type stripping 44ms, npx tsx 338ms;
+vale itself, the hook's real payload, 100ms, and the whole current sh hook 80ms. tsx would
+quadruple the hook; node-run TypeScript adds an imperceptible ~40ms against the vale payload.
+**Rust was asked about and declined on the same numbers:** it saves ~40ms over node-run
+TypeScript on a vale-dominated path, and costs a toolchain the repo does not carry, per-platform
+binaries, and a parallel quality stack for two small programs.
+
+**The honest consequence of the in-skill reading, accepted rather than hidden:** no gate reaches
+`.claude/skills/` in any language — vitest, both tsconfig projects, CRAP and mutation all stop
+at that boundary. The conversion buys the documented layout and a typed language, not test
+coverage; the Definition of Ready's stated-cost line continues to apply, and widening any gate
+to reach the subfolder is its own decision, not this slice's.
 
 ## Open questions
 
-- "The standard scripts folder" has two readings, and the gates only reach one: the repo's
-  gated `scripts/` project, or the skills convention of a scripts subfolder inside each skill
-  directory — which vitest's `.claude/**` exclusion leaves exactly as untested as today.
-  Settle the reading before the design pass.
-- What does a hook pay for `tsx` startup on every matching write, against the shell's
-  near-zero? Measure before converting the hook half.
-- Do the two scripts become one program with two entry modes, or two programs — and does the
-  shared hook-JSON extraction become the `scripts/` root module the layout rule asks for?
-- The full `scripts/` gate tax applies on arrival: CRAP, dry4ts, mutation, vitest. Sized as one
-  slice or two?
+- Node strip-types runs erasable TypeScript only, and the version floor matters: measured
+  working on node v24; the floor for the flag is v22.6. Does anything pin the node version a
+  contributor's hooks run under?
+- Do the two scripts share their hook-JSON extraction, and where does shared code live when
+  each skill's subfolder is its own island?
+- The reverted-then-refiled reference-check question rides along: does the conversion make the
+  shell-comments gap moot, or do the new TypeScript files' comments stay equally unscanned
+  under the `.claude/**` exclusions?
