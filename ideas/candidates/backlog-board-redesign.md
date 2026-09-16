@@ -16,11 +16,11 @@ the demotion commit and the split.
 
 In landing order:
 
-| #   | Child                                         | Delivers                                                                                                                                                                                                                                          |
-| --- | --------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| 1   | `ideas/candidates/backlog-board-migration.md` | The `backlog/` board: `ideas`/`ready`/`done` lanes, per-item artifact folders scaled by kind, `kind:` frontmatter, the retrospective queue, and the mutation-invariance chain edit with a fresh probe.                                            |
-| 2   | `ideas/candidates/pipeline-reference.md`      | `.claude/references/pipelines.md` + sidecar — per-kind classes of service with the citation-only gates rule — and the ruled single-sourcing migrations from `orchestration.md`, CLAUDE.md, `product.md`, and `architect.md`. Lands after child 1. |
-| 3   | `ideas/candidates/wire-in-the-adr-tier.md`    | `adr/0001` recording the board decision with the reevaluation's declines as Options considered, the stale `adr/README.md` reservation fix, and `architect.md`'s `adr/` read trigger. Independent.                                                 |
+| #   | Child                                                         | Delivers                                                                                                                                                                                                                                          |
+| --- | ------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 1   | `ideas/todo/backlog-board-migration.md` (promoted 2026-09-16) | The `backlog/` board: `ideas`/`ready`/`done` lanes, per-item artifact folders scaled by kind, `kind:` frontmatter, the retrospective queue, and the mutation-invariance chain edit with a fresh probe.                                            |
+| 2   | `ideas/candidates/pipeline-reference.md`                      | `.claude/references/pipelines.md` + sidecar — per-kind classes of service with the citation-only gates rule — and the ruled single-sourcing migrations from `orchestration.md`, CLAUDE.md, `product.md`, and `architect.md`. Lands after child 1. |
+| 3   | `ideas/candidates/wire-in-the-adr-tier.md`                    | `adr/0001` recording the board decision with the reevaluation's declines as Options considered, the stale `adr/README.md` reservation fix, and `architect.md`'s `adr/` read trigger. Independent.                                                 |
 
 ## Declined at the reevaluation, so nobody re-proposes them
 
