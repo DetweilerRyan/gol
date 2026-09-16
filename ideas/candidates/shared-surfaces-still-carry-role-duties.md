@@ -33,6 +33,11 @@ contracts stay, the substitution table gets its judgment call, restated duties g
 files that own them. Rewrite the offending descriptions to precondition form. The orchestrating
 seat edits, with the user's word per file class.
 
+**The sweep's scope, stated at promotion 2026-09-16:** `engineering.md`'s measured lines plus
+the five role descriptions, and nothing else. `workflow.md`, `handoffs.md`, and CLAUDE.md are
+out of scope, unmeasured rather than cleared — they earn their own sweep if this one's triage
+method proves out, and the title reads for the surfaces this file bounds.
+
 ## No-gos
 
 - No new checker. The byte-identity checker for descriptions was declined 2026-09-11, re-open
@@ -41,7 +46,9 @@ seat edits, with the user's word per file class.
 ## Open questions
 
 - Do the other four role descriptions carry sequence or order content, or is `hardener.md` the
-  lone instance?
+  lone instance? Reading them is the slice's first step.
+- Does the triage method transfer to the out-of-scope shared surfaces cheaply enough that their
+  sweep is a follow-up rather than a rerun?
 - The substitution table: one table beats five copies, but each row duplicates a role's own
   workflow — which way does the judgment fall?
 - Does rewriting a description change how the invoking prompt reads it anywhere?
