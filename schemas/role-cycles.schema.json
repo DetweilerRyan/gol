@@ -1,0 +1,38 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "role-cycles.config.json",
+  "description": "The canonical role-cycle declaration per pipeline, read by scripts/agent-doc-check's check 4. Each cycle's `roles` array is rendered to the canonical arrow string by the checker itself -- the config carries arrays, never arrow strings, so the glyph and spacing have exactly one author. The role roster stays derived from the agent files; the checker validates each declared role against it. Adding a pipeline's cycle is a config-only diff by design.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["cycles"],
+  "properties": {
+    "$schema": {
+      "type": "string"
+    },
+    "cycles": {
+      "type": "array",
+      "items": { "$ref": "#/definitions/cycle" }
+    }
+  },
+  "definitions": {
+    "cycle": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["pipeline", "roles"],
+      "properties": {
+        "pipeline": {
+          "type": "string",
+          "minLength": 1
+        },
+        "roles": {
+          "type": "array",
+          "minItems": 3,
+          "items": {
+            "type": "string",
+            "minLength": 1
+          }
+        }
+      }
+    }
+  }
+}

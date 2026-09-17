@@ -1,0 +1,9 @@
+{
+  "$schema": "./schemas/role-cycles.schema.json",
+  "cycles": [
+    {
+      "pipeline": "story",
+      "roles": ["product", "coder", "cleaner", "architect", "hardener", "product"]
+    }
+  ]
+}

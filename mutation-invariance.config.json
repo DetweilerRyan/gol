@@ -53,6 +53,12 @@
       "verifiedOn": "2026-09-08"
     },
     {
+      "path": "role-cycles.config.json",
+      "securedBy": "written-argument",
+      "argument": "The canonical role-cycle declarations agent-doc-check's check 4 reads. Never mutated (mutate is src/**) and consulted by no src/-side config: grepped vite.config.ts, both extra vitest configs, src/test-setup.ts, fast-check-stryker-seed.ts and both Stryker configs for the filename -- no reference. Read in production by scripts/agent-doc-check/run.ts alone, whose tests build temp-repo fixtures per case and never read the real root config, so a fixed filename here can never become a test nor change a collected one. Framed by the user's 2026-09-17 config-invariance ruling: a change to a real-world config a checker script reads is mutation-invariant, because the mutation gate on the checker scripts themselves is what makes the implementation behave correctly across runtime inputs -- argued for this predicate's own src/-run scope.",
+      "verifiedOn": "2026-09-17"
+    },
+    {
       "path": ".oxlintrc.json",
       "securedBy": "written-argument",
       "argument": "Not mutated (mutate is src/**); tracked and copied into the sandbox but nothing there consults it -- oxlint is referenced by neither vite.config.ts, vitest.scripts.config.ts, src/test-setup.ts, fast-check-stryker-seed.ts nor either Stryker config.",
@@ -142,7 +148,7 @@
     },
     {
       "path": "schemas/**",
-      "reason": "Backs this gate's own config validation; editing it must re-arm the gate for the same reason as the config file itself."
+      "reason": "Backs config validation for this gate and for agent-doc-check's role-cycles config; editing a schema changes what a gate accepts, so it must re-arm the gate for the same reason as this config file itself."
     }
   ]
 }
