@@ -93,6 +93,44 @@ slice inherits it:
   roles); the job statement must satisfy the Instruction Vale style — two lines, not
   marketing prose.
 
+## The edit ordering, each step green
+
+Written 2026-09-17 to answer the assessment's S finding; the coach's first spec may refine
+it, but the sequence and its one trap are named now:
+
+1. **The reference pair first** — the JTBD+TROOP role-file shape under `.claude/references/`,
+   since the three role files are written to it.
+2. **The three role files** — each lands green immediately: `agent-doc-check`'s frontmatter
+   check covers a new agent file by construction, and the roster widening is safe because
+   `declare-the-role-cycles-in-config` landed — no bare process chain exists, and the docs'
+   process sequences stay mode-decorated.
+3. **The process cycle's declaration** — a config-only, `writer`-legal edit to
+   `role-cycles.config.json`, made **only when a bare chain first lands in prose**. The trap:
+   guard 4 fails a declared cycle with zero bare mentions, so declaring early reds the gate.
+4. **The governance edits last**, so the docs describe roles that exist: the sub-kind
+   discriminator in `definition-of-ready.md`'s kind check, the no-role-edits amendment in
+   CLAUDE.md's Conventions, and `pipelines.md`'s Enabler section splitting into
+   enabler-technical and enabler-process.
+
+## What the checks read, before and after
+
+Written 2026-09-17 to answer the assessment's T finding. The readings that flip:
+
+- `agent-doc-check`'s summary line: **5 agent files today → 8 after** step 2, with every new
+  file's frontmatter validated the day it lands.
+- The Vale `Instruction` style's reach: 5 role files today → 8, the job statements inside its
+  scope.
+- `role-cycles.config.json`: one declared cycle today → two, at step 3 and not before.
+- `reference-check` and `prose-lint` file counts grow by the reference pair; both stay green
+  at every step.
+
+The substantive finished state — a working coach → writer → editor pipeline — is accepted by
+**two recorded user sign-offs**, not a command: the coach's first spec gated to the user, and
+the closing review's ruling. The observable trace is the calibration-record form promotions
+already use — a dated ruling in the commit record. The residual gap (no checker-column T
+anchor fits a sign-off-gated state) is the scale's finding, routed to
+`definition-of-ready.meta.md` by the 2026-09-17 assessment, not this file's to fix.
+
 ## No-gos
 
 - No retro pipeline — coach's file reserves the intake duty in one line; the existing role
