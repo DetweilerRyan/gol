@@ -2,6 +2,7 @@
 name: revise-the-pipelines-reference
 title: Revise pipelines.md per the user's feedback — spike sub-pipeline, mode-bearing cycles, the defect loop, required Enabler design
 created: 2026-09-17
+kind: enabler
 ---
 
 Child of `act-on-the-pipelines-feedback`, the feedback index. Each change below is the user's
