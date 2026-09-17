@@ -331,7 +331,7 @@ A board-rendering script would have to live in `scripts/`, which would subject i
 
 `.claude/agents/` defines two role families: the story pipeline's roles, adapted from unclebob/swarm-forge's six-pack branch, and the process pipeline's roles (`coach`, `writer`, `editor`), which own change to the process corpus itself. It is scoped to this repo's actual commands — Gherkin features, `crap4ts`, `halstead4ts`, `dry4ts`, Stryker, `acceptance-mutation`, Playwright — rather than swarm-forge's tmux and file-based-handoff orchestration. Worktrees are used, but per _slice_ rather than per _role_; see "Running slices concurrently" below.
 
-Each role's full instructions and boundaries live in its own file. Read the relevant one before invoking it, rather than relying on this summary. Shared house rules ported from swarm-forge's `main`-branch constitution live in `.claude/agents/articles/`: `engineering.md`, `workflow.md`, `handoffs.md`. Every role reads those three unconditionally.
+Each role's full instructions and boundaries live in its own file. Read the relevant one before invoking it, rather than relying on this summary. Shared house rules ported from swarm-forge's `main`-branch constitution live in `.claude/agents/articles/`: `engineering.md`, `workflow.md`, `handoffs.md`, `claim-discipline.md`. Every role reads those four unconditionally.
 
 The same directory also holds nine **topic** articles, which a role reads only when its own file names the trigger. It also holds `orchestration.md`, addressed to the session that invokes the roles rather than to any role. See the Documentation map above for the list and what each one is for.
 
@@ -517,7 +517,7 @@ The next slice repeats from step 1 against the new `main`.
 
 So the orchestrator decides when a slice is perf-relevant, and runs `npm run test:perf` **followed by** `npm run perf-report`. Skipping the second leaves the previous run's `reports/perf/latest.md` in place, reading as a successful run of the current tree. The orchestrator also regenerates the `main` baseline first whenever `src/` or `perf/` has moved since that report's own commit. Check it: the report names the commit it was generated from. A role may _recommend_ a run in its handoff, which is a useful signal; no role runs it.
 
-There is deliberately no seventh role for this. The post-merge gate is `hardener`, invoked on `main` and told that it is verifying an integration rather than a slice. The whole tree is then in scope. It already owns exactly that sequence, and already knows when to reach for `test:mutation:full`.
+There is deliberately no dedicated perf role for this. The post-merge gate is `hardener`, invoked on `main` and told that it is verifying an integration rather than a slice. The whole tree is then in scope. It already owns exactly that sequence, and already knows when to reach for `test:mutation:full`.
 
 ## Conventions
 

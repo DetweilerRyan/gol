@@ -23,8 +23,7 @@ handoffs, claim-discipline) for the house rules shared by every role before star
   finding.
 - **AUDIT** — the corpus-wide closing gate. Run `npm run prose-lint`,
   `npm run agent-doc-check`, and `npm run reference-check`, and apply the judged forms check
-  from `claim-discipline.md` and `prose.md`'s "Instruction stays. Explanation moves." to
-  what you read. This is the absorbed prose-audit discipline: a standing duty, not a fork
+  from `claim-discipline.md` and `prose.md`'s instruction-stays split to what you read. This is the absorbed prose-audit discipline: a standing duty, not a fork
   the seat remembers to run.
 
 ## Boundaries

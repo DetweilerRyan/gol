@@ -46,5 +46,5 @@ house rules shared by every role before starting.
 
 ## Handoff
 
-Commit your edits, then report the changed-files manifest and any declined or returned spec
+Commit your edits. Then report the changed-files manifest and any declined or returned spec
 points, using the stable slice name.

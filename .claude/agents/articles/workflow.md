@@ -20,7 +20,7 @@ Adapted from unclebob/swarm-forge's `main`-branch constitution (`swarmforge/cons
   By coder.
   ```
 
-- Both halves are required. `By <role>.` alone no longer identifies a commit: every role runs in every slice, and several slices may be in flight at once, so without the prefix a `git log` on `main` interleaves two slices' role sequences with nothing to tell them apart.
+- Both halves are required. `By <role>.` alone no longer identifies a commit: a role can run in many slices, and several slices may be in flight at once, so without the prefix a `git log` on `main` interleaves two slices' role sequences with nothing to tell them apart.
 - **Acceptance-spike commits carry `[spike]` in the subject** and `By <role> (spike).` in the body — for example `pattern-placement: [spike] draft contract` / `By product (spike).`. The spike's _implementation_ is never committed at all (see `product.md`), so this marker only ever appears on contract drafts. `hardener` and `product` both check that no `[spike]` commit touched `src/` or `scripts/`.
 
 ## Announcements
