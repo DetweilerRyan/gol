@@ -26,12 +26,23 @@ sanctioned idiom stops reading as a standing violation?
 
 ## Answer
 
-None yet — the 10 want a measurement before any prose moves. Plausible but unverified: browser-suffix
-or environment-conditional collection differences between the coverage run and Stryker's dry run.
+The measurement exists — the 22 decomposes completely, with no residual. Measured 2026-09-16 by
+`hardener` during the post-merge integration gate on `main` at the migration's tip:
+
+- **13** — every test in `fast-check-stryker-seed.test.ts`. Stryker's incremental cache records 69
+  collected test files totalling exactly 933; that file is the one collected file absent from the
+  set. Its own module header predicts this: it imports nothing from `src/` or `scripts/`, so
+  `coverageAnalysis: "perTest"` related-file filtering never selects it. The omission was
+  corroborated; the filtering mechanism itself was not independently verified.
+- **9** — the `it.skipIf(underStryker)` tests under `src/` (the other 3 of the probe's 12 skips
+  live in the root file above, which is uncollected anyway).
+
+So the divergence is one uncollected root-level file plus the sanctioned skip idiom — not a
+coverage gap. What remains is prose reconciliation only.
 
 ## Open questions
 
-- Is the residual 10 stable across runs, or does it track something in the tree?
 - Does the reconciliation belong in `hardener.md` (restate the invariant as "identical minus the
-  sanctioned skips, count them") or in `mutation-testing.md` (name the divergence the idiom causes)?
-- No role edits either file — the seat does, on the user's approval, once the measurement exists.
+  sanctioned skips and the uncollected seed file, count them") or in `mutation-testing.md` (name
+  the divergence the idiom and the perTest filter cause)?
+- No role edits either file — the seat does, on the user's approval.
