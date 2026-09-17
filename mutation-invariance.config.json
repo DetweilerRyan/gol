@@ -11,6 +11,10 @@
       "securedBy": "vitest-exclude"
     },
     {
+      "path": "adr/**",
+      "securedBy": "vitest-exclude"
+    },
+    {
       "path": ".claude/**",
       "securedBy": "vitest-exclude"
     },
