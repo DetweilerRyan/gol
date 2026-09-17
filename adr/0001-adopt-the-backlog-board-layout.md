@@ -3,7 +3,8 @@
 - **Status:** Accepted (not yet frozen)
 - **Date:** 2026-09-16
 - **Accepted:** 2026-09-16 by Ryan, per point, at the reevaluation of the
-  `backlog-board-redesign` epic (its board file's git history carries every dated ruling)
+  `backlog-board-redesign` epic (the dated rulings were recorded in that board file's git
+  history, readable across its moves with `--follow`)
 
 ## Context and problem statement
 
@@ -24,7 +25,7 @@ point by point against a tree three landed slices had changed under it.
 - Lane-as-directory with `ls` as the board; no gate, no board machinery in `scripts/`.
 - Fail-safe interactions with the standing checkers (vitest collection, mutation-invariance,
   reference-check, Vale) rather than silent holes.
-- Names that say what a thing is, in the Agile Alliance vocabulary the repo already prefers.
+- Names that say what a thing is, in the Agile Alliance vocabulary the repo preferred.
 
 ## Options considered
 
@@ -42,7 +43,7 @@ without the substrate.
 Declined 2026-09-16: the three-file bundle a directory would have united died with
 `delete-step-test-layer`; the live pairing was measured at 12 `.feature` ↔ 12 step modules,
 1:1 by name, so colocation already read off the filenames. The shared layer (global step
-registry, `features/screenplay/`, the barrel) resists per-capability grouping, and the
+registry, `features/screenplay/`, the barrel) resisted per-capability grouping, and the
 coupling bill had grown past the proposal's estimate via two checkers that post-dated it
 (`mutation-invariance`, `reference-check`).
 
@@ -77,8 +78,8 @@ recognizability case had failed.
   identity slug survives from idea file to tag; the board stayed gate-free.
 - Negative: promotion renames every file to `proposal.md`, so a citation of a board file's
   old basename breaks at promotion — measured the day the migration landed, when three
-  citations of a promoted file's name needed retargeting to the slice slug. Cite slugs, not
-  board filenames.
+  citations of a promoted file's name needed retargeting to the slice slug. A citation that
+  must survive belongs to the slice slug rather than a board filename.
 - Negative: `done/` deletion waits on a retrospective whose trigger and owner were left
   unruled; until ruled, the lane only grows.
 - Neutral: the landing migration (`slice/backlog-board-migration`, 2026-09-16) walked the
@@ -96,7 +97,6 @@ completed item, and whether any skip was granted on the label alone.
 
 ---
 
-**A frozen `Accepted` ADR is immutable.** Correct one by writing a superseding ADR and
-marking this one `Superseded by`, never by editing it. This record is `Accepted (not yet
-frozen)`: the decision binds while the wording absorbs what adoption teaches. See `README.md`
-for the four statuses and who freezes.
+This record is `Accepted (not yet frozen)`: the decision binds while the wording absorbs what
+adoption teaches. `README.md` carries the four statuses, the immutability rule, and who
+freezes.
