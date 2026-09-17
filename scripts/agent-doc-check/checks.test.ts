@@ -184,6 +184,20 @@ describe('checkCycleStringConsistent', () => {
     expect(failures[0].message).toContain(canonical)
   })
 
+  it('joins every declared rendering, comma-separated, when more than one cycle is declared', () => {
+    const twoCycles = configFile([
+      { pipeline: 'story', roles: ['product', 'coder', 'cleaner'] },
+      { pipeline: 'other', roles: ['product', 'architect', 'hardener'] },
+    ])
+    // Matches neither declared rendering, so it lands in driftFailures and
+    // the message lists both -- with one declared cycle, the join has
+    // nothing to separate, so a dropped separator would go unnoticed.
+    const docFiles = [{ path: 'a.md', text: 'coder → cleaner → architect' }]
+    const failures = checkCycleStringConsistent(docFiles, roles, twoCycles, schemaFile)
+    const driftFailure = failures.find((failure) => failure.file === 'a.md')
+    expect(driftFailure?.message).toContain('"product → coder → cleaner", "product → architect → hardener"')
+  })
+
   it('fails an inert declared cycle -- zero byte-identical mentions anywhere -- naming the pipeline and rendering', () => {
     const docFiles = [{ path: 'a.md', text: 'nothing relevant here' }]
     const failures = checkCycleStringConsistent(docFiles, roles, oneStoryCycle, schemaFile)
@@ -194,6 +208,17 @@ describe('checkCycleStringConsistent', () => {
     })
     expect(failures[0].message).toContain('story')
     expect(failures[0].message).toContain(canonical)
+  })
+
+  it('still fails an inert declared cycle when an unrelated, non-matching mention exists elsewhere', () => {
+    // With zero mentions at all, `.some(...)` on an empty array returns
+    // false regardless of the predicate inside it, so that case alone
+    // can't tell "no mention matched" apart from "the predicate always
+    // returns true." A present-but-non-matching mention forces the real
+    // predicate to run and return false.
+    const docFiles = [{ path: 'a.md', text: 'coder → cleaner → architect' }]
+    const failures = checkCycleStringConsistent(docFiles, roles, oneStoryCycle, schemaFile)
+    expect(failures.some((failure) => failure.message.includes('zero byte-identical mentions'))).toBe(true)
   })
 
   it('fails on a config declaring zero cycles', () => {
@@ -217,6 +242,11 @@ describe('checkCycleStringConsistent', () => {
     })
     expect(failures[0].message).toContain('story')
     expect(failures[0].message).toContain('architect')
+    // The roster is sorted, comma-separated -- `roles`'s Set-insertion order
+    // (product, coder, cleaner, architect, hardener) differs from this, so
+    // this pins both the sort and the join separator, not just the roster's
+    // membership.
+    expect(failures[0].message).toContain('architect, cleaner, coder, hardener, product')
     // Skipping the mention pass means the empty-docFiles inert-entry
     // failure never also appears alongside the unknown-role failure.
     expect(failures).toHaveLength(1)

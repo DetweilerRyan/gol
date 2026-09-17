@@ -73,7 +73,13 @@ describe('parseRoleCyclesConfig', () => {
   it('fails on malformed JSON in the schema text, attributing the error to the schema file', () => {
     const errors = errorsOf(parseRoleCyclesConfig(VALID_CONFIG, '{ not json', 'role-cycles.config.json'))
     expect(errors).toHaveLength(1)
-    expect(errors[0]).toContain('schemas/role-cycles.schema.json')
+    // One combined pattern, not two separate toContain checks: this also
+    // pins the short-circuit itself, not just which file gets blamed. Skip
+    // that early return and the same malformed schema still fails, but only
+    // after falling through to ajv.compile(undefined), which reports
+    // "schema-compile" instead of "invalid JSON" -- a check for the schema
+    // path alone can't tell the two apart.
+    expect(errors[0]).toMatch(/schemas\/role-cycles\.schema\.json.*invalid JSON/)
   })
 
   it('fails when the schema itself does not compile', () => {
@@ -112,7 +118,7 @@ describe('parseRoleCyclesConfig', () => {
   it('rejects an unknown top-level property (additionalProperties: false)', () => {
     const badConfig = JSON.stringify({ ...JSON.parse(VALID_CONFIG), extra: true })
     const errors = errorsOf(parseRoleCyclesConfig(badConfig, SCHEMA, 'role-cycles.config.json'))
-    expect(errors.length).toBeGreaterThan(0)
+    expect(errors.some((error) => error.includes('must NOT have additional properties'))).toBe(true)
   })
 
   it('rejects a cycle declaring fewer than three roles', () => {
