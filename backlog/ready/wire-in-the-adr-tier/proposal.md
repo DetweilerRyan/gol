@@ -2,6 +2,7 @@
 name: wire-in-the-adr-tier
 title: Write adr/0001, fix the stale README reservation, and give architect the adr/ read trigger
 created: 2026-09-16
+kind: enabler
 ---
 
 Child of `backlog-board-redesign`, the epic index. Scope ruled by the user at the 2026-09-16
