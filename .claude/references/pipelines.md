@@ -2,7 +2,6 @@
 
 <!-- reference-check: allow tasks.md -- a per-item artifact-name convention; no ready item carries one yet, and the marker goes stale (delete it) when the first does -->
 <!-- reference-check: allow findings.md -- a per-item artifact-name convention; no ready item carries one yet, and the marker goes stale (delete it) when the first does -->
-<!-- reference-check: allow spec.md -- a per-item artifact-name convention; no ready item carries one yet, and the marker goes stale (delete it) when the first does -->
 
 **Audience:** the orchestrating seat, the `idea-*` skills, and the process roles — `coach`
 reads this file. **Read when:** planning a promoted item's cycle, composing any role
@@ -91,7 +90,7 @@ step vocabulary. The seat decides, and tells `hardener` whether a spike ran eith
 | 6    | `hardener`                                                                                         | The manifest; whether an acceptance spike ran; any exemption instruction with its computed diff; slice, not integration | Reads the tree                                                    | Its own — see `hardener.md`  | Per-stage results; any skip named with its instruction                               |
 | 7    | `product` VERIFY                                                                                   | The mode by name; read the committed artifacts, not memory                                                              | Writes `*.e2e.spec.ts`; runs its full acceptance-mutation pass    | Its own — see `product.md`   | Done, or one batched defect report routed to `architect` ADJUDICATE                  |
 
-**Exit:** the merge protocol in CLAUDE.md, which is the source of truth for landing. The item's
+**Exit:** the merge protocol in `.claude/references/merge-protocol.md`, which is the source of truth for landing. The item's
 folder moves `ready/` → `done/` after step 1's rebase and **before** step 3's gate, so the gated
 tip is the true tip.
 
@@ -202,7 +201,7 @@ or, worse, succeeds wrongly.
   pass it returns looks plausible. This is the most dangerous contract in the set.
 - **The mutation-invariant exemption exists only as a thing the seat says.** Compute the
   predicate with `npm run mutation-invariance -- --diff <range>`, name the diff, and put both
-  in the prompt — and never read exit 1 as a pass. CLAUDE.md's merge protocol is the source of
+  in the prompt — and never read exit 1 as a pass. `.claude/references/merge-protocol.md` is the source of
   truth for the exit codes, the sequence, and `hardener`'s side of the contract.
 - **An integration run must say so.** Post-merge, `hardener` on `main` is _verifying an
   integration rather than a slice_ — say that phrase in the prompt.

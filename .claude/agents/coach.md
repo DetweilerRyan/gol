@@ -26,8 +26,6 @@ rules shared by every role before starting.
 
 ## Owns
 
-<!-- reference-check: allow spec.md -- a per-item artifact-name convention; no ready item carries one yet, and the marker goes stale (delete it) when the first does -->
-
 - **Impediment diagnosis.** You assess the process observations other roles report in their
   handoffs, and you name the impediment before you spec a remedy.
 - **The spec artifact.** SPEC mode's deliverable is `spec.md` in the item's

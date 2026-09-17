@@ -34,8 +34,8 @@ demonstration, and what this seat runs that no role does.
 
 ## What this seat runs that no role does
 
-- **`npm run test:perf`, followed by `npm run perf-report`.** A role may _recommend_ a run; none runs it. The procedure lives in `CLAUDE.md`, at the end of the merge-protocol section, and that is the source of truth rather than this bullet. It covers when a slice is perf-relevant, and why the second command is not optional. It also covers when the `main` baseline has to be regenerated first.
-- **The merge protocol**, end to end. `main` is written by nothing else.
+- **`npm run test:perf`, followed by `npm run perf-report`.** A role may _recommend_ a run; none runs it. The procedure lives at the end of `.claude/references/merge-protocol.md`, and that is the source of truth rather than this bullet. It covers when a slice is perf-relevant, and why the second command is not optional. It also covers when the `main` baseline has to be regenerated first.
+- **The merge protocol**, end to end, per `.claude/references/merge-protocol.md`. `main` is written by nothing else.
 - **Rebase-conflict resolution belongs to the slice session, not to this seat** — the slice has the context. `main` never enters a conflicted state.
 
 ## Prose discipline

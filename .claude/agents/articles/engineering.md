@@ -121,7 +121,7 @@ Five gate and the rest are report-only. **The gating five:** `npm run ast-grep:r
 - a comment or doc line naming a file, symbol or line number that does not resolve
 - a mutation-invariance allowlist entry that no longer holds against the tree
 
-**Read `npm run mutation-invariance`'s exit code carefully, because it carries three meanings rather than two.** 0 is invariant, 2 is not invariant, and **1 means the config failed validation, so no verdict exists** — never read 1 as a pass. It is also the one no role runs. The orchestrating session runs it at merge step 3, and CLAUDE.md's merge protocol is the source of truth for when.
+**Read `npm run mutation-invariance`'s exit code carefully, because it carries three meanings rather than two.** 0 is invariant, 2 is not invariant, and **1 means the config failed validation, so no verdict exists** — never read 1 as a pass. It is also the one no role runs. The orchestrating session runs it at merge step 3, and `.claude/references/merge-protocol.md` is the source of truth for when.
 
 Do not generalize "the `scripts/` tools are advisory" to any of these four.
 
