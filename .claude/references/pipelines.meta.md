@@ -49,6 +49,19 @@ which file to `git log`:
   `agent-doc-check`'s check 4 pins byte-identical everywhere it appears — including in
   `pipelines.md`'s story section, which is deliberate: the gate now covers this file for free.
 
+## The evidence behind two sequencing rules
+
+Carried over from `orchestration.md` when its sequencing section migrated, so the measurements
+survive the move:
+
+- **`cleaner` after every `coder` invocation** — the measured cost of the single-pass
+  alternative: one slice shipped a function at CRAP 8.0 against a threshold of 6, and it stood
+  until a much later pass; another left three `dry4ts` clones, a hard gate failure. `cleaner`
+  structurally could not have caught either, because both were authored after its single scan.
+- **Do not widen `coder`'s scope** — handing it another role's work inflates an invocation from
+  minutes to tens of minutes and runs the gates twice. It also turns `architect`'s
+  property-coverage review into reviewing someone else's work rather than authoring it.
+
 ## The slice-name contract's correction
 
 `orchestration.md`'s migrated bullet said `product` invents the slice name in SPECIFY. Under

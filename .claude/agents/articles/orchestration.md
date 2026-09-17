@@ -14,23 +14,14 @@ The five roles have files. The seat that invokes them does not, and until this a
 
 Topic articles keep their own triggers, and exactly one names this seat: **`mutation-testing.md`**, on its Audience line and again in its exemption trigger. Read it for a second thing its triggers do _not_ route you to. That is its fourth failure mode: the shell pipeline that eats the exit status of the thing being measured. It is the one place that trap is written down. It bit this seat on a `npm run test:perf` run rather than on anything to do with mutants.
 
-## The invocation contracts
+## The pipeline reference is this seat's operating manual
 
-Each of these is something a role expects to be told. Nothing on the role's side can supply it; a missing one either hard-fails or, worse, succeeds wrongly.
-
-- **`product` requires a mode.** SPECIFY or VERIFY, named in the prompt. It refuses to guess, so omitting it costs a round trip and nothing else.
-- **`architect` requires a mode, and omitting it does _not_ hard-fail.** Its file says the prompt will name one and that absent a name **you are reviewing**. A DESIGN, CONTRACT or ADJUDICATE request sent without its mode comes back as a REVIEW pass that looks entirely successful. This is the most dangerous contract in the set, because the failure is silent and the output is plausible.
-- **The mutation-invariant exemption exists only as a thing you say.** `hardener` runs stage 5 absent an instruction not to, without exception. It may check the predicate and must run the stage anyway if it can falsify it; a verification that comes back "invariant" grants nothing. Compute the predicate with `npm run mutation-invariance -- --diff <range>`, name the diff it was computed over, and put both in the prompt. Exit 0 is invariant, 2 is not, and **1 means the config failed validation so no verdict exists** — never read 1 as a pass. See the merge protocol in CLAUDE.md for where the command sits in the sequence. **That is the source of truth, and this article defers to it if the two ever disagree.**
-- **An integration run must say so.** After a merge, you invoke `hardener` on `main`, _verifying an integration rather than a slice_. See CLAUDE.md's merge protocol, step 5, and its "no seventh role" paragraph. Absent that phrase it is gating a slice. Its standing rule is then to report-and-stop on any gate failure outside the changed-files manifest, which an integration run does not have. So the post-merge gate would halt at its first finding instead of fixing it. Say it explicitly; `hardener.md`'s manifest rule carries the matching exception.
-- **`cleaner`'s scope is `coder`'s handoff manifest.** Cleaner cannot see the previous invocation. Carry the manifest forward into its prompt, or its mutation scan and its cleanup both aim at nothing in particular.
-- **The slice name must be re-injected into every downstream prompt.** `product` invents it in SPECIFY (`product.md`'s handoff section); `coder`, `cleaner`, `architect` and `hardener` each close their own handoff with it. It is also the branch, the worktree directory, and the `slice/<name>` tag.
-
-## State only this seat can carry
-
-Subagents are stateless between invocations. Two counters therefore belong here and nowhere else.
-
-- **The two-round-trip budget on an adjudicated finding.** `handoffs.md` states the rule and `architect.md` repeats it. What neither can do is apply it, because **nothing but this seat can count to two**. The roles are stateless between invocations, and a third appearance looks like a first to both of them. Hold the count, and escalate to the user when it is reached.
-- **Whether an acceptance spike ran.** `hardener.md` tells `hardener` to check that a spike left nothing behind _if the slice ran one_, and only this seat knows. The spike also leaves a throwaway implementation that this seat discards.
+The invocation contracts, the counters only this seat can carry, the sequencing rules, and the
+escalation lanes all moved to `.claude/references/pipelines.md` on 2026-09-16. That file states
+each backlog kind's full class of service — the steps, what every invoking prompt must carry,
+and where handoffs route. **Read it before composing any role invocation.** This article keeps
+the seat's conduct: prose discipline, the exemption-flag protocol, the VERIFY-skip
+demonstration, and what this seat runs that no role does.
 
 ## The idea board belongs to this seat
 
@@ -40,25 +31,6 @@ Subagents are stateless between invocations. Two counters therefore belong here 
 - **Hold the epic and spike exits open.** A candidate that fails assessment is not merely refused. The disposition names what kind of not-ready it is. A spike it generates is a first-class slice.
 - **Keep `ready/` at about three.** The cap is prose, deliberately — the board has no gate, and a hard refusal would be its first.
 - **The kind plans the cycle; the diff authorizes it.** An enabler's expected cycle omits `product`, but the skip is confirmed by the walk-every-path demonstration below, never by the label alone.
-
-## The escalation lanes that end here
-
-Four lanes terminate in this seat, and each is described only as an outbound prohibition on the role that takes it. When one fires, the role has stopped and is waiting.
-
-- **`product`, triage bucket D** — reports and stops.
-- **`product` dissent** — `architect` is authoritative on code-vs-spec; **the user is authoritative on what the product should do**, and only this seat can reach the user.
-- **`architect` ADJUDICATE, outside the changed-files manifest** — routed here by name.
-- **`hardener`, a gate failure outside the slice manifest** — reports and stops. `workflow.md` states the general form: a failure there is either a pre-existing break on `main` or something a rebase brought in, and both belong to this seat.
-
-## Sequencing this seat owns
-
-- **`cleaner` runs after _every_ `coder` invocation**, not once after the last. Measured cost of the alternative: one slice shipped a function at CRAP 8.0 against a threshold of 6. That stood until a much later pass. Another left three `dry4ts` clones, a hard gate failure. `cleaner` structurally could not have caught them, because they were authored after its single scan. Each pass also gets a small diff instead of the union of every invocation.
-- **Re-invoke `hardener` whenever an adjudicated fix touches `src/`**, before `product` re-verifies. Not optional, and mostly cheap — Stryker runs `--incremental`, so the cost tracks the diff.
-- **Do not widen `coder`'s scope.** It writes focused unit tests and the implementation, and runs `test:unit`, `build`, `ast-grep`, lint and format — plus `test:browser` if it touched that layer. Property tests are `architect`'s. `crap4ts`, `dry4ts`, `acceptance-mutation` and every mutation run belong to `cleaner` and `hardener`.
-
-  Handing `coder` another role's work inflates an invocation from minutes to tens of minutes, and runs the gates twice. It also turns `architect`'s property-coverage review into reviewing someone else's work rather than authoring it. A design step reading "module + unit **and property** suite" is a split, not one invocation.
-
-- **The design pass is this seat's call, not `product`'s.** Its triggers are facts about the current shape of `src/`, which `product` is deliberately blind to. They live in CLAUDE.md's "The optional architect design pass"; no article states them.
 
 ## What this seat runs that no role does
 
