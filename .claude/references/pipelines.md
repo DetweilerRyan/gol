@@ -2,9 +2,11 @@
 
 <!-- reference-check: allow tasks.md -- a per-item artifact-name convention; no ready item carries one yet, and the marker goes stale (delete it) when the first does -->
 <!-- reference-check: allow findings.md -- a per-item artifact-name convention; no ready item carries one yet, and the marker goes stale (delete it) when the first does -->
+<!-- reference-check: allow spec.md -- a per-item artifact-name convention; no ready item carries one yet, and the marker goes stale (delete it) when the first does -->
 
-**Audience:** the orchestrating seat and the `idea-*` skills. **Read when:** planning a promoted
-item's cycle, composing any role invocation, and when an escalation interrupts a pipeline.
+**Audience:** the orchestrating seat, the `idea-*` skills, and the process roles — `coach`
+reads this file. **Read when:** planning a promoted item's cycle, composing any role
+invocation, and when an escalation interrupts a pipeline.
 
 This file is the single source for the **between-invocation** facts. It says which steps run
 for which kind, what each invoking prompt must carry, and where handoffs route. A role file remains the
@@ -93,18 +95,20 @@ step vocabulary. The seat decides, and tells `hardener` whether a spike ran eith
 folder moves `ready/` → `done/` after step 1's rebase and **before** step 3's gate, so the gated
 tip is the true tip.
 
-## Enabler — checker-bearing
+## Enabler-technical — checker-bearing
 
-The finished state is a check's reading, so a `product` VERIFY pass has nothing to observe and
-**no `product` invocation runs in either mode**. The kind plans that skip; the diff authorizes
-it. Before skipping, walk **every** path in the diff and account for each, per
-`orchestration.md`'s "`product` VERIFY does not run on a slice with no behaviour change". The
-same section says how to record the moot merge step 8. The cycle, modes named:
+The diff lands in the tree the gates measure (`src/`, `scripts/`, configs, `rules/`), per
+`definition-of-ready.md`'s sub-kind discriminator. The finished state is a check's reading,
+so a `product` VERIFY pass has nothing to observe and **no `product` invocation runs in
+either mode**. The kind plans that skip; the diff authorizes it. Before skipping, walk
+**every** path in the diff and account for each, per `orchestration.md`'s "`product` VERIFY
+does not run on a slice with no behaviour change". The same section says how to record the
+moot merge step 8. The cycle, modes named:
 **architect (DESIGN, required) → coder → cleaner → architect (REVIEW) → hardener**.
 
 ```mermaid
 flowchart LR
-  B[architect DESIGN — required] --> C[coder or seat]
+  B[architect DESIGN — required] --> C[coder]
   C --> D[cleaner, per coder pass]
   D --> E[architect REVIEW]
   E --> F[hardener]
@@ -117,12 +121,48 @@ The steps are the story table's rows 2–6, with three differences:
   Enabler has no `product` SPECIFY, so the DESIGN pass is its only pre-implementation gate. A
   Story has the spike and sign-off; an Enabler has only this. Row 2's
   "only when a trigger fires" condition applies to the Story pipeline alone.
-- **Surfaces no role may edit fall to the seat.** CLAUDE.md, articles, sidecars, role files, and
-  reference files are the seat's to write, each edit with the user's explicit approval per
-  CLAUDE.md's Conventions. An enabler that is mostly documentation is therefore mostly
-  seat-executed, with `coder` and `cleaner` taking only the `src/` and `scripts/` share.
+- **Staleness recording stays with the seat.** A role reports what its change made stale in
+  the process corpus; the seat records it per CLAUDE.md's Conventions. A substantive corpus
+  change discovered inside a technical enabler is a split signal — it is `enabler-process`
+  work, not a side edit.
 - **Acceptance criteria are fitness functions**: name the check and both readings (before and
   after) in the proposal, per `definition-of-ready.md`'s checker-bearing T anchors.
+
+**Exit:** as the story, minus step 8's figure — record the moot step per the
+`orchestration.md` section cited above.
+
+## Enabler-process — checker-bearing
+
+The diff lands in the instructions that run the gates (`.claude/**`, CLAUDE.md,
+`.claude/references/`, `adr/`, the board docs). No `product` runs, and the same
+walk-every-path accounting applies. The cycle, modes named:
+**coach (SPEC) → user sign-off → writer → editor (CLEAN, per writer pass) → editor (AUDIT)
+→ coach (REVIEW)**. The bare roster this decorates is the process cycle declared in
+`role-cycles.config.json`, pinned by `agent-doc-check`'s check 4.
+
+```mermaid
+flowchart LR
+  A[coach SPEC] --> U[user sign-off]
+  U --> W[writer]
+  W --> X[editor CLEAN, per writer pass]
+  X --> Y{more writer work?}
+  Y -->|yes| W
+  Y -->|no| Z[editor AUDIT]
+  Z --> R[coach REVIEW]
+  R --> G[merge protocol]
+```
+
+| Step | Role + mode                        | The prompt must carry                                           | Artifacts                                      | Gates                     | Handoff                                                  |
+| ---- | ---------------------------------- | --------------------------------------------------------------- | ---------------------------------------------- | ------------------------- | -------------------------------------------------------- |
+| 1    | `coach` SPEC                       | The mode by name; the proposal's content; the slice name        | Writes `spec.md` in the item's `ready/` folder | Its own — see `coach.md`  | The spec, stopped for user sign-off                      |
+| 2    | `writer`                           | The signed spec as prompt content; the slice name               | Edits exactly the files the spec names         | Its own — see `writer.md` | Changed-files manifest; declined or returned spec points |
+| 3    | `editor` CLEAN — per `writer` pass | The mode by name; `writer`'s manifest, verbatim; the slice name | Reads the manifest's files                     | Its own — see `editor.md` | What changed or that nothing did                         |
+| 4    | `editor` AUDIT                     | The mode by name; the slice name                                | Reads the corpus                               | Its own — see `editor.md` | Findings by file, or a measured clean                    |
+| 5    | `coach` REVIEW                     | The mode by name; the signed spec; the slice name               | Reads the landed corpus against the spec       | Its own — see `coach.md`  | Cycle closed, or divergences named                       |
+
+**The user gate sits at step 1's close**, on the `product` SPECIFY precedent. Governance
+changes gate to the user at the spec; the closing review needs no second gate. `hardener`
+runs at the merge protocol, not as a pipeline step.
 
 **Exit:** as the story, minus step 8's figure — record the moot step per the
 `orchestration.md` section cited above.
@@ -153,6 +193,11 @@ Each of these is something a role expects the prompt to supply. A missing one ei
 or, worse, succeeds wrongly.
 
 - **`product` requires a mode.** SPECIFY or VERIFY, named — omitting it costs a round trip.
+- **`coach` requires a mode.** SPEC or REVIEW, named — it refuses to guess, per its file.
+- **`editor` requires a mode**, CLEAN or AUDIT, and CLEAN carries `writer`'s manifest
+  verbatim — the `cleaner` manifest contract, in the process family.
+- **`writer` receives the signed spec as prompt content**, plus the slice name. No spec in
+  the prompt, no authority to edit.
 - **Name `architect`'s mode, even for REVIEW.** An unnamed mode fails silently, and the wrong
   pass it returns looks plausible. This is the most dangerous contract in the set.
 - **The mutation-invariant exemption exists only as a thing the seat says.** Compute the
@@ -181,6 +226,7 @@ Roles are stateless between invocations. Two counters live here and nowhere else
 
 - **`cleaner` runs after every `coder` invocation**, not once after the last. Each pass gets a
   small diff instead of the union of every invocation.
+- **`editor` CLEAN runs after every `writer` pass**, on the same reasoning.
 - **Re-invoke `hardener` whenever an adjudicated fix touches `src/`**, before `product`
   re-verifies.
 - **Do not widen `coder`'s scope.** Another role's work handed to it runs that work's gates

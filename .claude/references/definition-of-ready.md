@@ -18,7 +18,7 @@ Run this before the kind check; an exempt file never reaches it. Two classes are
 Ask first: would a `product` VERIFY pass have anything to observe?
 
 - **Contract-bearing** (SAFe: user story) — the finished state is reachable through the accessible tree. It gets Gherkin.
-- **Checker-bearing** (SAFe: architecture or infrastructure enabler) — the finished state is a check's reading, usually a command's output or exit code. A VERIFY pass therefore has nothing to observe. Its acceptance criteria are fitness functions, in the evolutionary-architecture sense.
+- **Checker-bearing** (SAFe: architecture or infrastructure enabler) — the finished state is a check's reading, usually a command's output or exit code. A VERIFY pass therefore has nothing to observe. Its acceptance criteria are fitness functions, in the evolutionary-architecture sense. A second discriminator splits the sub-kind, and the `kind:` label carries it. A diff landing in the tree the gates measure (`src/`, `scripts/`, configs, `rules/`) is **enabler-technical**. A diff landing in the instructions that run the gates (`.claude/**`, CLAUDE.md, `.claude/references/`, `adr/`, the board docs) is **enabler-process**. V and T score against the checker-bearing column either way.
 - **Knowledge-bearing** (SAFe: exploration enabler) — a readiness spike. The finished state is a recorded answer to a named question.
 
 Score V and T against the kind's own column below. Never score a checker-bearing idea against user-visible value. An assessment record's kind row carries the label, so a reader oriented by SAFe never has to look the mapping up. Ruled by the user 2026-09-14.

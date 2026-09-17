@@ -4,6 +4,10 @@
     {
       "pipeline": "story",
       "roles": ["product", "coder", "cleaner", "architect", "hardener", "product"]
+    },
+    {
+      "pipeline": "process",
+      "roles": ["coach", "writer", "editor", "coach"]
     }
   ]
 }

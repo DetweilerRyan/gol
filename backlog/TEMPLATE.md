@@ -3,7 +3,7 @@ name: kebab-slug-matching-this-filename
 title: One line, imperative, what the slice would deliver
 created: YYYY-MM-DD
 # kind is ruled by /idea-assess and written by the seat at assessment, not at capture:
-# kind: story | enabler | spike | epic
+# kind: story | enabler-technical | enabler-process | spike | epic
 ---
 
 ## Situation
