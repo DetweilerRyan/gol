@@ -8,15 +8,16 @@ narrowing, or overturning one — never in order to follow one.
 `extract-the-merge-protocol`, 2026-09-17. Before this slice, CLAUDE.md's `### Merge
 protocol` section — the heading, the serial-landing paragraph, the nine numbered steps,
 and the perf-ownership paragraphs — measured 18,657 bytes of CLAUDE.md's 89,387, 20.9
-percent, measured on the commit `extract-the-merge-protocol` branched from. The body moved to
-`.claude/references/merge-protocol.md` byte-for-byte, and `editor` AUDIT and `coach`
-REVIEW each verified it that way: no word, emphasis, ordinal, or indentation changed.
-`coach` REVIEW then found two referents the move had broken and ruled two repairs, which
-are the only departures from the original bytes. Step 5's allowlist paragraph read "It
-once lived in this file", where "this file" meant CLAUDE.md and now named the wrong one;
-it names CLAUDE.md outright. Step 6 read `See "Idea board" above`, pointing at a section
-this file does not have; it names CLAUDE.md's section. Both are recorded here so a later
-diff against CLAUDE.md's history finds them accounted for rather than unexplained. `.claude/references/merge-protocol.meta.md` — this file — was
+percent, measured on the commit `extract-the-merge-protocol` branched from. The body
+moved to `.claude/references/merge-protocol.md` byte-for-byte, and `editor` AUDIT and
+`coach` REVIEW each verified it that way: no word, emphasis, ordinal, or indentation
+changed. `coach` REVIEW then found two referents the move had broken and ruled two
+repairs, which are the only departures from the original bytes. Step 5's allowlist
+paragraph read "It once lived in this file", where "this file" meant CLAUDE.md and now
+named the wrong one; it names CLAUDE.md outright. Step 6 read `See "Idea board" above`,
+pointing at a section this file does not have; it names CLAUDE.md's section. Both are
+recorded here so a later diff against CLAUDE.md's history finds them accounted for
+rather than unexplained. `.claude/references/merge-protocol.meta.md` — this file — was
 created empty of moved prose; nothing in the moved block qualified as evidence rather
 than instruction, so there was nothing to route here from the move itself.
 
@@ -46,8 +47,8 @@ ruling exists to avoid, and this move keeps the protocol in exactly one place.
 
 ## Known-stale window
 
-Three files still name `CLAUDE.md` as the merge protocol's home, and `extract-the-merge-protocol` did not
-repoint them:
+Three files still name `CLAUDE.md` as the merge protocol's home, and
+`extract-the-merge-protocol` did not repoint them:
 
 - `vite.config.ts`'s path-allowlist comment
 - `schemas/mutation-invariance.schema.json`, in two `description` strings
@@ -58,10 +59,10 @@ path. That instruction is the boundary. All three are also on the mutation-invar
 **absent** list — `vite.config.ts`, `schemas/**` and `scripts/**` each appear there — so
 editing any of them would have re-armed a full mutation run for a prose move. Read that
 as a cost that argues for the boundary, never as the boundary itself: absent-list
-membership constrains what a diff costs, not who may write a file. The retained CLAUDE.md
-pointer keeps those three citations navigable — a reader
-following any of them reaches CLAUDE.md, then `.claude/references/merge-protocol.md` one
-hop further. An `enabler-technical` item is recommended to repoint the three directly.
+membership constrains what a diff costs, not who may write a file. The retained
+CLAUDE.md pointer keeps those three citations navigable — a reader following any of them
+reaches CLAUDE.md, then `.claude/references/merge-protocol.md` one hop further. An
+`enabler-technical` item is recommended to repoint the three directly.
 
 ## Check readings at landing
 
