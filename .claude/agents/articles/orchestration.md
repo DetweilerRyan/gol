@@ -2,7 +2,7 @@
 
 **Audience:** the orchestrating session - **Read when:** at session start, before composing any role invocation, and at every merge-protocol step.
 
-The five roles have files. The seat that invokes them does not, and until this article it had no reading list either. That is the gap this article exists to close. **Everything here is either a duty no role can perform, or a contract a role expects the invoking prompt to satisfy. A contract earns its place here only if the role's own file was the one place that documented it.** Nothing here restates a role's own work.
+The roles have files. The seat that invokes them does not, and until this article it had no reading list either. That is the gap this article exists to close. **Everything here is either a duty no role can perform, or a contract a role expects the invoking prompt to satisfy. A contract earns its place here only if the role's own file was the one place that documented it.** Nothing here restates a role's own work.
 
 **Why this is an article and not a sixth file in `.claude/agents/`.** That directory's direct `*.md` children are agent files by definition. `listAgentFiles` in `scripts/agent-doc-check/run.ts` hands every one of them to check 2. Check 2 requires frontmatter naming a `tools` allowlist and a `model`. This seat is never invoked as an agent and has neither, so a role file here could only pass the gate by asserting something untrue. `articles/` is excluded from that scan for exactly this reason, and `mutation-testing.md` already names this seat on its Audience line.
 
