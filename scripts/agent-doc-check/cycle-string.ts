@@ -37,6 +37,12 @@ function escapeRegExp(value: string): string {
 // in the source docs currently produces one, so this is future headroom
 // rather than something exercised today.
 export function findCycleMentions(text: string, knownRoles: ReadonlySet<string>): CycleMention[] {
+  // Equivalent mutant (`if (false)` survives): with no roles the alternation is empty, so every arrow
+  // repeat ends at a `\b` that demands a word character exactly where the next repeat's mandatory `→`
+  // would have to sit -- `{2,}` never completes, the pattern matches nothing, and [] falls out of the
+  // loop regardless. Verified by hand-applying the mutant under an unfiltered `npm run test:scripts`.
+  // The guard stays even so: its deadness is an artifact of the per-link `\b` + `{2,}` shape (it was
+  // load-bearing under the pre-mode-marker pattern), not a contract the empty-set case may lean on.
   if (knownRoles.size === 0) return []
   const roleAlternation = [...knownRoles].map(escapeRegExp).join('|')
   // A parenthetical mode marker is optional on each link, so it is consumed
