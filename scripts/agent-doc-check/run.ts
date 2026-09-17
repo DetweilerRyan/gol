@@ -2,7 +2,8 @@
 // Gating checker over `.claude/**` + CLAUDE.md: the binary facts described
 // in CLAUDE.md's "Custom quality tooling" section (npm run references
 // resolve, agent frontmatter validates, no stale retired-role references,
-// the cycle string is identical everywhere, every rules/*.yml is named in
+// every cycle-shaped mention matches a cycle declared in
+// role-cycles.config.json, every rules/*.yml is named in
 // the rule documentation file -- see RULE_DOC_PATH below -- and vice versa).
 // Follows ast-grep-rule-check's shape exactly:
 // this file is pure I/O (recursive-ish directory reads, package.json
@@ -122,6 +123,21 @@ function readRuleDocFile(repoRoot: string): RawFile {
   return readRawFile(repoRoot, RULE_DOC_PATH)
 }
 
+// Same existsSync-guard-that-throws-by-name idiom as RULE_DOC_PATH above --
+// check4's canonical rendering authority is this config, so a missing file
+// must never read as "no cycles to verify, pass." A moved or renamed
+// config throws by name instead of silently checking nothing.
+const ROLE_CYCLES_CONFIG_PATH = 'role-cycles.config.json'
+const ROLE_CYCLES_SCHEMA_PATH = 'schemas/role-cycles.schema.json'
+
+function readRequiredFile(repoRoot: string, relativePath: string, whatFor: string): RawFile {
+  const fullPath = path.join(repoRoot, relativePath)
+  if (!existsSync(fullPath)) {
+    throw new Error(`${whatFor} not found: ${relativePath} -- check4 has nothing to read`)
+  }
+  return readRawFile(repoRoot, relativePath)
+}
+
 export function gatherCheckInput(repoRoot: string): CheckInput {
   return {
     docFiles: listDocFiles(repoRoot),
@@ -129,6 +145,8 @@ export function gatherCheckInput(repoRoot: string): CheckInput {
     ruleDocFile: readRuleDocFile(repoRoot),
     packageScripts: loadPackageScripts(repoRoot),
     ruleIds: listRuleIds(repoRoot),
+    cycleConfigFile: readRequiredFile(repoRoot, ROLE_CYCLES_CONFIG_PATH, 'Role-cycles config'),
+    cycleSchemaFile: readRequiredFile(repoRoot, ROLE_CYCLES_SCHEMA_PATH, 'Role-cycles schema'),
   }
 }
 

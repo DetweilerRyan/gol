@@ -74,6 +74,38 @@ describe('loadPackageScripts', () => {
 const ARTICLE_PATH = '.claude/agents/articles/ast-grep-rules.md'
 const CYCLE = 'product → coder → cleaner → architect → hardener → product'
 
+const ROLE_CYCLES_SCHEMA = JSON.stringify({
+  type: 'object',
+  additionalProperties: false,
+  required: ['cycles'],
+  properties: {
+    $schema: { type: 'string' },
+    cycles: { type: 'array', items: { $ref: '#/definitions/cycle' } },
+  },
+  definitions: {
+    cycle: {
+      type: 'object',
+      additionalProperties: false,
+      required: ['pipeline', 'roles'],
+      properties: {
+        pipeline: { type: 'string', minLength: 1 },
+        roles: { type: 'array', minItems: 3, items: { type: 'string', minLength: 1 } },
+      },
+    },
+  },
+})
+
+function writeRoleCyclesConfig(root: string): void {
+  writeFile(root, 'schemas/role-cycles.schema.json', ROLE_CYCLES_SCHEMA)
+  writeFile(
+    root,
+    'role-cycles.config.json',
+    JSON.stringify({
+      cycles: [{ pipeline: 'story', roles: ['product', 'coder', 'cleaner', 'architect', 'hardener', 'product'] }],
+    }),
+  )
+}
+
 // Shared setup for the two "fully consistent" cases below, which differ only
 // in whether CLAUDE.md itself also mentions the rule -- that's the one axis
 // the repoint changed the meaning of, so it's the one parameter here.
@@ -82,6 +114,7 @@ function buildConsistentRepo(root: string, { mentionRuleInClaudeMd }: { mentionR
   writeFile(root, 'CLAUDE.md', `\`npm run build\`\n${CYCLE}\n${mentionRuleInClaudeMd ? 'the `no-foo` rule.\n' : ''}`)
   writeFile(root, ARTICLE_PATH, 'the `no-foo` rule.\n')
   writeFile(root, 'rules/no-foo.yml', 'id: no-foo\n')
+  writeRoleCyclesConfig(root)
   for (const role of ['product', 'coder', 'cleaner', 'architect', 'hardener']) {
     writeFile(
       root,
@@ -116,6 +149,7 @@ describe('runCheck', () => {
     writeFile(root, ARTICLE_PATH, 'nothing rule-shaped\n')
     mkdirSync(path.join(root, 'rules'), { recursive: true })
     writeFile(root, '.claude/agents/coder.md', GOOD_AGENT.replace('name: coder', 'name: cleaner'))
+    writeRoleCyclesConfig(root)
     const result = runCheck(root)
     expect(result.exitCode).toBe(1)
     expect(result.lines.some((line) => line.includes('.claude/agents/coder.md'))).toBe(true)
@@ -135,5 +169,30 @@ describe('runCheck', () => {
     mkdirSync(path.join(root, 'rules'), { recursive: true })
     writeFile(root, '.claude/agents/coder.md', GOOD_AGENT)
     expect(() => runCheck(root)).toThrow(`Rule documentation file not found: ${ARTICLE_PATH}`)
+  })
+
+  // Same by-name existsSync-throw idiom as the rule-doc guard above, and the
+  // same reason: a missing role-cycles config must never read as "no cycles
+  // to verify, pass."
+  it('throws naming the missing path when the role-cycles config is absent', () => {
+    const root = tempRepo()
+    writeFile(root, 'package.json', JSON.stringify({ scripts: {} }))
+    writeFile(root, 'CLAUDE.md', 'nothing relevant\n')
+    writeFile(root, ARTICLE_PATH, 'nothing rule-shaped\n')
+    mkdirSync(path.join(root, 'rules'), { recursive: true })
+    writeFile(root, '.claude/agents/coder.md', GOOD_AGENT)
+    writeFile(root, 'schemas/role-cycles.schema.json', ROLE_CYCLES_SCHEMA)
+    expect(() => runCheck(root)).toThrow('Role-cycles config not found: role-cycles.config.json')
+  })
+
+  it('throws naming the missing path when the role-cycles schema is absent', () => {
+    const root = tempRepo()
+    writeFile(root, 'package.json', JSON.stringify({ scripts: {} }))
+    writeFile(root, 'CLAUDE.md', 'nothing relevant\n')
+    writeFile(root, ARTICLE_PATH, 'nothing rule-shaped\n')
+    mkdirSync(path.join(root, 'rules'), { recursive: true })
+    writeFile(root, '.claude/agents/coder.md', GOOD_AGENT)
+    writeFile(root, 'role-cycles.config.json', JSON.stringify({ cycles: [] }))
+    expect(() => runCheck(root)).toThrow('Role-cycles schema not found: schemas/role-cycles.schema.json')
   })
 })

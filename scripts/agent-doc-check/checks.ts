@@ -4,11 +4,12 @@
 // every check here is a binary fact, so this program (like that one) is a
 // gate, not advisory. Parsing/extraction for each check lives in its own
 // file (npm-run-refs.ts, agent-frontmatter.ts, roles.ts, cycle-string.ts,
-// rule-mentions.ts); this file is just the five checks plus checkAll, which
+// cycle-config.ts, rule-mentions.ts); this file is just the five checks plus checkAll, which
 // runs them all -- the surrounding orchestration (reading files off disk,
 // formatting the exit code/output lines) lives in run.ts/decide.ts instead.
 
 import { filenameStemOf, parseAgentFrontmatter, type AgentFrontmatter } from './agent-frontmatter.ts'
+import { parseRoleCyclesConfig, renderCycle, type DeclaredCycle } from './cycle-config.ts'
 import { findCycleMentions } from './cycle-string.ts'
 import { extractNpmRunReferences } from './npm-run-refs.ts'
 import { findStaleRoleReferences } from './roles.ts'
@@ -142,38 +143,135 @@ export function checkNoStaleRoleReferences(docFiles: RawFile[]): Failure[] {
   return failures
 }
 
-/**
- * Check 4: every cycle-shaped string (role → role → ... → role) across the
- * docs is byte-identical. Reports every mention that differs from the
- * most-common form found, and reports its own failure if no cycle mention
- * was found anywhere at all -- an empty result set here would otherwise
- * look identical to a clean repo, the same failure mode
- * ast-grep-rule-check's checkAnyRulesFound exists to catch.
- */
-export function checkCycleStringConsistent(docFiles: RawFile[], knownRoles: ReadonlySet<string>): Failure[] {
+function cycleFailure(file: string, message: string): Failure {
+  return { check: 'cycle-string-consistent', file, message }
+}
+
+// Guard 6: duplicate `pipeline` names, and two cycles rendering identically
+// -- reported, not thrown, since neither prevents the mention pass below
+// from running against whichever renderings the config does declare.
+function checkDuplicateCycles(cycleConfigFile: RawFile, cycles: DeclaredCycle[]): Failure[] {
+  const failures: Failure[] = []
+  const seenPipelines = new Set<string>()
+  for (const cycle of cycles) {
+    if (seenPipelines.has(cycle.pipeline)) {
+      failures.push(cycleFailure(cycleConfigFile.path, `pipeline "${cycle.pipeline}" is declared more than once`))
+    }
+    seenPipelines.add(cycle.pipeline)
+  }
+  const renderingOwners = new Map<string, string>()
+  for (const cycle of cycles) {
+    const rendering = renderCycle(cycle.roles)
+    const owner = renderingOwners.get(rendering)
+    if (owner !== undefined) {
+      failures.push(
+        cycleFailure(
+          cycleConfigFile.path,
+          `pipeline "${cycle.pipeline}" renders identically to pipeline "${owner}": "${rendering}"`,
+        ),
+      )
+    } else {
+      renderingOwners.set(rendering, cycle.pipeline)
+    }
+  }
+  return failures
+}
+
+// Guards 4 and 5, the "mention pass": run only once the config itself is
+// known-good (guards 2/3 and schema validation have already passed), so a
+// bad config never cascades into a wall of mention-pass noise.
+function checkCycleMentions(
+  docFiles: RawFile[],
+  knownRoles: ReadonlySet<string>,
+  cycleConfigFile: RawFile,
+  cycles: DeclaredCycle[],
+): Failure[] {
+  const renderings = cycles.map((cycle) => renderCycle(cycle.roles))
   const allMentions = docFiles.flatMap((file) =>
     findCycleMentions(file.text, knownRoles).map((mention) => ({ file: file.path, ...mention })),
   )
-  if (allMentions.length === 0) {
+
+  // Guard 4: an inert declared cycle -- zero byte-identical mentions of it
+  // anywhere -- subsumes the old global no-mention guard (still catching
+  // arrow-glyph drift, since a wrong glyph produces zero mentions of every
+  // declared rendering at once) and additionally catches a single stale or
+  // unreferenced pipeline entry.
+  const inertFailures = cycles
+    .filter((cycle) => !allMentions.some((mention) => mention.text === renderCycle(cycle.roles)))
+    .map((cycle) =>
+      cycleFailure(
+        cycleConfigFile.path,
+        `pipeline "${cycle.pipeline}" (${renderCycle(cycle.roles)}) has zero byte-identical mentions anywhere in the docs`,
+      ),
+    )
+
+  // Guard 5: a bare mention matching no declared rendering, byte-identity
+  // only -- no fuzzy nearest-cycle matching.
+  const renderingSet = new Set(renderings)
+  const driftFailures = allMentions
+    .filter((mention) => !renderingSet.has(mention.text))
+    .map((mention) =>
+      cycleFailure(
+        mention.file,
+        `line ${mention.line} has cycle string "${mention.text}", which matches none of the declared cycle rendering(s): ${renderings.map((rendering) => `"${rendering}"`).join(', ')}`,
+      ),
+    )
+
+  return [...inertFailures, ...driftFailures]
+}
+
+/**
+ * Check 4: every cycle-shaped string (role → role → ... → role) across the
+ * docs matches a cycle declared in role-cycles.config.json -- that config is
+ * the canonical rendering authority outright, not a vote among the mentions
+ * found. Guards, in order: the config must itself parse and schema-validate;
+ * it must declare at least one cycle; every declared role must be in the
+ * derived roster (`knownRoles`) -- the load-bearing guard, since roster
+ * drift would otherwise make both the declared cycle and stale mentions of
+ * it vanish from the scan simultaneously; no duplicate `pipeline` name or
+ * identically-rendering cycle; every declared cycle has at least one
+ * byte-identical mention somewhere; and every mention matches some declared
+ * rendering. A config-level failure (parse/schema, zero cycles, or an
+ * unknown role) is reported and skips the mention pass entirely, so one bad
+ * config does not cascade into unrelated mention-pass noise.
+ */
+export function checkCycleStringConsistent(
+  docFiles: RawFile[],
+  knownRoles: ReadonlySet<string>,
+  cycleConfigFile: RawFile,
+  cycleSchemaFile: RawFile,
+): Failure[] {
+  const parsed = parseRoleCyclesConfig(cycleConfigFile.text, cycleSchemaFile.text, cycleConfigFile.path)
+  if (!parsed.ok) {
+    return parsed.errors.map((message) => cycleFailure(cycleConfigFile.path, message))
+  }
+
+  const { cycles } = parsed.config
+  if (cycles.length === 0) {
     return [
-      {
-        check: 'cycle-string-consistent',
-        file: '(none)',
-        message:
-          'no cycle-shaped string (role → role → ...) was found anywhere -- check the arrow glyph or the known-roles list',
-      },
+      cycleFailure(
+        cycleConfigFile.path,
+        'declares zero cycles -- an empty declaration must not read like a clean tree',
+      ),
     ]
   }
-  const counts = new Map<string, number>()
-  for (const mention of allMentions) counts.set(mention.text, (counts.get(mention.text) ?? 0) + 1)
-  const [canonical] = [...counts.entries()].sort((a, b) => b[1] - a[1])[0]
-  return allMentions
-    .filter((mention) => mention.text !== canonical)
-    .map((mention) => ({
-      check: 'cycle-string-consistent',
-      file: mention.file,
-      message: `line ${mention.line} has cycle string "${mention.text}", which differs from the canonical form seen elsewhere: "${canonical}"`,
-    }))
+
+  const unknownRoleFailures = cycles.flatMap((cycle) =>
+    cycle.roles
+      .filter((role) => !knownRoles.has(role))
+      .map((role) =>
+        cycleFailure(
+          cycleConfigFile.path,
+          `pipeline "${cycle.pipeline}" (${renderCycle(cycle.roles)}) declares role \`${role}\`, which is not in the derived roster: ${[...knownRoles].sort().join(', ')}`,
+        ),
+      ),
+  )
+  if (unknownRoleFailures.length > 0) return unknownRoleFailures
+
+  return [
+    ...checkDuplicateCycles(cycleConfigFile, cycles),
+    ...checkCycleMentions(docFiles, knownRoles, cycleConfigFile, cycles),
+  ]
 }
 
 /**
@@ -220,6 +318,8 @@ export interface CheckInput {
   ruleDocFile: RawFile
   packageScripts: ReadonlySet<string>
   ruleIds: string[]
+  cycleConfigFile: RawFile
+  cycleSchemaFile: RawFile
 }
 
 export function checkAll(input: CheckInput): Failure[] {
@@ -234,7 +334,7 @@ export function checkAll(input: CheckInput): Failure[] {
     ...checkNpmRunReferencesResolve(input.docFiles, input.packageScripts),
     ...checkAgentFrontmatterValid(input.agentFiles),
     ...checkNoStaleRoleReferences(input.docFiles),
-    ...checkCycleStringConsistent(input.docFiles, knownRoles),
+    ...checkCycleStringConsistent(input.docFiles, knownRoles, input.cycleConfigFile, input.cycleSchemaFile),
     ...checkRulesDocumented(input.ruleDocFile, input.docFiles, input.ruleIds),
   ]
 }

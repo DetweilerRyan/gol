@@ -125,60 +125,133 @@ describe('checkNoStaleRoleReferences', () => {
 describe('checkCycleStringConsistent', () => {
   const roles = new Set(['product', 'coder', 'cleaner', 'architect', 'hardener'])
   const canonical = 'product → coder → cleaner → architect → hardener → product'
+  const CONFIG_PATH = 'role-cycles.config.json'
 
-  it('passes when every mention is byte-identical', () => {
+  // A schema fixture faithful to schemas/role-cycles.schema.json, owned by
+  // this test file -- every test below uses in-memory fixtures only.
+  const SCHEMA = JSON.stringify({
+    type: 'object',
+    additionalProperties: false,
+    required: ['cycles'],
+    properties: {
+      $schema: { type: 'string' },
+      cycles: { type: 'array', items: { $ref: '#/definitions/cycle' } },
+    },
+    definitions: {
+      cycle: {
+        type: 'object',
+        additionalProperties: false,
+        required: ['pipeline', 'roles'],
+        properties: {
+          pipeline: { type: 'string', minLength: 1 },
+          roles: { type: 'array', minItems: 3, items: { type: 'string', minLength: 1 } },
+        },
+      },
+    },
+  })
+  const schemaFile = { path: 'schemas/role-cycles.schema.json', text: SCHEMA }
+
+  function configFile(cycles: { pipeline: string; roles: string[] }[]) {
+    return { path: CONFIG_PATH, text: JSON.stringify({ cycles }) }
+  }
+
+  const oneStoryCycle = configFile([
+    { pipeline: 'story', roles: ['product', 'coder', 'cleaner', 'architect', 'hardener', 'product'] },
+  ])
+
+  it('passes when every mention matches the declared rendering', () => {
     const docFiles = [
       { path: 'a.md', text: canonical },
       { path: 'b.md', text: `see: ${canonical} here` },
     ]
-    expect(checkCycleStringConsistent(docFiles, roles)).toEqual([])
+    expect(checkCycleStringConsistent(docFiles, roles, oneStoryCycle, schemaFile)).toEqual([])
   })
 
-  it('fails the divergent mention(s), not the majority form', () => {
+  it('fails a bare mention matching no declared rendering, naming the mention and the declared rendering', () => {
     // Reordered rather than a different arrow glyph, so it still matches
-    // findCycleMentions and the divergence is genuinely in the check's own
-    // byte-identical comparison, not in cycle-mention detection upstream.
+    // findCycleMentions and the divergence is genuinely in the byte-identity
+    // comparison against the config, not in cycle-mention detection upstream.
     const reordered = 'coder → product → cleaner → architect → hardener → product'
     const docFiles = [
       { path: 'a.md', text: canonical },
-      { path: 'b.md', text: canonical },
       { path: 'c.md', text: reordered },
     ]
-    const failures = checkCycleStringConsistent(docFiles, roles)
+    const failures = checkCycleStringConsistent(docFiles, roles, oneStoryCycle, schemaFile)
     expect(failures).toHaveLength(1)
     expect(failures[0].check).toBe('cycle-string-consistent')
     expect(failures[0].file).toBe('c.md')
     expect(failures[0].message).toContain(reordered)
-  })
-
-  it('picks the true majority by count, not whichever form was inserted first', () => {
-    // The minority form is seen before the majority form ever appears, and
-    // the majority form is repeated enough times that only an actual
-    // descending sort by count -- not map insertion order -- picks it as
-    // canonical. This is what pins down the sort in checkCycleStringConsistent
-    // itself, as distinct from findCycleMentions above.
-    const reordered = 'coder → product → cleaner → architect → hardener → product'
-    const docFiles = [
-      { path: 'x.md', text: reordered },
-      { path: 'a.md', text: canonical },
-      { path: 'b.md', text: canonical },
-      { path: 'c.md', text: canonical },
-    ]
-    const failures = checkCycleStringConsistent(docFiles, roles)
-    expect(failures).toHaveLength(1)
-    expect(failures[0].file).toBe('x.md')
-    expect(failures[0].message).toContain(reordered)
     expect(failures[0].message).toContain(canonical)
   })
 
-  it('fails with a single, clearly-flagged failure when no cycle mention is found at all', () => {
+  it('fails an inert declared cycle -- zero byte-identical mentions anywhere -- naming the pipeline and rendering', () => {
     const docFiles = [{ path: 'a.md', text: 'nothing relevant here' }]
-    const failures = checkCycleStringConsistent(docFiles, roles)
+    const failures = checkCycleStringConsistent(docFiles, roles, oneStoryCycle, schemaFile)
     expectSingleFailure(failures, {
       check: 'cycle-string-consistent',
-      file: '(none)',
-      messageIncludes: 'no cycle-shaped string',
+      file: CONFIG_PATH,
+      messageIncludes: 'zero byte-identical mentions',
     })
+    expect(failures[0].message).toContain('story')
+    expect(failures[0].message).toContain(canonical)
+  })
+
+  it('fails on a config declaring zero cycles', () => {
+    const docFiles = [{ path: 'a.md', text: canonical }]
+    const failures = checkCycleStringConsistent(docFiles, roles, configFile([]), schemaFile)
+    expectSingleFailure(failures, {
+      check: 'cycle-string-consistent',
+      file: CONFIG_PATH,
+      messageIncludes: 'zero cycles',
+    })
+  })
+
+  it('fails a declared role not in the derived roster, naming the cycle, the role, and the roster, and skips the mention pass', () => {
+    const bad = configFile([{ pipeline: 'story', roles: ['product', 'coder', 'ghostwriter'] }])
+    const docFiles = [{ path: 'a.md', text: 'nothing relevant here' }]
+    const failures = checkCycleStringConsistent(docFiles, roles, bad, schemaFile)
+    expectSingleFailure(failures, {
+      check: 'cycle-string-consistent',
+      file: CONFIG_PATH,
+      messageIncludes: 'ghostwriter',
+    })
+    expect(failures[0].message).toContain('story')
+    expect(failures[0].message).toContain('architect')
+    // Skipping the mention pass means the empty-docFiles inert-entry
+    // failure never also appears alongside the unknown-role failure.
+    expect(failures).toHaveLength(1)
+  })
+
+  it('fails a config that is not valid JSON, and skips the mention pass', () => {
+    const badFile = { path: CONFIG_PATH, text: '{ not json' }
+    const docFiles = [{ path: 'a.md', text: canonical }]
+    const failures = checkCycleStringConsistent(docFiles, roles, badFile, schemaFile)
+    expect(failures).toHaveLength(1)
+    expect(failures[0].check).toBe('cycle-string-consistent')
+    expect(failures[0].message).toContain('invalid JSON')
+  })
+
+  it('fails duplicate pipeline names, reported rather than thrown', () => {
+    const dup = configFile([
+      { pipeline: 'story', roles: ['product', 'coder', 'cleaner'] },
+      { pipeline: 'story', roles: ['product', 'coder', 'architect'] },
+    ])
+    const docFiles = [
+      { path: 'a.md', text: 'product → coder → cleaner' },
+      { path: 'b.md', text: 'product → coder → architect' },
+    ]
+    const failures = checkCycleStringConsistent(docFiles, roles, dup, schemaFile)
+    expect(failures.some((failure) => failure.message.includes('declared more than once'))).toBe(true)
+  })
+
+  it('fails two cycles that render identically, reported rather than thrown', () => {
+    const dup = configFile([
+      { pipeline: 'story', roles: ['product', 'coder', 'cleaner'] },
+      { pipeline: 'other', roles: ['product', 'coder', 'cleaner'] },
+    ])
+    const docFiles = [{ path: 'a.md', text: 'product → coder → cleaner' }]
+    const failures = checkCycleStringConsistent(docFiles, roles, dup, schemaFile)
+    expect(failures.some((failure) => failure.message.includes('renders identically'))).toBe(true)
   })
 })
 

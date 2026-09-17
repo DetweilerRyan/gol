@@ -8,6 +8,27 @@ const CYCLE = 'product → coder → cleaner → architect → hardener → prod
 const ROLES = ['product', 'coder', 'cleaner', 'architect', 'hardener']
 const ARTICLE_PATH = '.claude/agents/articles/ast-grep-rules.md'
 
+const CYCLE_SCHEMA = JSON.stringify({
+  type: 'object',
+  additionalProperties: false,
+  required: ['cycles'],
+  properties: {
+    $schema: { type: 'string' },
+    cycles: { type: 'array', items: { $ref: '#/definitions/cycle' } },
+  },
+  definitions: {
+    cycle: {
+      type: 'object',
+      additionalProperties: false,
+      required: ['pipeline', 'roles'],
+      properties: {
+        pipeline: { type: 'string', minLength: 1 },
+        roles: { type: 'array', minItems: 3, items: { type: 'string', minLength: 1 } },
+      },
+    },
+  },
+})
+
 function baseInput() {
   const claudeMdText = `\`npm run build\`\n${CYCLE}\n`
   const ruleDocFile = { path: ARTICLE_PATH, text: 'the `no-foo` rule (`rules/no-foo.yml`)' }
@@ -21,6 +42,11 @@ function baseInput() {
     ruleDocFile,
     packageScripts: new Set(['build']),
     ruleIds: ['no-foo'],
+    cycleConfigFile: {
+      path: 'role-cycles.config.json',
+      text: JSON.stringify({ cycles: [{ pipeline: 'story', roles: ROLES.concat('product') }] }),
+    },
+    cycleSchemaFile: { path: 'schemas/role-cycles.schema.json', text: CYCLE_SCHEMA },
   }
 }
 
