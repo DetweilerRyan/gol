@@ -2,6 +2,7 @@
 name: pipeline-reference
 title: Author the per-kind pipeline reference and single-source it from the docs that carry pieces of it
 created: 2026-09-16
+kind: enabler
 ---
 
 Child of `backlog-board-redesign`, the epic index. The deliverable and its boundaries were
