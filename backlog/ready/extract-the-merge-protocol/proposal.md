@@ -2,7 +2,7 @@
 name: extract-the-merge-protocol
 title: Move the merge protocol out of CLAUDE.md into its own reference file
 created: 2026-09-17
-kind: enabler
+kind: enabler-process
 ---
 
 Child of `act-on-the-pipelines-feedback`, the feedback index — its item 4, ruled by the user
