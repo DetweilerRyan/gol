@@ -92,7 +92,7 @@ step vocabulary. The seat decides, and tells `hardener` whether a spike ran eith
 
 **Exit:** the merge protocol in CLAUDE.md, which is the source of truth for landing. The item's
 folder moves `ready/` → `done/` after step 1's rebase and **before** step 3's gate, so the gated
-tip is the true tip. Merge step 8 reads the acceptance-mutation figure from the VERIFY handoff.
+tip is the true tip.
 
 ## Enabler — checker-bearing
 
@@ -153,20 +153,17 @@ Each child then enters its own kind's pipeline above.
 Each of these is something a role expects the prompt to supply. A missing one either hard-fails
 or, worse, succeeds wrongly.
 
-- **`product` requires a mode.** SPECIFY or VERIFY, named. It refuses to guess, so omitting it
-  costs a round trip and nothing else.
-- **Name `architect`'s mode, even for REVIEW.** An omitted mode does not hard-fail —
-  `architect.md` supplies a default — so a mis-moded request comes back as a plausible wrong
-  pass. This is the most dangerous contract in the set, because the failure is silent.
+- **`product` requires a mode.** SPECIFY or VERIFY, named — omitting it costs a round trip.
+- **Name `architect`'s mode, even for REVIEW.** An unnamed mode fails silently, and the wrong
+  pass it returns looks plausible. This is the most dangerous contract in the set.
 - **The mutation-invariant exemption exists only as a thing the seat says.** Compute the
   predicate with `npm run mutation-invariance -- --diff <range>`, name the diff, and put both
   in the prompt — and never read exit 1 as a pass. CLAUDE.md's merge protocol is the source of
   truth for the exit codes, the sequence, and `hardener`'s side of the contract.
 - **An integration run must say so.** Post-merge, `hardener` on `main` is _verifying an
-  integration rather than a slice_ — say that phrase, or it halts at its first finding outside a
-  manifest it does not have.
-- **`cleaner`'s scope is `coder`'s handoff manifest.** Carry it forward into the prompt, or the
-  scan aims at nothing in particular.
+  integration rather than a slice_ — say that phrase in the prompt.
+- **`cleaner`'s scope is `coder`'s handoff manifest.** Carry it forward into the prompt,
+  verbatim.
 - **The slice name goes into every downstream prompt.** For a board-originated slice it is the
   `ready/` folder's basename; only a slice with no board item gets its name from `product` in
   SPECIFY. It is also the branch, the worktree, and the `slice/<name>` tag.
