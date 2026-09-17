@@ -21,15 +21,17 @@ function escapeRegExp(value: string): string {
  *
  * A chain in which any link carries a parenthetical mode marker (e.g.
  * "product (SPECIFY) → coder → cleaner") is a pipeline sequence, not a cycle
- * mention, and is not reported at all -- `.claude/references/pipelines.md`
- * writes exactly this shape, and it has no obligation to match the canonical
- * cycle string byte-for-byte. The whole decorated chain is matched first, so
- * a fully-bare sub-chain inside it (e.g. "coder → cleaner → architect" inside
- * a longer decorated chain) is consumed as part of that match and never
- * considered separately. Only a chain with no parenthetical on any link is
- * reported as a mention, and such a bare chain still must match the
- * canonical form byte-for-byte.
+ * mention, and is never reported -- nor is a bare sub-chain found inside
+ * one. Only a chain with no parenthetical on any link is reported, and it
+ * must still match the canonical form byte-for-byte.
  */
+// `.claude/references/pipelines.md` writes the parenthetical-decorated form
+// and has no obligation to match the canonical cycle string byte-for-byte --
+// that is why a decorated chain is excluded outright rather than flagged as
+// a divergent mention. The whole decorated chain is matched greedily as one
+// unit, so a fully-bare sub-chain inside it (e.g. "coder → cleaner →
+// architect") is consumed as part of that match and never considered as a
+// separate mention.
 // Every bare occurrence found in this repo's docs today is the full six-link
 // cycle, but a shorter, still-all-roles fragment is accepted too -- nothing
 // in the source docs currently produces one, so this is future headroom
