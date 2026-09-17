@@ -1,6 +1,5 @@
 # Pipelines: the class of service per backlog item kind
 
-<!-- reference-check: allow design.md -- a per-item artifact-name convention; no ready item carries one yet, and the marker goes stale (delete it) when the first does -->
 <!-- reference-check: allow tasks.md -- a per-item artifact-name convention; no ready item carries one yet, and the marker goes stale (delete it) when the first does -->
 <!-- reference-check: allow findings.md -- a per-item artifact-name convention; no ready item carries one yet, and the marker goes stale (delete it) when the first does -->
 

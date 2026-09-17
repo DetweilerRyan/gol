@@ -293,7 +293,6 @@ That is why `coder` runs `npm run ast-grep` in its own workflow rather than wait
 
 ## Idea board
 
-<!-- reference-check: allow design.md -- a per-item artifact-name convention; no ready item carries one yet, and the marker goes stale (delete it) when the first does -->
 <!-- reference-check: allow tasks.md -- a per-item artifact-name convention; no ready item carries one yet, and the marker goes stale (delete it) when the first does -->
 <!-- reference-check: allow findings.md -- a per-item artifact-name convention; no ready item carries one yet, and the marker goes stale (delete it) when the first does -->
 
