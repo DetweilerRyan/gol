@@ -81,11 +81,14 @@ slice inherits it:
   success outcomes, permissions and constraints, where human judgment remains,
   assumptions and risks) map one-to-one onto write boundary, gates, user sign-offs, and
   failure-direction prose the role files already carry, scattered.
-- **Proposed incorporation, three widths** (the ruling picks one): (1) author
-  `coach`/`writer`/`editor` JTBD-first — a two-line job statement heading each file, TROOP as
-  the completeness checklist over the existing anatomy; (2) also make it the template the
-  audit sibling retrofits onto the five existing roles; (3) both, plus a `references/`
-  role-file template so future roles inherit the shape.
+- **Incorporation ruled — user, 2026-09-17: new roles only, plus a reference pair.**
+  `coach`, `writer`, and `editor` are authored JTBD-first — a two-line job statement heading
+  each file, TROOP as the completeness checklist over the existing anatomy — and the
+  JTBD+TROOP role-file shape lands as its own `.claude/references/` pair (`<name>.md` +
+  `<name>.meta.md`; the slice chooses the name), so future roles inherit the shape from a
+  documented source rather than by imitation. **No retrofit of the five existing roles** —
+  the audit sibling may cite the reference when its own slice runs, but this ruling does not
+  reach it.
 - **Cautions**: skip consumer-JTBD's emotional/social dimensions (cargo cult for repo
   roles); the job statement must satisfy the Instruction Vale style — two lines, not
   marketing prose.
@@ -109,5 +112,5 @@ slice inherits it:
   should land together with this or after it — the kind-neutral wording it proposes now has a
   third pipeline to hold under, and the JTBD framing above would give its rewrite an
   organizing principle if the user rules it in.
-- Which width of the JTBD + TROOP incorporation the user rules — the three options in the
-  research section above.
+- The new reference pair's name, and where the documentation map's routing test files it —
+  its audience is the seat and this pipeline's roles, which is the `references/` tier's test.
