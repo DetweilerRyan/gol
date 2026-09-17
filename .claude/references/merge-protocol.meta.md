@@ -1,6 +1,9 @@
-# Merge protocol — evidence
+# Rationale: The merge protocol
 
-## 1. Extraction record
+**Audience:** whoever is changing a step in `merge-protocol.md`. **Read when:** amending,
+narrowing, or overturning one — never in order to follow one.
+
+## Extraction record
 
 `extract-the-merge-protocol`, 2026-09-17. Before this slice, CLAUDE.md's `### Merge
 protocol` section — the heading, the serial-landing paragraph, the nine numbered steps,
@@ -11,7 +14,7 @@ indentation changed. `.claude/references/merge-protocol.meta.md` — this file �
 created empty of moved prose; nothing in the moved block qualified as evidence rather
 than instruction, so there was nothing to route here from the move itself.
 
-## 2. Placement ruling and its test
+## Placement ruling and its test
 
 **A fact that binds before step 1 stays in CLAUDE.md; a fact that binds inside the
 protocol moves.** The serial-landing rule binds before any merge starts — it decides how
@@ -23,7 +26,7 @@ The precedent is the mutation-invariance allowlist, which once lived in CLAUDE.m
 single procedure restated in more than one file is the failure mode this placement
 ruling exists to avoid, and this move keeps the protocol in exactly one place.
 
-## 3. Rejected alternatives
+## Rejected alternatives
 
 - **A bare pointer with nothing retained.** Rejected: the serial-landing rule binds
   while planning a slice, before any merge starts, so a reader who never opens the
@@ -35,7 +38,7 @@ ruling exists to avoid, and this move keeps the protocol in exactly one place.
   a move plus a rewrite in one slice cannot be reviewed as a move, since a reviewer
   cannot tell which lines are relocation and which are edit.
 
-## 4. Known-stale window
+## Known-stale window
 
 Three files still name `CLAUDE.md` as the merge protocol's home, and this slice did not
 repoint them:
@@ -50,7 +53,7 @@ reason). The retained CLAUDE.md pointer keeps those three citations navigable �
 following any of them reaches CLAUDE.md, then `.claude/references/merge-protocol.md` one
 hop further. An `enabler-technical` item is recommended to repoint the three directly.
 
-## 5. Check readings at landing
+## Check readings at landing
 
 | Check                         | Reading                                                                                                                                                                                  |
 | ----------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
