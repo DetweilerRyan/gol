@@ -69,6 +69,17 @@ the `backlog/` board that is true only for slices with no board item: a promoted
 its `ready/` folder basename, fixed at promotion. The article states the split form. The old
 absolute form predated the board redesign rather than being wrong when written.
 
+## Two in-slice judgments, from the proposal's open questions
+
+- **Role frontmatter descriptions were left unthinned.** They restate some pipeline facts
+  (architect's trigger list, coder's precondition), but they are harness-facing selection
+  summaries the seat reads in the agent listing before any file is open — functional, not
+  documentation. Thinning them would trade selection clarity for a deduplication nobody
+  measured a cost for. Revisit only if one drifts from its file.
+- **No extra SAFe-vocabulary disclaimer was added.** `definition-of-ready.md` already maps each
+  kind to its SAFe label at the definition site, which is what the glossary convention asks;
+  `pipelines.md` cites that mapping rather than restating it.
+
 ## Diagrams are unverified by anything
 
 The Mermaid flow and the step table are two representations kept consistent by hand — ruled

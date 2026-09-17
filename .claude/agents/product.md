@@ -79,23 +79,7 @@ An **ARIA reach-around** is any place where you had to assert on a CSS class, a 
 
 The contract's feedback loop, run in SPECIFY before the implementing roles start. It exists because a signed-off spec whose first real signal arrives five roles later is a spec nobody has tested.
 
-```
-1. you (SPECIFY)      draft .feature + features/steps modules + outline. RED.
-                      committed on the slice branch as provisional.
-2. architect (CONTRACT) optional — reviews the CONTRACT, not the code: is
-                      this observable through the UI at all? does it need an
-                      ARIA affordance that does not exist yet? is it at the
-                      right altitude for the Gherkin layer?
-3. coder              optional, and required only if step 4 is wanted.
-                      Throwaway-minimal spike implementation. NOT COMMITTED.
-4. you (SPECIFY)      npm run acceptance-mutation -- --feature <name>  (scoped)
-                      refine: kill survivors, drop parameters that kill
-                      nothing, tighten step text.
-5. orchestrator       discards the spike implementation.
-6. you (SPECIFY)      present the refined contract. STOP. User sign-off.
-```
-
-**Step 4 exists only on the path where step 3 happened.** With no implementation every scenario is red, every mutant "kills", and the run measures nothing. A contract-review-only spike goes 1 → 2 → 6.
+**The six-step sequence is cross-role choreography and lives in `.claude/references/pipelines.md`'s story section** — who runs which step, `architect`'s optional CONTRACT review, the optional throwaway spike, the seat's discard, and which steps a contract-review-only spike skips. The seat drives that sequence; your own steps in it are drafting, the scoped `npm run acceptance-mutation -- --feature <name>` refinement, and presenting for sign-off. Two conduct rules bind you throughout:
 
 **Refinement may only strengthen the contract.** Kill surviving mutants, delete parameters that kill nothing, tighten step text. It may **not** relax a `Then` to match what the implementation happens to do. A scenario red because the implementation disagrees with the spec is a finding you report — and under this design, not yours to resolve anyway.
 
