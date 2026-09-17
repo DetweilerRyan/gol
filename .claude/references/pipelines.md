@@ -23,12 +23,18 @@ each to its SAFe orientation label. `kind:` sits in the promoted item's frontmat
 ## Story — contract-bearing
 
 The finished state is reachable through the accessible tree, so it gets Gherkin and the full
-cycle: **product → coder → cleaner → architect → hardener → product**.
+cycle. Modes are named and optional steps marked.
+**product (SPECIFY, with the optional spike sub-pipeline) → architect (DESIGN, when a trigger
+fires) → coder → cleaner → architect (REVIEW) → hardener → product (VERIFY)**. The bare role
+roster this decorates is CLAUDE.md's canonical cycle string, pinned by `agent-doc-check`'s
+check 4. A mode-bearing sequence is exempt from that check by design.
 
 ```mermaid
 flowchart LR
-  A[product SPECIFY + spike] --> B{design pass?}
-  B -->|triggers fire| C[architect DESIGN]
+  A[product SPECIFY] -.->|optional| S[spike sub-pipeline]
+  S -.-> A
+  A --> B{design trigger fires?}
+  B -->|yes| C[architect DESIGN]
   B -->|no| D[coder]
   C --> D
   D --> E[cleaner]
@@ -37,12 +43,25 @@ flowchart LR
   F -->|no| G[architect REVIEW]
   G --> H[hardener]
   H --> I[product VERIFY]
-  I --> J[merge protocol]
+  I -->|clean| J[merge protocol]
+  I -->|batched defect report| K[architect ADJUDICATE]
+  K -->|corrective fix, or routed to coder| L[hardener re-runs]
+  L --> I
+  K -->|spec finding| A
 ```
 
-**The acceptance spike runs inside SPECIFY**, before any implementing role starts. It exists
-because a signed-off spec whose first real signal arrives five roles later is a spec nobody has
-tested:
+**The defect loop is part of the pipeline, not an exception to it.** `product` VERIFY closes
+with either done or **one batched defect report**, routed to `architect` ADJUDICATE. Each
+finding gets exactly one disposition: a corrective fix `architect` makes itself, a routing to
+`coder`, or a return to `product` (SPECIFY) as a spec finding. Whenever an adjudicated fix
+touches `src/`, `hardener` re-runs before `product` re-verifies. The seat holds the
+two-round-trip budget per finding — see "State only the seat carries".
+
+### The acceptance spike — an optional sub-pipeline of SPECIFY
+
+A story may run the spike inside SPECIFY, before any implementing role starts; it is the
+contract's feedback loop, not a mandatory stage. It exists because a signed-off spec whose
+first real signal arrives five roles later is a spec nobody has tested:
 
 1. `product` (SPECIFY) drafts the `.feature`, the step modules, and the outline. All red.
    Committed on the slice branch as provisional.
@@ -57,6 +76,8 @@ tested:
 5. The seat discards the spike implementation.
 6. `product` (SPECIFY) presents the refined contract and stops for user sign-off.
 
+Skipping the sub-pipeline entirely is legitimate for a story whose contract carries no new
+step vocabulary. The seat decides, and tells `hardener` whether a spike ran either way.
 `product.md` carries the conduct that binds steps 1–6.
 
 | Step | Role + mode                                                                                        | The prompt must carry                                                                                                   | Artifacts                                                         | Gates                        | Handoff                                                                              |
@@ -79,21 +100,24 @@ The finished state is a check's reading, so a `product` VERIFY pass has nothing 
 **no `product` invocation runs in either mode**. The kind plans that skip; the diff authorizes
 it. Before skipping, walk **every** path in the diff and account for each, per
 `orchestration.md`'s "`product` VERIFY does not run on a slice with no behaviour change". The
-same section says how to record the moot merge step 8.
+same section says how to record the moot merge step 8. The cycle, modes named:
+**architect (DESIGN, required) → coder → cleaner → architect (REVIEW) → hardener**.
 
 ```mermaid
 flowchart LR
-  A{design pass?} -->|triggers fire| B[architect DESIGN]
-  A -->|no| C[coder or seat]
-  B --> C
+  B[architect DESIGN — required] --> C[coder or seat]
   C --> D[cleaner, per coder pass]
   D --> E[architect REVIEW]
   E --> F[hardener]
   F --> G[merge protocol]
 ```
 
-The steps are the story table's rows 2–6 unchanged, with two differences:
+The steps are the story table's rows 2–6, with three differences:
 
+- **The design pass is required, not trigger-conditional** — ruled by the user 2026-09-17. An
+  Enabler has no `product` SPECIFY, so the DESIGN pass is its only pre-implementation gate. A
+  Story has the spike and sign-off; an Enabler has only this. Row 2's
+  "only when a trigger fires" condition applies to the Story pipeline alone.
 - **Surfaces no role may edit fall to the seat.** CLAUDE.md, articles, sidecars, role files, and
   reference files are the seat's to write, each edit with the user's explicit approval per
   CLAUDE.md's Conventions. An enabler that is mostly documentation is therefore mostly

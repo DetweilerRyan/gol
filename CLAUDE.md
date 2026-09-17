@@ -345,6 +345,8 @@ There is no daemon or persistent process wiring these together. The orchestratin
 
 The orchestrating session may invoke `architect` a **second time, before `coder`**, as a design pass that ratifies a file set and interface rather than reviewing landed code. It still runs in its normal post-`cleaner` slot afterward, so the slice gets both a design and a review. The two jobs compete for one pass otherwise. That is the same reasoning that split `hardener` out of the four-pack architect.
 
+**"Optional" and the triggers below belong to the Story pipeline.** In the Enabler pipeline the design pass is **required** — ruled 2026-09-17 — because an Enabler has no `product` SPECIFY, so the DESIGN pass is its only pre-implementation gate. See the Enabler section of `.claude/references/pipelines.md`.
+
 **The orchestrating session decides this, not `product`.** Every trigger below is a fact about the current shape of `src/`, and `product` is deliberately blind to it. It reads `src/` but never writes it, precisely so its reach stays honest. `product` may _flag_ that a slice smells structurally large; it does not make the call.
 
 Reach for a design pass when:

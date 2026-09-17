@@ -46,8 +46,10 @@ which file to `git log`:
 - `architect.md`: its verbatim quote of hardener's eight stages became a pointer. Nothing moved
   in — the quote was a copy, not a source.
 - CLAUDE.md: the "Subagent pipeline" section slimmed to routing, keeping the cycle string that
-  `agent-doc-check`'s check 4 pins byte-identical everywhere it appears — including in
-  `pipelines.md`'s story section, which is deliberate: the gate now covers this file for free.
+  `agent-doc-check`'s check 4 pins byte-identical everywhere it appears — including, at the
+  time, in `pipelines.md`'s story section. (Superseded 2026-09-17: the story line became a
+  mode-bearing sequence, which check 4 exempts, so the file no longer carries a bare canonical
+  occurrence — see the revision record below.)
 
 ## The evidence behind two sequencing rules
 
@@ -80,7 +82,29 @@ absolute form predated the board redesign rather than being wrong when written.
   kind to its SAFe label at the definition site, which is what the glossary convention asks;
   `pipelines.md` cites that mapping rather than restating it.
 
-## Diagrams are unverified by anything
+## The 2026-09-17 revision, from the user's feedback
+
+`revise-the-pipelines-reference` executed four rulings collected item by item the same day
+(the feedback index `act-on-the-pipelines-feedback` carries them): the acceptance spike became
+a separated, explicitly optional sub-pipeline of SPECIFY; the cycle strings became
+mode-bearing with optionality marked; the VERIFY→ADJUDICATE defect loop was drawn into the
+Story flow and stated in prose; and the Enabler design pass became required.
+
+**The check-4 fork was resolved on a measured fact.** The old matcher extracted any three or
+more consecutive bare role links, so a decorated chain's bare sub-chain (the
+`coder → cleaner` middle of any mode-bearing sequence) would have matched and red the gate
+against the canonical form — writing around it would have boobytrapped every future editor.
+The code route won: `findCycleMentions` now consumes a decorated chain whole and drops any
+match containing a parenthetical, so mode-bearing pipeline sequences are exempt while bare
+chains keep byte-identity. The scoped mutation scan of the changed module scored one
+survivor, demonstrated equivalent by construction plus a half-million randomized inputs plus
+the hand-applied full-suite run.
+
+**The required Enabler design pass** rests on the gate asymmetry: a Story's contract is tested
+by the spike and signed off by the user before implementation; an Enabler had nothing between
+promotion and `coder`. The first Enabler run under the board (`backlog-board-migration`)
+took a design pass by judgment and its ordering caught real work — the ruling makes that
+judgment structural.
 
 The Mermaid flow and the step table are two representations kept consistent by hand — ruled
 2026-09-16 (user chose flow-plus-table over table-only, accepting the cost). No checker parses
