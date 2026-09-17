@@ -25,8 +25,8 @@ The finished state is reachable through the accessible tree, so it gets Gherkin 
 cycle. Modes are named and optional steps marked.
 **product (SPECIFY, with the optional spike sub-pipeline) → architect (DESIGN, when a trigger
 fires) → coder → cleaner → architect (REVIEW) → hardener → product (VERIFY)**. The bare role
-roster this decorates is CLAUDE.md's canonical cycle string, pinned by `agent-doc-check`'s
-check 4. A mode-bearing sequence is exempt from that check by design.
+roster this decorates is the story cycle declared in `role-cycles.config.json`, pinned by
+`agent-doc-check`'s check 4. A mode-bearing sequence is exempt from that check by design.
 
 ```mermaid
 flowchart LR
