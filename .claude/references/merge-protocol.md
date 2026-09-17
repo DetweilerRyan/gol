@@ -42,7 +42,7 @@ this protocol assumes. Read that section first; nothing here repeats it.
 
    Exit **0** means the diff is mutation-invariant. Exit **2** means it is not, and the output names the first disqualifying path. Exit **1** means the config itself failed validation, so **no verdict was computed** — read that as "run stage 5", never as a pass. Redirect to a file and read `$?` on the next line. A pipe replaces the exit status with the pipe's own.
 
-   **The list is not restated here, and that is deliberate.** It once lived in this file, in `mutation-testing.md` and in `hardener.md` at the same time, and the three drifted apart. Each entry's argument now lives in `.claude/agents/articles/mutation-testing.meta.md`, which the checker binds to the config: its check C4 fails when a config path has no prose there. So add an entry by editing the config and writing its argument, never by editing prose alone. **Adding a path requires the argument, not the intuition.** The failure mode of a wrong entry is a skipped stage that reads exactly like a passing one.
+   **The list is not restated here, and that is deliberate.** It once lived in CLAUDE.md, in `mutation-testing.md` and in `hardener.md` at the same time, and the three drifted apart. Each entry's argument now lives in `.claude/agents/articles/mutation-testing.meta.md`, which the checker binds to the config: its check C4 fails when a config path has no prose there. So add an entry by editing the config and writing its argument, never by editing prose alone. **Adding a path requires the argument, not the intuition.** The failure mode of a wrong entry is a skipped stage that reads exactly like a passing one.
 
    **`mutation-invariance.config.json` and `schemas/**` are themselves on the absent list.** A diff that widens the allowlist therefore re-arms the full run in that same diff. Without those two entries, the first slice to edit the allowlist would be granting itself an exemption.
 
@@ -102,7 +102,7 @@ this protocol assumes. Read that section first; nothing here repeats it.
 
    The `slice/` prefix is load-bearing. A bare tag sharing the slice branch's name makes every `git log <name>` ambiguous until the branch is deleted in step 9. It also makes `git tag -l 'slice/*'` a list of every completed slice. Annotated rather than lightweight, so the tag carries its own date and message.
 
-   If the slice began as an entry on the idea board, its folder already sits at `backlog/done/<slice>/` by now — the slice moves it there as its final commit before step 3's gate, and the retrospective deletes it later. See "Idea board" above. This tag is the permanent completion record either way.
+   If the slice began as an entry on the idea board, its folder already sits at `backlog/done/<slice>/` by now — the slice moves it there as its final commit before step 3's gate, and the retrospective deletes it later. See CLAUDE.md's "Idea board". This tag is the permanent completion record either way.
 
 7. **Push `main` and the tag:** `git push --follow-tags` (plain `git push` leaves the tag behind).
 
