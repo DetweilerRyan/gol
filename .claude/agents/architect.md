@@ -56,6 +56,7 @@ Run each fault once yourself before handing the battery over. That is the only t
 ## Owns
 
 - **Read `.claude/agents/articles/architecture.md` and `state-flow.md` at the start of every review and design pass.** They carry the cross-module contracts and the hook and composition-root contracts your review is conducted against.
+- **Check `adr/` for in-force decision records at the start of every design, review, and adjudicate pass.** A record with status `Accepted` or `Accepted (not yet frozen)` binds; conduct the pass against each one that touches the slice's surfaces. Never edit a frozen record — `adr/README.md` carries the correction path.
 - **Keeping the architecture aligned with the specs and implementation.**
   - Framework-free modules stay free of React and DOM.
   - Hooks stay thin adapters over them.

@@ -38,10 +38,12 @@ still moving and the ADR is tracking it, which is what a `Proposed` one is for.
 
 Sequential, four digits, never reused.
 
-**`0001` is deliberately reserved and not yet written.** It belongs to the
-`wire-in-the-adr-tier` slice on the idea board, a child of the `backlog-board-redesign.md`
-epic (the renamed successor of `intent-driven-layout`). Its scope was re-ruled at the
-2026-09-16 reevaluation: `0001` records the adoption of the backlog board layout, with
-that reevaluation's declined alternatives as its Options considered. This directory was
-created ahead of that work because a decision needed recording sooner; the gap is
-intentional, not a lost file.
+**`0002` was written before `0001`, and the inversion is deliberate.** This directory was
+created by the LSP-proxy work because a decision needed recording before the board slice was
+ready, and `0001` stayed reserved for the layout decision itself.
+`0001-adopt-the-backlog-board-layout.md` was written by `wire-in-the-adr-tier` on 2026-09-16,
+closing the reservation.
+
+**`architect` reads this directory.** Its file routes it here at the start of every design,
+review, and adjudicate pass; a record whose status binds is conducted against, never edited
+around.
