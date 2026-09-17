@@ -55,4 +55,31 @@ describe('findCycleMentions', () => {
       { text: 'architect → hardener → product', line: 1 },
     ])
   })
+
+  it('ignores a mode-bearing pipeline sequence, since a parenthetical on any link marks it as a sequence rather than a cycle mention', () => {
+    const text = 'product (SPECIFY) → coder → cleaner → architect (REVIEW) → hardener → product (VERIFY)'
+    expect(findCycleMentions(text, ROLES)).toEqual([])
+  })
+
+  it('ignores a mode-bearing chain even when only one link carries a parenthetical', () => {
+    expect(findCycleMentions('architect (REVIEW) → hardener → product', ROLES)).toEqual([])
+  })
+
+  it('does not extract a bare 3-role sub-chain hiding inside a longer mode-bearing sequence', () => {
+    // "coder → cleaner → architect" is a bare 3-role sub-chain of the text
+    // below, but it must not be reported: the surrounding mode-bearing chain
+    // is matched greedily as one unit, so the bare sub-chain is never
+    // considered as a separate match.
+    const text = 'product (SPECIFY) → coder → cleaner → architect (REVIEW) → hardener → product (VERIFY)'
+    expect(findCycleMentions(text, ROLES)).toEqual([])
+  })
+
+  it('reports only the bare chain when a line holds both a bare chain and a mode-bearing chain', () => {
+    const text =
+      'the cycle: product → coder → cleaner → architect → hardener → product. ' +
+      'the pipeline: product (SPECIFY) → coder → cleaner → architect (REVIEW) → hardener → product (VERIFY).'
+    expect(findCycleMentions(text, ROLES)).toEqual([
+      { text: 'product → coder → cleaner → architect → hardener → product', line: 1 },
+    ])
+  })
 })
