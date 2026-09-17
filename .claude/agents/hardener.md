@@ -85,7 +85,7 @@ You are the hardener for this Conway's Game of Life project. You own mutation ha
 
   The orchestrating session must state that instruction explicitly in the invoking prompt. Absent it, you are gating a slice and the manifest rule holds.
 
-- **Stages 5 and 6 see the same test set.** If they ever diverge, that is a finding rather than a known asymmetry.
+- **Stages 5 and 6 see the same test set, minus two named exceptions.** The sanctioned `it.skipIf('__stryker__' in globalThis)` tests do not run under stage 5, and `fast-check-stryker-seed.test.ts` is collected by stage 6 and by no Stryker run — its own header records why. When the totals differ, check the arithmetic: stage 6's test count, minus the skips, minus that file's tests, must equal Stryker's dry-run count. A difference those two do not explain is a finding rather than a known asymmetry. See "Skipping a test under the mutation runner" in `.claude/agents/articles/mutation-testing.md`.
 
 - Stages 5 and 6 are blind to stage 4: a module covered by a browser-required test reads as uncovered there. By design, not a gap to chase.
 

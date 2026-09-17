@@ -120,6 +120,8 @@ All four conditions must hold:
 
 The abuse shape is the mirror image: skipping a test _because_ it kills a mutant that is awkward to keep alive, or because it fails under Stryker for a reason nobody has explained. That converts a real gap into a green score, invisibly. `architect` rules on new uses of the idiom; anyone else who needs one reports it rather than adding it.
 
+**The idiom's visible footprint is a dry run smaller than the coverage run.** Two mechanisms account for the whole measured gap: each sanctioned skip subtracts its test, and `fast-check-stryker-seed.test.ts` is collected by no Stryker run at all — it imports nothing from `src/` or `scripts/`, so `coverageAnalysis: "perTest"` related-file filtering never selects it, as that file's own header records. `hardener.md` carries the arithmetic to check; a difference those two do not explain is a real finding. The dated decomposition lives in `mutation-testing.meta.md`.
+
 **`// Stryker disable` is not the better alternative here — that was measured and rejected.** Stryker's instrumenter does support comment directives, so the obvious question is whether disabling mutants on just the affected declarations lets the test run. It does not, and the reason generalises: the React Compiler bailout is triggered by the _file's_ instrumentation, not by the individual mutant switches.
 
 Only the file-wide form works, and it costs every mutant in the file. Worse, it costs them _silently_: Stryker still creates the mutants, reports them as ignored, and scores the file `n/a` — so the file leaves the denominator without the score dropping. A skipped test kills no mutants but removes none either; a file-wide disable removes them all while looking clean. Prefer the skip.

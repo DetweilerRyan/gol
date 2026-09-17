@@ -498,6 +498,23 @@ The worked example is `scripts-mutation-survivors-untriaged`, which triaged 23 u
 
 That slice also supplied the counter-shape the budget has to tolerate. `analyze.ts`'s loop-bound and diagonal-guard comments run past two lines and reason across functions — and both are _correct_, confirmed by hand-application at full scope. What distinguishes them from the one that was wrong is not length: it is that each is a **closed** argument about a value space the file itself defines, and each now carries the measurement that settles it. The warning fires on an argument that is long because it is _unresolved_, not on one that is long because it is documented.
 
+## The stage-5/6 test-set decomposition, 2026-09-16
+
+The evidence behind the two named exceptions in `hardener.md`'s same-test-set rule and the
+"visible footprint" paragraph in the article's skip section. Measured twice on the same day, on
+the `backlog-board-migration` tree: the slice gate found stage 6's coverage input at 955 tests
+against Stryker's dry-run 933 and probed 12 skips under a forced `globalThis.__stryker__` (all 943
+names distinct — no dedup), leaving 10 unexplained; the post-merge integration gate closed the
+residual to zero. The 22 is 13 plus 9: every test in `fast-check-stryker-seed.test.ts` (the one
+collected file absent from the incremental cache's 69-file, 933-test record — it imports nothing
+from `src/` or `scripts/`, so `coverageAnalysis: "perTest"` related-file filtering never selects
+it, as its header predicted; the omission was corroborated, the filtering mechanism not
+independently verified), and the nine `it.skipIf` tests under `src/`. The probe's 12 was 9 plus
+the seed file's own 3 — consistent, since the whole seed file is uncollected anyway. Until this
+measurement, the role file stated the invariant absolutely while this article sanctioned an idiom
+that breaks it; the reconciliation edit was made by the orchestrating seat on the user's approval,
+2026-09-16.
+
 ## The mutation-invariance allowlist, entry by entry
 
 Moved out of `CLAUDE.md` by `the-invariance-allowlist-omits-paths-that-provably-cannot-move-a-mutant`. That file now names only the command, so this is the sole prose home for why each entry is sound. The list itself lives in `mutation-invariance.config.json`, which is the single source of truth; this section explains, and can rot without changing what the gate does.
