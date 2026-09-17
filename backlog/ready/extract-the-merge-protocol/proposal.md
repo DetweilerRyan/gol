@@ -2,6 +2,7 @@
 name: extract-the-merge-protocol
 title: Move the merge protocol out of CLAUDE.md into its own reference file
 created: 2026-09-17
+kind: enabler
 ---
 
 Child of `act-on-the-pipelines-feedback`, the feedback index — its item 4, ruled by the user
@@ -10,9 +11,11 @@ Child of `act-on-the-pipelines-feedback`, the feedback index — its item 4, rul
 ## Situation
 
 CLAUDE.md carries the nine-step merge protocol in full, including the mutation-invariant
-exemption clause — the largest single block in the auto-loaded file. Four-plus files cite
-"CLAUDE.md's merge protocol" by name as the source of truth: `hardener.md`,
-`orchestration.md`, `pipelines.md`, and the mutation-testing articles. Its consumers are the
+exemption clause — the largest single block in the auto-loaded file. The 2026-09-17
+assessment's grep found merge-protocol mentions in roughly a dozen files under `.claude/` —
+`hardener.md`, `orchestration.md`, `pipelines.md`, the mutation-testing articles,
+`engineering.md`, `workflow.md`, `testing-layers.md`, `quality-tooling.md`, and `product.md`
+among them — so the sweep clause below is load-bearing, not a formality. Its consumers are the
 orchestrating seat and the pipelines' exit sections — the same audience as
 `.claude/references/pipelines.md`.
 
@@ -45,6 +48,8 @@ Shaped, per the ruling:
 
 - No change to the protocol's content — this is a move, and a move-plus-rewrite is the
   delete-plus-add the board's own history rules warn about.
+- No renumbering of the merge steps — other files cite the ordinals by number, so the
+  no-rewrite rule doubles as a no-renumber rule (judge's carried note, 2026-09-17).
 
 ## Open questions
 
