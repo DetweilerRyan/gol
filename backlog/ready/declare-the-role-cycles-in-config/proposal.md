@@ -2,6 +2,7 @@
 name: declare-the-role-cycles-in-config
 title: Move check 4's single-canonical-cycle assumption into a cycle-declarations config the checker imports
 created: 2026-09-17
+kind: enabler
 ---
 
 Child of `split-enablers-and-staff-the-process-pipeline`, the process-pipeline index, itself a
