@@ -2,6 +2,7 @@
 name: split-the-merge-protocol-reasoning-into-its-sidecar
 title: Split merge-protocol.md's clause-level reasoning into its evidence sidecar
 created: 2026-09-17
+kind: enabler-process
 ---
 
 Captured from `coach` REVIEW's handoff on `slice/extract-the-merge-protocol`, its R2,
