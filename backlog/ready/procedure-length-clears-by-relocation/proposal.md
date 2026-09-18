@@ -44,6 +44,23 @@ rule bounding the body?
 - No edit to the corpus's prose. A step rewritten to fit a rule under investigation
   contaminates the measurement.
 
+## Exit
+
+The recorded answer lands in `findings.md` beside this file: the corpus-wide exposure
+count, and the three-way ruling on whether `ProcedureLength`'s marker-line measure stays,
+closes, or gains a companion rule. An `enabler-technical` candidate follows only if the
+answer needs one.
+
+**Parent, ruled by the user 2026-09-18:** the parked slice
+`split-the-merge-protocol-reasoning-into-its-sidecar`. **The letter this spike expects to
+move is that slice's T** — its spec states a post-split Vale reading of 0 that depends
+entirely on the relocation being legitimate. Under the other two answers that reading is 3,
+and the spec's three affected steps keep their single-line shape.
+
+**Ordering:** this spike runs first. The sibling slice is parked at its unsigned `coach`
+spec so the relocation is not applied to the three `merge-protocol.md` steps before the
+measurement is taken. The no-go below is what that parking protects.
+
 ## Open questions
 
 - How many numbered steps across the linted corpus would clear by relocation alone? That
