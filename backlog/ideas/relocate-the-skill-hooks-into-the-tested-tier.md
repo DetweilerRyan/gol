@@ -83,7 +83,11 @@ Shaped by `architect`, six steps:
 2. **Behaviour-preserving throughout**: same stdin contract, same envelope delivery, same
    exit-0 discipline, byte-identical output on the same inputs.
 3. **Update the four hook commands and the one skill-file injection line** to the new paths,
-   keeping bare `node` as the runner.
+   keeping bare `node` as the runner. **Ruled by the user 2026-09-18: `coder` makes these
+   five edits, granted by name in the invoking prompt.** No role in an enabler-technical
+   cycle carries a standing write boundary over `.claude/settings.json` or a `SKILL.md`, and
+   the grant is per-slice rather than a widening of `coder`'s boundary. The seat names the
+   five paths in the prompt; `coder` writes nothing else under `.claude/`.
 4. **Re-measure the zero-stderr property at execution**, on the node the hooks actually use.
    The spike did not run this probe — it closed on its falsifier — so this is a real
    measurement rather than a confirmation.
@@ -119,3 +123,10 @@ Shaped by `architect`, six steps:
   or is it overhead for the smaller program?
 - The worktree caveat in Situation is location-neutral, so it does not bear on the move.
   Does it want a line wherever the relocated hooks end up documented?
+- **The per-slice grant in step 3 is a workaround, and the gap it works around is durable.**
+  An enabler-technical cycle runs `coder`, `cleaner`, `architect` and `hardener`, none of
+  which owns `.claude/**`; `writer` owns it and never writes `scripts/`, so no single cycle
+  covers a slice that spans both. Any future slice moving a hook, a skill script or a
+  settings entry alongside code hits this. Whether that wants a standing rule is a process
+  question this slice does not answer — but run this one first, so the rule is written
+  against a worked case rather than a hypothesis.
