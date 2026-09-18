@@ -2,6 +2,7 @@
 name: name-the-spec-amendment-and-the-in-cycle-fix-rule
 title: Name the spec amendment mechanism and the resolve-in-cycle rule
 created: 2026-09-18
+kind: enabler-process
 ---
 
 Recommended by `coach` REVIEW on `split-the-merge-protocol-reasoning-into-its-sidecar`,
@@ -18,9 +19,10 @@ Two cycles have now improvised it. The `extract-the-merge-protocol` cycle landed
 `coach` REVIEW rulings as writer instructions. This slice landed a fifteen-item amendment
 that the user re-signed. Both worked; neither had a named mechanism to follow.
 
-Separately, a closing review pass routes its findings to the idea board by default. Ten
-candidates landed on 2026-09-18 from review passes, several of them for defects the running
-slice had just authored.
+Separately, a closing review pass routes its findings to the idea board by default. One
+`coach` REVIEW produced seven candidates dated 2026-09-17, and four more are dated
+2026-09-18 — several for defects the running slice had just authored. Both figures are
+counts of `created:` lines in `backlog/ideas/`, taken 2026-09-18, and both move.
 
 ## Complication
 
@@ -56,6 +58,20 @@ Shaped, per `coach`'s recommendation. Three files, three registers:
 `coach` notes the split is `pipelines.md`'s own: one source for between-invocation facts,
 the role file for its own within-invocation facts. Two files cost less than one fact in the
 wrong register.
+
+## Acceptance
+
+The finished state is a `coach` REVIEW ruling, so the checks bound the work rather than
+decide it. Name them anyway, since an enabler owes both readings:
+
+- `npm run prose-lint` over the three edited files — clean, against each file's current
+  baseline. **`vale sync` is the precondition.** Without it the run reports zero findings
+  through its `grep -c` pipeline exactly as a clean file does, so an unsynced worktree
+  turns this check into a confident zero.
+- `npm run agent-doc-check` — exit 0. It validates `coach.md`'s frontmatter either way, so
+  it bounds the edit rather than confirming it.
+- `npm run reference-check` — exit 0, read directly rather than through a pipe, which
+  replaces the exit status with the pipe's own.
 
 ## No-gos
 
