@@ -31,6 +31,21 @@ The failure direction is cost rather than risk — a gate that cannot move was p
 anyway. That is the same defect `dont-run-gates-that-cannot-move` names from the other
 side.
 
+**The enabler-process case is wider than the spike case, and it is a contradiction rather
+than a silence.** `pipelines.md`'s enabler-process section states the opposite of the Spike
+section: "`hardener` runs at the merge protocol, not as a pipeline step", with the exit "as
+the story, minus step 8's figure". So for this kind the documented rule is that the full
+gate runs.
+
+The user ruled against it twice on 2026-09-18 — once at the step-5 integration gate on
+`name-the-spec-amendment-and-the-in-cycle-fix-rule`, and once in advance for
+`record-two-rules-the-amendment-cycle-surfaced`. Both diffs were confined to `.claude/**`
+and `backlog/**`, where the only gates that can move are `reference-check` and
+`agent-doc-check`. The seat ran those two directly and recorded the readings in the tag.
+
+So the rule and the practice now disagree, and nothing in either file records why. That is
+worse than the spike case, where the protocol was merely silent.
+
 ## Question
 
 Where does the per-kind narrowing live, so that a seat reading either file alone lands in
@@ -48,3 +63,14 @@ the same place?
 - Does `pipelines.md`'s Spike exit bullet cite the merge steps by ordinal, or does the
   citation run only one way?
 - Is any other step in the protocol story-specific in the same silent way?
+- **What is the enabler-process exit, stated as a rule rather than as practice?** The
+  candidate the two 2026-09-18 skips suggest: run the gates the diff can move, which for a
+  `.claude/**` and `backlog/**` diff are `reference-check` and `agent-doc-check`. That is
+  the Spike section's own form, applied to a kind whose section currently says the
+  opposite.
+- Does the answer generalise to one rule covering every kind — run the gates the diff can
+  move, and name who runs them — or does each kind keep its own exit? A single rule would
+  retire the per-kind divergence rather than documenting it.
+- Who runs the narrowed set when `hardener` does not: the seat directly, as it did twice on
+  2026-09-18, or `hardener` invoked with a named subset? The first is what happened; nothing
+  says it is right.
