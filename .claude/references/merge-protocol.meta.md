@@ -25,9 +25,13 @@ than instruction, so there was nothing to route here from the move itself.
 
 `split-the-merge-protocol-reasoning-into-its-sidecar`, 2026-09-18. `extract-the-merge-protocol`
 moved the protocol byte-for-byte and deferred the instruction-versus-explanation split, which is
-the third rejected alternative below. This slice ran it. Every block below moved verbatim from
+the third rejected alternative below. Every block below moved verbatim from
 `merge-protocol.md`, except where moving it stranded a referent; each such rewrite is named at the
 block that carried it.
+
+This record accounts for the moves, and for every rewrite a move forced. Edits made for other
+reasons live in the slice's spec and its amendments. Those include a marker line recompressed, a
+sentence split and a narration trimmed.
 
 **Four clauses were deleted rather than moved.** Each restated something the instruction half
 already says, which is the only deletion `prose.md` licenses:
@@ -42,7 +46,7 @@ already says, which is the only deletion `prose.md` licenses:
   arrive. Deletion is the right disposition either way: the option it points at lives here now, so
   a reader of the instruction half cannot act on the phrase.
 
-**Two stranded referents predating this slice were repaired**, on the two-repair precedent the
+**Two stranded referents the split inherited were repaired**, on the two-repair precedent the
 extraction record sets:
 
 - The exemption clause read "read every entry below". The allowlist is not below and never was,
@@ -50,15 +54,24 @@ extraction record sets:
 - The same clause read "a diff confined to the paths below". That sentence moved here, and it names
   the config too.
 
-**Three survivors were rewritten because the move stranded a referent.** Each was named in the
-spec and belongs in this record too:
+**Two moved blocks were rewritten on arrival**, which is what the promise above covers:
 
-- `merge-protocol.md`'s skipped-cache claim read "differs from the one it was built from". "The
-  one" lost its referent when the sentence above it moved, so it names the tree.
 - This file's stage-6 entry read "the paragraph above now refutes it", which pointed at a
   paragraph that stayed in `merge-protocol.md`. It names that file's stage list.
 - This file's skipped-stage-5 entry gained the trailing clause "and under the predicate it does
-  not", carrying a negation the instruction half held through an adjacency the move removed.
+  not". An adjacency in the instruction half carried that negation, and the move removed it.
+
+**Four survivors in `merge-protocol.md` were rewritten because the move stranded a referent.** Each
+stayed put while the sentence it leaned on left:
+
+- The skipped-cache claim read "differs from the one it was built from". "The one" lost its
+  referent when the sentence above it moved, so it names the tree.
+- Step 5's not-a-fast-path caveat opened "It is still not a fast path", where "It" was the
+  exemption named in the paragraph that moved. It names the exemption.
+- Step 5's compute-once instruction read "reconstructing one from `main`'s reflog", where "one"
+  was the second diff the moved sentence introduced. It names the second diff.
+- Step 7's annotated-tag caveat read "Note the setting only follows", where "the setting" was
+  `push.followTags`, named in the sentence that moved. It names the setting.
 
 **One referent the sweep missed, recorded so the next sweep is wider.** Step 5's "the second path"
 was a stranded noun phrase rather than one of the indexicals the spec listed, and it survived into
@@ -287,7 +300,7 @@ The re-measure rule above binds this table too.
 | Check                                     | Reading                                                                                                                                                |
 | ----------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------ |
 | `wc -c` on `merge-protocol.md`            | before 19,078 bytes, after 11,619 bytes                                                                                                                |
-| `wc -c` on this sidecar                   | before 10,350 bytes, after 28,542 bytes                                                                                                                |
+| `wc -c` on this sidecar                   | before 10,350 bytes, after 29,439 bytes                                                                                                                |
 | `wc -c CLAUDE.md`                         | before 72,434 bytes, after 72,492 bytes                                                                                                                |
 | `npm run reference-check`                 | exit 0, 524 files scanned, 3,177 references found                                                                                                      |
 | `npm run agent-doc-check`                 | exit 0, 54 doc files, 8 agent files, 31 rules                                                                                                          |
@@ -297,7 +310,7 @@ The re-measure rule above binds this table too.
 | `vale` on `prose.md`                      | 5 findings, against 5 before                                                                                                                           |
 | `vale` on `mutation-testing.md`           | 16 findings, against 16 before — item A15 shortens a sentence inside a blockquote                                                                      |
 | `vale` on this sidecar                    | 0 — exempt by `.vale.ini`'s final `[**/*.meta.md]` section. Read that as a confident zero, never as a pass                                             |
-| `vale` on this sidecar, exemption removed | 24 findings, through a scratch config outside the repo carrying the same rule set as `.vale.ini`'s `[.claude/references/**/*.md]` section              |
+| `vale` on this sidecar, exemption removed | 23 findings, through a scratch config outside the repo carrying the same rule set as `.vale.ini`'s `[.claude/references/**/*.md]` section              |
 | `npm run prose-lint`                      | 507 tracked files linted                                                                                                                               |
 
 **The instruction half's drop has three causes, and only one of them is the register split.**
@@ -330,6 +343,7 @@ records what this file reports with the exemption removed. Reproduce it by copyi
 under a `[*.md]` section with absolute `StylesPath` entries pointing at this checkout's
 `vale-styles/` and `.vale/`, and running `vale --config=<scratch> <copy of this file>`.
 
-**That 19 is mostly inherited, so read it decomposed.** The same command on this file as
-`extract-the-merge-protocol` left it reports 12. The slice's own prose is the difference, not the
-bulk of the number.
+**Read the exemption-removed row decomposed, and take the current figure from the row.** The same
+command on this file as `extract-the-merge-protocol` left it reports 12, which is the inherited
+half. Restating the current figure here would put one number in two places, and the row is its
+home.
