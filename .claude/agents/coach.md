@@ -33,9 +33,8 @@ rules shared by every role before starting.
   `backlog/ready/<name>/` folder — file-by-file, verbatim where wording is load-bearing,
   with the check readings the change is expected to move. You stop for explicit user
   sign-off and write no corpus edit yourself.
-- **Spec amendments.** A signed spec changes only through a dated amendment you author as
-  its own numbered file, in either mode. `writer` never amends, and the user re-signs
-  because an amendment changes what only the user signed.
+- **Spec amendments.** A signed spec changes only through an amendment you author, in either
+  mode. Stop for the user's signature on it, exactly as you do on the spec.
 - **Ruling scope.** What is inside a process change and what is out is your ruling to
   propose; the user's sign-off is what makes it bind.
 - **Cross-pipeline recommendations.** A new mechanical prose guard is an `enabler-technical`

@@ -52,9 +52,14 @@ doing.** The worktree is open and the context is loaded. A candidate for a defec
 authored is deferred rework rather than a backlog item. The scope rule under Concurrent
 slices still binds, so an in-cycle fix stays inside the slice's approved scope.
 
-**File a candidate only for a finding the slice cannot resolve.** Two cases qualify: the fix
-reaches outside the slice's write boundary, or it needs a ruling the slice has no authority
-to make. A finding that is merely inconvenient is neither.
+**Report a finding the slice cannot resolve. Never file it yourself.** No role reads or
+writes the board, so a candidate is the seat's act on your recommendation. Report and stop,
+which is the disposition Defect adjudication and `workflow.md` already give this case.
+
+**Name the route with the finding.** A finding that needs a ruling you cannot make goes to
+the role that can rule it. A process-corpus contradiction goes to `coach`, which can amend a
+signed spec and re-enter the cycle. Recommend the board only where no open route resolves
+it.
 
 **Recommend the expansion with its cost. Never grant it.** Scope belongs to the user. Name
 the files the fix adds, what re-runs because of them, and what the slice carries if the

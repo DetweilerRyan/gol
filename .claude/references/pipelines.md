@@ -148,7 +148,7 @@ flowchart LR
   Y -->|no| Z[editor AUDIT]
   Z --> R[coach REVIEW]
   R --> G[merge protocol]
-  W -.->|returned spec point| A
+  W -.->|spec gap found| A
   R -.->|amendment| U
 ```
 
@@ -180,8 +180,9 @@ amend ahead of the review pass, and in REVIEW mode when the review itself finds 
 divergence.
 
 **An amendment is its own file, `amendment-<n>.md` beside the spec, numbered from 1 in
-writing order.** The spec is immutable once the slice starts, so the signed bytes stay the
-signed bytes. A reader can then diff what was signed against what was proposed without
+writing order.** It opens with its number and the date it was written. The spec and every
+signed amendment are immutable once the slice starts, so the signed bytes stay the signed
+bytes. A reader can then diff what was signed against what was proposed without
 untangling appended sections.
 
 **Each amendment names the spec items it supersedes, and supersedes nothing it does not
@@ -275,7 +276,7 @@ Roles are stateless between invocations. Two counters live here and nowhere else
 
 ## Escalation lanes, as pipeline interrupts
 
-Four lanes terminate at the seat. When one fires, the role has stopped and is waiting.
+Five lanes terminate at the seat. When one fires, the role has stopped and is waiting.
 
 - **`product`, a finding outside the slice's changed-files manifest** — its own triage routes
   it here; it reports and stops.
@@ -284,3 +285,5 @@ Four lanes terminate at the seat. When one fires, the role has stopped and is wa
 - **`architect` ADJUDICATE, outside the changed-files manifest** — routed to the seat by name.
 - **`hardener`, a gate failure outside the slice manifest** — reports and stops. The failure is
   a pre-existing break on `main` or something a rebase brought in, and both belong to the seat.
+- **`writer`, a spec point it cannot execute** — it returns the point and stops. The seat hires
+  `coach` to amend, per Amending a signed spec above.
