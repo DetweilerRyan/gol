@@ -1,0 +1,18 @@
+id: no-process-io-outside-run-in-hook-programs
+valid:
+  - import { basename, dirname } from 'node:path'
+  - import { type HookOutcome } from '../post-tool-use.ts'
+  - import { checkShape } from './board-shape.ts'
+  # A member expression whose object is not the bare `process` identifier is not a finding.
+  - const mode = payload.process.mode
+  # A string literal naming the API is not a use of it, which the kind:/pattern constraints buy.
+  - const label = 'process.exit'
+invalid:
+  - import { existsSync, readFileSync } from 'node:fs'
+  - import { spawnSync } from 'node:child_process'
+  - import { readFileSync } from 'fs'
+  - import process from 'node:process'
+  - process.exit(0)
+  - const target = process.argv[2]
+  - process.stderr.write('LAYER1\n')
+  - const home = process.env.HOME

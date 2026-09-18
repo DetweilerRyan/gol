@@ -38,6 +38,10 @@ export function missingOutcome(target: string): HookOutcome {
 // The frontmatter window is sed -n '2,/^---$/p' exactly: line 2 through the
 // first bare --- at or after it, inclusive; to EOF when no closer exists.
 function frontmatterWindow(lines: string[]): string[] {
+  // Equivalent mutant: seeding this array (Stryker's ArrayDeclaration) changes nothing --
+  // fm's only consumer checks membership against `name:`/`title:`/`created:`/`status:` line
+  // shapes the seeded string matches none of, and never reads length or order. Demonstrated
+  // 2026-09-18: mutant hand-applied, all 1114 of `npm run test:scripts` green.
   const fm: string[] = []
   for (let i = 1; i < lines.length; i++) {
     fm.push(lines[i])

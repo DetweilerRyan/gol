@@ -1,0 +1,38 @@
+id: no-process-io-outside-run-in-hook-programs
+language: TypeScript
+severity: warning
+message: In a hook program directory, only run.ts may touch process, node:fs or node:child_process -- the pure modules stay I/O-free.
+note: >-
+  The two bare-node hook programs (scripts/board-shape-hook/, scripts/prose-write-hook/) split
+  each program into an I/O shell (run.ts, which executes at import and is excluded from
+  crap4ts, Stryker and dry4ts alike) and pure modules that carry the whole measured load. A
+  process, node:fs or node:child_process reference in a pure module drags unmeasured I/O back
+  into the tier's gates' scope and breaks the seam the parked
+  the-board-hook-misfits-per-item-artifacts slice depends on: board-shape.ts takes (path, text)
+  and an injected exists probe, so that rewrite edits it and its test file and nothing else.
+  The fix is the injection resolveTarget already models -- pass the probe or the text in from
+  run.ts rather than reading it here.
+# Scoped to the two hook program directories, not tier-wide. Measured 2026-09-18: outside
+# these directories three modules legitimately touch this surface (scripts/feature-files.ts
+# imports node:fs, scripts/acceptance-mutation/playwright-runner.ts spawns and reads
+# process.env, scripts/test-support.ts does both), so the tier-wide form of the invariant is
+# false and would fire on working code. run.ts and the spawn-based *.test.ts files are the
+# sanctioned I/O sites, excluded via ignores.
+files:
+  - 'scripts/board-shape-hook/*.ts'
+  - 'scripts/prose-write-hook/*.ts'
+ignores:
+  - '**/run.ts'
+  - '**/*.test.ts'
+# Metavariables do not interpolate inside string literals, so the import specifier is matched
+# with kind: + regex: rather than a pattern -- the same construction as
+# no-downward-import-in-scripts.yml, and for the same reason. The bare 'fs'/'child_process'
+# specifiers are matched too, so dropping the node: prefix is not an escape hatch. The
+# process.$PROP pattern matches only a member expression whose object is the identifier
+# `process`, so `payload.process.x` and the string 'process.exit' are not findings -- the
+# fixture pins both.
+rule:
+  any:
+    - kind: import_statement
+      regex: 'from [''"](node:)?(fs|child_process|process)[''"]'
+    - pattern: process.$PROP

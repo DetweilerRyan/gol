@@ -2,6 +2,11 @@
 // (board-shape-hook, prose-write-hook): payload in, envelope out. Lives at
 // scripts/ root because two programs need it -- the layout rule's "shared
 // by two or more programs" test.
+/**
+ * One hook decision: the report lines, plus whether they also reach the
+ * acting agent's context as an envelope. The lines go to the log stream
+ * either way; `deliver` gates only the `envelope(lines)` write.
+ */
 export type HookOutcome = { lines: string[]; deliver: boolean }
 
 /**

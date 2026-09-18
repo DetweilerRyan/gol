@@ -1,0 +1,50 @@
+id: no-process-io-outside-run-in-hook-programs
+snapshots:
+  const home = process.env.HOME:
+    labels:
+    - source: process.env
+      style: primary
+      start: 13
+      end: 24
+  const target = process.argv[2]:
+    labels:
+    - source: process.argv
+      style: primary
+      start: 15
+      end: 27
+  import process from 'node:process':
+    labels:
+    - source: import process from 'node:process'
+      style: primary
+      start: 0
+      end: 34
+  import { existsSync, readFileSync } from 'node:fs':
+    labels:
+    - source: import { existsSync, readFileSync } from 'node:fs'
+      style: primary
+      start: 0
+      end: 50
+  import { readFileSync } from 'fs':
+    labels:
+    - source: import { readFileSync } from 'fs'
+      style: primary
+      start: 0
+      end: 33
+  import { spawnSync } from 'node:child_process':
+    labels:
+    - source: import { spawnSync } from 'node:child_process'
+      style: primary
+      start: 0
+      end: 46
+  process.exit(0):
+    labels:
+    - source: process.exit
+      style: primary
+      start: 0
+      end: 12
+  process.stderr.write('LAYER1\n'):
+    labels:
+    - source: process.stderr
+      style: primary
+      start: 0
+      end: 14
