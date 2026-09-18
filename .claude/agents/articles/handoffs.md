@@ -59,7 +59,7 @@ which is the disposition Defect adjudication and `workflow.md` already give this
 **Name the route with the finding.** A finding that needs a ruling you cannot make goes to
 the role that can rule it. A process-corpus contradiction goes to `coach`, which can amend a
 signed spec and re-enter the cycle. Recommend the board only where no open route resolves
-it.
+it. A route you would rather not take is not a closed one.
 
 **Recommend the expansion with its cost. Never grant it.** Scope belongs to the user. Name
 the files the fix adds, what re-runs because of them, and what the slice carries if the
