@@ -3,44 +3,6 @@
 **Audience:** whoever is changing a step in `merge-protocol.md`. **Read when:** amending,
 narrowing, or overturning one — never in order to follow one.
 
-## Extraction record
-
-`extract-the-merge-protocol`, 2026-09-17. Before this slice, CLAUDE.md's `### Merge
-protocol` section — the heading, the serial-landing paragraph, the nine numbered steps,
-and the perf-ownership paragraphs — measured 18,657 bytes of CLAUDE.md's 89,387, 20.9
-percent, measured on the commit `extract-the-merge-protocol` branched from. The body
-moved to `.claude/references/merge-protocol.md` byte-for-byte, and `editor` AUDIT and
-`coach` REVIEW each verified it that way: no word, emphasis, ordinal, or indentation
-changed. `coach` REVIEW then found two referents the move had broken and ruled two
-repairs, which are the only departures from the original bytes. Step 5's allowlist
-paragraph read "It once lived in this file", where "this file" meant CLAUDE.md and now
-named the wrong one; it names CLAUDE.md outright. Step 6 read `See "Idea board" above`,
-pointing at a section this file does not have; it names CLAUDE.md's section. Both are
-recorded here so a later diff against CLAUDE.md's history finds them accounted for
-rather than unexplained. `.claude/references/merge-protocol.meta.md` — this file — was
-created empty of moved prose; nothing in the moved block qualified as evidence rather
-than instruction, so there was nothing to route here from the move itself.
-
-## Register split record
-
-`split-the-merge-protocol-reasoning-into-its-sidecar`, 2026-09-18. `extract-the-merge-protocol`
-moved the protocol byte-for-byte and deferred the instruction-versus-explanation split, which is
-the third rejected alternative below.
-
-**This move was not byte-for-byte, and that is what a later reader needs from this record.** Blocks
-arrived reworded where the move stranded a referent. Some sentences stayed while the sentence they
-leaned on left. A few clauses were deleted as restatements of what the instruction half keeps. So a
-diff of this pair against `extract-the-merge-protocol`'s tree does not read as a relocation, and
-that is expected rather than unaccounted for.
-
-**The per-block accounting is in the slice's own history rather than here.** Read `git log -p` over
-either half of this pair, back from `slice/split-the-merge-protocol-reasoning-into-its-sidecar`.
-
-**Ruled 2026-09-18, after three review rounds: a record does not count its own slice's edits.**
-Hand-written enumerations of this slice's diff lived here, and each round found one short by n or
-quoting a string a later item had removed. The diff is authoritative and free. The enumeration was
-neither.
-
 ## Placement ruling and its test
 
 **A fact that binds before step 1 stays in CLAUDE.md; a fact that binds inside the
@@ -207,106 +169,18 @@ on an allowlist-only diff. The example outlived its premise and was repaired by
   by exactly the invariant diff. So the middle option is really a step-5 proposal, and it changes
   what the gate measures, so it is a slice of its own.
 
-## Known-stale window, closed 2026-09-18
+## Known-stale window
 
-Three files named `CLAUDE.md` as the merge protocol's home after `extract-the-merge-protocol`,
-which did not repoint them:
+**A write boundary is set by path in the spec, and absent-list membership is not a boundary.**
+`extract-the-merge-protocol` left files outside `writer`'s boundary still citing `CLAUDE.md` as the
+merge protocol's home. Those files are on the mutation-invariance **absent** list —
+`vite.config.ts`, `schemas/**` and `scripts/**` each appear there. Editing any of them would have
+re-armed a full mutation run for a prose move. Read that as a cost that argued for the boundary,
+never as the boundary itself. Absent-list membership constrains what a diff costs, not who may
+write a file.
 
-- `vite.config.ts`'s path-allowlist comment
-- `schemas/mutation-invariance.schema.json`, in two `description` strings
-- `scripts/mutation-invariance/checks.ts`'s module header
-
-All three sat outside the write boundary the spec set for `writer`, which named each by
-path. That instruction was the boundary. All three are also on the mutation-invariance
-**absent** list — `vite.config.ts`, `schemas/**` and `scripts/**` each appear there — so
-editing any of them would have re-armed a full mutation run for a prose move. Read that
-as a cost that argues for the boundary, never as the boundary itself: absent-list
-membership constrains what a diff costs, not who may write a file. `repoint the stale
-merge-protocol home citations to the subject name` closed all three on 2026-09-18, so the
-`enabler-technical` this section used to recommend is spent.
-
-`split-the-merge-protocol-reasoning-into-its-sidecar` deepened the second entry rather than
-repairing it. `schemas/mutation-invariance.schema.json` cites `merge-protocol` step 5 "for why that
-scope is load-bearing", and that why moved into this file, under "Why the predicate is stated over
-the `src/` run alone". Step 5 still asserts the scope is load-bearing, so the citation degrades
-rather than breaks: a reader reaches the assertion and this file is one hop further. The
-repointing closed the home-citation half and not this one, and no item owns it.
-
-## Check readings at landing — `extract-the-merge-protocol`
-
-| Check                         | Reading                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                       |
-| ----------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `wc -c CLAUDE.md`             | 72,607 bytes                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                  |
-| `npm run reference-check`     | exit 0, 524 files scanned, 3,154 references found                                                                                                                                                                                                                                                                                                                                                                                                                                                                             |
-| `npm run agent-doc-check`     | exit 0, 54 doc files, 8 agent files, 31 rules                                                                                                                                                                                                                                                                                                                                                                                                                                                                                 |
-| `npm run mutation-invariance` | exit 0, config valid, no `--diff` given                                                                                                                                                                                                                                                                                                                                                                                                                                                                                       |
-| `vale` on `CLAUDE.md`         | 26 findings before, 21 after. Seven left with the moved block. Two are new, both `STE.SentenceLength`: 34 words on the new reference-tier bullet, 28 words on routing branch 1. Two worsened: branch 1's `Procedure.ProcedureLength` 68 → 116 words, and the `backlog/ready/` bullet's `STE.SentenceLength` 26 → 31. `coach` REVIEW accepted all four, since every sibling bullet and every sibling routing branch already carries the identical finding. The spec's table predicted 19 and 0 new; that prediction was wrong. |
-| `vale` on `merge-protocol.md` | 7 findings — 6 `Procedure.ProcedureLength`, 1 `STE.SentenceLength`. All seven are the CLAUDE.md findings the move carried over, verified as the same seven by message                                                                                                                                                                                                                                                                                                                                                         |
-| `vale` on this sidecar        | 0 — exempt by `.vale.ini`'s final `[**/*.meta.md]` section                                                                                                                                                                                                                                                                                                                                                                                                                                                                    |
-| `npm run prose-lint`          | 498 tracked files linted                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                      |
-
-**Re-measure the reference count after any edit to this table, and do not carry the
-figure above across one.** The count moves when a row gains or loses a token shaped like
-a file name, and every row here that reports a per-file reading carries one by
-construction. So the row recording the count can falsify itself, and in
-`extract-the-merge-protocol` it did so twice. The first time, `editor` landed a cleaning pass after `writer` had measured. The
-second time, the two per-file Vale rows were added after the measurement and moved the
-table's own token count by one. That second miss was diagnosed at the time as the config
-file name in the exemption row; it was not. That name ends in an extension the checker
-never scans, and the glob beside it is discarded for holding a wildcard. The correction
-changed digits alone, which is the only edit to this table that provably adds no token.
-
-## Check readings at landing — `split-the-merge-protocol-reasoning-into-its-sidecar`
-
-The re-measure rule above binds this table too.
-
-| Check                                     | Reading                                                                                                                                                |
-| ----------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| `wc -c` on `merge-protocol.md`            | before 19,078 bytes, after 11,619 bytes                                                                                                                |
-| `wc -c` on this sidecar                   | before 10,350 bytes, after 27,107 bytes                                                                                                                |
-| `wc -c CLAUDE.md`                         | before 72,434 bytes, after 72,492 bytes                                                                                                                |
-| `npm run reference-check`                 | exit 0, 524 files scanned, 3,170 references found                                                                                                      |
-| `npm run agent-doc-check`                 | exit 0, 54 doc files, 8 agent files, 31 rules                                                                                                          |
-| `npm run mutation-invariance`             | exit 0, config valid, no `--diff` given                                                                                                                |
-| `vale` on `merge-protocol.md`             | 1 finding: step 5's marker line at 39 words, `Procedure.ProcedureLength`. Before: 7, of which 6 `Procedure.ProcedureLength` and 1 `STE.SentenceLength` |
-| `vale` on `CLAUDE.md`                     | 21 findings, against 21 before                                                                                                                         |
-| `vale` on `prose.md`                      | 5 findings, against 5 before                                                                                                                           |
-| `vale` on `mutation-testing.md`           | 16 findings, against 16 before — item A15 shortens a sentence inside a blockquote                                                                      |
-| `vale` on this sidecar                    | 0 — exempt by `.vale.ini`'s final `[**/*.meta.md]` section. Read that as a confident zero, never as a pass                                             |
-| `vale` on this sidecar, exemption removed | 22 findings, through a scratch config outside the repo carrying the same rule set as `.vale.ini`'s `[.claude/references/**/*.md]` section              |
-| `npm run prose-lint`                      | 507 tracked files linted                                                                                                                               |
-
-**The instruction half's drop has three causes, and only one of them is the register split.**
-Measured on the drafted text before landing: moving explanation to this sidecar alone clears
-steps 1, 2 and 4, and takes steps 3, 5 and 8 from 71, 68 and 61 words to 50, 39 and 30 — all three
-still over `Procedure.ProcedureLength`'s 20-word cap, so a register split alone reads 4 findings
-rather than 1. Relocating step 3's and step 8's qualifiers into indented continuation paragraphs
-clears two of the four, and splitting step 6's 37-word idea-board sentence clears a third.
-
-**The relocation is licensed rather than assumed.** `architect` ruled the shape legitimate on
-`procedure-length-clears-by-relocation`, 2026-09-18, on a measured corpus exposure of 51 findings
-and 28 numbered steps already carrying an over-cap body while reading clean.
-`.claude/agents/articles/prose.md` carries the ruling and its condition, and `prose.meta.md` the
-measurement.
-
-**Step 5 keeps its finding, and that is the ruling applied rather than ignored.** Its exception is
-an applicability condition on the command in the next block, which the ruling forbids relocating.
-A marker line carrying only the action and that exception verbatim measures 21 words against a cap
-of 20, so the finding is irreducible without rewording an instruction.
-
-**The floor and the reading are different numbers.** 21 is the minimum: a marker line carrying
-nothing but the action and the exception. The line reads 39 because it also carries "Mandatory,
-even though step 3 just passed on an identical tree" and the pointer into the fence below, both
-instruction. Even stripped to the floor the line exceeds the cap, so the extra words are cost
-rather than cause.
-
-**The sidecar's own zero is bought by the exemption, not earned.** That is why the row above
-records what this file reports with the exemption removed. Reproduce it by copying
-`.vale.ini`'s `[.claude/references/**/*.md]` rule keys into a scratch config outside the repo,
-under a `[*.md]` section with absolute `StylesPath` entries pointing at this checkout's
-`vale-styles/` and `.vale/`, and running `vale --config=<scratch> <copy of this file>`.
-
-**Read the exemption-removed row decomposed, and take the current figure from the row.** The same
-command on this file as `extract-the-merge-protocol` left it reports 12, which is the inherited
-half. Restating the current figure here would put one number in two places, and the row is its
-home.
+**One gap in this window is still open, and no item owns it.**
+`schemas/mutation-invariance.schema.json` cites `merge-protocol` step 5 "for why that scope is
+load-bearing", and that why now sits in this file under "Why the predicate is stated over the
+`src/` run alone". Step 5 still asserts the scope is load-bearing, so the citation degrades rather
+than breaks: a reader reaches the assertion and this file is one hop further.

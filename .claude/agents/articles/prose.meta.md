@@ -1583,10 +1583,11 @@ reconciled run, 51 against 51, is reported above.
 under a numbered step. The register classification of all 28 bodies, as against the hand-sampled
 extremes. `ParagraphLength` segmentation away from the 6-to-7 boundary.
 
-**The parent slice's own application, and the first exception to the count above.**
-`split-the-merge-protocol-reasoning-into-its-sidecar` relocated two steps and ruled a third
-unfixable. `merge-protocol.md`'s step 5 keeps its finding, because its exception is an
-applicability condition on the command in the next block, and a marker line carrying only the
-action and that exception measures 21 words against a cap of 20. So the completeness condition
-removes at least one of the 51 from the exposure count, and nothing has re-measured the other 50
-against it.
+**The condition has a known exception, so read the count above as mechanical.** `merge-protocol.md`'s
+step 5 fails it: its exception is an applicability condition on the command in the next block, and a
+marker line carrying only the action and that exception measures 21 words against a cap of 20. So the
+completeness condition removes at least one of the 51, and nothing has re-measured the rest against it.
+
+`coach`'s reason, so you do not read the trim as half a job: the old sentence was a log and goes, but
+the same paragraph is the only thing qualifying the "51 of 51" figure stated a few paragraphs above it
+in that file. Deleting outright would leave a bare mechanical claim with nothing narrowing it.
