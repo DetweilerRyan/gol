@@ -2,6 +2,7 @@
 name: the-merge-protocol-does-not-narrow-its-gate-by-kind
 title: Reconcile the merge protocol's unconditional gate with the per-kind exits
 created: 2026-09-18
+kind: enabler-process
 ---
 
 ## Situation
