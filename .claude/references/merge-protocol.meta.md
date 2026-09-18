@@ -262,7 +262,7 @@ The re-measure rule above binds this table too.
 | Check                                     | Reading                                                                                                                                   |
 | ----------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------- |
 | `wc -c` on `merge-protocol.md`            | before 19,078 bytes, after 11,595 bytes                                                                                                   |
-| `wc -c` on this sidecar                   | before 10,350 bytes, after 25,876 bytes                                                                                                   |
+| `wc -c` on this sidecar                   | before 10,350 bytes, after 25,735 bytes                                                                                                   |
 | `wc -c CLAUDE.md`                         | before 72,607 bytes, after 72,492 bytes                                                                                                   |
 | `npm run reference-check`                 | exit 0, 524 files scanned, 3,173 references found                                                                                         |
 | `npm run agent-doc-check`                 | exit 0, 54 doc files, 8 agent files, 31 rules                                                                                             |
