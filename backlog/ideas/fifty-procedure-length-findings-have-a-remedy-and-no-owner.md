@@ -2,6 +2,7 @@
 name: fifty-procedure-length-findings-have-a-remedy-and-no-owner
 title: Clear the corpus's remaining ProcedureLength findings in one ruled pass
 created: 2026-09-18
+kind: enabler-process
 ---
 
 Captured from `coach` SPEC revision 2 on `split-the-merge-protocol-reasoning-into-its-sidecar`,
@@ -21,8 +22,15 @@ slice applies that remedy to `merge-protocol.md` and records the rule in `prose.
 
 ## Complication
 
-After that slice lands, 50 of the 51 findings still stand. Every one has a ruled remedy and
-no owner. A ruled remedy with no owner is the state where a standing finding count becomes
+After that slice lands, **46** of the 51 findings still stand, across **nine** files. That
+figure is derived rather than measured: the spike counted six `ProcedureLength` findings in
+`merge-protocol.md`, and the signed spec's expected post-split reading is one — step 5's,
+named as accepted — so the slice clears five and `merge-protocol.md` stays on the list with
+one. `coach`'s handoff said 50 and eight files; that count assumed the slice cleared one
+finding rather than five, and this file carried it unchecked until `/idea-assess` reconciled
+it on 2026-09-18. Re-measure after the slice lands rather than trusting either number.
+
+Every one of the 46 has a ruled remedy and no owner. A ruled remedy with no owner is the state where a standing finding count becomes
 background noise — the condition `prose.md` already names when it says to read a big number
 as unworked rather than as a clean bill.
 
@@ -33,7 +41,7 @@ inconsistently. The ruling is corpus-wide, so the pass should be too.
 
 ## Question
 
-One pass over the eight remaining files, or a per-file sequence — and who rules each step's
+One pass over the nine remaining files, or a per-file sequence — and who rules each step's
 marker-completeness call?
 
 ## No-gos
