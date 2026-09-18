@@ -2,6 +2,7 @@
 name: procedure-length-clears-by-relocation
 title: Learn whether a continuation paragraph is a legitimate shape or an escape hatch for ProcedureLength
 created: 2026-09-18
+kind: spike
 ---
 
 ## Situation
