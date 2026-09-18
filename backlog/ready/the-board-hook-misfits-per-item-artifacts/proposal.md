@@ -15,11 +15,11 @@ logic, `slice/spike-where-a-skill-script-can-live-and-be-tested` established the
 testedness, and the user then ruled the relocation lands first.
 
 **Two consequences for whoever resumes this.** The spec's readings were taken against
-`layer1.ts` at its current path and single-file shape, so the relocation makes them stale —
-reach for an amendment rather than a re-spec, since a moved file is the trigger
-`pipelines.md` names for exactly that. And the relocation splits the program into a `run.ts`
-shell plus pure modules, so the logic this slice rewrites will live in a module that does not
-exist yet.
+`layer1.ts` at its current path and single-file shape, so the relocation makes them stale.
+**The spec is unsigned, so `coach` revises it in place** — no amendment is involved, since
+the amendment mechanism exists to protect a signature and there is none yet. And the
+relocation splits the program into a `run.ts` shell plus pure modules, so the logic this
+slice rewrites will live in a module that does not exist yet.
 
 ## Situation
 

@@ -77,11 +77,9 @@ Shaped by `architect`, six steps:
 - **Settled by the user 2026-09-18: this item lands first.** The parked parent,
   `the-board-hook-misfits-per-item-artifacts`, waits behind it. The accepted cost is that
   the parent's `coach` spec was measured against `layer1.ts` at its current path and shape,
-  so its readings go stale when this item moves and splits the file. **The amendment
-  mechanism is the cheaper remedy and it now exists** — a moved file is exactly the "the seat
-  finds the spec under-specifies a point `writer` has reached" trigger `pipelines.md` names,
-  so `coach` amends rather than re-specs. Whoever runs the parent next should reach for that
-  before re-opening a spec.
+  so its readings go stale when this item moves and splits the file. **That spec is unsigned,
+  so `coach` revises it in place.** No amendment is involved — the amendment mechanism exists
+  to protect a signature, and an unsigned spec has none.
 - Where does the structure-versus-logic boundary sit between the two items? This one moves
   and splits, that one rewrites — but the split decides which module the rewrite lands in,
   so this item's design pass should name the seam the parent will edit.
