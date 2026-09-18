@@ -288,6 +288,26 @@ it was replaced.
 example, not an instruction. The rule skips fences, so you should not see one; if you do, that is a
 defect in the rule rather than prose to fix.
 
+**Relocation below the marker is a legitimate remedy, and it carries one condition.** Ruled
+2026-09-18 on `procedure-length-clears-by-relocation`'s measurement. The rule reads the marker line
+alone, so moving words into an indented continuation paragraph clears a finding. That is the
+corpus's existing register rather than a loophole: 28 numbered steps already carry a body over the
+cap and read clean.
+
+**The condition is that the marker line keeps the complete executable instruction.** A reader who
+executes marker lines alone must perform the procedure correctly. What moves below is qualification,
+rationale or a worked example. Never a second action, and never the step's own applicability
+condition.
+
+**Check that condition step by step, never as a blanket claim over a file.** A step whose complete
+instruction will not fit under the cap keeps its finding. Name such a step in the handoff as
+accepted, with the words that could not move.
+
+**The body is bounded rather than unlinted.** `STE.SentenceLength` and `STE.ParagraphLength` both
+reach a continuation paragraph, and the marker's own sentence does not count toward the six. So
+relocation moves words from a procedural cap into a descriptive one, which is the split ASD-STE100
+itself draws.
+
 ### `Procedure.OneInstruction` — act on every finding
 
 Fires on `, then` or `and then` **followed by an imperative verb**. That verb is the discriminator:

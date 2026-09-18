@@ -1537,3 +1537,51 @@ duty in its own file. Four of five descriptions were rewritten: the sequence enu
 position phrase left `hardener`'s, the second copy of that same stage list left `architect`'s,
 the three-role gate attribution in `coder`'s became the adopted not-yours form, and the
 implementing-roles sequence phrase left `product`'s. `cleaner`'s was clean as written.
+
+## Why `Procedure.ProcedureLength` was left measuring the marker line alone (2026-09-18)
+
+`procedure-length-clears-by-relocation` asked whether the rule's marker-line measure is an
+incidental gap. `architect` ruled it the correct measure, with no rule change, no companion rule
+and no `enabler-technical`. The parent slice was
+`split-the-merge-protocol-reasoning-into-its-sidecar`, whose spec was blocked on the answer.
+
+**Exposure.** 51 of 51 current findings clear by relocation alone, across 9 files — 44 percent of
+the corpus's 116 numbered steps. `product.md` 13, `coder.md` 8, `cleaner.md` 6,
+`merge-protocol.md` 6, CLAUDE.md 5, `architect/contract-mode.md` 4, `testing-layers.md` 4,
+`engineering.md` 3, `mutation-testing.md` 2.
+
+**The shape is already the corpus's.** 44 of the 116 steps carry an indented body, and **28 pass
+the rule while marker plus body exceeds 20 words**, 27 of them through plain continuation
+paragraphs. Twenty of those 27 are `prose.md`'s own numbered enumerations of failure modes, which
+are numbered statements rather than procedures — a separate known imprecision.
+
+**What lints the body, measured.** A 31-word continuation paragraph fires `STE.SentenceLength`. A
+7-sentence one fires `STE.ParagraphLength`, a 6-sentence one is clean, and the marker's own
+sentence does not count toward the six. A 26-word marker line fires `ProcedureLength` and does
+**not** fire `SentenceLength`, so on the marker line `ProcedureLength` is the only length rule.
+
+**Closing the rule was rejected on the measure, not on cost.** A total-words-per-step cap has no
+ASD-STE100 basis, and it would convert the 28 legitimate shadow steps into findings. The
+instruction-against-rationale split inside a body is not mechanically decidable:
+`OneInstruction`'s imperative-verb discriminator fails there, because rationale is full of quoted
+imperatives. The `.good` fixture such a rule would owe cannot be written honestly, and that
+impossibility is itself the evidence.
+
+**A companion body rule was rejected as drift.** The body is already bounded by two enabled `STE`
+rules, so a second rule would report one defect at two precisions — the reason `.vale.ini`
+disables `STE.ProcedureLength` by name. The priced-in cost is 5 words per sentence, 25 against 20,
+plus the loss of a per-step total.
+
+**One probe defect, caught and corrected.** The first exposure scan used the git pathspec
+`.claude/references/**/*.md`, which matches nothing, because git's `**/` needs an intermediate
+directory. It silently dropped the reference tier and reported 45 against vale's 51. Only the
+reconciled run, 51 against 51, is reported above.
+
+**Not measured, stated rather than inferred.** Whether `SentenceLength` reaches sub-bullet text
+under a numbered step. The register classification of all 28 bodies, as against the hand-sampled
+extremes. `ParagraphLength` segmentation away from the 6-to-7 boundary.
+
+**The parent slice's own application.** `split-the-merge-protocol-reasoning-into-its-sidecar`
+relocated three steps and ruled a fourth unfixable: `merge-protocol.md`'s step 5 keeps its
+finding, because its exception is an applicability condition on the command in the next block,
+and a marker line carrying only the action and that exception measures 21 words against a cap of 20.
