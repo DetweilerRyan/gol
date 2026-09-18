@@ -6,11 +6,19 @@
 // out-of-scope or .meta.md payload). audit.test.ts carries every decision
 // this file delegates to. No test here shells out to a real vale binary --
 // see prose-lint/run.test.ts's header for why a stub is used instead.
+//
+// The seeded repo is built once in beforeAll and shared read-only across
+// every test that needs one: no test here commits or otherwise mutates it,
+// and repoRootFor only needs a `.git` directory to exist. Rebuilding it
+// per test paid for `git init` plus two `git config` spawns -- three
+// process forks -- on top of the run.ts spawn under test; sharing it cut
+// this file from ~1.2s to well under the ~1s per-file budget.
 import { execFileSync, spawnSync } from 'node:child_process'
-import { chmodSync } from 'node:fs'
+import { chmodSync, mkdtempSync, realpathSync, rmSync } from 'node:fs'
+import os from 'node:os'
 import path from 'node:path'
 import { fileURLToPath } from 'node:url'
-import { afterEach, describe, expect, it } from 'vitest'
+import { afterAll, afterEach, beforeAll, describe, expect, it } from 'vitest'
 import { expectEnvelopeContext, initGitRepo, tempDirTracker, writeFile } from '../test-support.ts'
 
 const RUN_TS = fileURLToPath(new URL('./run.ts', import.meta.url))
@@ -23,14 +31,19 @@ afterEach(() => {
   savedPath = undefined
 })
 
-function seedRepo(): string {
-  const root = tempDir('prose-write-hook-repo-')
-  initGitRepo(root)
-  writeFile(root, '.claude/skills/scratch/SKILL.md', '# scratch\n')
-  writeFile(root, '.claude/skills/scratch/notes.meta.md', '# scratch\n')
-  writeFile(root, 'notes.txt', 'not in scope\n')
-  return root
-}
+let sharedRoot: string
+beforeAll(() => {
+  // Not tempDirTracker's tempDir(): that tracker's cleanup() runs on every
+  // afterEach, and this directory must outlive the first test.
+  sharedRoot = realpathSync(mkdtempSync(path.join(os.tmpdir(), 'prose-write-hook-repo-')))
+  initGitRepo(sharedRoot)
+  writeFile(sharedRoot, '.claude/skills/scratch/SKILL.md', '# scratch\n')
+  writeFile(sharedRoot, '.claude/skills/scratch/notes.meta.md', '# scratch\n')
+  writeFile(sharedRoot, 'notes.txt', 'not in scope\n')
+})
+afterAll(() => {
+  rmSync(sharedRoot, { recursive: true, force: true })
+})
 
 function stubVale(lintStatus: number, output: string): void {
   const binDir = tempDir('prose-write-hook-bin-')
@@ -53,9 +66,8 @@ function runHook(payload: string, env?: NodeJS.ProcessEnv) {
 
 describe('a scoped write that trips vale findings', () => {
   it('streams the vale text to stderr before the summary, and delivers both on stdout', () => {
-    const root = seedRepo()
     stubVale(1, 'SKILL.md:1:1:Rule.Name:message\n')
-    const target = path.join(root, '.claude/skills/scratch/SKILL.md')
+    const target = path.join(sharedRoot, '.claude/skills/scratch/SKILL.md')
     const result = runHook(JSON.stringify({ tool_input: { file_path: target } }))
     expect(result.status).toBe(0)
     expect(result.stderr).toBe(
@@ -67,9 +79,8 @@ describe('a scoped write that trips vale findings', () => {
 
 describe('a scoped write that vale reports clean', () => {
   it('writes only the count line to stderr and delivers nothing on stdout', () => {
-    const root = seedRepo()
     stubVale(0, '')
-    const target = path.join(root, '.claude/skills/scratch/SKILL.md')
+    const target = path.join(sharedRoot, '.claude/skills/scratch/SKILL.md')
     const result = runHook(JSON.stringify({ tool_input: { file_path: target } }))
     expect(result.status).toBe(0)
     expect(result.stderr).toBe('PROSEHOOK .claude/skills/scratch/SKILL.md: 0 findings\n')
@@ -82,8 +93,7 @@ describe('a payload the hook does not act on', () => {
     { name: 'a .meta.md sidecar', relativePath: '.claude/skills/scratch/notes.meta.md' },
     { name: 'a path outside skills/ and references/', relativePath: 'notes.txt' },
   ])('stays silent on both streams for $name', ({ relativePath }) => {
-    const root = seedRepo()
-    const target = path.join(root, relativePath)
+    const target = path.join(sharedRoot, relativePath)
     const result = runHook(JSON.stringify({ tool_input: { file_path: target } }))
     expect(result.status).toBe(0)
     expect(result.stdout).toBe('')
@@ -111,8 +121,7 @@ describe('a payload that cannot be resolved to a write', () => {
 
 describe('vale absent from PATH', () => {
   it('reports NOT RUN rather than reading the absence as clean', () => {
-    const root = seedRepo()
-    const target = path.join(root, '.claude/skills/scratch/SKILL.md')
+    const target = path.join(sharedRoot, '.claude/skills/scratch/SKILL.md')
     const result = runHook(JSON.stringify({ tool_input: { file_path: target } }), { PATH: pathWithoutVale() })
     expect(result.status).toBe(0)
     expect(result.stderr).toBe('PROSEHOOK .claude/skills/scratch/SKILL.md: vale absent -- NOT RUN\n')

@@ -12,39 +12,54 @@ describe('isBoardPath', () => {
 })
 
 describe('resolveTarget', () => {
-  it('returns the target unchanged when it already exists', () => {
-    const exists = (p: string) => p === 'given.md'
-    expect(resolveTarget('given.md', exists)).toBe('given.md')
-  })
-
-  it('resolves a bare slug to the ideas/ candidate', () => {
-    const exists = (p: string) => p === 'backlog/ideas/my-slug.md'
-    expect(resolveTarget('my-slug', exists)).toBe('backlog/ideas/my-slug.md')
-  })
-
-  it('resolves a bare slug to the ready/ candidate', () => {
-    const exists = (p: string) => p === 'backlog/ready/my-slug/proposal.md'
-    expect(resolveTarget('my-slug', exists)).toBe('backlog/ready/my-slug/proposal.md')
-  })
-
-  it('picks the ready/ candidate when both exist -- last hit wins', () => {
-    const exists = (p: string) => p === 'backlog/ideas/my-slug.md' || p === 'backlog/ready/my-slug/proposal.md'
-    expect(resolveTarget('my-slug', exists)).toBe('backlog/ready/my-slug/proposal.md')
-  })
-
-  it('returns the target unresolved when no candidate exists either', () => {
-    const exists = () => false
-    expect(resolveTarget('nope', exists)).toBe('nope')
-  })
-
-  it('does not fall through to slug candidates once the target itself already exists', () => {
-    const exists = (p: string) => p === 'given.md' || p === 'backlog/ideas/given.md'
-    expect(resolveTarget('given.md', exists)).toBe('given.md')
-  })
-
-  it('anchors the .md strip to the end of the slug, not any occurrence', () => {
-    const exists = (p: string) => p === 'backlog/ideas/a.md-b.md'
-    expect(resolveTarget('a.md-b.md', exists)).toBe('backlog/ideas/a.md-b.md')
+  // Object-table it.each, the audit.test.ts inScope shape: the individual
+  // it() blocks this replaced were structurally identical at dry4ts
+  // score 1.00 despite each exercising a different exists() predicate.
+  it.each([
+    {
+      name: 'returns the target unchanged when it already exists',
+      target: 'given.md',
+      exists: (p: string) => p === 'given.md',
+      expected: 'given.md',
+    },
+    {
+      name: 'resolves a bare slug to the ideas/ candidate',
+      target: 'my-slug',
+      exists: (p: string) => p === 'backlog/ideas/my-slug.md',
+      expected: 'backlog/ideas/my-slug.md',
+    },
+    {
+      name: 'resolves a bare slug to the ready/ candidate',
+      target: 'my-slug',
+      exists: (p: string) => p === 'backlog/ready/my-slug/proposal.md',
+      expected: 'backlog/ready/my-slug/proposal.md',
+    },
+    {
+      name: 'picks the ready/ candidate when both exist -- last hit wins',
+      target: 'my-slug',
+      exists: (p: string) => p === 'backlog/ideas/my-slug.md' || p === 'backlog/ready/my-slug/proposal.md',
+      expected: 'backlog/ready/my-slug/proposal.md',
+    },
+    {
+      name: 'returns the target unresolved when no candidate exists either',
+      target: 'nope',
+      exists: () => false,
+      expected: 'nope',
+    },
+    {
+      name: 'does not fall through to slug candidates once the target itself already exists',
+      target: 'given.md',
+      exists: (p: string) => p === 'given.md' || p === 'backlog/ideas/given.md',
+      expected: 'given.md',
+    },
+    {
+      name: 'anchors the .md strip to the end of the slug, not any occurrence',
+      target: 'a.md-b.md',
+      exists: (p: string) => p === 'backlog/ideas/a.md-b.md',
+      expected: 'backlog/ideas/a.md-b.md',
+    },
+  ])('$name', ({ target, exists, expected }) => {
+    expect(resolveTarget(target, exists)).toBe(expected)
   })
 })
 
