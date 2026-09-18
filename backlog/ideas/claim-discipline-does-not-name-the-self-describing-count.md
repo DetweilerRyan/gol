@@ -40,6 +40,30 @@ Every failure was invisible to the gates. `reference-check`, `agent-doc-check` a
 The pair already named the hazard for exactly one row — "the row recording the count can
 falsify itself" — and nobody generalised it, so each recurrence was diagnosed from scratch.
 
+## The user's ruling, which reaches further than the count
+
+**Ruled by the user 2026-09-18: a `.meta.md` sidecar carries the explanation behind its
+instruction file — including an option that was dropped and why, so the decision can be
+relitigated with context — and never a log of what a slice changed, because git already
+holds that.**
+
+That ruling removes the genre rather than policing it. All fifteen findings were in change-log
+prose, so a sidecar carrying no change log cannot produce them. It was applied to
+`.claude/references/merge-protocol.meta.md` in the slice that generated the evidence — four
+sections deleted, leaving the placement ruling, why each step is shaped as it is, the stage-5
+argument, and the rejected alternatives. The user ruled the corpus-wide form belongs to this
+item rather than to that slice, and no other sidecar has been swept.
+
+**The two tests are ordered, not competing.** The ruling above gates whether a passage belongs
+in a sidecar at all. `coach`'s test applies afterwards, to a count inside a passage that has
+already passed that gate:
+
+> Where a count survives inside a passage that explains, it stays only when a command
+> re-derives it; a count only a diff can verify goes even there.
+
+The worked case is `prose.meta.md`'s surviving "51 of 51" figure: it explains a ruling, so it
+passes the first gate, and `vale` re-derives it, so the count may stand.
+
 ## Question
 
 What does `claim-discipline.md` say about a count of your own in-flight diff, and where
