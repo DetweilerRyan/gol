@@ -45,6 +45,24 @@ It states which of the two middle buckets it believes and **labels that a hypoth
 
 **Two round trips per finding, then stop.** A third appearance means the roles disagree about what _correct_ means, which is a product decision rather than an engineering one: escalate to the user with both positions written up. New findings from a re-verify get their own budget and don't reset an existing one. If `product` disagrees with a ruling it writes a **dissent** into the same report rather than re-reporting — **`architect` is authoritative on code-vs-spec; the user is authoritative on what the product should do.**
 
+## Resolve a finding in the cycle that made it
+
+**Prefer an in-cycle fix to a board candidate whenever the finding is the running slice's own
+doing.** The worktree is open and the context is loaded. A candidate for a defect this slice
+authored is deferred rework rather than a backlog item. The scope rule under Concurrent
+slices still binds, so an in-cycle fix stays inside the slice's approved scope.
+
+**File a candidate only for a finding the slice cannot resolve.** Two cases qualify: the fix
+reaches outside the slice's write boundary, or it needs a ruling the slice has no authority
+to make. A finding that is merely inconvenient is neither.
+
+**Recommend the expansion with its cost. Never grant it.** Scope belongs to the user. Name
+the files the fix adds, what re-runs because of them, and what the slice carries if the
+expansion is declined.
+
+**A pre-existing finding the slice did not create is out of scope by default.** Say so, and
+say what made it visible.
+
 ## When blocked
 
 - When blocked by ambiguity, a contradiction, or a conflict between the spec and what you're finding in the code, stop and ask for clarification (report it back to the orchestrating session, which relays to the user) rather than guessing and proceeding.

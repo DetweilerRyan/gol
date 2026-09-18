@@ -148,6 +148,8 @@ flowchart LR
   Y -->|no| Z[editor AUDIT]
   Z --> R[coach REVIEW]
   R --> G[merge protocol]
+  W -.->|returned spec point| A
+  R -.->|amendment| U
 ```
 
 | Step | Role + mode                        | The prompt must carry                                           | Artifacts                                      | Gates                     | Handoff                                                  |
@@ -161,6 +163,44 @@ flowchart LR
 **The user gate sits at step 1's close**, on the `product` SPECIFY precedent. Governance
 changes gate to the user at the spec; the closing review needs no second gate. `hardener`
 runs at the merge protocol, not as a pipeline step.
+
+### Amending a signed spec
+
+A signed spec is the authority `writer` edits under, so changing it after sign-off needs its
+own rule.
+
+**Trigger.** `coach` REVIEW finds the landed corpus diverges from what the spec should say,
+or the seat finds the spec under-specifies a point `writer` has reached. A `writer` that
+cannot execute a spec point returns it and stops; that return is a trigger, never an
+amendment.
+
+**`coach` authors every amendment, in either mode. `writer` never does.** An executing role
+editing its own authority is the boundary this pipeline holds. Hire `coach` in SPEC mode to
+amend ahead of the review pass, and in REVIEW mode when the review itself finds the
+divergence.
+
+**An amendment is its own file, `amendment-<n>.md` beside the spec, numbered from 1 in
+writing order.** The spec is immutable once the slice starts, so the signed bytes stay the
+signed bytes. A reader can then diff what was signed against what was proposed without
+untangling appended sections.
+
+**Each amendment names the spec items it supersedes, and supersedes nothing it does not
+name.** The live instruction set is `spec.md` plus every amendment, read in number order,
+with later text winning. No amendment restates the live set, because a restatement drifts as
+the next amendment lands.
+
+**Every amendment needs the user's re-sign-off.** An amendment changes something only the
+user signed, so the original signature does not carry across it.
+
+**The cycle then re-enters at step 2**, scoped to the files the amendment names. `editor`
+CLEAN runs over `writer`'s new manifest, and `coach` REVIEW closes against the spec and
+every amendment together.
+
+**A second amendment on one slice states a stopping condition, a falsifier and a fallback.**
+The stopping condition is a set of properties a reader can check without re-measuring. The
+falsifier names the observation that means the shape is wrong rather than the wording. The
+fallback says what to do instead of a further round. The seat does not run a further round
+without all three.
 
 **Exit:** as the story, minus step 8's figure — record the moot step per the
 `orchestration.md` section cited above.
