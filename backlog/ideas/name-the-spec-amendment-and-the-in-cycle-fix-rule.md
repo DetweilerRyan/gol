@@ -45,10 +45,17 @@ Shaped, per `coach`'s recommendation. Three files, three registers:
 
 - **`.claude/references/pipelines.md`** — the amendment mechanism, as a subsection under
   the enabler-process section: its trigger, that `coach` authors every amendment and
-  `writer` never does, that it is dated, numbered and appended to `spec.md`, that it needs
-  the user's re-sign-off, and that the cycle re-enters at step 2 scoped to the files the
-  amendment names. This is a between-invocation fact, and that file already owns the user
-  gate.
+  `writer` never does, that it is dated and numbered, that it needs the user's
+  re-sign-off, and that the cycle re-enters at step 2 scoped to the files the amendment
+  names. This is a between-invocation fact, and that file already owns the user gate.
+
+  **Amended by the user 2026-09-18: an amendment is its own file, and `spec.md` is
+  immutable once the slice starts.** `coach`'s draft appended each amendment to `spec.md`.
+  The signed bytes should stay the signed bytes: with a separate file, `git log --follow`
+  on `spec.md` shows only the revisions that preceded sign-off, and a reviewer can diff
+  what was signed against what was proposed without untangling appended sections. Ruled
+  before the item runs, so the text above changes accordingly.
+
 - **`.claude/agents/coach.md`** — one bullet under Owns, since who may author is a role
   boundary. Without it a `coach` REVIEW invocation has no amendment authority to read.
 - **`.claude/agents/articles/handoffs.md`** — the resolve-in-cycle rule as a new section,
@@ -107,6 +114,23 @@ decide it. Name them anyway, since an enabler owes both readings:
 
 ## Open questions
 
+- **What is the amendment file called?** The board's artifact names are bare nouns —
+  `proposal.md`, `design.md`, `spec.md`, `tasks.md`, `findings.md` — so a numbered form is
+  a new shape for the folder. `amendment-1.md` fits that convention;
+  `spec.amendment.1.md` reads as a variant of the spec and sorts beside it. Settle it
+  before the first one is written.
+- **A numbered artifact name is a worse instance of a known time bomb.**
+  `artifact-name-tokens-break-when-done-empties` records that `reference-check` resolves a
+  basename only while some instance exists. A numbered series is more brittle still: a doc
+  line citing `amendment-2.md` resolves only while some slice has reached a second
+  amendment. Decide whether the corpus cites the name at all.
+- **Separate files cost a reader the single authority.** With appended sections, the
+  current instruction set is one file. With N files, a reviewer must read the spec plus
+  every amendment to know what binds, and `coach` REVIEW closes against all of them. Does
+  each amendment state which items it supersedes, or does the last one restate the live
+  set?
+- The board hook applies the idea-file shape to every `backlog/**` write, so a new artifact
+  kind adds another misfit until `the-board-hook-misfits-per-item-artifacts` is settled.
 - `coach.md`'s `description:` frontmatter is what the seat reads when routing, and it does
   not mention amendments. A seat that has not read the role file would not know to hire
   `coach` for one. Widen it, or leave the read trigger to carry it? `agent-doc-check`
