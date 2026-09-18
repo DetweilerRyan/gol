@@ -1381,3 +1381,222 @@ what made it visible.
 `coach.md`'s `description:` frontmatter is what the seat reads when routing. It does not mention
 amendments, so a seat that has not read the role file would not know to hire `coach` for one.
 Whether to widen it is that item's call, and `agent-doc-check` validates the field either way.
+
+---
+
+# Amendment 2 — 2026-09-18, after `coach` REVIEW round 2
+
+**Status: needs the user's re-sign-off**, on the same ground as Amendment 1.
+
+**Four items, one file.** All four are in `.claude/references/merge-protocol.meta.md`, and all four
+are in text Amendment 1 authored. `writer` executed Amendment 1 in full and returned no findings;
+`editor` CLEAN verified every item byte-for-byte and every reading. Nothing below is `writer`
+drift.
+
+## Part B-0 — the diagnosis, because it decides whether a third round is worth running
+
+**Thirteen findings across two rounds. Zero in the instruction half's rules. Zero in `writer`'s
+execution. Zero in prose that was moved.** Every one is in prose `coach` authored that **describes
+or counts the slice's own edits**: a count of deletions, a count of rewrites, a number describing
+the file the number sits in.
+
+**That is one defect class, not thirteen defects.** A self-describing record is written while the
+thing it describes is still changing, so it falsifies itself as the edit continues. This file
+already names the hazard for exactly one row — "the row recording the count can falsify itself" —
+and nobody generalised it. Amendment 1 then added more instances of the same shape, and two were
+wrong.
+
+**The two new findings are that class, precisely.** A10's decomposition restated a figure that the
+row beside it owns, so the row moved to 24 and the paragraph still argued from 19. A5's count stood
+beside an enumeration that was never complete, which is finding 4's shape exactly.
+
+### The stopping condition
+
+Three properties, all checkable by reading rather than by re-measuring. **After Amendment 2 the
+pair should satisfy all three.**
+
+1. **No record paragraph in this pair states a count of this file's own current state.** The table
+   row is that number's only home. Item B1 is what makes this true.
+2. **Every count that remains stands beside a complete, adjacent enumeration.** `claim-discipline.md`
+   permits that form because it cannot drift with the tree. Item B2 is what makes this true.
+3. **Every figure about another file or another landing is dated or attributed to a slice.** The
+   12 in item B1 and the spike's figures in `prose.meta.md` already are.
+
+**A figure about a different file is not in this class and does not move.** The 39 in the
+step-5 paragraph describes `merge-protocol.md`, which this file's edits cannot change. Leaving it
+is deliberate, not an oversight.
+
+### Ruled: Amendment 2 is the last, and here is the falsifier
+
+**I expect convergence**, because Amendment 2 adds no new self-describing count. B1 removes one,
+B2 replaces one incomplete enumeration with two complete ones, B3 narrows a promise so it stops
+claiming coverage it does not enumerate, and B4 is two phrases.
+
+**If `editor` finds a third-round defect of this same class in Amendment 2's own text, do not write
+Amendment 3.** That would be the third attempt to keep a self-describing record consistent with a
+corpus being edited under it, and the evidence would then say the shape is wrong rather than the
+wording. **The fallback: strip the register-split record to the move table alone and move the
+accounting into this spec artifact.** `backlog/` is not corpus, nothing downstream reads it as a
+rule, and it does not have to stay consistent with anything. Recording it here so the seat does not
+have to invent it under pressure.
+
+---
+
+## Part B-1 — the four items
+
+### B1 — re-derive A10's decomposition against the row
+
+**Finding 1.** The row reads 24; the paragraph argues from 19. "That" has no antecedent but the
+row. `editor` measured all three figures: tip 24, merge base 12, intermediate tip `a253052` 19.
+
+**Ruled: not a digit swap.** Three clauses are wrong, not one. **19 was never a landing** — it is
+this slice's own intermediate tip, which never reached `main`, standing unlabelled beside a 12 that
+**is** a landing. And "mostly inherited" inverts: 12 of 24 is exactly half.
+
+**The repair removes the figure rather than correcting it**, per stopping condition 1. The
+paragraph keeps the method and the dated attribution; the row keeps the arithmetic.
+
+Replace the final paragraph of the section in full:
+
+```markdown
+**Read the exemption-removed row decomposed, and take the current figure from the row.** The same
+command on this file as `extract-the-merge-protocol` left it reports 12, which is the inherited
+half. Restating the current figure here would put one number in two places, and the row is its
+home.
+```
+
+### B2 — complete A5's enumeration, and label the two classes apart
+
+**Finding 2.** Three of six rewrites go unrecorded. `editor` confirmed all four survivors against
+`git show d8a9738:.claude/references/merge-protocol.md`, and `coach` REVIEW re-confirmed each by
+grep before writing this item.
+
+**`editor`'s secondary note is right and this item acts on it.** Two of the three landed bullets are
+**moved blocks**, not survivors, which is not the word's sense elsewhere in this pair. The promise
+at line 29 is scoped to "every block below", so it reaches only those two — the promise is
+discharged and the **label** overreached. The four survivors are a different class the record
+should carry anyway.
+
+**Ruled: keep both counts.** A count over its own adjacent bullets is explicitly permitted by
+`claim-discipline.md`, because it cannot drift with the tree. **The numeral was never the defect
+here — the enumeration was incomplete at authoring, and the numeral is what made that visible.**
+Stripping it would have hidden the next omission.
+
+Replace the block beginning "**Three survivors were rewritten because the move stranded a
+referent.**" and its three bullets, in full:
+
+```markdown
+**Two moved blocks were rewritten on arrival**, which is what the promise above covers:
+
+- This file's stage-6 entry read "the paragraph above now refutes it", which pointed at a
+  paragraph that stayed in `merge-protocol.md`. It names that file's stage list.
+- This file's skipped-stage-5 entry gained the trailing clause "and under the predicate it does
+  not". An adjacency in the instruction half carried that negation, and the move removed it.
+
+**Four survivors in `merge-protocol.md` were rewritten because the move stranded a referent.** Each
+stayed put while the sentence it leaned on left:
+
+- The skipped-cache claim read "differs from the one it was built from". "The one" lost its
+  referent when the sentence above it moved, so it names the tree.
+- Step 5's not-a-fast-path caveat opened "It is still not a fast path", where "It" was the
+  exemption named in the paragraph that moved. It names the exemption.
+- Step 5's compute-once instruction read "reconstructing one from `main`'s reflog", where "one"
+  was the second diff the moved sentence introduced. It names the second diff.
+- Step 7's annotated-tag caveat read "Note the setting only follows", where "the setting" was
+  `push.followTags`, named in the sentence that moved. It names the setting.
+```
+
+### B3 — bound what the record claims to cover
+
+**Not an `editor` finding; `coach` REVIEW's own.** Item B2 fixes one incomplete enumeration, and
+the record would still imply it covers edits it enumerates nowhere — step 3's marker recompression,
+step 6's sentence split, step 5's narration trim. **Enumerating them adds a fourth list to a record
+that has now failed twice on lists.** Bounding the claim closes the class instead.
+
+Insert as a new paragraph immediately after the register-split record's opening paragraph, before
+"**Four clauses were deleted rather than moved.**":
+
+```markdown
+This record accounts for the moves, and for every rewrite a move forced. Edits made for other
+reasons live in the slice's spec and its amendments. Those include a marker line recompressed, a
+sentence split and a narration trimmed.
+```
+
+### B4 — two `this slice` indexicals this slice authored
+
+**`editor` raised these as arguable. Ruled in reach.** `claim-discipline.md` bans the record-sense
+indexical outright, and these two sit in text this slice wrote. The extraction record's own
+instances are pre-existing and stay.
+
+**The distinction against item S6, which made the opposite call look inconsistent.** S6's instance
+sat far from any dateline inside a rule paragraph, where the referent really was recoverable only
+by `git log -S`. These two are near their dateline — which is why they read as arguable, and why
+the repair is a phrase rather than a restructure.
+
+Two edits:
+
+- In the register-split record's opening paragraph, **delete the sentence "This slice ran it."** It
+  restates what the dateline and the section heading already say, which is the only deletion
+  `prose.md` licenses.
+- Replace the lead of the two-bullet stranded-referent list:
+
+```markdown
+**Two stranded referents the split inherited were repaired**, on the two-repair precedent the
+extraction record sets:
+```
+
+---
+
+## Part B-2 — execution and expected readings
+
+Item S9's sequence, unchanged: every prose item plus filled digits in one commit, a re-run, then a
+digits-only second commit if anything moved.
+
+| Check                           | At `7b41590`        | Expected after                                                                                               |
+| ------------------------------- | ------------------- | ------------------------------------------------------------------------------------------------------------ |
+| `vale` on `merge-protocol.md`   | 1                   | **1** — the file is not edited                                                                               |
+| `vale` on `CLAUDE.md`           | 21                  | **21** — not edited                                                                                          |
+| `vale` on `prose.md`            | 5                   | **5** — not edited                                                                                           |
+| `vale` on `mutation-testing.md` | 16                  | **16** — not edited                                                                                          |
+| `vale` on the sidecar           | 0, by exemption     | **0**, by exemption                                                                                          |
+| the sidecar, exemption removed  | 24                  | **re-measure** — B2 and B3 add prose, B1 and B4 remove some. All four measured clean, so expect a small rise |
+| `npm run reference-check`       | exit 0, 524, 3,177  | exit 0, 524, **re-measure** — B2 adds two `merge-protocol.md` occurrences                                    |
+| `npm run agent-doc-check`       | exit 0, 54 / 8 / 31 | **unchanged**                                                                                                |
+| `npm run mutation-invariance`   | exit 0              | **exit 0**                                                                                                   |
+| `npm run prose-lint`            | 507 files           | **507 files**                                                                                                |
+| `npm run format:check`          | clean               | **clean**                                                                                                    |
+
+**Then check the three stopping conditions by reading**, and say in the handoff whether each holds.
+That check is the close, not the finding count.
+
+---
+
+## Part B-3 — disposed without an edit
+
+- **A2 and A15 place one obligation in two files.** `editor` raised it as arguable. **Ruled out of
+  scope, and filed** — see Part B-4. The duplication is pre-existing in form: before this slice
+  `mutation-testing.md` restated the same obligation and pointed at a clause that no longer
+  existed, so A15 made it less wrong rather than more. Collapsing it needs a ruling on **which file
+  owns the `--incremental` obligation**, which reaches into `mutation-testing.md`'s own structure.
+  `pipelines.md` calls that a split signal, and this slice has no authority to make it.
+- **Step 5's `Procedure.ProcedureLength` finding.** Still accepted, still measured at a 21-word
+  floor.
+- **The extraction record's own `this slice` instances.** Pre-existing, dated 2026-09-17, out of
+  scope. Item B4 fixes only what this slice wrote.
+
+## Part B-4 — board candidates from round 2
+
+Two, and both meet the filing bar: each needs a ruling this slice has no authority to make.
+
+1. **`enabler-process` — which file owns the `--incremental` obligation.** `merge-protocol.md` step
+   5 and `mutation-testing.md`'s blockquote both instruct a future slice to restore
+   `reports/stryker-incremental-scripts.json`. `prose.md` forbids an instruction file restating a
+   section it cites. The fix is one of them citing rather than restating, and choosing which is a
+   ruling about `mutation-testing.md`'s structure.
+2. **`enabler-process` — `claim-discipline.md` does not name the self-describing count.** Part
+   B-0's diagnosis generalises past this pair: **a count of your own in-flight diff is a census of
+   a moving target**, and the article's census rule does not reach it. Thirteen findings across two
+   rounds are the evidence. It binds every role, so it is not this slice's to add.
+
+**Neither is deferred rework.** Neither is a defect this slice created, and neither can be settled
+inside a merge-protocol register split.
