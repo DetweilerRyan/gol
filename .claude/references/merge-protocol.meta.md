@@ -25,57 +25,21 @@ than instruction, so there was nothing to route here from the move itself.
 
 `split-the-merge-protocol-reasoning-into-its-sidecar`, 2026-09-18. `extract-the-merge-protocol`
 moved the protocol byte-for-byte and deferred the instruction-versus-explanation split, which is
-the third rejected alternative below. Every block below moved verbatim from
-`merge-protocol.md`, except where moving it stranded a referent; each such rewrite is named at the
-block that carried it.
+the third rejected alternative below.
 
-This record accounts for the moves, and for every rewrite a move forced. Edits made for other
-reasons live in the slice's spec and its amendments. Those include a marker line recompressed, a
-sentence split and a narration trimmed.
+**This move was not byte-for-byte, and that is what a later reader needs from this record.** Blocks
+arrived reworded where the move stranded a referent. Some sentences stayed while the sentence they
+leaned on left. A few clauses were deleted as restatements of what the instruction half keeps. So a
+diff of this pair against `extract-the-merge-protocol`'s tree does not read as a relocation, and
+that is expected rather than unaccounted for.
 
-**Four clauses were deleted rather than moved.** Each restated something the instruction half
-already says, which is the only deletion `prose.md` licenses:
+**The per-block accounting is in the slice's own history rather than here.** Read `git log -p` over
+either half of this pair, back from `slice/split-the-merge-protocol-reasoning-into-its-sidecar`.
 
-- Step 5's "One path, not two, and that is deliberate", whose content survives as the conditional
-  obligation the instruction half keeps.
-- Step 5's "This is not hypothetical, and", ahead of "the trigger is stage 1".
-- Step 5's "Read this as a caution about examples in this clause", whose content survives as "The
-  rule is what binds, never an example".
-- Step 5's "and know which option was not taken", from "Record every skip, and know which option
-  was not taken". The spec routed that phrase into the middle-option bullet below and it did not
-  arrive. Deletion is the right disposition either way: the option it points at lives here now, so
-  a reader of the instruction half cannot act on the phrase.
-
-**Two stranded referents the split inherited were repaired**, on the two-repair precedent the
-extraction record sets:
-
-- The exemption clause read "read every entry below". The allowlist is not below and never was,
-  since the same clause says the list is not restated there. It names `mutation-invariance.config.json`.
-- The same clause read "a diff confined to the paths below". That sentence moved here, and it names
-  the config too.
-
-**Two moved blocks were rewritten on arrival**, which is what the promise above covers:
-
-- This file's stage-6 entry read "the paragraph above now refutes it", which pointed at a
-  paragraph that stayed in `merge-protocol.md`. It names that file's stage list.
-- This file's skipped-stage-5 entry gained the trailing clause "and under the predicate it does
-  not". An adjacency in the instruction half carried that negation, and the move removed it.
-
-**Four survivors in `merge-protocol.md` were rewritten because the move stranded a referent.** Each
-stayed put while the sentence it leaned on left:
-
-- The skipped-cache claim read "differs from the one it was built from". "The one" lost its
-  referent when the sentence above it moved, so it names the tree.
-- Step 5's not-a-fast-path caveat opened "It is still not a fast path", where "It" was the
-  exemption named in the paragraph that moved. It names the exemption.
-- Step 5's compute-once instruction read "reconstructing one from `main`'s reflog", where "one"
-  was the second diff the moved sentence introduced. It names the second diff.
-- Step 7's annotated-tag caveat read "Note the setting only follows", where "the setting" was
-  `push.followTags`, named in the sentence that moved. It names the setting.
-
-**One referent the sweep missed, recorded so the next sweep is wider.** Step 5's "the second path"
-was a stranded noun phrase rather than one of the indexicals the spec listed, and it survived into
-the corpus. `coach` REVIEW ruled the repair, which names the file the phrase points at.
+**Ruled 2026-09-18, after three review rounds: a record does not count its own slice's edits.**
+Hand-written enumerations of this slice's diff lived here, and each round found one short by n or
+quoting a string a later item had removed. The diff is authoritative and free. The enumeration was
+neither.
 
 ## Placement ruling and its test
 
@@ -243,31 +207,30 @@ on an allowlist-only diff. The example outlived its premise and was repaired by
   by exactly the invariant diff. So the middle option is really a step-5 proposal, and it changes
   what the gate measures, so it is a slice of its own.
 
-## Known-stale window
+## Known-stale window, closed 2026-09-18
 
-Three files still name `CLAUDE.md` as the merge protocol's home, and
-`extract-the-merge-protocol` did not repoint them:
+Three files named `CLAUDE.md` as the merge protocol's home after `extract-the-merge-protocol`,
+which did not repoint them:
 
 - `vite.config.ts`'s path-allowlist comment
 - `schemas/mutation-invariance.schema.json`, in two `description` strings
 - `scripts/mutation-invariance/checks.ts`'s module header
 
-All three sit outside the write boundary the spec set for `writer`, which named each by
-path. That instruction is the boundary. All three are also on the mutation-invariance
+All three sat outside the write boundary the spec set for `writer`, which named each by
+path. That instruction was the boundary. All three are also on the mutation-invariance
 **absent** list — `vite.config.ts`, `schemas/**` and `scripts/**` each appear there — so
 editing any of them would have re-armed a full mutation run for a prose move. Read that
 as a cost that argues for the boundary, never as the boundary itself: absent-list
-membership constrains what a diff costs, not who may write a file. The retained
-CLAUDE.md pointer keeps those three citations navigable — a reader following any of them
-reaches CLAUDE.md, then `.claude/references/merge-protocol.md` one hop further. An
-`enabler-technical` item is recommended to repoint the three directly.
+membership constrains what a diff costs, not who may write a file. `repoint the stale
+merge-protocol home citations to the subject name` closed all three on 2026-09-18, so the
+`enabler-technical` this section used to recommend is spent.
 
 `split-the-merge-protocol-reasoning-into-its-sidecar` deepened the second entry rather than
 repairing it. `schemas/mutation-invariance.schema.json` cites `merge-protocol` step 5 "for why that
 scope is load-bearing", and that why moved into this file, under "Why the predicate is stated over
 the `src/` run alone". Step 5 still asserts the scope is load-bearing, so the citation degrades
-rather than breaks: a reader reaches the assertion and this file is one hop further. The same
-`enabler-technical` covers it.
+rather than breaks: a reader reaches the assertion and this file is one hop further. The
+repointing closed the home-citation half and not this one, and no item owns it.
 
 ## Check readings at landing — `extract-the-merge-protocol`
 
@@ -300,9 +263,9 @@ The re-measure rule above binds this table too.
 | Check                                     | Reading                                                                                                                                                |
 | ----------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------ |
 | `wc -c` on `merge-protocol.md`            | before 19,078 bytes, after 11,619 bytes                                                                                                                |
-| `wc -c` on this sidecar                   | before 10,350 bytes, after 29,439 bytes                                                                                                                |
+| `wc -c` on this sidecar                   | before 10,350 bytes, after 27,107 bytes                                                                                                                |
 | `wc -c CLAUDE.md`                         | before 72,434 bytes, after 72,492 bytes                                                                                                                |
-| `npm run reference-check`                 | exit 0, 524 files scanned, 3,177 references found                                                                                                      |
+| `npm run reference-check`                 | exit 0, 524 files scanned, 3,170 references found                                                                                                      |
 | `npm run agent-doc-check`                 | exit 0, 54 doc files, 8 agent files, 31 rules                                                                                                          |
 | `npm run mutation-invariance`             | exit 0, config valid, no `--diff` given                                                                                                                |
 | `vale` on `merge-protocol.md`             | 1 finding: step 5's marker line at 39 words, `Procedure.ProcedureLength`. Before: 7, of which 6 `Procedure.ProcedureLength` and 1 `STE.SentenceLength` |
@@ -310,7 +273,7 @@ The re-measure rule above binds this table too.
 | `vale` on `prose.md`                      | 5 findings, against 5 before                                                                                                                           |
 | `vale` on `mutation-testing.md`           | 16 findings, against 16 before — item A15 shortens a sentence inside a blockquote                                                                      |
 | `vale` on this sidecar                    | 0 — exempt by `.vale.ini`'s final `[**/*.meta.md]` section. Read that as a confident zero, never as a pass                                             |
-| `vale` on this sidecar, exemption removed | 23 findings, through a scratch config outside the repo carrying the same rule set as `.vale.ini`'s `[.claude/references/**/*.md]` section              |
+| `vale` on this sidecar, exemption removed | 22 findings, through a scratch config outside the repo carrying the same rule set as `.vale.ini`'s `[.claude/references/**/*.md]` section              |
 | `npm run prose-lint`                      | 507 tracked files linted                                                                                                                               |
 
 **The instruction half's drop has three causes, and only one of them is the register split.**
