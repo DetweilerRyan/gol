@@ -37,14 +37,16 @@ Shaped, per `coach`:
   `this repo`, and quoted section names — ruled one by one before the move is signed.
   Candidate homes: `claim-discipline.md`, or the spec section of
   `.claude/references/role-file-shape.md`. This half probably needs judgement.
-- **The table prohibition.** A check-readings table may not contain both a whole-tree
-  token count and a per-file row, because the second falsifies the first. Either record
-  the count in a file with no per-file rows, or record exit code and file count alone and
-  drop the reference total. This half is a flat structural prohibition, so it is the
-  better fixture candidate. Candidate home: `claim-discipline.md`'s dated-record guidance.
-- Ask `architect` whether either half is fixturable as a `Claim` rule scoped to a moved
-  block or a readings table. If the sweep is, this becomes an enabler-technical; if
-  uncertain, a spike is the right shape.
+- Ask `architect` whether the sweep is fixturable as a `Claim` rule scoped to a moved block.
+  If it is, this becomes an enabler-technical; if uncertain, a spike is the right shape.
+
+**The table prohibition left this file on 2026-09-18** and now lands inside
+`backlog/ideas/claim-discipline-does-not-name-the-self-describing-count.md`, which
+generalises it: a check-readings table carrying both a whole-tree count and a per-file row
+is one instance of a record counting its own slice's edits. Writing the general rule and its
+special case as two slices would have meant either duplication or a collision in one
+article. Nothing about the referent sweep collides with it — a stranded `this file` is not a
+count — so this item stands on its own.
 
 ## Open questions
 

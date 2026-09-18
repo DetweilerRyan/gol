@@ -9,6 +9,17 @@ Captured from `coach` REVIEW on `slice/split-the-merge-protocol-reasoning-into-i
 rounds 1 to 3, 2026-09-18, with the user's approval the same day. `coach` ruled it outside
 that slice's authority: it binds every role, not one pair.
 
+**Scope narrowed to the rule alone, 2026-09-18.** `/idea-assess` ruled this file an Epic:
+it carried the rule and a corpus-wide sidecar sweep with no ordering between them, and E and
+S scored 3 and 2 on the unbounded half. The user ruled the split, and ruled that both halves
+belong under the existing `effective-prose` epic rather than under a new one — its Wave 4 is
+already "mechanise the claim discipline". The sweep is now
+`backlog/ideas/sweep-the-sidecars-for-change-logs.md`.
+
+**This file also absorbed the check-readings table prohibition** from
+`backlog/ideas/verbatim-moves-need-a-referent-sweep.md`, which is the special case this rule
+generalises. That item keeps the referent sweep, which is a different defect class.
+
 ## Situation
 
 `.claude/agents/articles/claim-discipline.md` rules on counts. A census of external state
@@ -40,23 +51,17 @@ Every failure was invisible to the gates. `reference-check`, `agent-doc-check` a
 The pair already named the hazard for exactly one row — "the row recording the count can
 falsify itself" — and nobody generalised it, so each recurrence was diagnosed from scratch.
 
-## The user's ruling, which reaches further than the count
+## The ordering with the sidecar ruling
 
-**Ruled by the user 2026-09-18: a `.meta.md` sidecar carries the explanation behind its
-instruction file — including an option that was dropped and why, so the decision can be
-relitigated with context — and never a log of what a slice changed, because git already
-holds that.**
+The user's 2026-09-18 sidecar ruling — a `.meta.md` carries explanation, never a log of what
+a slice changed — removes this defect's commonest habitat rather than policing it, and it is
+`sweep-the-sidecars-for-change-logs` that applies it. **This rule still binds where that one
+does not reach**, since a count of a slice's own diff can sit in an instruction file, a
+board artifact, or a commit body, none of which the sweep touches.
 
-That ruling removes the genre rather than policing it. All fifteen findings were in change-log
-prose, so a sidecar carrying no change log cannot produce them. It was applied to
-`.claude/references/merge-protocol.meta.md` in the slice that generated the evidence — four
-sections deleted, leaving the placement ruling, why each step is shaped as it is, the stage-5
-argument, and the rejected alternatives. The user ruled the corpus-wide form belongs to this
-item rather than to that slice, and no other sidecar has been swept.
-
-**The two tests are ordered, not competing.** The ruling above gates whether a passage belongs
-in a sidecar at all. `coach`'s test applies afterwards, to a count inside a passage that has
-already passed that gate:
+**The two tests are ordered, not competing.** The sidecar ruling gates whether a passage
+belongs in a sidecar at all. `coach`'s test applies afterwards, to a count inside a passage
+that has already passed that gate:
 
 > Where a count survives inside a passage that explains, it stays only when a command
 > re-derives it; a count only a diff can verify goes even there.
@@ -88,9 +93,18 @@ it: the numeral is not the defect.** Twice in that slice an incomplete enumerati
 caught precisely because a numeral stood beside it and disagreed. Stripping the numeral
 would have hidden the omission rather than fixing it.
 
-`backlog/ideas/verbatim-moves-need-a-referent-sweep.md` carries the neighbouring pair of
-remedies from the previous slice — the referent sweep and the check-readings table
-prohibition — and this is the third member of that family rather than a duplicate of either.
+**The table prohibition is this rule's special case, and lands with it rather than beside
+it.** A check-readings table may not carry both a whole-tree token count and a per-file row,
+because a per-file row names a file and so moves the count the other row records. Write it
+as the worked instance under the general rule, not as a second rule: the general form is
+that a record does not count its own slice's edits, and this is what that looks like in a
+table. **Measure before writing it** — the sidecar ruling deleted both check-readings tables
+from `merge-protocol.meta.md`, so the construct may be shrinking. If it survives only in
+board artifacts, say so and scope the instance there.
+
+`backlog/ideas/verbatim-moves-need-a-referent-sweep.md` keeps the referent sweep, which is a
+different class — a moved sentence whose `this file` or `above` no longer resolves — and is
+the third member of the family this slice's evidence produced.
 
 ## No-gos
 
@@ -103,9 +117,15 @@ prohibition — and this is the third member of that family rather than a duplic
 ## Open questions
 
 - Does the rule bind a `backlog/` artifact at all, given the lane is unlinted and the folder
-  is deleted at retrospective?
-- `CLAUDE.md`'s module map is a census the sweep has not reached, filed separately at
-  `backlog/ideas/apply-the-census-count-rule-everywhere.md`. Does that item absorb this one,
-  or stay distinct?
+  is deleted at retrospective? The table prohibition's answer may depend on this, since the
+  construct now survives mainly there.
 - Does the guidance belong in `claim-discipline.md` alone, or does `prose.md` need a
   matching line where it discusses records?
+- `mechanise-the-prose-direction-check` asks whether the token-frequency diff becomes a
+  command. That diff is what caught the dropped obligation this rule exists to prevent, so
+  the two are the judged and mechanical halves of one question. Which lands first?
+
+**Struck by `/idea-assess`, 2026-09-18:** whether `apply-the-census-count-rule-everywhere`
+absorbs this. It does not, and this file's own No-go already says why — a census drifts with
+the tree, and this one is wrong the moment it is written. They are Wave 4 siblings, not
+duplicates.

@@ -165,6 +165,24 @@ an acceptable outcome; a measured refutation closes a question permanently.
 - `a-written-argument-entry-goes-stale-in-silence` — a mutation-invariance entry whose argument this
   slice falsified, with the gate still exiting 0 over it
 
+**Three entries joined this wave on 2026-09-18**, from the merge-protocol slices' evidence. The user
+ruled them here rather than under a second epic, since a competing ordering over the same territory is
+the fragmentation this epic exists to fix.
+
+- `claim-discipline-does-not-name-the-self-describing-count` — a record counting its own in-flight
+  diff, which neither existing count rule reaches. Fifteen findings in one slice, every one invisible
+  to all three gates. It absorbed the check-readings table prohibition as its worked instance
+- `verbatim-moves-need-a-referent-sweep` — a moved block whose `this file` or `above` no longer
+  resolves. A different class, and the one `architect` may find fixturable
+- `sweep-the-sidecars-for-change-logs` — applies the user's 2026-09-18 sidecar ruling to the 21
+  tracked sidecars nobody has read against it
+
+**Two orderings this wave now owes a ruling on.** `mechanise-the-prose-direction-check` asks whether
+the token-frequency diff becomes a command, and that diff is what caught the defect the
+self-describing-count rule exists to prevent — they are the mechanical and judged halves of one
+question. And `apply-the-census-count-rule-everywhere` is that rule's sibling rather than its parent:
+a census drifts with the tree, a self-describing count is wrong the moment it is written.
+
 ### Adjacent, and deliberately not in the waves
 
 The doc-comment depth cluster shares vocabulary with this epic and answers a different question —
@@ -184,6 +202,9 @@ prevent, which is the failure this epic's own framing warns about.
 - `spike-the-slop-rules-one-at-a-time` — **DECLINED.** `Metaphor` read at roughly zero precision.
 - `module-mutation-sidecars-refuted` — **REFUTED.** Rulings already live at their sites.
 - `roll-the-rationale-sidecar-out` — believed complete. **Verify and delete, or say what remains.**
+  Note what this does **not** cover: `sweep-the-sidecars-for-change-logs` in Wave 4 is new work on the
+  same tier, not the remainder of this entry. That one removes change-log prose from sidecars that
+  already exist; this one was about splitting articles to create them.
 
 ## Touches
 
