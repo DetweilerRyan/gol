@@ -10,28 +10,28 @@
         "hooks": [
           {
             "type": "command",
-            "command": "node \"$CLAUDE_PROJECT_DIR/.claude/skills/idea-assess/scripts/layer1.ts\" --hook",
+            "command": "node \"$CLAUDE_PROJECT_DIR/scripts/board-shape-hook/run.ts\" --hook",
             "timeout": 10,
             "statusMessage": "Layer 1: checking the idea file's shape",
             "if": "Write(backlog/**)"
           },
           {
             "type": "command",
-            "command": "node \"$CLAUDE_PROJECT_DIR/.claude/skills/idea-assess/scripts/layer1.ts\" --hook",
+            "command": "node \"$CLAUDE_PROJECT_DIR/scripts/board-shape-hook/run.ts\" --hook",
             "timeout": 10,
             "statusMessage": "Layer 1: checking the idea file's shape",
             "if": "Edit(backlog/**)"
           },
           {
             "type": "command",
-            "command": "node \"$CLAUDE_PROJECT_DIR/.claude/skills/prose-audit/scripts/on-edit.ts\"",
+            "command": "node \"$CLAUDE_PROJECT_DIR/scripts/prose-write-hook/run.ts\"",
             "timeout": 15,
             "statusMessage": "Prose loop: Vale on the edited file",
             "if": "Write(.claude/**)"
           },
           {
             "type": "command",
-            "command": "node \"$CLAUDE_PROJECT_DIR/.claude/skills/prose-audit/scripts/on-edit.ts\"",
+            "command": "node \"$CLAUDE_PROJECT_DIR/scripts/prose-write-hook/run.ts\"",
             "timeout": 15,
             "statusMessage": "Prose loop: Vale on the edited file",
             "if": "Edit(.claude/**)"

@@ -15,7 +15,7 @@ Target: $target
 
 Layer 1 ran before this text reached you. Its output:
 
-!`node "${CLAUDE_SKILL_DIR}/scripts/layer1.ts" $target`
+!`node "${CLAUDE_PROJECT_DIR}/scripts/board-shape-hook/run.ts" $target`
 
 **Absent a `LAYER1` count line directly above, Layer 1 did not run — stop and say so. A line reporting the path missing means the target was never measured — stop the same way. Never assess on hand-computed checks.**
 
