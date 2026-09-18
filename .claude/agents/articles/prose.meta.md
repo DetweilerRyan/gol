@@ -1590,6 +1590,12 @@ completeness condition removes at least one of the 51, and nothing has re-measur
 
 ## `vale` given an absolute path lints nothing (2026-09-18)
 
+**This mechanism was measured once before, and this section discharges that record's own
+anticipation.** "The write-time hook's shape ruling (2026-09-15)" measured it with a
+contraction-bearing probe, and records that the hook relativizes a path before Vale runs. So
+`prose.md`'s item 12 is reachable only by a hand-run. What this section adds is the file-count
+discriminator and the subdirectory case.
+
 Measured on vale 3.20.0 in the `record-two-rules-the-amendment-cycle-surfaced` worktree, with
 `.vale/` synced and the cwd at the repo root:
 
