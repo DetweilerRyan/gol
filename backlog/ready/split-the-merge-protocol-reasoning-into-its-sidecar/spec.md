@@ -8,14 +8,18 @@ created: 2026-09-18
 
 **Slice:** `split-the-merge-protocol-reasoning-into-its-sidecar`
 **Kind:** `enabler-process` · **Author:** `coach` SPEC, 2026-09-18 · **Executes:** `writer`
+**Revision 2, 2026-09-18**, after `procedure-length-clears-by-relocation` ruled the spec's one
+blocking question. What that revision changed is listed at the end, under "Revision 2".
 
-Three files change. Nothing else in the tree moves.
+Five files change. Nothing else in the tree moves.
 
 | File                                        | Change                                                                     |
 | ------------------------------------------- | -------------------------------------------------------------------------- |
 | `.claude/references/merge-protocol.md`      | Whole-file replacement — the register split, given verbatim as item M0     |
 | `.claude/references/merge-protocol.meta.md` | Four new sections, one appended bullet, three in-place fixes — items S1–S9 |
 | `CLAUDE.md`                                 | One sentence on the `merge-protocol` routing bullet — item C1              |
+| `.claude/agents/articles/prose.md`          | The relocation ruling and its condition — item P1                          |
+| `.claude/agents/articles/prose.meta.md`     | The spike's measurements behind that ruling — item P2                      |
 
 ---
 
@@ -44,12 +48,21 @@ re-read the sentences that survive around the gap and check every `this file`, `
 the ones found at spec time; a further one found during execution goes back to `coach` as a
 finding, per `writer.md`'s no-improvise boundary.
 
-**R-E. The numbered line carries the action; its qualifiers go to an indented continuation
-paragraph under the same number.** `Procedure.ProcedureLength` reads only a line matching
-`^[0-9]+\.\s` and counts space-separated tokens on that line, marker included. Steps 3, 5 and 8
-keep every instructing word, relocated below the marker. **This clears a Vale finding without
-moving a word to the sidecar, so it is not a register improvement and Part 3 records it
-separately.** It is the spec's one open question — see Part 5.
+**R-E. The numbered line keeps the complete executable instruction; only qualification goes to
+an indented continuation paragraph under the same number.** Ruled by `architect` on
+`procedure-length-clears-by-relocation`, 2026-09-18, and recorded at that slice's
+`findings.md`. `Procedure.ProcedureLength` reads only a line matching `^[0-9]+\.\s` and counts
+space-separated tokens on that line, marker included. The measure is the correct measure rather
+than a gap, and the rule stays unchanged.
+
+**The condition binds this spec item by item.** A reader who executes marker lines alone must
+perform the procedure correctly. What moves below is qualification, rationale or a worked
+example — never a second action, and never the step's own applicability condition. Part 1B
+applies it step by step, as `findings.md` requires, and it is why one step keeps its finding.
+
+**Relocation still clears a Vale finding without moving a word to the sidecar, so Part 3 keeps
+the two apart.** The register split alone reads 4; the ruling is what licenses clearing three of
+those four.
 
 **R-F. The sidecar's check-readings table is protected, and its own rule binds this slice.**
 `merge-protocol.meta.md` records that a row reporting a per-file reading carries a
@@ -125,7 +138,7 @@ repaired on that slice's own two-repair precedent, and recorded in item S1.
 
 ### Four survivor rewrites, each forced by a move
 
-`writer` makes these and no others.
+`writer` makes these, step 3's marker compression in Part 1B, and no others.
 
 | Survivor                             | Before                                             | After                                                                                           |
 | ------------------------------------ | -------------------------------------------------- | ----------------------------------------------------------------------------------------------- |
@@ -171,16 +184,14 @@ this protocol assumes. Read that section first; nothing here repeats it.
 
 1. **Rebase, do not merge.** In the slice's worktree: `git fetch && git rebase main`.
 2. **The slice's own session resolves its own conflicts**, in its own worktree. `main` never enters a conflicted state.
-3. **Re-run the gate on the rebased branch, still in the worktree.** Invoke `hardener` again.
+3. **Re-run the gate on the rebased branch, still in the worktree.** Invoke `hardener` again with `npm run test:mutation:full`.
 
-   It must use `npm run test:mutation:full`. **The one exception: if the merge is mutation-invariant, stage 5 does not run at all.** See the clause under step 5, and evaluate its predicate here, at this step.
+   **The one exception: if the merge is mutation-invariant, stage 5 does not run at all.** See the clause under step 5, and evaluate its predicate here, at this step.
 
    Pay attention to `npm run ast-grep:rules` here specifically. It is the gate most likely to have been broken by the _other_ slice's renames invalidating a `files:` glob. Post-rebase, that breakage is legitimately yours.
 
 4. **Fast-forward `main`:** `git checkout main && git merge --ff-only <slice>` from the primary checkout.
-5. **Run the full gate on `main`.** Mandatory, even though step 3 just passed on an identical tree.
-
-   **The one exception: if this is a mutation-invariant merge, skip the deletion below entirely.** Read the clause below before running it:
+5. **Run the full gate on `main`.** Mandatory, even though step 3 just passed on an identical tree. **The one exception: if this is a mutation-invariant merge, skip the deletion below entirely.** Read the clause below before running it:
 
    ```bash
    rm -f reports/stryker-incremental.json
@@ -288,6 +299,68 @@ So the orchestrator decides when a slice is perf-relevant, and runs `npm run tes
 
 There is deliberately no dedicated perf role for this. The post-merge gate is `hardener`, invoked on `main` and told that it is verifying an integration rather than a slice. The whole tree is then in scope.
 ````
+
+---
+
+## Part 1B — the completeness check, step by step
+
+`procedure-length-clears-by-relocation`'s `findings.md` requires this check per step rather than
+as a blanket claim. Three steps relocate words below their marker. Each is ruled here, and the
+test is the ruling's own: **a reader who executes marker lines alone performs the procedure
+correctly.**
+
+### Step 3 — passes, but only after one compression
+
+**The mandate is instruction, not qualification, so it stays on the marker line.** A reader who
+executes "Invoke `hardener` again" alone gets `hardener`'s own stage-5 default, which is the
+incremental `npm run test:mutation`. The rebase is exactly the file-level change that cache
+cannot survive, and that is the whole reason step 3 exists. Leaving the mandate below the marker
+would let a marker-only reader perform the step **incorrectly**, which the ruling forbids.
+
+**So the marker line keeps the command, and two sentences become one.**
+
+| Before (revision 1)                                                                  | After (this revision)                                                |
+| ------------------------------------------------------------------------------------ | -------------------------------------------------------------------- |
+| Marker: "Invoke `hardener` again." Body: "It must use `npm run test:mutation:full`." | Marker: "Invoke `hardener` again with `npm run test:mutation:full`." |
+
+**This is the spec's fifth authored rewrite, and it is ruled rather than incidental.** It does
+not change what step 3 instructs: the imperative carries the obligation the word "must" carried,
+and no other word moves. Measured at 19 tokens, clean.
+
+**What stays below is qualification.** The mutation-invariant exception narrows which stages
+`hardener` runs, and a marker-only reader who misses it runs the fuller gate. That fails safe —
+it costs one mutation run and can never produce a wrong merge. The instruction to evaluate the
+predicate here fails safe the same way.
+
+### Step 5 — fails the test, and keeps its finding
+
+**The exception is an applicability condition on the `rm -f` in the very next block, so the
+ruling forbids relocating it.** The current text says so in its own words: "Read the clause below
+before running it". A marker-only reader must meet the condition before the command, not after.
+
+**The marker line therefore cannot fit under the cap, and the floor is measured rather than
+estimated.** A line carrying only the marker, the action, and the exception verbatim — no
+"Mandatory", no pointer to the fence, both of which are instruction — measures **21 words**. The
+cap is 20.
+
+**Ruled: step 5 keeps its `Procedure.ProcedureLength` finding**, at 39 words after the register
+split, down from 68. Clearing it would need the exception reworded, which the proposal's No-go
+forbids. `writer` names it in the handoff as accepted, with the words that could not move.
+
+### Step 8 — passes
+
+**The marker line carries the whole action**: carry the figure forward from `product`'s VERIFY
+handoff, and do not edit anything. A marker-only reader performs step 8 correctly.
+
+**What moves below is qualification.** The `engineering.md` sentence says there is nothing in
+that file to re-record, which the marker's own "This is a read, not an edit" already instructs.
+The two paragraphs on noticing a moved figure are rationale and were already below the marker
+before this slice.
+
+### Steps 1, 2, 4 — no relocation at all
+
+Each clears by the register split alone. Their markers are unchanged in structure; only
+explanation left them, to `merge-protocol.meta.md`.
 
 ---
 
@@ -536,6 +609,7 @@ The re-measure rule above binds this table too.
 | `npm run mutation-invariance`             | exit 0, config valid, no `--diff` given                                                                                                          |
 | `vale` on `merge-protocol.md`             | ⟨measure⟩ findings, against 7 before — 6 `Procedure.ProcedureLength`, 1 `STE.SentenceLength`                                                     |
 | `vale` on `CLAUDE.md`                     | ⟨measure⟩ findings, against 21 before                                                                                                            |
+| `vale` on `prose.md`                      | ⟨measure⟩ findings, against 5 before                                                                                                             |
 | `vale` on this sidecar                    | 0 — exempt by `.vale.ini`'s final `[**/*.meta.md]` section. Read that as a confident zero, never as a pass                                       |
 | `vale` on this sidecar, exemption removed | ⟨measure⟩ findings, through a scratch config outside the repo carrying the same rule set as `.vale.ini`'s `[.claude/references/**/*.md]` section |
 | `npm run prose-lint`                      | ⟨measure⟩ tracked files linted                                                                                                                   |
@@ -544,9 +618,19 @@ The re-measure rule above binds this table too.
 Measured on the drafted text before landing: moving explanation to this sidecar alone clears
 steps 1, 2 and 4, and takes steps 3, 5 and 8 from 71, 68 and 61 words to 50, 39 and 30 — all three
 still over `Procedure.ProcedureLength`'s 20-word cap, so a register split alone reads 4 findings
-rather than 0. Relocating those three steps' qualifiers into indented continuation paragraphs
-under the same number clears three of the four. Splitting step 6's 37-word idea-board sentence
-clears the fourth.
+rather than 1. Relocating step 3's and step 8's qualifiers into indented continuation paragraphs
+clears two of the four, and splitting step 6's 37-word idea-board sentence clears a third.
+
+**The relocation is licensed rather than assumed.** `architect` ruled the shape legitimate on
+`procedure-length-clears-by-relocation`, 2026-09-18, on a measured corpus exposure of 51 findings
+and 28 numbered steps already carrying an over-cap body while reading clean.
+`.claude/agents/articles/prose.md` carries the ruling and its condition, and `prose.meta.md` the
+measurement.
+
+**Step 5 keeps its finding, and that is the ruling applied rather than ignored.** Its exception is
+an applicability condition on the command in the next block, which the ruling forbids relocating.
+A marker line carrying only the action and that exception verbatim measures 21 words against a cap
+of 20, so the finding is irreducible without rewording an instruction.
 
 **The sidecar's own zero is bought by the exemption, not earned.** That is why the row above
 records what this file reports with the exemption removed. Reproduce it by copying
@@ -596,6 +680,123 @@ words, measured clean at spec time, so CLAUDE.md's reading stays at 21.
 
 ---
 
+## Part 2C — `prose.md` and `prose.meta.md`
+
+**Ruled: the `prose.md` ruling rides this spec rather than becoming its own process item — and
+the user may strike it.** `architect` left the choice to the seat; the seat put it to me. Three
+reasons, and one cost stated plainly.
+
+- **The ruling's evidence has no other home.** `findings.md` sits in
+  `backlog/done/procedure-length-clears-by-relocation/`, and CLAUDE.md's Idea board says the
+  retrospective **deletes** that folder. A separate process item is a race against that deletion.
+- **This slice is the ruling's first application.** Without item P1, three relocated steps land
+  in `merge-protocol.md` with no rule behind them, and the next reader cannot tell a ruled shape
+  from a slip.
+- **The reviewers of this slice need it.** `editor` AUDIT and `coach` REVIEW check Part 1B
+  against a rule; a rule that is not yet written is a rule they must take from a board folder.
+
+**The cost.** This slice's scope widens from one pair to one pair plus a corpus-wide ruling, so
+`editor` and `coach` REVIEW carry two subjects instead of one. The diff stays inside `.claude/**`
+and so stays mutation-invariant. **If you prefer the narrower slice, strike Part 2C and the seat
+raises an `enabler-process` item; Part 1B and item M0 are unaffected either way.**
+
+The split between the two items is the house rule: `prose.md` gets the ruling and its condition,
+`prose.meta.md` gets the measurements.
+
+### Item P1 — `prose.md`
+
+Insert at the end of the section `### Procedure.ProcedureLength — act on every finding`, after
+its existing "One exemption survives and it is real" paragraph. Add nothing above it.
+
+**Two things about this item are deliberate and will look like defects to a reviewer.**
+
+- **It adds an accepted-residual class to a rule whose heading says "act on every finding".** The
+  heading stays, because the class is narrow: a step whose complete executable instruction will
+  not fit. `merge-protocol.md`'s step 5 is the first instance and this slice lands it.
+- **It is article prose, not a rule file, so it is `writer`'s edit rather than `architect`'s.**
+  `architect` authored the ruling and named `prose.md` as its home; no `vale-styles/` file and no
+  `.vale.ini` key changes.
+
+```markdown
+**Relocation below the marker is a legitimate remedy, and it carries one condition.** Ruled
+2026-09-18 on `procedure-length-clears-by-relocation`'s measurement. The rule reads the marker line
+alone, so moving words into an indented continuation paragraph clears a finding. That is the
+corpus's existing register rather than a loophole: 28 numbered steps already carry a body over the
+cap and read clean.
+
+**The condition is that the marker line keeps the complete executable instruction.** A reader who
+executes marker lines alone must perform the procedure correctly. What moves below is qualification,
+rationale or a worked example. Never a second action, and never the step's own applicability
+condition.
+
+**Check that condition step by step, never as a blanket claim over a file.** A step whose complete
+instruction will not fit under the cap keeps its finding. Name such a step in the handoff as
+accepted, with the words that could not move.
+
+**The body is bounded rather than unlinted.** `STE.SentenceLength` and `STE.ParagraphLength` both
+reach a continuation paragraph, and the marker's own sentence does not count toward the six. So
+relocation moves words from a procedural cap into a descriptive one, which is the split ASD-STE100
+itself draws.
+```
+
+Measured at spec time: this block adds **0** findings, so `prose.md` stays at its current 5.
+
+### Item P2 — `prose.meta.md`
+
+Append as a new final section. The file's existing sections are dated headings in this shape.
+
+```markdown
+## Why `Procedure.ProcedureLength` was left measuring the marker line alone (2026-09-18)
+
+`procedure-length-clears-by-relocation` asked whether the rule's marker-line measure is an
+incidental gap. `architect` ruled it the correct measure, with no rule change, no companion rule
+and no `enabler-technical`. The parent slice was
+`split-the-merge-protocol-reasoning-into-its-sidecar`, whose spec was blocked on the answer.
+
+**Exposure.** 51 of 51 current findings clear by relocation alone, across 9 files — 44 percent of
+the corpus's 116 numbered steps. `product.md` 13, `coder.md` 8, `cleaner.md` 6,
+`merge-protocol.md` 6, CLAUDE.md 5, `architect/contract-mode.md` 4, `testing-layers.md` 4,
+`engineering.md` 3, `mutation-testing.md` 2.
+
+**The shape is already the corpus's.** 44 of the 116 steps carry an indented body, and **28 pass
+the rule while marker plus body exceeds 20 words**, 27 of them through plain continuation
+paragraphs. Twenty of those 27 are `prose.md`'s own numbered enumerations of failure modes, which
+are numbered statements rather than procedures — a separate known imprecision.
+
+**What lints the body, measured.** A 31-word continuation paragraph fires `STE.SentenceLength`. A
+7-sentence one fires `STE.ParagraphLength`, a 6-sentence one is clean, and the marker's own
+sentence does not count toward the six. A 26-word marker line fires `ProcedureLength` and does
+**not** fire `SentenceLength`, so on the marker line `ProcedureLength` is the only length rule.
+
+**Closing the rule was rejected on the measure, not on cost.** A total-words-per-step cap has no
+ASD-STE100 basis, and it would convert the 28 legitimate shadow steps into findings. The
+instruction-against-rationale split inside a body is not mechanically decidable:
+`OneInstruction`'s imperative-verb discriminator fails there, because rationale is full of quoted
+imperatives. The `.good` fixture such a rule would owe cannot be written honestly, and that
+impossibility is itself the evidence.
+
+**A companion body rule was rejected as drift.** The body is already bounded by two enabled `STE`
+rules, so a second rule would report one defect at two precisions — the reason `.vale.ini`
+disables `STE.ProcedureLength` by name. The priced-in cost is 5 words per sentence, 25 against 20,
+plus the loss of a per-step total.
+
+**One probe defect, caught and corrected.** The first exposure scan used the git pathspec
+`.claude/references/**/*.md`, which matches nothing, because git's `**/` needs an intermediate
+directory. It silently dropped the reference tier and reported 45 against vale's 51. Only the
+reconciled run, 51 against 51, is reported above.
+
+**Not measured, stated rather than inferred.** Whether `SentenceLength` reaches sub-bullet text
+under a numbered step. The register classification of all 28 bodies, as against the hand-sampled
+extremes. `ParagraphLength` segmentation away from the 6-to-7 boundary.
+
+**The parent slice's own application.** `split-the-merge-protocol-reasoning-into-its-sidecar`
+relocated three steps and ruled a fourth unfixable: `merge-protocol.md`'s step 5 keeps its
+finding, because its exception is an applicability condition on the command in the next block,
+and a marker line carrying only the action and that exception measures 21 words against a cap of 20.
+```
+
+---
+
 ## Part 3 — the expected check readings
 
 Measured at spec time on this worktree's tip, against drafted copies outside the repo. `writer`
@@ -604,8 +805,10 @@ reconcile silently.
 
 | Check                                    | Before                                        | Expected after                            | How the spec knows                                                                                                                                                                   |
 | ---------------------------------------- | --------------------------------------------- | ----------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| `vale` on `merge-protocol.md`            | 7                                             | **0**                                     | Measured on the drafted M0 body through a scratch config reproducing the live reading                                                                                                |
+| `vale` on `merge-protocol.md`            | 7                                             | **1**, step 5's marker at 39 words        | Measured on the drafted M0 body through a scratch config reproducing the live reading. Step 5's finding is ruled irreducible in Part 1B                                              |
 | `vale` on `CLAUDE.md`                    | 21                                            | **21**                                    | Measured on the drafted C1 line: the pre-existing 34-word finding is untouched, the edited sentence is 20 words                                                                      |
+| `vale` on `prose.md`                     | 5                                             | **5**                                     | Measured on the drafted P1 block, which adds none                                                                                                                                    |
+| `vale` on `prose.meta.md`                | 0                                             | **0**, by exemption                       | The same `[**/*.meta.md]` section. Item P2's block is a dated record and belongs to that register                                                                                    |
 | `vale` on the sidecar                    | 0                                             | **0**, by exemption                       | `.vale.ini`'s final `[**/*.meta.md]` section. Guaranteed by construction, proves nothing                                                                                             |
 | `vale` on the sidecar, exemption removed | n/a                                           | **2** `STE.SentenceLength`                | Measured on the drafted S1–S4 blocks. This is the honest cost of the exemption                                                                                                       |
 | `npm run reference-check`                | exit 0, 524 files, 3,151 refs                 | exit 0, 524 files, **a count that rises** | Every token moving between these two files stays inside the checker's scan set, so a move alone cannot change the count. The new sections add occurrences of already-resolving names |
@@ -614,9 +817,13 @@ reconcile silently.
 | `npm run prose-lint`                     | 504 files                                     | **504 files**                             | No file is added or removed                                                                                                                                                          |
 | `npm run format:check`                   | clean                                         | **clean**                                 | `proseWrap` is Prettier's default `preserve`, so no prose is rewrapped                                                                                                               |
 
-**Read the 7 → 0 drop with its decomposition, never on its own.** The register split alone
-reads **4**, measured. Part 2's item S8 mandates that the decomposition lands in the sidecar
-rather than only here.
+**Read the 7 → 1 drop with its decomposition and its provenance, never on its own.** The
+register split alone reads **4**, measured. Relocation clears two of those four and the
+sentence split clears a third; the fourth is step 5's, ruled irreducible. Relocation is licensed
+by `architect`'s 2026-09-18 ruling on `procedure-length-clears-by-relocation`, which measured 51
+findings of this rule corpus-wide and 28 steps already carrying an over-cap body while reading
+clean. Item S8 mandates that both the decomposition and the provenance land in the sidecar rather
+than only here.
 
 **Read the sidecar's 0 as a confident zero.** `.vale.ini` exempts `*.meta.md`, so every sentence
 moved into it stops being linted rather than being fixed. The exemption-removed row is the
@@ -628,7 +835,9 @@ counter-measurement, and 2 is the number it hides.
 
 - **`merge-protocol.md`'s step numbering.** Other files cite the steps by ordinal. No step is
   added, removed, merged or renumbered.
-- **What any step instructs.** Every instructing word survives in the instruction half.
+- **What any step instructs.** Every instructing word survives in the instruction half. Step 3's
+  marker compression is the one place two sentences become one; Part 1B rules why the instruction
+  is unchanged, and it is the only such edit in the file.
 - **CLAUDE.md's "Merge protocol" pointer**, under "Running slices concurrently". It summarises
   the instruction half — "the protocol's steps, the mutation-invariant stage-5 exemption and its
   computed predicate, and the perf runs this seat owns". All three still live there after the
@@ -648,36 +857,28 @@ counter-measurement, and 2 is the number it hides.
 
 ---
 
-## Part 5 — the open question for the user
+## Part 5 — the blocking question, answered
 
-**One ruling in this spec is mine to propose and yours to make.**
+**Revision 1's open question is closed.** `architect` ruled on
+`procedure-length-clears-by-relocation`, 2026-09-18. Relocation below the marker is legitimate,
+`Procedure.ProcedureLength`'s marker-line measure is the correct measure, the rule stays
+unchanged, and there is no companion rule and no `enabler-technical`. Two measurements decided
+it: 28 numbered steps in the corpus already carry an over-cap body and read clean, and the body
+is reached by `STE.SentenceLength` and `STE.ParagraphLength` rather than being unlinted.
 
-Three of the seven Vale findings are cleared by relocating **instruction** words from a numbered
-step's own line into an indented continuation paragraph under the same number. No word leaves
-`merge-protocol.md`, no instruction changes, and the ordinals are untouched. Steps 3, 5 and 8 are
-the three.
+**The ruling arrived with a condition, and applying it changed this spec's answer.** Revision 1
+assumed a post-split reading of 0. Under the condition the reading is **1**:
 
-`Procedure.ProcedureLength` reads only the line that carries the numbered marker. So the
-relocation clears a real finding without improving the register at all. `prose.md`'s stated
-remedy for that rule is "state one instruction per step and move the reasoning to prose below the
-list", which sanctions moving **reasoning** down — it does not speak to moving an instruction
-down.
+- **Step 3** needed a compression that revision 1 did not have. Its `:full` mandate is
+  instruction, so it had to come back up onto the marker line — see Part 1B.
+- **Step 5** cannot satisfy the condition at all. Its exception is an applicability condition on
+  the next block's command, and the minimum compliant marker line measures 21 words against a cap
+  of 20. It keeps its finding, named as accepted.
+- **Step 8** passes unchanged.
 
-- **Option A, what this spec assumes.** Accept the relocation. The step's numbered line carries
-  the action; its mandates, exceptions and pointers sit in a continuation paragraph under the
-  same number. The file already uses that shape for step 3's `ast-grep:rules` paragraph and for
-  the whole exemption clause. Post-split reading: **0**.
-- **Option B.** Refuse it. Steps 3, 5 and 8 keep their qualifiers on the numbered line and carry
-  a residual `Procedure.ProcedureLength` finding each, named in the handoff as accepted. Post-split
-  reading: **3**, all `Procedure.ProcedureLength`.
-
-**Recommendation: Option A.** The finding it clears is real — a 71-word numbered step is a genuine
-defect — and the fix keeps every word of instruction in the step it belongs to. Option B lands
-three findings nobody intends to clear, which is what `prose.md`'s landing constraint exists to
-prevent.
-
-If you rule B, the only change to this spec is that steps 3, 5 and 8 in item M0 revert to their
-current single-line shape with the moved explanation removed, and item S8's table records 3.
+**Nothing here needs your ruling.** The one thing still open is the scope choice in Part 2C: whether
+the `prose.md` ruling rides this slice or becomes its own item. My recommendation and its cost are
+stated there.
 
 ---
 
@@ -695,14 +896,22 @@ For the seat to capture as board items. None is executed here.
    already lives in CLAUDE.md's "Idea board" and in `pipelines.md`'s story exit. `prose.md`
    forbids an instruction file carrying a restatement of a section it cites. This spec keeps the
    clause because R-B forbids removing an instruction, so the deletion needs its own ruled slice.
-3. **Candidate idea — `Procedure.ProcedureLength` cannot see a continuation paragraph.** Part 5's
-   question generalises: any numbered step in this corpus can clear the rule by moving words one
-   line down. Whether that is the intended remedy or a gap in the rule is `architect`'s question,
-   and it wants a measurement across the corpus before anyone changes the rule.
+3. **Withdrawn.** Revision 1 recommended a spike on whether the rule's marker-line measure is a
+   gap. `procedure-length-clears-by-relocation` ran it and answered. Items P1 and P2 record the
+   answer.
 4. **Candidate idea — the reference-tier `Instruction.*` rules are still off.** `.vale.ini` holds
    them off for `.claude/references/**` over a measured 6-finding backlog on
    `definition-of-ready.md`. This slice adds no finding to that backlog and does not clear it.
    Enabling them is a slice of its own.
+5. **Candidate idea — 50 of the 51 `Procedure.ProcedureLength` findings are untouched.** The spike
+   measured the corpus at 51 across 9 files; this slice clears 5 of `merge-protocol.md`'s 6 and
+   leaves the rest. Every one of them now has a ruled remedy and none has an owner. `product.md`
+   at 13 and `coder.md` at 8 are the largest. Clearing them is `enabler-process` work, and
+   `prose.md`'s landing constraint argues for doing it in one slice rather than opportunistically.
+6. **Recorded for the retrospective.** `backlog/done/procedure-length-clears-by-relocation/` is
+   scheduled for deletion by its retrospective. Item P2 is what carries its measurements out
+   first. If Part 2C is struck, the separate `enabler-process` item must land **before** that
+   retrospective runs.
 
 ---
 
@@ -711,18 +920,40 @@ For the seat to capture as board items. None is executed here.
 - `.claude/references/merge-protocol.md` — item M0, whole-file replacement.
 - `.claude/references/merge-protocol.meta.md` — items S1 through S9.
 - `CLAUDE.md` — item C1, one sentence on the `merge-protocol` routing bullet.
+- `.claude/agents/articles/prose.md` — item P1, one block in the `ProcedureLength` section.
+- `.claude/agents/articles/prose.meta.md` — item P2, one appended dated section.
 
 Nothing else. No `src/`, no `scripts/`, no `rules/`, no `vale-styles/`, no `.vale.ini`, no
 config. The diff is confined to `.claude/**` and `CLAUDE.md`, both on
 `mutation-invariance.config.json`'s allow list, so the landing diff is expected to compute as
 mutation-invariant at merge step 3.
 
+## Revision 2
+
+What changed after `procedure-length-clears-by-relocation` landed, 2026-09-18.
+
+- **R-E rewritten.** It now states the ruling, its provenance, and the completeness condition
+  instead of flagging an open question.
+- **Part 1B added** — the completeness check, step by step, as `findings.md` requires.
+- **Step 3's marker line recompressed.** "Invoke `hardener` again. It must use `npm run
+test:mutation:full`." becomes "Invoke `hardener` again with `npm run test:mutation:full`.",
+  because the mandate is instruction and the condition keeps instruction on the marker.
+- **Step 5's marker line restored** to carry its exception, which revision 1 had relocated. Step
+  5 keeps its `Procedure.ProcedureLength` finding, and the 21-word floor behind that is measured.
+- **The expected reading moves from 0 to 1.** Part 3 and item S8 both carry the new figure, the
+  decomposition, and the ruling's provenance.
+- **Part 2C added** — items P1 and P2, the ruling in `prose.md` and its measurements in
+  `prose.meta.md`.
+- **Part 6's third recommendation withdrawn**, since the spike answered it. Two new ones added:
+  the 50 findings this slice does not touch, and the deletion deadline on the spike's folder.
+
 ## Open questions
 
-1. **Part 5's ruling — accept or refuse the numbered-line relocation for steps 3, 5 and 8.**
-   Option A reads 0 findings, Option B reads 3. Recommendation: A. This is the one question that
-   blocks item M0.
-2. **Part 6's four recommendations** are for the seat's board, not for this slice. None needs a
-   ruling now.
+1. **Part 2C's scope choice.** The `prose.md` ruling rides this slice, or becomes its own
+   `enabler-process` item. **Recommendation: ride it**, because the spike's folder is scheduled
+   for deletion and this slice is the ruling's first application. Cost: `editor` and `coach`
+   REVIEW carry two subjects. Striking Part 2C changes nothing else in this spec.
+2. **Part 6's recommendations** are for the seat's board, not for this slice. None needs a ruling
+   now.
 
 `writer` has no authority to execute any item above until the user signs this spec.
