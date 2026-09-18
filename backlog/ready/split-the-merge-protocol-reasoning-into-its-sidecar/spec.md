@@ -1600,3 +1600,305 @@ Two, and both meet the filing bar: each needs a ruling this slice has no authori
 
 **Neither is deferred rework.** Neither is a defect this slice created, and neither can be settled
 inside a merge-protocol register split.
+
+---
+
+# Fallback — 2026-09-18, after `coach` REVIEW round 3
+
+**This is not Amendment 3, deliberately.** Amendment 2's Part B-0 named the falsifier and the user
+accepted it: a third defect of the self-describing-count class in amendment text means the shape is
+wrong rather than the wording, and the answer is to strip the register-split record and move the
+accounting here. **`editor` found two such defects in Amendment 2's own text.** The condition is
+met, so the pre-decided fallback executes rather than a fourth round of wording.
+
+**Status: needs the user's sign-off before `writer` executes**, the same as an amendment.
+
+## Part C-0 — what fired, verified against the tree
+
+`writer` executed all four Amendment 2 items and returned no finding. `editor` CLEAN then swept the
+**whole pair** rather than the four amended passages — which is what caught these — and ruled
+stopping condition 1 holding, condition 3 holding, condition 2 failing.
+
+**The two defects, both re-verified by `coach` REVIEW before writing this instruction:**
+
+- **"Two moved blocks were rewritten on arrival" under-enumerates by about ten.** `editor` diffed
+  every moved sentence against `main`'s `merge-protocol.md`: twelve blocks arrived non-verbatim,
+  two are named. **This is round 2's failure on the other side of the move.** Round 2 audited the
+  survivor side and found four against a label of three. Nobody audited the arrival side, and the
+  label of two is the old bullet count carried forward. Item B3's bounding paragraph does not save
+  it — B3 promises the record accounts "for every rewrite a move forced", which is this class.
+- **The second moved-block bullet quotes a string that is in no file.** It says the skipped-stage-5
+  entry gained the clause "and under the predicate it does not". Item A7 removed that clause and
+  item A5 added the bullet quoting it, **in the same commit**; B2 then reproduced the bullet
+  unchanged. Grep confirms the string occurs nowhere but in the bullet.
+
+**The four-survivor list is complete and accurately labelled** — `editor` confirms it, and so does
+a grep against the merge base. **It goes anyway.** Keeping the lists that happen to be right today
+is the selective application that produced three rounds; the moved-blocks bullet broke precisely
+because another item edited the text it quoted, and every surviving list quotes strings the same
+way.
+
+**The diagnosis stands unchanged and is now fully evidenced.** Fifteen findings, three rounds. None
+in the instruction half's rules. None in `writer`'s execution. None in prose that was moved. Every
+one in `coach`-authored prose that counts or describes the slice's own edits.
+
+## Part C-1 — the items for `writer`
+
+### F1 — replace the whole `## Register split record` section
+
+Delete the section's four enumerations and both accounting paragraphs. Replace the section, heading
+included, with this and nothing else. Measured clean under the reference-tier rule set.
+
+```markdown
+## Register split record
+
+`split-the-merge-protocol-reasoning-into-its-sidecar`, 2026-09-18. `extract-the-merge-protocol`
+moved the protocol byte-for-byte and deferred the instruction-versus-explanation split, which is
+the third rejected alternative below.
+
+**This move was not byte-for-byte, and that is what a later reader needs from this record.** Blocks
+arrived reworded where the move stranded a referent. Some sentences stayed while the sentence they
+leaned on left. A few clauses were deleted as restatements of what the instruction half keeps. So a
+diff of this pair against `extract-the-merge-protocol`'s tree does not read as a relocation, and
+that is expected rather than unaccounted for.
+
+**The per-block accounting is in the slice's own history rather than here.** Read `git log -p` over
+either half of this pair, back from `slice/split-the-merge-protocol-reasoning-into-its-sidecar`.
+
+**Ruled 2026-09-18, after three review rounds: a record does not count its own slice's edits.**
+Hand-written enumerations of this slice's diff lived here, and each round found one short by n or
+quoting a string a later item had removed. The diff is authoritative and free. The enumeration was
+neither.
+```
+
+**The pointer is to git, not to this spec.** `backlog/ready/` moves to `backlog/done/` and the
+retrospective deletes it, so a corpus pointer at this file would rot by design. The `slice/` tag is
+permanent — `merge-protocol.md` step 6 says so and creates it.
+
+### F2 — date the Known-stale window closed
+
+**`editor` finding 3, and it survives the fallback.** Commit `197dd7f` on 2026-09-18 repointed all
+three files to the subject name and is an ancestor of this branch. Verified: none of the three now
+contains the string `CLAUDE.md`. So the section's opening claim is false and its closing
+`enabler-technical` recommendation is spent.
+
+**`editor` classes this correctly, and the class matters.** It is
+`claim-discipline.md`'s own predicted failure — "the enumeration validates the count, not the
+claim". A reader could count three names and still not see that none of the three still cites
+`CLAUDE.md`. It is **not** the self-describing-count class, so the fallback does not reach it and
+it needs its own repair.
+
+**Ruled: date it rather than delete it.** The boundary argument in that paragraph is still worth
+reading, and the past tense is the escape hatch `claim-discipline.md` names.
+
+Replace the heading and the closing sentence:
+
+- Heading becomes `## Known-stale window, closed 2026-09-18`.
+- The opening becomes `Three files named `CLAUDE.md`as the merge protocol's home after`extract-the-merge-protocol`, which did not repoint them:` — past tense, same three bullets.
+- `All three sit outside` becomes `All three sat outside`, and `That instruction is the boundary`
+  becomes `That instruction was the boundary`.
+- The final sentence, `The retained CLAUDE.md pointer keeps those three citations navigable … An
+`enabler-technical` item is recommended to repoint the three directly.`, is replaced by:
+  `` `repoint the stale merge-protocol home citations to the subject name` closed all three on
+2026-09-18, so the `enabler-technical` this section used to recommend is spent. ``
+
+### F3 — the schema citation has no owner, and the paragraph must say so
+
+Item A6's paragraph closes `The same `enabler-technical` covers it.` That item is now spent, so the
+sentence points at nothing. The gap it describes is still live and verified: the schema cites
+`merge-protocol` step 5 for a why that this slice moved into the sidecar.
+
+Replace that closing sentence with:
+
+```markdown
+The repointing closed the home-citation half and not this one, and no item owns it.
+```
+
+Part C-4 files it.
+
+### F4 — item S9's sequence, and the re-measure rule
+
+The sidecar's own re-measure rule binds this edit: F1 removes a large block of prose and F2 and F3
+change wording, so every per-file row in **this slice's** check-readings table can move.
+
+Run S9 unchanged. Every prose item plus filled digits in one commit; re-run `reference-check`,
+`prose-lint` and the `wc -c` commands; correct **digits only** in a second commit if anything
+moved. Do not carry a figure across the edit.
+
+## Part C-2 — the accounting, which now lives here
+
+**This is where the enumerations land, and it is deliberately a dated measurement rather than a
+live claim.** `backlog/` is not corpus, nothing downstream reads it as a rule, and the retrospective
+deletes it. That is the point: an accounting that need not stay true is an accounting nobody has to
+keep true.
+
+**Measured by `editor` CLEAN on 2026-09-18** at tip `b8371ce`, by diffing every moved sentence of
+`merge-protocol.meta.md` against `git show main:.claude/references/merge-protocol.md`. Re-confirmed
+by `coach` REVIEW by grep for the survivor half.
+
+- **Twelve moved blocks arrived non-verbatim.** Ten are the stranded-referent class; two arrived
+  reworded rather than referent-repaired. Every one is already named in this spec's own 35-row move
+  table, at rows 4, 5, 14, 16, 18, 21, 29, 30, 31, 32, 33 and 35.
+- **Four survivors in `merge-protocol.md` were rewritten** because the sentence each leaned on
+  left: the skipped-cache claim's "the one", step 5's not-a-fast-path "It", step 5's compute-once
+  "one", step 7's "the setting". Part 1's survivor-rewrite table carries all four with their
+  before and after.
+- **Four clauses were deleted as restatements**, listed in Amendment 1 item A4.
+- **Two stranded referents predating the slice were repaired**, and **one the spec's sweep missed**
+  — step 5's "the second path", a stranded noun phrase rather than an indexical, repaired by
+  Amendment 1 item A2.
+
+**Read every count above as of that date and that method, not as of the tree.** That is the whole
+reason they are here rather than in the corpus.
+
+## Part C-3 — expected readings
+
+| Check                           | At `b8371ce`        | Expected after                                                                                                                                                                                 |
+| ------------------------------- | ------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `vale` on `merge-protocol.md`   | 1                   | **1** — the instruction half is not edited                                                                                                                                                     |
+| `vale` on `CLAUDE.md`           | 21                  | **21** — not edited                                                                                                                                                                            |
+| `vale` on `prose.md`            | 5                   | **5** — not edited                                                                                                                                                                             |
+| `vale` on `mutation-testing.md` | 16                  | **16** — not edited                                                                                                                                                                            |
+| `vale` on the sidecar           | 0, by exemption     | **0**, by exemption                                                                                                                                                                            |
+| the sidecar, exemption removed  | 24                  | **re-measure, and expect a fall** — F1 removes prose and adds none that fires. `coach` REVIEW measured F1's replacement text at zero findings, and F2 and F3 touch sentences that already fire |
+| `npm run reference-check`       | exit 0, 524, 3,177  | exit 0, 524, **re-measure and expect a fall** — F1 deletes several backticked filenames                                                                                                        |
+| `npm run agent-doc-check`       | exit 0, 54 / 8 / 31 | **unchanged**                                                                                                                                                                                  |
+| `npm run mutation-invariance`   | exit 0              | **exit 0**                                                                                                                                                                                     |
+| `npm run prose-lint`            | 507 files           | **507 files**                                                                                                                                                                                  |
+| `npm run format:check`          | clean               | **clean**                                                                                                                                                                                      |
+
+**The close is not a finding count.** Report whether the pair now satisfies one property: **no
+section of either half enumerates or counts this slice's own edits.** That is checkable by reading
+the two files end to end, and it is the only condition the fallback claims to establish.
+
+## Part C-4 — board candidates, and the split ruling
+
+### The split, ruled
+
+The seat asked whether the convergence artifact belongs with the claim-discipline candidate or with
+the spec-amendment one. **Ruled: with the spec-amendment one. The seat's reading is right, and it
+does not override the user's position — it settles the one piece that position does not name.**
+
+The user placed **the defect class** and **where its counts should live** with the claim-discipline
+item. Both belong there and this ruling moves neither.
+
+The boundary is **claim form against control flow**:
+
+- `claim-discipline.md` answers _what may this sentence claim, and how long does it stay true_. A
+  self-describing count is a claim form that rots. It has a sentence shape, so it is arguably
+  fixturable, and it binds every prose surface.
+- The convergence artifact answers _this remediation round has run three times: do I run a
+  fourth_. It has no sentence shape, nothing to fixture, and it binds the seat rather than the
+  claim. It is the missing terminal state of the amendment lifecycle that item already owns —
+  trigger, authorship, re-sign-off, re-entry, and now **stop**.
+
+**The cost of consolidating instead.** `claim-discipline.md` is read unconditionally by every role
+and by the seat. A pipeline procedure placed there is paid for by six audiences that cannot act on
+it, which is the tax CLAUDE.md's routing test exists to prevent.
+
+### Candidate 1 — `backlog/ideas/claim-discipline-does-not-name-the-self-describing-count.md`
+
+The file does not exist yet. Exact text for the seat to land:
+
+```markdown
+---
+name: claim-discipline-does-not-name-the-self-describing-count
+title: claim-discipline.md does not name the self-describing count
+created: 2026-09-18
+---
+
+Captured from `coach` REVIEW on `slice/split-the-merge-protocol-reasoning-into-its-sidecar`,
+rounds 1 to 3, 2026-09-18.
+
+## Situation
+
+`claim-discipline.md` rules on counts. A census of external state drops its numeral and keeps
+the enumeration. A count standing beside its own adjacent bullets stays, because it cannot
+drift with the tree.
+
+## Complication
+
+Neither rule reaches the count that broke `slice/split-the-merge-protocol-reasoning-into-its-sidecar`
+three times: **a count of the slice's own in-flight diff.** It is not a census of the tree, and
+its adjacent enumeration does not protect it, because the failure is incompleteness at authoring
+rather than drift afterwards.
+
+Fifteen findings across three review rounds, all of one class. None was in the instruction
+half's rules, in `writer`'s execution, or in prose that was moved. Every one was in
+`coach`-authored prose counting or describing that slice's own edits: a deletion count short by
+one, a rewrite count short by one, a rewrite count short by ten, a figure describing the file it
+sat in, and a bullet quoting a clause a sibling item had removed in the same commit.
+
+Two mechanisms make it worse than an ordinary stale count. The record is written **while** the
+diff it describes is still changing, so a correct count falsifies itself later in the same
+cycle. And one item can remove the text another item quotes, inside one commit, with no gate
+able to see it.
+
+The pair already named the hazard for exactly one row — "the row recording the count can
+falsify itself" — and nobody generalised it.
+
+## Question
+
+What does `claim-discipline.md` say about a count of your own in-flight diff, and where should
+such a count live instead?
+
+## Answer
+
+Shaped, per `coach`:
+
+- **State the rule.** A record does not count its own slice's edits. The diff is authoritative
+  and free; a hand-written enumeration of it is neither.
+- **Say where it goes instead.** The slice's own history, reachable from the `slice/` tag, or
+  the item's `spec.md`, which is not corpus and which the retrospective deletes. A dated,
+  method-attributed measurement is acceptable in either; an undated live claim is not.
+- **Name the same-commit variant explicitly.** A record may not quote a string that another
+  item in the same change removes. That is what turned a correct bullet into a false one.
+- Ask `architect` whether any of it is fixturable as a `Claim` rule. `coach` doubts it: the
+  defect is an absent bullet, and no matcher sees what is not written.
+
+`backlog/ideas/verbatim-moves-need-a-referent-sweep.md` carries the neighbouring pair of
+remedies from the previous slice — the referent sweep and the check-readings table prohibition
+— and this is the third member of that family rather than a duplicate of either.
+
+## No-gos
+
+- Do not widen the existing census rule to cover this. The two fail differently: a census
+  drifts with the tree, and this one is wrong the moment it is written.
+
+## Open questions
+
+- Does the rule bind a `backlog/` artifact at all, given the lane is unlinted and the folder is
+  deleted at retrospective?
+- `CLAUDE.md`'s module map is a census the sweep has not reached, filed separately at
+  `backlog/ideas/apply-the-census-count-rule-everywhere.md`. Does that item absorb this one, or
+  stay distinct?
+```
+
+### Candidate 2 — `backlog/ideas/name-the-spec-amendment-and-the-in-cycle-fix-rule.md`
+
+The file does not exist yet either. Part A-7 above already carries its corpus text for
+`pipelines.md`, `coach.md` and `handoffs.md`, all measured clean. **This round adds one section to
+that item**, the terminal state:
+
+```markdown
+## What round 3 adds: the amendment loop needs a stop
+
+`slice/split-the-merge-protocol-reasoning-into-its-sidecar` ran findings → amendment → findings
+→ amendment → findings, and stopped only because `coach` had written the stopping rule down in
+advance. The three parts that made it stop, and none is in the corpus:
+
+- **A stopping condition** — properties checkable by reading rather than a finding count.
+- **A named falsifier** — what observation means the shape is wrong rather than the wording.
+- **A pre-decided fallback** — what to do instead, settled before the round runs.
+
+Settling all three **before** the round is what mattered. Deciding after a third round is when
+someone has already asked whether the loop terminates, and by then the cheap answer is one more
+amendment.
+
+Candidate text, for that item's own spec to settle: a `coach` REVIEW that issues a second
+amendment on one slice states a stopping condition, a falsifier and a fallback in that
+amendment, and the seat does not run a further round without them.
+```
+
+**Why this section and not the claim-discipline item:** it is about when an amendment round ends,
+not about what a claim may say. See the split ruling above.
