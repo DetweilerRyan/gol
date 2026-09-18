@@ -59,6 +59,31 @@ Shaped, per `coach`'s recommendation. Three files, three registers:
 the role file for its own within-invocation facts. Two files cost less than one fact in the
 wrong register.
 
+## What round 3 adds: the amendment loop needs a stop
+
+`slice/split-the-merge-protocol-reasoning-into-its-sidecar` ran findings → amendment →
+findings → amendment → findings, and stopped only because `coach` had written the stopping
+rule down in advance. The three parts that made it stop, and none is in the corpus:
+
+- **A stopping condition** — properties checkable by reading rather than a finding count.
+- **A named falsifier** — what observation means the shape is wrong rather than the wording.
+- **A pre-decided fallback** — what to do instead, settled before the round runs.
+
+Settling all three **before** the round is what mattered. Deciding after a third round is
+when someone has already asked whether the loop terminates, and by then the cheap answer is
+one more amendment.
+
+Candidate text, for this item's own spec to settle: a `coach` REVIEW that issues a second
+amendment on one slice states a stopping condition, a falsifier and a fallback in that
+amendment, and the seat does not run a further round without them.
+
+`coach` ruled this section belongs here rather than with
+`claim-discipline-does-not-name-the-self-describing-count`, and the boundary is claim form
+against control flow. That article answers what a sentence may claim and how long it stays
+true; a stopping rule answers whether a round runs again, has no sentence shape, and binds
+the seat. Consolidating it there would charge six audiences for a pipeline procedure none of
+them can act on.
+
 ## Acceptance
 
 The finished state is a `coach` REVIEW ruling, so the checks bound the work rather than
