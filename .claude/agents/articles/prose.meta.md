@@ -1587,3 +1587,32 @@ extremes. `ParagraphLength` segmentation away from the 6-to-7 boundary.
 step 5 fails it: its exception is an applicability condition on the command in the next block, and a
 marker line carrying only the action and that exception measures 21 words against a cap of 20. So the
 completeness condition removes at least one of the 51, and nothing has re-measured the rest against it.
+
+## `vale` given an absolute path lints nothing (2026-09-18)
+
+Measured on vale 3.20.0 in the `record-two-rules-the-amendment-cycle-surfaced` worktree, with
+`.vale/` synced and the cwd at the repo root:
+
+| command                                              | summary line                                         | exit |
+| ---------------------------------------------------- | ---------------------------------------------------- | ---- |
+| `vale .claude/agents/articles/prose.md`              | `0 errors, 5 warnings and 0 suggestions in 1 file.`  | 0    |
+| `vale "$PWD/.claude/agents/articles/prose.md"`       | `0 errors, 0 warnings and 0 suggestions in 0 files.` | 0    |
+| `vale perf/README.md`, relative and out of scope     | `0 errors, 0 warnings and 0 suggestions in 0 files.` | 0    |
+| `vale .claude/agents/articles/prose.meta.md`, exempt | `0 errors, 0 warnings and 0 suggestions in 1 file.`  | 0    |
+
+Rows 2 and 3 read identically, which is the whole finding: an absolute path is confident-zero
+item 4 reached through the path rather than through where the file sits. Row 2 also carries the
+clean tick glyph rather than the cross, so the line reads as a pass.
+
+Row 4 is the discriminator that makes the file count worth reading. An exempt file is still
+counted as linted, so `in 1 file` separates a file Vale styled with nothing from a file no
+section reached at all.
+
+`coach` hit row 2 on the first probe of `name-the-spec-amendment-and-the-in-cycle-fix-rule` and
+switched to relative paths before taking a reading. No reading in that slice's four amendments
+rests on it.
+
+**A relative path from a subdirectory fails loudly instead.** Run from `.claude/agents/`, Vale
+resolves `StylesPath` against the cwd, prints `E201 Invalid value` naming `.vale`, and exits 2 —
+the same reading "What a missing `.vale/` actually reports" records. So the instruction names the
+repo root for one command's sake, not against a second silent failure.

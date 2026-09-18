@@ -88,7 +88,7 @@ anything that gates has to read `--output=JSON` rather than `$?`.
 stdout counts zero. Do not take the number from Vale's own closing line either: it says the run stopped
 "with code 1" while the process exits 2.
 
-## Eleven ways a run reports a confident zero
+## Twelve ways a run reports a confident zero
 
 Check each before you believe one.
 
@@ -122,6 +122,10 @@ Check each before you believe one.
     `text.comment.documentation.ts` scope, and a rule carrying it reports nothing, with no diagnostic
     and exit 0. Number 8's twin, reached through the rule file rather than through the section
     header.
+12. **The path was absolute, so it matched no section glob.** `.vale.ini`'s globs are
+    repo-relative, so Vale applies no style, reports `in 0 files` and exits 0. That is number 4
+    reached through the path you typed rather than through where the file sits. Run `vale` from
+    the repo root, name a repo-relative path, and read the file count.
 
 <!-- reference-check: allow text.comment.documentation.ts -- a Vale scope selector that does not exist, named here as the measured example; not a path -->
 

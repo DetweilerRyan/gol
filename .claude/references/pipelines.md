@@ -190,6 +190,12 @@ name.** The live instruction set is `spec.md` plus every amendment, read in numb
 with later text winning. No amendment restates the live set, because a restatement drifts as
 the next amendment lands.
 
+**An amendment that replaces a block names every obligation the block carried that the
+replacement does not.** A supersession row is true at block granularity and cannot show a
+sentence leaving inside the block. So `coach` reads the replaced text against the replacement,
+and records each dropped obligation as restored or as ruled out. The shapes to look for are the
+four in `prose.md`, under "How a pass damages the file it cleans".
+
 **Every amendment needs the user's re-sign-off.** An amendment changes something only the
 user signed, so the original signature does not carry across it.
 
