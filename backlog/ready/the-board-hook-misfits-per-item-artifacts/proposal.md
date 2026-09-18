@@ -9,6 +9,18 @@ Captured from `coach` REVIEW's handoff on `slice/extract-the-merge-protocol`, it
 2026-09-17 — a process observation first made in its SPEC handoff. The mechanism below was
 read out of the hook itself on 2026-09-18.
 
+**Parked 2026-09-18, behind `relocate-the-skill-hooks-into-the-tested-tier`.** `coach`'s spec
+is written and unsigned at that date. The user declined to sign a spec changing untested
+logic, `slice/spike-where-a-skill-script-can-live-and-be-tested` established the path to
+testedness, and the user then ruled the relocation lands first.
+
+**Two consequences for whoever resumes this.** The spec's readings were taken against
+`layer1.ts` at its current path and single-file shape, so the relocation makes them stale —
+reach for an amendment rather than a re-spec, since a moved file is the trigger
+`pipelines.md` names for exactly that. And the relocation splits the program into a `run.ts`
+shell plus pure modules, so the logic this slice rewrites will live in a module that does not
+exist yet.
+
 ## Situation
 
 `.claude/settings.json` wires `.claude/skills/idea-assess/scripts/layer1.ts` as a

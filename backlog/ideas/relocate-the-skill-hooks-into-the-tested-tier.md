@@ -74,11 +74,17 @@ Shaped by `architect`, six steps:
 
 ## Open questions
 
-- **The sequencing question the spike left to the seat and the user, and it is the one to
-  settle first.** This item splits `layer1.ts`; the parked parent rewrites its logic. Which
-  lands first, and where does the structure-versus-logic boundary sit between them? Landing
-  this first means the parent's spec may need re-measuring against a moved file; landing the
-  parent first means changing untested logic, which is the objection that produced the spike.
+- **Settled by the user 2026-09-18: this item lands first.** The parked parent,
+  `the-board-hook-misfits-per-item-artifacts`, waits behind it. The accepted cost is that
+  the parent's `coach` spec was measured against `layer1.ts` at its current path and shape,
+  so its readings go stale when this item moves and splits the file. **The amendment
+  mechanism is the cheaper remedy and it now exists** — a moved file is exactly the "the seat
+  finds the spec under-specifies a point `writer` has reached" trigger `pipelines.md` names,
+  so `coach` amends rather than re-specs. Whoever runs the parent next should reach for that
+  before re-opening a spec.
+- Where does the structure-versus-logic boundary sit between the two items? This one moves
+  and splits, that one rewrites — but the split decides which module the rewrite lands in,
+  so this item's design pass should name the seam the parent will edit.
 - Does the `run.ts` and pure-modules split fall out naturally for `on-edit.ts` at 91 lines,
   or is it overhead for the smaller program?
 - The spike found that `${CLAUDE_PROJECT_DIR}` stays at the session's starting root when
