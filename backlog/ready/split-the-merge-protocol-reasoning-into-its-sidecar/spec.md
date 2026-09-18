@@ -957,3 +957,427 @@ test:mutation:full`." becomes "Invoke `hardener` again with `npm run test:mutati
    now.
 
 `writer` has no authority to execute any item above until the user signs this spec.
+
+---
+
+# Amendment 1 — 2026-09-18, after `coach` REVIEW
+
+**Status: needs the user's re-sign-off.** It amends a spec the user signed, so the signature does
+not carry over. `writer` has no authority to execute an item below until that happens.
+
+**Why it exists.** `editor` routed eleven findings to `coach` REVIEW at branch tip `a253052`.
+`writer` executed the signed spec item for item; nothing below is `writer` drift. **Six of the
+eleven are contradictions the spec itself carried into the corpus**, and two more are consequences
+the spec's referent sweep did not reach. The remedy belongs in this cycle, not on the board: the
+worktree is open, and a board candidate for a defect this slice authored is deferred rework.
+
+**Fifteen items across five files.** `.claude/agents/articles/mutation-testing.md` is new to the
+manifest — see item A15 for why, and Part A-4 for the cost of adding it.
+
+---
+
+## Part A-1 — `.claude/references/merge-protocol.md`
+
+### A1 — restore step 3's modal
+
+`editor` flagged the modal the spec's fifth rewrite dropped, and the flag is right. The em-dash
+form carries both the modal and the location inside the cap. Measured at 19 tokens, clean.
+
+Replace line 14 in full:
+
+```markdown
+3. **Re-run the gate on the rebased branch, still in the worktree** — `hardener` must use `npm run test:mutation:full`.
+```
+
+**The completeness condition still holds.** "Re-run the gate" is the act, `hardener` is the agent,
+and the command is named. A marker-only reader performs step 3 correctly.
+
+### A2 — name the second path again
+
+**Finding 2, and it is the spec's defect.** Before this slice the instruction half named
+`reports/stryker-incremental-scripts.json`. The register split moved that sentence out, leaving
+"the second path" pointing at nothing a reader of the instruction half can resolve. `prose.md`
+forbids repairing it with a pointer to the sidecar.
+
+**Ruled: naming the referent of an existing noun phrase does not change what the step instructs.**
+The No-go bars changing the obligation. This restores what the slice removed and the obligation is
+word for word the same act. R-D's sweep listed indexicals and missed a stranded noun phrase; that
+gap is the spec's, and item A5 records it.
+
+Replace line 29 in full:
+
+```markdown
+**Adding `--incremental` to `npm run test:mutation:scripts` re-arms this deletion.** A slice that adds it must put `reports/stryker-incremental-scripts.json` back into the `rm -f` block above.
+```
+
+### A3 — drop a narration with no antecedent
+
+"the defect this clause used to carry" names a defect the file no longer contains, since its
+example moved to the sidecar. `editor` called this arguable. **Ruled in reach**: the caution is
+what binds and it survives intact.
+
+Replace line 79 in full:
+
+```markdown
+**The rule is what binds, never an example.** An example a later slice can falsify is what produced a defect here once.
+```
+
+---
+
+## Part A-2 — `.claude/references/merge-protocol.meta.md`
+
+### A4 — the deleted-clause count is short by one
+
+**Finding 4, and the spec caused it.** Row 24 of the move table routed "and know which option was
+not taken" into the middle-option bullet. It did not arrive, and it is in neither half.
+
+**Ruled: deletion is the correct disposition, and the record must say four.** The option that
+phrase points at now lives in this file, so a reader of the instruction half cannot act on it.
+Keeping it would have stranded it. The count sits beside its own enumeration, which is why it
+fails loudly — so fix the count and add the bullet, never the count alone.
+
+Replace the lead sentence and the list at lines 32 to 39 in full:
+
+```markdown
+**Four clauses were deleted rather than moved.** Each restated something the instruction half
+already says, which is the only deletion `prose.md` licenses:
+
+- Step 5's "One path, not two, and that is deliberate", whose content survives as the conditional
+  obligation the instruction half keeps.
+- Step 5's "This is not hypothetical, and", ahead of "the trigger is stage 1".
+- Step 5's "Read this as a caution about examples in this clause", whose content survives as "The
+  rule is what binds, never an example".
+- Step 5's "and know which option was not taken", from "Record every skip, and know which option
+  was not taken". The spec routed that phrase into the middle-option bullet below and it did not
+  arrive. Deletion is the right disposition either way: the option it points at lives here now, so
+  a reader of the instruction half cannot act on the phrase.
+```
+
+### A5 — keep the promise about named rewrites
+
+**Finding 7.** This file promises "each such rewrite is named at the block that carried it", and
+three rewrites are unnamed. The two-bullet list beside the promise covers only referents that
+predate the slice.
+
+Insert immediately after the two-bullet list that ends at line 47:
+
+```markdown
+**Three survivors were rewritten because the move stranded a referent.** Each was named in the
+spec and belongs in this record too:
+
+- `merge-protocol.md`'s skipped-cache claim read "differs from the one it was built from". "The
+  one" lost its referent when the sentence above it moved, so it names the tree.
+- This file's stage-6 entry read "the paragraph above now refutes it", which pointed at a
+  paragraph that stayed in `merge-protocol.md`. It names that file's stage list.
+- This file's skipped-stage-5 entry gained the trailing clause "and under the predicate it does
+  not", carrying a negation the instruction half held through an adjacency the move removed.
+
+**One referent the sweep missed, recorded so the next sweep is wider.** Step 5's "the second path"
+was a stranded noun phrase rather than one of the indexicals the spec listed, and it survived into
+the corpus. `coach` REVIEW ruled the repair, which names the file the phrase points at.
+```
+
+### A6 — widen the known-stale entry the split reached
+
+**Finding 6.** `schemas/mutation-invariance.schema.json` is outside `writer`'s write boundary and
+on the mutation-invariance absent list, so the repair is not this slice's. The **record** of it is.
+
+Insert as a new paragraph at the end of the `## Known-stale window` section:
+
+```markdown
+`split-the-merge-protocol-reasoning-into-its-sidecar` deepened the second entry rather than
+repairing it. `schemas/mutation-invariance.schema.json` cites `merge-protocol` step 5 "for why that
+scope is load-bearing", and that why moved into this file, under "Why the predicate is stated over
+the `src/` run alone". Step 5 still asserts the scope is load-bearing, so the citation degrades
+rather than breaks: a reader reaches the assertion and this file is one hop further. The same
+`enabler-technical` covers it.
+```
+
+### A7 — one fact, one home
+
+**Finding 11.** "The cache describes a tree that no longer exists" now sits in two sections eighty
+lines apart. **Ruled: the step entry under "Why each step is shaped as it is" owns the
+proposition**, because that section owns step-level reasons. The exemption section needs the
+proposition only to negate it, so it refers.
+
+Replace the paragraph at lines 161 to 164 in full:
+
+```markdown
+**Why the cache survives a skipped stage 5.** The step-5 entry above says why the `rm -f` exists;
+under this predicate that reason does not hold. Deleting the cache would tax the next merge with a
+full cold run in exchange for nothing. That answers step 5's own "different cache" justification on
+its own terms, rather than waiving it.
+```
+
+### A8 — the Vale row reads its breakdown onto the wrong number
+
+**Finding 5, and the spec's cell was different.** The em-dash construction makes "6
+`Procedure.ProcedureLength`, 1 `STE.SentenceLength`" read as the breakdown of the 1.
+
+Replace the row in full:
+
+```markdown
+| `vale` on `merge-protocol.md` | 1 finding: step 5's marker line at 39 words, `Procedure.ProcedureLength`. Before: 7, of which 6 `Procedure.ProcedureLength` and 1 `STE.SentenceLength` |
+```
+
+### A9 — bridge 21 to 39
+
+**Finding 5's consequence.** The paragraph reasons from 21, the irreducible floor, while the file
+reads 39, and nothing landed explains the gap.
+
+Insert as a new paragraph immediately after the step-5 paragraph at lines 290 to 293:
+
+```markdown
+**The floor and the reading are different numbers.** 21 is the minimum: a marker line carrying
+nothing but the action and the exception. The line reads 39 because it also carries "Mandatory,
+even though step 3 just passed on an identical tree" and the pointer into the fence below, both
+instruction. Even stripped to the floor the line exceeds the cap, so the extra words are cost
+rather than cause.
+```
+
+### A10 — decompose the exemption-removed figure
+
+**The spec predicted 2 and the row landed 19, and both are right about different things.** The
+spec measured the drafted S1 to S4 blocks; the row measures the whole file, which is what the row
+label means. That mismatch is the spec's, and the honest repair is the decomposition the rest of
+this table already uses.
+
+Measured by `coach` REVIEW on the merge base and on the tip, through the same scratch config.
+
+Insert as a new paragraph at the end of the section, after the reproduction instructions:
+
+```markdown
+**That 19 is mostly inherited, so read it decomposed.** The same command on this file as
+`extract-the-merge-protocol` left it reports 12. The slice's own prose is the difference, not the
+bulk of the number.
+```
+
+### A11 — the CLAUDE.md byte row, digits only
+
+**Finding 1, and the spec handed `writer` the wrong before-figure.** `spec.md` carried 72,607,
+which is `extract-the-merge-protocol`'s landing figure. The merge base measures **72,434**. The row
+reads as a 115-byte shrink where the slice added 58 bytes.
+
+Replace the digits in that row and nothing else:
+
+```markdown
+| `wc -c CLAUDE.md` | before 72,434 bytes, after 72,492 bytes |
+```
+
+---
+
+## Part A-3 — `prose.md` and `prose.meta.md`
+
+### A12 — drop the census numeral from the instruction file
+
+**Finding 9.** "28 numbered steps already carry a body over the cap and read clean" is an undated
+present-tense census with no enumeration beside it, in an instruction file.
+`claim-discipline.md` says drop the numeral. **A pointer to the sidecar is not available** —
+`prose.md` forbids an instruction file pointing at its own `.meta.md`. So the repair leans on the
+date already in the paragraph. Measured clean.
+
+Replace the paragraph at `prose.md` lines 291 to 295 in full:
+
+```markdown
+**Relocation below the marker is a legitimate remedy, and it carries one condition.** Ruled
+2026-09-18 on `procedure-length-clears-by-relocation`'s measurement. The rule reads the marker line
+alone, so moving words into an indented continuation paragraph clears a finding. That is the
+corpus's existing register rather than a loophole: the same measurement found the shape already in
+use across the corpus, reading clean.
+```
+
+### A13 — scope the exposure count to what it measured
+
+**Finding 8, and `editor` named the mechanism correctly.** The spike measured whether a marker
+line can always be shortened; it can, 51 of 51. The completeness condition that makes step 5 exempt
+was authored by **this** slice, after that measurement. So the figure is not wrong — it is
+mechanical, and the condition supersedes it.
+
+Replace the `**Exposure.**` paragraph in full:
+
+```markdown
+**Exposure, and it is a mechanical count.** 51 of 51 findings clear the rule by relocation alone,
+across 9 files — 44 percent of the corpus's 116 numbered steps. `product.md` 13, `coder.md` 8,
+`cleaner.md` 6, `merge-protocol.md` 6, CLAUDE.md 5, `architect/contract-mode.md` 4,
+`testing-layers.md` 4, `engineering.md` 3, `mutation-testing.md` 2. The count says a marker line
+can always be shortened. It does not say the shortened line still carries the whole instruction,
+because the completeness condition in `prose.md` was written after this measurement.
+```
+
+### A14 — two steps relocated, not three
+
+**Finding 10.** Step 5 relocated nothing in the end: revision 2 put its exception back on the
+marker line. Step 6's edit was an `STE.SentenceLength` split in a continuation paragraph, which the
+relocation ruling never reached. Steps 3 and 8 are the two.
+
+Replace the `**The parent slice's own application.**` paragraph in full:
+
+```markdown
+**The parent slice's own application, and the first exception to the count above.**
+`split-the-merge-protocol-reasoning-into-its-sidecar` relocated two steps and ruled a third
+unfixable. `merge-protocol.md`'s step 5 keeps its finding, because its exception is an
+applicability condition on the command in the next block, and a marker line carrying only the
+action and that exception measures 21 words against a cap of 20. So the completeness condition
+removes at least one of the 51 from the exposure count, and nothing has re-measured the other 50
+against it.
+```
+
+---
+
+## Part A-4 — `mutation-testing.md`, new to the manifest
+
+### A15 — repair the instruction this slice broke in another file
+
+**Finding 3.** `mutation-testing.md` tells a future slice to "put the second path back and restore
+the plural in the clause beside it". **This slice deleted that clause** — item A4's first bullet.
+The instruction now points at nothing.
+
+**Ruled in-cycle rather than filed.** The file is inside `writer`'s write boundary
+(`.claude/**`), it is on the mutation-invariance allow list so it costs no mutation run, and the
+damage is this slice's own. Filing it would be deferred rework.
+
+**The cost, stated.** One more file in `writer`'s manifest, so `editor` CLEAN re-reads it, and
+`mutation-testing.md`'s Vale baseline of 16 joins the readings to re-measure. The repair is two
+lines inside one blockquote and names the same path item A2 names.
+
+Replace the two blockquote lines:
+
+```markdown
+> step 5's `rm -f` to the `src/` path alone. A slice that adds `--incremental` there has to put
+> `reports/stryker-incremental-scripts.json` back into that block. Note the `--mutate` prohibition above
+```
+
+---
+
+## Part A-5 — execution and expected readings
+
+**Run item S9's sequence again, unchanged.** Every prose item above plus the filled digits in one
+commit; re-run `reference-check`, `prose-lint` and the `wc -c` commands; correct **digits only** in
+a second commit if any moved. If none moved, no second commit, and say which happened.
+
+**Item A11 is a digits-only correction that must land in the first commit**, because the rest of
+the amendment edits the same table and would invalidate a separate digits pass.
+
+| Check                           | At `a253052`        | Expected after the amendment                                                           |
+| ------------------------------- | ------------------- | -------------------------------------------------------------------------------------- |
+| `vale` on `merge-protocol.md`   | 1                   | **1** — step 5 only. Items A1 to A3 measured clean                                     |
+| `vale` on `prose.md`            | 5                   | **5** — item A12 measured clean                                                        |
+| `vale` on `mutation-testing.md` | 16                  | **16** — item A15 shortens a sentence inside a blockquote                              |
+| `vale` on the sidecar           | 0, by exemption     | **0**, by exemption. Still a confident zero                                            |
+| the sidecar, exemption removed  | 19                  | **re-measure** — items A4 to A11 add prose, so expect a rise. 12 is the inherited half |
+| `npm run reference-check`       | exit 0, 524, 3,173  | exit 0, 524, **a count that rises** — A2 and A15 each add a filename-shaped token      |
+| `npm run agent-doc-check`       | exit 0, 54 / 8 / 31 | **unchanged** — no file added or removed                                               |
+| `npm run mutation-invariance`   | exit 0              | **exit 0** — the config is untouched                                                   |
+| `npm run prose-lint`            | 507 files           | **507 files**                                                                          |
+| `npm run format:check`          | clean               | **clean**                                                                              |
+
+**Add a row to the landing table for `mutation-testing.md`**, since it is now in the manifest, and
+re-measure the whole table per S9.
+
+---
+
+## Part A-6 — what is not amended
+
+- **`schemas/mutation-invariance.schema.json`** — outside `writer`'s write boundary and on the
+  mutation-invariance absent list, so editing it re-arms a full mutation run for a prose fix. Item
+  A6 records it; the standing `enabler-technical` repoints it.
+- **`testing-layers.md:149`** — `editor` names it pre-existing and not this split's doing. Out of
+  scope, and no candidate: it was not created here and nothing about this slice makes it newly
+  visible.
+- **Step 5's `Procedure.ProcedureLength` finding** — ruled irreducible in Part 1B and measured at
+  a 21-word floor. It stays, named as accepted.
+
+---
+
+## Part A-7 — two mechanisms the corpus does not name, recommended as their own item
+
+**Recommendation: a separate `enabler-process` item, not this amendment.** Exact text is below so
+that item's spec can lift it. Both texts measured clean at REVIEW time.
+
+**Why not here.** This slice already carries three subjects — the pair split, the `prose.md`
+relocation ruling, and now a fifteen-item amendment. These two rules bind **every** role rather
+than this pair, and they deserve a user signature of their own rather than riding a merge-protocol
+amendment. There is also a bootstrap objection: an amendment that creates the amendment mechanism
+authorizes itself.
+
+**The cost of deferring.** The mechanism stays unnamed for one more cycle, and Amendment 1 above is
+improvised authority once more — which is the user's complaint. **Mitigation: Amendment 1 is
+written in exactly the shape the text below describes**, so the item lands with a worked precedent
+rather than a blank page. If you would rather not wait, say so and I will fold both into Amendment
+2; the cost is two more files in `writer`'s manifest and a second `editor` AUDIT subject.
+
+### Where each belongs, and why
+
+| Text                      | File                                  | Why that file                                                                                                                                      |
+| ------------------------- | ------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------- |
+| The amendment mechanism   | `.claude/references/pipelines.md`     | Between-invocation: an extra user gate and a re-entry point. That file already owns "The user gate sits at step 1's close"                         |
+| One line on authorship    | `.claude/agents/coach.md`             | Within-invocation: who may author is a role boundary. Without it a `coach` REVIEW invocation has no amendment authority to read                    |
+| The scope-preference rule | `.claude/agents/articles/handoffs.md` | It binds every reviewing pass — `coach` REVIEW, `architect` REVIEW and ADJUDICATE, `editor` AUDIT, `product` VERIFY. Every role reads that article |
+
+`pipelines.md` states the split itself: it is the single source for between-invocation facts, and a
+role file is the single source for its own within-invocation facts. Two files is the smaller cost
+than one fact in the wrong register.
+
+### Text for `pipelines.md` — a new subsection under `## Enabler-process`, after the user-gate paragraph
+
+```markdown
+### Amending a signed spec
+
+A signed spec is the authority `writer` edits under, so changing it after sign-off needs its own
+rule.
+
+**Trigger.** `coach` REVIEW finds the landed corpus diverges from what the spec should have said,
+or the seat finds the spec under-specifies a point `writer` has reached. A `writer` that cannot
+execute a spec point returns it and stops; that return is a trigger, never an amendment.
+
+**`coach` authors every amendment, in either mode. `writer` never does.** An executing role editing
+its own authority is the boundary this pipeline holds.
+
+**An amendment is dated, numbered, and appended to the item's `spec.md`.** The signed text stays
+readable beside it, so a reviewer can tell an amendment from the spec.
+
+**It needs the user's re-sign-off.** An amendment changes something only the user signed, so the
+original signature does not carry across it.
+
+**The cycle then re-enters at step 2**, scoped to the files the amendment names. `editor` CLEAN
+runs over `writer`'s new manifest, and `coach` REVIEW closes against the spec and its amendments
+together.
+```
+
+### Text for `coach.md` — one bullet in `## Owns`
+
+```markdown
+- **Spec amendments.** A signed spec changes only through a dated amendment you author and append
+  to the item's `spec.md`, in either mode; `writer` never amends. The user re-signs, because an
+  amendment changes something only the user signed.
+```
+
+Three sentences including the bolded lead, which is what `Instruction.ListItemSentences` counts.
+A four-sentence draft tripped it; that is why the `pipelines.md` pointer is absent here, and
+`coach.md` already carries a read trigger for that file.
+
+### Text for `handoffs.md` — a new section
+
+```markdown
+## Resolve a finding in the cycle that made it
+
+**Prefer an in-cycle fix to a board candidate whenever the finding is the running slice's own
+doing.** The worktree is open and the context is loaded. A candidate for a defect this slice
+authored is deferred rework rather than a backlog item.
+
+**File a candidate only for a finding the slice cannot resolve.** Two cases qualify: the fix
+reaches outside the slice's write boundary, or it needs a ruling the slice has no authority to
+make. A finding that is merely inconvenient is neither.
+
+**Recommend the expansion with its cost. Never grant it.** Scope belongs to the user. Name the
+files the fix adds, what re-runs because of them, and what the slice carries if it is declined.
+
+**A pre-existing finding the slice did not create is out of scope by default.** Say so, and say
+what made it visible.
+```
+
+### One thing that item must settle and this one does not
+
+`coach.md`'s `description:` frontmatter is what the seat reads when routing. It does not mention
+amendments, so a seat that has not read the role file would not know to hire `coach` for one.
+Whether to widen it is that item's call, and `agent-doc-check` validates the field either way.
