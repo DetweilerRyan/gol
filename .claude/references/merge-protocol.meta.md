@@ -153,9 +153,9 @@ on an allowlist-only diff. The example outlived its premise and was repaired by
 - **Restating the step-3/step-5 `test:mutation:full` mandates in CLAUDE.md.** Rejected,
   on the three-file drift precedent above: a restatement is a second copy nothing
   compares, and it is exactly how the allowlist drifted the first time.
-- **Splitting the clause-level reasoning into this sidecar in the same slice.** Deferred:
-  a move plus a rewrite in one slice cannot be reviewed as a move, since a reviewer
-  cannot tell which lines are relocation and which are edit.
+- **Splitting the clause-level reasoning into this sidecar in `extract-the-merge-protocol`
+  itself.** Deferred: a move plus a rewrite in one slice cannot be reviewed as a move,
+  since a reviewer cannot tell which lines are relocation and which are edit.
 - **The middle option: a plain `npm run test:mutation` in place of the skip.** Since the cache is
   retained by design, a plain run would still produce a real score — most of the saving plus the
   missing evidence. Its cost argument got considerably stronger once
