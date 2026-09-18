@@ -226,8 +226,8 @@ default, not a misconfiguration.
 an aborted run. The separate path still earns its line, because it is what makes adding the flag safe.
 
 > **Turning that flag on is not a one-line change.** `honest-scripts-cache-deletion` reduced merge-protocol
-> step 5's `rm -f` to the `src/` path alone. A slice that adds `--incremental` there has to put the second
-> path back and restore the plural in the clause beside it. Note the `--mutate` prohibition above
+> step 5's `rm -f` to the `src/` path alone. A slice that adds `--incremental` there has to put
+> `reports/stryker-incremental-scripts.json` back into that block. Note the `--mutate` prohibition above
 > does **not** reach `test:mutation:scripts`: that is a config-scoped run with its own `mutate` list and
 > its own `incrementalFile`.
 

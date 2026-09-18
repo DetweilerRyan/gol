@@ -1545,10 +1545,12 @@ incidental gap. `architect` ruled it the correct measure, with no rule change, n
 and no `enabler-technical`. The parent slice was
 `split-the-merge-protocol-reasoning-into-its-sidecar`, whose spec was blocked on the answer.
 
-**Exposure.** 51 of 51 current findings clear by relocation alone, across 9 files — 44 percent of
-the corpus's 116 numbered steps. `product.md` 13, `coder.md` 8, `cleaner.md` 6,
-`merge-protocol.md` 6, CLAUDE.md 5, `architect/contract-mode.md` 4, `testing-layers.md` 4,
-`engineering.md` 3, `mutation-testing.md` 2.
+**Exposure, and it is a mechanical count.** 51 of 51 findings clear the rule by relocation alone,
+across 9 files — 44 percent of the corpus's 116 numbered steps. `product.md` 13, `coder.md` 8,
+`cleaner.md` 6, `merge-protocol.md` 6, CLAUDE.md 5, `architect/contract-mode.md` 4,
+`testing-layers.md` 4, `engineering.md` 3, `mutation-testing.md` 2. The count says a marker line
+can always be shortened. It does not say the shortened line still carries the whole instruction,
+because the completeness condition in `prose.md` was written after this measurement.
 
 **The shape is already the corpus's.** 44 of the 116 steps carry an indented body, and **28 pass
 the rule while marker plus body exceeds 20 words**, 27 of them through plain continuation
@@ -1581,7 +1583,10 @@ reconciled run, 51 against 51, is reported above.
 under a numbered step. The register classification of all 28 bodies, as against the hand-sampled
 extremes. `ParagraphLength` segmentation away from the 6-to-7 boundary.
 
-**The parent slice's own application.** `split-the-merge-protocol-reasoning-into-its-sidecar`
-relocated three steps and ruled a fourth unfixable: `merge-protocol.md`'s step 5 keeps its
-finding, because its exception is an applicability condition on the command in the next block,
-and a marker line carrying only the action and that exception measures 21 words against a cap of 20.
+**The parent slice's own application, and the first exception to the count above.**
+`split-the-merge-protocol-reasoning-into-its-sidecar` relocated two steps and ruled a third
+unfixable. `merge-protocol.md`'s step 5 keeps its finding, because its exception is an
+applicability condition on the command in the next block, and a marker line carrying only the
+action and that exception measures 21 words against a cap of 20. So the completeness condition
+removes at least one of the 51 from the exposure count, and nothing has re-measured the other 50
+against it.

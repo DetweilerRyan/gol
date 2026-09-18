@@ -11,7 +11,7 @@ this protocol assumes. Read that section first; nothing here repeats it.
 
 1. **Rebase, do not merge.** In the slice's worktree: `git fetch && git rebase main`.
 2. **The slice's own session resolves its own conflicts**, in its own worktree. `main` never enters a conflicted state.
-3. **Re-run the gate on the rebased branch, still in the worktree.** Invoke `hardener` again with `npm run test:mutation:full`.
+3. **Re-run the gate on the rebased branch, still in the worktree** — `hardener` must use `npm run test:mutation:full`.
 
    **The one exception: if the merge is mutation-invariant, stage 5 does not run at all.** See the clause under step 5, and evaluate its predicate here, at this step.
 
@@ -26,7 +26,7 @@ this protocol assumes. Read that section first; nothing here repeats it.
 
    then invoke `hardener` on `main` with the whole tree as its scope.
 
-   **Adding `--incremental` to `npm run test:mutation:scripts` re-arms this deletion**, so a slice that adds it must put the second path back here.
+   **Adding `--incremental` to `npm run test:mutation:scripts` re-arms this deletion.** A slice that adds it must put `reports/stryker-incremental-scripts.json` back into the `rm -f` block above.
 
    **Mutation-invariant merges — the one exemption, and it is stage 5 only.**
 
@@ -76,7 +76,7 @@ this protocol assumes. Read that section first; nothing here repeats it.
 
    **The trigger is stage 1.** `tsconfig.app.json`'s `include` is `["src", "features", "perf"]`, so a type error a `features/`-only diff introduces is a real `npm run build` failure, and its fix can reach `src/`. That adds a file Stryker mutates, _after_ the stage that would have measured it was skipped.
 
-   **The rule is what binds, never an example.** An example a later slice can falsify is what produced the defect this clause used to carry.
+   **The rule is what binds, never an example.** An example a later slice can falsify is what produced a defect here once.
 
    Stage 8, `npm run agent-doc-check`, is not a replacement trigger. It moves on the doc entries, but its remediation is prose and cannot reach `src/`. See `.claude/agents/hardener.md`'s stage 5.
 

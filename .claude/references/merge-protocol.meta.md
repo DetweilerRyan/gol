@@ -29,7 +29,7 @@ the third rejected alternative below. This slice ran it. Every block below moved
 `merge-protocol.md`, except where moving it stranded a referent; each such rewrite is named at the
 block that carried it.
 
-**Three clauses were deleted rather than moved.** Each restated something the instruction half
+**Four clauses were deleted rather than moved.** Each restated something the instruction half
 already says, which is the only deletion `prose.md` licenses:
 
 - Step 5's "One path, not two, and that is deliberate", whose content survives as the conditional
@@ -37,6 +37,10 @@ already says, which is the only deletion `prose.md` licenses:
 - Step 5's "This is not hypothetical, and", ahead of "the trigger is stage 1".
 - Step 5's "Read this as a caution about examples in this clause", whose content survives as "The
   rule is what binds, never an example".
+- Step 5's "and know which option was not taken", from "Record every skip, and know which option
+  was not taken". The spec routed that phrase into the middle-option bullet below and it did not
+  arrive. Deletion is the right disposition either way: the option it points at lives here now, so
+  a reader of the instruction half cannot act on the phrase.
 
 **Two stranded referents predating this slice were repaired**, on the two-repair precedent the
 extraction record sets:
@@ -45,6 +49,20 @@ extraction record sets:
   since the same clause says the list is not restated there. It names `mutation-invariance.config.json`.
 - The same clause read "a diff confined to the paths below". That sentence moved here, and it names
   the config too.
+
+**Three survivors were rewritten because the move stranded a referent.** Each was named in the
+spec and belongs in this record too:
+
+- `merge-protocol.md`'s skipped-cache claim read "differs from the one it was built from". "The
+  one" lost its referent when the sentence above it moved, so it names the tree.
+- This file's stage-6 entry read "the paragraph above now refutes it", which pointed at a
+  paragraph that stayed in `merge-protocol.md`. It names that file's stage list.
+- This file's skipped-stage-5 entry gained the trailing clause "and under the predicate it does
+  not", carrying a negation the instruction half held through an adjacency the move removed.
+
+**One referent the sweep missed, recorded so the next sweep is wider.** Step 5's "the second path"
+was a stranded noun phrase rather than one of the indexicals the spec listed, and it survived into
+the corpus. `coach` REVIEW ruled the repair, which names the file the phrase points at.
 
 ## Placement ruling and its test
 
@@ -158,9 +176,9 @@ remain are fewer than the sentence it replaced implied.
 **Why the predicate is computed once.** Step 4 is a fast-forward, so the tree step 5 gates is
 byte-identical to the one step 3 gated. There is no second diff worth taking.
 
-**Why the cache survives a skipped stage 5.** The `rm -f` exists because the cache describes a tree
-that no longer exists, and under the predicate it does not. Deleting it would tax the next merge with
-a full cold run in exchange for nothing. That answers step 5's own "different cache" justification on
+**Why the cache survives a skipped stage 5.** The step-5 entry above says why the `rm -f` exists;
+under this predicate that reason does not hold. Deleting the cache would tax the next merge with a
+full cold run in exchange for nothing. That answers step 5's own "different cache" justification on
 its own terms, rather than waiving it.
 
 **Why the claim is worded "no mutated file and no collected test differs".** `backlog/`, `.claude/`
@@ -231,6 +249,13 @@ CLAUDE.md pointer keeps those three citations navigable — a reader following a
 reaches CLAUDE.md, then `.claude/references/merge-protocol.md` one hop further. An
 `enabler-technical` item is recommended to repoint the three directly.
 
+`split-the-merge-protocol-reasoning-into-its-sidecar` deepened the second entry rather than
+repairing it. `schemas/mutation-invariance.schema.json` cites `merge-protocol` step 5 "for why that
+scope is load-bearing", and that why moved into this file, under "Why the predicate is stated over
+the `src/` run alone". Step 5 still asserts the scope is load-bearing, so the citation degrades
+rather than breaks: a reader reaches the assertion and this file is one hop further. The same
+`enabler-technical` covers it.
+
 ## Check readings at landing — `extract-the-merge-protocol`
 
 | Check                         | Reading                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                       |
@@ -259,20 +284,21 @@ changed digits alone, which is the only edit to this table that provably adds no
 
 The re-measure rule above binds this table too.
 
-| Check                                     | Reading                                                                                                                                   |
-| ----------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------- |
-| `wc -c` on `merge-protocol.md`            | before 19,078 bytes, after 11,595 bytes                                                                                                   |
-| `wc -c` on this sidecar                   | before 10,350 bytes, after 25,735 bytes                                                                                                   |
-| `wc -c CLAUDE.md`                         | before 72,607 bytes, after 72,492 bytes                                                                                                   |
-| `npm run reference-check`                 | exit 0, 524 files scanned, 3,173 references found                                                                                         |
-| `npm run agent-doc-check`                 | exit 0, 54 doc files, 8 agent files, 31 rules                                                                                             |
-| `npm run mutation-invariance`             | exit 0, config valid, no `--diff` given                                                                                                   |
-| `vale` on `merge-protocol.md`             | 1 finding, against 7 before — 6 `Procedure.ProcedureLength`, 1 `STE.SentenceLength`                                                       |
-| `vale` on `CLAUDE.md`                     | 21 findings, against 21 before                                                                                                            |
-| `vale` on `prose.md`                      | 5 findings, against 5 before                                                                                                              |
-| `vale` on this sidecar                    | 0 — exempt by `.vale.ini`'s final `[**/*.meta.md]` section. Read that as a confident zero, never as a pass                                |
-| `vale` on this sidecar, exemption removed | 19 findings, through a scratch config outside the repo carrying the same rule set as `.vale.ini`'s `[.claude/references/**/*.md]` section |
-| `npm run prose-lint`                      | 507 tracked files linted                                                                                                                  |
+| Check                                     | Reading                                                                                                                                                |
+| ----------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `wc -c` on `merge-protocol.md`            | before 19,078 bytes, after 11,619 bytes                                                                                                                |
+| `wc -c` on this sidecar                   | before 10,350 bytes, after 28,542 bytes                                                                                                                |
+| `wc -c CLAUDE.md`                         | before 72,434 bytes, after 72,492 bytes                                                                                                                |
+| `npm run reference-check`                 | exit 0, 524 files scanned, 3,177 references found                                                                                                      |
+| `npm run agent-doc-check`                 | exit 0, 54 doc files, 8 agent files, 31 rules                                                                                                          |
+| `npm run mutation-invariance`             | exit 0, config valid, no `--diff` given                                                                                                                |
+| `vale` on `merge-protocol.md`             | 1 finding: step 5's marker line at 39 words, `Procedure.ProcedureLength`. Before: 7, of which 6 `Procedure.ProcedureLength` and 1 `STE.SentenceLength` |
+| `vale` on `CLAUDE.md`                     | 21 findings, against 21 before                                                                                                                         |
+| `vale` on `prose.md`                      | 5 findings, against 5 before                                                                                                                           |
+| `vale` on `mutation-testing.md`           | 16 findings, against 16 before — item A15 shortens a sentence inside a blockquote                                                                      |
+| `vale` on this sidecar                    | 0 — exempt by `.vale.ini`'s final `[**/*.meta.md]` section. Read that as a confident zero, never as a pass                                             |
+| `vale` on this sidecar, exemption removed | 24 findings, through a scratch config outside the repo carrying the same rule set as `.vale.ini`'s `[.claude/references/**/*.md]` section              |
+| `npm run prose-lint`                      | 507 tracked files linted                                                                                                                               |
 
 **The instruction half's drop has three causes, and only one of them is the register split.**
 Measured on the drafted text before landing: moving explanation to this sidecar alone clears
@@ -292,8 +318,18 @@ an applicability condition on the command in the next block, which the ruling fo
 A marker line carrying only the action and that exception verbatim measures 21 words against a cap
 of 20, so the finding is irreducible without rewording an instruction.
 
+**The floor and the reading are different numbers.** 21 is the minimum: a marker line carrying
+nothing but the action and the exception. The line reads 39 because it also carries "Mandatory,
+even though step 3 just passed on an identical tree" and the pointer into the fence below, both
+instruction. Even stripped to the floor the line exceeds the cap, so the extra words are cost
+rather than cause.
+
 **The sidecar's own zero is bought by the exemption, not earned.** That is why the row above
 records what this file reports with the exemption removed. Reproduce it by copying
 `.vale.ini`'s `[.claude/references/**/*.md]` rule keys into a scratch config outside the repo,
 under a `[*.md]` section with absolute `StylesPath` entries pointing at this checkout's
 `vale-styles/` and `.vale/`, and running `vale --config=<scratch> <copy of this file>`.
+
+**That 19 is mostly inherited, so read it decomposed.** The same command on this file as
+`extract-the-merge-protocol` left it reports 12. The slice's own prose is the difference, not the
+bulk of the number.

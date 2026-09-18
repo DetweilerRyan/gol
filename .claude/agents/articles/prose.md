@@ -291,8 +291,8 @@ defect in the rule rather than prose to fix.
 **Relocation below the marker is a legitimate remedy, and it carries one condition.** Ruled
 2026-09-18 on `procedure-length-clears-by-relocation`'s measurement. The rule reads the marker line
 alone, so moving words into an indented continuation paragraph clears a finding. That is the
-corpus's existing register rather than a loophole: 28 numbered steps already carry a body over the
-cap and read clean.
+corpus's existing register rather than a loophole: the same measurement found the shape already in
+use across the corpus, reading clean.
 
 **The condition is that the marker line keeps the complete executable instruction.** A reader who
 executes marker lines alone must perform the procedure correctly. What moves below is qualification,
