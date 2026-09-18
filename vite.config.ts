@@ -27,8 +27,8 @@ const sharedExclude = [
   // same way, both of them, measured 2026-09-08 by
   // `the-invariance-allowlist-omits-paths-that-provably-cannot-move-a-mutant`
   // before it added those two entries. These four entries are what make
-  // CLAUDE.md's merge-protocol mutation-invariant clause's path-allowlist
-  // predicate sound for backlog/, .claude/, rules/ and rule-tests/: without
+  // the path-allowlist predicate in `merge-protocol`'s mutation-invariant
+  // clause sound for backlog/, .claude/, rules/ and rule-tests/: without
   // them, a stray test file in any of those directories runs inside
   // Stryker's sandbox while the path check still answers "invariant."
   // `.claude/worktrees/**`, the narrower entry this replaces, is subsumed
@@ -74,7 +74,7 @@ const sharedExclude = [
   // .vale/ holds Vale's synced style package -- a downloaded artifact, gitignored,
   // and third-party YAML this repo does not author. It needs this entry for the same
   // reason backlog/** and .claude/** do, and for one more that makes it sharper: the
-  // mutation-invariant merge allowlist in CLAUDE.md's step 5 names `.vale/**`, added
+  // mutation-invariant merge allowlist in `merge-protocol` step 5 names `.vale/**`, added
   // by rationale-sidecar-pilot. Without this exclusion a `git add -f`'d test file
   // under .vale/ would be tracked, MATCH that allowlist so stage 5 is skipped, and
   // still be collected here and run inside Stryker's sandbox -- the hole

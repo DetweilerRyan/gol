@@ -1,5 +1,5 @@
 // The seven checks over a parsed mutation-invariance config -- the allowlist
-// behind CLAUDE.md's merge-protocol step 5 exemption, which is where the
+// behind `merge-protocol` step 5's exemption, which is where the
 // predicate they police is defined. Every check here is a binary fact --
 // this program is a gate, like ast-grep-rule-check and agent-doc-check, not
 // advisory like gherkin-dry-checker or halstead4ts.

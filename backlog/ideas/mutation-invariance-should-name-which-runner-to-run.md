@@ -63,7 +63,7 @@ required` beats a first-disqualifying-path line, and it is the sentence a role o
 `scripts/mutation-invariance/` — a gating checker, so CRAP <= 6, its own suite, `dry4ts:scripts` and
 `test:mutation:scripts`. `mutation-invariance.config.json` and `schemas/mutation-invariance.schema.json`,
 since the entry shape changes. `.claude/agents/articles/mutation-testing.meta.md`, whose check C4 binds
-every entry to a written argument. CLAUDE.md's merge-protocol step 5, which states the current
+every entry to a written argument. `merge-protocol` step 5, which states the current
 one-runner contract.
 
 ## The prerequisite: audit what `scripts/` reads outside its own tree
