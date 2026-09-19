@@ -5,7 +5,7 @@
 import { basename, dirname } from 'node:path'
 import { type HookOutcome } from '../post-tool-use.ts'
 
-/** Board-scope gate, run in `run.ts` before any filesystem read in either mode: is `path` under `backlog/`, absolute or relative. */
+/** Board-scope gate, run in `run.ts` before a target's content is read in either mode: is `path` under `backlog/`, absolute or relative. */
 export function isBoardPath(path: string): boolean {
   return path.includes('/backlog/') || path.startsWith('backlog/')
 }
@@ -86,8 +86,8 @@ function sectionFindings(lines: string[]): { era: 'scqa' | 'legacy'; findings: s
 // leading `backlog/` a relative one. A target under neither marker keeps all
 // of its segments, which is why checkShape alone has no board gate of its
 // own -- called directly with an off-board target, it classifies by that
-// segment count like any other. Both shells guard against that in run.ts's
-// checkTarget before checkShape is ever reached: the hook mode gates on
+// segment count like any other. Both shells guard against that in run.ts
+// before checkShape is ever reached: the hook mode gates on
 // isBoardPath before it resolves or reads anything, and the argv mode gates
 // on isBoardPath after resolving, immediately before this function would
 // otherwise run.
