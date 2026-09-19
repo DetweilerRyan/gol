@@ -72,8 +72,11 @@ function sectionFindings(lines: string[]): { era: 'scqa' | 'legacy'; findings: s
 }
 
 // The board-relative path segments. `/backlog/` marks an absolute path and a
-// leading `backlog/` a relative one; a target under neither keeps all of its
-// segments, which is what makes an off-board argv target a non-candidate.
+// leading `backlog/` a relative one. A target under neither keeps all of its
+// segments, so argv mode -- which has no board-scoping gate -- classifies an
+// off-board path by that segment count like any other, and a two-segment one
+// reads as a candidate. The hook path cannot reach that case: run.ts gates on
+// isBoardPath before it resolves or reads anything.
 function segmentsAfterRoot(target: string): string[] {
   const afterRoot = target.includes('/backlog/') ? target.split('/backlog/')[1] : target.replace(/^backlog\//, '')
   return afterRoot.split('/')

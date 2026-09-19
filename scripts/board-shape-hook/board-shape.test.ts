@@ -305,7 +305,19 @@ describe('checkShape candidate classification', () => {
       candidate: false,
     },
     { name: 'a fourth segment is not a candidate', target: 'backlog/ready/foo/sub/proposal.md', candidate: false },
-    { name: 'an off-board argv target is not a candidate', target: 'clean.md', candidate: false },
+    { name: 'a bare single-segment argv target is not a candidate', target: 'clean.md', candidate: false },
+    // Named residue, 2026-09-19: argv mode has no board-scoping gate, so an
+    // off-board path with exactly two segments satisfies the <lane>/<name>.md
+    // shape by coincidence. Unreachable from the hook, which gates on
+    // isBoardPath first, and unchanged by this slice -- src/camera.ts read six
+    // checks before it too. Adding the gate here would strand the ^ anchor in
+    // segmentsAfterRoot as an equivalent mutant, which is why it is named
+    // rather than closed.
+    {
+      name: 'an off-board two-segment path is a candidate -- the named argv residue',
+      target: 'src/camera.ts',
+      candidate: true,
+    },
   ])('$name', ({ target, candidate }) => {
     expect((checkShape(target, CLEAN).lines.at(-1) ?? '').includes(REFUSAL)).toBe(!candidate)
   })
