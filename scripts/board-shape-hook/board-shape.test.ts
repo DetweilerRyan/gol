@@ -279,6 +279,7 @@ describe('checkShape', () => {
   it('anchors the backlog/ prefix strip to the start of the path, not any occurrence', () => {
     // Unanchored, the strip would leave `sub/foo.md` -- two segments, and so a
     // candidate. The anchor is what keeps a look-alike directory off the board.
+    // reference-check: allow sub/foo.md -- illustrative fragment from the unanchored strip above, never a real file
     expect(checkShape('zzbacklog/sub/foo.md', CLEAN).lines[0]).toContain('not a candidate')
   })
 })
