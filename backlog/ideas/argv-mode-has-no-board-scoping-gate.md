@@ -2,6 +2,7 @@
 name: argv-mode-has-no-board-scoping-gate
 title: Gate the board-shape hook's argv mode on the target being under backlog/
 created: 2026-09-19
+kind: enabler-technical
 ---
 
 Recommended by `coach` in `amendment-1.md` on `the-board-hook-misfits-per-item-artifacts`,
@@ -55,6 +56,13 @@ killing its mutant.
 per-item artifact, where argv mode also prints that line for off-board paths. With the gate
 in place, the refusal line's domain narrows to exactly what the skill file already says, and
 the wording becomes accurate without touching signed bytes.
+
+**One file the shaped answer does not name, found at assessment.**
+`scripts/board-shape-hook/board-shape.ts` carries a comment stating that argv mode "has no
+board-scoping gate", and explaining the two-segment consequence. It is accurate today and
+becomes a stale present-tense claim about the program's own behaviour the moment the gate
+lands. **It moves in the same diff**, and the surrounding sentences need re-deriving rather
+than deleting — they also carry why the hook path cannot reach the case, which stays true.
 
 ## No-gos
 
