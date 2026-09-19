@@ -92,6 +92,65 @@ recall — which is conduct, and conduct goes through the process pipeline. The 
 the correct move sit on opposite sides of that line. `hardener` reported it and did not edit
 its own file, which is the rule working.
 
+## Nothing checks that a hook command names a file that exists
+
+Raised by `architect` at REVIEW, stated for capture and recorded here instead.
+
+`.claude/settings.json` wires each hook as a command string. `reference-check` reads comment
+lines in source files and every line of tracked `.md` files — not JSON string values. So a
+path inside a hook command resolves against nothing.
+
+**This slice widened the exposure.** Before it, two skill-local scripts were named. After it,
+four hook commands plus one `SKILL.md` injection line name paths under `scripts/`. A future
+rename of either program's directory breaks all four hooks, and the failure is silent: a
+hook whose command names a missing file does not announce itself, it simply stops firing.
+That is the same confident-zero class this slice closed inside the programs, still open
+around them.
+
+**One measurement supports it and one does not exist.** The five references were verified by
+hand at REVIEW and again after the merge — both targets exist, and `settings.json` names
+exactly those two paths. Nobody has measured what happens when a hook command names a
+missing file, and the answer decides how bad this is: silent skip, or a visible error.
+
+## Three doc surfaces the slice made stale
+
+Named in the DESIGN pass, confirmed by `coder` at handoff, and not yet repaired:
+
+- CLAUDE.md's **"Ten programs"** count and its **"All ten run via `tsx`"** sentence. Both are
+  now wrong twice over — the count moved, and the two new programs run under bare `node`
+  rather than `tsx`, which is the whole point of the runner contract the tier's tsconfig
+  enforces.
+- `quality-tooling.md`'s roster, which sorts `scripts/` programs into gating and advisory.
+  Neither new program is either: a hook is a third thing, and the roster has no slot for it.
+
+**Worth noticing what these three have in common with the finding above them.** Each is a
+hand-maintained enumeration of what `scripts/` contains, and each went stale the moment the
+directory did. The repair is not only to update the counts — it is to decide whether a
+census of a directory belongs in prose at all when `ls scripts/` answers it exactly.
+
+## The live-fire check is unfinished, and the reason is itself a finding
+
+The DESIGN pass assigned the seat a live-fire check of the repointed hooks, because settings
+bind at session start and no role inside a cycle can verify them. Half of it is done: both
+targets exist, and `settings.json` names exactly those two paths, verified after the merge.
+
+The other half needs a fresh session, and **the reason why is a fact `architect` discovered
+during the spike and this session then demonstrated without meaning to.** The
+project-directory variable stays at the session's starting root when Claude enters a worktree
+mid-session, so a hook runs the main checkout's copy rather than the worktree's. This session
+entered and left worktrees repeatedly. So every hook that fired while the slice was being
+built — including the board-shape hook firing on this very file — was the **old** program in
+the main checkout, not the new one under test.
+
+Two consequences worth carrying:
+
+- **The new programs have never actually run as hooks.** They are proven by unit tests, a
+  20-case byte-differential harness against the originals, and direct execution under bare
+  `node`. None of that is the same as the hook system invoking them.
+- **A worktree-based slice cannot test its own hook changes.** That is a structural limit on
+  this pipeline, not an oversight in this slice, and it applies to any future slice touching
+  `.claude/settings.json`.
+
 ## Why this is here rather than on the board
 
 It is an observation about how the seat and a role behaved in one cycle, not a defect in the
