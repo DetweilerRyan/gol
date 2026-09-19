@@ -71,11 +71,40 @@ function sectionFindings(lines: string[]): { era: 'scqa' | 'legacy'; findings: s
   return { era, findings }
 }
 
-// The lane is the path segment after backlog/ -- dirname's basename would
-// report the item's own folder name for the ready/ and done/ forms.
-function laneFor(target: string): string {
+// The board-relative path segments. `/backlog/` marks an absolute path and a
+// leading `backlog/` a relative one; a target under neither keeps all of its
+// segments, which is what makes an off-board argv target a non-candidate.
+function segmentsAfterRoot(target: string): string[] {
   const afterRoot = target.includes('/backlog/') ? target.split('/backlog/')[1] : target.replace(/^backlog\//, '')
-  return afterRoot.includes('/') ? afterRoot.split('/')[0] : basename(dirname(target))
+  return afterRoot.split('/')
+}
+
+// The lane is the first board-relative segment. Only a candidate reaches
+// here, and every candidate has at least two segments, so there is no
+// shorter form to fall back to.
+function laneFor(target: string): string {
+  return segmentsAfterRoot(target)[0]
+}
+
+// Two board shapes carry the candidate form and everything else does not.
+// `<lane>/<name>.md` is a flat idea file, and `<lane>/<item>/proposal.md` is
+// the same idea promoted into its own folder. Every other .md under an item
+// folder is a per-item artifact -- a spec, a design, an amendment, a task
+// list, a spike's findings -- and owes the candidate form nothing. The test is
+// positional, so a new artifact kind needs no entry here, a numbered amendment
+// needs no pattern, and a new lane directory needs no literal.
+function isCandidatePath(target: string): boolean {
+  const segments = segmentsAfterRoot(target)
+  if (segments.length === 2) return true
+  return segments.length === 3 && segments[2] === 'proposal.md'
+}
+
+// deliver is false, so no envelope reaches the acting agent and writing a
+// spec, a design or an amendment stays silent. The line still reaches the log
+// stream, worded as a refusal to assess rather than as a pass.
+function notACandidateOutcome(target: string): HookOutcome {
+  const line = `LAYER1 ${target}: not a candidate, 0 checks -- only an idea file carries the candidate shape`
+  return { lines: [line], deliver: false }
 }
 
 /**
@@ -85,6 +114,7 @@ function laneFor(target: string): string {
  * and the LAYER1 tally, and `deliver` is true only when a check failed.
  */
 export function checkShape(target: string, text: string): HookOutcome {
+  if (!isCandidatePath(target)) return notACandidateOutcome(target)
   const textLines = text.split('\n')
   // In the folder lanes the file is always proposal.md, so the identity the
   // name: field must match is the folder's basename, not the file's.

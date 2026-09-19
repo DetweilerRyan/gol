@@ -175,9 +175,11 @@ describe('checkShape', () => {
     expect(outcome.lines[0]).toMatch(/^lane done,/)
   })
 
-  it('falls back to the dirname basename for a lane path with no subdirectory segment', () => {
-    const outcome = checkShape('backlog/clean.md', CLEAN.replace('name: clean', 'name: clean'))
-    expect(outcome.lines[0]).toMatch(/^lane backlog,/)
+  it('refuses a file sitting directly under backlog/ and pins the whole non-candidate outcome', () => {
+    expect(checkShape('backlog/TEMPLATE.md', CLEAN)).toEqual({
+      lines: ['LAYER1 backlog/TEMPLATE.md: not a candidate, 0 checks -- only an idea file carries the candidate shape'],
+      deliver: false,
+    })
   })
 
   it('counts zero lines for a target with no newline character at all', () => {
@@ -275,8 +277,36 @@ describe('checkShape', () => {
   })
 
   it('anchors the backlog/ prefix strip to the start of the path, not any occurrence', () => {
-    const text = CLEAN.replace('name: clean', 'name: foo')
-    const outcome = checkShape('zzbacklog/sub/foo.md', text)
-    expect(outcome.lines[0]).toMatch(/^lane zzbacklog,/)
+    // Unanchored, the strip would leave `sub/foo.md` -- two segments, and so a
+    // candidate. The anchor is what keeps a look-alike directory off the board.
+    expect(checkShape('zzbacklog/sub/foo.md', CLEAN).lines[0]).toContain('not a candidate')
+  })
+})
+
+describe('checkShape candidate classification', () => {
+  const REFUSAL = 'not a candidate, 0 checks -- only an idea file carries the candidate shape'
+  it.each([
+    { name: 'a flat idea file is a candidate', target: 'backlog/ideas/foo.md', candidate: true },
+    { name: 'a ready-lane proposal is a candidate', target: 'backlog/ready/foo/proposal.md', candidate: true },
+    { name: 'a done-lane proposal is a candidate', target: 'backlog/done/foo/proposal.md', candidate: true },
+    {
+      name: 'an absolute proposal path classifies the same',
+      target: '/repo/backlog/done/foo/proposal.md',
+      candidate: true,
+    },
+    { name: 'a spec is a per-item artifact', target: 'backlog/ready/foo/spec.md', candidate: false },
+    { name: 'a design is a per-item artifact', target: 'backlog/done/foo/design.md', candidate: false },
+    { name: 'a numbered amendment needs no pattern', target: 'backlog/done/foo/amendment-11.md', candidate: false },
+    { name: 'an unbuilt tasks.md needs no new entry', target: 'backlog/ready/foo/tasks.md', candidate: false },
+    { name: 'a spike findings file is a per-item artifact', target: 'backlog/done/foo/findings.md', candidate: false },
+    {
+      name: 'an absolute artifact path classifies the same',
+      target: '/repo/backlog/done/foo/spec.md',
+      candidate: false,
+    },
+    { name: 'a fourth segment is not a candidate', target: 'backlog/ready/foo/sub/proposal.md', candidate: false },
+    { name: 'an off-board argv target is not a candidate', target: 'clean.md', candidate: false },
+  ])('$name', ({ target, candidate }) => {
+    expect((checkShape(target, CLEAN).lines.at(-1) ?? '').includes(REFUSAL)).toBe(!candidate)
   })
 })

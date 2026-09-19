@@ -42,18 +42,21 @@ const CLEAN = [
 describe('argv mode', () => {
   it('writes the report to stdout, nothing to stderr, and exits 0 for a clean file', () => {
     const dir = tempDir('board-shape-hook-')
-    writeFileSync(path.join(dir, 'clean.md'), CLEAN)
-    const result = runArgv(dir, ['clean.md'])
+    mkdirSync(path.join(dir, 'backlog', 'ideas'), { recursive: true })
+    writeFileSync(path.join(dir, 'backlog', 'ideas', 'clean.md'), CLEAN)
+    const result = runArgv(dir, ['backlog/ideas/clean.md'])
     expect(result.status).toBe(0)
     expect(result.stderr).toBe('')
-    expect(result.stdout).toContain('LAYER1 clean.md: 6 checks, 0 findings')
+    expect(result.stdout).toContain('LAYER1 backlog/ideas/clean.md: 6 checks, 0 findings')
   })
 
   it('never emits a hookSpecificOutput envelope, even when findings exist', () => {
     const dir = tempDir('board-shape-hook-')
-    writeFileSync(path.join(dir, 'bad.md'), '---\nname: nope\n---\n')
-    const result = runArgv(dir, ['bad.md'])
+    mkdirSync(path.join(dir, 'backlog', 'ideas'), { recursive: true })
+    writeFileSync(path.join(dir, 'backlog', 'ideas', 'bad.md'), '---\nname: nope\n---\n')
+    const result = runArgv(dir, ['backlog/ideas/bad.md'])
     expect(result.status).toBe(0)
+    expect(result.stdout).toContain('6 checks,')
     expect(result.stdout).not.toContain('hookSpecificOutput')
   })
 })
@@ -61,8 +64,8 @@ describe('argv mode', () => {
 describe('--hook mode', () => {
   it('delivers the envelope on stdout and the log on stderr when a check fails', () => {
     const dir = tempDir('board-shape-hook-')
-    mkdirSync(path.join(dir, 'backlog'), { recursive: true })
-    const target = path.join(dir, 'backlog', 'bad.md')
+    mkdirSync(path.join(dir, 'backlog', 'ideas'), { recursive: true })
+    const target = path.join(dir, 'backlog', 'ideas', 'bad.md')
     writeFileSync(target, '---\nname: nope\n---\n')
     const result = runHook(JSON.stringify({ tool_input: { file_path: target } }))
     expect(result.status).toBe(0)
@@ -79,6 +82,17 @@ describe('--hook mode', () => {
     expect(result.status).toBe(0)
     expect(result.stdout).toBe('')
     expect(result.stderr).toBe('')
+  })
+
+  it('logs a per-item artifact to stderr and delivers no envelope', () => {
+    const dir = tempDir('board-shape-hook-')
+    mkdirSync(path.join(dir, 'backlog', 'ready', 'item'), { recursive: true })
+    const target = path.join(dir, 'backlog', 'ready', 'item', 'spec.md')
+    writeFileSync(target, '# Spec\n')
+    const result = runHook(JSON.stringify({ tool_input: { file_path: target } }))
+    expect(result.status).toBe(0)
+    expect(result.stderr).toContain('not a candidate')
+    expect(result.stdout).toBe('')
   })
 
   it('reports the empty-extraction finding for a malformed payload', () => {
