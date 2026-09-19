@@ -32,6 +32,12 @@ into the ready lane. A re-assessment may replace an existing sidecar while the i
 the ideas lane; after promotion the assessment is immutable — the record the retro compares
 against is the one the promotion was granted on.
 
+The sidecar also stores a hash of the assessed idea file's contents, so an assessment that has
+gone out of sync with its idea is detectable rather than read as current — and a
+post-assessment edit therefore forces a visible re-assess-or-acknowledge before promotion
+freezes the record. The census-instrument precedent pinned to the pre-edit git blob hash for
+the same reason.
+
 ## No-gos
 
 - No gate on immutability. The board stays ungated; post-promotion immutability is a stated
@@ -48,6 +54,9 @@ against is the one the promotion was granted on.
 - The promotion commit's two-record body carries the judge's record today. Does the sidecar
   become the single home with the commit referencing it, or do two homes carry one record?
 - What do the board's own checks say about an assessment sidecar — does the Layer 1 shape
-  check ignore it, and which prose rules reach it?
+  check ignore it, and which prose rules reach it? The hash gives that check a new
+  deterministic fact if wanted: sidecar hash versus current blob, reported as staleness.
+- Which hash form — the git blob hash, repo-native and precedented, or a plain content
+  digest? And does the promotion step verify sync before granting?
 - Does the human ruling join the sidecar as its second half at promotion, mirroring the
   two-record body, or stay in the commit alone?
