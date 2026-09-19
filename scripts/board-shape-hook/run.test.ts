@@ -10,7 +10,7 @@ import path from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { spawnSync } from 'node:child_process'
 import { afterEach, describe, expect, it } from 'vitest'
-import { expectEnvelopeContext, tempDirTracker } from '../test-support.ts'
+import { expectEnvelopeContext, tempDirTracker, writeFile } from '../test-support.ts'
 
 const RUN_TS = fileURLToPath(new URL('./run.ts', import.meta.url))
 const { tempDir, cleanup } = tempDirTracker()
@@ -42,8 +42,7 @@ const CLEAN = [
 describe('argv mode', () => {
   it('writes the report to stdout, nothing to stderr, and exits 0 for a clean file', () => {
     const dir = tempDir('board-shape-hook-')
-    mkdirSync(path.join(dir, 'backlog', 'ideas'), { recursive: true })
-    writeFileSync(path.join(dir, 'backlog', 'ideas', 'clean.md'), CLEAN)
+    writeFile(dir, 'backlog/ideas/clean.md', CLEAN)
     const result = runArgv(dir, ['backlog/ideas/clean.md'])
     expect(result.status).toBe(0)
     expect(result.stderr).toBe('')
@@ -52,8 +51,7 @@ describe('argv mode', () => {
 
   it('never emits a hookSpecificOutput envelope, even when findings exist', () => {
     const dir = tempDir('board-shape-hook-')
-    mkdirSync(path.join(dir, 'backlog', 'ideas'), { recursive: true })
-    writeFileSync(path.join(dir, 'backlog', 'ideas', 'bad.md'), '---\nname: nope\n---\n')
+    writeFile(dir, 'backlog/ideas/bad.md', '---\nname: nope\n---\n')
     const result = runArgv(dir, ['backlog/ideas/bad.md'])
     expect(result.status).toBe(0)
     expect(result.stdout).toContain('6 checks,')
@@ -62,8 +60,7 @@ describe('argv mode', () => {
 
   it('refuses an existing off-board target rather than reading its shape', () => {
     const dir = tempDir('board-shape-hook-')
-    mkdirSync(path.join(dir, 'src'), { recursive: true })
-    writeFileSync(path.join(dir, 'src', 'camera.ts'), '// not a board file')
+    writeFile(dir, 'src/camera.ts', '// not a board file')
     const result = runArgv(dir, ['src/camera.ts'])
     expect(result.status).toBe(0)
     expect(result.stdout).toContain('off the board')
