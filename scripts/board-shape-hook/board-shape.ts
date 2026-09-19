@@ -5,7 +5,7 @@
 import { basename, dirname } from 'node:path'
 import { type HookOutcome } from '../post-tool-use.ts'
 
-/** Hook-mode scope gate, run before any filesystem read: is `path` under `backlog/`, absolute or relative. */
+/** Board-scope gate, run in `run.ts` before any filesystem read in either mode: is `path` under `backlog/`, absolute or relative. */
 export function isBoardPath(path: string): boolean {
   return path.includes('/backlog/') || path.startsWith('backlog/')
 }
@@ -33,6 +33,17 @@ export function emptyPathOutcome(): HookOutcome {
 export function missingOutcome(target: string): HookOutcome {
   const label = target === '' ? '(no path)' : target
   return { lines: [`LAYER1 ${label}: 0 checks, 1 findings -- path missing or unreadable`], deliver: true }
+}
+
+// Argv mode's counterpart to the hook path's isBoardPath gate in run.ts --
+// see checkTarget. A refusal to assess, worded distinctly from
+// notACandidateOutcome so the two causes (off the board vs. on-board but not
+// a candidate) stay tellable apart in the log stream.
+export function offBoardOutcome(target: string): HookOutcome {
+  return {
+    lines: [`LAYER1 ${target}: off the board, 0 checks -- only a backlog/ target can be assessed`],
+    deliver: false,
+  }
 }
 
 // The frontmatter window is sed -n '2,/^---$/p' exactly: line 2 through the
@@ -72,11 +83,14 @@ function sectionFindings(lines: string[]): { era: 'scqa' | 'legacy'; findings: s
 }
 
 // The board-relative path segments. `/backlog/` marks an absolute path and a
-// leading `backlog/` a relative one. A target under neither keeps all of its
-// segments, so argv mode -- which has no board-scoping gate -- classifies an
-// off-board path by that segment count like any other, and a two-segment one
-// reads as a candidate. The hook path cannot reach that case: run.ts gates on
-// isBoardPath before it resolves or reads anything.
+// leading `backlog/` a relative one. A target under neither marker keeps all
+// of its segments, which is why checkShape alone has no board gate of its
+// own -- called directly with an off-board target, it classifies by that
+// segment count like any other. Both shells guard against that in run.ts's
+// checkTarget before checkShape is ever reached: the hook mode gates on
+// isBoardPath before it resolves or reads anything, and the argv mode gates
+// on isBoardPath after resolving, immediately before this function would
+// otherwise run.
 function segmentsAfterRoot(target: string): string[] {
   const afterRoot = target.includes('/backlog/') ? target.split('/backlog/')[1] : target.replace(/^backlog\//, '')
   return afterRoot.split('/')

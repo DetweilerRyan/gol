@@ -16,11 +16,19 @@
 // -- no enum, no namespace, no parameter properties.
 import { existsSync, readFileSync } from 'node:fs'
 import { envelope, extractFilePath, type HookOutcome } from '../post-tool-use.ts'
-import { checkShape, emptyPathOutcome, isBoardPath, missingOutcome, resolveTarget } from './board-shape.ts'
+import {
+  checkShape,
+  emptyPathOutcome,
+  isBoardPath,
+  missingOutcome,
+  offBoardOutcome,
+  resolveTarget,
+} from './board-shape.ts'
 
 function checkTarget(target: string): HookOutcome {
   const resolved = resolveTarget(target, existsSync)
   if (resolved === '' || !existsSync(resolved)) return missingOutcome(resolved)
+  if (!isBoardPath(resolved)) return offBoardOutcome(resolved)
   return checkShape(resolved, readFileSync(resolved, 'utf8'))
 }
 

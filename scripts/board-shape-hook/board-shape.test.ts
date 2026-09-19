@@ -1,5 +1,12 @@
 import { describe, expect, it } from 'vitest'
-import { checkShape, emptyPathOutcome, isBoardPath, missingOutcome, resolveTarget } from './board-shape.ts'
+import {
+  checkShape,
+  emptyPathOutcome,
+  isBoardPath,
+  missingOutcome,
+  offBoardOutcome,
+  resolveTarget,
+} from './board-shape.ts'
 
 describe('isBoardPath', () => {
   it.each([
@@ -84,6 +91,15 @@ describe('missingOutcome', () => {
     expect(missingOutcome('backlog/ideas/gone.md')).toEqual({
       lines: ['LAYER1 backlog/ideas/gone.md: 0 checks, 1 findings -- path missing or unreadable'],
       deliver: true,
+    })
+  })
+})
+
+describe('offBoardOutcome', () => {
+  it('refuses with a distinct off-board line and never delivers', () => {
+    expect(offBoardOutcome('src/camera.ts')).toEqual({
+      lines: ['LAYER1 src/camera.ts: off the board, 0 checks -- only a backlog/ target can be assessed'],
+      deliver: false,
     })
   })
 })
@@ -315,15 +331,16 @@ describe('checkShape candidate classification', () => {
       candidate: false,
     },
     { name: 'a bare single-segment argv target is not a candidate', target: 'clean.md', candidate: false },
-    // Named residue, 2026-09-19: argv mode has no board-scoping gate, so an
+    // Named residue, 2026-09-19: checkShape alone has no board gate, so an
     // off-board path with exactly two segments satisfies the <lane>/<name>.md
-    // shape by coincidence. Unreachable from the hook, which gates on
-    // isBoardPath first, and unchanged by this slice -- src/camera.ts read six
-    // checks before it too. Adding the gate here would strand the ^ anchor in
-    // segmentsAfterRoot as an equivalent mutant, which is why it is named
-    // rather than closed.
+    // shape by coincidence when checkShape is called directly, as this row
+    // does. Both shells gate on isBoardPath in run.ts before checkShape is
+    // ever reached, so this path is unreachable from either --hook or argv
+    // mode. Adding the gate here, inside isCandidatePath, would strand the ^
+    // anchor in segmentsAfterRoot as an equivalent mutant, which is why it is
+    // named rather than closed.
     {
-      name: 'an off-board two-segment path is a candidate -- the named argv residue',
+      name: 'an off-board two-segment path is a candidate when checkShape is called directly',
       target: 'src/camera.ts',
       candidate: true,
     },

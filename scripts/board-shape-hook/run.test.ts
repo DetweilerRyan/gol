@@ -2,9 +2,9 @@
 // -- so it cannot be imported for a test the way every other program's
 // run.ts is. These tests spawn bare node on it instead, pinning the shell
 // contract (mode dispatch, envelope on stdout only in --hook mode, log
-// stream per mode, exit 0 always, and the zero-byte silence of an
-// out-of-scope --hook payload). board-shape.test.ts carries every decision
-// this file delegates to.
+// stream per mode, exit 0 always, the zero-byte silence of an out-of-scope
+// --hook payload, and the off-board refusal in argv mode). board-shape.test.ts
+// carries every decision this file delegates to.
 import { mkdirSync, writeFileSync } from 'node:fs'
 import path from 'node:path'
 import { fileURLToPath } from 'node:url'
@@ -58,6 +58,25 @@ describe('argv mode', () => {
     expect(result.status).toBe(0)
     expect(result.stdout).toContain('6 checks,')
     expect(result.stdout).not.toContain('hookSpecificOutput')
+  })
+
+  it('refuses an existing off-board target rather than reading its shape', () => {
+    const dir = tempDir('board-shape-hook-')
+    mkdirSync(path.join(dir, 'src'), { recursive: true })
+    writeFileSync(path.join(dir, 'src', 'camera.ts'), '// not a board file')
+    const result = runArgv(dir, ['src/camera.ts'])
+    expect(result.status).toBe(0)
+    expect(result.stdout).toContain('off the board')
+    expect(result.stdout).not.toContain('6 checks')
+    expect(result.stderr).toBe('')
+  })
+
+  it('reports the target as missing rather than off the board when it does not resolve at all', () => {
+    const dir = tempDir('board-shape-hook-')
+    const result = runArgv(dir, ['no-such-slug'])
+    expect(result.status).toBe(0)
+    expect(result.stdout).toContain('path missing or unreadable')
+    expect(result.stdout).not.toContain('off the board')
   })
 })
 
