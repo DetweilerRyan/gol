@@ -7,6 +7,11 @@ created: 2026-09-17
 Captured from `coach` REVIEW's handoff on `slice/extract-the-merge-protocol`, its R5,
 2026-09-17 — consolidating `editor` AUDIT's two census findings of the same day.
 
+**Placed in `effective-prose`'s Wave 1, 2026-09-18.** It is that wave's own "the Vale rules
+match what those two articles actually say" row, with the measurements taken. Every later wave
+writes rules or remediates against what this article says, so a superseded sentence here
+propagates.
+
 ## Situation
 
 `.claude/agents/articles/prose.md` describes which Vale rules run where. `.vale.ini` is

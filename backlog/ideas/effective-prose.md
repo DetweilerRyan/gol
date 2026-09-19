@@ -128,6 +128,20 @@ measurement rather than by the change alone:
 reconciliation, the size question, the two renames, and `orchestrator-prose-has-no-reviewer`. Those
 are judgement, and the gate at the top of this file says the user closes them.
 
+**One of those article reviews now has a candidate, added 2026-09-18.**
+
+- `prose-md-has-drifted-from-vale-ini` — four measured divergences between the article and
+  `.vale.ini`, and it is Wave 1's own "the Vale rules match what those two articles actually say"
+  row with the measurements taken. `.vale.ini` is the live side in all four. The article's
+  six-enabled-rules census predates three styles; its "the enable block appears three times" is
+  five; it says Vale runs over three surfaces and names "the five role files" where there are
+  eight; and it claims a reference pair is scoped the same way as a skill file, which `.vale.ini`
+  contradicts by name over a recorded six-finding backlog.
+
+  It sits in Wave 1 rather than later because every wave after this one writes rules or remediates
+  against what that article says. A rule enforcing a superseded sentence is the failure this
+  wave's own gate paragraph names.
+
 **One thing the three slices changed about the rest of Wave 1.** The renames are now cheaper and
 safer than when they were filed: `reference-check` reaches every tracked `.md`, so a rename that
 strands a citation reds the gate instead of passing silently. That was the argument for sequencing
@@ -139,6 +153,20 @@ them after the tooling, and it held.
 | --------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------- |
 | `ste-over-jsdoc-and-its-remediation`    | The planned successor. Largest single slice on the board. Every corpus figure in it is superseded and must be re-derived.             |
 | `ste-shape-rules-for-instruction-files` | Sentence-shape rules plus a governed vocabulary. Overlaps the above; decide whether they are one slice or two before starting either. |
+
+**One remediation entry joined this wave 2026-09-18.**
+
+- `fifty-procedure-length-findings-have-a-remedy-and-no-owner` — the corpus's standing
+  `Procedure.ProcedureLength` findings, with a ruled remedy and nobody holding it. `architect`
+  measured 51 across nine files on 2026-09-18, 44 percent of the corpus's numbered steps, and
+  ruled the relocation remedy in `slice/procedure-length-clears-by-relocation`. A later slice
+  cleared five, so the standing figure is derived rather than measured and **moves again with
+  every slice that touches a numbered step** — the same caution this wave's first row carries.
+
+  **It is assessed a Spike, not Ready**, and that is the wave's own lesson repeating: nobody
+  has applied the completeness condition outside one file, so the target reading is unknown and
+  cannot be written. Take the per-file clear-versus-irreducible count before scoping the
+  remediation, exactly as `ste-over-jsdoc-and-its-remediation` must re-derive its figures.
 
 ### Wave 3 — close the checker-reach gaps
 

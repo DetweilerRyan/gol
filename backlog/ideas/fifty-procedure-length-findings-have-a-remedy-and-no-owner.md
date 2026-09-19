@@ -8,6 +8,10 @@ kind: enabler-process
 Captured from `coach` SPEC revision 2 on `split-the-merge-protocol-reasoning-into-its-sidecar`,
 2026-09-18.
 
+**Placed in `effective-prose`'s Wave 2, 2026-09-18**, beside the other remediation entries.
+Its standing figure is derived rather than measured and moves with every slice that touches a
+numbered step — the same caution that wave's first row already carries.
+
 ## Situation
 
 The `procedure-length-clears-by-relocation` spike measured 51 `Procedure.ProcedureLength`
