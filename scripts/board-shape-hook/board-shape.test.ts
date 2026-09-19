@@ -305,6 +305,14 @@ describe('checkShape candidate classification', () => {
       candidate: false,
     },
     { name: 'a fourth segment is not a candidate', target: 'backlog/ready/foo/sub/proposal.md', candidate: false },
+    // proposal.md sitting in the third slot of a four-segment path must not
+    // satisfy the three-segment shape on its own -- pins the segment-count
+    // check rather than only the basename check it is paired with.
+    {
+      name: 'proposal.md in the third slot of a four-segment path is not a candidate',
+      target: 'backlog/ready/item/proposal.md/stray.md',
+      candidate: false,
+    },
     { name: 'a bare single-segment argv target is not a candidate', target: 'clean.md', candidate: false },
     // Named residue, 2026-09-19: argv mode has no board-scoping gate, so an
     // off-board path with exactly two segments satisfies the <lane>/<name>.md

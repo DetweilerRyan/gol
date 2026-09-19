@@ -73,26 +73,32 @@ describe('--hook mode', () => {
     expectEnvelopeContext(result.stdout, 'LAYER1')
   })
 
-  it('stays silent on both streams for a path outside the board', () => {
+  // Object-table it.each, the resolveTarget shape in board-shape.test.ts: both
+  // rows exercise a target that never reaches the envelope, differing only in
+  // why -- off-board entirely versus on-board but not a candidate -- so the
+  // stderr assertion is carried per row rather than duplicating the harness.
+  it.each([
+    {
+      name: 'stays silent on both streams for a path outside the board',
+      relPath: ['src', 'camera.ts'],
+      content: '// not a board file',
+      expectStderr: (stderr: string) => expect(stderr).toBe(''),
+    },
+    {
+      name: 'logs a per-item artifact to stderr and delivers no envelope',
+      relPath: ['backlog', 'ready', 'item', 'spec.md'],
+      content: '# Spec\n',
+      expectStderr: (stderr: string) => expect(stderr).toContain('not a candidate'),
+    },
+  ])('$name', ({ relPath, content, expectStderr }) => {
     const dir = tempDir('board-shape-hook-')
-    const target = path.join(dir, 'src', 'camera.ts')
+    const target = path.join(dir, ...relPath)
     mkdirSync(path.dirname(target), { recursive: true })
-    writeFileSync(target, '// not a board file')
+    writeFileSync(target, content)
     const result = runHook(JSON.stringify({ tool_input: { file_path: target } }))
     expect(result.status).toBe(0)
     expect(result.stdout).toBe('')
-    expect(result.stderr).toBe('')
-  })
-
-  it('logs a per-item artifact to stderr and delivers no envelope', () => {
-    const dir = tempDir('board-shape-hook-')
-    mkdirSync(path.join(dir, 'backlog', 'ready', 'item'), { recursive: true })
-    const target = path.join(dir, 'backlog', 'ready', 'item', 'spec.md')
-    writeFileSync(target, '# Spec\n')
-    const result = runHook(JSON.stringify({ tool_input: { file_path: target } }))
-    expect(result.status).toBe(0)
-    expect(result.stderr).toContain('not a candidate')
-    expect(result.stdout).toBe('')
+    expectStderr(result.stderr)
   })
 
   it('reports the empty-extraction finding for a malformed payload', () => {
