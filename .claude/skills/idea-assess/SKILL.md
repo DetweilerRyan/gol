@@ -19,6 +19,8 @@ Layer 1 ran before this text reached you. Its output:
 
 **Absent a `LAYER1` count line directly above, Layer 1 did not run — stop and say so. A line reporting the path missing means the target was never measured — stop the same way. Never assess on hand-computed checks.**
 
+**A `not a candidate` line means the target is a per-item artifact rather than an idea file — stop and say so, and score nothing.**
+
 Then:
 
 1. Read `.claude/references/definition-of-ready.md` in full.

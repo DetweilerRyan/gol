@@ -19,6 +19,31 @@ The kinds come from `.claude/references/definition-of-ready.md`'s kind check, wh
 each to its SAFe orientation label. `kind:` sits in the promoted item's frontmatter, and it
 **plans** the cycle below — it never authorizes a skip on its own.
 
+## Per-item artifacts — the shape they owe
+
+A `ready/` or `done/` item is a folder. `proposal.md` is the promoted idea file, and it keeps
+the shape `backlog/TEMPLATE.md` states. Every other file in that folder is a **per-item
+artifact**, and it owes that shape nothing.
+
+**A per-item artifact carries no frontmatter.** Its identity is positional. The folder names the
+item and the basename names the artifact's job. A `name:` field would restate the folder and a
+`title:` field the heading. `created:` restates what `git log --diff-filter=A` answers, and
+`kind:` belongs to `proposal.md` alone.
+
+**Open with a heading and an attribution line instead.** The heading names the artifact and its
+item. The attribution line names the authoring role, its mode, and the date.
+
+**The kinds are not a closed set.** `scripts/board-shape-hook/board-shape.ts` classifies by
+position rather than by basename, so an artifact kind nobody has named yet is covered on the day
+it lands.
+
+**The board hook checks no per-item artifact.** It prints a non-candidate line rather than
+findings. Read that line as a refusal to assess, never as a pass. Vale's `Board.NoStatusField`
+still reaches every board file, artifacts included.
+
+**Name the artifact's shape in the prompt of any role that writes one.** A role reaches this file
+only when its own file or its invoking prompt sends it here.
+
 ## Story — contract-bearing
 
 The finished state is reachable through the accessible tree, so it gets Gherkin and the full
