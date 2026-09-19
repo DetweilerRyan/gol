@@ -38,6 +38,12 @@ post-assessment edit therefore forces a visible re-assess-or-acknowledge before 
 freezes the record. The census-instrument precedent pinned to the pre-edit git blob hash for
 the same reason.
 
+**Promotion verifies sync before granting — ruled by the user 2026-09-19.** An assessment out
+of sync with its idea fails the promotion. This is a correctness precondition of the promotion
+procedure, the same class as the existing refusals on a missing judge record or absent human
+ruling — not a gate on the board, which is why the lane cap stays advisory while this does
+not: a cap is a limit, a stale record is an integrity fact.
+
 ## No-gos
 
 - No gate on immutability. The board stays ungated; post-promotion immutability is a stated
@@ -57,6 +63,6 @@ the same reason.
   check ignore it, and which prose rules reach it? The hash gives that check a new
   deterministic fact if wanted: sidecar hash versus current blob, reported as staleness.
 - Which hash form — the git blob hash, repo-native and precedented, or a plain content
-  digest? And does the promotion step verify sync before granting?
+  digest?
 - Does the human ruling join the sidecar as its second half at promotion, mirroring the
   two-record body, or stay in the commit alone?
