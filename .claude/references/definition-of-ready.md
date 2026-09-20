@@ -2,7 +2,7 @@
 
 **Read before assessing a candidate, promoting an idea, or ruling a disposition on the board.** Who reads this file is a routing question, and CLAUDE.md answers it.
 
-Promotion from `backlog/ideas/` to `backlog/ready/` is this repo's Definition of Ready, in the Agile Alliance glossary sense — the lane is even named for it. The kind check below also yields the file's frontmatter `kind:` label. The judging pass rules the label, the orchestrating seat writes it when recording the ruling, and the seat reads it to plan the role cycle. Assessing a candidate is the board's backlog refinement, in the same vocabulary. This file carries the assessment: two pre-questions, six predicates, anchored scores, and four dispositions. In this file, "ready" means the board's promotion bar and nothing else; the word carries other senses elsewhere, and none is this subject.
+Promotion from `backlog/ideas/` to `backlog/ready/` is this repo's Definition of Ready, in the Agile Alliance glossary sense — the lane is even named for it. The kind check below also yields the file's frontmatter `kind:` label. The judging pass rules the label, the orchestrating seat writes it when recording the ruling, and the seat reads it to plan the role cycle. Assessing a candidate is the board's backlog refinement, in the same vocabulary. This file carries the assessment: two pre-questions, six predicates, anchored scores, four dispositions, and the record that holds the result. In this file, "ready" means the board's promotion bar and nothing else; the word carries other senses elsewhere, and none is this subject.
 
 **Nothing here gates.** Ruled by the user 2026-09-13: CLAUDE.md's decision that `ideas/` has no gate stands unreversed. Every check reports, and none can fail anything.
 
@@ -21,7 +21,7 @@ Ask first: would a `product` VERIFY pass have anything to observe?
 - **Checker-bearing** (SAFe: architecture or infrastructure enabler) — the finished state is a check's reading, usually a command's output or exit code. A VERIFY pass therefore has nothing to observe. Its acceptance criteria are fitness functions, in the evolutionary-architecture sense. A second discriminator splits the sub-kind, and the `kind:` label carries it. A diff landing in the tree the gates measure (`src/`, `scripts/`, configs, `rules/`) is **enabler-technical**. A diff landing in the instructions that run the gates (`.claude/**`, CLAUDE.md, `.claude/references/`, `adr/`, the board docs) is **enabler-process**. V and T score against the checker-bearing column either way.
 - **Knowledge-bearing** (SAFe: exploration enabler) — a readiness spike. The finished state is a recorded answer to a named question.
 
-Score V and T against the kind's own column below. Never score a checker-bearing idea against user-visible value. An assessment record's kind row carries the label, so a reader oriented by SAFe never has to look the mapping up. Ruled by the user 2026-09-14.
+Score V and T against the kind's own column below. Never score a checker-bearing idea against user-visible value. An assessment record carries the label beside the kind, so a reader oriented by SAFe never has to look the mapping up. Ruled by the user 2026-09-14.
 
 ## The six predicates
 
@@ -153,12 +153,16 @@ Every assessment ends in exactly one. The disposition comes from the written fin
 Layer 2's record is a file rather than a conversation turn. The judging pass writes it, and writes nothing else.
 
 - **It sits beside the idea**, as `backlog/ideas/<name>.assessment.md`.
-- **Frontmatter carries the three facts a machine reads**: `name`, the idea's slug; `assessed`, the date; and `idea-blob`, the idea file's git blob id at assessment.
-- **Kind and disposition sit in prose above the table.** The seat copies the kind ruling into the idea's own frontmatter, so neither belongs in this file's frontmatter.
+- **Frontmatter carries three fields**: `name`, the idea's slug; `assessed`, the date; and `idea-blob`, the idea file's git blob id at assessment.
+- **Kind and disposition sit in prose above the table**, not in the record's frontmatter. Both are judged rulings that a reader takes with the findings beside them, and the idea file's frontmatter is the kind's one home.
 - **A summary table opens the record**, one row per letter in INVEST order. Three columns: the letter spelled out, its score, and a one-line finding.
 - **A detail section per letter follows**, in the same spelling, carrying the finding in full.
 - **A letter that declines a score says so in the score column**, and its finding is the declination.
 - **The `LAYER1` line is carried into the record verbatim.** A record without it reads as not-run.
+- **The judged half closes with what happens next**, under its own heading, naming what the ruled disposition hands on.
+  - **Epic** — the child candidates the split would produce.
+  - **Spike** — the spike's question, and the letters it would move.
+  - **Ready or Not worth doing** — the disposition's own next step from the table, in one line.
 - **The human's ruling closes the record**, under its own heading, and arrives later than the rest.
 
 **Re-assessment replaces the record while the idea is in the ideas lane.** One idea carries one record, holding the assessment the next promotion would be granted on.
@@ -202,6 +206,8 @@ idea-blob: <blob id>
 ## Small
 
 ## Testable
+
+## What happens next
 
 ## The human ruling
 

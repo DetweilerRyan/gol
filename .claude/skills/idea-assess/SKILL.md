@@ -40,6 +40,7 @@ Rules that bind the record:
 - Fold the Layer 1 findings above into the record; they are measurements, not scores.
 - The disposition comes from the written findings, never from the numbers.
 - `claim-discipline.md` binds this record. Date every figure, name the tree, and write the record as history.
+- Name what happens next under its own heading. An Epic or a Spike names its children or its spike there, and nowhere else.
 - Close with the human-ruling heading and `None recorded.` The ruling is a separate act, and `/idea-approve` writes it.
 
 Rules that bind the write:
