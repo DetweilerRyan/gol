@@ -36,6 +36,15 @@ against the idea file's current hash, and report the difference as staleness. Th
 exclusion in `reference-check` gains a carve-out for the sidecar, so a record's citations resolve
 the way every other record's do.
 
+Both checks fail open, and each owes a guard that says so. A carve-out whose glob matches no
+sidecar reports zero findings exactly as a clean tree does. A hash comparison passes vacuously
+when the sidecar is absent. The non-empty inertness guard that two gating checkers shared as of
+2026-09-20 is the precedent to follow rather than to reinvent.
+
+Three documentation surfaces go false with the change, and the slice owes all three. CLAUDE.md's
+`reference-check` entry states the board exclusion as two directories. The readiness reference
+describes what Layer 1 measures. The `idea-assess` skill states what its own run reports.
+
 Depends on `assessment-records-die-with-the-conversation`, which creates the artifact both checks
 read and rules its shape. Nothing here is worth building before that lands.
 
@@ -47,7 +56,8 @@ read and rules its shape. Nothing here is worth building before that lands.
 ## Open questions
 
 - Does Layer 1 report a missing sidecar at all, or only a stale one? An idea with no assessment
-  is the ordinary case in the ideas lane, so silence may be right.
+  is the ordinary case in the ideas lane, so silence may be right. Either way the silence has to
+  be distinguishable from the vacuous pass named above.
 - Which of the two `reference-check` surfaces does the carve-out reach? A sidecar carries no
   source comments, so the source surface may be moot rather than merely unused.
 - Does the carve-out belong to the sidecar alone, or to any board file that is a record rather
