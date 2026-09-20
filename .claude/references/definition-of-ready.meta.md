@@ -283,13 +283,14 @@ The rulings, by date:
   the order is what keeps the two readable as two.
 
 **The name, ruled by `coach` at SPEC and confirmed by the user 2026-09-20.**
-`backlog/ideas/<name>.assessment.md` in the ideas lane, `assessment.md` in the item's folder. The
-second form is a bare filename token `npm run reference-check` resolves by basename, so four files
-carry an allow-marker of the shape the board's other unlanded artifact name already carries — the
-multi-unit task list, named in CLAUDE.md and in the pipelines reference with exactly that marker.
-The first form costs nothing: the
-extractor discards a token whose basename starts with a dot, which is what the placeholder form
-reduces to.
+`backlog/ideas/<name>.assessment.md` in the ideas lane, and the same basename without the
+placeholder in the item's folder. The folder form is a bare filename token
+`npm run reference-check` resolves by basename, so it needs an allow-marker wherever an
+instruction file names it, until the first item carries one. That is the shape the board's other
+unlanded artifact name already carries — the multi-unit task list. Each marker carries its own
+reason, and the checker's own stale-marker check is what retires it. The first form costs nothing:
+the extractor discards a token whose basename starts with a dot, which is what the placeholder
+form reduces to.
 
 **Frontmatter, and which field is weakest.** `idea-blob` is the fact that forced the exception —
 no position supplies it. `assessed` is a claim about when the judging ran, which `git log` can
