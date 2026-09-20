@@ -302,12 +302,21 @@ That is why `coder` runs `npm run ast-grep` in its own workflow rather than wait
 `backlog/` is a three-lane kanban of slices — it is the product backlog, in Agile Alliance terms, and the lane is the directory:
 
 - **`backlog/ideas/<name>.md`** — raw and unjudged, no limit, one flat file per idea, plus `<name>.assessment.md` beside it once the idea has been assessed. An idea lands here the moment it is worth not forgetting.
-- **`backlog/ready/<name>/`** — assessed against `.claude/references/definition-of-ready.md` (advisory, since this board has no gate) and concrete enough to start. A ready item is a **folder**: `proposal.md` (the promoted idea file) always; `design.md` when the design-pass triggers fire; `spec.md` when a process enabler runs `coach` SPEC; `tasks.md` when dispatch is multi-unit; `findings.md` for a spike's recorded answer; `assessment.md` once the item has been promoted, carrying the assessment it was promoted on. **Only `proposal.md` carries the idea-file shape**; `.claude/references/pipelines.md` states what a per-item artifact owes instead. The orchestrating session owns this board: no role reads it, and an item reaches a role as prompt content rather than as a file path. Keep this lane to about three, matching the two-or-three concurrent-slice ceiling below.
+- **`backlog/ready/<name>/`** — assessed against `.claude/references/definition-of-ready.md` (advisory, since this board has no gate) and concrete enough to start. A ready item is a **folder**:
+  - `proposal.md` — the promoted idea file. Always.
+  - `assessment.md` — the assessment the promotion was granted on. Always, from the move commit.
+  - `design.md` — when the design-pass triggers fire.
+  - `spec.md` — when a process enabler runs `coach` SPEC.
+  - `tasks.md` — when dispatch is multi-unit.
+  - `findings.md` — a spike's recorded answer.
+
+  **Only `proposal.md` carries the idea-file shape**; `.claude/references/pipelines.md` states what a per-item artifact owes instead. The orchestrating session owns this board: no role reads it, and an item reaches a role as prompt content rather than as a file path. Keep this lane to about three, matching the two-or-three concurrent-slice ceiling below.
+
 - **`backlog/done/<name>/`** — completed, awaiting a retrospective. The retrospective extracts what the finished work can teach — durable halves of `design.md` and `tasks.md` deviations become new `backlog/ideas/` files, spike findings land in the parent's re-assessment or `adr/` — then deletes the folder. This lane records the one fact the `slice/*` tag cannot: _not yet retrospected_. Its trigger and owner are not yet ruled; folders simply wait.
 
 `backlog/TEMPLATE.md` is the idea-file shape: frontmatter (`name`, `title`, `created`, and `kind` once assessed) over Situation / Complication / Question, an optional shaped Answer and No-gos, then Open questions.
 
-**`kind` lives in frontmatter**: `story | enabler-technical | enabler-process | spike | epic`, ruled by `/idea-assess`'s kind check per `definition-of-ready.md` and written by the orchestrating seat when it records the ruling. The judging pass writes its own assessment record and nothing else. The directory carries the lane and the frontmatter carries the kind — it is not a `status:` field. Kind selects the expected role cycle (a technical enabler runs no `product`, a process enabler runs the `coach` family, a spike runs no pipeline) and **plans rather than authorizes**: the walk-every-path demonstration in `orchestration.md` still confirms any `product` skip at merge time. An epic gets no `ready/` folder — it stays an index file in `backlog/ideas/` and splits into children. Board files written before 2026-09-17 keep their historical `enabler` labels — they are records.
+**`kind` lives in frontmatter**: `story | enabler-technical | enabler-process | spike | epic`, ruled by `/idea-assess`'s kind check per `definition-of-ready.md` and written into the proposal by `/idea-promote` after the move. The judging pass writes its own assessment record and nothing else. The directory carries the lane and the frontmatter carries the kind — it is not a `status:` field. Kind selects the expected role cycle (a technical enabler runs no `product`, a process enabler runs the `coach` family, a spike runs no pipeline) and **plans rather than authorizes**: the walk-every-path demonstration in `orchestration.md` still confirms any `product` skip at merge time. An epic gets no `ready/` folder — it stays an index file in `backlog/ideas/` and splits into children. Board files written before 2026-09-17 keep their historical `enabler` labels — they are records.
 
 **`name` is the slice's identity end to end.** It is the file's basename in `ideas/`, the folder's basename in `ready/` and `done/`, becomes the branch in `git worktree add -b <slice>`, and becomes the `slice/<name>` tag at merge. One slug from idea to tag, so `git log` and the board agree on what a thing is called.
 
@@ -317,7 +326,7 @@ Two rules keep the board honest:
 
   Git records a move made in its own commit as a rename, and the history survives. It records a move plus a rewrite as delete-plus-add, and the history does not. `CLAUDE.meta.md` carries the similarity scores. (You need `--follow` to read across the move either way.)
 
-  The move commit's body carries the judge's summary rather than either record in full, since the assessment record already holds both halves: the judge's at assessment, and the human's per-letter ruling whenever `/idea-approve` recorded it. `.claude/references/definition-of-ready.md` states the record shapes and why the order matters. `/idea-promote` executes this whole bullet.
+  The assessment record already holds both halves — the judge's at assessment, and the human's per-letter ruling whenever `/idea-approve` recorded it. So the move commit's body carries the judge's summary rather than either record in full. `.claude/references/definition-of-ready.md` states the record shapes and why the order matters. `/idea-promote` executes this whole bullet.
 
 - **The slice moves its own folder to `done/`.** Run `git mv backlog/ready/<name> backlog/done/<name>` as the slice's final commit before the merge gate — after the rebase, before step 3's re-verification, so the gated tip is the true tip. The `slice/<name>` tag stays the permanent completion record; the `done/` folder waits for its retrospective. Deleting the folder at completion is the retired rule — deletion now belongs to the retrospective alone.
 

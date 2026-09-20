@@ -31,13 +31,14 @@ item and the basename names the artifact's job. A `name:` field would restate th
 `title:` field the heading. `created:` restates what `git log --diff-filter=A` answers, and
 `kind:` belongs to `proposal.md` alone.
 
+**Open with a heading and an attribution line instead.** The heading names the artifact and its
+item. The attribution line names the author and the date — a role with its mode, or the command
+that wrote the file.
+
 **One artifact carries frontmatter, and that exception is ruled rather than inherited.**
 `assessment.md` begins beside the idea, before the folder exists, and it stores the assessed idea
 file's git blob id. A blob id is a fact no position supplies, so it stays in frontmatter after the
 move. `.claude/references/definition-of-ready.md` names the three fields.
-
-**Open with a heading and an attribution line instead.** The heading names the artifact and its
-item. The attribution line names the authoring role, its mode, and the date.
 
 **The kinds are not a closed set.** `scripts/board-shape-hook/board-shape.ts` classifies by
 position rather than by basename, so an artifact kind nobody has named yet is covered on the day

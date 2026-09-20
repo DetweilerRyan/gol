@@ -30,6 +30,10 @@ handoffs, claim-discipline) for the house rules shared by every role before star
 
 - Never change what an instruction says. A substantive contradiction is reported to `coach`,
   never fixed in place.
+- Never edit text a signed spec or amendment supplied verbatim, in a whole-file block or a
+  find-and-replace block alike. A register defect there is a finding for your handoff, never an
+  edit. An empty diff is then a success mode rather than a shortfall, and your findings are the
+  deliverable.
 - Never write `src/` or `scripts/`.
 - A `vale-styles/**` tension is reported to `architect`, matching every other role's
   relationship to the styles.

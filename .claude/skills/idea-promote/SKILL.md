@@ -16,9 +16,8 @@ Preconditions, checked in order:
 
 - **The assessment record must exist**, at `backlog/ideas/<name>.assessment.md`, carrying a Ready disposition. Absent one, stop and report that `/idea-assess` writes it.
 - **The record must carry a ruling on every letter.** A record with none, or one missing a letter, refuses the promotion. Stop and report that `/idea-approve` records it.
-- **The record must be in sync with the idea.** Run `git hash-object -- backlog/ideas/<name>.md` and compare the result against the record's `idea-blob`. On a difference, stop and report it. The record describes text the idea has since changed, and the recommended remedy is a fresh `/idea-assess` followed by a fresh `/idea-approve`.
+- **The record must be in sync with the idea.** Run `git hash-object -- backlog/ideas/<name>.md` and compare the result against the record's `idea-blob`. On a difference, stop, report it, and recommend a fresh `/idea-assess` followed by a fresh `/idea-approve`.
 - **Report the lane count.** Run `git ls-files 'backlog/ready/*/proposal.md'` and count. Above three, report the cap and proceed only on the user's word, since a hard refusal would be the board's first gate.
-- **The kind must be in the file's frontmatter.** Absent a `kind:` line, take it from the record and add it in step 4, never in the move commit.
 
 Then, in this order:
 
@@ -26,6 +25,8 @@ Then, in this order:
 2. Run `git mv backlog/ideas/<name>.assessment.md backlog/ready/<name>/assessment.md`.
 3. Commit both moves alone, with the body below. Rename detection is content-based, so neither basename change defeats it.
 4. Flesh out the proposal afterwards, as its own commit, if the file needs it.
+
+**`kind:` is written after the move, never before it.** Take it from the record in step 4, absent one in the proposal already. Any earlier edit to the idea file changes its blob id and makes the record stale.
 
 The move commit's body carries the judge's summary: the kind, the disposition, and each of the six scores beside its one-line finding. It names the date the record was ruled on, so a reader of `git log` can see the ruling preceded the grant. The record in full stays in the file, and no total travels in either place.
 

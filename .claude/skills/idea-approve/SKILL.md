@@ -15,8 +15,7 @@ Preconditions, checked in order:
 
 - **The record must exist**, at `backlog/ideas/<name>.assessment.md`. Absent one, stop and report that `/idea-assess`
   writes it.
-- **The record must be in sync with the idea.** Run `git hash-object -- backlog/ideas/<name>.md` and compare the result
-  against the record's `idea-blob`. On a difference, stop and report it, and recommend a fresh `/idea-assess`.
+- **The record must be in sync with the idea.** Run `git hash-object -- backlog/ideas/<name>.md` and compare the result against the record's `idea-blob`. On a difference, stop, report it, and recommend a fresh `/idea-assess` followed by a fresh `/idea-approve`.
 - **The ruling must be in this conversation**, per letter: agree, or differ with the reason. Absent a letter, ask for it
   and stop.
 - **The target must sit in the ideas lane.** A promoted record is frozen. Stop and say so.
