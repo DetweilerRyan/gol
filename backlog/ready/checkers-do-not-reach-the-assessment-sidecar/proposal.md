@@ -14,9 +14,10 @@ sees. Layer 1 reads an idea file's shape and hands its findings to the assessing
 
 ## Complication
 
-Neither reaches the sidecar. Layer 1 reads the idea file alone, so the stored blob hash is read
-by nothing and staleness stays invisible — the single deterministic fact the hash was chosen
-for. `reference-check` excludes the whole board from both of its surfaces, on two reasons that
+Neither reaches the sidecar. Layer 1 reads the idea file alone, so no checker reads the stored
+blob hash and staleness stays invisible to the board's tooling — the single deterministic fact
+the hash was chosen for. The two board commands do compare it, and refuse on a mismatch, so the
+gap is a checker's rather than the whole procedure's. `reference-check` excludes the whole board from both of its surfaces, on two reasons that
 are facts about idea files: a board file names dead references as its own worked examples, and a
 candidate names a module it only proposes creating. An assessment cites files that exist, so the
 exclusion hides the exact class that checker was built to catch.
