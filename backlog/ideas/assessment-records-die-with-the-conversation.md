@@ -2,6 +2,7 @@
 name: assessment-records-die-with-the-conversation
 title: Persist each assessment as an idea-side sidecar that survives promotion for the retro
 created: 2026-09-19
+kind: enabler-process
 ---
 
 ## Situation
@@ -88,6 +89,16 @@ of sync with its idea fails the promotion. This is a correctness precondition of
 procedure, the same class as the existing refusals on a missing judge record or absent human
 ruling — not a gate on the board, which is why the lane cap stays advisory while this does
 not: a cap is a limit, a stale record is an integrity fact.
+
+**The checker work splits out — ruled by the user 2026-09-20, on the assessment's kind.** This
+is a process enabler, and its cycle runs roles that may not write `scripts/`. So Layer 1's hash
+check and the `reference-check` carve-out leave this slice and become
+`checkers-do-not-reach-the-assessment-sidecar`, a technical enabler that depends on this one.
+
+What stays is the corpus: the skill, the promotion procedure, the record's shape, and the board
+documentation. Two documentation surfaces go false the moment a sidecar lands, and the slice
+owes both — CLAUDE.md's one-flat-file-per-idea clause, and the statement of what a per-item
+artifact owes in the pipelines reference.
 
 ## No-gos
 
