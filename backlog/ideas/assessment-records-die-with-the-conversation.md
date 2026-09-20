@@ -47,6 +47,18 @@ determines it. Only retrieval is at risk, and only where a squash swallows the c
 captured the assessed state and the unreachable object is later pruned. The sync verdict holds
 in that case regardless.
 
+**Four mechanics ruled by the user 2026-09-20.** The judge fork writes the sidecar itself, so
+the grant is Write scoped to that file. The skill stays one invocation per idea, and a request
+to assess a set — every child of an epic, say — is the seat invoking the skill once per child
+rather than a batch mode inside the skill.
+
+The sidecar is the single home of the detailed assessment. A promotion commit carries a
+summary, the numeric scores, or both, rather than the record in full.
+
+The sidecar's own frontmatter carries the blob hash, and the Layer 1 check reads that hash
+against the idea file to report staleness. Beyond that one fact Layer 1 enforces no shape on
+the sidecar, for now.
+
 **Promotion verifies sync before granting — ruled by the user 2026-09-19.** An assessment out
 of sync with its idea fails the promotion. This is a correctness precondition of the promotion
 procedure, the same class as the existing refusals on a missing judge record or absent human
@@ -60,16 +72,8 @@ not: a cap is a limit, a stale record is an integrity fact.
 
 ## Open questions
 
-- The judge holds no Write by design — the separation-of-powers ruling that a judging seat may
-  not act on its own grade. Writing its own record is not acting on the grade, but the grant
-  needs its ruling restated: Write scoped to the sidecar, or the seat writes the record from
-  the returned text?
-- Model invocation was disabled deliberately as a cost control on the fork. What triggers an
-  automatic assessment, and what stops one firing on every board touch?
-- The promotion commit's two-record body carries the judge's record today. Does the sidecar
-  become the single home with the commit referencing it, or do two homes carry one record?
-- What do the board's own checks say about an assessment sidecar — does the Layer 1 shape
-  check ignore it, and which prose rules reach it? The hash gives that check a new
-  deterministic fact if wanted: sidecar hash versus current blob, reported as staleness.
 - Does the human ruling join the sidecar as its second half at promotion, mirroring the
-  two-record body, or stay in the commit alone?
+  two-record body, or stay in the commit alone? The single-home ruling above settled where the
+  judge's record lives and left the human's untouched.
+- Which prose rules reach a sidecar, given that Layer 1 now reads one line of it and checks no
+  shape?
