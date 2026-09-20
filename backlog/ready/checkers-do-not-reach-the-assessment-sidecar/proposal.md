@@ -49,6 +49,24 @@ describes what Layer 1 measures. The `idea-assess` skill states what its own run
 Depends on `assessment-records-die-with-the-conversation`, which creates the artifact both checks
 read and rules its shape. Nothing here is worth building before that lands.
 
+**Two findings arrived from the parent's spec on 2026-09-20, after this item was assessed and
+promoted.** `coach` found both while specifying the parent, and the seat recorded them here
+rather than leaving them in that item's artifacts. Neither was scored.
+
+A third check joins the reach, and it is the one a reader would not predict. The board hook's
+candidate test is positional, and a record in the ideas lane carries the same two path segments
+a flat idea file does. So the hook measures a record against the idea-file shape and reports
+findings for a name, a title, a created date and two headings the record was never meant to
+carry. Those findings reach the agent that just wrote the file, which is the judge itself. The
+promoted form carries three segments and already draws the hook's refusal instead. Confirmed by
+reading the classifier on 2026-09-20.
+
+The hash check is lane-sensitive, and a lane-blind predicate would be worse than none. A
+mismatch in the ideas lane is staleness, which is the fact the hash was stored for. A mismatch
+in the ready or done lane is expected history, because promotion freezes the record and the next
+commit fleshes out the proposal. So a predicate that read the lanes alike would report every
+promoted item as stale.
+
 ## No-gos
 
 - No shape enforcement on the sidecar beyond the hash comparison. The parent ruled that on
