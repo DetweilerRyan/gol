@@ -1,33 +1,36 @@
 ---
 name: idea-promote
-description: Promote an assessed candidate to backlog/ready with the two-record verdict commit.
+description: Promote a ruled-on candidate to backlog/ready, carrying its assessment record and freezing it.
 argument-hint: '[backlog/ideas/<name>.md]'
 disable-model-invocation: true
 allowed-tools: Read, Edit, Bash(git *)
 ---
 
+<!-- reference-check: allow assessment.md -- the per-item artifact name this procedure creates; no item carries one yet, and the marker goes stale (delete it) when the first does -->
+
 # Promote an idea
 
-Move the candidate in $ARGUMENTS to its `backlog/ready/<name>/` folder, carrying the calibration record. The human invocation of this command is the grant; the judging pass never promotes.
+Move the candidate in $ARGUMENTS to its `backlog/ready/<name>/` folder, carrying its assessment record. The human invocation of this command is the grant; neither the judging pass nor the ruling promotes.
 
 Preconditions, checked in order:
 
-- **A judge's record for this file must be in this conversation** — a `/idea-assess` output with kind, per-letter findings, and a Ready disposition. Absent one, stop and say so.
-- **The human's ruling must be in this conversation** — agree or differ, per letter, with reasons on the differing letters. Absent one, ask for it and stop.
+- **The assessment record must exist**, at `backlog/ideas/<name>.assessment.md`, carrying a Ready disposition. Absent one, stop and report that `/idea-assess` writes it.
+- **The record must carry a ruling on every letter.** A record with none, or one missing a letter, refuses the promotion. Stop and report that `/idea-approve` records it.
+- **The record must be in sync with the idea.** Run `git hash-object -- backlog/ideas/<name>.md` and compare the result against the record's `idea-blob`. On a difference, stop and report it. The record describes text the idea has since changed, and the recommended remedy is a fresh `/idea-assess` followed by a fresh `/idea-approve`.
 - **Report the lane count.** Run `git ls-files 'backlog/ready/*/proposal.md'` and count. Above three, report the cap and proceed only on the user's word, since a hard refusal would be the board's first gate.
-- **The kind must be in the file's frontmatter** — `/idea-assess` writes it at assessment. Absent a `kind:` line, take it from the judge's record in this conversation and add it in step 3's edit commit, never in the move commit.
+- **The kind must be in the file's frontmatter.** Absent a `kind:` line, take it from the record and add it in step 4, never in the move commit.
 
 Then, in this order:
 
-1. Run `git mv backlog/ideas/<name>.md backlog/ready/<name>/proposal.md`. The basename change does not defeat rename detection — it is content-based.
-2. Commit that move alone, with the two-record body below.
-3. Flesh out the file afterwards, as its own commit, if the file needs it.
+1. Run `git mv backlog/ideas/<name>.md backlog/ready/<name>/proposal.md`.
+2. Run `git mv backlog/ideas/<name>.assessment.md backlog/ready/<name>/assessment.md`.
+3. Commit both moves alone, with the body below. Rename detection is content-based, so neither basename change defeats it.
+4. Flesh out the proposal afterwards, as its own commit, if the file needs it.
 
-The commit body carries **two records, in this order**:
+The move commit's body carries the judge's summary: the kind, the disposition, and each of the six scores beside its one-line finding. It names the date the record was ruled on, so a reader of `git log` can see the ruling preceded the grant. The record in full stays in the file, and no total travels in either place.
 
-- The judge's six letters, verbatim from the assessment — each score with its finding text. Never edit this half after the fact.
-- The human's ruling, per letter: agree, or differ with the reason.
+**This command writes nothing inside the record.** Both halves are already there, and the sync check above covers both — a ruling cannot outlive the record that holds it.
 
-A number never travels without its finding text, and the body carries no total. `definition-of-ready.md` says why the order matters: the judge's half written first is what keeps the human label uncontaminated for calibration.
+**The record is immutable from the move commit.** A retro compares what happened against the assessment the promotion was granted on, so the frozen text is the point. The stored `idea-blob` stops matching once the proposal is fleshed out, and that divergence is expected history rather than a defect.
 
-Report the commit hash and the new path.
+Report the commit hash and the new paths.

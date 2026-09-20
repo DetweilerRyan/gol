@@ -1,5 +1,7 @@
 # Definition of Ready
 
+<!-- reference-check: allow assessment.md -- the per-item artifact name this reference defines; no item carries one yet, and the marker goes stale (delete it) when the first does -->
+
 **Read before assessing a candidate, promoting an idea, or ruling a disposition on the board.** Who reads this file is a routing question, and CLAUDE.md answers it.
 
 Promotion from `backlog/ideas/` to `backlog/ready/` is this repo's Definition of Ready, in the Agile Alliance glossary sense — the lane is even named for it. The kind check below also yields the file's frontmatter `kind:` label. The judging pass rules the label, the orchestrating seat writes it when recording the ruling, and the seat reads it to plan the role cycle. Assessing a candidate is the board's backlog refinement, in the same vocabulary. This file carries the assessment: two pre-questions, six predicates, anchored scores, four dispositions, and the record that holds the result. In this file, "ready" means the board's promotion bar and nothing else; the word carries other senses elsewhere, and none is this subject.
@@ -152,7 +154,7 @@ Every assessment ends in exactly one. The disposition comes from the written fin
 
 Layer 2's record is a file rather than a conversation turn. The judging pass writes it, and writes nothing else.
 
-- **It sits beside the idea**, as `backlog/ideas/<name>.assessment.md`.
+- **It sits beside the idea**, as `backlog/ideas/<name>.assessment.md`, and moves into the item's folder at promotion as `assessment.md`.
 - **Frontmatter carries three fields**: `name`, the idea's slug; `assessed`, the date; and `idea-blob`, the idea file's git blob id at assessment.
 - **Kind and disposition sit in prose above the table**, not in the record's frontmatter. Both are judged rulings that a reader takes with the findings beside them, and the idea file's frontmatter is the kind's one home.
 - **A summary table opens the record**, one row per letter in INVEST order. Three columns: the letter spelled out, its score, and a one-line finding.
@@ -218,9 +220,15 @@ None recorded.
 
 ## Layer 3 — the calibration record
 
-The record lives in git, with no new artifact class.
+Both halves live in the assessment record, and git holds the history of each.
 
-A promotion commit carries **two records in order**. First the judge's six letters as rendered, each number with its finding text. Then the human's ruling per letter — agree or differ, with the reason on each differing letter. Write the judge's half first, and never edit it afterwards. Without the second record the human's verdict is a contaminated label, and calibration would measure agreement with itself.
+An assessment carries **two records in order**. First the judge's six letters as written at assessment, each number with its finding text. Then the human's ruling per letter — agree or differ, with the reason on each differing letter. The judge's half is written first and is never edited afterwards. Without the second record the human's verdict is a contaminated label, and calibration would measure agreement with itself.
+
+**The ruling is its own act.** `/idea-approve` records it into the record whenever the user makes it, at any point after the judging pass. Promotion writes nothing inside the record.
+
+**Promotion requires a complete, non-stale record.** It refuses a record carrying no ruling, a ruling missing a letter, or an `idea-blob` that differs from the idea file's current blob id. The ruling inherits the record's staleness, since a re-assessment replaces the record whole and takes the ruling with it. The procedure halts and recommends a fresh assessment, which needs a fresh ruling after it.
+
+**The record is immutable from the promotion's move commit.** Until then it sits in the ideas lane, where a re-assessment may replace it whole and a second ruling may replace the human's half. A retro compares what happened against the record the promotion was granted on, which is the frozen text. The move commit carries the judge's summary instead of the record in full: the kind, the disposition, and each score beside its one-line finding.
 
 Declines keep the existing in-file practice: a dated `REFUTED` or `DECLINED` record. An epic's trace is its index sections and children. A spike's trace is its own candidate file.
 

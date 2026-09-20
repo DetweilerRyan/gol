@@ -1,6 +1,7 @@
 # Pipelines: the class of service per backlog item kind
 
 <!-- reference-check: allow tasks.md -- a per-item artifact-name convention; no ready item carries one yet, and the marker goes stale (delete it) when the first does -->
+<!-- reference-check: allow assessment.md -- the same convention, one artifact later; the marker goes stale (delete it) when the first item carries one -->
 
 **Audience:** the orchestrating seat, the `idea-*` skills, and the process roles — `coach`
 reads this file. **Read when:** planning a promoted item's cycle, composing any role
@@ -29,6 +30,11 @@ artifact**, and it owes that shape nothing.
 item and the basename names the artifact's job. A `name:` field would restate the folder and a
 `title:` field the heading. `created:` restates what `git log --diff-filter=A` answers, and
 `kind:` belongs to `proposal.md` alone.
+
+**One artifact carries frontmatter, and that exception is ruled rather than inherited.**
+`assessment.md` begins beside the idea, before the folder exists, and it stores the assessed idea
+file's git blob id. A blob id is a fact no position supplies, so it stays in frontmatter after the
+move. `.claude/references/definition-of-ready.md` names the three fields.
 
 **Open with a heading and an attribution line instead.** The heading names the artifact and its
 item. The attribution line names the authoring role, its mode, and the date.

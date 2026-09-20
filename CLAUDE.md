@@ -297,11 +297,12 @@ That is why `coder` runs `npm run ast-grep` in its own workflow rather than wait
 ## Idea board
 
 <!-- reference-check: allow tasks.md -- a per-item artifact-name convention; no ready item carries one yet, and the marker goes stale (delete it) when the first does -->
+<!-- reference-check: allow assessment.md -- the same convention, one artifact later; the marker goes stale (delete it) when the first item carries one -->
 
 `backlog/` is a three-lane kanban of slices — it is the product backlog, in Agile Alliance terms, and the lane is the directory:
 
 - **`backlog/ideas/<name>.md`** — raw and unjudged, no limit, one flat file per idea, plus `<name>.assessment.md` beside it once the idea has been assessed. An idea lands here the moment it is worth not forgetting.
-- **`backlog/ready/<name>/`** — assessed against `.claude/references/definition-of-ready.md` (advisory, since this board has no gate) and concrete enough to start. A ready item is a **folder**: `proposal.md` (the promoted idea file) always; `design.md` when the design-pass triggers fire; `spec.md` when a process enabler runs `coach` SPEC; `tasks.md` when dispatch is multi-unit; `findings.md` for a spike's recorded answer. **Only `proposal.md` carries the idea-file shape**; `.claude/references/pipelines.md` states what a per-item artifact owes instead. The orchestrating session owns this board: no role reads it, and an item reaches a role as prompt content rather than as a file path. Keep this lane to about three, matching the two-or-three concurrent-slice ceiling below.
+- **`backlog/ready/<name>/`** — assessed against `.claude/references/definition-of-ready.md` (advisory, since this board has no gate) and concrete enough to start. A ready item is a **folder**: `proposal.md` (the promoted idea file) always; `design.md` when the design-pass triggers fire; `spec.md` when a process enabler runs `coach` SPEC; `tasks.md` when dispatch is multi-unit; `findings.md` for a spike's recorded answer; `assessment.md` once the item has been promoted, carrying the assessment it was promoted on. **Only `proposal.md` carries the idea-file shape**; `.claude/references/pipelines.md` states what a per-item artifact owes instead. The orchestrating session owns this board: no role reads it, and an item reaches a role as prompt content rather than as a file path. Keep this lane to about three, matching the two-or-three concurrent-slice ceiling below.
 - **`backlog/done/<name>/`** — completed, awaiting a retrospective. The retrospective extracts what the finished work can teach — durable halves of `design.md` and `tasks.md` deviations become new `backlog/ideas/` files, spike findings land in the parent's re-assessment or `adr/` — then deletes the folder. This lane records the one fact the `slice/*` tag cannot: _not yet retrospected_. Its trigger and owner are not yet ruled; folders simply wait.
 
 `backlog/TEMPLATE.md` is the idea-file shape: frontmatter (`name`, `title`, `created`, and `kind` once assessed) over Situation / Complication / Question, an optional shaped Answer and No-gos, then Open questions.
@@ -312,11 +313,11 @@ That is why `coder` runs `npm run ast-grep` in its own workflow rather than wait
 
 Two rules keep the board honest:
 
-- **Promote with a move-only commit, then edit.** Run `git mv backlog/ideas/<name>.md backlog/ready/<name>/proposal.md` and commit _that alone_, before fleshing the file out. Git infers renames from content similarity, and a candidate being expanded at promotion is precisely the case that defeats it. (The basename change to `proposal.md` does not — rename detection is content-based, measured at R100 across exactly this move.)
+- **Promote with a move-only commit, then edit.** Run `git mv backlog/ideas/<name>.md backlog/ready/<name>/proposal.md`, move `<name>.assessment.md` to `assessment.md` in the same folder, and commit _those alone_, before fleshing the file out. Git infers renames from content similarity, and a candidate being expanded at promotion is precisely the case that defeats it. (The basename change to `proposal.md` does not — rename detection is content-based, measured at R100 across exactly this move.)
 
   Git records a move made in its own commit as a rename, and the history survives. It records a move plus a rewrite as delete-plus-add, and the history does not. `CLAUDE.meta.md` carries the similarity scores. (You need `--follow` to read across the move either way.)
 
-  The move commit's body carries the promotion's two records, in order: the judge's assessment, then the human's per-letter ruling. `.claude/references/definition-of-ready.md` states the record shapes and why the order matters. `/idea-promote` executes this whole bullet.
+  The move commit's body carries the judge's summary rather than either record in full, since the assessment record already holds both halves: the judge's at assessment, and the human's per-letter ruling whenever `/idea-approve` recorded it. `.claude/references/definition-of-ready.md` states the record shapes and why the order matters. `/idea-promote` executes this whole bullet.
 
 - **The slice moves its own folder to `done/`.** Run `git mv backlog/ready/<name> backlog/done/<name>` as the slice's final commit before the merge gate — after the rebase, before step 3's re-verification, so the gated tip is the true tip. The `slice/<name>` tag stays the permanent completion record; the `done/` folder waits for its retrospective. Deleting the folder at completion is the retired rule — deletion now belongs to the retrospective alone.
 
