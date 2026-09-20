@@ -35,8 +35,17 @@ against is the one the promotion was granted on.
 The sidecar also stores a hash of the assessed idea file's contents, so an assessment that has
 gone out of sync with its idea is detectable rather than read as current — and a
 post-assessment edit therefore forces a visible re-assess-or-acknowledge before promotion
-freezes the record. The census-instrument precedent pinned to the pre-edit git blob hash for
-the same reason.
+freezes the record.
+
+**The hash is the git blob hash — ruled by the user 2026-09-20.** It is the id git already
+assigns the file, so sync is checkable against the committed tree rather than by rehashing,
+and the assessed text stays retrievable by that same id. The census instrument pinned to a
+blob hash for those reasons.
+
+Measured 2026-09-20: the id survives rebase and squash unchanged, since content alone
+determines it. Only retrieval is at risk, and only where a squash swallows the commit that
+captured the assessed state and the unreachable object is later pruned. The sync verdict holds
+in that case regardless.
 
 **Promotion verifies sync before granting — ruled by the user 2026-09-19.** An assessment out
 of sync with its idea fails the promotion. This is a correctness precondition of the promotion
@@ -62,7 +71,5 @@ not: a cap is a limit, a stale record is an integrity fact.
 - What do the board's own checks say about an assessment sidecar — does the Layer 1 shape
   check ignore it, and which prose rules reach it? The hash gives that check a new
   deterministic fact if wanted: sidecar hash versus current blob, reported as staleness.
-- Which hash form — the git blob hash, repo-native and precedented, or a plain content
-  digest?
 - Does the human ruling join the sidecar as its second half at promotion, mirroring the
   two-record body, or stay in the commit alone?
