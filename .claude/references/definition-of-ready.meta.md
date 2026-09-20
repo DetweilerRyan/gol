@@ -252,3 +252,204 @@ Touches and Open questions — the sweep of the 60 legacy board files was ruled 
 shapes stay live. The capture skill's rules follow the new shape. Two residual section
 references in `definition-of-ready.md` were re-founded, and CLAUDE.md's file-shape line
 follows the template it describes.
+
+## The assessment record (ruled by the user 2026-09-19 and 2026-09-20)
+
+The record was a conversation turn whose only durable trace was a promotion commit's body. An
+idea assessed and never promoted left nothing at all. The user ruled the judging skill
+model-invocable, and ruled that it writes its own record beside the idea.
+
+The rulings, by date:
+
+- **2026-09-19.** The record persists beside the idea and survives promotion. A re-assessment
+  replaces it while the idea sits in the ideas lane; after promotion it is immutable. Promotion
+  verifies sync before granting, as a correctness precondition rather than as a board gate.
+- **2026-09-20, the hash.** The stored id is the git blob hash. It is the id git already assigns
+  the file, so the assessed text stays retrievable by that id and sync is a comparison against
+  the committed tree rather than a second scheme. Measured the same day: the id survives rebase
+  and squash unchanged, since content alone determines it. Only retrieval is at risk, and only
+  where a squash swallows the commit that captured the assessed state and the unreachable object
+  is later pruned. The sync verdict holds in that case regardless.
+- **2026-09-20, four mechanics.** The judge fork writes the record itself. The skill stays one
+  invocation per idea. The record is the single home of the detailed assessment. The frontmatter
+  carries the hash, and Layer 1 enforces no further shape.
+- **2026-09-20, the record's shape.** A summary table opens the record, one row per letter with
+  the letter spelled out, and a detail section per letter follows in the same spelling. Three
+  columns, because a score column alone would break the bound that a number never travels
+  without its finding text at the altitude a reader skims. Rows hold INVEST order, since sorting
+  by score is a ranking device the bounds forbid.
+- **2026-09-20, the human's half.** It lives in the record, judge's half first. The calibration
+  design turns on the human label being ruled against the judge's rather than merged into it, and
+  the order is what keeps the two readable as two.
+
+**The name, ruled by `coach` at SPEC and confirmed by the user 2026-09-20.**
+`backlog/ideas/<name>.assessment.md` in the ideas lane, `assessment.md` in the item's folder. The
+second form is a bare filename token `npm run reference-check` resolves by basename, so four files
+carry an allow-marker of the shape the board's other unlanded artifact name already carries — the
+multi-unit task list, named in CLAUDE.md and in the pipelines reference with exactly that marker.
+The first form costs nothing: the
+extractor discards a token whose basename starts with a dot, which is what the placeholder form
+reduces to.
+
+**Frontmatter, and which field is weakest.** `idea-blob` is the fact that forced the exception —
+no position supplies it. `assessed` is a claim about when the judging ran, which `git log` can
+corroborate but not state. `name` is the weakest of the three: it restates the basename in the
+ideas lane and the folder after promotion. It stays because it is the slug that survives both
+moves and binds the record to its idea independently of position. A later ruling may drop it
+without touching the other two.
+
+**`assessed:` deliberately does not reuse `created:`.** The board's `created:` field means the
+day a candidate was filed. Reusing the spelling would let a reader take one date for the other.
+
+## The ruling decouples from promotion (ruled by the user 2026-09-20)
+
+The first draft of this design had `/idea-promote` write the human's half into the record as a
+second commit. The user ruled that the ruling is its own act, made at any time after the judging
+pass and before promotion. Promotion then moves a record that is already complete, and writes
+nothing inside it.
+
+**Open question 1, as the proposal posed it, is settled by that ruling plus one `coach` ruling.**
+The human's half leaves the promotion commit's body entirely. It lives in the record, and the
+commit that records it is its own. The objection considered and answered: a commit body is
+immutable and a file is not, so moving the human's half into the file looks like a loss. It is
+not. The ruling commit's diff is held by git exactly as a body is, and the promotion's judge
+summary gives a second fixed point a tampered record can be checked against.
+
+**Sub-decision 1 — a third skill, `/idea-approve`, rather than the seat editing by hand.** Four
+reasons: a hand-edit is the class of act this artifact exists to remove; the skill compares the
+blob id mechanically rather than by eye; it refuses deterministically on a missing record, a stale
+record or a ruling missing a letter; and `disable-model-invocation: true` keeps the grant human,
+as `/idea-promote` already does.
+
+**Sub-decision 2 — the ruling inherits the record's staleness, with no second stamp.** The ruling
+sits inside the record, the record carries `idea-blob`, and a re-assessment replaces the record
+whole. So a stale ruling is a stale record, and promotion's existing comparison covers both
+halves.
+
+The threat this accepts: a judge's half edited by hand after the ruling, with no re-assessment. A
+second stamp over the judge's half would catch it; the inheriting reading cannot. Accepted for
+three reasons. The board has one editor, so the hand-edit is a discipline breach rather than
+drift. The never-edit rule already governs the judge's half. And a second stamp has no git-native
+id to use, since git ids whole files rather than sub-ranges — it would be the bespoke scheme the
+blob-hash ruling exists to avoid. What would reopen it: a second editor of the board, or one
+observed instance.
+
+**Immutability, stated for the decoupled lifecycle.** The record is mutable in the ideas lane, by
+re-assessment and by a second ruling, and immutable from the promotion's move commit. One
+sentence was needed beyond what replacement already said, and it sits in `/idea-approve`: a fresh
+assessment discards the ruling, because the ruling was given on findings that no longer stand.
+
+## Rules on the record surface (ruled by the user 2026-09-20, reversing a `coach` ruling)
+
+`coach` ruled at SPEC that no rule should be enabled on the record, on three arguments: the board
+is a raw-register surface, a finding on a frozen record cannot be cleared without breaking
+immutability, and the surface cannot be measured because no record exists. The user reversed it
+and directed that rules be enabled.
+
+**The recommendation.** The three `Claim` rules — `AudienceRoster`, `WordingIdentity` and
+`SentenceInitialMost` — at `warning`, on a `.vale.ini` section scoped to
+`[backlog/ideas/*.assessment.md]`, with explicit per-rule keys and no `BasedOnStyles`. The section
+must sit after `[backlog/**/*.md]`, since sections stack and the later one wins per key, and it
+must not name a style in `BasedOnStyles`, which would re-enable the whole style and destroy the
+earlier per-rule keys.
+
+**The immutability argument survives the reversal and is answered by the glob, not dropped.** A
+record in the ideas lane is mutable, so a finding there is clearable. A promoted record matches
+only `[backlog/**/*.md]` and keeps `Board.NoStatusField` alone, so a frozen record never carries a
+clearable finding. The lane-scoped section is the whole answer, and it is available only because
+Vale's sections are path globs.
+
+**The evidence, given that the surface cannot be read.** Each rule's own header carries a dated
+2026-09-15 precision run over the instruction corpus: three hits in total, zero on every enabled
+surface, zero clean false positives. These are phrase fingerprints rather than register
+heuristics, so their false-positive surface is bounded on an unmeasured corpus. They also
+mechanise three forms of `claim-discipline.md`, which is the record's binding rulebook, so
+enabling them adds no second standard.
+
+**The register families wait for a corpus.** `STE`, `Instruction` and `Procedure` are not
+recommended yet: their false-positive surface is unbounded here,
+`Instruction.ParagraphSentences` looks likely to fire on a per-letter detail section, and the
+landing constraint forbids enabling over a backlog nobody has counted. Re-ask at roughly ten
+records.
+
+**Why the enable did not land in the slice that created the artifact.** Two independently
+sufficient reasons, both measured 2026-09-20.
+
+1. `.vale.ini` is `architect`'s by practice and outside `writer`'s surface. `git log -- .vale.ini`
+   shows every role-attributed commit reading `By architect.` except one,
+   `By the orchestrating seat.` on the process-pipeline staffing commit. `writer.md` enumerates
+   its write surface, and `.vale.ini` appears in neither that grant nor its prohibition list. The
+   `enabler-process` cycle has no `architect` step to route the edit to.
+2. The enable alone would not reach the judge at the one moment a record is fixable.
+   `scripts/prose-write-hook/audit.ts`'s `inScope` accepts only paths under `.claude/skills/` or
+   `.claude/references/`, so the write-time prose loop refuses a `backlog/` path whatever
+   `.claude/settings.json` sends it. Extending it is a `scripts/` change with its own unit test.
+
+**What is reachable without either change.** `npm run prose-lint` lints every tracked `*.md` minus
+`src/catalyst/`, so the board is already in its file set. Measured 2026-09-20:
+`npm run prose-lint -- --scope backlog` linted 115 tracked files and reported zero findings. An
+enabled rule would show up in that standing run, just not at write time.
+
+**What the corpus may therefore not say.** No instruction file states that nothing lints the
+record. That would be an undated present-tense claim about another file, falsified on the day the
+follow-up enabler lands.
+
+## What the board checkers do with the record (read 2026-09-20)
+
+Read off `scripts/board-shape-hook/board-shape.ts` at tip `44bbf55`, rather than run: the
+classifier's candidate test is positional, and treats any two-segment board path as a flat idea
+file. `backlog/ideas/<name>.assessment.md` has two segments, so a record written into the ideas
+lane is measured as an idea file and reports findings against a shape it does not have — a name
+that does not match the basename, a missing title, a missing created date, and the two missing
+section headings. `.claude/settings.json` wires the hook to every `backlog/**` write, and the
+outcome delivers, so the envelope reaches the judge that wrote the file.
+
+The skill's write rules therefore tell the judge to assess only against the Layer 1 output
+injected above its own text. The classifier fix belongs to
+`checkers-do-not-reach-the-assessment-sidecar`, which owns `scripts/` and already carries the
+question of which board files are records rather than proposals.
+
+In the item's folder the same classifier reads three segments and a basename other than
+`proposal.md`, so it prints its non-candidate refusal and delivers nothing. That half needs no
+change.
+
+**One constraint this artifact hands the dependent enabler: the hash check is lane-sensitive.** A
+mismatch in the ideas lane is staleness. A mismatch in `ready/` or `done/` is expected history,
+because the promotion procedure freezes the record and then fleshes out the proposal in the next
+commit. A predicate that reads the two lanes alike would report every promoted item as stale.
+
+## The path-qualified `Write` grant (probed 2026-09-20)
+
+The judging skill's grant is written as `Write(backlog/ideas/*.assessment.md)`. Probed against the
+installed Claude Code binary, build 2.1.236: it carries the literals `"Edit(docs/**)"` and
+`"Edit(//etc/*)"`, the repo-relative and absolute forms of a file-tool path specifier, so the
+permission-rule grammar accepts a path-qualified rule for a file tool in that build. The
+`--allowed-tools` flag's help text gives `Bash(git *) Edit` as its example, the frontmatter
+validator stores entries as raw strings, and this repo already depends on `Bash(git *)` in the
+same field.
+
+Unproven, and stated as such: that a skill's `allowed-tools` entries are evaluated by the same
+matcher as `settings.json`'s `permissions.allow`. The probe read strings from a stripped binary
+rather than a code path.
+
+No spike was filed, because every failure mode is acceptable and one is loud. A binding specifier
+scopes the grant, which is the goal. A non-matching entry refuses the write, and the skill reports
+that it could not write the record at first use. An ignored specifier leaves an unscoped `Write`,
+which is where a prose-only constraint already stood. The fallback, if the write is refused, is
+`Write(backlog/ideas/**)`.
+
+## `kind:` is written after the move (ruled by `coach` at amendment 2, 2026-09-20)
+
+The board's earlier rule had the orchestrating seat write `kind:` into the idea file when it
+recorded the ruling. That moment stopped existing when `/idea-approve` took the ruling over,
+since that command commits the record alone.
+
+The deciding argument is not the moment. It is the blob. `idea-blob` is the idea file's git blob
+id at assessment, and any edit to that file changes it, `kind:` included. So a `kind:` line
+written between the assessment and the promotion makes the record stale by construction, and both
+`/idea-approve` and `/idea-promote` refuse a stale record. The only safe moment is after the move
+commit.
+
+`/idea-promote`'s step 4 already did that write, framed as a fallback for a proposal that arrived
+without a `kind:` line. The amendment promotes the fallback to the rule, because no earlier write
+is possible.

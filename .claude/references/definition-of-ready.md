@@ -169,7 +169,7 @@ Layer 2's record is a file rather than a conversation turn. The judging pass wri
 
 **Re-assessment replaces the record while the idea is in the ideas lane.** One idea carries one record, holding the assessment the next promotion would be granted on.
 
-**`idea-blob` is what makes a stale record visible.** Take it with `git hash-object -- backlog/ideas/<name>.md`. Git already assigns the file that id, so the assessed text stays retrievable by it and sync is a comparison rather than a second scheme.
+**`idea-blob` is what makes a stale record visible.** Take it with `git hash-object -- backlog/ideas/<name>.md`.
 
 **The record is prose, and `claim-discipline.md` binds it.** Date every figure, name the tree it was taken on, and write the whole record as history.
 

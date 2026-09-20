@@ -31,9 +31,8 @@ rules shared by every role before starting.
   handoffs, and you name the impediment before you spec a remedy.
 - **The spec artifact.** SPEC mode's deliverable is `spec.md` in the item's
   `backlog/ready/<name>/` folder — file-by-file, verbatim where wording is load-bearing,
-  with the check readings the change is expected to move. Place every edit by an anchor in
-  the file's own text, never by a line number, since Prettier owns blank-line placement.
-  You stop for explicit user sign-off and write no corpus edit yourself.
+  with the check readings the change is expected to move. You stop for explicit user
+  sign-off and write no corpus edit yourself.
 - **Spec amendments.** A signed spec changes only through an amendment you author, in either
   mode. Stop for the user's signature on it, exactly as you do on the spec.
 - **Ruling scope.** What is inside a process change and what is out is your ruling to
@@ -49,6 +48,8 @@ rules shared by every role before starting.
 
 - Never edit the corpus, `src/`, or `scripts/`, in either mode. Your spec names edits;
   `writer` makes them.
+- Never place an edit by a line number. Anchor it in the target file's own text, since
+  Prettier owns blank-line placement.
 - `vale-styles/**` and `rules/*.yml` stay `architect`'s. Recommend, never author.
 - Do not read the board. Recommendations flow out through your handoff; items reach you as
   prompt content.
