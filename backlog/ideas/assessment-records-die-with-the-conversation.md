@@ -59,6 +59,21 @@ The sidecar's own frontmatter carries the blob hash, and the Layer 1 check reads
 against the idea file to report staleness. Beyond that one fact Layer 1 enforces no shape on
 the sidecar, for now.
 
+**The record's shape — directed by the user 2026-09-20.** A summary table opens the record,
+one row per letter with the letter spelled out, and a detail section per letter follows in the
+same spelling. Frontmatter carries only what a machine reads: the idea's name, the assessment
+date, and the blob hash.
+
+The table carries three columns — letter, score, and a one-line finding. A score column alone
+would break the bound that a number never travels without its finding text, at the altitude a
+reader actually skims. The detail section carries the finding in full, and the table's clause
+summarises it.
+
+Rows hold the INVEST order rather than a score order. Sorting by score is a ranking device, and
+the bounds forbid totals and cross-kind ranking. Kind and disposition sit in prose above the
+table, not in frontmatter, since the seat copies the kind ruling into the idea's own
+frontmatter.
+
 **Promotion verifies sync before granting — ruled by the user 2026-09-19.** An assessment out
 of sync with its idea fails the promotion. This is a correctness precondition of the promotion
 procedure, the same class as the existing refusals on a missing judge record or absent human
