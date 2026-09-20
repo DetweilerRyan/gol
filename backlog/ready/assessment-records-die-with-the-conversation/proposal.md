@@ -100,6 +100,16 @@ documentation. Two documentation surfaces go false the moment a sidecar lands, a
 owes both — CLAUDE.md's one-flat-file-per-idea clause, and the statement of what a per-item
 artifact owes in the pipelines reference.
 
+**A second child splits out — recorded 2026-09-20, on the same boundary.** The user ruled for
+Vale rules over the record surface, and `coach` then measured two reasons this cycle cannot
+execute that enable. So the recommendation left the slice intact and became
+`no-vale-rule-reaches-the-assessment-record`, which depends on this one.
+
+**This item now has two children, and the seam is the same in both cases.** What stays is the
+record and the procedures that write it. What leaves is every edit to a file the process
+pipeline's roles may not write — the checkers under `scripts/` in the first child, the Vale
+configuration and the write-time hook's reach in the second.
+
 ## No-gos
 
 - No gate on immutability. The board stays ungated; post-promotion immutability is a stated
