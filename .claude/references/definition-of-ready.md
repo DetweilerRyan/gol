@@ -148,6 +148,68 @@ Every assessment ends in exactly one. The disposition comes from the written fin
 
 **The judge is not reproducible, and the anchors are the only thing constraining it.** Measured 2026-09-13: skill invocations exposed `model` and `effort` only, no temperature control, so the source architecture's determinism guarantee did not transfer. Treat two divergent judge runs as evidence about the anchors, not as noise to average away.
 
+## The assessment record
+
+Layer 2's record is a file rather than a conversation turn. The judging pass writes it, and writes nothing else.
+
+- **It sits beside the idea**, as `backlog/ideas/<name>.assessment.md`.
+- **Frontmatter carries the three facts a machine reads**: `name`, the idea's slug; `assessed`, the date; and `idea-blob`, the idea file's git blob id at assessment.
+- **Kind and disposition sit in prose above the table.** The seat copies the kind ruling into the idea's own frontmatter, so neither belongs in this file's frontmatter.
+- **A summary table opens the record**, one row per letter in INVEST order. Three columns: the letter spelled out, its score, and a one-line finding.
+- **A detail section per letter follows**, in the same spelling, carrying the finding in full.
+- **A letter that declines a score says so in the score column**, and its finding is the declination.
+- **The `LAYER1` line is carried into the record verbatim.** A record without it reads as not-run.
+- **The human's ruling closes the record**, under its own heading, and arrives later than the rest.
+
+**Re-assessment replaces the record while the idea is in the ideas lane.** One idea carries one record, holding the assessment the next promotion would be granted on.
+
+**`idea-blob` is what makes a stale record visible.** Take it with `git hash-object -- backlog/ideas/<name>.md`. Git already assigns the file that id, so the assessed text stays retrievable by it and sync is a comparison rather than a second scheme.
+
+**The record is prose, and `claim-discipline.md` binds it.** Date every figure, name the tree it was taken on, and write the whole record as history.
+
+The shape, with every field named:
+
+```text
+---
+name: <slug>
+assessed: <YYYY-MM-DD>
+idea-blob: <blob id>
+---
+
+# Assessment — <slug>
+
+`/idea-assess`, <date>. Kind: <kind> (SAFe: <orientation>). Disposition: <disposition>.
+
+`<the LAYER1 line, verbatim>`
+
+| Letter      | Score | Finding |
+| ----------- | ----- | ------- |
+| Independent |       |         |
+| Negotiable  |       |         |
+| Valuable    |       |         |
+| Estimable   |       |         |
+| Small       |       |         |
+| Testable    |       |         |
+
+## Independent
+
+## Negotiable
+
+## Valuable
+
+## Estimable
+
+## Small
+
+## Testable
+
+## The human ruling
+
+None recorded.
+```
+
+`None recorded.` is a live anchor rather than filler: the ruling replaces that one line, and an idea nobody rules on keeps a true statement.
+
 ## Layer 3 — the calibration record
 
 The record lives in git, with no new artifact class.
