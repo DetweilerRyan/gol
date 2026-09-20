@@ -36,17 +36,22 @@ item. The attribution line names the author and the date — a role with its mod
 that wrote the file.
 
 **One artifact carries frontmatter, and that exception is ruled rather than inherited.**
-`assessment.md` begins beside the idea, before the folder exists, and it stores the assessed idea
-file's git blob id. A blob id is a fact no position supplies, so it stays in frontmatter after the
-move. `.claude/references/definition-of-ready.md` names the three fields.
+`assessment.md` begins beside the idea, before the folder exists, so no position identifies it
+until the promotion moves it. That is the ground for every field it carries, not only for the git
+blob id it stores. That blob id belongs to the assessed idea file, and no position supplies it at
+any point. `.claude/references/definition-of-ready.md` names the fields.
 
 **The kinds are not a closed set.** `scripts/board-shape-hook/board-shape.ts` classifies by
-position rather than by basename, so an artifact kind nobody has named yet is covered on the day
-it lands.
+position rather than by basename. So an artifact kind nobody has named yet is covered in an item's
+folder on the day it lands.
 
-**The board hook checks no per-item artifact.** It prints a non-candidate line rather than
-findings. Read that line as a refusal to assess, never as a pass. Vale's `Board.NoStatusField`
-still reaches every board file, artifacts included.
+**The board hook checks no per-item artifact in an item's folder.** It prints a non-candidate line
+rather than findings. Read that line as a refusal to assess, never as a pass. Vale's
+`Board.NoStatusField` still reaches every board file, artifacts included.
+
+**An assessment record in the ideas lane is the exception, and it is not yet refused.** Measured
+2026-09-20: such a record is two segments, so the same classifier reads it as an idea file and
+reports findings. `checkers-do-not-reach-the-assessment-sidecar` owns the fix.
 
 **Name the artifact's shape in the prompt of any role that writes one.** A role reaches this file
 only when its own file or its invoking prompt sends it here.
@@ -184,13 +189,13 @@ flowchart LR
   R -.->|amendment| U
 ```
 
-| Step | Role + mode                        | The prompt must carry                                           | Artifacts                                      | Gates                     | Handoff                                                  |
-| ---- | ---------------------------------- | --------------------------------------------------------------- | ---------------------------------------------- | ------------------------- | -------------------------------------------------------- |
-| 1    | `coach` SPEC                       | The mode by name; the proposal's content; the slice name        | Writes `spec.md` in the item's `ready/` folder | Its own — see `coach.md`  | The spec, stopped for user sign-off                      |
-| 2    | `writer`                           | The signed spec as prompt content; the slice name               | Edits exactly the files the spec names         | Its own — see `writer.md` | Changed-files manifest; declined or returned spec points |
-| 3    | `editor` CLEAN — per `writer` pass | The mode by name; `writer`'s manifest, verbatim; the slice name | Reads the manifest's files                     | Its own — see `editor.md` | What changed or that nothing did                         |
-| 4    | `editor` AUDIT                     | The mode by name; the slice name                                | Reads the corpus                               | Its own — see `editor.md` | Findings by file, or a measured clean                    |
-| 5    | `coach` REVIEW                     | The mode by name; the signed spec; the slice name               | Reads the landed corpus against the spec       | Its own — see `coach.md`  | Cycle closed, or divergences named                       |
+| Step | Role + mode                        | The prompt must carry                                                                                | Artifacts                                      | Gates                     | Handoff                                                  |
+| ---- | ---------------------------------- | ---------------------------------------------------------------------------------------------------- | ---------------------------------------------- | ------------------------- | -------------------------------------------------------- |
+| 1    | `coach` SPEC                       | The mode by name; the proposal's content; the slice name                                             | Writes `spec.md` in the item's `ready/` folder | Its own — see `coach.md`  | The spec, stopped for user sign-off                      |
+| 2    | `writer`                           | The paths of `spec.md` and every `amendment-<n>.md`; the item numbers this pass runs; the slice name | Edits exactly the files the spec names         | Its own — see `writer.md` | Changed-files manifest; declined or returned spec points |
+| 3    | `editor` CLEAN — per `writer` pass | The mode by name; `writer`'s manifest, verbatim; the slice name                                      | Reads the manifest's files                     | Its own — see `editor.md` | What changed or that nothing did                         |
+| 4    | `editor` AUDIT                     | The mode by name; the slice name                                                                     | Reads the corpus                               | Its own — see `editor.md` | Findings by file, or a measured clean                    |
+| 5    | `coach` REVIEW                     | The mode by name; the signed spec; the slice name                                                    | Reads the landed corpus against the spec       | Its own — see `coach.md`  | Cycle closed, or divergences named                       |
 
 **The user gate sits at step 1's close**, on the `product` SPECIFY precedent. Governance
 changes gate to the user at the spec; the closing review needs no second gate. `hardener`
@@ -221,6 +226,10 @@ untangling appended sections.
 name.** The live instruction set is `spec.md` plus every amendment, read in number order,
 with later text winning. No amendment restates the live set, because a restatement drifts as
 the next amendment lands.
+
+**An amendment opens by naming its item numbers, and `writer` reports the numbers it executed.**
+The prompt names which of them this pass runs. `writer` reads the whole file, so that named set is
+what bounds the pass rather than what the prompt happened to include.
 
 **An amendment that replaces a block names every obligation the block carried that the
 replacement does not.** A supersession row is true at block granularity and cannot show a
@@ -273,8 +282,12 @@ or, worse, succeeds wrongly.
 - **`coach` requires a mode.** SPEC or REVIEW, named — it refuses to guess, per its file.
 - **`editor` requires a mode**, CLEAN or AUDIT, and CLEAN carries `writer`'s manifest
   verbatim — the `cleaner` manifest contract, in the process family.
-- **`writer` receives the signed spec as prompt content**, plus the slice name. No spec in
-  the prompt, no authority to edit.
+- **`writer` receives the signed spec by path**, plus every amendment and the slice name. The
+  prompt names `backlog/ready/<slice>/spec.md` and each `amendment-<n>.md`; no path named, no
+  authority to edit.
+- **A role reads a board path the prompt names, and never derives one.** That is the whole
+  carve-out: its own item's `spec.md` and `amendment-*.md`, at paths it was handed. No globbing,
+  no directory listing, no path built from the slice name, and nothing else under `backlog/`.
 - **Name `architect`'s mode, even for REVIEW.** An unnamed mode fails silently, and the wrong
   pass it returns looks plausible. This is the most dangerous contract in the set.
 - **The mutation-invariant exemption exists only as a thing the seat says.** Compute the

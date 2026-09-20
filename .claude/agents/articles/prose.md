@@ -39,6 +39,10 @@ These hold whether or not a checker fires. Vale's rules below are a partial and 
   Its findings reach the acting agent as hook context; a clean write stays silent. It cannot
   block, so this instruction binds whether or not the hook fires. `prose.meta.md` carries the
   hook's shape ruling, its scope, and the measured delivery channel.
+- **Probe a predicted Vale reading; never count by hand.** Apply the candidate at a path on the
+  same `.vale.ini` glob and run `vale` over it. Confirm the probe discriminates by re-running it
+  with the defect deliberately present. Probe the whole enabled rule set for that path, never
+  only the rules you are watching.
 
 ## Setup
 

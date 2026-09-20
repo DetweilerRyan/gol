@@ -1622,3 +1622,39 @@ rests on it.
 resolves `StylesPath` against the cwd, prints `E201 Invalid value` naming `.vale`, and exits 2 —
 the same reading "What a missing `.vale/` actually reports" records. So the instruction names the
 repo root for one command's sake, not against a second silent failure.
+
+## Why a predicted Vale reading is probed rather than counted (2026-09-20)
+
+Measured across `assessment-records-die-with-the-conversation`'s six amendments. Every prediction
+that was probed held through its `writer` pass. The one counted by hand shipped a finding.
+
+**Three ways a hand count fails, and the third is why the instruction says probe rather than count
+carefully.**
+
+1. **A bolded lead ending in a period counts as a sentence.** So the count runs low and a list item
+   ships over `Instruction.ListItemSentences`'s cap. The instance: amendment 2's item 3 predicted
+   three sentences for `coach.md`'s spec-artifact bullet and did not count the bolded lead. The
+   file read 0 before that pass and 1 after, and amendment 4 moved the rule to Boundaries to clear
+   it.
+2. **Code spans are dropped before the word count.** So the count runs high and a sentence gets
+   rewritten that never needed it. The same bullet's second sentence measures 24 words against
+   `STE.SentenceLength`'s 25 only because two code spans leave the count. Counted by eye it reads
+   as over the cap and invites a split nothing asked for.
+3. **A hand count only checks the rules you thought of.** The instance: amendment 6's first draft
+   of a `pipelines.md` sentence read "That blob id is the assessed idea file's", and the probe
+   reported `STE.Contractions` — a rule nobody in the chain had considered, firing on a possessive
+   the replaced text carried without tripping. The sentence was rewritten before it landed. The
+   first two mechanisms make a counter miscount; this one makes a counter not count at all.
+
+**The discriminating half is not optional, and it is a separate lesson.** A clean probe on a clean
+candidate proves the candidate is clean. It does not prove the rule is live on that path. Each
+probe in this slice was re-run with the defect deliberately present, and each reported: a
+five-sentence paragraph drew `Instruction.ParagraphSentences`, a 29-word numbered step drew
+`Procedure.ProcedureLength`, and a 37-word sentence drew `STE.SentenceLength`.
+
+**The probe copy goes in a subdirectory of `.claude/agents/` when the target is a role file.**
+`scripts/agent-doc-check`'s roster scan filters on `entry.isFile()` and never descends, so the copy
+cannot enrol as an agent while it exists. A whole-tree checker such as `npm run reference-check`
+cannot be probed on a copy at all, since the copy is scanned as an extra file and carries its own
+tokens into the count. Those candidates are applied in place and restored, with `git status`
+verified empty afterwards.

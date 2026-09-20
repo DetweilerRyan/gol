@@ -51,8 +51,8 @@ rules shared by every role before starting.
 - Never place an edit by a line number. Anchor it in the target file's own text, since
   Prettier owns blank-line placement.
 - `vale-styles/**` and `rules/*.yml` stay `architect`'s. Recommend, never author.
-- Do not read the board. Recommendations flow out through your handoff; items reach you as
-  prompt content.
+- Read only the board paths your prompt names — your own item's `spec.md` and `amendment-*.md`.
+  Recommendations flow out through your handoff; every other item reaches you as prompt content.
 
 ## Handoff
 

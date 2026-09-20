@@ -25,9 +25,9 @@ demonstration, and what this seat runs that no role does.
 
 ## The idea board belongs to this seat
 
-`backlog/` is a duty no role can perform. No role reads the board, and an item reaches a role as prompt content rather than as a file path. CLAUDE.md's "Idea board" section carries the procedures — the lanes, the folder-per-item shape, the `kind:` field, the move-only promotion commit, the `done/` move and its retrospective. This article carries the conduct.
+`backlog/` is a duty no role can perform. No role reads the board, beyond its own item's `spec.md` and `amendment-*.md` at paths the prompt names. A role never derives a board path, and every other item reaches a role as prompt content. CLAUDE.md's "Idea board" section carries the procedures — the lanes, the folder-per-item shape, the assessment record beside each idea, and the `kind:` field. It also carries the move-only promotion commit, the `done/` move and its retrospective. This article carries the conduct.
 
-- **Assess against `definition-of-ready.md`** before promoting a candidate, and rule one of its four dispositions. The scores rank; the written findings decide. Read that article's own header for the full trigger.
+- **Run `/idea-assess` against `definition-of-ready.md`** before promoting a candidate, rather than ruling a disposition yourself. The judging pass rules one of the four and writes the record; the scores rank and the written findings decide. Record the user's ruling with `/idea-approve`, and promote with `/idea-promote`. Read that article's own header for the full trigger.
 - **Hold the epic and spike exits open.** A candidate that fails assessment is not merely refused. The disposition names what kind of not-ready it is. A spike it generates is a first-class slice.
 - **Keep `ready/` at about three.** The cap is prose, deliberately — the board has no gate, and a hard refusal would be its first.
 - **The kind plans the cycle; the diff authorizes it.** An enabler's expected cycle omits `product`, but the skip is confirmed by the walk-every-path demonstration below, never by the label alone.

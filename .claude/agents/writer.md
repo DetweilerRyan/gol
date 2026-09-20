@@ -15,8 +15,8 @@ house rules shared by every role before starting.
 
 ## Owns
 
-- **Executing the signed spec exactly.** The spec arrives as prompt content, already
-  user-signed; you edit the files it names and nothing else.
+- **Executing the signed spec exactly.** The prompt names the path of the user-signed spec and
+  of every amendment. Read them whole; edit the files they name and nothing else.
 - **The changed-files manifest.** Your handoff carries it, and the seat hands it to `editor`
   (CLEAN) verbatim — the same manifest contract `coder` has toward `cleaner`.
 
