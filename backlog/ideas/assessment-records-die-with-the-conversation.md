@@ -76,4 +76,28 @@ not: a cap is a limit, a stale record is an integrity fact.
   two-record body, or stay in the commit alone? The single-home ruling above settled where the
   judge's record lives and left the human's untouched.
 - Which prose rules reach a sidecar, given that Layer 1 now reads one line of it and checks no
-  shape?
+  shape? A ruling-in-waiting, read out of both rulebooks and `.vale.ini` on 2026-09-20 and
+  recorded here so the slice rules with the analysis in hand:
+
+  - **No register rules.** STE, `Instruction` and `Procedure` are calibrated for a file a
+    reader follows in order to act, and the board section held all three off on that reading at
+    that date. Immutability is the stronger argument: a finding on a frozen assessment cannot
+    be cleared without breaking the immutability rule. A register rule ever wanted therefore
+    fires at write time through the existing hook, never as a standing lint.
+  - **The three `Claim` rules, measured before enabling.** `SentenceInitialMost` is the one
+    likely to fire on judge prose, since an unmeasured majority is a judge's characteristic
+    defect. The other two looked near-unreachable on this surface. The landing constraint
+    forbids enabling over an untriaged backlog, so the slice measures first.
+  - **`claim-discipline.md` is the real rulebook here**, because an assessment is a record
+    rather than an instruction file. Six forms bind it: date the figure and name the tree,
+    write the whole record as history, keep a claim at the scope of the command that produced
+    it, date any claim about another board file, name which rather than how many, and name the
+    slug rather than the bare indexical. The blob hash mechanises the name-the-tree half of the
+    first form, so the hash ruling and this one are the same rule twice.
+  - **The live gap is `reference-check` rather than Vale.** That checker excluded the whole
+    board from both surfaces at that date, for two recorded reasons: a board file names dead
+    references as its own worked examples, and a candidate names a module it only proposes
+    creating. Both are facts about ideas. An assessment cites files that exist, so the
+    exclusion would hide the exact class the checker exists to catch. Carving the assessment
+    sidecar back out is the candidate change, and the scope decision is a pure module with a
+    test already asserting the exclusion, so the opposite assertion costs one test.
