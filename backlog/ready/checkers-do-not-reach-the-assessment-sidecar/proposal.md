@@ -2,6 +2,7 @@
 name: checkers-do-not-reach-the-assessment-sidecar
 title: Teach Layer 1 and reference-check to read an assessment sidecar
 created: 2026-09-20
+kind: enabler-technical
 ---
 
 ## Situation
