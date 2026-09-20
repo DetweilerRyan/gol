@@ -14,7 +14,7 @@ statement. The first takes the form "when [situation], the seat hires `<role>` t
 [motivation]". The second states the outcome the hiring buys. The statement is the file's
 Objective — the job the role exists to do.
 
-Write it kind-neutrally. The authority object is the spec the invoking prompt carries,
+Write it kind-neutrally. The authority object is the spec the invoking prompt names,
 never any one pipeline's artifact. A job statement that names a `.feature` builds the
 Story assumption into the role. Keep each sentence within STE's 25-word cap, use no
 contractions and no narration tokens, and give the statement its own paragraph.

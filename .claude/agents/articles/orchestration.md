@@ -25,7 +25,7 @@ demonstration, and what this seat runs that no role does.
 
 ## The idea board belongs to this seat
 
-`backlog/` is a duty no role can perform. No role reads the board, beyond its own item's `spec.md` and `amendment-*.md` at paths the prompt names. A role never derives a board path, and every other item reaches a role as prompt content. CLAUDE.md's "Idea board" section carries the procedures — the lanes, the folder-per-item shape, the assessment record beside each idea, and the `kind:` field. It also carries the move-only promotion commit, the `done/` move and its retrospective. This article carries the conduct.
+`backlog/` is a duty no role can perform. `.claude/references/pipelines.md` states the one read carve-out and its limits. CLAUDE.md's "Idea board" section carries the procedures — the lanes, the folder-per-item shape, the assessment record beside each idea, and the `kind:` field. It also carries the move-only promotion commit, the `done/` move and its retrospective. This article carries the conduct.
 
 - **Run `/idea-assess` against `definition-of-ready.md`** before promoting a candidate, rather than ruling a disposition yourself. The judging pass rules one of the four and writes the record; the scores rank and the written findings decide. Record the user's ruling with `/idea-approve`, and promote with `/idea-promote`. Read that article's own header for the full trigger.
 - **Hold the epic and spike exits open.** A candidate that fails assessment is not merely refused. The disposition names what kind of not-ready it is. A spike it generates is a first-class slice.

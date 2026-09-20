@@ -118,7 +118,7 @@ step vocabulary. The seat decides, and tells `hardener` whether a spike ran eith
 
 | Step | Role + mode                                                                                        | The prompt must carry                                                                                                   | Artifacts                                                         | Gates                        | Handoff                                                                              |
 | ---- | -------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------- | ---------------------------- | ------------------------------------------------------------------------------------ |
-| 1    | `product` SPECIFY                                                                                  | The mode by name; the proposal's content (no role reads the board); the slice name                                      | Writes `features/**`; reads `proposal.md` content from the prompt | Its own — see `product.md`   | Approved contract, outline, acceptance-mutation figure                               |
+| 1    | `product` SPECIFY                                                                                  | The mode by name; the proposal's content (no role reads a proposal file); the slice name                                | Writes `features/**`; reads `proposal.md` content from the prompt | Its own — see `product.md`   | Approved contract, outline, acceptance-mutation figure                               |
 | 2    | `architect` DESIGN — only when a trigger in CLAUDE.md's "The optional architect design pass" fires | The mode by name; the approved contract; the design question                                                            | Writes `design.md` in the item's `ready/` folder                  | Its own — see `architect.md` | Ratified file set, interfaces, step ordering; `tasks.md` when dispatch is multi-unit |
 | 3    | `coder` (repeat per design step)                                                                   | The approved `.feature` refs; the slice name; the design step when one exists                                           | Reads `features/**`, `design.md`; writes `src/`                   | Its own — see `coder.md`     | Changed-files manifest, test durations, ast-grep report                              |
 | 4    | `cleaner` — see "Sequencing the seat owns"                                                         | Coder's manifest, carried forward verbatim; the slice name                                                              | Reads the manifest's files                                        | Its own — see `cleaner.md`   | What changed or that nothing did; survivor demonstrations                            |
@@ -195,7 +195,7 @@ flowchart LR
 | 2    | `writer`                           | The paths of `spec.md` and every `amendment-<n>.md`; the item numbers this pass runs; the slice name | Edits exactly the files the spec names         | Its own — see `writer.md` | Changed-files manifest; declined or returned spec points |
 | 3    | `editor` CLEAN — per `writer` pass | The mode by name; `writer`'s manifest, verbatim; the slice name                                      | Reads the manifest's files                     | Its own — see `editor.md` | What changed or that nothing did                         |
 | 4    | `editor` AUDIT                     | The mode by name; the slice name                                                                     | Reads the corpus                               | Its own — see `editor.md` | Findings by file, or a measured clean                    |
-| 5    | `coach` REVIEW                     | The mode by name; the signed spec; the slice name                                                    | Reads the landed corpus against the spec       | Its own — see `coach.md`  | Cycle closed, or divergences named                       |
+| 5    | `coach` REVIEW                     | The mode by name; the paths of `spec.md` and every `amendment-<n>.md`; the slice name                | Reads the landed corpus against the spec       | Its own — see `coach.md`  | Cycle closed, or divergences named                       |
 
 **The user gate sits at step 1's close**, on the `product` SPECIFY precedent. Governance
 changes gate to the user at the spec; the closing review needs no second gate. `hardener`
@@ -282,12 +282,16 @@ or, worse, succeeds wrongly.
 - **`coach` requires a mode.** SPEC or REVIEW, named — it refuses to guess, per its file.
 - **`editor` requires a mode**, CLEAN or AUDIT, and CLEAN carries `writer`'s manifest
   verbatim — the `cleaner` manifest contract, in the process family.
-- **`writer` receives the signed spec by path**, plus every amendment and the slice name. The
-  prompt names `backlog/ready/<slice>/spec.md` and each `amendment-<n>.md`; no path named, no
-  authority to edit.
-- **A role reads a board path the prompt names, and never derives one.** That is the whole
-  carve-out: its own item's `spec.md` and `amendment-*.md`, at paths it was handed. No globbing,
-  no directory listing, no path built from the slice name, and nothing else under `backlog/`.
+- **`writer` receives the signed spec by path**, plus every amendment, the item numbers this
+  pass runs, and the slice name. The prompt names `backlog/ready/<slice>/spec.md` and each
+  `amendment-<n>.md`; no path named, no authority to edit.
+- **A role reads a board path the prompt names, and never derives one.** That is the whole read
+  carve-out: its own item's `spec.md` and `amendment-*.md`, at paths it was handed. Never glob,
+  never list a directory, never build a read path from the slice name, and read nothing else
+  under `backlog/`.
+- **Writing a board file is a separate grant, and only a role's own file gives it.** `coach`
+  SPEC builds `backlog/ready/<slice>/spec.md` from the slice name, because its own file names
+  that deliverable. A write grant licenses no read.
 - **Name `architect`'s mode, even for REVIEW.** An unnamed mode fails silently, and the wrong
   pass it returns looks plausible. This is the most dangerous contract in the set.
 - **The mutation-invariant exemption exists only as a thing the seat says.** Compute the

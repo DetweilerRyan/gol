@@ -26,9 +26,9 @@ Then, in this order:
 3. Commit both moves alone, with the body below. Rename detection is content-based, so neither basename change defeats it.
 4. Add the `kind:` line from the record to the proposal's frontmatter, absent one already.
 5. Flesh out the proposal, if the file needs it.
-6. Commit steps 4 and 5 together, separately from the move commit.
+6. Commit whatever steps 4 and 5 changed, separately from the move commit. Skip it if neither changed anything.
 
-**`kind:` is written after the move, never before it.** Step 4 is unconditional, and runs whether or not step 5 has anything to do. Any earlier edit to the idea file changes its blob id and makes the record stale.
+**`kind:` is written after the move, never before it.** Step 4 does not wait on step 5, and runs whether or not the proposal needs fleshing out. Any earlier edit to the idea file changes its blob id and makes the record stale.
 
 The move commit's body carries the judge's summary: the kind, the disposition, and each of the six scores beside its one-line finding. It names the date the record was ruled on, so a reader of `git log` can see the ruling preceded the grant. The record in full stays in the file, and no total travels in either place.
 

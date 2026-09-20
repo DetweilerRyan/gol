@@ -1634,8 +1634,9 @@ carefully.**
 1. **A bolded lead ending in a period counts as a sentence.** So the count runs low and a list item
    ships over `Instruction.ListItemSentences`'s cap. The instance: amendment 2's item 3 predicted
    three sentences for `coach.md`'s spec-artifact bullet and did not count the bolded lead. The
-   file read 0 before that pass and 1 after, and amendment 4 moved the rule to Boundaries to clear
-   it.
+   fourth sentence item 3 added was the rule that an edit is placed by an anchor rather than by a
+   line number. The file read 0 before that pass and 1 after, and amendment 4 moved that rule to
+   Boundaries to clear it.
 2. **Code spans are dropped before the word count.** So the count runs high and a sentence gets
    rewritten that never needed it. The same bullet's second sentence measures 24 words against
    `STE.SentenceLength`'s 25 only because two code spans leave the count. Counted by eye it reads
