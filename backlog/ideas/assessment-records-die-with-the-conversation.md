@@ -69,6 +69,15 @@ would break the bound that a number never travels without its finding text, at t
 reader actually skims. The detail section carries the finding in full, and the table's clause
 summarises it.
 
+**The human ruling joins the sidecar at promotion — ruled by the user 2026-09-20.** The judge's
+record and the human's per-letter agree-or-differ then sit in one file, which is the pair a
+retro compares. That write is the sidecar's last mutation before immutability takes hold.
+
+The judge's record stays first and the human's ruling second. The calibration design turns on
+the human label being ruled against the judge's rather than merged into it, and the order is
+what keeps the two readable as two. Authorship splits the same way: the judge fork writes its
+own record, and the seat writes the human's half at promotion.
+
 Rows hold the INVEST order rather than a score order. Sorting by score is a ranking device, and
 the bounds forbid totals and cross-kind ranking. Kind and disposition sit in prose above the
 table, not in frontmatter, since the seat copies the kind ruling into the idea's own
@@ -87,9 +96,8 @@ not: a cap is a limit, a stale record is an integrity fact.
 
 ## Open questions
 
-- Does the human ruling join the sidecar as its second half at promotion, mirroring the
-  two-record body, or stay in the commit alone? The single-home ruling above settled where the
-  judge's record lives and left the human's untouched.
+- Both halves of the record now live in the sidecar, and the promotion commit keeps a summary.
+  Does the human's half also reduce to a summary there, or leave the commit body entirely?
 - Which prose rules reach a sidecar, given that Layer 1 now reads one line of it and checks no
   shape? A ruling-in-waiting, read out of both rulebooks and `.vale.ini` on 2026-09-20 and
   recorded here so the slice rules with the analysis in hand:
