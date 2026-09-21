@@ -25,8 +25,9 @@ it read "Layer 1 does not refuse it, since the classifier reads position rather 
 consequence clause saying why the guard was not redundant. The hook falsified its premise.
 Deleting it outright would have left the guard looking like duplicated work to the next pass that
 reads the file, which is the shape `prose.md` names under "How a pass damages the file it cleans".
-The replacement keeps the duty and asserts nothing about the hook's internals, which
-`claim-discipline.md` prohibits.
+The replacement keeps the duty and states no undated present-tense fact about the hook, which is
+the form `claim-discipline.md` rules out. A dated claim about the same refusal is not ruled out,
+and the `checkShape` sentence in this section is one.
 
 **The `off the board` stop clause closes the same gap for one more line shape.** Measured live
 2026-09-20, `node scripts/board-shape-hook/run.ts src/camera.ts` prints a `LAYER1` line reading
