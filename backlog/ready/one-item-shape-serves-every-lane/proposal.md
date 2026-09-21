@@ -2,6 +2,7 @@
 name: one-item-shape-serves-every-lane
 title: Let the board classifier read each lane's item shape from a declaration rather than one hardcoded form
 created: 2026-09-21
+kind: enabler-technical
 ---
 
 Split from `lanes-declare-their-own-item-shape`, ruled Epic 2026-09-21. This is the technical child,
@@ -32,9 +33,11 @@ does not recognise draws no checks and prints the same refusal a per-item artifa
 item reads exactly like a correctly skipped spec. An item file that happens to carry the recognised
 basename draws the full candidate checks and reports missing sections it never owed.
 
-A second reading is already wrong today rather than on the day a lane diverges. The lane is read as
-the first board-relative segment, so a path directly under the board root reports its own filename
-where a lane name belongs.
+A second reading is already wrong today rather than on the day a lane diverges. A path two segments
+deep in a directory no lane names is classified a candidate outright. Measured 2026-09-21: a probe at
+`backlog/zzprobe/x.md`, removed after the run, printed `lane zzprobe` and reported seven checks with
+five findings. An invented directory is not merely mislabelled — it draws the full candidate checks
+and delivers an envelope to whoever wrote the file.
 
 R1's evidence does not reach either case. Artifact kinds are an open population arriving unannounced,
 which is what positional covering protects. Lanes are a closed population, and each has so far
@@ -61,8 +64,11 @@ Shaped. Every bullet is a user ruling taken 2026-09-21 during the parent's shapi
   on the finding count exactly as it does today.
 - **The declarations live in a board data file rather than a constant in the script**, and the script
   validates that input rather than trusting it.
-- **A path directly under the board root is its own class, and it stays silent**, provisionally. The
-  segment count classifies it before the lane lookup is reached.
+- **A path directly under the board root keeps the silence it already has**, provisionally. The
+  segment count classifies such a path before the lane lookup is reached, which is how the classifier
+  behaves today — measured 2026-09-21, `backlog/TEMPLATE.md` printed the plain refusal with no lane
+  clause. The ruling preserves that rather than introducing it, and it binds because a lane-first
+  classifier would otherwise have changed it.
 - **The rationale lands in a sidecar beside the module at landing**, not only in a board file. A board
   file reaches the done lane and the retrospective deletes it, so a ruling whose argument lives only
   there loses that argument when the board clears.
