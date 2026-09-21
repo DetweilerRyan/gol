@@ -2,6 +2,13 @@
 // A bare board slug resolves by exact basename -- name is identity, so the
 // lookup is not a guess. Every decision the board-shape hook makes lives
 // here; run.ts owns only stdin, argv, fs and channel discipline.
+//
+// Classification runs on two axes, checked differently on purpose: the lane
+// axis (which backlog/ directory, and what shape it declares) is looked up
+// by name against a declared, closed LaneDeclarations map; the artifact axis
+// (which .md sits inside a folder-lane item) stays positional, since that
+// population arrives unannounced and stays open. See board-shape.meta.md for
+// why the split runs that way and how far it reaches.
 import { basename, dirname } from 'node:path'
 import { type HookOutcome } from '../post-tool-use.ts'
 import { isAssessmentRecordPath } from './assessment-record.ts'
@@ -293,6 +300,7 @@ function candidateOutcome(target: string, text: string, record: RecordLookup, sh
  * their own warning rather than running the checks. Always reports the lane
  * summary, the assessment clause, and the LAYER1 tally; `deliver` is true
  * only when a check failed.
+ * @see {@link ./board-shape.meta.md}
  */
 export function checkShape(target: string, text: string, record: RecordLookup, lanes: LaneDeclarations): HookOutcome {
   if (isAssessmentRecordPath(target)) return assessmentRecordOutcome(target)
