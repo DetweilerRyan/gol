@@ -111,3 +111,56 @@ The rule was small and its homes were many. Every home was correct in isolation 
 never censused as a set until the sixth amendment, by which point each repair was landing into a
 corpus the previous repair had moved. A rule's cost is the number of files that restate it, and
 nothing in this repo measures that before the rule lands.
+
+## The census enumeration failed again, and nothing was wrong
+
+The ninth amendment censused by claim rather than by token, read 3,047 paragraphs across 55
+files, and enumerated twelve paragraphs stating who may touch the board. It named its falsifier:
+a paragraph stating a board rule and absent from that table.
+
+`editor` reproduced the instrument first, matching all three of its numbers, then attacked it on
+the axis its author could not. The argument was that a claim about the board must name its
+subject — true, and not what the filter tested, since the filter tested five spellings of the
+subject. Widened to every synonym the corpus actually uses, the census found 27 more paragraphs
+and **four more homes**: a read grant in `writer.md`'s Owns, two statements in the pipelines step
+table, one on amendment authorship, and a write grant living in YAML frontmatter rather than in
+prose at all.
+
+**None of the four is a defect.** All four agree with the canonical rule. So the enumeration
+failed and the corpus did not, which is the fourth consecutive round finding no new defect.
+
+Three things the retrospective should take from that.
+
+- **The decisive miss had a foreclosed objection.** `coach`'s table listed one role file's Owns
+  grant and not its mirror image in the other role file. One inclusion rule, applied to one file
+  and not to the other.
+- **The residual its author named was the one place empty.** A second probe for cross-paragraph
+  anaphora returned 33 hits, all read, none stating a board rule. The misses were all on the axis
+  believed safe.
+- **A permission in frontmatter is a home no paragraph census reaches.** It is not prose, and no
+  method in this chain would have found it.
+
+The count of homes is deliberately not written into the corpus. It would rot the way every other
+census in this slice rotted, and the durable artifact is the recorded method rather than the
+number it produced this time.
+
+## A probe can land in the wrong rule section
+
+`editor`'s first baseline read 25 where the file reads 23. Its probe copy sat in a subdirectory
+of `.claude/agents/`, which `.vale.ini` reaches with the `Instruction` style that the articles
+section switches off — two extra findings, both from rules the real path does not carry.
+
+`prose.md` already says to probe at a path on the same `.vale.ini` glob, and this is a live case
+of that instruction being right and terse. A subdirectory can be **in scope for the checker and
+in a different rule section at once**, and the reading it produces is wrong in the direction that
+looks like a regression. Whether the instruction should name that case is a question for whoever
+next opens the probe bullet.
+
+## Two small records
+
+The ninth amendment describes its second item as three words; the token delta is two. The
+amendment is signed and immutable, so the correction lives here.
+
+`handoffs.md` says "the seat" once where the rest of the file says "the orchestrating session".
+Pre-existing and identical before the edit, named only because deleting the false universal
+removed its nearest contrast word.
