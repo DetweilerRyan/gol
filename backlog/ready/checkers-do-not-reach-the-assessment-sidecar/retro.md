@@ -298,6 +298,30 @@ elsewhere in the same file: CLAUDE.md's new pair-index bullet says `idea-assess`
 no other skill does". That is a negative universal over a tier with nothing checking it, and the
 article roster two bullets above it is the same shape, already false.
 
+### P18 — the mutation arithmetic names two mechanisms and a third one operates
+
+`hardener` reconciled the collected test count against Stryker's dry run at both scopes on
+2026-09-21. It closes exactly on `src/`: 955 collected, minus nine sanctioned `skipIf`, minus
+thirteen in the seed test file, is 933, which is the dry run. On `scripts/` it does not — 1176
+minus three `skipIf` is 1173 against a dry run of 1166, a gap of seven.
+
+**The gap is pre-existing and this slice halved it.** Measured the same way on `main`: 1132 minus
+three against 1114, a gap of fifteen. Adding a module to the mutate set made previously unrelated
+test files related, which closed eight.
+
+The mechanism is `coverageAnalysis: "perTest"` related-file filtering, which the corpus already
+names for the seed file. It bites harder on `scripts/` because `run.ts` and `test-support.ts` are
+excluded from `mutate`, so a test file covering only `run.ts` relates to no mutant and is dropped.
+**The direction is safe** — a dropped file covers no mutant and so could kill none.
+
+`hardener` did not accept the discrepancy on inference. It rebuilt Stryker's sandbox conditions,
+tracked files only with `__stryker__` injected, and confirmed the suite still runs 1173 with three
+skipped, so no test is silently failing to register.
+
+The correction belongs in `.claude/agents/hardener.md` or
+`.claude/agents/articles/mutation-testing.md`, and is corpus prose rather than the seat's residue:
+it adds a mechanism account rather than refreshing a stale figure.
+
 ## Two records, not findings
 
 **A promoted record's `LAYER1` line names a path that promotion retires.** The ruled record shape
