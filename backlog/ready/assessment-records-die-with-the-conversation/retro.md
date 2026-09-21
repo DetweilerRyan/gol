@@ -64,3 +64,50 @@ diff and durable in the tree, rather than living in an invocation nobody keeps.
 item 17 landed already makes a truncation visible at the receiving end, and it cost one sentence
 rather than an artifact per pass. Whether a task file buys enough beyond that to justify its own
 ceremony is the call.
+
+## Findings binned to this retrospective under the slice's stopping condition
+
+The user signed a stopping condition with amendment 7 on 2026-09-20: after it, a non-blocking
+finding comes here rather than reopening the slice, and only a live contradiction between two
+landed instructions or a red gate reopens it. `editor` CLEAN binned the four below on that rule
+and argued against its own placement on the last one.
+
+- **A probe bullet overclaims in its lead.** `prose.md`'s new probe instruction opens "Put the
+  copy where no gate reaches it", and its body narrows that to one validator. Three other
+  `agent-doc-check` checks and `reference-check` do reach a subdirectory copy. For probe content
+  the size of a bullet all four stay green, so no wrong action follows — but the universal sits
+  in the article that carries the sibling of the rule against exactly that shape.
+- **A nested bullet's referent has no antecedent.** "Take the pre-edit baseline at the same path
+  first" is the first nested bullet under a lead that names no path. The sentence after it
+  supplies the meaning, so a reader lands correctly.
+- **`writer.md` states a scoped rule in blanket form.** Its "Never derive a board path" does not
+  carry the read and write split the canonical statement now makes. Harmless while every path
+  that role writes arrives named in a spec; it will not carry the split if that changes.
+- **`/idea-assess`'s "and nothing else" reads wider than the item intended.** The judging pass
+  also rules the kind label, which three files mandate. `editor` binned this as non-blocking
+  because the next sentence names the two excluded acts, and recorded the argument against its
+  own placement: a charitable reading of a trailing clause is what the carve-out repair rejected
+  one amendment earlier.
+
+One observation sat below `editor`'s own bar for a finding and is kept here rather than lost.
+`orchestration.md`'s topic sentence says `backlog/` is a duty no role can perform, which is now
+literally wider than the corpus — one role writes a spec into the ready lane and another holds
+board docs in its write surface. It reads as a claim about board management, and the pointer
+beside it routes the reader to the file that states the rule.
+
+## The amendment chain is itself a finding
+
+Eight amendments carried 24 items. The retrospective should read the shape rather than the
+count.
+
+The three amendments that found defects in this slice's own subject — the record, the ruling
+act, the promotion — are the first, the second and the fifth. The last three found almost
+nothing about assessment records and almost everything about the repairs. `coach` ruled that
+convergence on the original subject and divergence on the repair subject, and closed the second
+with a census by recorded method plus a cut from five homes for one rule to four.
+
+**The question left for the retrospective: what made a one-rule change cost five amendments?**
+The rule was small and its homes were many. Every home was correct in isolation and the set was
+never censused as a set until the sixth amendment, by which point each repair was landing into a
+corpus the previous repair had moved. A rule's cost is the number of files that restate it, and
+nothing in this repo measures that before the rule lands.
