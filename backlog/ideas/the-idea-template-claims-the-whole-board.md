@@ -26,6 +26,12 @@ advisory Vale style. Measured 2026-09-21: the board-shape hook ships, `.claude/s
 registers it on two write events, and its directory carries three test files. The hook's own shell
 states that it always exits zero because the board has no gate.
 
+Two further statements went stale when the executable half landed on 2026-09-21. `doc-comments.md`'s
+rule 7 counts the live module sidecars and CLAUDE.md's index counts the same three, and a fourth now
+exists outside `src/`. `.claude/skills/idea-assess/SKILL.md` tells the judging pass to stop when
+Layer 1 reports without measuring, and names the one case that existed when it was written; the
+classifier now has a second.
+
 ## Complication
 
 The name is wrong in two ways at once, and only one is a matter of taste. It claims the board for a
@@ -66,7 +72,13 @@ Shaped. The first two bullets are user rulings taken 2026-09-21 during the paren
   prose.
 - **The prose stating the positional rule is amended to name the axis split** rather than deleted. The
   positional argument survives for artifacts, and the evidence behind it is still the evidence.
-- **The sidecar index gains its entry** when the sibling's rationale sidecar lands.
+- **Two counts of the same three sidecars each gain a fourth.** CLAUDE.md's index of which pairs
+  exist and `doc-comments.md`'s rule 7 both name three live module sidecars. The sibling landed a
+  fourth, and the first outside `src/`. One cause, two surfaces, and nothing checks either.
+- **The assessment skill's Layer-1 stop rule names one never-measured case, and there are now two.**
+  The classifier gained a declarations-unavailable line, which is a second state in which Layer 1
+  reports without having measured anything. A judge instructed to stop on the one it names has no
+  reason to stop on the other.
 - **The board section's no-checker clause is corrected, and the no-gate clause beside it is kept.**
   The board is unchecked no longer and ungated still, so the sentence needs splitting rather than
   rewriting. What replaces the false clause should say what the hook does and what it refuses to do,
