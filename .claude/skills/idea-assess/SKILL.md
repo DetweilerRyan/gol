@@ -54,6 +54,6 @@ Rules that bind the write:
 - A target outside the ideas lane is already promoted, and its record is frozen. Return the record and write no file.
 - Ignore any hook line naming the file you just wrote. Only the Layer 1 output above is yours to assess against.
 - Match the 120-character width. Formatting is prettier's job.
-- The judging pass rules the disposition and nothing else. The human ruling and the promotion are separate human-invoked commands.
+- The judging pass rules the disposition. The human ruling and the promotion are separate human-invoked commands, and neither is yours.
 
 Return the record and the path you wrote, so the seat can rule on it.

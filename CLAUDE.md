@@ -310,7 +310,7 @@ That is why `coder` runs `npm run ast-grep` in its own workflow rather than wait
   - `tasks.md` — when dispatch is multi-unit.
   - `findings.md` — a spike's recorded answer.
 
-  **Only `proposal.md` carries the idea-file shape**; `.claude/references/pipelines.md` states what a per-item artifact owes instead. The orchestrating session owns this board: no role reads it, except its own item's `spec.md` and `amendment-*.md` at paths the prompt names. A role never derives a board path. Keep this lane to about three, matching the two-or-three concurrent-slice ceiling below.
+  **Only `proposal.md` carries the idea-file shape**; `.claude/references/pipelines.md` states what a per-item artifact owes instead. The orchestrating session owns this board: no role reads it, except its own item's `spec.md` and `amendment-*.md` at paths the prompt names. A role never derives a board path to read one, and writing is a separate grant only a role's own file gives. Keep this lane to about three, matching the two-or-three concurrent-slice ceiling below.
 
 - **`backlog/done/<name>/`** — completed, awaiting a retrospective. The retrospective extracts what the finished work can teach — durable halves of `design.md` and `tasks.md` deviations become new `backlog/ideas/` files, spike findings land in the parent's re-assessment or `adr/` — then deletes the folder. This lane records the one fact the `slice/*` tag cannot: _not yet retrospected_. Its trigger and owner are not yet ruled; folders simply wait.
 
