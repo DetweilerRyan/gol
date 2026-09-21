@@ -6,6 +6,17 @@ import { basename, dirname } from 'node:path'
 import { type HookOutcome } from '../post-tool-use.ts'
 import { isAssessmentRecordPath } from './assessment-record.ts'
 
+/**
+ * A candidate's staleness input, computed by `run.ts` against the sibling
+ * record `assessment-record.ts`'s `siblingRecordPathFor` names. `absent`
+ * covers both no sibling path and no file at that path; `unreadable` covers
+ * a record that exists but whose `idea-blob` field cannot be read. Required
+ * on `checkShape` rather than optional, so a caller can never omit "no
+ * record" as an oversight -- it has to be written as a value.
+ */
+export type RecordLookup =
+  { kind: 'absent' } | { kind: 'present'; storedBlob: string; currentBlob: string } | { kind: 'unreadable' }
+
 /** Board-scope gate, run in `run.ts` before a target's content is read in either mode: is `path` under `backlog/`, absolute or relative. */
 export function isBoardPath(path: string): boolean {
   return path.includes('/backlog/') || path.startsWith('backlog/')
@@ -144,7 +155,7 @@ function assessmentRecordOutcome(target: string): HookOutcome {
  * segment count as the idea file it judges. Always reports the lane summary
  * and the LAYER1 tally, and `deliver` is true only when a check failed.
  */
-export function checkShape(target: string, text: string): HookOutcome {
+export function checkShape(target: string, text: string, _record: RecordLookup): HookOutcome {
   if (isAssessmentRecordPath(target)) return assessmentRecordOutcome(target)
   if (!isCandidatePath(target)) return notACandidateOutcome(target)
   const textLines = text.split('\n')

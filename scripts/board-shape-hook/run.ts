@@ -16,6 +16,7 @@
 // -- no enum, no namespace, no parameter properties.
 import { existsSync, readFileSync } from 'node:fs'
 import { envelope, extractFilePath, type HookOutcome } from '../post-tool-use.ts'
+import { blobIdOf, siblingRecordPathFor, storedBlobOf } from './assessment-record.ts'
 import {
   checkShape,
   emptyPathOutcome,
@@ -23,13 +24,36 @@ import {
   missingOutcome,
   offBoardOutcome,
   resolveTarget,
+  type RecordLookup,
 } from './board-shape.ts'
+
+// The sibling record's staleness input for a resolved, on-board target.
+// `absent` covers both "no sibling shape at all" (a record's own path, or a
+// non-candidate artifact -- checkShape refuses those before this value is
+// ever read) and "sibling path computed but no file sits there yet".
+// `unreadable` covers a record file that exists but whose idea-blob field
+// cannot be recovered, whether because the read itself throws or because
+// storedBlobOf finds no such field.
+function recordLookupFor(target: string, ideaBytes: Buffer): RecordLookup {
+  const recordPath = siblingRecordPathFor(target)
+  if (recordPath === undefined || !existsSync(recordPath)) return { kind: 'absent' }
+  let recordText: string
+  try {
+    recordText = readFileSync(recordPath, 'utf8')
+  } catch {
+    return { kind: 'unreadable' }
+  }
+  const storedBlob = storedBlobOf(recordText)
+  if (storedBlob === undefined) return { kind: 'unreadable' }
+  return { kind: 'present', storedBlob, currentBlob: blobIdOf(ideaBytes) }
+}
 
 function checkTarget(target: string): HookOutcome {
   const resolved = resolveTarget(target, existsSync)
   if (resolved === '' || !existsSync(resolved)) return missingOutcome(resolved)
   if (!isBoardPath(resolved)) return offBoardOutcome(resolved)
-  return checkShape(resolved, readFileSync(resolved, 'utf8'))
+  const bytes = readFileSync(resolved)
+  return checkShape(resolved, bytes.toString('utf8'), recordLookupFor(resolved, bytes))
 }
 
 function readStdin(): string {

@@ -6,7 +6,14 @@ import {
   missingOutcome,
   offBoardOutcome,
   resolveTarget,
+  type RecordLookup,
 } from './board-shape.ts'
+
+// Commit-1 filler for every checkShape call below that is not itself
+// exercising the record lookup: checkShape's third parameter is required so
+// "no record" is a value a caller writes rather than an argument it forgot,
+// and these calls are testing shape checks the lookup does not affect.
+const NO_RECORD: RecordLookup = { kind: 'absent' }
 
 describe('isBoardPath', () => {
   it.each([
@@ -127,7 +134,7 @@ const CLEAN = [
 
 describe('checkShape', () => {
   it('finds nothing wrong with a well-formed scqa-era file and does not deliver', () => {
-    const outcome = checkShape('backlog/ideas/clean.md', CLEAN)
+    const outcome = checkShape('backlog/ideas/clean.md', CLEAN, NO_RECORD)
     expect(outcome.deliver).toBe(false)
     expect(outcome.lines).toEqual([
       'lane ideas, scqa shape, 17 lines, 0 depends-on mention(s)',
@@ -137,7 +144,7 @@ describe('checkShape', () => {
 
   it('reports all six findings for a mismatched, status-bearing, headingless file', () => {
     const text = ['---', 'name: mismatched-name', 'status: ready', '---', '', 'Body with no headings.', ''].join('\n')
-    const outcome = checkShape('backlog/ideas/all-six.md', text)
+    const outcome = checkShape('backlog/ideas/all-six.md', text, NO_RECORD)
     expect(outcome.deliver).toBe(true)
     expect(outcome.lines).toEqual([
       "name: does not match basename 'all-six'",
@@ -168,26 +175,30 @@ describe('checkShape', () => {
       'None.',
       '',
     ].join('\n')
-    const outcome = checkShape('backlog/ideas/legacy.md', text)
+    const outcome = checkShape('backlog/ideas/legacy.md', text, NO_RECORD)
     expect(outcome.deliver).toBe(false)
     expect(outcome.lines[0]).toMatch(/^lane ideas, legacy shape,/)
   })
 
   it("takes identity from the folder's basename for a ready/ proposal.md, not the file stem", () => {
     const text = CLEAN.replace('name: clean', 'name: my-slug')
-    const outcome = checkShape('backlog/ready/my-slug/proposal.md', text)
+    const outcome = checkShape('backlog/ready/my-slug/proposal.md', text, NO_RECORD)
     expect(outcome.deliver).toBe(false)
     expect(outcome.lines[0]).toMatch(/^lane ready,/)
   })
 
   it('counts a case-insensitive "depends on" mention', () => {
     const text = CLEAN.replace('None.', 'Depends on something else.')
-    const outcome = checkShape('backlog/ideas/clean.md', text)
+    const outcome = checkShape('backlog/ideas/clean.md', text, NO_RECORD)
     expect(outcome.lines[0]).toContain('1 depends-on mention(s)')
   })
 
   it('reads the lane off an absolute path via the /backlog/ marker', () => {
-    const outcome = checkShape('/repo/backlog/done/clean/proposal.md', CLEAN.replace('name: clean', 'name: clean'))
+    const outcome = checkShape(
+      '/repo/backlog/done/clean/proposal.md',
+      CLEAN.replace('name: clean', 'name: clean'),
+      NO_RECORD,
+    )
     expect(outcome.lines[0]).toMatch(/^lane done,/)
   })
 
@@ -195,21 +206,21 @@ describe('checkShape', () => {
     { name: 'the ideas-lane record form', path: 'backlog/ideas/foo.assessment.md' },
     { name: 'the promoted ready-lane record form', path: 'backlog/ready/foo/assessment.md' },
   ])('refuses $name ahead of the candidate test, and pins the whole refusal outcome', ({ path }) => {
-    expect(checkShape(path, CLEAN)).toEqual({
+    expect(checkShape(path, CLEAN, NO_RECORD)).toEqual({
       lines: [`LAYER1 ${path}: an assessment record, 0 checks -- this layer does not shape-check its own judgments`],
       deliver: false,
     })
   })
 
   it('refuses a file sitting directly under backlog/ and pins the whole non-candidate outcome', () => {
-    expect(checkShape('backlog/TEMPLATE.md', CLEAN)).toEqual({
+    expect(checkShape('backlog/TEMPLATE.md', CLEAN, NO_RECORD)).toEqual({
       lines: ['LAYER1 backlog/TEMPLATE.md: not a candidate, 0 checks -- only an idea file carries the candidate shape'],
       deliver: false,
     })
   })
 
   it('counts zero lines for a target with no newline character at all', () => {
-    const outcome = checkShape('backlog/ideas/one-liner.md', 'no newline here')
+    const outcome = checkShape('backlog/ideas/one-liner.md', 'no newline here', NO_RECORD)
     expect(outcome.lines.at(-2)).toMatch(/^lane ideas, legacy shape, 0 lines, 0 depends-on mention\(s\)$/)
   })
 
@@ -229,7 +240,7 @@ describe('checkShape', () => {
       '## Open questions',
       '',
     ].join('\n')
-    const outcome = checkShape('backlog/ideas/clean.md', text)
+    const outcome = checkShape('backlog/ideas/clean.md', text, NO_RECORD)
     expect(outcome.deliver).toBe(false)
   })
 
@@ -250,7 +261,7 @@ describe('checkShape', () => {
       '## Open questions',
       '',
     ].join('\n')
-    const outcome = checkShape('backlog/ideas/clean.md', text)
+    const outcome = checkShape('backlog/ideas/clean.md', text, NO_RECORD)
     expect(outcome.deliver).toBe(false)
   })
 
@@ -269,19 +280,19 @@ describe('checkShape', () => {
       '## Open questions',
       '',
     ].join('\n')
-    const outcome = checkShape('backlog/ideas/clean.md', text)
+    const outcome = checkShape('backlog/ideas/clean.md', text, NO_RECORD)
     expect(outcome.lines).toContain('title: missing or empty')
   })
 
   it('requires the created date to end the line, not merely start it', () => {
     const text = CLEAN.replace('created: 2026-09-18', 'created: 2026-09-18 (draft)')
-    const outcome = checkShape('backlog/ideas/clean.md', text)
+    const outcome = checkShape('backlog/ideas/clean.md', text, NO_RECORD)
     expect(outcome.lines).toContain('created: not a YYYY-MM-DD date')
   })
 
   it('requires the created date to start the line, not merely appear later in it', () => {
     const text = CLEAN.replace('created: 2026-09-18', 'xcreated: 2026-09-18')
-    const outcome = checkShape('backlog/ideas/clean.md', text)
+    const outcome = checkShape('backlog/ideas/clean.md', text, NO_RECORD)
     expect(outcome.lines).toContain('created: not a YYYY-MM-DD date')
   })
 
@@ -298,7 +309,7 @@ describe('checkShape', () => {
       '## Open questions',
       '',
     ].join('\n')
-    const outcome = checkShape('backlog/ideas/clean.md', text)
+    const outcome = checkShape('backlog/ideas/clean.md', text, NO_RECORD)
     expect(outcome.lines).toContain('section missing: ## Question')
   })
 
@@ -306,7 +317,7 @@ describe('checkShape', () => {
     // Unanchored, the strip would leave `sub/foo.md` -- two segments, and so a
     // candidate. The anchor is what keeps a look-alike directory off the board.
     // reference-check: allow sub/foo.md -- illustrative fragment from the unanchored strip above, never a real file
-    expect(checkShape('zzbacklog/sub/foo.md', CLEAN).lines[0]).toContain('not a candidate')
+    expect(checkShape('zzbacklog/sub/foo.md', CLEAN, NO_RECORD).lines[0]).toContain('not a candidate')
   })
 })
 
@@ -355,6 +366,6 @@ describe('checkShape candidate classification', () => {
       candidate: true,
     },
   ])('$name', ({ target, candidate }) => {
-    expect((checkShape(target, CLEAN).lines.at(-1) ?? '').includes(REFUSAL)).toBe(!candidate)
+    expect((checkShape(target, CLEAN, NO_RECORD).lines.at(-1) ?? '').includes(REFUSAL)).toBe(!candidate)
   })
 })
