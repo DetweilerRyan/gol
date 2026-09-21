@@ -229,6 +229,42 @@ by moving the working tree.** `git show <ref>:<path>` reaches the old bytes with
 anything else, and `editor` used exactly that method for the same measurement in the same slice.
 Nothing warns about the alternative, and no gate could.
 
+### P17 — a tier's census lives in three uncoordinated numerals, on three different units
+
+`CLAUDE.md` counts the `scripts/` tier at three surfaces, and each counts something else. The layout
+paragraph's unit is a directory carrying a `run.ts`, of which there are twelve. The `Ten programs`
+claim and its ten-name list carry npm-invoked programs. A third surface reads `a tenth checker`,
+and `git log -S` shows that ordinal tracked the program count while saying checker, so it is pinned
+to neither unit cleanly.
+
+**Two programs entered the tier by a route no documentation branch routes** — a hook declared in
+settings rather than an npm script — and reached none of the three surfaces. Neither is described in
+`CLAUDE.md` or in any article; they appear only in a reference, two sidecars, a skill file and board
+records. **The stale numerals are the symptom and the missing description is the defect**, so a
+numeral-only repair is the wrong fix.
+
+The durable form: **a census surface states its unit, or it cannot be checked by hand or by
+machine.** This is the third instance of the family P7 and P9 already hold — a count over external
+state with no loud audience — and it strengthens the first board recommendation rather than
+competing with it.
+
+### P15 paid out, and the closing REVIEW is where
+
+The second amendment's disposition table routed seven items to this file or to the seat's residue
+lane. The closing REVIEW checked each against the landed file and found all seven arrived. That is
+the remedy P15 named, working once, and it is the evidence that the check belongs at the closing
+REVIEW rather than anywhere earlier.
+
+### The cycle closed at the item that retired its subject, after two amendments
+
+The parent slice's verdict held under test. Both amendments were forced by a live contradiction in
+text the spec itself supplied, and a third was refused because the two findings that surfaced were
+pre-existing on `main` in a file the pass had opened for an unrelated repair.
+
+Worth recording as the boundary working in the **declining** direction, which the parent slice's
+four-amendment record did not demonstrate. The pre-authorized fallback in the second amendment
+expired unfired, and is not a standing authorization to replace that sentence later.
+
 ## The three dispositions that fell out, now recorded
 
 Each was ruled non-blocking on the ground that it is true on the tip. A claim that is true today and
@@ -279,7 +315,14 @@ filed. A retrospective rules whether any becomes an item.
 3. **A disposition for one false claim.** `prose.md` says of the skills tier that it "carries no
    backlog", and a scoped run reports one finding in `idea-approve/SKILL.md`. Either the finding
    clears or the sentence stops claiming zero. Pre-existing, and both fixes edit passages this
-   slice never opened.
+   slice never opened. A second copy of the same claim sits in `.vale.ini`'s own section header,
+   which `architect` owns rather than any process role.
+4. **A process enabler for the `scripts/` census and the two undescribed hook programs.** P17 is
+   the instance. **The proposal must rule the unit before anything is repaired**: whether a
+   settings-declared hook is a `scripts/` program for census purposes. Then either the numerals
+   move to twelve and both hooks gain a description, or the text gains the npm-invoked qualifier
+   and a sentence naming the hooks as a separate class. State in the proposal that a numeral-only
+   repair is the wrong fix, so a later reader does not take the cheap half.
 
 ## What worked, and is worth keeping
 
