@@ -165,6 +165,77 @@ run found eleven survivors, every one a genuine unanchored-regex gap rather than
 the first run came in below the configured break threshold. Whether a per-pass cadence would have
 surfaced them earlier is unmeasured.
 
+### P12 — a spec that grants an edit without supplying its bytes hands authorship to `writer`
+
+Every item of the spec supplied verbatim text except the conditional decision point, which granted
+"one sentence is added". `writer` composed two, and the count error that reopened the cycle was that
+composition rather than spec text. Nothing in the artifact marks which paragraph the spec did not
+write, which is how the first amendment's attribution went over-broad.
+
+The durable form: **a spec supplies bytes for every edit it names, a conditional item included. A
+grant with no bytes is a `writer` decision the spec is pretending to have made.** The cheap version
+is one line — a decision point that cannot supply bytes says so, and says who authors them.
+
+### P13 — a spec cites a rule at two widths, and nothing reads a spec against the rules it invokes
+
+Two instances. One item stated `claim-discipline.md`'s rule correctly in a binding note's second
+sentence and over-broadly in its bolded lead; another item's verbatim body kept only the bolded
+half, which is the sentence the second amendment replaces. Separately, one item removed a tier
+roster from `prose.md` on the ground that a roster of external state rots, while another item added
+a negative universal over a tier in the same pass.
+
+The durable form: **where a spec invokes a house rule, the rule's own text is the authority and the
+spec's paraphrase is not — quote it or cite it, never compress it.** No role reads a spec against
+`claim-discipline.md` today, and `coach` is the only party positioned to.
+
+### P14 — `coach` REVIEW cannot find a defect that needs disagreement with its own reading
+
+`coach` REVIEW reviews text `coach` SPEC authored. The first amendment's subject was a numeral
+against its own enumeration — mechanical, and REVIEW found it. The second amendment's subject is a
+judgement about what a cited article says, where the reviewer shared the author's mistaken reading.
+One REVIEW pass cleared it; `editor` AUDIT found it on its first run.
+
+The durable form: **`editor` AUDIT is not optional for a process enabler, because it is the
+pipeline's only independent reading of a cited rule.** This strengthens P11's remedy rather than
+competing with it — the sequencing rule the seat dropped is the one that protects against this
+class, and dropping it is what let the defect survive a review.
+
+### P15 — a disposition routed to the retro is executed by a different party than the one that ruled it
+
+The first amendment dispositioned four findings here. Measured 2026-09-21 on `e510567`: one arrived
+as a board recommendation, and **the other three did not arrive at all.** The seat wrote a thorough
+intake and the three that came through an amendment's disposition table, rather than through a
+handoff's finding list, are the three that fell out.
+
+The durable form: **an amendment's disposition table is an instruction to the seat, and the closing
+REVIEW is the only pass that can check it arrived.** That review did, which is how the gap surfaced,
+and the three findings below are it being closed.
+
+## The three dispositions that fell out, now recorded
+
+Each was ruled non-blocking on the ground that it is true on the tip. A claim that is true today and
+rots later is this slice's own stopping-condition boundary, so each is recorded rather than repaired.
+
+- **A register defect reinstated one file over.** `.claude/references/pipelines.md` now reads "An
+  assessment record is refused by its own path, in every lane, ahead of the candidate test", and the
+  sentence after it reads "The hook reports the refusal and scores nothing". Both are undated
+  present-tense assertions about another program's internals — the same form this slice deleted from
+  the judging skill. Both re-measured true on 2026-09-21, at the source and behaviourally. The dated
+  counterpart exists in `SKILL.meta.md`, and nothing connects the two.
+- **An undated paragraph among dated siblings.** `SKILL.meta.md`'s "The hook reports; it does not
+  enforce. Argv mode writes every line to stdout and exits 0, with the outcome's `deliver` flag
+  unread" states a present-tense fact about `run.ts` while its three sibling paragraphs date theirs.
+  The tier is exempt from every Vale register rule, so nothing mechanical reaches it, and
+  `claim-discipline.md` binds it regardless. Its opening paragraph carries a second instance.
+- **A heading whose section outgrew it.** `SKILL.meta.md`'s "Why the basename guard is duplicated in
+  prose" now covers a paragraph whose subject is a different stop clause. One clause holds it under
+  the heading. A heading rewrite is structural and no signed text licensed one.
+
+**One observation of the same family**, recorded because its subject has already rotted once
+elsewhere in the same file: CLAUDE.md's new pair-index bullet says `idea-assess` has a sidecar "and
+no other skill does". That is a negative universal over a tier with nothing checking it, and the
+article roster two bullets above it is the same shape, already false.
+
 ## Two records, not findings
 
 **A promoted record's `LAYER1` line names a path that promotion retires.** The ruled record shape
