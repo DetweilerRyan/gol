@@ -1,15 +1,14 @@
 ---
 name: a-reader-finds-a-sidecar-without-an-inventory
-title: Let a reader locate any file's sidecar without CLAUDE.md naming them
+title: Replace the sidecar rosters with a rule a reader can apply
 created: 2026-09-17
 ---
 
 Captured from `coach` REVIEW's handoff on `slice/extract-the-merge-protocol`, its R6,
 2026-09-17, as the residue after the references-tier half landed in that slice's amendment 6.
 **Widened twice by the user on 2026-09-21** — first from the role-file bullet to the whole
-sidecar index, then from the index to every mention in CLAUDE.md of a specific sidecar and what
-it contains. **Six rulings sit under their own heading below**, and they bound the spec without
-writing it.
+sidecar index, then from the index to every mention of a specific sidecar and what it contains.
+**Nine rulings sit under their own heading below**, and they bound the spec without writing it.
 
 ## Situation
 
@@ -23,10 +22,10 @@ audiences before any of them does any work.
 
 ## Complication
 
-**Measured on `main` at `de8fbd6`, 2026-09-21.** Thirty mentions name a concrete sidecar, across
-thirteen distinct files. `CLAUDE.meta.md` accounts for eleven of the thirty. A further ten
-mentions are generic placeholders — `<name>.meta.md`, `<module>.meta.md` — which state the
-convention rather than an instance.
+**Measured on `main` at `de8fbd6`, 2026-09-21.** Thirty mentions in CLAUDE.md name a concrete
+sidecar, across thirteen distinct files. `CLAUDE.meta.md` accounts for eleven of the thirty. A
+further ten mentions are generic placeholders — `<name>.meta.md`, `<module>.meta.md` — which
+state the convention rather than an instance.
 
 **The inventory is false, and hand-repair does not hold it.** The roster was repaired on
 2026-09-21 by `1b1f3e9`, which added the article it had been missing and dropped a bare count.
@@ -41,6 +40,10 @@ beside a `scripts/` program is routine under CLAUDE.md's own routing branches. S
 whose editor is not in the file when it goes stale — the class that rots, rather than the class
 whose author is already holding the document.
 
+**One roster is written three times.** The module-sidecar tier's three names appear twice in
+CLAUDE.md, at two different sections, and a third time in `doc-comments.md`, where a count stands
+beside the enumeration. Three copies of one census, maintained by hand, in two files.
+
 **The index fails the same way twice, one tier apart.** The 2026-09-17 capture found that a
 reader cannot tell an omitted role from a role without a sidecar, because the role-file bullet
 lists only the haves. The article tier carried the identical defect from the other side until
@@ -53,8 +56,8 @@ carries.
 
 ## Question
 
-What should CLAUDE.md say about the sidecar tier so that a reader about to edit any file can find
-that file's sidecar — without naming the instances, which ordinary work falsifies?
+What should the corpus say about the sidecar tier so that a reader about to edit any file can
+find that file's sidecar — without naming the instances, which ordinary work falsifies?
 
 ## Answer
 
@@ -64,7 +67,8 @@ Shaped as an outcome, deliberately. The wording is the process pipeline's to wri
 
 - A reader holding any file in the corpus can determine whether it has a sidecar, and where to
   look, from what CLAUDE.md says plus the tree — without CLAUDE.md naming any instance.
-- No sentence in CLAUDE.md claims completeness over a set that ordinary work changes.
+- No sentence in the files this slice touches claims completeness over a set that ordinary work
+  changes.
 - The placement rulings survive somewhere a reader can reach. They are measured mechanism facts,
   and a directory listing cannot recover them.
 - No fact about how a gate behaves is lost, whether or not the sentence carrying it named a
@@ -85,7 +89,9 @@ Shaped as an outcome, deliberately. The wording is the process pipeline's to wri
 - **`CLAUDE.meta.md` already carries that mechanism**, under its own placement heading. The
   explanation half of ruling D is largely in place rather than to be written.
 - **The ten generic placeholders are the convention itself and stay.** Removing them would delete
-  the rule the replacement depends on.
+  the rule the replacement depends on. The angle-bracket form is safe against the gate:
+  `npm run reference-check` passed on `de8fbd6` at 546 files and 3275 references with four
+  `<module>.meta.md` tokens already in the file.
 - **Nothing reads the section programmatically.** Measured 2026-09-20 on the
   `checkers-do-not-reach-the-assessment-sidecar` slice: nothing binds a sidecar to CLAUDE.md's
   pair index. The section is free to change shape; no gate depends on it.
@@ -93,12 +99,11 @@ Shaped as an outcome, deliberately. The wording is the process pipeline's to wri
   names `mutation-testing.meta.md` because check C4 reds when a config path has no argument
   there. Ruling E covers it, and the destination already carries the fact — `mutation-testing.md`
   states that deleting an entry reds the run.
+- **A dated measurement is not a roster and stays.** `doc-comments.md` records relocating
+  `src/cache.meta.md` and measuring the result. `claim-discipline.md` licenses that form
+  explicitly: it claims history and cannot rot.
 - **`prose.md` owns what fills a sidecar**, and CLAUDE.md's own text already routes that question
   there. The replacement inherits that routing unchanged.
-
-**A second surface goes stale, and the slice owes it.** `CLAUDE.meta.md` states that the sidecar
-index is hand-maintained and unchecked, then proposes a cheap checker extension. Deleting the
-index falsifies the first half, and ruling B rules out the second.
 
 **What would rule this idea out.** That the placement is not rule-statable. The replacement is
 only worth making while a short convention plus one named exception covers the tier. If a third
@@ -107,7 +112,7 @@ checked list becomes the better answer.
 
 ## Ruled by the user, 2026-09-21
 
-Six rulings, taken one at a time against the measurements above.
+Nine rulings, taken one at a time against the measurements above.
 
 - **A — no roster survives.** Both halves go, positive and negative. Checked before ruling that
   nothing goes dark: the two article sidecars named nowhere else, `mutation-testing.meta.md` and
@@ -124,22 +129,40 @@ Six rulings, taken one at a time against the measurements above.
   to CLAUDE.md itself. Moving the whole rule to `prose.md` was ruled out on circularity: that
   file's read trigger assumes the reader already knows sidecars exist.
 - **E — the reach is every named mention, not only the index, and the gate fact moves rather than
-  dies.** The per-article pointer lines go too, which closes the open question the previous
-  revision left. The `mutation-invariance` entry keeps its gate entry without naming the sidecar,
-  and the mechanism lives in `mutation-testing.md`, whose read trigger already fires at
-  `hardener`'s mutation stage. **This puts a second file in the slice's reach.**
+  dies.** The per-article pointer lines go too. The `mutation-invariance` entry keeps its gate
+  entry without naming the sidecar, and the mechanism lives in `mutation-testing.md`, whose read
+  trigger already fires at `hardener`'s mutation stage.
 - **F — the eleven `CLAUDE.meta.md` self-citations are ruled per mention, by `coach`, at spec
   time.** Each is CLAUDE.md citing its own sidecar as evidence for a claim that stays. Whether a
   claim survives losing its citation is a `claim-discipline.md` judgement per sentence, not a
-  blanket, and `coach` is the pass positioned to make it under the user's signature.
+  blanket.
+- **G — a syntax example is genericised, a worked precedent loses its name.** The mandated
+  reference form becomes `@see {@link ./<module>.meta.md}`, and the leading-dot resolution fact
+  is stated about the form rather than about a live file. The routing tie-break keeps its rule
+  and drops `src/scrollbars.meta.md` as its named instance.
+- **H — `CLAUDE.meta.md`'s stale sentence and its checker proposal are deleted, not rewritten.**
+  The smaller edit was ruled over recording the decline. **Consequence, recorded so the spec knows
+  it:** ruling B's argument then survives only in this file's No-gos and in the commit history,
+  and this file is deleted at retrospective. Open question 1 below carries the residue.
+- **I — the slice reaches `doc-comments.md`.** Its copy of the module roster and its twin of the
+  syntax example go, on ruling A and ruling G respectively. Its two dated measurements stay. A
+  roster left in the article that owns the tier relocates the defect rather than removing it.
+
+**The reach, after every ruling:** `CLAUDE.md`, `CLAUDE.meta.md`, `mutation-testing.md`,
+`doc-comments.md`.
 
 ## No-gos
 
 - **No mechanical binding**, per ruling B. A later slice re-proposing a checker over this tier is
   re-opening a closed decision, and the asymmetry above is why it closed.
-- **No surviving roster in CLAUDE.md**, per ruling A, in either direction.
+- **No surviving roster** in the files this slice touches, per ruling A, in either direction.
 - **No deletion of the generic placeholders.** They state the convention the replacement rests
-  on, and they name no instance, so the instruction does not reach them.
+  on, and they name no instance.
+- **No corpus-wide sweep.** Eight further articles carry four to thirteen named mentions each,
+  over eighty in total, and most are an article pointing at its own sidecar — the legitimate pair
+  pointer rather than a roster. Ruled out of this slice as a different and much larger piece of
+  work.
+- **No deletion of a dated measurement**, wherever one names a sidecar.
 - **Does not decide what fills a sidecar.** That is `prose.md`'s question under "Instruction
   stays. Explanation moves."
 - **Does not reach the topic-article counts.** `apply-the-census-count-rule-everywhere` owns
@@ -147,11 +170,11 @@ Six rulings, taken one at a time against the measurements above.
 
 ## Open questions
 
-- **Do the named filenames used as syntax examples go?** Branch 4 mandates the reference form
-  `@see {@link ./useZoomGlide.meta.md}`, which names a real sidecar in order to show the syntax.
-  Ruling E reaches every named mention, but an example that illustrates a convention is not a
-  pointer to what a sidecar contains. Either keep it, or find a form that shows the syntax without
-  naming a live file.
-- **How deep does the `CLAUDE.meta.md` repair go?** Ruling B makes its checker proposal a
-  ruled-out route rather than merely a stale one. Recording why it was declined is the more useful
-  repair, and also the larger edit.
+- **Where does ruling B's argument live once ruling H deletes the proposal?** The decline survives
+  in this file and in git, and this file is deleted at retrospective. A durable home would be
+  `CLAUDE.meta.md` itself, which ruling H declines, or the retrospective's own extraction. If
+  neither takes it, the next reader who notices the list is unchecked re-proposes the checker with
+  nothing to stop them.
+- **Does the corpus-wide residue get its own candidate?** Ruled out of this slice by the No-go
+  above, which leaves over eighty named mentions unexamined. Whether any of those are rosters
+  rather than pair pointers has not been measured.
