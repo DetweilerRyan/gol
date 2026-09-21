@@ -162,8 +162,16 @@ evidence for it rather than a new question.
 
 **The cost landed anyway, in the direction that argues for the rule.** `cleaner`'s single mutation
 run found eleven survivors, every one a genuine unanchored-regex gap rather than an equivalent, and
-the first run came in below the configured break threshold. Whether a per-pass cadence would have
-surfaced them earlier is unmeasured.
+the first run came in below the configured break threshold.
+
+**The rule's own evidence was already recorded, and the seat did not read it before dropping the
+rule.** `.claude/references/pipelines.meta.md` carries the measured cost of the single-pass
+alternative: one slice shipped a function at CRAP 8.0 against a threshold of 6 and it stood until a
+much later pass, and another left three `dry4ts` clones, which is a hard gate failure. **`cleaner`
+structurally could not have caught either, because both were authored after its single scan.** So
+the failure mode is not that a per-pass cadence finds things sooner; it is that a single scan cannot
+see what a later `coder` pass writes. This slice's own union scan happened to run last, which is why
+it caught anything at all.
 
 ### P12 — a spec that grants an edit without supplying its bytes hands authorship to `writer`
 
