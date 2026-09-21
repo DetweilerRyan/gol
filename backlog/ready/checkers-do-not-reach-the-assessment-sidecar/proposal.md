@@ -40,8 +40,9 @@ the way every other record's do.
 
 Both checks fail open, and each owes a guard that says so. A carve-out whose glob matches no
 sidecar reports zero findings exactly as a clean tree does. A hash comparison passes vacuously
-when the sidecar is absent. The non-empty inertness guard that two gating checkers shared as of
-2026-09-20 is the precedent to follow rather than to reinvent.
+when the sidecar is absent. The precedent to follow rather than reinvent is the shared non-empty
+guard in `scripts/gate-report.ts`, which the gating checkers already call rather than each
+writing its own.
 
 Three documentation surfaces go false with the change, and the slice owes all three. CLAUDE.md's
 `reference-check` entry states the board exclusion as two directories. The readiness reference
@@ -67,6 +68,25 @@ mismatch in the ideas lane is staleness, which is the fact the hash was stored f
 in the ready or done lane is expected history, because promotion freezes the record and the next
 commit fleshes out the proposal. So a predicate that read the lanes alike would report every
 promoted item as stale.
+
+**The parent landed on 2026-09-20, and three things this file says were checked against the
+landed tree that day.** The two checkers are untouched — that slice changed no file under
+`scripts/` — so the classifier's positional test, the board exclusion and both fail-open readings
+all still hold as written.
+
+Two premises moved, and neither is re-scored here, since the letters live in the promotion
+commit and that record is closed. The dependency is now tagged and in the done lane rather than
+filed and unlanded, which is the fact the Independent finding rested on. And the artifact class
+now exists and is written on demand, where the Valuable finding recorded a ceiling on the
+grounds that no instance could be cited.
+
+**A fourth surface joined the three, and it is the one that binds hardest.** The judging skill
+now refuses a target whose basename marks it a record, and the clause explaining why names this
+item's defect as its reason — that the classifier reads position rather than basename. **That
+sentence goes false the moment this work lands**, so the surface does not merely describe the
+old behaviour; it depends on it and cites the mechanism. The prose also mitigates only half the
+defect: it stops a judge assessing a record, and does nothing about the hook delivering
+idea-file findings to whoever writes one.
 
 ## No-gos
 
