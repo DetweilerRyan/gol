@@ -59,6 +59,57 @@ describe('isAssessmentRecordPath and siblingRecordPathFor', () => {
       sibling: undefined,
     },
     { name: 'an off-board path', path: 'src/camera.ts', isRecord: false, sibling: undefined },
+    // Every regex below is anchored at both ends; each row below removes one
+    // anchor's protection by hand and checks the shape it would wrongly
+    // admit. `.mdx` rows prove the trailing `$`: without it, `[^/]+\.md`
+    // backtracks onto the `.md` substring inside `.mdx` and matches anyway.
+    // `X`-glued rows prove the leading `^`: without it, `.exec` is free to
+    // start the whole match one character later, right at `backlog/`.
+    {
+      name: 'an idea path with a non-.md extension that contains .md as a substring',
+      path: 'backlog/ideas/foo.mdx',
+      isRecord: false,
+      sibling: undefined,
+    },
+    {
+      name: 'an idea-shaped suffix glued to a preceding non-slash character',
+      path: 'Xbacklog/ideas/foo.md',
+      isRecord: false,
+      sibling: undefined,
+    },
+    {
+      name: 'a record-shaped suffix with trailing characters after .md',
+      path: 'backlog/ideas/foo.assessment.mdx',
+      isRecord: false,
+      sibling: undefined,
+    },
+    {
+      name: 'a record-shaped suffix glued to a preceding non-slash character',
+      path: 'Xbacklog/ideas/foo.assessment.md',
+      isRecord: false,
+      sibling: undefined,
+    },
+    {
+      name: 'a proposal path with a non-.md extension that contains .md as a substring',
+      path: 'backlog/ready/foo/proposal.mdx',
+      isRecord: false,
+      sibling: undefined,
+    },
+    {
+      name: 'a proposal-shaped suffix glued to a preceding non-slash character',
+      path: 'Xbacklog/ready/foo/proposal.md',
+      isRecord: false,
+      sibling: undefined,
+    },
+    // Distinct from the two anchor rows above: this one pins the `.*` in
+    // PROPOSAL_PATH's optional prefix group against a narrowed `.` -- a
+    // multi-character prefix like /repo/ only matches the starred form.
+    {
+      name: 'an absolute proposal path with a multi-character prefix, preserved on the sibling',
+      path: '/repo/backlog/ready/foo/proposal.md',
+      isRecord: false,
+      sibling: '/repo/backlog/ready/foo/assessment.md',
+    },
   ])('$name', ({ path, isRecord, sibling }) => {
     expect(isAssessmentRecordPath(path)).toBe(isRecord)
     expect(siblingRecordPathFor(path)).toBe(sibling)
@@ -82,6 +133,24 @@ describe('storedBlobOf', () => {
       expected: undefined,
     },
     { name: 'returns undefined for text with no frontmatter at all', text: 'just some prose\n', expected: undefined },
+    // IDEA_BLOB_LINE is anchored at both ends and requires zero-or-more
+    // separators, not one-or-more. Each row isolates one of those choices.
+    {
+      name: 'ignores idea-blob glued to a preceding non-whitespace character on the line',
+      text: frontmatter('xidea-blob: sneaky'),
+      expected: undefined,
+    },
+    {
+      name: 'returns undefined when trailing content follows the value on the same line',
+      text: frontmatter('idea-blob: abc123 extra-token'),
+      expected: undefined,
+    },
+    { name: 'reads a value with no space after the colon', text: frontmatter('idea-blob:abc123'), expected: 'abc123' },
+    {
+      name: 'reads a value followed by trailing whitespace before the line ends',
+      text: frontmatter('idea-blob: abc123 '),
+      expected: 'abc123',
+    },
   ])('$name', ({ text, expected }) => {
     expect(storedBlobOf(text)).toBe(expected)
   })
