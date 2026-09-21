@@ -1,0 +1,8 @@
+{
+  "$schema": "./schemas/board-lanes.schema.json",
+  "lanes": {
+    "ideas": { "shape": "flat" },
+    "ready": { "shape": "folder", "item": "proposal.md" },
+    "done": { "shape": "folder", "item": "proposal.md" }
+  }
+}

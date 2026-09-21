@@ -1,0 +1,49 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "board-lanes.config.json",
+  "description": "Editor affordance only -- the runtime validator in scripts/board-shape-hook/lane-declarations.ts stays authoritative and never reads this file. Declares each backlog/ lane's item shape: 'flat' for a lane whose candidate is a bare <slug>.md file, or 'folder' for a lane whose candidate is a <slug>/<item> folder, naming the item's basename.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["lanes"],
+  "properties": {
+    "$schema": {
+      "type": "string"
+    },
+    "lanes": {
+      "type": "object",
+      "minProperties": 1,
+      "additionalProperties": { "$ref": "#/definitions/laneShape" },
+      "propertyNames": {
+        "type": "string",
+        "minLength": 1,
+        "pattern": "^[^/]+$"
+      }
+    }
+  },
+  "definitions": {
+    "laneShape": {
+      "oneOf": [
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["shape"],
+          "properties": {
+            "shape": { "const": "flat" }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["shape", "item"],
+          "properties": {
+            "shape": { "const": "folder" },
+            "item": {
+              "type": "string",
+              "pattern": "^[^/]+\\.md$"
+            }
+          }
+        }
+      ]
+    }
+  }
+}
