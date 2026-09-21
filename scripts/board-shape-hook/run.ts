@@ -21,11 +21,13 @@ import {
   checkShape,
   emptyPathOutcome,
   isBoardPath,
+  laneDeclarationsUnavailableOutcome,
   missingOutcome,
   offBoardOutcome,
   resolveTarget,
   type RecordLookup,
 } from './board-shape.ts'
+import { parseLaneDeclarations } from './lane-declarations.ts'
 
 // The sibling record's staleness input for a resolved, on-board target.
 // `absent` covers both "no sibling shape at all" (a record's own path, or a
@@ -48,12 +50,28 @@ function recordLookupFor(target: string, ideaBytes: Buffer): RecordLookup {
   return { kind: 'present', storedBlob, currentBlob: blobIdOf(ideaBytes) }
 }
 
+// Reads the lane declarations from the checkout root, CWD-relative -- both
+// entry points below already run with cwd at the checkout root, the same
+// assumption resolveTarget's own backlog/ candidates rest on. `undefined`
+// stands for "missing or unreadable"; parseLaneDeclarations turns that, and
+// every other malformed shape, into a single `unavailable` outcome with a
+// reason.
+function readLaneDeclarationsText(): string | undefined {
+  try {
+    return readFileSync('board-lanes.config.json', 'utf8')
+  } catch {
+    return undefined
+  }
+}
+
 function checkTarget(target: string): HookOutcome {
+  const lanes = parseLaneDeclarations(readLaneDeclarationsText())
+  if (lanes.kind === 'unavailable') return laneDeclarationsUnavailableOutcome(target, lanes.reason)
   const resolved = resolveTarget(target, existsSync)
   if (resolved === '' || !existsSync(resolved)) return missingOutcome(resolved)
   if (!isBoardPath(resolved)) return offBoardOutcome(resolved)
   const bytes = readFileSync(resolved)
-  return checkShape(resolved, bytes.toString('utf8'), recordLookupFor(resolved, bytes))
+  return checkShape(resolved, bytes.toString('utf8'), recordLookupFor(resolved, bytes), lanes.lanes)
 }
 
 function readStdin(): string {

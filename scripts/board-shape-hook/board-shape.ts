@@ -5,6 +5,7 @@
 import { basename, dirname } from 'node:path'
 import { type HookOutcome } from '../post-tool-use.ts'
 import { isAssessmentRecordPath } from './assessment-record.ts'
+import { type LaneDeclarations, type LaneShape } from './lane-declarations.ts'
 
 /**
  * A candidate's staleness input: how the sibling assessment record's stored
@@ -55,6 +56,21 @@ export function offBoardOutcome(target: string): HookOutcome {
   return {
     lines: [`LAYER1 ${target}: off the board, 0 checks -- only a backlog/ target can be assessed`],
     deliver: false,
+  }
+}
+
+// run.ts's counterpart of missingOutcome for a config read that failed --
+// checkShape cannot classify any target without the declaration map, so this
+// is the one outcome run.ts builds itself rather than delegating to
+// checkShape. deliver is true, same as missingOutcome: this is the loudest
+// channel short of a nonzero exit, since the board has no gate. `target` is
+// whatever run.ts received before it ever resolved or read anything, since
+// the config read happens ahead of resolution.
+export function laneDeclarationsUnavailableOutcome(target: string, reason: string): HookOutcome {
+  const label = target === '' ? '(no path)' : target
+  return {
+    lines: [`LAYER1 ${label}: 0 checks, 1 findings -- lane declarations unavailable (${reason})`],
+    deliver: true,
   }
 }
 
@@ -116,17 +132,39 @@ function laneFor(target: string): string {
   return segmentsAfterRoot(target)[0]
 }
 
-// Two board shapes carry the candidate form and everything else does not.
-// `<lane>/<name>.md` is a flat idea file, and `<lane>/<item>/proposal.md` is
-// the same idea promoted into its own folder. Every other .md under an item
-// folder is a per-item artifact -- a spec, a design, an amendment, a task
-// list, a spike's findings -- and owes the candidate form nothing. The test is
-// positional, so a new artifact kind needs no entry here, a numbered amendment
-// needs no pattern, and a new lane directory needs no literal.
-function isCandidatePath(target: string): boolean {
+// Declaration-driven classification. A lane's declared shape decides which
+// segment count carries the candidate form: `flat` wants exactly `<lane>/
+// <name>.md`, `folder` wants exactly `<lane>/<item>/<lane.item>`. Every
+// other .md under an item folder is a per-item artifact -- a spec, a design,
+// an amendment, a task list, a spike's findings -- and owes the candidate
+// form nothing, regardless of which shape the lane declares. The test is
+// positional within a lane's own declared shape, so a new artifact kind
+// still needs no entry here and a numbered amendment still needs no
+// pattern -- only the lane name itself is looked up, by name, against
+// `lanes`. An undeclared first segment and a segment count the lane's own
+// shape does not expect each draw their own outcome rather than folding
+// into "not a candidate", so the three refusal/warning causes stay tellable
+// apart in the log stream. `classifyShape` carries the resolved `LaneShape`
+// on its `candidate` branch, so a caller never has to look the lane back up.
+type Classification =
+  | { kind: 'candidate'; shape: LaneShape }
+  | { kind: 'undeclared-lane' }
+  | { kind: 'shape-mismatch' }
+  | { kind: 'not-a-candidate' }
+
+function classifyShape(target: string, lanes: LaneDeclarations): Classification {
   const segments = segmentsAfterRoot(target)
-  if (segments.length === 2) return true
-  return segments.length === 3 && segments[2] === 'proposal.md'
+  if (segments.length < 2) return { kind: 'not-a-candidate' }
+  const lane = lanes.get(segments[0])
+  if (lane === undefined) return { kind: 'undeclared-lane' }
+  if (lane.shape === 'flat') {
+    return segments.length === 2 ? { kind: 'candidate', shape: lane } : { kind: 'shape-mismatch' }
+  }
+  if (segments.length === 2) return { kind: 'shape-mismatch' }
+  if (segments.length === 3) {
+    return segments[2] === lane.item ? { kind: 'candidate', shape: lane } : { kind: 'not-a-candidate' }
+  }
+  return { kind: 'not-a-candidate' }
 }
 
 // deliver is false, so no envelope reaches the acting agent and writing a
@@ -134,6 +172,26 @@ function isCandidatePath(target: string): boolean {
 // stream, worded as a refusal to assess rather than as a pass.
 function notACandidateOutcome(target: string): HookOutcome {
   const line = `LAYER1 ${target}: not a candidate, 0 checks -- only an idea file carries the candidate shape`
+  return { lines: [line], deliver: false }
+}
+
+// deliver is false, matching notACandidateOutcome's silence: an undeclared
+// lane is not a malformed candidate, it is a path the config simply has no
+// opinion about, so writing under it stays silent while the log stream still
+// names the gap. Worded distinctly from notACandidateOutcome and
+// shapeMismatchOutcome so the three causes stay tellable apart.
+function undeclaredLaneOutcome(target: string): HookOutcome {
+  const line = `LAYER1 ${target}: undeclared lane, 0 checks -- board-lanes.config.json names no lane for this path`
+  return { lines: [line], deliver: false }
+}
+
+// deliver is false, same reasoning as undeclaredLaneOutcome: the lane is
+// declared, but this path does not fit the shape declared for it -- a bare
+// file where the lane expects an item folder, or an item folder's own file
+// nested deeper than the lane declares. Worded distinctly from the other two
+// refusal/warning outcomes so all three stay tellable apart.
+function shapeMismatchOutcome(target: string): HookOutcome {
+  const line = `LAYER1 ${target}: shape mismatch, 0 checks -- path does not match its lane's declared shape`
   return { lines: [line], deliver: false }
 }
 
@@ -167,19 +225,30 @@ function assessmentRecordOutcome(target: string): HookOutcome {
  * The seven readiness checks over an already-resolved target's text: name
  * matches basename, title present, created is a date, no status field, the
  * era-appropriate section headings, and the sibling record's staleness
- * against `record`. Refuses an assessment record's own path before testing
- * candidacy, since a record's shape carries the same segment count as the
- * idea file it judges. Always reports the lane summary, the assessment
- * clause, and the LAYER1 tally; `deliver` is true only when a check failed.
+ * against `record`. `lanes` is the validated declaration map -- this
+ * function cannot classify a target at all without it, so a caller with no
+ * declarations resolves that first (see `laneDeclarationsUnavailableOutcome`
+ * in `run.ts`). Refuses an assessment record's own path before classifying,
+ * since a record's shape carries the same segment count as the idea file it
+ * judges; an undeclared lane or a lane/segment-count mismatch each draw
+ * their own warning rather than running the checks. Always reports the lane
+ * summary, the assessment clause, and the LAYER1 tally; `deliver` is true
+ * only when a check failed.
  */
-export function checkShape(target: string, text: string, record: RecordLookup): HookOutcome {
+export function checkShape(target: string, text: string, record: RecordLookup, lanes: LaneDeclarations): HookOutcome {
   if (isAssessmentRecordPath(target)) return assessmentRecordOutcome(target)
-  if (!isCandidatePath(target)) return notACandidateOutcome(target)
+  const classification = classifyShape(target, lanes)
+  if (classification.kind === 'undeclared-lane') return undeclaredLaneOutcome(target)
+  if (classification.kind === 'shape-mismatch') return shapeMismatchOutcome(target)
+  if (classification.kind === 'not-a-candidate') return notACandidateOutcome(target)
   const textLines = text.split('\n')
-  // In the folder lanes the file is always proposal.md, so the identity the
-  // name: field must match is the folder's basename, not the file's.
+  // In a folder lane the file is always the lane's declared item, so the
+  // identity the name: field must match is the folder's basename, not the
+  // file's -- generalized from the folder shape itself rather than a
+  // hardcoded 'proposal' stem, so a lane declaring a different item name
+  // classifies identically.
   const stem = basename(target, '.md')
-  const base = stem === 'proposal' ? basename(dirname(target)) : stem
+  const base = classification.shape.shape === 'folder' ? basename(dirname(target)) : stem
   const fm = frontmatterWindow(textLines)
   const identity = identityFindings(fm, base)
   const { era, findings: sections } = sectionFindings(textLines)

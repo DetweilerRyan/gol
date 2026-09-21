@@ -8,12 +8,25 @@ import {
   resolveTarget,
   type RecordLookup,
 } from './board-shape.ts'
+import { type LaneDeclarations } from './lane-declarations.ts'
 
 // Absent-record filler for every checkShape call below that is not itself
 // exercising the record lookup: it reports the 'no assessment record' clause
 // and contributes no finding, so it never perturbs a shape-check assertion
 // that predates the record parameter.
 const NO_RECORD: RecordLookup = { kind: 'absent' }
+
+// The tracked board-lanes.config.json's three lanes, as a LaneDeclarations
+// value -- the same map lane-declarations.test.ts pins the config file
+// parses into. Every checkShape call below that is not itself exercising
+// declaration-driven classification passes this, so an ideas/ready/done
+// target classifies exactly as it did before checkShape took a lanes
+// parameter.
+const LANES: LaneDeclarations = new Map([
+  ['ideas', { shape: 'flat' }],
+  ['ready', { shape: 'folder', item: 'proposal.md' }],
+  ['done', { shape: 'folder', item: 'proposal.md' }],
+])
 
 describe('isBoardPath', () => {
   it.each([
@@ -134,7 +147,7 @@ const CLEAN = [
 
 describe('checkShape', () => {
   it('finds nothing wrong with a well-formed scqa-era file and does not deliver', () => {
-    const outcome = checkShape('backlog/ideas/clean.md', CLEAN, NO_RECORD)
+    const outcome = checkShape('backlog/ideas/clean.md', CLEAN, NO_RECORD, LANES)
     expect(outcome.deliver).toBe(false)
     expect(outcome.lines).toEqual([
       'lane ideas, scqa shape, 17 lines, 0 depends-on mention(s)',
@@ -145,7 +158,7 @@ describe('checkShape', () => {
 
   it('reports all six findings for a mismatched, status-bearing, headingless file', () => {
     const text = ['---', 'name: mismatched-name', 'status: ready', '---', '', 'Body with no headings.', ''].join('\n')
-    const outcome = checkShape('backlog/ideas/all-six.md', text, NO_RECORD)
+    const outcome = checkShape('backlog/ideas/all-six.md', text, NO_RECORD, LANES)
     expect(outcome.deliver).toBe(true)
     expect(outcome.lines).toEqual([
       "name: does not match basename 'all-six'",
@@ -177,21 +190,21 @@ describe('checkShape', () => {
       'None.',
       '',
     ].join('\n')
-    const outcome = checkShape('backlog/ideas/legacy.md', text, NO_RECORD)
+    const outcome = checkShape('backlog/ideas/legacy.md', text, NO_RECORD, LANES)
     expect(outcome.deliver).toBe(false)
     expect(outcome.lines[0]).toMatch(/^lane ideas, legacy shape,/)
   })
 
   it("takes identity from the folder's basename for a ready/ proposal.md, not the file stem", () => {
     const text = CLEAN.replace('name: clean', 'name: my-slug')
-    const outcome = checkShape('backlog/ready/my-slug/proposal.md', text, NO_RECORD)
+    const outcome = checkShape('backlog/ready/my-slug/proposal.md', text, NO_RECORD, LANES)
     expect(outcome.deliver).toBe(false)
     expect(outcome.lines[0]).toMatch(/^lane ready,/)
   })
 
   it('counts a case-insensitive "depends on" mention', () => {
     const text = CLEAN.replace('None.', 'Depends on something else.')
-    const outcome = checkShape('backlog/ideas/clean.md', text, NO_RECORD)
+    const outcome = checkShape('backlog/ideas/clean.md', text, NO_RECORD, LANES)
     expect(outcome.lines[0]).toContain('1 depends-on mention(s)')
   })
 
@@ -200,6 +213,7 @@ describe('checkShape', () => {
       '/repo/backlog/done/clean/proposal.md',
       CLEAN.replace('name: clean', 'name: clean'),
       NO_RECORD,
+      LANES,
     )
     expect(outcome.lines[0]).toMatch(/^lane done,/)
   })
@@ -208,21 +222,21 @@ describe('checkShape', () => {
     { name: 'the ideas-lane record form', path: 'backlog/ideas/foo.assessment.md' },
     { name: 'the promoted ready-lane record form', path: 'backlog/ready/foo/assessment.md' },
   ])('refuses $name ahead of the candidate test, and pins the whole refusal outcome', ({ path }) => {
-    expect(checkShape(path, CLEAN, NO_RECORD)).toEqual({
+    expect(checkShape(path, CLEAN, NO_RECORD, LANES)).toEqual({
       lines: [`LAYER1 ${path}: an assessment record, 0 checks -- this layer does not shape-check its own judgments`],
       deliver: false,
     })
   })
 
   it('refuses a file sitting directly under backlog/ and pins the whole non-candidate outcome', () => {
-    expect(checkShape('backlog/TEMPLATE.md', CLEAN, NO_RECORD)).toEqual({
+    expect(checkShape('backlog/TEMPLATE.md', CLEAN, NO_RECORD, LANES)).toEqual({
       lines: ['LAYER1 backlog/TEMPLATE.md: not a candidate, 0 checks -- only an idea file carries the candidate shape'],
       deliver: false,
     })
   })
 
   it('counts zero lines for a target with no newline character at all', () => {
-    const outcome = checkShape('backlog/ideas/one-liner.md', 'no newline here', NO_RECORD)
+    const outcome = checkShape('backlog/ideas/one-liner.md', 'no newline here', NO_RECORD, LANES)
     expect(outcome.lines.at(-3)).toMatch(/^lane ideas, legacy shape, 0 lines, 0 depends-on mention\(s\)$/)
   })
 
@@ -242,7 +256,7 @@ describe('checkShape', () => {
       '## Open questions',
       '',
     ].join('\n')
-    const outcome = checkShape('backlog/ideas/clean.md', text, NO_RECORD)
+    const outcome = checkShape('backlog/ideas/clean.md', text, NO_RECORD, LANES)
     expect(outcome.deliver).toBe(false)
   })
 
@@ -263,7 +277,7 @@ describe('checkShape', () => {
       '## Open questions',
       '',
     ].join('\n')
-    const outcome = checkShape('backlog/ideas/clean.md', text, NO_RECORD)
+    const outcome = checkShape('backlog/ideas/clean.md', text, NO_RECORD, LANES)
     expect(outcome.deliver).toBe(false)
   })
 
@@ -282,19 +296,19 @@ describe('checkShape', () => {
       '## Open questions',
       '',
     ].join('\n')
-    const outcome = checkShape('backlog/ideas/clean.md', text, NO_RECORD)
+    const outcome = checkShape('backlog/ideas/clean.md', text, NO_RECORD, LANES)
     expect(outcome.lines).toContain('title: missing or empty')
   })
 
   it('requires the created date to end the line, not merely start it', () => {
     const text = CLEAN.replace('created: 2026-09-18', 'created: 2026-09-18 (draft)')
-    const outcome = checkShape('backlog/ideas/clean.md', text, NO_RECORD)
+    const outcome = checkShape('backlog/ideas/clean.md', text, NO_RECORD, LANES)
     expect(outcome.lines).toContain('created: not a YYYY-MM-DD date')
   })
 
   it('requires the created date to start the line, not merely appear later in it', () => {
     const text = CLEAN.replace('created: 2026-09-18', 'xcreated: 2026-09-18')
-    const outcome = checkShape('backlog/ideas/clean.md', text, NO_RECORD)
+    const outcome = checkShape('backlog/ideas/clean.md', text, NO_RECORD, LANES)
     expect(outcome.lines).toContain('created: not a YYYY-MM-DD date')
   })
 
@@ -311,15 +325,19 @@ describe('checkShape', () => {
       '## Open questions',
       '',
     ].join('\n')
-    const outcome = checkShape('backlog/ideas/clean.md', text, NO_RECORD)
+    const outcome = checkShape('backlog/ideas/clean.md', text, NO_RECORD, LANES)
     expect(outcome.lines).toContain('section missing: ## Question')
   })
 
   it('anchors the backlog/ prefix strip to the start of the path, not any occurrence', () => {
     // Unanchored, the strip would leave `sub/foo.md` -- two segments, and so a
     // candidate. The anchor is what keeps a look-alike directory off the board.
+    // With the anchor intact, `zzbacklog` reads as the (undeclared) lane name
+    // rather than falling through to a shorter slice of the path, so the
+    // wording is "undeclared lane" rather than "not a candidate" -- the
+    // segment count still pins the anchor even though the outcome class moved.
     // reference-check: allow sub/foo.md -- illustrative fragment from the unanchored strip above, never a real file
-    expect(checkShape('zzbacklog/sub/foo.md', CLEAN, NO_RECORD).lines[0]).toContain('not a candidate')
+    expect(checkShape('zzbacklog/sub/foo.md', CLEAN, NO_RECORD, LANES).lines[0]).toContain('undeclared lane')
   })
 })
 
@@ -395,7 +413,7 @@ describe('checkShape assessment record staleness', () => {
       findings: 1,
     },
   ])('$name', ({ target, text, record, clause, findings }) => {
-    const outcome = checkShape(target, text, record)
+    const outcome = checkShape(target, text, record, LANES)
     expect(outcome.lines).toContain(clause)
     expect(outcome.lines.at(-1)).toBe(`LAYER1 ${target}: 7 checks, ${findings} findings`)
     expect(outcome.deliver).toBe(findings > 0)
@@ -433,20 +451,81 @@ describe('checkShape candidate classification', () => {
       candidate: false,
     },
     { name: 'a bare single-segment argv target is not a candidate', target: 'clean.md', candidate: false },
-    // Named residue, 2026-09-19: checkShape alone has no board gate, so an
-    // off-board path with exactly two segments satisfies the <lane>/<name>.md
-    // shape by coincidence when checkShape is called directly, as this row
-    // does. Both shells gate on isBoardPath in run.ts before checkShape is
-    // ever reached, so this path is unreachable from either --hook or argv
-    // mode. Adding the gate here, inside isCandidatePath, would strand the ^
-    // anchor in segmentsAfterRoot as an equivalent mutant, which is why it is
-    // named rather than closed.
-    {
-      name: 'an off-board two-segment path is a candidate when checkShape is called directly',
-      target: 'src/camera.ts',
-      candidate: true,
-    },
   ])('$name', ({ target, candidate }) => {
-    expect((checkShape(target, CLEAN, NO_RECORD).lines.at(-1) ?? '').includes(REFUSAL)).toBe(!candidate)
+    expect((checkShape(target, CLEAN, NO_RECORD, LANES).lines.at(-1) ?? '').includes(REFUSAL)).toBe(!candidate)
+  })
+
+  // Named residue, 2026-09-19, narrowed 2026-09-21 once classification became
+  // declaration-driven: checkShape alone has no board gate, so an off-board
+  // path whose first segment happens to match a declared lane name still
+  // classifies as a candidate when checkShape is called directly, as this
+  // row does. Both shells gate on isBoardPath in run.ts before checkShape is
+  // ever reached, so this path is unreachable from either --hook or argv
+  // mode. Adding the gate here, inside classifyShape, would strand the ^
+  // anchor in segmentsAfterRoot as an equivalent mutant, which is why it is
+  // named rather than closed. `src/camera.ts` -- the row this replaced --
+  // moved below: `src` is not a declared lane name, so it no longer
+  // illustrates the residue and now draws its own undeclared-lane outcome
+  // instead.
+  it('classifies an off-board path as a candidate when its lane segment happens to match a declared lane name', () => {
+    const text = CLEAN.replace('name: clean', 'name: off-board')
+    const outcome = checkShape('ideas/off-board.md', text, NO_RECORD, LANES)
+    expect(outcome.lines.at(-1)).toContain('7 checks,')
+  })
+
+  it('classifies an off-board path with no declared-lane collision as an undeclared lane, not a candidate', () => {
+    const outcome = checkShape('src/camera.ts', CLEAN, NO_RECORD, LANES)
+    expect(outcome.lines.at(-1)).toContain('undeclared lane')
+    expect(outcome.deliver).toBe(false)
+  })
+})
+
+describe('checkShape declaration-driven classification', () => {
+  // Rows 3, 5 and 8 of the design's decision table: the three outcomes a
+  // board target can draw once the lane is declared but the path either
+  // names no lane at all, or names one whose declared shape it does not
+  // fit. Every row asserts both the wording and that the outcome never
+  // delivers -- a warning reaches the log stream only, exactly like
+  // notACandidateOutcome, so the finding tally an eventual candidate write
+  // produces stays uncontaminated by a path that was never classified.
+  it.each([
+    {
+      name: 'row 3: an undeclared lane never reaches the checks',
+      target: 'backlog/unknown/foo.md',
+      contains: 'undeclared lane',
+    },
+    {
+      name: 'row 5: a flat lane with a third segment is a shape mismatch',
+      target: 'backlog/ideas/sub/foo.md',
+      contains: 'shape mismatch',
+    },
+    {
+      name: 'row 8: a folder lane with only two segments is a shape mismatch',
+      target: 'backlog/ready/foo.md',
+      contains: 'shape mismatch',
+    },
+  ])('$name', ({ target, contains }) => {
+    const outcome = checkShape(target, CLEAN, NO_RECORD, LANES)
+    expect(outcome.lines).toEqual([expect.stringContaining(contains)])
+    expect(outcome.deliver).toBe(false)
+  })
+
+  it('draws distinct wording for an undeclared lane, a shape mismatch, and a non-candidate artifact', () => {
+    const undeclared = checkShape('backlog/unknown/foo.md', CLEAN, NO_RECORD, LANES).lines[0]
+    const mismatch = checkShape('backlog/ready/foo.md', CLEAN, NO_RECORD, LANES).lines[0]
+    const notACandidate = checkShape('backlog/ready/foo/spec.md', CLEAN, NO_RECORD, LANES).lines[0]
+    expect(new Set([undeclared, mismatch, notACandidate]).size).toBe(3)
+  })
+
+  // The slice's namesake claim: a folder lane's identity extraction is
+  // driven by the shape declared for it, not by a hardcoded 'proposal' stem
+  // -- so a lane declaring a differently-named item classifies and reports
+  // identity exactly as ready/done already do.
+  it('takes identity from the folder basename for a folder lane declaring an item other than proposal.md', () => {
+    const lanes: LaneDeclarations = new Map([['archive', { shape: 'folder', item: 'summary.md' }]])
+    const text = CLEAN.replace('name: clean', 'name: my-thing')
+    const outcome = checkShape('backlog/archive/my-thing/summary.md', text, NO_RECORD, lanes)
+    expect(outcome.deliver).toBe(false)
+    expect(outcome.lines.at(-1)).toBe('LAYER1 backlog/archive/my-thing/summary.md: 7 checks, 0 findings')
   })
 })
