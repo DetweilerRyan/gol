@@ -146,9 +146,19 @@ are ruled, and only `git log` disagrees.
 so each pass gets a small diff. The seat wrote that into its own plan and then ran `cleaner` once,
 on the union of five `coder` invocations. The user caught it by asking.
 
+**It happened twice in the one slice, in two pipelines.** The process cycle runs `writer` then
+`editor` CLEAN then `editor` AUDIT then `coach` REVIEW, and the seat ran the first `coach` REVIEW
+with no AUDIT before it. The reopened cycle let the order be corrected from the amendment pass
+onward, so the miss cost a stage run out of order rather than a stage skipped.
+
 This is the parent slice's recorded gap from the other side: the invoking prompt is the one artifact
 nothing checks. A sequencing rule stated in a reference that no gate reads survives only if the
-seat remembers it.
+seat remembers it, and two misses in one slice is the measurement rather than the anecdote.
+
+**What would catch it is not a checker.** Both rules are facts about a sequence of invocations, and
+no gate reads a prompt or a sequence. The parent slice's `retro.md` already holds the candidate
+remedy — a per-pass task artifact scoping each invocation — and this finding is the second body of
+evidence for it rather than a new question.
 
 **The cost landed anyway, in the direction that argues for the rule.** `cleaner`'s single mutation
 run found eleven survivors, every one a genuine unanchored-regex gap rather than an equivalent, and
