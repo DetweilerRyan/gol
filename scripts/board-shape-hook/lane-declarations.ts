@@ -44,8 +44,11 @@ function parseFlatLane(name: string, keys: string[]): ParsedLaneShape {
   return { shape: { shape: 'flat' } }
 }
 
+// The caller's message also promises "non-empty", and that holds without its own
+// conjunct: ''.endsWith('.md') is false, so the suffix check rejects the empty
+// string. Reinstate an explicit length check if the suffix conjunct ever relaxes.
 function isValidItemBasename(item: unknown): item is string {
-  return typeof item === 'string' && item.length > 0 && !item.includes('/') && item.endsWith('.md')
+  return typeof item === 'string' && !item.includes('/') && item.endsWith('.md')
 }
 
 function parseFolderLane(name: string, value: Record<string, unknown>, keys: string[]): ParsedLaneShape {
