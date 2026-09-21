@@ -34,12 +34,14 @@ Shaped, per the user's 2026-09-21 direction.
 - **Promotion moves an epic to `backlog/epics/<name>/`** instead of leaving it in `ideas/`. The
   lane's existence is what makes a running epic visible, the same directory-is-status logic every
   other lane uses.
-- **The folder carries a roster of the epic's children as a checkbox table**, so the epic's own
-  file answers what work belongs to it and where each piece has got to. A child's state is already
-  a fact the board holds in its lane directories; the roster's job is to gather it in one place
-  rather than to become a second source of truth for it.
-- **The promoted index becomes the epic's own file**, carrying the goal that makes the children one
-  epic rather than a list.
+- **The epic's status is derived on demand, never stored.** The seat is asked where an epic stands
+  and answers by reading the board — each child's lane directory already is its state — printing
+  the result in chat. Ruled by the user 2026-09-21, replacing a stored checkbox table. A stored
+  status is a census of external state with no gate behind it, which is the form that has gone
+  false repeatedly in this corpus; a derived one cannot drift because it is never written down.
+- **The folder holds what the board cannot derive**, which is the epic's goal and the membership
+  that makes a set of children one epic.
+- **The promoted index becomes the epic's own file**, carrying that goal.
 
 ## No-gos
 
@@ -51,11 +53,16 @@ Shaped, per the user's 2026-09-21 direction.
 
 ## Open questions
 
-- **Does the roster stay true by hand, and is that acceptable?** A checkbox that disagrees with the
-  lane directories is worse than no checkbox, and nothing on this board is checked by a gate. The
-  cheapest honest form may be one that a reader can falsify against `ls` in a second.
-- What exactly lives in `epics/<name>/` — is the promoted index the `proposal.md` analogue, and do
-  the goal and the roster get their own files or sections?
+- **Where does membership live — in the epic, or in each child?** Status is now derived, but which
+  children belong to an epic is not derivable from anything the board holds today. If the epic
+  names its children, that list is a roster of external state and goes stale on any rename. If each
+  child's frontmatter names its epic, membership travels with the child and the roster derives like
+  the status does, at the cost of a third frontmatter fact beside `name` and `kind`. The second
+  form is the one this repo's own claim discipline argues for, and it is unruled.
+- What exactly lives in `epics/<name>/` — is the promoted index the `proposal.md` analogue, and
+  does the goal get its own file or a section?
+- **What does the derived answer look like?** A status the seat prints is a report with no fixed
+  shape, and an unshaped report is one a reader cannot compare against last week's.
 - How does an epic complete: a `done/` move and a retrospective like any item, its own `slice/` tag
   beside its children's, or closure when its last child lands?
 - Does `ls backlog/epics/` join `ls backlog/ready/` as "the board"?
