@@ -9,10 +9,10 @@ import {
   type RecordLookup,
 } from './board-shape.ts'
 
-// Commit-1 filler for every checkShape call below that is not itself
-// exercising the record lookup: checkShape's third parameter is required so
-// "no record" is a value a caller writes rather than an argument it forgot,
-// and these calls are testing shape checks the lookup does not affect.
+// Absent-record filler for every checkShape call below that is not itself
+// exercising the record lookup: it reports the 'no assessment record' clause
+// and contributes no finding, so it never perturbs a shape-check assertion
+// that predates the record parameter.
 const NO_RECORD: RecordLookup = { kind: 'absent' }
 
 describe('isBoardPath', () => {
@@ -138,7 +138,8 @@ describe('checkShape', () => {
     expect(outcome.deliver).toBe(false)
     expect(outcome.lines).toEqual([
       'lane ideas, scqa shape, 17 lines, 0 depends-on mention(s)',
-      'LAYER1 backlog/ideas/clean.md: 6 checks, 0 findings',
+      'no assessment record',
+      'LAYER1 backlog/ideas/clean.md: 7 checks, 0 findings',
     ])
   })
 
@@ -154,7 +155,8 @@ describe('checkShape', () => {
       'section missing: ## Touches',
       'section missing: ## Open questions',
       'lane ideas, legacy shape, 6 lines, 0 depends-on mention(s)',
-      'LAYER1 backlog/ideas/all-six.md: 6 checks, 6 findings',
+      'no assessment record',
+      'LAYER1 backlog/ideas/all-six.md: 7 checks, 6 findings',
     ])
   })
 
@@ -221,7 +223,7 @@ describe('checkShape', () => {
 
   it('counts zero lines for a target with no newline character at all', () => {
     const outcome = checkShape('backlog/ideas/one-liner.md', 'no newline here', NO_RECORD)
-    expect(outcome.lines.at(-2)).toMatch(/^lane ideas, legacy shape, 0 lines, 0 depends-on mention\(s\)$/)
+    expect(outcome.lines.at(-3)).toMatch(/^lane ideas, legacy shape, 0 lines, 0 depends-on mention\(s\)$/)
   })
 
   it('does not stop the frontmatter window early at a blank line inside it', () => {
@@ -318,6 +320,85 @@ describe('checkShape', () => {
     // candidate. The anchor is what keeps a look-alike directory off the board.
     // reference-check: allow sub/foo.md -- illustrative fragment from the unanchored strip above, never a real file
     expect(checkShape('zzbacklog/sub/foo.md', CLEAN, NO_RECORD).lines[0]).toContain('not a candidate')
+  })
+})
+
+describe('checkShape assessment record staleness', () => {
+  const IDEA_TARGET = 'backlog/ideas/clean.md'
+  const READY_TARGET = 'backlog/ready/my-slug/proposal.md'
+  const READY_TEXT = CLEAN.replace('name: clean', 'name: my-slug')
+  const MATCHED: RecordLookup = { kind: 'present', storedBlob: 'abc', currentBlob: 'abc' }
+  const MISMATCHED: RecordLookup = { kind: 'present', storedBlob: 'abc', currentBlob: 'def' }
+  const UNREADABLE: RecordLookup = { kind: 'unreadable' }
+
+  // One table for both lanes: a blob mismatch means opposite things
+  // depending on where the idea sits, so the ideas-lane and ready-lane rows
+  // are pinned side by side rather than in separate describe blocks. The
+  // ready-lane "frozen, zero findings" row is the one a lane-blind
+  // implementation fails -- deleting the lane gate collapses it onto the
+  // ideas-lane "stale, one finding" row instead.
+  it.each([
+    {
+      name: 'ideas lane, no record yet',
+      target: IDEA_TARGET,
+      text: CLEAN,
+      record: NO_RECORD,
+      clause: 'no assessment record',
+      findings: 0,
+    },
+    {
+      name: 'ideas lane, record matches the current blob',
+      target: IDEA_TARGET,
+      text: CLEAN,
+      record: MATCHED,
+      clause: 'assessment current',
+      findings: 0,
+    },
+    {
+      name: 'ideas lane, record predates an edit',
+      target: IDEA_TARGET,
+      text: CLEAN,
+      record: MISMATCHED,
+      clause: 'assessment stale',
+      findings: 1,
+    },
+    {
+      name: 'ready lane, no record yet',
+      target: READY_TARGET,
+      text: READY_TEXT,
+      record: NO_RECORD,
+      clause: 'no assessment record',
+      findings: 0,
+    },
+    {
+      name: 'ready lane, record matches the current blob',
+      target: READY_TARGET,
+      text: READY_TEXT,
+      record: MATCHED,
+      clause: 'assessment current',
+      findings: 0,
+    },
+    {
+      name: 'ready lane, record predates promotion -- frozen, not stale',
+      target: READY_TARGET,
+      text: READY_TEXT,
+      record: MISMATCHED,
+      clause: 'assessment frozen',
+      findings: 0,
+    },
+    {
+      name: 'record unreadable, lane-blind',
+      target: IDEA_TARGET,
+      text: CLEAN,
+      record: UNREADABLE,
+      clause: 'assessment record unreadable',
+      findings: 1,
+    },
+  ])('$name', ({ target, text, record, clause, findings }) => {
+    const outcome = checkShape(target, text, record)
+    expect(outcome.lines).toContain(clause)
+    expect(outcome.lines.at(-1)).toBe(`LAYER1 ${target}: 7 checks, ${findings} findings`)
+    expect(outcome.deliver).toBe(findings > 0)
   })
 })
 

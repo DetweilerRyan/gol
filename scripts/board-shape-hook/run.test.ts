@@ -11,6 +11,7 @@ import { fileURLToPath } from 'node:url'
 import { spawnSync } from 'node:child_process'
 import { afterEach, describe, expect, it } from 'vitest'
 import { expectEnvelopeContext, tempDirTracker, writeFile } from '../test-support.ts'
+import { blobIdOf } from './assessment-record.ts'
 
 const RUN_TS = fileURLToPath(new URL('./run.ts', import.meta.url))
 const { tempDir, cleanup } = tempDirTracker()
@@ -46,7 +47,7 @@ describe('argv mode', () => {
     const result = runArgv(dir, ['backlog/ideas/clean.md'])
     expect(result.status).toBe(0)
     expect(result.stderr).toBe('')
-    expect(result.stdout).toContain('LAYER1 backlog/ideas/clean.md: 6 checks, 0 findings')
+    expect(result.stdout).toContain('LAYER1 backlog/ideas/clean.md: 7 checks, 0 findings')
   })
 
   it('never emits a hookSpecificOutput envelope, even when findings exist', () => {
@@ -54,7 +55,7 @@ describe('argv mode', () => {
     writeFile(dir, 'backlog/ideas/bad.md', '---\nname: nope\n---\n')
     const result = runArgv(dir, ['backlog/ideas/bad.md'])
     expect(result.status).toBe(0)
-    expect(result.stdout).toContain('6 checks,')
+    expect(result.stdout).toContain('7 checks,')
     expect(result.stdout).not.toContain('hookSpecificOutput')
   })
 
@@ -74,6 +75,54 @@ describe('argv mode', () => {
     expect(result.status).toBe(0)
     expect(result.stdout).toContain('path missing or unreadable')
     expect(result.stdout).not.toContain('off the board')
+  })
+})
+
+// The filesystem half of the RecordLookup plumbing: run.ts's recordLookupFor
+// reads the sibling record real run.ts cannot exercise via checkShape alone,
+// since board-shape.test.ts hands checkShape a constructed RecordLookup
+// directly. These pin the read, the hash, and the two ways a record reads as
+// unreadable (a directory at the sibling path; a record with no idea-blob
+// field) against a real temp tree.
+describe('sibling assessment record', () => {
+  it('reports assessment current when the sibling record blob matches the idea file', () => {
+    const dir = tempDir('board-shape-hook-')
+    writeFile(dir, 'backlog/ideas/clean.md', CLEAN)
+    writeFile(dir, 'backlog/ideas/clean.assessment.md', `---\nidea-blob: ${blobIdOf(Buffer.from(CLEAN))}\n---\n`)
+    const result = runArgv(dir, ['backlog/ideas/clean.md'])
+    expect(result.stdout).toContain('assessment current')
+  })
+
+  it('reports assessment stale in the ideas lane when the sibling record blob no longer matches', () => {
+    const dir = tempDir('board-shape-hook-')
+    writeFile(dir, 'backlog/ideas/clean.md', CLEAN)
+    writeFile(dir, 'backlog/ideas/clean.assessment.md', '---\nidea-blob: not-the-current-blob\n---\n')
+    const result = runArgv(dir, ['backlog/ideas/clean.md'])
+    expect(result.stdout).toContain('assessment stale')
+  })
+
+  it('reports assessment frozen in the ready lane when the sibling record blob no longer matches', () => {
+    const dir = tempDir('board-shape-hook-')
+    writeFile(dir, 'backlog/ready/my-slug/proposal.md', CLEAN.replace('name: clean', 'name: my-slug'))
+    writeFile(dir, 'backlog/ready/my-slug/assessment.md', '---\nidea-blob: not-the-current-blob\n---\n')
+    const result = runArgv(dir, ['backlog/ready/my-slug/proposal.md'])
+    expect(result.stdout).toContain('assessment frozen')
+  })
+
+  it('reports the record unreadable when the sibling path is a directory rather than a file', () => {
+    const dir = tempDir('board-shape-hook-')
+    writeFile(dir, 'backlog/ideas/clean.md', CLEAN)
+    mkdirSync(path.join(dir, 'backlog', 'ideas', 'clean.assessment.md'), { recursive: true })
+    const result = runArgv(dir, ['backlog/ideas/clean.md'])
+    expect(result.stdout).toContain('assessment record unreadable')
+  })
+
+  it('reports the record unreadable when it carries no idea-blob field', () => {
+    const dir = tempDir('board-shape-hook-')
+    writeFile(dir, 'backlog/ideas/clean.md', CLEAN)
+    writeFile(dir, 'backlog/ideas/clean.assessment.md', '---\nassessed: 2026-09-20\n---\n')
+    const result = runArgv(dir, ['backlog/ideas/clean.md'])
+    expect(result.stdout).toContain('assessment record unreadable')
   })
 })
 

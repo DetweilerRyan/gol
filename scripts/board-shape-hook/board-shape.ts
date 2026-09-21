@@ -136,6 +136,21 @@ function notACandidateOutcome(target: string): HookOutcome {
   return { lines: [line], deliver: false }
 }
 
+// The lane-sensitive half of the staleness check, isolated so checkShape
+// itself gains only one branch for it. A blob mismatch means opposite things
+// per lane: in ideas it is drift since the assessment ran, and a finding; in
+// ready/done it is promotion's own history -- the freeze is expected, so it
+// is reported but never a finding. `unreadable` is lane-blind, since a record
+// this layer cannot read is a finding regardless of where the idea sits.
+function assessmentSummary(lane: string, record: RecordLookup): { clause: string; finding: boolean } {
+  if (record.kind === 'unreadable') return { clause: 'assessment record unreadable', finding: true }
+  if (record.kind === 'absent') return { clause: 'no assessment record', finding: false }
+  if (record.storedBlob === record.currentBlob) return { clause: 'assessment current', finding: false }
+  return lane === 'ideas'
+    ? { clause: 'assessment stale', finding: true }
+    : { clause: 'assessment frozen', finding: false }
+}
+
 // deliver is false for the same reason notACandidateOutcome's is: an
 // assessment record is a known artifact class, not a malformed candidate, so
 // writing one stays silent rather than surfacing the shape checks meant for
@@ -148,14 +163,15 @@ function assessmentRecordOutcome(target: string): HookOutcome {
 }
 
 /**
- * The six readiness checks over an already-resolved target's text: name
- * matches basename, title present, created is a date, no status field, and
- * the era-appropriate section headings. Refuses an assessment record's own
- * path before testing candidacy, since a record's shape carries the same
- * segment count as the idea file it judges. Always reports the lane summary
- * and the LAYER1 tally, and `deliver` is true only when a check failed.
+ * The seven readiness checks over an already-resolved target's text: name
+ * matches basename, title present, created is a date, no status field, the
+ * era-appropriate section headings, and the sibling record's staleness
+ * against `record`. Refuses an assessment record's own path before testing
+ * candidacy, since a record's shape carries the same segment count as the
+ * idea file it judges. Always reports the lane summary, the assessment
+ * clause, and the LAYER1 tally; `deliver` is true only when a check failed.
  */
-export function checkShape(target: string, text: string, _record: RecordLookup): HookOutcome {
+export function checkShape(target: string, text: string, record: RecordLookup): HookOutcome {
   if (isAssessmentRecordPath(target)) return assessmentRecordOutcome(target)
   if (!isCandidatePath(target)) return notACandidateOutcome(target)
   const textLines = text.split('\n')
@@ -166,17 +182,19 @@ export function checkShape(target: string, text: string, _record: RecordLookup):
   const fm = frontmatterWindow(textLines)
   const identity = identityFindings(fm, base)
   const { era, findings: sections } = sectionFindings(textLines)
-  const findings = identity.length + sections.length
+  const lane = laneFor(target)
+  const { clause, finding: staleness } = assessmentSummary(lane, record)
+  const findings = identity.length + sections.length + (staleness ? 1 : 0)
   // wc -l counts newline bytes; grep -ci counts matching lines, case-insensitively.
   const newlines = (text.match(/\n/g) ?? []).length
   const depends = textLines.filter((l) => l.toLowerCase().includes('depends on')).length
-  const lane = laneFor(target)
   return {
     lines: [
       ...identity,
       ...sections,
       `lane ${lane}, ${era} shape, ${newlines} lines, ${depends} depends-on mention(s)`,
-      `LAYER1 ${target}: 6 checks, ${findings} findings`,
+      clause,
+      `LAYER1 ${target}: 7 checks, ${findings} findings`,
     ],
     deliver: findings > 0,
   }
