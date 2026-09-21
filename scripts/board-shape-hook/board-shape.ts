@@ -7,12 +7,12 @@ import { type HookOutcome } from '../post-tool-use.ts'
 import { isAssessmentRecordPath } from './assessment-record.ts'
 
 /**
- * A candidate's staleness input, computed by `run.ts` against the sibling
- * record `assessment-record.ts`'s `siblingRecordPathFor` names. `absent`
- * covers both no sibling path and no file at that path; `unreadable` covers
- * a record that exists but whose `idea-blob` field cannot be read. Required
- * on `checkShape` rather than optional, so a caller can never omit "no
- * record" as an oversight -- it has to be written as a value.
+ * A candidate's staleness input: how the sibling assessment record's stored
+ * blob compares to the candidate's current bytes. `absent` covers both no
+ * sibling path and no file at that path; `unreadable` covers a record that
+ * exists but whose `idea-blob` field cannot be read. Required on
+ * `checkShape` rather than optional, so a caller can never omit "no record"
+ * as an oversight -- it has to be written as a value.
  */
 export type RecordLookup =
   { kind: 'absent' } | { kind: 'present'; storedBlob: string; currentBlob: string } | { kind: 'unreadable' }
@@ -64,7 +64,8 @@ function frontmatterWindow(lines: string[]): string[] {
   // Equivalent mutant: seeding this array (Stryker's ArrayDeclaration) changes nothing --
   // fm's only consumer checks membership against `name:`/`title:`/`created:`/`status:` line
   // shapes the seeded string matches none of, and never reads length or order. Demonstrated
-  // 2026-09-18: mutant hand-applied, all 1114 of `npm run test:scripts` green.
+  // 2026-09-18 (1114 tests) and re-demonstrated 2026-09-21 under the RecordLookup parameter
+  // (1176 tests): mutant hand-applied, `npm run test:scripts` fully green both times.
   const fm: string[] = []
   for (let i = 1; i < lines.length; i++) {
     fm.push(lines[i])

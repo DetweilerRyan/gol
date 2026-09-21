@@ -2,7 +2,7 @@
 // its own, where a candidate idea or proposal file's record would sit, and
 // how to read and compute the blob id that pins a record against staleness.
 // No filesystem or subprocess IO -- a caller supplies text and bytes it
-// already has. Lands as a standalone module with no consumer wired yet.
+// already has.
 import { createHash } from 'node:crypto'
 
 // Matches board-shape.ts's isBoardPath convention: an absolute path carries
