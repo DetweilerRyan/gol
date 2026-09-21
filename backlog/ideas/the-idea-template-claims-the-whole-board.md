@@ -1,6 +1,6 @@
 ---
 name: the-idea-template-claims-the-whole-board
-title: Name the idea template for the lane it serves and settle the corpus statements the axis split moves
+title: Name the idea template for the lane it serves and correct the board statements that no longer hold
 created: 2026-09-21
 ---
 
@@ -21,6 +21,11 @@ The pipelines reference states that the board classifier tests position rather t
 gives four properties as the argument. CLAUDE.md's index of which sidecar pairs exist names the live
 module sidecars, all of which sit under `src/`.
 
+CLAUDE.md's board section also states that the board has no gate, no checker, and no test beyond one
+advisory Vale style. Measured 2026-09-21: the board-shape hook ships, `.claude/settings.json`
+registers it on two write events, and its directory carries three test files. The hook's own shell
+states that it always exits zero because the board has no gate.
+
 ## Complication
 
 The name is wrong in two ways at once, and only one is a matter of taste. It claims the board for a
@@ -32,7 +37,16 @@ being the whole argument — the split is by axis, so the positional half surviv
 the lane half does not. A rationale sidecar landing beside the classifier makes the sidecar index
 short by one.
 
-None of that can be fixed from the cycle that makes the change. Corpus prose goes through the process
+One clause of the board section is false already, independently of the axis split. The no-checker
+claim describes a board the hook has not left unchecked since it shipped. The no-gate claim beside it
+is true and deliberate rather than merely surviving, so the fix is a clause rather than a sentence —
+deleting the whole line would discard a design fact the hook's own shell states about itself.
+
+That one is a pre-existing defect this idea adopts rather than creates, folded in by the user
+2026-09-21. What made it visible is the assessment of the sibling, which named it an orphan no child
+owned. It is in scope here because it is the same file, the same section and the same cycle.
+
+None of this can be fixed from the cycle that makes the change. Corpus prose goes through the process
 pipeline, and no role in a technical cycle may edit it.
 
 ## Question
@@ -53,6 +67,10 @@ Shaped. The first two bullets are user rulings taken 2026-09-21 during the paren
 - **The prose stating the positional rule is amended to name the axis split** rather than deleted. The
   positional argument survives for artifacts, and the evidence behind it is still the evidence.
 - **The sidecar index gains its entry** when the sibling's rationale sidecar lands.
+- **The board section's no-checker clause is corrected, and the no-gate clause beside it is kept.**
+  The board is unchecked no longer and ungated still, so the sentence needs splitting rather than
+  rewriting. What replaces the false clause should say what the hook does and what it refuses to do,
+  since a reader who learns only that a checker exists will expect it to fail something.
 
 ## No-gos
 
@@ -81,6 +99,12 @@ Shaped. The first two bullets are user rulings taken 2026-09-21 during the paren
 - **How is the amended positional prose kept honest?** The claim it replaces was argued from a
   measured instance. The replacement claims a split between two populations, and nothing measures the
   rate at which either grows.
+- **Does the no-test clause fail too, or only the no-checker one?** The three test files cover the
+  hook rather than the board, so the clause is defensible read one way and misleading read the other.
+  Ruling it needs a decision about what the sentence is telling a reader, not a further measurement.
+- **Does one false clause imply the board section wants a sweep?** The clause was found by assessing
+  a sibling rather than by looking, and nothing has read that section against the tree since the hook
+  landed. A second stale claim in the same paragraph would be found the same accidental way.
 - **Does the ambiguity of the shared basename deserve its own candidate?** The sweep found a bare
   citation in the decision-record tier that resolves against either file, and this idea deliberately
   leaves it.
