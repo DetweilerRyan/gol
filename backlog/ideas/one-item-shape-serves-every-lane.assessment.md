@@ -171,4 +171,11 @@ auto-loaded claim that the board has no checker is already stale on this tree, a
 
 ## The human ruling
 
-None recorded.
+Ruled 2026-09-21.
+
+Independent — agree
+Negotiable — agree
+Valuable — agree
+Estimable — agree
+Small — agree
+Testable — agree
