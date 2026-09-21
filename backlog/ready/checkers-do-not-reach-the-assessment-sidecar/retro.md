@@ -211,6 +211,24 @@ The durable form: **an amendment's disposition table is an instruction to the se
 REVIEW is the only pass that can check it arrived.** That review did, which is how the gap surfaced,
 and the three findings below are it being closed.
 
+### P16 — the seat runs tree-wide git operations while agents write to the same worktree
+
+To take a pre-edit Vale baseline of `CLAUDE.md` at its real path, the seat ran `git stash` and
+`git stash pop` while a `writer` pass held uncommitted work in the same worktree. The work survived.
+It survived on timing: a stash is tree-wide, so a write landing between the two commands would have
+been swallowed or conflicted, and the seat had no way to know where in its pass the agent was.
+
+The hazard is structural rather than careless in the particular. One worktree is one working tree,
+the concurrency model is one slice per worktree, and the seat's own procedures need tree-wide git
+operations that the per-slice isolation does not separate. The baseline discipline
+`.claude/agents/articles/prose.md` mandates is what invited it: a baseline must be taken at the real
+path, and the cheapest way to get `main`'s bytes to a real path is to move the working tree.
+
+The durable form: **take a baseline by writing the old bytes to the path and restoring them, never
+by moving the working tree.** `git show <ref>:<path>` reaches the old bytes without touching
+anything else, and `editor` used exactly that method for the same measurement in the same slice.
+Nothing warns about the alternative, and no gate could.
+
 ## The three dispositions that fell out, now recorded
 
 Each was ruled non-blocking on the ground that it is true on the tip. A claim that is true today and
