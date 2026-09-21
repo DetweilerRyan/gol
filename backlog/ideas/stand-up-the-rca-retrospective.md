@@ -102,6 +102,30 @@ predicate, so nothing in this item waits on it. Teaching the checker to read the
 lane may declare its own shape, belongs to the promoted technical item that already owns the
 defect.
 
+Four checks read this work, and their readings on 2026-09-21 are these.
+
+| Check                                  | Today                                              | Afterwards                                                    |
+| -------------------------------------- | -------------------------------------------------- | ------------------------------------------------------------- |
+| `npm run agent-doc-check`              | 55 doc files, 8 agent files, 32 rules, no failures | more doc files, still 8 agent files, no failures              |
+| `npm run reference-check`              | 538 files scanned, 3226 references, no failures    | more of each, no failures                                     |
+| `npm run prose-lint`                   | 556 tracked files, 164 findings                    | more tracked files, and no finding from a file this work adds |
+| The board's shape checker, folder form | `not a candidate, 0 checks`                        | unchanged, which is the reason for the form                   |
+
+The agent count holding at eight is a reading rather than an accident. A participant mode file
+sits in a role's own subdirectory, and the roster scan filters for files, so it never descends.
+The same measurement on the flat form in a new lane reports six checks and five findings, and
+measures the record against the retired board era, since a structured record carries no Situation
+heading.
+
+Two of those readings would be a confident zero rather than a pass. The roster scan's blindness
+is the same fact as the frontmatter exemption, so a mode file with broken frontmatter passes by
+being unreachable and nothing validates what a mode file declares. A missing `vale` binary
+reports zero exactly as a clean run does, which is why the prose linter states that its zero was
+measured.
+
+The pass's own observable is a ruled root cause in the new lane, or the null result the pass
+declared before it ran. `coach` REVIEW against its signed spec closes the cycle either way.
+
 ## No-gos
 
 - Pre-mortems and futurespectives. Both invert a retrospective's direction, and neither reads a
@@ -158,3 +182,8 @@ defect.
 - May a participant refute the effect itself, rather than a branch? A pass whose problem
   statement is wrong produces a well-evidenced answer to the wrong question, and the approved
   scope is what a participant would be contesting.
+
+- Is a retrospective a declared role cycle? The configuration declares the story and the process
+  cycles, and the documentation gate holds every bare arrow sequence byte-identical to one of
+  them, while a mode-bearing sequence stays exempt. Declaring nothing and writing nothing both
+  read green, so the answer has to be deliberate rather than inherited.

@@ -34,9 +34,15 @@ already carries a full class of service of its own?
 None yet. The shape depends on what `epics-promote-to-their-own-lane` settles about the folder,
 since a pipeline's steps address artifacts that idea defines.
 
+One boundary is already ruled, on 2026-09-21. **That idea holds the plan and this one holds its
+execution.** The epic's file states the goal and the order its children run in, including that a
+spike may run first and change what a later child should be. What this idea owes is who reads that
+order, when a child is dispatched against it, what a child's landing obliges of its siblings, and
+what happens when a spike's answer contradicts the plan it was run to inform.
+
 ## No-gos
 
-- **This idea does not create the lane or the folder.** That is
+- **This idea does not create the lane or the folder, and does not define the sequence.** That is
   `epics-promote-to-their-own-lane`, and this idea starts after it lands.
 - No change to any child's own pipeline. A story child still runs the story pipeline unchanged.
 

@@ -39,26 +39,43 @@ Shaped, per the user's 2026-09-21 direction.
   the result in chat. Ruled by the user 2026-09-21, replacing a stored checkbox table. A stored
   status is a census of external state with no gate behind it, which is the form that has gone
   false repeatedly in this corpus; a derived one cannot drift because it is never written down.
-- **The folder holds what the board cannot derive**, which is the epic's goal and the membership
-  that makes a set of children one epic.
-- **The promoted index becomes the epic's own file**, carrying that goal.
+- **The folder holds what the board cannot derive**, which is the epic's goal and the order its
+  children run in.
+- **The epic names its children as a sequence, not a set.** Ruled by the user 2026-09-21: an epic
+  may have to sequence its children, and a spike that runs first can change what a later child
+  should be. Order and cross-child dependency are properties of the set rather than of any member,
+  so no child can carry them and nothing on the board can derive them.
+- **Each child's frontmatter names its epic too, and the duplication is deliberate.** Membership
+  then travels with the child, so a child read on its own says what it belongs to. Two independent
+  statements of one fact are also **checkable**, where a single roster is not: the children
+  claiming an epic and the children that epic names must be the same set, and a mismatch is
+  mechanically findable. A single source of membership can only be trusted.
+- **The promoted index becomes the epic's own file**, carrying the goal and the sequence.
 
 ## No-gos
 
 - **No Epic pipeline.** Ruled out of this idea by the user on 2026-09-21 and split to
-  `epic-pipeline-runs-the-children`. This idea gives an epic a lane and a readable roster; it does
-  not say how the children get executed, and `pipelines.md`'s Epic section is untouched by it.
+  `epic-pipeline-runs-the-children`. **The split is between the plan and its execution**: this idea
+  gives the epic a lane and lets its file state the goal and the child sequence, and it says
+  nothing about who reads that sequence, when a child is dispatched, or what a child's landing
+  obliges. `pipelines.md`'s Epic section is untouched by this idea.
 - A child still assesses and promotes on its own merits. The epic gathers ready items; it does not
   exempt them from the definition of ready.
 
 ## Open questions
 
-- **Where does membership live — in the epic, or in each child?** Status is now derived, but which
-  children belong to an epic is not derivable from anything the board holds today. If the epic
-  names its children, that list is a roster of external state and goes stale on any rename. If each
-  child's frontmatter names its epic, membership travels with the child and the roster derives like
-  the status does, at the cost of a third frontmatter fact beside `name` and `kind`. The second
-  form is the one this repo's own claim discipline argues for, and it is unruled.
+- **Does anything check the two membership statements against each other?** They are only worth
+  duplicating because they can disagree detectably, and nothing on this board is gated. The check
+  is cheap — the set of children naming an epic against the set that epic names — but it has no
+  home, since `backlog/` has no checker and a board-rendering script would owe `scripts/` its full
+  quality bar.
+- **What happens to the epic's sequence when a child is renamed or dropped?** The child's own
+  frontmatter survives a rename of itself; the epic's ordered list does not. That is the residual
+  staleness the duplication does not remove, and it is the half a checker would catch.
+- **Does the epic's frontmatter need `kind: epic` once the lane carries it?** The directory is the
+  lane under this board's own rule, and an epic in `backlog/epics/` states its kind by sitting
+  there. Deciding otherwise puts one fact in two places without the checkability that justifies it
+  for membership.
 - What exactly lives in `epics/<name>/` — is the promoted index the `proposal.md` analogue, and
   does the goal get its own file or a section?
 - **What does the derived answer look like?** A status the seat prints is a report with no fixed
