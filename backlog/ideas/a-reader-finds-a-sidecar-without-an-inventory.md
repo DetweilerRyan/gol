@@ -1,6 +1,6 @@
 ---
 name: a-reader-finds-a-sidecar-without-an-inventory
-title: Replace the sidecar rosters with a rule a reader can apply
+title: Give CLAUDE.md one sidecar section, holding a rule rather than a roster
 created: 2026-09-17
 ---
 
@@ -8,7 +8,7 @@ Captured from `coach` REVIEW's handoff on `slice/extract-the-merge-protocol`, it
 2026-09-17, as the residue after the references-tier half landed in that slice's amendment 6.
 **Widened twice by the user on 2026-09-21** — first from the role-file bullet to the whole
 sidecar index, then from the index to every mention of a specific sidecar and what it contains.
-**Nine rulings sit under their own heading below**, and they bound the spec without writing it.
+**Ten rulings sit under their own heading below**, and they bound the spec without writing it.
 
 ## Situation
 
@@ -63,10 +63,13 @@ find that file's sidecar — without naming the instances, which ordinary work f
 
 Shaped as an outcome, deliberately. The wording is the process pipeline's to write.
 
-**The outcome, in four properties a reader can check:**
+**The outcome, in five properties a reader can check:**
 
 - A reader holding any file in the corpus can determine whether it has a sidecar, and where to
   look, from what CLAUDE.md says plus the tree — without CLAUDE.md naming any instance.
+- **CLAUDE.md says what it has to say about sidecars in one place.** A reader looking for the
+  convention finds all of it together rather than assembling it from a tier bullet, three routing
+  branches and a conventions bullet.
 - No sentence in the files this slice touches claims completeness over a set that ordinary work
   changes.
 - The placement rulings survive somewhere a reader can reach. They are measured mechanism facts,
@@ -112,7 +115,7 @@ checked list becomes the better answer.
 
 ## Ruled by the user, 2026-09-21
 
-Nine rulings, taken one at a time against the measurements above.
+Ten rulings, taken one at a time against the measurements above.
 
 - **A — no roster survives.** Both halves go, positive and negative. Checked before ruling that
   nothing goes dark: the two article sidecars named nowhere else, `mutation-testing.meta.md` and
@@ -148,6 +151,14 @@ Nine rulings, taken one at a time against the measurements above.
   syntax example go, on ruling A and ruling G respectively. Its two dated measurements stay. A
   roster left in the article that owns the tier relocates the defect rather than removing it.
 
+- **J — CLAUDE.md carries one section about sidecars, and the generic placeholders colocate into
+  it.** The convention is currently assembled from scattered parts: measured on `de8fbd6`, the ten
+  generic mentions sit at nine places under the documentation map and one under Conventions. The
+  ruling fixes the outcome — one section rather than scattered mentions — and **deliberately does
+  not fix the shape.** Where the section sits, what it is called, and how much of each displaced
+  passage it absorbs are `coach`'s to rule at spec time, against the tensions in the open questions
+  below. The placeholders stay in CLAUDE.md throughout; this moves them together rather than out.
+
 **The reach, after every ruling:** `CLAUDE.md`, `CLAUDE.meta.md`, `mutation-testing.md`,
 `doc-comments.md`.
 
@@ -170,6 +181,22 @@ Nine rulings, taken one at a time against the measurements above.
 
 ## Open questions
 
+- **Do routing branches 2, 4 and 5 move into the new section, or become pointers into it?** Those
+  three branches of the "Where new documentation goes" test are themselves sidecar rules, so
+  ruling J reaches them. The test's value is that it is one ordered decision procedure a reader
+  walks in sequence; a version with holes in it is worse than a longer one. Whether the branches
+  keep their substance and the section points at them, or the reverse, is the central structural
+  call in this slice.
+- **Does the routing tie-break survive being moved?** Its own text says the question is settled
+  "here rather than in `prose.md`", so part of its force comes from sitting inside the routing
+  test. Relocating it needs that clause re-derived rather than carried.
+- **Does the Conventions bullet move?** The instruction-register bullet routes explanation to a
+  sidecar, and CLAUDE.md's branch 3 exception put it in this file precisely because it binds at
+  authoring time and only the auto-loaded surface is guaranteed to be read first. Colocating it is
+  consistent with ruling J; leaving it is consistent with the exception that placed it.
+- **Where does the section sit, relative to the routing test?** A reader walking the routing test
+  needs the sidecar rule at branch 4. A section after the test is a forward reference at the
+  moment of use; a section before it front-loads a convention most readers do not need yet.
 - **Where does ruling B's argument live once ruling H deletes the proposal?** The decline survives
   in this file and in git, and this file is deleted at retrospective. A durable home would be
   `CLAUDE.meta.md` itself, which ruling H declines, or the retrospective's own extraction. If
