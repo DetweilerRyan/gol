@@ -39,27 +39,76 @@ function isLaneName(value: string): boolean {
 
 type ParsedLaneShape = { shape: LaneShape } | { reason: string }
 
+function parseFlatLane(name: string, keys: string[]): ParsedLaneShape {
+  if (keys.length !== 1) return { reason: `lane '${name}': a 'flat' lane must declare only "shape"` }
+  return { shape: { shape: 'flat' } }
+}
+
+function isValidItemBasename(item: unknown): item is string {
+  return typeof item === 'string' && item.length > 0 && !item.includes('/') && item.endsWith('.md')
+}
+
+function parseFolderLane(name: string, value: Record<string, unknown>, keys: string[]): ParsedLaneShape {
+  if (keys.length !== 2 || !('item' in value)) {
+    return { reason: `lane '${name}': a 'folder' lane must declare exactly "shape" and "item"` }
+  }
+  const item = value.item
+  if (!isValidItemBasename(item)) {
+    return { reason: `lane '${name}': "item" must be a non-empty, '/'-free '*.md' basename` }
+  }
+  return { shape: { shape: 'folder', item } }
+}
+
 function parseLaneShape(name: string, value: unknown): ParsedLaneShape {
   if (!isPlainObject(value)) return { reason: `lane '${name}': value is not an object` }
   const keys = Object.keys(value)
 
-  if (value.shape === 'flat') {
-    if (keys.length !== 1) return { reason: `lane '${name}': a 'flat' lane must declare only "shape"` }
-    return { shape: { shape: 'flat' } }
-  }
-
-  if (value.shape === 'folder') {
-    if (keys.length !== 2 || !('item' in value)) {
-      return { reason: `lane '${name}': a 'folder' lane must declare exactly "shape" and "item"` }
-    }
-    const item = value.item
-    if (typeof item !== 'string' || item.length === 0 || item.includes('/') || !item.endsWith('.md')) {
-      return { reason: `lane '${name}': "item" must be a non-empty, '/'-free '*.md' basename` }
-    }
-    return { shape: { shape: 'folder', item } }
-  }
+  if (value.shape === 'flat') return parseFlatLane(name, keys)
+  if (value.shape === 'folder') return parseFolderLane(name, value, keys)
 
   return { reason: `lane '${name}': "shape" must be 'flat' or 'folder'` }
+}
+
+type ParsedJson = { value: unknown } | { reason: string }
+
+function parseJsonText(text: string): ParsedJson {
+  try {
+    return { value: JSON.parse(text) }
+  } catch {
+    return { reason: 'declaration file is not valid JSON' }
+  }
+}
+
+type LaneEntries = { entries: Array<[string, unknown]> } | { reason: string }
+
+function extractLaneEntries(parsed: unknown): LaneEntries {
+  if (!isPlainObject(parsed)) return { reason: 'declaration file is not a JSON object' }
+
+  const lanesValue = parsed.lanes
+  if (!isPlainObject(lanesValue)) return { reason: 'declaration file has no "lanes" object' }
+
+  const entries = Object.entries(lanesValue)
+  // The inertness guard: an empty "lanes" object would leave every board
+  // path undeclared, silently downgrading every lane's shape check to an
+  // undeclared-lane warning -- the exact fail-open direction this slice
+  // exists to close. Same principle as scripts/gate-report.ts's
+  // checkNonEmpty.
+  if (entries.length === 0) return { reason: 'declaration file\'s "lanes" object has no entries' }
+
+  return { entries }
+}
+
+type BuiltLanes = { lanes: LaneDeclarations } | { reason: string }
+
+function buildLaneMap(entries: Array<[string, unknown]>): BuiltLanes {
+  const lanes = new Map<string, LaneShape>()
+  for (const [name, value] of entries) {
+    if (!isLaneName(name)) return { reason: `lane name '${name}' is empty or contains '/'` }
+    const result = parseLaneShape(name, value)
+    if ('reason' in result) return { reason: result.reason }
+    lanes.set(name, result.shape)
+  }
+  return { lanes }
 }
 
 /**
@@ -74,33 +123,14 @@ function parseLaneShape(name: string, value: unknown): ParsedLaneShape {
 export function parseLaneDeclarations(text: string | undefined): LaneDeclarationsLookup {
   if (text === undefined) return unavailable('declaration file missing or unreadable')
 
-  let parsed: unknown
-  try {
-    parsed = JSON.parse(text)
-  } catch {
-    return unavailable('declaration file is not valid JSON')
-  }
+  const parsedJson = parseJsonText(text)
+  if ('reason' in parsedJson) return unavailable(parsedJson.reason)
 
-  if (!isPlainObject(parsed)) return unavailable('declaration file is not a JSON object')
+  const entriesResult = extractLaneEntries(parsedJson.value)
+  if ('reason' in entriesResult) return unavailable(entriesResult.reason)
 
-  const lanesValue = parsed.lanes
-  if (!isPlainObject(lanesValue)) return unavailable('declaration file has no "lanes" object')
+  const lanesResult = buildLaneMap(entriesResult.entries)
+  if ('reason' in lanesResult) return unavailable(lanesResult.reason)
 
-  const entries = Object.entries(lanesValue)
-  // The inertness guard: an empty "lanes" object would leave every board
-  // path undeclared, silently downgrading every lane's shape check to an
-  // undeclared-lane warning -- the exact fail-open direction this slice
-  // exists to close. Same principle as scripts/gate-report.ts's
-  // checkNonEmpty.
-  if (entries.length === 0) return unavailable('declaration file\'s "lanes" object has no entries')
-
-  const lanes = new Map<string, LaneShape>()
-  for (const [name, value] of entries) {
-    if (!isLaneName(name)) return unavailable(`lane name '${name}' is empty or contains '/'`)
-    const result = parseLaneShape(name, value)
-    if ('reason' in result) return unavailable(result.reason)
-    lanes.set(name, result.shape)
-  }
-
-  return { kind: 'declared', lanes }
+  return { kind: 'declared', lanes: lanesResult.lanes }
 }

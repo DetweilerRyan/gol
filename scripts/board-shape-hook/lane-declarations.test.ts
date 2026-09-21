@@ -25,6 +25,11 @@ describe('parseLaneDeclarations -- unavailable rows', () => {
       reason: 'declaration file is not a JSON object',
     },
     {
+      name: 'the parsed value is null -- typeof null is "object", so the null check is load-bearing',
+      text: 'null',
+      reason: 'declaration file is not a JSON object',
+    },
+    {
       name: '"lanes" is missing',
       text: '{}',
       reason: 'declaration file has no "lanes" object',
@@ -43,6 +48,11 @@ describe('parseLaneDeclarations -- unavailable rows', () => {
       name: 'a lane name contains a "/"',
       text: '{"lanes": {"a/b": {"shape": "flat"}}}',
       reason: "lane name 'a/b' is empty or contains '/'",
+    },
+    {
+      name: 'a lane name is the empty string',
+      text: '{"lanes": {"": {"shape": "flat"}}}',
+      reason: "lane name '' is empty or contains '/'",
     },
     {
       name: 'a lane value is not an object',
@@ -82,6 +92,15 @@ describe('parseLaneDeclarations -- unavailable rows', () => {
     {
       name: 'a "folder" lane\'s "item" does not end in ".md"',
       text: '{"lanes": {"ready": {"shape": "folder", "item": "proposal.txt"}}}',
+      reason: "lane 'ready': \"item\" must be a non-empty, '/'-free '*.md' basename",
+    },
+    {
+      // A JSON array can carry a `.length`, an `.includes` and (via a JSON-encoded
+      // string element) look superficially item-shaped -- this pins that the type
+      // check runs before any of that, rather than an array reaching `.endsWith`
+      // and throwing past the validator.
+      name: 'a "folder" lane\'s "item" is not a string (an array)',
+      text: '{"lanes": {"ready": {"shape": "folder", "item": ["proposal.md"]}}}',
       reason: "lane 'ready': \"item\" must be a non-empty, '/'-free '*.md' basename",
     },
   ])('$name', ({ text, reason }) => {
