@@ -4,6 +4,7 @@
 // here; run.ts owns only stdin, argv, fs and channel discipline.
 import { basename, dirname } from 'node:path'
 import { type HookOutcome } from '../post-tool-use.ts'
+import { isAssessmentRecordPath } from './assessment-record.ts'
 
 /** Board-scope gate, run in `run.ts` before a target's content is read in either mode: is `path` under `backlog/`, absolute or relative. */
 export function isBoardPath(path: string): boolean {
@@ -124,13 +125,27 @@ function notACandidateOutcome(target: string): HookOutcome {
   return { lines: [line], deliver: false }
 }
 
+// deliver is false for the same reason notACandidateOutcome's is: an
+// assessment record is a known artifact class, not a malformed candidate, so
+// writing one stays silent rather than surfacing the shape checks meant for
+// the idea file it judges. Worded distinctly from notACandidateOutcome so the
+// two refusals -- wrong shape vs. a shape this layer declines to judge at all
+// -- stay tellable apart in the log stream.
+function assessmentRecordOutcome(target: string): HookOutcome {
+  const line = `LAYER1 ${target}: an assessment record, 0 checks -- this layer does not shape-check its own judgments`
+  return { lines: [line], deliver: false }
+}
+
 /**
  * The six readiness checks over an already-resolved target's text: name
  * matches basename, title present, created is a date, no status field, and
- * the era-appropriate section headings. Always reports the lane summary
+ * the era-appropriate section headings. Refuses an assessment record's own
+ * path before testing candidacy, since a record's shape carries the same
+ * segment count as the idea file it judges. Always reports the lane summary
  * and the LAYER1 tally, and `deliver` is true only when a check failed.
  */
 export function checkShape(target: string, text: string): HookOutcome {
+  if (isAssessmentRecordPath(target)) return assessmentRecordOutcome(target)
   if (!isCandidatePath(target)) return notACandidateOutcome(target)
   const textLines = text.split('\n')
   // In the folder lanes the file is always proposal.md, so the identity the

@@ -191,6 +191,16 @@ describe('checkShape', () => {
     expect(outcome.lines[0]).toMatch(/^lane done,/)
   })
 
+  it.each([
+    { name: 'the ideas-lane record form', path: 'backlog/ideas/foo.assessment.md' },
+    { name: 'the promoted ready-lane record form', path: 'backlog/ready/foo/assessment.md' },
+  ])('refuses $name ahead of the candidate test, and pins the whole refusal outcome', ({ path }) => {
+    expect(checkShape(path, CLEAN)).toEqual({
+      lines: [`LAYER1 ${path}: an assessment record, 0 checks -- this layer does not shape-check its own judgments`],
+      deliver: false,
+    })
+  })
+
   it('refuses a file sitting directly under backlog/ and pins the whole non-candidate outcome', () => {
     expect(checkShape('backlog/TEMPLATE.md', CLEAN)).toEqual({
       lines: ['LAYER1 backlog/TEMPLATE.md: not a candidate, 0 checks -- only an idea file carries the candidate shape'],
