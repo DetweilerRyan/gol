@@ -109,9 +109,9 @@ describe('parseLaneDeclarations -- unavailable rows', () => {
 })
 
 describe('parseLaneDeclarations -- declared rows', () => {
-  it('tolerates a top-level "$schema" key by name', () => {
+  it('reads only the top-level "lanes" key, ignoring "$schema" and any other top-level key', () => {
     const result = parseLaneDeclarations(
-      '{"$schema": "./schemas/board-lanes.schema.json", "lanes": {"ideas": {"shape": "flat"}}}',
+      '{"$schema": "./schemas/board-lanes.schema.json", "unknown": 1, "lanes": {"ideas": {"shape": "flat"}}}',
     )
     expect(result).toEqual({ kind: 'declared', lanes: new Map([['ideas', { shape: 'flat' }]]) })
   })

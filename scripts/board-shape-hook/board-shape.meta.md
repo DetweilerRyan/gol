@@ -2,8 +2,8 @@
 
 The rationale half of the sidecar pair, per `doc-comments.md` rule 7: the hover carries the
 contract, and this file carries the evidence for why the contract is shaped that way. Read it
-when you are changing lane classification, not in order to call `checkShape`. This is the first
-`scripts/`-tier sidecar; the three prior instances all sit under `src/`.
+when you are changing lane classification, not in order to call `checkShape`. This was the tier's
+first instance outside `src/` when it landed (2026-09-21).
 
 ## The 2026-09-21 axis-split ruling
 

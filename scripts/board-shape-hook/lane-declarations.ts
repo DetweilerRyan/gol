@@ -117,8 +117,9 @@ function buildLaneMap(entries: Array<[string, unknown]>): BuiltLanes {
  * the caller writes absence as a value rather than as an omitted argument.
  * Every failure -- malformed JSON, a missing or empty "lanes" object, an
  * invalid lane name, an invalid shape -- returns `unavailable` with a
- * reason; there is no partial-map outcome. A top-level `$schema` key is
- * tolerated by name and otherwise ignored.
+ * reason; there is no partial-map outcome. Only the top-level `lanes` key is
+ * read: any other top-level key, `$schema` among them, is ignored (the JSON
+ * schema file gives editors the strict view).
  */
 export function parseLaneDeclarations(text: string | undefined): LaneDeclarationsLookup {
   if (text === undefined) return unavailable('declaration file missing or unreadable')
