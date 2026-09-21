@@ -21,7 +21,9 @@ Layer 1 ran before this text reached you. Its output:
 
 **A `not a candidate` line means the target is a per-item artifact rather than an idea file — stop and say so, and score nothing.**
 
-**A target whose basename ends `.assessment.md` is a record rather than an idea — stop and say so, and score nothing.** Layer 1 does not refuse it, since the classifier reads position rather than basename.
+**An `off the board` line means the target is not a board file at all — stop and say so, and score nothing.**
+
+**A target whose basename ends `.assessment.md` is a record rather than an idea — stop and say so, and score nothing.** Read the basename yourself before you assess, and never take candidacy from the Layer 1 output alone.
 
 **One invocation assesses one idea.** A request to assess a set is one invocation per member.
 

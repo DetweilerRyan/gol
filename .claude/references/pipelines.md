@@ -41,17 +41,17 @@ until the promotion moves it. That is the ground for every field it carries, not
 blob id it stores. That blob id belongs to the assessed idea file, and no position supplies it at
 any point. `.claude/references/definition-of-ready.md` names the fields.
 
-**The kinds are not a closed set.** `scripts/board-shape-hook/board-shape.ts` classifies by
-position rather than by basename. So an artifact kind nobody has named yet is covered in an item's
-folder on the day it lands.
+**The kinds are not a closed set.** Apart from the record refusal below,
+`scripts/board-shape-hook/board-shape.ts` classifies by position rather than by basename. So an
+artifact kind nobody has named yet is covered in an item's folder on the day it lands.
 
 **The board hook checks no per-item artifact in an item's folder.** It prints a non-candidate line
 rather than findings. Read that line as a refusal to assess, never as a pass. Vale's
 `Board.NoStatusField` still reaches every board file, artifacts included.
 
-**An assessment record in the ideas lane is the exception, and it is not yet refused.** Measured
-2026-09-20: such a record is two segments, so the same classifier reads it as an idea file and
-reports findings. `checkers-do-not-reach-the-assessment-sidecar` owns the fix.
+**An assessment record is refused by its own path, in every lane, ahead of the candidate test.**
+The hook reports the refusal and scores nothing, so read that line the way you read a
+non-candidate line.
 
 **Name the artifact's shape in the prompt of any role that writes one.** A role reaches this file
 only when its own file or its invoking prompt sends it here.

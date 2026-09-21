@@ -422,9 +422,9 @@ already scanned past.
 ## Instruction stays. Explanation moves.
 
 **An instruction file carries instructions. Its `.meta.md` sidecar carries the explanation.** That
-governs every article, every role file and every module sidecar, not only the file you reached it
-from. Apply it whenever acting on a finding makes you shorten something, because every mechanical rule
-here is satisfied by moving something out.
+governs every instruction file in this corpus, whatever tier it sits in, not only the file you reached
+it from. Apply it whenever acting on a finding makes you shorten something, because every mechanical
+rule here is satisfied by moving something out.
 
 ### What an instruction file may not carry
 
