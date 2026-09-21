@@ -76,13 +76,35 @@ describe('argv mode', () => {
     expect(result.stdout).toContain('LAYER1 backlog/ideas/clean.md: 7 checks, 0 findings')
   })
 
-  it('never emits a hookSpecificOutput envelope, even when findings exist', () => {
-    const dir = tempDirWithLanes('board-shape-hook-')
-    writeFile(dir, 'backlog/ideas/bad.md', '---\nname: nope\n---\n')
-    const result = runArgv(dir, ['backlog/ideas/bad.md'])
+  // Object-table it.each, the resolveTarget shape in board-shape.test.ts:
+  // both rows spawn argv mode against a single file and assert a contains/
+  // not-contains pair on stdout, differing only in which config and target
+  // produce which pair -- dry4ts flagged these as near-identical `it()`
+  // bodies before the table unified them (score 1.00 against each other).
+  it.each([
+    {
+      name: 'never emits a hookSpecificOutput envelope, even when findings exist',
+      dir: () => tempDirWithLanes('board-shape-hook-'),
+      relPath: 'backlog/ideas/bad.md',
+      content: '---\nname: nope\n---\n',
+      contains: '7 checks,',
+      notContains: 'hookSpecificOutput',
+    },
+    {
+      name: 'prints the lane-declarations-unavailable line instead of resolving when the config is missing',
+      dir: () => tempDir('board-shape-hook-'),
+      relPath: 'backlog/ideas/clean.md',
+      content: CLEAN,
+      contains: 'lane declarations unavailable',
+      notContains: 'path missing or unreadable',
+    },
+  ])('$name', ({ dir, relPath, content, contains, notContains }) => {
+    const target = dir()
+    writeFile(target, relPath, content)
+    const result = runArgv(target, [relPath])
     expect(result.status).toBe(0)
-    expect(result.stdout).toContain('7 checks,')
-    expect(result.stdout).not.toContain('hookSpecificOutput')
+    expect(result.stdout).toContain(contains)
+    expect(result.stdout).not.toContain(notContains)
   })
 
   it('refuses an existing off-board target rather than reading its shape', () => {
@@ -101,15 +123,6 @@ describe('argv mode', () => {
     expect(result.status).toBe(0)
     expect(result.stdout).toContain('path missing or unreadable')
     expect(result.stdout).not.toContain('off the board')
-  })
-
-  it('prints the lane-declarations-unavailable line instead of resolving when the config is missing', () => {
-    const dir = tempDir('board-shape-hook-')
-    writeFile(dir, 'backlog/ideas/clean.md', CLEAN)
-    const result = runArgv(dir, ['backlog/ideas/clean.md'])
-    expect(result.status).toBe(0)
-    expect(result.stdout).toContain('lane declarations unavailable')
-    expect(result.stdout).not.toContain('path missing or unreadable')
   })
 })
 
@@ -162,15 +175,35 @@ describe('sibling assessment record', () => {
 })
 
 describe('--hook mode', () => {
-  it('delivers the envelope on stdout and the log on stderr when a check fails', () => {
-    const dir = tempDirWithLanes('board-shape-hook-')
-    mkdirSync(path.join(dir, 'backlog', 'ideas'), { recursive: true })
-    const target = path.join(dir, 'backlog', 'ideas', 'bad.md')
-    writeFileSync(target, '---\nname: nope\n---\n')
-    const result = runHook(JSON.stringify({ tool_input: { file_path: target } }), dir)
+  // Object-table it.each, the resolveTarget shape in board-shape.test.ts:
+  // both rows deliver an envelope over a distinct cause (a failed check
+  // versus an unavailable config) and assert the same contains/envelope
+  // pair -- dry4ts flagged the two standalone `it()` bodies this replaced as
+  // near-identical (score 0.85) before the table unified them.
+  it.each([
+    {
+      name: 'delivers the envelope on stdout and the log on stderr when a check fails',
+      dir: () => tempDirWithLanes('board-shape-hook-'),
+      relPath: ['backlog', 'ideas', 'bad.md'],
+      content: '---\nname: nope\n---\n',
+      contains: 'LAYER1',
+    },
+    {
+      name: 'delivers the config envelope instead of a shape report when the config is missing',
+      dir: () => tempDir('board-shape-hook-'),
+      relPath: ['backlog', 'ideas', 'clean.md'],
+      content: CLEAN,
+      contains: 'lane declarations unavailable',
+    },
+  ])('$name', ({ dir, relPath, content, contains }) => {
+    const root = dir()
+    const target = path.join(root, ...relPath)
+    mkdirSync(path.dirname(target), { recursive: true })
+    writeFileSync(target, content)
+    const result = runHook(JSON.stringify({ tool_input: { file_path: target } }), root)
     expect(result.status).toBe(0)
-    expect(result.stderr).toContain('LAYER1')
-    expectEnvelopeContext(result.stdout, 'LAYER1')
+    expect(result.stderr).toContain(contains)
+    expectEnvelopeContext(result.stdout, contains)
   })
 
   // Object-table it.each, the resolveTarget shape in board-shape.test.ts: both
@@ -213,17 +246,6 @@ describe('--hook mode', () => {
     expect(result.status).toBe(0)
     expect(result.stdout).toBe('')
     expect(result.stderr).toContain('undeclared lane')
-  })
-
-  it('delivers the config envelope instead of a shape report when the config is missing', () => {
-    const dir = tempDir('board-shape-hook-')
-    const target = path.join(dir, 'backlog', 'ideas', 'clean.md')
-    mkdirSync(path.dirname(target), { recursive: true })
-    writeFileSync(target, CLEAN)
-    const result = runHook(JSON.stringify({ tool_input: { file_path: target } }), dir)
-    expect(result.status).toBe(0)
-    expect(result.stderr).toContain('lane declarations unavailable')
-    expectEnvelopeContext(result.stdout, 'lane declarations unavailable')
   })
 
   it('reports the empty-extraction finding for a malformed payload', () => {

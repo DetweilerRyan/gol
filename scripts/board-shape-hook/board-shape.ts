@@ -80,8 +80,9 @@ function frontmatterWindow(lines: string[]): string[] {
   // Equivalent mutant: seeding this array (Stryker's ArrayDeclaration) changes nothing --
   // fm's only consumer checks membership against `name:`/`title:`/`created:`/`status:` line
   // shapes the seeded string matches none of, and never reads length or order. Demonstrated
-  // 2026-09-18 (1114 tests) and re-demonstrated 2026-09-21 under the RecordLookup parameter
-  // (1176 tests): mutant hand-applied, `npm run test:scripts` fully green both times.
+  // 2026-09-18 (1114 tests), re-demonstrated 2026-09-21 under the RecordLookup parameter
+  // (1176 tests) and again under the declaration-driven classifyShape split (1222 tests):
+  // mutant hand-applied, `npm run test:scripts` fully green every time.
   const fm: string[] = []
   for (let i = 1; i < lines.length; i++) {
     fm.push(lines[i])
@@ -152,19 +153,36 @@ type Classification =
   | { kind: 'shape-mismatch' }
   | { kind: 'not-a-candidate' }
 
-function classifyShape(target: string, lanes: LaneDeclarations): Classification {
-  const segments = segmentsAfterRoot(target)
-  if (segments.length < 2) return { kind: 'not-a-candidate' }
-  const lane = lanes.get(segments[0])
-  if (lane === undefined) return { kind: 'undeclared-lane' }
-  if (lane.shape === 'flat') {
-    return segments.length === 2 ? { kind: 'candidate', shape: lane } : { kind: 'shape-mismatch' }
-  }
+// Split out of classifyShape to hold each lane shape's own CRAP score under
+// threshold -- the two branches share no decision points, so nothing but the
+// call site was lost by separating them.
+//
+// Equivalent mutant on both `kind: 'candidate'` literals below (Stryker's
+// StringLiteral, e.g. 'candidate' -> ''): checkShape's own dispatch only
+// ever tests `classification.kind` against 'undeclared-lane', 'shape-mismatch'
+// and 'not-a-candidate'; anything that matches none of those three falls
+// through to candidateOutcome regardless of its actual string value. So
+// 'candidate' is a human-readable tag, never a compared-against literal.
+// Demonstrated 2026-09-21: both literals mutated in turn, `npm run
+// test:scripts` fully green each time (1222 tests).
+function classifyFlatLane(segments: string[], lane: Extract<LaneShape, { shape: 'flat' }>): Classification {
+  return segments.length === 2 ? { kind: 'candidate', shape: lane } : { kind: 'shape-mismatch' }
+}
+
+function classifyFolderLane(segments: string[], lane: Extract<LaneShape, { shape: 'folder' }>): Classification {
   if (segments.length === 2) return { kind: 'shape-mismatch' }
   if (segments.length === 3) {
     return segments[2] === lane.item ? { kind: 'candidate', shape: lane } : { kind: 'not-a-candidate' }
   }
   return { kind: 'not-a-candidate' }
+}
+
+function classifyShape(target: string, lanes: LaneDeclarations): Classification {
+  const segments = segmentsAfterRoot(target)
+  if (segments.length < 2) return { kind: 'not-a-candidate' }
+  const lane = lanes.get(segments[0])
+  if (lane === undefined) return { kind: 'undeclared-lane' }
+  return lane.shape === 'flat' ? classifyFlatLane(segments, lane) : classifyFolderLane(segments, lane)
 }
 
 // deliver is false, so no envelope reaches the acting agent and writing a
@@ -221,6 +239,40 @@ function assessmentRecordOutcome(target: string): HookOutcome {
   return { lines: [line], deliver: false }
 }
 
+// The seven checks proper, run only once classifyShape has confirmed
+// `target` is a candidate -- split out of checkShape to hold each function's
+// own CRAP score under threshold. `shape` is the classification's own
+// resolved LaneShape, so this never re-derives or re-looks-up the lane.
+function candidateOutcome(target: string, text: string, record: RecordLookup, shape: LaneShape): HookOutcome {
+  const textLines = text.split('\n')
+  // In a folder lane the file is always the lane's declared item, so the
+  // identity the name: field must match is the folder's basename, not the
+  // file's -- generalized from the folder shape itself rather than a
+  // hardcoded 'proposal' stem, so a lane declaring a different item name
+  // classifies identically.
+  const stem = basename(target, '.md')
+  const base = shape.shape === 'folder' ? basename(dirname(target)) : stem
+  const fm = frontmatterWindow(textLines)
+  const identity = identityFindings(fm, base)
+  const { era, findings: sections } = sectionFindings(textLines)
+  const lane = laneFor(target)
+  const { clause, finding: staleness } = assessmentSummary(lane, record)
+  const findings = identity.length + sections.length + (staleness ? 1 : 0)
+  // wc -l counts newline bytes; grep -ci counts matching lines, case-insensitively.
+  const newlines = (text.match(/\n/g) ?? []).length
+  const depends = textLines.filter((l) => l.toLowerCase().includes('depends on')).length
+  return {
+    lines: [
+      ...identity,
+      ...sections,
+      `lane ${lane}, ${era} shape, ${newlines} lines, ${depends} depends-on mention(s)`,
+      clause,
+      `LAYER1 ${target}: 7 checks, ${findings} findings`,
+    ],
+    deliver: findings > 0,
+  }
+}
+
 /**
  * The seven readiness checks over an already-resolved target's text: name
  * matches basename, title present, created is a date, no status field, the
@@ -241,31 +293,5 @@ export function checkShape(target: string, text: string, record: RecordLookup, l
   if (classification.kind === 'undeclared-lane') return undeclaredLaneOutcome(target)
   if (classification.kind === 'shape-mismatch') return shapeMismatchOutcome(target)
   if (classification.kind === 'not-a-candidate') return notACandidateOutcome(target)
-  const textLines = text.split('\n')
-  // In a folder lane the file is always the lane's declared item, so the
-  // identity the name: field must match is the folder's basename, not the
-  // file's -- generalized from the folder shape itself rather than a
-  // hardcoded 'proposal' stem, so a lane declaring a different item name
-  // classifies identically.
-  const stem = basename(target, '.md')
-  const base = classification.shape.shape === 'folder' ? basename(dirname(target)) : stem
-  const fm = frontmatterWindow(textLines)
-  const identity = identityFindings(fm, base)
-  const { era, findings: sections } = sectionFindings(textLines)
-  const lane = laneFor(target)
-  const { clause, finding: staleness } = assessmentSummary(lane, record)
-  const findings = identity.length + sections.length + (staleness ? 1 : 0)
-  // wc -l counts newline bytes; grep -ci counts matching lines, case-insensitively.
-  const newlines = (text.match(/\n/g) ?? []).length
-  const depends = textLines.filter((l) => l.toLowerCase().includes('depends on')).length
-  return {
-    lines: [
-      ...identity,
-      ...sections,
-      `lane ${lane}, ${era} shape, ${newlines} lines, ${depends} depends-on mention(s)`,
-      clause,
-      `LAYER1 ${target}: 7 checks, ${findings} findings`,
-    ],
-    deliver: findings > 0,
-  }
+  return candidateOutcome(target, text, record, classification.shape)
 }

@@ -3,6 +3,7 @@ import {
   checkShape,
   emptyPathOutcome,
   isBoardPath,
+  laneDeclarationsUnavailableOutcome,
   missingOutcome,
   offBoardOutcome,
   resolveTarget,
@@ -120,6 +121,28 @@ describe('offBoardOutcome', () => {
     expect(offBoardOutcome('src/camera.ts')).toEqual({
       lines: ['LAYER1 src/camera.ts: off the board, 0 checks -- only a backlog/ target can be assessed'],
       deliver: false,
+    })
+  })
+})
+
+describe('laneDeclarationsUnavailableOutcome', () => {
+  it.each([
+    {
+      name: 'labels an empty target as (no path)',
+      target: '',
+      reason: 'declaration file missing or unreadable',
+      label: '(no path)',
+    },
+    {
+      name: 'names a non-empty target directly',
+      target: 'backlog/ideas/clean.md',
+      reason: 'declaration file is not valid JSON',
+      label: 'backlog/ideas/clean.md',
+    },
+  ])('$name, and always delivers, carrying the given reason', ({ target, reason, label }) => {
+    expect(laneDeclarationsUnavailableOutcome(target, reason)).toEqual({
+      lines: [`LAYER1 ${label}: 0 checks, 1 findings -- lane declarations unavailable (${reason})`],
+      deliver: true,
     })
   })
 })
@@ -332,12 +355,23 @@ describe('checkShape', () => {
   it('anchors the backlog/ prefix strip to the start of the path, not any occurrence', () => {
     // Unanchored, the strip would leave `sub/foo.md` -- two segments, and so a
     // candidate. The anchor is what keeps a look-alike directory off the board.
-    // With the anchor intact, `zzbacklog` reads as the (undeclared) lane name
-    // rather than falling through to a shorter slice of the path, so the
-    // wording is "undeclared lane" rather than "not a candidate" -- the
-    // segment count still pins the anchor even though the outcome class moved.
+    // Both an anchored and an unanchored strip happen to read `zzbacklog` as
+    // an undeclared lane here, so this row alone does not discriminate the
+    // two -- see the row below, which does.
     // reference-check: allow sub/foo.md -- illustrative fragment from the unanchored strip above, never a real file
     expect(checkShape('zzbacklog/sub/foo.md', CLEAN, NO_RECORD, LANES).lines[0]).toContain('undeclared lane')
+  })
+
+  it('anchors the backlog/ prefix strip so a mid-string occurrence cannot manufacture a declared lane name', () => {
+    // Unanchored, stripping the first "backlog/" out of "idbacklog/eas/foo.md"
+    // (found mid-string, not at the start) leaves "id" + "eas/foo.md" ==
+    // "ideas/foo.md" -- a two-segment flat-lane candidate. Anchored, the
+    // string does not start with "backlog/" at all, so the strip is a no-op
+    // and "idbacklog" stays the (undeclared) first segment. The two
+    // implementations disagree on outcome *kind* here, not just wording --
+    // this is what the row above could not pin.
+    const outcome = checkShape('idbacklog/eas/foo.md', CLEAN, NO_RECORD, LANES)
+    expect(outcome.lines.at(-1)).toContain('undeclared lane')
   })
 })
 
