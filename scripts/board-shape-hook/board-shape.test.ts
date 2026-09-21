@@ -87,7 +87,13 @@ describe('resolveTarget', () => {
       expected: 'backlog/ideas/a.md-b.md',
     },
   ])('$name', ({ target, exists, expected }) => {
-    expect(resolveTarget(target, exists)).toBe(expected)
+    expect(resolveTarget(target, exists, LANES)).toBe(expected)
+  })
+
+  it('skips a lane absent from the declarations, contributing no candidate', () => {
+    const lanes: LaneDeclarations = new Map([['ready', { shape: 'folder', item: 'proposal.md' }]])
+    const exists = (p: string) => p === 'backlog/ideas/my-slug.md'
+    expect(resolveTarget('my-slug', exists, lanes)).toBe('my-slug')
   })
 })
 

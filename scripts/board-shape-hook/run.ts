@@ -67,7 +67,7 @@ function readLaneDeclarationsText(): string | undefined {
 function checkTarget(target: string): HookOutcome {
   const lanes = parseLaneDeclarations(readLaneDeclarationsText())
   if (lanes.kind === 'unavailable') return laneDeclarationsUnavailableOutcome(target, lanes.reason)
-  const resolved = resolveTarget(target, existsSync)
+  const resolved = resolveTarget(target, existsSync, lanes.lanes)
   if (resolved === '' || !existsSync(resolved)) return missingOutcome(resolved)
   if (!isBoardPath(resolved)) return offBoardOutcome(resolved)
   const bytes = readFileSync(resolved)

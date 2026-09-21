@@ -24,16 +24,23 @@ export function isBoardPath(path: string): boolean {
 }
 
 /**
- * Bare-slug resolution: ideas checked first, ready second, last hit wins. A
- * ready item is a folder, so its file is `<lane>/<slug>/proposal.md` rather
- * than `<slug>.md`. Returns `target` unchanged when it already exists, or
- * when no candidate does either.
+ * Bare-slug resolution: ideas checked first, ready second, last hit wins.
+ * Precedence membership and order are this function's own fact, not
+ * derivable from `lanes` -- `done` is a folder lane too and deliberately
+ * does not resolve. Each candidate's path is built from the lane's declared
+ * shape instead: `flat` wants `<lane>/<slug>.md`, `folder` wants
+ * `<lane>/<slug>/<item>`. A lane absent from `lanes` contributes no
+ * candidate. Returns `target` unchanged when it already exists, or when no
+ * candidate does either.
  */
-export function resolveTarget(target: string, exists: (path: string) => boolean): string {
+export function resolveTarget(target: string, exists: (path: string) => boolean, lanes: LaneDeclarations): string {
   if (exists(target)) return target
   const slug = target.replace(/\.md$/, '')
   let resolved = target
-  for (const candidate of [`backlog/ideas/${slug}.md`, `backlog/ready/${slug}/proposal.md`]) {
+  for (const name of ['ideas', 'ready']) {
+    const lane = lanes.get(name)
+    if (lane === undefined) continue
+    const candidate = lane.shape === 'flat' ? `backlog/${name}/${slug}.md` : `backlog/${name}/${slug}/${lane.item}`
     if (exists(candidate)) resolved = candidate
   }
   return resolved
