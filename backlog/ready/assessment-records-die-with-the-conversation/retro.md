@@ -164,3 +164,54 @@ amendment is signed and immutable, so the correction lives here.
 `handoffs.md` says "the seat" once where the rest of the file says "the orchestrating session".
 Pre-existing and identical before the edit, named only because deleting the false universal
 removed its nearest contrast word.
+
+## A seventh `kind:` home, false before this slice began
+
+`coach` REVIEW found `idea-capture/SKILL.md` telling a reader that the judging pass writes the
+`kind:` field at assessment. It does not — its own write rules put the idea file, its frontmatter
+and its lane outside its reach, and three other files attribute the write to the promotion after
+the move.
+
+**It is not this slice's damage.** `git log -L` places the sentence in the board-migration slice,
+where it was already false: the attribution then named the seat, not the judging pass. `coach`
+censused the class and found seven homes making a `kind:` attribution, exactly one wrong.
+
+It went to this file rather than a tenth amendment on the slice's own discriminator — the
+instruction is correct and only its reason misattributes, the promoting command performs the
+write regardless, and no gate moves. The cost of the alternative was widening a signed file set
+to a sixteenth file for one clause.
+
+## The question `coach` takes to the retrospective
+
+**Before admitting an item into a running slice, census how many files restate the rule it
+changes. An item whose answer is one rides. An item whose answer is unknown is a slice of its
+own.**
+
+Its verdict on this cycle, asked directly and answered directly: it should have closed earlier,
+not at an amendment number but at the item that retired a standing universal. Four of nine
+amendments and twelve of twenty-seven items exist because of that one item, and the slice's
+subject had closed before it.
+
+**Two signals were readable at the time.** The amendment's own sign-off called that item the
+heaviest edit in the set — a rule changed rather than added, at four of its seven anchors — and
+drew no conclusion from it. And "seven anchors in five files" was a count standing without a
+verified enumeration, which is the defect the house rules name, committed inside an amendment
+repairing that same defect elsewhere. **A rule-spread count that has not been censused by method
+is the tell that the item is bigger than the slice.**
+
+**The control case matters, and it cuts against blaming direction.** One earlier item was also
+ruled out of scope and directed in by the user; it cost one bullet, one file, no residue. The
+difference was measurable before signature: that item changed a rule nothing else stated, and
+this one changed a rule other files restate. Nobody was asked to check which.
+
+**And one fact cuts the other way.** The universal the item retired was born false, in the same
+commit that gave a role a board deliverable and told it not to read the board. It had been false
+through at least one intervening slice. So the repair chain did not only undo its own damage — it
+closed a pre-existing falsehood the item exposed, and the corpus now states that rule in four
+homes with a recorded, re-runnable census method. Closing earlier would have been better; the
+work was not waste.
+
+**What nobody claims.** That a fourth census method would have found every home. Three
+convergence claims failed in a row and all three failed the same way — a census narrower than
+the claim space. The honest reading is that the corpus held better than any instrument in this
+slice measured it.
