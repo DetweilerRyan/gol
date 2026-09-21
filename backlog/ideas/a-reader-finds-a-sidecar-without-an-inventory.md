@@ -28,11 +28,12 @@ further ten mentions are generic placeholders — `<name>.meta.md`, `<module>.me
 state the convention rather than an instance.
 
 **The inventory is false, and hand-repair does not hold it.** The roster was repaired on
-2026-09-21 by `1b1f3e9`, which added the article it had been missing and dropped a bare count.
-Later the same day `ab3e946` landed `scripts/board-shape-hook/board-shape.meta.md`, which the
-section does not account for: the string `board-shape` appears nowhere in CLAUDE.md. **Repaired
-and re-broken within hours, by a different slice.** That is the argument — not that the list is
-currently wrong, but that being currently right is a state it does not hold.
+2026-09-21 at 11:14 by `1b1f3e9`, which added the article it had been missing and dropped a bare
+count. At 15:20 the same day, `2f1aca3` added `scripts/board-shape-hook/board-shape.meta.md`,
+which the section does not account for: the string `board-shape` appears nowhere in CLAUDE.md.
+**Repaired at 11:14 and re-broken at 15:20, by a different slice.** That is the argument — not
+that the list is currently wrong, but that being currently right is a state it does not hold for
+one working day.
 
 **A sidecar is a thing ordinary work adds.** `apply-the-census-count-rule-everywhere` supplies
 the test the corpus already uses: does a normal slice move this fact? Adding a `<module>.meta.md`
