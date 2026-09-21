@@ -1,7 +1,5 @@
 # Definition of Ready
 
-<!-- reference-check: allow assessment.md -- the per-item artifact name this reference defines; no item carries one yet, and the marker goes stale (delete it) when the first does -->
-
 **Read before assessing a candidate, promoting an idea, or ruling a disposition on the board.** Who reads this file is a routing question, and CLAUDE.md answers it.
 
 Promotion from `backlog/ideas/` to `backlog/ready/` is this repo's Definition of Ready, in the Agile Alliance glossary sense — the lane is even named for it. The kind check below also yields the file's frontmatter `kind:` label. The judging pass rules the label, `/idea-promote` writes it into the proposal, and the seat reads it to plan the role cycle. Assessing a candidate is the board's backlog refinement, in the same vocabulary. This file carries the assessment: two pre-questions, six predicates, anchored scores, four dispositions, and the record that holds the result. In this file, "ready" means the board's promotion bar and nothing else; the word carries other senses elsewhere, and none is this subject.

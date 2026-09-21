@@ -298,7 +298,6 @@ That is why `coder` runs `npm run ast-grep` in its own workflow rather than wait
 ## Idea board
 
 <!-- reference-check: allow tasks.md -- a per-item artifact-name convention; no ready item carries one yet, and the marker goes stale (delete it) when the first does -->
-<!-- reference-check: allow assessment.md -- the same convention, one artifact later; the marker goes stale (delete it) when the first item carries one -->
 
 `backlog/` is a three-lane kanban of slices — it is the product backlog, in Agile Alliance terms, and the lane is the directory:
 

@@ -6,8 +6,6 @@ disable-model-invocation: true
 allowed-tools: Read, Edit, Bash(git *)
 ---
 
-<!-- reference-check: allow assessment.md -- the per-item artifact name this procedure creates; no item carries one yet, and the marker goes stale (delete it) when the first does -->
-
 # Promote an idea
 
 Move the candidate in $ARGUMENTS to its `backlog/ready/<name>/` folder, carrying its assessment record. The human invocation of this command is the grant; neither the judging pass nor the ruling promotes.
