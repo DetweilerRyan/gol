@@ -10,11 +10,11 @@ On 2026-09-20 the hook gained a refusal for an assessment record's own path, in 
 `checkShape`, ahead of the candidate test. The skill's basename guard now looks like a second copy
 of that refusal, and it is not.
 
-**The guard covers a gap the skill's other two stop clauses leave open.** Those two key on line
-shapes: an absent `LAYER1` count line, and a `not a candidate` line. Measured 2026-09-20, the
-record refusal prints a third shape — `an assessment record, 0 checks` — which neither clause
-names. Delete the basename guard and a reader holding that line finds a `LAYER1` line present, no
-`not a candidate` line, and no instruction covering the case.
+**The guard covers a gap every stop clause keyed on the `LAYER1` output leaves open.** Those
+clauses key on a line shape in that output, or on its absence. Measured 2026-09-20, the record
+refusal prints a shape none of them names — `an assessment record, 0 checks`. Delete the basename
+guard and a reader holding that line finds a `LAYER1` line present, no stop clause that names it,
+and no instruction covering the case.
 
 **The hook reports; it does not enforce.** Argv mode writes every line to stdout and exits 0, with
 the outcome's `deliver` flag unread. Nothing stops an assessment proceeding, so the refusal binds
@@ -28,10 +28,11 @@ reads the file, which is the shape `prose.md` names under "How a pass damages th
 The replacement keeps the duty and asserts nothing about the hook's internals, which
 `claim-discipline.md` prohibits.
 
-**The `off the board` stop clause closes the same gap for a fourth line shape.** Measured live
+**The `off the board` stop clause closes the same gap for one more line shape.** Measured live
 2026-09-20, `node scripts/board-shape-hook/run.ts src/camera.ts` prints a `LAYER1` line reading
-`off the board, 0 checks` that none of the three prior stop clauses named — the same shape as the
-basename guard's gap, one line shape later.
+`off the board, 0 checks`, which no stop clause named until
+`checkers-do-not-reach-the-assessment-sidecar` added one — the same gap as the basename guard's,
+one line shape later.
 
 ## What was ruled out
 
