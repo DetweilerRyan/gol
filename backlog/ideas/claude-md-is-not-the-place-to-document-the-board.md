@@ -12,8 +12,9 @@ argument for lane-as-directory. Measured 2026-09-21: the section runs 45 lines o
 
 Three other files already document the same board. `.claude/references/definition-of-ready.md` holds
 the assessment, the dispositions and the record shape. `.claude/references/pipelines.md` holds the
-per-kind class of service and the per-item artifact convention. `backlog/TEMPLATE.md` holds the idea
-shape. Measured the same day, those three run 619 lines between them.
+per-kind class of service and the per-item artifact convention. `backlog/IDEA-TEMPLATE.md` holds the
+ideas lane's item shape, renamed there from `backlog/TEMPLATE.md` on 2026-09-22. Measured 2026-09-21,
+those three run 619 lines between them.
 
 `CLAUDE.md` is auto-loaded into every session and every subagent. Its own Idea board section states
 that the orchestrating session owns the board and that no role reads it, apart from an item's own

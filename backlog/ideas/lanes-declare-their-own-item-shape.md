@@ -15,9 +15,10 @@ else. The lane literal is therefore already in the file.
 Measured 2026-09-21: every item file in the `ready` and `done` lanes is named `proposal.md`, and no
 lane holds a divergent item shape. One shape serves all three lanes today.
 
-`backlog/TEMPLATE.md` is named for the whole board while holding the shape of one lane's item. The
-basename is shared with `adr/TEMPLATE.md`, and `npm run reference-check` resolves a citation by
-basename against the live tree, so a bare mention resolves against either file. A sweep on 2026-09-21
+`backlog/TEMPLATE.md` was named for the whole board while holding the shape of one lane's item, until
+the corpus child renamed it to `backlog/IDEA-TEMPLATE.md` on 2026-09-22. The basename was shared with
+`adr/TEMPLATE.md`, and `npm run reference-check` resolves a citation by basename against the live
+tree, so a bare mention resolved against either file. A sweep on 2026-09-21
 with `grep -rn 'TEMPLATE\.md'` found live citations in the auto-loaded index, the pipelines reference,
 a skill, and the hook's own unit test, plus a bare one in the decision-record tier.
 
