@@ -165,8 +165,16 @@ neither waits on it nor conflicts with it. `editor` CLEAN then reads one manifes
 
 ## Sign-off
 
-**Unsigned.** The user rules on this amendment before `writer` re-enters. Item 9 carries no
-authority until then, and items 1 to 8 keep the authority the spec's own signature gave them.
+**Signed by the user 2026-09-22.** Item 9 carries authority, and items 1 to 8 keep the authority
+the spec's own signature gave them.
 
-The ruling most worth overturning is **R11** — whether the pipelines sentence should say more than
-the renamed token, now that the name carries a lane the sentence does not mention.
+**R11 stands.** The seat put it to the user as the one ruling this amendment flagged for
+overturning, with its argument and the cost of reversing it. The user signed item 9 as written,
+which is the token substitution and nothing more. The pipelines sentence gains no lane clause: its
+own opening words already name `proposal.md` as the promoted idea file, and the renamed token puts
+the shared noun on both sides of a link the neutral old name left invisible.
+
+**R12 stands** with it, unremarked — the three pathless references stay as they are.
+
+Nothing below the signature line changes without a further amendment `coach` authors and the user
+signs again.
