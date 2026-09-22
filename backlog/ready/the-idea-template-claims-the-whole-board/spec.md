@@ -409,7 +409,12 @@ reading this sentence as the verdict.
 
 ## Sign-off
 
-Unsigned. `writer` has no authority until the user signs this file, and item 8 has none until the
-same signature. The two places most worth overturning are **R1**, the name and the location, and
-**R7**, the departure from the proposal's one-case reading. **8E** is the one item that is a
-question rather than an instruction.
+**Signed by the user 2026-09-22.** Items 1 to 8 carry authority, and **8E is signed in scope**
+rather than dropped.
+
+The seat put the ten rulings to the user one at a time, each with its argument and its cost, and
+each was accepted in turn. The two the spec named as most worth overturning stand: **R1**, the name
+and the location, and **R7**, the departure from the proposal's one-case reading.
+
+Nothing below the signature line changes without an amendment `coach` authors and the user signs
+again.
