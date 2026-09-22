@@ -2,6 +2,7 @@
 name: a-reader-finds-a-sidecar-without-an-inventory
 title: Give CLAUDE.md one sidecar section, holding a rule rather than a roster
 created: 2026-09-17
+kind: enabler-process
 ---
 
 Captured from `coach` REVIEW's handoff on `slice/extract-the-merge-protocol`, its R6,
