@@ -2,6 +2,7 @@
 name: the-idea-template-claims-the-whole-board
 title: Name the idea template for the lane it serves and correct the board statements that no longer hold
 created: 2026-09-21
+kind: enabler-process
 ---
 
 Split from `lanes-declare-their-own-item-shape`, ruled Epic 2026-09-21. This is the corpus child, and
@@ -17,8 +18,10 @@ citation by basename against the live tree, so a bare mention resolves against e
 reference, a skill that reads the file as a step, and a unit test, plus a bare one in the
 decision-record tier.
 
-The pipelines reference states that the board classifier tests position rather than basename, and
-gives four properties as the argument.
+The pipelines reference states that the board classifier classifies by position rather than by
+basename, and gives one consequence as the argument: an artifact kind nobody has named is covered in
+an item's folder the day it lands. The four properties that argument is sometimes credited with
+belong to the landed spec of `the-board-hook-misfits-per-item-artifacts`, not to the reference.
 
 CLAUDE.md's board section also states that the board has no gate, no checker, and no test beyond one
 advisory Vale style. Measured 2026-09-22: the board-shape hook ships, `.claude/settings.json`
@@ -35,9 +38,9 @@ declarations-unavailable line, which is another such case and is named nowhere i
 The name is wrong in two ways at once, and only one is a matter of taste. It claims the board for a
 shape one lane uses, and it is ambiguous to the single checker that would catch a broken citation.
 
-The rest arrives with the sibling. When a lane declares its own item shape, the prose stating that the
-classifier tests position stops being true as written, and the argument it gives for that form stops
-being the whole argument — the split is by axis, so the positional half survives for artifacts and
+The rest arrived with the sibling, which landed 2026-09-21. The prose stating that the classifier
+tests position is false as written from that date, and the argument it gives for that form is no
+longer the whole argument — the split is by axis, so the positional half survives for artifacts and
 the lane half does not.
 
 One clause of the board section is false already, independently of the axis split. The no-checker
