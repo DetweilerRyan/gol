@@ -10,11 +10,11 @@ On 2026-09-20 the hook gained a refusal for an assessment record's own path, in 
 `checkShape`, ahead of the candidate test. The skill's basename guard now looks like a second copy
 of that refusal, and it is not.
 
-**Measured 2026-09-20, the guard covered a gap every stop clause keyed on the `LAYER1` output left open.** Those
-clauses keyed on a line shape in that output, or on its absence. Measured 2026-09-20, the record
-refusal prints a shape none of them names — `an assessment record, 0 checks`. Delete the basename
-guard and a reader holding that line finds a `LAYER1` line present, no stop clause that names it,
-and no instruction covering the case.
+**As of 2026-09-20, the guard covered a gap every stop clause keyed on the `LAYER1` output left
+open.** Those clauses keyed on a line shape in that output, or on its absence. The record
+refusal printed a shape none of them named — `an assessment record, 0 checks`. Deleting the
+basename guard then would have left a reader holding that line with a `LAYER1` line present, no
+stop clause that named it, and no instruction covering the case.
 
 **The hook reports; it does not enforce.** Argv mode writes every line to stdout and exits 0, with
 the outcome's `deliver` flag unread. Nothing stops an assessment proceeding, so the refusal binds
@@ -29,11 +29,12 @@ The replacement keeps the duty and states no undated present-tense fact about th
 the form `claim-discipline.md` rules out. A dated claim about the same refusal is not ruled out,
 and the `checkShape` sentence in this section is one.
 
-**The `off the board` stop clause closes the same gap for one more line shape.** Measured live
-2026-09-20, `node scripts/board-shape-hook/run.ts src/camera.ts` prints a `LAYER1` line reading
-`off the board, 0 checks`, which no stop clause named until
-`checkers-do-not-reach-the-assessment-sidecar` added one — the same gap as the basename guard's,
-one line shape later.
+**As of 2026-09-20, an `off the board` stop clause closed the same gap for one more line
+shape.** Measured live that day, `node scripts/board-shape-hook/run.ts src/camera.ts` printed a
+`LAYER1` line reading `off the board, 0 checks`, which no stop clause named until
+`checkers-do-not-reach-the-assessment-sidecar` added one — the same gap as the basename
+guard's, one line shape later. The 2026-09-22 positive gate below replaced that clause; see
+that section for what stands in its place.
 
 ## What was ruled out
 
