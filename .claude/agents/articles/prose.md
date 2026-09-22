@@ -500,8 +500,8 @@ half, `<module>.meta.md` the explanation half. CLAUDE.md's sidecar section says 
 everything above applies to that pair unchanged.
 
 **Which article a subject belongs to, and where a sidecar file physically sits, are CLAUDE.md's
-questions** — its sidecar section and routing branches 1 to 6. Settle those first. This rule applies once the pair exists, and
-says only what may sit on each side of it.
+questions** — its sidecar section and routing branches 1 to 6. Settle those first. This rule
+applies once the pair exists, and says only what may sit on each side of it.
 
 **Nothing checks the pair.** `reference-check` and `agent-doc-check` stay green while an article and
 its sidecar drift, because every filename resolves and no checker reads for absent prose. So audit the

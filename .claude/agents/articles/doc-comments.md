@@ -181,8 +181,7 @@ which register they opened before reading a word.
 | `<module>.md`      | extended examples, use cases, best-practice notes | the hover was not enough, and you are calling it |
 | `<module>.meta.md` | measurements, rejected alternatives, corrections  | you are changing it                              |
 
-Either file may be absent, and usually one is. Read `src/hooks/useZoomGlide.meta.md` as the
-precedent.
+Either file may be absent, and usually one is. Read `src/hooks/useZoomGlide.meta.md` as the precedent.
 
 This mirrors the article tier on purpose, so one convention covers both. Separating by filename rather than
 by section is the point. A filename shows in an editor tab, a diff header and an `@see` link. The reader
@@ -191,7 +190,7 @@ opens nothing to know which register it is.
 **A sidecar points at an article, it does not restate one.** Its content is depth the hover cannot hold —
 measurements, rejected alternatives, the failure mode a change invites. Where an article already carries a
 ruling, the sidecar cites it in one line. Two copies of one paragraph, in two files nobody checks against
-each other, is CLAUDE.md's branch 5 drift one tier down.
+each other, is the article-tier pair drift `prose.md` names, one tier down.
 
 That gives a three-tier escalation: **hover for the contract, sidecar for the depth, implementation only
 when changing it.**

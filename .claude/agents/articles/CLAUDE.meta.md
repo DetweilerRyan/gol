@@ -1,9 +1,8 @@
 # CLAUDE.meta.md
 
 Evidence behind the rulings in `CLAUDE.md`, under the sidecar convention that file's own sidecar
-section states. **Nothing here constrains an action.** Every
-rule stays in `CLAUDE.md`; only the measurement, the probe method, the rejected alternative
-or the correction moved down here.
+section states. **Nothing here constrains an action.** Every rule stays in `CLAUDE.md`; only the
+measurement, the probe method, the rejected alternative or the correction moved down here.
 
 **No role carries a read trigger for this file, and that is the point.** It is read when a
 rule in `CLAUDE.md` is being changed, never in order to follow one.
@@ -63,7 +62,7 @@ Branch 1 used to read "it has no other instruction surface", which
 A pair's own framing measures 1.0-1.4 KB across the three landed role pairs. Measured across
 the five role files plus `orchestration.md`: three earned a sidecar and three did not.
 
-### Branch 5's pair-consistency audit
+### The pair-consistency audit
 
 Measured on the first pair: six editing passes on the article dropped fifteen illustrations
 out of the pair entirely rather than moving them across.
