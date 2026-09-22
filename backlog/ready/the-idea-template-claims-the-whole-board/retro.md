@@ -51,3 +51,44 @@ not yet built.
 **The open question this raises.** `coach.md` calls the retro intake reserved and unbuilt, while
 three `done/` folders carry a `retro.md` the seat wrote. The practice runs ahead of the rule. Which
 is correct is not this slice's to settle.
+
+### P3 — a spec that dictates prose verbatim has no reviewer before it binds
+
+**Named by `coach` at REVIEW on 2026-09-22 as this cycle's real output**, and recorded here rather
+than fixed, since it is an `enabler-process` question rather than a defect any role may repair.
+
+**The mechanism.** `coach` writes corpus prose into `spec.md`. `writer` reproduces it. `editor`
+reads the landed file. So a defect in that prose surfaces only after the user's signature, when the
+text is immutable without an amendment. The two roles positioned to catch it have no standing to:
+`writer`'s correctness is defined as faithful reproduction, and `editor`'s own boundary forbids it
+editing text a signed artifact supplied verbatim, ruling that such a finding is a report rather than
+an edit.
+
+**Measured on this slice.** Two amendments, five corrective items, and zero role divergences.
+`coach` diffed the landed tree against both signed artifacts and found every one of the nine signed
+items had landed byte for byte. Every defect the three review passes found sat in text the spec
+itself supplied.
+
+**What the corpus already says, and did not enforce.** `coach.md` calls for a spec that is
+"file-by-file, verbatim where wording is load-bearing". The qualifier was the rule all along. What
+was missing was any pass that asks, per item, whether the wording is load-bearing — so verbatim
+became the default register rather than the exception the sentence describes.
+
+**The user's ruling, 2026-09-22.** Revise the unsigned amendment 2 to state each item's invariant
+and its anchor, and leave `writer` and `editor` the latitude to write and clean. That is the
+near-term half. `coach` carried the durable half out as an `enabler-process` recommendation.
+
+**The trade, so a later reader does not mistake it for a free improvement.** Autonomy moves the
+catch rather than removing it. A `writer` given an invariant may satisfy it with a sentence `coach`
+would not have written, and `editor` CLEAN becomes the pass that finds it — which is earlier than an
+amendment and cheaper, but not nothing. The stopping condition in amendment 2 is the instrument that
+keeps that bounded.
+
+**One property of the old register is worth keeping in view.** Four of amendment 2's five stopping
+conditions were already written as invariants checkable by reading, and they survived the revision
+untouched. Only the fifth depended on the verbatim blocks existing. A stopping condition written as
+properties is register-independent; one written as a reproduction check is not.
+
+**Open, and not this slice's to settle.** Where the per-item load-bearing test belongs — `coach.md`,
+`prose.md`, or `pipelines.md`'s amendment section — and whether `editor` should gain standing to
+edit spec-supplied prose when the spec marks it non-load-bearing.
