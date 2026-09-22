@@ -101,13 +101,27 @@ became the default register rather than the exception the sentence describes.
 and its anchor, and leave `writer` and `editor` the latitude to write and clean. That is the
 near-term half. `coach` carried the durable half out as an `enabler-process` recommendation.
 
-**One measured outcome, taken the same day the register changed.** Amendment 2's item 11 corrected a
-sentence the spec had dictated as `board-lanes.config.json` declares item depth and basename only.
-Neither `item depth` nor `basename` is a key in that file. The amendment stated the property and
-sent `writer` to read the config rather than supplying the names; `writer` wrote that the file
-declares each lane's `shape` and a folder lane's `item`, which the seat verified matches the config
-exactly. **The dictated sentence was wrong and the authored one was right**, because the role that
-wrote it was sent to the source. One instance proves no rule, and it is recorded as an instance.
+**What the register change is and is not evidence for, corrected by `coach` at REVIEW 2026-09-22.**
+The seat first recorded item 11 as the case for authoring over dictation: the spec had dictated that
+`board-lanes.config.json` declares item depth and basename only, neither of which is a key in that
+file, and `writer` — sent to read the config — wrote that it declares each lane's `shape` and a
+folder lane's `item`. `coach` ruled that reading too strong, and it is right. Item 11's own property
+already named the two words that had to go and said where to read the replacements, and `coach` had
+read the config itself when it wrote the item. Under the old register it would have dictated the
+correct names. **Item 11 is a weak data point and the seat cited it as a strong one.**
+
+**What the change did do, stated as `coach` stated it.** It did not reduce defects in this cycle. It
+moved one error's source from `coach`, unreviewable after signature, to `writer`, reviewable before
+merge. **Count unchanged; reachability changed.** The existence proof is the third CLEAN pass below:
+a defect in `writer`'s own sentence, found and fixed inside one pass, which the verbatim register
+made impossible.
+
+**And the strongest evidence in this slice sits on the other side of the ledger.** `editor` AUDIT
+measured a universal in `CLAUDE.md` false at the closing gate — a template in a flat lane fails two
+of four identity checks, not every one. That sentence was written by `coach` into the spec,
+reproduced correctly by `writer`, passed by `editor` CLEAN, and found by the one pass positioned to
+catch it and positioned too late to fix it. It is the displacement argued by measurement rather than
+by reasoning, and it predates the register change rather than being caused by it.
 
 **The trade, so a later reader does not mistake it for a free improvement.** Autonomy moves the
 catch rather than removing it. A `writer` given an invariant may satisfy it with a sentence `coach`
