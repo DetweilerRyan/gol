@@ -30,7 +30,7 @@ The forms to check:
 
 - From `claim-discipline.md`: caller rosters, file-and-line citations, quoted test titles, bare counts and censuses, "this slice" in a record.
 - Also from it: undated present-tense claims about another file or about external state.
-- From `prose.md`: a sidecar pointer in an instruction file, a fact about another role's file, a restatement of a cited section, an execution-order claim.
+- From `prose.md`: the forms under "What an instruction file may not carry".
 
 Rules that bind the record:
 
