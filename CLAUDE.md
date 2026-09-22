@@ -322,7 +322,7 @@ That is why `coder` runs `npm run ast-grep` in its own workflow rather than wait
 
 - **`backlog/done/<name>/`** — completed, awaiting a retrospective. The retrospective extracts what the finished work can teach — durable halves of `design.md` and `tasks.md` deviations become new `backlog/ideas/` files, spike findings land in the parent's re-assessment or `adr/` — then deletes the folder. This lane records the one fact the `slice/*` tag cannot: _not yet retrospected_. Its trigger and owner are not yet ruled; folders simply wait.
 
-`backlog/TEMPLATE.md` is the idea-file shape: frontmatter (`name`, `title`, `created`, and `kind` once assessed) over Situation / Complication / Question, an optional shaped Answer and No-gos, then Open questions.
+`backlog/IDEA-TEMPLATE.md` is the `ideas/` lane's item shape: frontmatter (`name`, `title`, `created`, and `kind` once assessed) over Situation / Complication / Question, an optional shaped Answer and No-gos, then Open questions. It sits at the board root, not inside `ideas/`: a file in a flat lane is a candidate, and a template fails every identity check. Nothing machine-readable pairs a lane with a template — `board-lanes.config.json` declares item depth and basename only.
 
 **`kind` lives in frontmatter**: `story | enabler-technical | enabler-process | spike | epic`, ruled by `/idea-assess`'s kind check per `definition-of-ready.md` and written into the proposal by `/idea-promote` after the move. The judging pass writes its own assessment record and nothing else. The directory carries the lane and the frontmatter carries the kind — it is not a `status:` field. Kind selects the expected role cycle (a technical enabler runs no `product`, a process enabler runs the `coach` family, a spike runs no pipeline) and **plans rather than authorizes**: the walk-every-path demonstration in `orchestration.md` still confirms any `product` skip at merge time. An epic gets no `ready/` folder — it stays an index file in `backlog/ideas/` and splits into children. Board files written before 2026-09-17 keep their historical `enabler` labels — they are records.
 
@@ -342,7 +342,9 @@ Two rules keep the board honest:
 
 The lane-as-directory choice runs against the prevailing convention. [Backlog.md](https://github.com/MrLesk/Backlog.md), [MADR](https://adr.github.io/madr/), and most git-native trackers keep a `status:` field and never move the file. Moves conflict when several people edit one board. That objection does not reach this repo: slices land **serially** (see `.claude/references/merge-protocol.md`), and the board has a single editor. Since the directory _is_ the status, **do not also put a `status:` field in the frontmatter** — one fact, one home; `kind` is a different fact and is allowed.
 
-Nothing enforces any of this. `backlog/` has no gate, no checker, and no test beyond the advisory `Board` Vale style. Prettier formats the Markdown, and its ignore list is exclusion-based, so a new top-level path is covered with no config edit. That is the extent of the tooling.
+Nothing enforces any of this, and `backlog/` has no gate. The board-shape hook (`scripts/board-shape-hook/run.ts`) reads every `backlog/**` write and edit, and it always exits 0. It scores an idea file's shape and refuses everything else, so a line reporting `0 checks` is a refusal rather than a pass. Vale's advisory `Board` style is the only other reader of a board file.
+
+Prettier formats the Markdown, and its ignore list is exclusion-based, so a new top-level path is covered with no config edit. That is the extent of the tooling.
 
 A board-rendering script would have to live in `scripts/`, which would subject it to CRAP ≤ 6, its own vitest suite, `dry4ts`, and mutation testing. That is more machinery than the board is worth. `ls backlog/ready/` is the board.
 

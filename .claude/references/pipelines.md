@@ -40,9 +40,7 @@ until the promotion moves it. That is the ground for every field it carries, not
 blob id it stores. That blob id belongs to the assessed idea file, and no position supplies it at
 any point. `.claude/references/definition-of-ready.md` names the fields.
 
-**The kinds are not a closed set.** Apart from the record refusal below,
-`scripts/board-shape-hook/board-shape.ts` classifies by position rather than by basename. So an
-artifact kind nobody has named yet is covered in an item's folder on the day it lands.
+**The kinds are not a closed set.** `scripts/board-shape-hook/board-shape.ts` classifies on two axes, and only one of them is a name lookup. The hook looks a lane up in `board-lanes.config.json`, so an undeclared lane draws its own refusal. A per-item artifact stays positional: any file at a folder lane's item depth that is neither the declared item nor an assessment record. So an artifact kind nobody has named yet is covered in an item's folder on the day it lands. `scripts/board-shape-hook/board-shape.meta.md` carries the axis-split ruling.
 
 **The board hook checks no per-item artifact in an item's folder.** It prints a non-candidate line
 rather than findings. Read that line as a refusal to assess, never as a pass. Vale's

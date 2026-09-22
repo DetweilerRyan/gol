@@ -11,7 +11,7 @@ allowed-tools: Read, Write
 File the thought in $ARGUMENTS as `backlog/ideas/<name>.md`.
 
 1. Derive `<name>`: kebab-case, short, naming the problem.
-2. Read `backlog/TEMPLATE.md`.
+2. Read `backlog/IDEA-TEMPLATE.md`.
 3. Write the candidate in the template's shape.
 
 Rules that bind the file:
