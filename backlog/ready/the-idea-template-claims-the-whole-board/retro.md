@@ -69,10 +69,18 @@ remit is unreachable.
 
 **The corpus already encoded the consequence as normal, which is how it stayed invisible.**
 `editor.md` closes that boundary with "An empty diff is then a success mode rather than a shortfall,
-and your findings are the deliverable." Both `editor` CLEAN passes on this slice returned an empty
-diff. Neither was a clean read of a clean manifest — both were a role forbidden to act, reporting
-the only thing left to it. The rule that makes that acceptable is the accommodation that hides the
-displacement.
+and your findings are the deliverable." The two CLEAN passes over verbatim manifests each returned
+an empty diff. Neither was a clean read of a clean manifest — both were a role forbidden to act,
+reporting the only thing left to it. The rule that makes that acceptable is the accommodation that
+hides the displacement, and the seat reported both as the success mode because that clause says to.
+
+**The third CLEAN pass is the control, and it separates the two readings.** It ran over a manifest
+`writer` had authored under amendment 2's properties, so `editor` had standing over every sentence
+in it. It returned the slice's first non-empty diff: `writer`, re-tensing a paragraph, had collapsed
+two dates into one frame and dated a stop clause to a day before the clause existed. `editor` traced
+the clause's life in git, restored the date to the measurement, and fixed it in place. Under the
+earlier register that defect would have been a report and would have cost a third amendment and a
+further signature.
 
 **The detection gap is a symptom of the displacement rather than the disease.** A defect escapes
 review because the two roles who would catch it have been reduced to transcription and reporting. Add
@@ -122,3 +130,29 @@ the displacement rather than reporting it — an empty diff from a forbidden rol
 from a clean manifest are different results wearing one word. And whether a spec that leaves a role
 nothing its own rulebooks can decide should be refused by that role on those grounds, the way
 `writer` already refuses a spec point it cannot execute.
+
+### P4 — the amendment re-entry path names two of three steps and reads as complete
+
+**What happened.** After amendment 2 was signed and executed, the seat ran `writer`, then `editor`
+CLEAN, then went straight to `coach` REVIEW. The user caught the omission and the seat stopped the
+review before it read anything substantive.
+
+**Why the seat did it.** `.claude/references/pipelines.md`'s amendment section closes with "The
+cycle then re-enters at step 2, scoped to the files the amendment names. `editor` CLEAN runs over
+`writer`'s new manifest, and `coach` REVIEW closes against the spec and every amendment together."
+That sentence names CLEAN and REVIEW and omits AUDIT. It reads as a complete account of re-entry,
+and a seat following it literally skips the gate.
+
+**The same file says otherwise twice.** Its declared process cycle lists `editor (AUDIT)` between
+CLEAN and `coach (REVIEW)`, and its flowchart draws `editor AUDIT` into `coach REVIEW` with no
+branch around it. So the corpus carries the rule in two places and contradicts it in a third.
+
+**The class is this slice's own subject.** An enumeration that omits a case and reads as exhaustive
+is exactly what the spec's R7 ruled against for the assessment skill's stop clauses, and the remedy
+there was to key on a positive form rather than lengthen a list. The re-entry sentence is the same
+shape one tier up, in the reference that governs the pipeline rather than in a skill it runs.
+
+**Recorded, not ruled.** Whether the fix is a third clause in that sentence, a pointer to the
+declared cycle, or something keyed positively the way R7 was, is a later question. The user's
+standing rule — AUDIT always runs before REVIEW — is unambiguous and is what the seat should have
+followed.
