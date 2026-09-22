@@ -15,10 +15,19 @@ that the check is paid on every mutant on every run while the triage cost is pai
 slower, so the cost that the trade-off was built around does not exist on that config. It makes the `scripts/`
 run slower.
 
-**Recommendation: adopt on `src/`. Leave `scripts/` alone.** On `src/` the checker is faster by 3m08s a run,
-removes 6 of 23 survivors that no test could ever close, and shrinks the mutant population to the programs
-TypeScript permits. On `scripts/` it costs 53s a run to remove 5 of 38 survivors, which is a worse trade on a
-suite that already finishes in under two minutes.
+**Recommendation: adopt on both configs.** The checker makes mutation testing aware of the type system, so the
+score is computed over the programs TypeScript permits rather than over a population that includes programs
+that cannot exist. That gain does not depend on which config is running, and it is the reason to adopt.
+
+On `src/` the trade needs no argument at all: 3m08s faster per run, 6 of 23 survivors removed. On `scripts/`
+the run costs 53s more and removes 5 of 38 survivors. **An earlier revision of this file declined `scripts/` on
+that cost, and the reasoning was weak.** A relative figure of +46% reads decisively and describes 53 seconds on
+a run that happens about once a slice, against no stated budget it breaches. Accuracy was the reason to adopt
+and wall clock was allowed to overrule it. `scripts/` is also the cleaner of the two cases: it has no file
+whose every mutant is excluded, so the one residual concern below does not arise there.
+
+A per-config split would also need an explanation that survives contact with the next reader, and "the faster
+one only" is not one.
 
 **A correction to this file's own first reading.** An earlier revision recommended against adoption on both
 configs, on the ground that 629 of the 635 excluded valid mutants had been killed rather than surviving. That
@@ -190,9 +199,10 @@ Two candidates, neither of which this spike is authorized to land:
    currently fire on five files that deserve their `n/a`. It is worth having as the same inertness predicate
    `ast-grep-rule-check`'s "was any rule found at all" and `reference-check`'s `checkNonEmpty` already encode,
    applied to a mutation report, so that a file which stops reporting is visible rather than silent.
-2. **A narrower way to close a type-impossible survivor.** Adopting on `src/` leaves the 5 `scripts/`
-   survivors and the TS6133 case unaddressed, and `mutation-testing.md` has no shape for closing any of them.
-   A ruling shape costs one article edit and no run time.
+2. **A narrower way to close a type-impossible survivor.** Adopting on both configs removes the eleven this
+   spike found, but not the class. The TS6133 case survives the checker by construction, and any future
+   survivor the checker's relaxed settings accept will arrive with no shape for closing it.
+   `mutation-testing.md` has none today. A ruling shape costs one article edit and no run time.
 
    **The ruling shape must be argued against the repo's own compiler config, not the checker's.**
    `liveCellStore.ts:230` is the case that forces this: the repo's build rejects it and the checker's relaxed
