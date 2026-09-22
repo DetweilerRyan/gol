@@ -39,11 +39,37 @@ the kill rate recomputed over programs that can exist, and it fell because the t
 excluded subset better than the tests were guarding the rest. That is the checker working, not a cost.
 
 **What would reverse this, and what the evidence says about it.** A _false_ `CompileError` would silently
-remove a real test gap. Every verdict anyone has checked is genuine: 6 `src/` survivors and 5 `scripts/`
-survivors by two independent methods, a 20-of-20 sample across all 636 `src/` verdicts, and 9 of 9 on the dark
-files. The documented accuracy loss runs the other way — mutants that should be `CompileError` and are not —
-so false verdicts are not the known failure mode. 610 of the 636 remain unchecked, and the decisive
-measurement, splicing and type-checking all of them individually, was not run.
+remove a real test gap. Every verdict anyone has checked is genuine:
+
+| Check                                                            | Result                 |
+| ---------------------------------------------------------------- | ---------------------- |
+| `src/` survivors, two independent methods                        | 6 of 6 genuine         |
+| `scripts/` survivors, two independent methods                    | 5 of 5 genuine         |
+| `src/` dark-file mutants, all of them                            | 9 of 9 genuine         |
+| `src/` `CompileError` verdicts, sampled 20 of 636                | 20 of 20 genuine       |
+| `scripts/` `CompileError` verdicts, sampled 20 of 1189           | 20 of 20 genuine       |
+| **`src/` killed-and-removed, stratified sample 100 of 629**      | **100 of 100 genuine** |
+| **`scripts/` killed-and-removed, stratified sample 101 of 1184** | **101 of 101 genuine** |
+
+**261 verdicts checked, no false one.** The documented accuracy loss runs the other way — mutants that should
+be `CompileError` and are not — so a false verdict is not the known failure mode, and every deviation observed
+anywhere in this spike ran in that documented direction.
+
+**The last two rows target the population that actually decides adoption**, which the earlier samples did not:
+mutants the baseline _killed_ and the checker removes. A false verdict among those is the failure that hides a
+real test gap behind a passing gate. They were stratified by mutator type, proportionally to each stratum's
+share, so no mutator class went unrepresented — 11 strata on `src/`, 13 on `scripts/`, seeds 20260922 and 20260923.
+
+**A negative control licenses the harness rather than assuming it.** A splice with wrong offset arithmetic
+corrupts the file, `tsc` fails for reasons unrelated to the mutation, and the harness then reports every mutant
+genuine whatever the truth. So 60 mutants the checker did _not_ exclude were spliced through the identical code
+path: **60 of 60 compiled**, across 10 mutator classes per config including the offset-sensitive ones. A `tsc`
+failure in the main run is therefore attributable to the mutant.
+
+**That is a bound, not an audit.** Hypergeometric, at 95% confidence: fewer than about 18 false verdicts among
+the 629 on `src/` (2.8% or less), and fewer than about 34 among the 1184 on `scripts/` (2.9% or less). It
+licenses nothing about a future tree — both populations are properties of this source snapshot under TypeScript
+6.0.3. Adoption should stay reversible on the first false verdict anyone finds.
 
 ## Method
 

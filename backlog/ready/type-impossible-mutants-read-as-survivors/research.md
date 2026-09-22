@@ -67,7 +67,24 @@ So the honest statement is not "the score is unaffected" but "the score moves to
 mutants say, and the direction depends on which subset the type system removes." No upstream page makes the
 claim the third-party write-ups make; this is an inference added downstream, and it is false in general.
 
-### 2. Nothing upstream addresses a file losing every mutant
+### 2. `CompileError` can mean "unbuildable tree" rather than "impossible production program"
+
+Upstream describes the status as marking a mutant that results in a type error, without distinguishing where
+that error lands. The distinction appeared once in 201 stratified samples, and is worth stating so a reader
+auditing a single verdict does not mistake it for a harness fault.
+
+`usePatternPlacement.ts:87`, an `ArrowFunction` mutant replacing `(pattern: Pattern) => setPlacement(...)` with
+`() => undefined`, produces exactly one type error, and it lands in `usePatternPlacement.test.ts` — TS2554,
+expected 0 arguments but got 1. Every production module still compiles: `() => undefined` is assignable to the
+prop's `(pattern: Pattern) => void`, and only the test's own direct call fails.
+
+**The verdict is faithful, and it hides nothing.** The checker's program includes `src` test files, exactly as
+`tsc -b` does, so the mutated tree genuinely does not build. No test gap is concealed either, since the
+compiler catches the change at the test's own call site and the defect cannot return without a red build. But
+`CompileError` on such a mutant is a statement about the tree, not about whether the production program could
+exist. Measured at 1 of 100 on `src/` and 0 of 101 on `scripts/`.
+
+### 3. Nothing upstream addresses a file losing every mutant
 
 Neither the checker documentation, the plugin README, the troubleshooting page, nor issue #2438 discusses what
 happens when every mutant in a file is marked `CompileError`. No search surfaced an issue reporting it.
