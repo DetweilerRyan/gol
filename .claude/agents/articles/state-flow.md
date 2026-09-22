@@ -2,8 +2,6 @@
 
 **Audience:** coder, cleaner, architect. **Read when:** before touching a hook or a composition root, before relocating state, and at the start of every architect REVIEW or DESIGN pass.
 
-> The measurements behind every ruling here are in `state-flow.meta.md`. It holds the identity-churn measurements, the perf attribution, the resubscribe counts, and the readings later corrected. Read it when you are **changing** a ruling below, never in order to follow one.
-
 ### The standing preference for frequently-changing state
 
 **Prop-drill the store, not the state.** For state that changes often — anything driven by a pointer drag or a scroll — a leaf subscribes to a small **projection** of a store. It does not receive the state as a prop and re-render the whole tree on every commit.

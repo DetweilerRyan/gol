@@ -17,10 +17,7 @@ sidecar, or a JSDoc block in `src/` or `scripts/`
 > does it go in the instruction file, or in that file's `.meta.md` sidecar? See "Instruction stays.
 > Explanation moves." below, which governs every instruction file including this one.
 >
-> So this article carries instructions, and `prose.meta.md` carries the measurements, the
-> dates, the probe methods, the incidents, and the rules tried and rejected. Read the sidecar when you
-> are **changing** a rule below, never in order to follow one. **Do not fold a reason back into this
-> file.**
+> **Do not fold a reason back into this file.**
 
 ## Standing instructions, which bind at authoring time
 
@@ -431,9 +428,11 @@ rule here is satisfied by moving something out.
 Ruled 2026-09-11 while the five role files were stripped. Each is a shape to remove on sight, not a
 judgement call:
 
-- **A pointer to its own `.meta.md` sidecar.** A role never changes its own file, and an article's
-  reader is following a rule rather than changing it. Only a module sidecar keeps its `@see` pointer,
-  because that reader is changing the module.
+- **A pointer to its own `.meta.md` sidecar, offered as a read trigger or as a census of its
+  contents.** A role never changes its own file, and an article's reader is following a rule rather
+  than changing it. A citation that routes **named** evidence at the point a rule is stated is not
+  that pointer. Only a module sidecar keeps its `@see` pointer, because that reader is changing the
+  module.
 - **A fact about another role's file** — whose a duty is, how they do it, or what their threshold is.
   Saying _what is not yours_ is a routing fact the role needs and stays. The rest is a second copy
   nothing compares. The property-test ownership error survived in three files this way.
@@ -730,7 +729,7 @@ rule section above.
 
 The scope section above says where each of those keys lives.
 
-**Whenever you enable a rule, switch it off in the sidecar section in the same edit.** That pairing is
+**Whenever you enable a rule, switch it off in `.vale.ini`'s sidecar section in the same edit.** That pairing is
 the whole exemption. The test is one command: `vale` on any `*.meta.md` must report zero.
 
 **Every rule carries its own `scope:` in its own rule file, never from `.vale.ini`.** The

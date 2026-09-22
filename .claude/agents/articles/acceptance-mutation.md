@@ -2,8 +2,6 @@
 
 **Audience:** product. **Read when:** before your first `npm run acceptance-mutation` in a slice.
 
-> The measurements behind every ruling here are in `acceptance-mutation.meta.md`. It holds the delimiter runs, the decimal regression, the per-assertion measurement and the readings later corrected. Read it when you are **changing** a ruling below, never in order to follow one.
-
 ## What it is, and who owns it
 
 `scripts/acceptance-mutation/` is **owned by `product`, not `hardener`**. It mutates the _spec_ and asks whether the scenario notices, so both sides of what it measures are `product`'s.

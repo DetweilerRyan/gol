@@ -73,6 +73,12 @@ A repo-relative token naming a sidecar became resolvable when `check-md-referenc
 to the extractor. A leading-dot token, which is the form the module tier mandates, resolved from
 `reference-check-reach` onward, by its own basename.
 
+### The subject-wins tie-break's worked precedent
+
+`src/scrollbars.meta.md` under `architecture.md`'s provenance rule is the case the subject-wins
+tie-break was ruled on: a measurement about one module went beside that module even though it was
+also evidence behind an article's rule.
+
 ## Custom quality tooling in `scripts/`
 
 ### `agent-doc-check` check 2 — why the frontmatter reader is bespoke

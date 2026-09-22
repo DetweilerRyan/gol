@@ -8,10 +8,6 @@
 - at `hardener` stage 5
 - when granting a mutation-invariant merge exemption
 
-> The measurements behind every rule here are in `mutation-testing.meta.md`: the slices each was
-> found in, the figures, the source files read, and the readings later corrected. Read it when you are
-> **changing** a rule below, never in order to follow one.
-
 ## Read a survivor list as a list of candidates
 
 `npm run test:mutation` covers the whole `mutate` list, but Stryker caches results and re-tests only the

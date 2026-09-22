@@ -2,8 +2,6 @@
 
 **Audience:** product, coder, architect. **Read when:** authoring a .feature, a step module, or an e2e spec. Also when adding a \*.browser.test.ts, and in architect CONTRACT mode.
 
-> The measurements behind every ruling here are in `testing-layers.meta.md`. It holds the test-count history, the barrel curation figures, the fault runs, and the readings later corrected. Read it when you are **changing** a ruling below, never in order to follow one.
-
 ### Testing structure (three test layers plus the contract they answer to, deliberately separate)
 
 1. **Unit/property tests** — `src/*.test.ts` and `src/*.property.test.ts`, on fast-check via `@fast-check/vitest`, for each of the framework-free modules. `src/equality/`'s own tests are one directory deeper, but land in the same two projects. The layer also covers `src/hooks/*.test.ts` (`@testing-library/react`'s `renderHook`) and `src/components/*.test.tsx` (`render`/`screen`/`fireEvent`, jest-dom matchers via `src/test-setup.ts`), for the unit-tested components CLAUDE.md's compact module map names.

@@ -2,8 +2,6 @@
 
 **Audience:** cleaner, architect, hardener. **Read when:** on an unexpected crap4ts number, when touching .gherkin-lintrc or `.oxlintrc.json`, on a `jsdoc/*` lint finding, or at hardener stages 6-8.
 
-> The measurements behind every ruling here are in `quality-tooling.meta.md`. It holds the patch mechanism, the probe methods, the declined-rule roster and the readings later corrected. Read it when you are **changing** a ruling below, never in order to follow one.
-
 ## crap4ts is patched locally
 
 **crap4ts is patched (`patches/crap4ts+1.0.1.patch`), and `crap4ts` is pinned to an exact version because of it.** Upstream, a signature Prettier had to break across lines is reported at 0% coverage with an inflated CRAP score, even when it is fully exercised. The patch widens the span matcher to accept a candidate when either span fully contains the other.

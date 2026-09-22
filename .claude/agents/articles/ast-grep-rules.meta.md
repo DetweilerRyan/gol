@@ -53,8 +53,8 @@ So the enumeration below is **copied by line index, not retyped.** The instructi
 navigation list, which was verified to name all 31 rules on disk, so `agent-doc-check`'s check 5 stays
 green on the article alone.
 
-**Why the per-rule arguments belong here rather than in the article.** CLAUDE.md's routing branch 5 asks
-whether a thing constrains an action. A rule's measured scope argument is read when someone **narrows or
+**Why the per-rule arguments belong here rather than in the article.** `prose.md`'s three dispositions
+ask whether a thing constrains an action. A rule's measured scope argument is read when someone **narrows or
 widens that rule** — which is changing it, not following it. Following a rule means reading its finding
 and its `note:`, which the instruction file routes to `rules/<id>.yml`, the live source.
 

@@ -8,9 +8,7 @@
 - before adding a JSDoc block to a new export
 - whenever a hover did not tell you enough to use a thing
 
-> The evidence for every rule here is in `doc-comments.meta.md`. It holds the measurements, the
-> probe methods, the rejected alternatives and the corrections. Read it when you are **changing** a rule
-> below, never in order to follow one. Every rule here is actionable without it.
+> Every rule here is actionable without the sidecar.
 
 This article is one loop with two halves. Part 1 is how to write an interface comment. Part 2 is how
 to read one instead of reading a body. They pay off only together, because roles consume hover and
