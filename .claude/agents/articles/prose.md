@@ -428,11 +428,10 @@ rule here is satisfied by moving something out.
 Ruled 2026-09-11 while the five role files were stripped. Each is a shape to remove on sight, not a
 judgement call:
 
-- **A pointer to its own `.meta.md` sidecar, offered as a read trigger or as a census of its
-  contents.** A role never changes its own file, and an article's reader is following a rule rather
-  than changing it. A citation that routes **named** evidence at the point a rule is stated is not
-  that pointer. Only a module sidecar keeps its `@see` pointer, because that reader is changing the
-  module.
+- **A pointer to its own `.meta.md` sidecar, addressed to every reader — a general read trigger, or
+  a census of what it holds.** A pointer tied to one named ruling, at that ruling's site, is exempt
+  as a citation or an instruction to read before reopening it. Only a module sidecar keeps its
+  `@see` pointer, because that reader is changing the module.
 - **A fact about another role's file** — whose a duty is, how they do it, or what their threshold is.
   Saying _what is not yours_ is a routing fact the role needs and stays. The rest is a second copy
   nothing compares. The property-test ownership error survived in three files this way.
