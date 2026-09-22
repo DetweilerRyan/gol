@@ -10,8 +10,8 @@ On 2026-09-20 the hook gained a refusal for an assessment record's own path, in 
 `checkShape`, ahead of the candidate test. The skill's basename guard now looks like a second copy
 of that refusal, and it is not.
 
-**The guard covers a gap every stop clause keyed on the `LAYER1` output leaves open.** Those
-clauses key on a line shape in that output, or on its absence. Measured 2026-09-20, the record
+**Measured 2026-09-20, the guard covered a gap every stop clause keyed on the `LAYER1` output left open.** Those
+clauses keyed on a line shape in that output, or on its absence. Measured 2026-09-20, the record
 refusal prints a shape none of them names — `an assessment record, 0 checks`. Delete the basename
 guard and a reader holding that line finds a `LAYER1` line present, no stop clause that names it,
 and no instruction covering the case.
@@ -40,3 +40,24 @@ one line shape later.
 **A stop clause keyed on the hook's own refusal line was rejected.** It would make the skill's
 refusal depend on the hook's wording, which is the coupling a basename read avoids. The user ruled
 the guard stays, 2026-09-20.
+
+## The 2026-09-22 positive gate
+
+The stop clauses naming `not a candidate`, `off the board` and a missing path were replaced by one
+clause: assess only on a `LAYER1` line reporting a non-zero check count. Measured 2026-09-22 on
+`slice/the-idea-template-claims-the-whole-board`'s branch, three refusal forms printed a `LAYER1`
+line that no stop clause named — `lane declarations unavailable`, `undeclared lane` and `shape
+mismatch`. An enumerated list leaves the skill one behind every outcome the classifier grows, and
+the artifact axis is deliberately open.
+
+**The positive form fails safe where the enumerated form failed open.** A refusal worded in a way
+the skill does not recognise now stops the pass, because the pass proceeds only on a recognised
+measurement. The 2026-09-20 ruling above stands untouched: the basename guard is not keyed on the
+hook's wording, and it stays.
+
+**What the replacement gave up is the per-case report wording.** Each replaced clause said what to
+say. The clause that replaced them tells the judge to report the line, which carries its own reason
+after `--`. The forms `board-shape.ts` printed on 2026-09-22 were `extraction returned empty`,
+`path missing or unreadable`, `off the board`, `lane declarations unavailable`, `not a candidate`,
+`undeclared lane`, `shape mismatch` and `an assessment record` — every one of them at zero checks,
+against one scored form that is not.

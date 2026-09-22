@@ -22,7 +22,7 @@ each to its SAFe orientation label. `kind:` sits in the promoted item's frontmat
 ## Per-item artifacts — the shape they owe
 
 A `ready/` or `done/` item is a folder. `proposal.md` is the promoted idea file, and it keeps
-the shape `backlog/TEMPLATE.md` states. Every other file in that folder is a **per-item
+the shape `backlog/IDEA-TEMPLATE.md` states. Every other file in that folder is a **per-item
 artifact**, and it owes that shape nothing.
 
 **A per-item artifact carries no frontmatter.** Its identity is positional. The folder names the

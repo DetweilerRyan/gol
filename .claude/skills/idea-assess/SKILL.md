@@ -17,11 +17,7 @@ Layer 1 ran before this text reached you. Its output:
 
 !`node "${CLAUDE_PROJECT_DIR}/scripts/board-shape-hook/run.ts" $target`
 
-**Absent a `LAYER1` count line directly above, Layer 1 did not run — stop and say so. A line reporting the path missing means the target was never measured — stop the same way. Never assess on hand-computed checks.**
-
-**A `not a candidate` line means the target is a per-item artifact rather than an idea file — stop and say so, and score nothing.**
-
-**An `off the board` line means the target is not a board file at all — stop and say so, and score nothing.**
+**Assess only on a `LAYER1` line reporting a non-zero check count.** An absent line, or any other line, means the target was never measured. Stop, report the line or its absence, and score nothing. Never assess on hand-computed checks.
 
 **A target whose basename ends `.assessment.md` is a record rather than an idea — stop and say so, and score nothing.** Read the basename yourself before you assess, and never take candidacy from the Layer 1 output alone.
 
