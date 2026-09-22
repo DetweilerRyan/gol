@@ -431,7 +431,7 @@ judgement call:
 - **A pointer to its own `.meta.md` sidecar, addressed to every reader — a general read trigger, or
   a census of what it holds.** A pointer tied to one named ruling, at that ruling's site, is exempt
   as a citation or an instruction to read before reopening it. Only a module sidecar keeps its
-  `@see` pointer, because that reader is changing the module. "Its own" names the sidecar named
+  `@see` pointer, because that reader is changing the module. "Its own" means the sidecar named
   after this file; naming another file's sidecar to announce evidence's home is `CLAUDE.md`'s
   mandate, not what this bullet forbids.
 - **A fact about another role's file** — whose duty it is, how they do it, or what their threshold is.
