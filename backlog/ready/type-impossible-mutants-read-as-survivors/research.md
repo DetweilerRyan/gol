@@ -58,9 +58,10 @@ your mutation score."
 **Measured here, it does.** `src/` fell from 98.65 to 98.41 and `scripts/` from 98.94 to 98.62.
 
 The arithmetic is not a surprise once stated. The excluded set leaves both the numerator and the denominator,
-so the score moves toward the excluded set's own kill rate. On `src/`, 621 of the 627 excluded valid mutants
-were detected — a kill rate of 99.04% against the tree's 98.65%. **Removing a subset that is better-killed
-than average necessarily lowers the average.** A subset worse-killed than average would raise it.
+so the score becomes the **retained** set's own kill rate exactly — on `src/`, 1053/1070 = 98.41. It therefore
+moves _away_ from the excluded set's rate, not toward it. On `src/`, 629 of the 635 excluded valid mutants were
+detected, a kill rate of 99.06% against the tree's 98.65%. **Removing a subset that is better-killed than
+average necessarily lowers the average.** A subset worse-killed than average would raise it.
 
 So the honest statement is not "the score is unaffected" but "the score moves to whatever the surviving
 mutants say, and the direction depends on which subset the type system removes." No upstream page makes the
