@@ -258,8 +258,10 @@ describe('checkShape', () => {
   })
 
   it('refuses a file sitting directly under backlog/ and pins the whole non-candidate outcome', () => {
-    expect(checkShape('backlog/TEMPLATE.md', CLEAN, NO_RECORD, LANES)).toEqual({
-      lines: ['LAYER1 backlog/TEMPLATE.md: not a candidate, 0 checks -- only an idea file carries the candidate shape'],
+    expect(checkShape('backlog/IDEA-TEMPLATE.md', CLEAN, NO_RECORD, LANES)).toEqual({
+      lines: [
+        'LAYER1 backlog/IDEA-TEMPLATE.md: not a candidate, 0 checks -- only an idea file carries the candidate shape',
+      ],
       deliver: false,
     })
   })

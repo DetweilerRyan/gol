@@ -41,10 +41,10 @@ or a user ruling promoting the narrowing ahead of an observed instance.
 
 ## Ruling 3 — the silent board root, implemented as deferred
 
-A one-segment path directly under `backlog/` (`backlog/TEMPLATE.md`) draws the plain
+A one-segment path directly under `backlog/` (`backlog/IDEA-TEMPLATE.md`) draws the plain
 not-a-candidate refusal, with no lane clause at all. `classifyShape` tests `segments.length < 2`
 before it ever looks a lane up, so the root stays silent by the same code path it always has —
-this slice preserves that ordering rather than introducing it.
+`one-item-shape-serves-every-lane` preserved that ordering rather than introducing it.
 
 ## Three sanctioned residuals
 
