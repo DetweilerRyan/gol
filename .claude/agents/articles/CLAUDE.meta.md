@@ -1,7 +1,7 @@
 # CLAUDE.meta.md
 
-Evidence behind the rulings in `CLAUDE.md`, under the sidecar convention that file's own
-"Where new documentation goes" branch 5 states. **Nothing here constrains an action.** Every
+Evidence behind the rulings in `CLAUDE.md`, under the sidecar convention that file's own sidecar
+section states. **Nothing here constrains an action.** Every
 rule stays in `CLAUDE.md`; only the measurement, the probe method, the rejected alternative
 or the correction moved down here.
 
@@ -12,9 +12,11 @@ rule in `CLAUDE.md` is being changed, never in order to follow one.
 
 **Chosen, not forced.** The role-file sidecars sit here because `scripts/agent-doc-check`
 reads the direct `.md` children of `.claude/agents/` as the agent roster, so a prose file
-there fails the frontmatter check outright. No comparable mechanism reaches a root-level
-`.md`. Branch 5's literal wording — a sidecar goes _beside the article_ — would have put
-this one at `CLAUDE.meta.md` in the repo root, and nothing would have refused it.
+there fails the frontmatter check outright. The only way to pass that check is to give a
+prose file agent frontmatter, which then enrols it as a sixth agent. Measured both ways. No
+comparable mechanism reaches a root-level `.md`. The placement rule's literal wording — a
+sidecar sits beside its instruction file — would have put this one in the repo root, and
+nothing would have refused it.
 
 The repo root was rejected on **checker reach**, measured 2026-09-10 by writing a file
 carrying one deliberately unresolvable filename token and one deliberately unresolvable
@@ -46,8 +48,8 @@ Vale is a non-discriminator too. `.vale.ini`'s final `[**/*.meta.md]` section re
 both, so this file is exempt from every rule either way, the same as the article sidecars
 beside it.
 
-Two consequences the choice itself required, both landed in `CLAUDE.md`: branch 5 records
-this as its second placement exception, and the documentation map carries the pointer line.
+One consequence the choice itself required, landed in `CLAUDE.md`: the sidecar section
+records this as its second placement exception.
 
 ## Documentation map
 
@@ -65,6 +67,12 @@ the five role files plus `orchestration.md`: three earned a sidecar and three di
 
 Measured on the first pair: six editing passes on the article dropped fifteen illustrations
 out of the pair entirely rather than moving them across.
+
+### What made a sidecar citation resolve
+
+A repo-relative token naming a sidecar became resolvable when `check-md-references` added `.md`
+to the extractor. A leading-dot token, which is the form the module tier mandates, resolved from
+`reference-check-reach` onward, by its own basename.
 
 ## Custom quality tooling in `scripts/`
 
@@ -139,10 +147,6 @@ now works the same way.
 keeping any justification, which is what the ruling rejects. The corrected form distinguishes a passage
 that constrains conduct, which never moves, from one that only says why a rule is shaped as it is,
 which never stays.
-
-**The sidecar index above is hand-maintained and nothing checks it.** A cheap extension to
-`agent-doc-check` would glob `*.meta.md` under `.claude/agents/articles/` and compare it against
-the list. It is not built, and a wrong list fails safe: a reader looks and finds the file anyway.
 
 ## The `vale-styles/` authorship clause, tested once and upheld
 

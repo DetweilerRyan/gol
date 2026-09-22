@@ -181,9 +181,8 @@ which register they opened before reading a word.
 | `<module>.md`      | extended examples, use cases, best-practice notes | the hover was not enough, and you are calling it |
 | `<module>.meta.md` | measurements, rejected alternatives, corrections  | you are changing it                              |
 
-Either file may be absent, and usually one is. All three live instances are rationale:
-`src/cache.meta.md`, `src/hooks/useZoomGlide.meta.md` and `src/scrollbars.meta.md`. Read the
-`useZoomGlide` one as the precedent.
+Either file may be absent, and usually one is. Read `src/hooks/useZoomGlide.meta.md` as the
+precedent.
 
 This mirrors the article tier on purpose, so one convention covers both. Separating by filename rather than
 by section is the point. A filename shows in an editor tab, a diff header and an `@see` link. The reader
@@ -197,7 +196,7 @@ each other, is CLAUDE.md's branch 5 drift one tier down.
 That gives a three-tier escalation: **hover for the contract, sidecar for the depth, implementation only
 when changing it.**
 
-**Write the reference as `@see {@link ./useZoomGlide.meta.md}`.** Hover mangles a bare path after
+**Write the reference as `@see {@link ./<module>.meta.md}`.** Hover mangles a bare path after
 `@see`, while the braced form renders exactly. Point the hover at whichever half the reader needs, and at
 both when both exist. Point it at `<module>.meta.md` when the reader most needs why the contract is
 shaped this way.
