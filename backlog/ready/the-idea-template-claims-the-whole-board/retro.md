@@ -52,17 +52,32 @@ not yet built.
 three `done/` folders carry a `retro.md` the seat wrote. The practice runs ahead of the rule. Which
 is correct is not this slice's to settle.
 
-### P3 — a spec that dictates prose verbatim has no reviewer before it binds
+### P3 — a spec that dictates prose verbatim displaces two roles from their own work
 
-**Named by `coach` at REVIEW on 2026-09-22 as this cycle's real output**, and recorded here rather
-than fixed, since it is an `enabler-process` question rather than a defect any role may repair.
+**Named by `coach` at REVIEW on 2026-09-22 as this cycle's real output**, and reframed by the user
+the same day. `coach` named it as a review gap: a defect in spec-supplied prose surfaces only after
+the signature, when the text is immutable without an amendment. **The user ruled that reading too
+narrow.** The defect is not that a reviewer is missing. It is that the spec and its amendments take
+over work the pipeline assigns to `writer` and `editor`, so neither can perform its role.
 
-**The mechanism.** `coach` writes corpus prose into `spec.md`. `writer` reproduces it. `editor`
-reads the landed file. So a defect in that prose surfaces only after the user's signature, when the
-text is immutable without an amendment. The two roles positioned to catch it have no standing to:
-`writer`'s correctness is defined as faithful reproduction, and `editor`'s own boundary forbids it
-editing text a signed artifact supplied verbatim, ruling that such a finding is a report rather than
-an edit.
+**What each role loses.** `writer.md` names `prose.md` and `claim-discipline.md` as its **craft
+rulebooks** and instructs it to read them before editing. Dictated prose leaves no craft to apply:
+correctness collapses into faithful reproduction, and the rulebooks become decorative. `editor`
+CLEAN owns register, duplication and cross-reference consistency — and `editor.md` forbids it
+editing text a signed artifact supplied verbatim. Over a diff that is mostly such text, its entire
+remit is unreachable.
+
+**The corpus already encoded the consequence as normal, which is how it stayed invisible.**
+`editor.md` closes that boundary with "An empty diff is then a success mode rather than a shortfall,
+and your findings are the deliverable." Both `editor` CLEAN passes on this slice returned an empty
+diff. Neither was a clean read of a clean manifest — both were a role forbidden to act, reporting
+the only thing left to it. The rule that makes that acceptable is the accommodation that hides the
+displacement.
+
+**The detection gap is a symptom of the displacement rather than the disease.** A defect escapes
+review because the two roles who would catch it have been reduced to transcription and reporting. Add
+a reviewer and the roles are still displaced; restore the roles and the review happens where the
+pipeline already put it.
 
 **Measured on this slice.** Two amendments, five corrective items, and zero role divergences.
 `coach` diffed the landed tree against both signed artifacts and found every one of the nine signed
@@ -92,3 +107,10 @@ properties is register-independent; one written as a reproduction check is not.
 **Open, and not this slice's to settle.** Where the per-item load-bearing test belongs — `coach.md`,
 `prose.md`, or `pipelines.md`'s amendment section — and whether `editor` should gain standing to
 edit spec-supplied prose when the spec marks it non-load-bearing.
+
+**Two further questions the reframing opens, which the review-gap reading did not reach.** Whether
+`editor.md`'s "an empty diff is a success mode" clause should survive at all, since it rationalises
+the displacement rather than reporting it — an empty diff from a forbidden role and an empty diff
+from a clean manifest are different results wearing one word. And whether a spec that leaves a role
+nothing its own rulebooks can decide should be refused by that role on those grounds, the way
+`writer` already refuses a spec point it cannot execute.
