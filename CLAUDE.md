@@ -87,7 +87,7 @@ one, and do not add a list of instances here.
 
 5. Is it **the evidence behind a rule in an article**, rather than the rule itself? → that article's sidecar.
 
-   **These branches route by topic, and explicitly not by register.** They answer which article a subject belongs to; the sidecar section above answers where its sidecar file sits.
+   **These branches route by topic, and explicitly not by register.** They answer which article a subject belongs to; the sidecar section above answers where the sidecar file sits.
 
    They do **not** answer how prose is split between an instruction file and its sidecar. **`.claude/agents/articles/prose.md` answers all of that**, under "Instruction stays. Explanation moves." Open it when you are holding a sentence rather than a subject, and nothing here restates it.
 
