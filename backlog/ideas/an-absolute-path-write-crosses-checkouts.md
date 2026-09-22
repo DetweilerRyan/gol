@@ -19,9 +19,20 @@ The hazard it names is real and measured. The warning names one tool.
 
 ## Complication
 
-**Both incidents this session were plain writes, not `LSP` reads, and both crossed checkouts in
-the opposite direction** — an **absolute** path aimed at the primary checkout from a session
-working in a worktree.
+**Every incident on `slice/a-reader-finds-a-sidecar-without-an-inventory` was a plain write rather
+than an `LSP` read, and each crossed checkouts in the opposite direction** — an **absolute** path
+aimed at the primary checkout from a session working in a worktree.
+
+**The instances, rather than a count of them.** `editor` CLEAN's first edit of its first pass
+landed in the primary checkout and was reverted. The seat mis-edited a relocated config the same
+day, by a different mechanism. `editor` CLEAN's first edit of its fourth pass addressed the
+primary checkout again and **failed closed**, because the string it searched for does not exist
+there. Each was caught by its author on the next command.
+
+**The third instance is the one that settles the shape of the fix.** It failed closed by luck of
+content, not by design: the same mistyped path with a string that happened to match would have
+written silently. A hazard whose outcome turns on whether the target file happens to contain the
+search string is not guarded by care.
 
 **Measured 2026-09-21.** `editor` CLEAN's first edit on that slice landed in
 `/Users/ryandetweiler/Documents/projects/gol-claude/.claude/agents/articles/doc-comments.md`
