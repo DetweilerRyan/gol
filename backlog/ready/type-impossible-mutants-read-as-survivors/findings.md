@@ -11,23 +11,27 @@ that the check is paid on every mutant on every run while the triage cost is pai
 
 ## The answer
 
-**The framing was wrong, and the measurement inverts it.** The checker makes the `src/` run _faster_, not
-slower, so the cost that the trade-off was built around does not exist on that config. It makes the `scripts/`
-run slower.
+**Recommendation: adopt on both configs.** The reason is the one the proposal opened with — role time spent on
+mutants the type system already forbids — and the measurement says that waste is about one survivor
+investigation in five.
 
-**Recommendation: adopt on both configs.** The checker makes mutation testing aware of the type system, so the
-score is computed over the programs TypeScript permits rather than over a population that includes programs
-that cannot exist. That gain does not depend on which config is running, and it is the reason to adopt.
+**The decision criterion is wasted role time, not run time.** Ruled by the user on 2026-09-22, after an earlier
+revision of this file had led with wall clock. Timing is recorded below because it was measured, and it is not
+why this recommendation stands.
 
-On `src/` the trade needs no argument at all: 3m08s faster per run, 6 of 23 survivors removed. On `scripts/`
-the run costs 53s more and removes 5 of 38 survivors. **An earlier revision of this file declined `scripts/` on
-that cost, and the reasoning was weak.** A relative figure of +46% reads decisively and describes 53 seconds on
-a run that happens about once a slice, against no stated budget it breaches. Accuracy was the reason to adopt
-and wall clock was allowed to overrule it. `scripts/` is also the cleaner of the two cases: it has no file
-whose every mutant is excluded, so the one residual concern below does not arise there.
+**11 of the 61 survivors across both configs are type-impossible** — 6 of 23 on `src/`, 5 of 38 on `scripts/`.
+A role cannot tell which ones those are without investigating, and `mutation-testing.md` requires naming an
+input at which the two programs differ before a survivor may be closed. For these no such input exists, so the
+investigation cannot conclude. **That is 18% of survivor triage that can only end in giving up.**
 
-A per-config split would also need an explanation that survives contact with the next reader, and "the faster
-one only" is not one.
+The larger part of the same waste cannot be measured. 1,813 killed-and-removed mutants sit behind these, and
+some share of them were killed by tests an agent wrote deliberately after they surfaced as survivors in an
+earlier run. Nothing in the history distinguishes those from mutants killed incidentally, so this file states
+the stock it can count and declines to estimate the flow.
+
+**The type-awareness argument does not depend on which config runs**, which is why both adopt. An earlier
+revision declined `scripts/` on a +46% wall-clock figure; under the criterion above that objection does not
+arise at all. `scripts/` is also the cleaner case, with no file whose every mutant is excluded.
 
 **A correction to this file's own first reading.** An earlier revision recommended against adoption on both
 configs, on the ground that 629 of the 635 excluded valid mutants had been killed rather than surviving. That
@@ -210,9 +214,12 @@ repo's own build rejects, which the checker is documented not to catch.
   that its documented loss direction is one-way: setting it `false` can only move _more_ mutants into
   `CompileError`, deepening both exposures the recommendation rests on. It cannot reverse the verdict, so the
   run was judged not worth its cost.
-- **The incremental cache was never exercised.** Whether a `CompileError` verdict survives into a later
-  `--incremental` run is untested here, and it decides whether the `src/` speedup holds on the runs a role
-  actually makes.
+- **The incremental cache was never exercised, and this is the one open question that can still cost the
+  benefit.** Every run here was `--force`, while `npm run test:mutation` is incremental by default. If an
+  incremental run does not apply the checker's exclusions, the type-impossible mutants return to the survivor
+  list on exactly the runs a role makes, and the waste this recommendation exists to remove comes back. The
+  adoption enabler has to answer that before it wires anything. Whether the _timing_ saving survives
+  incrementally does not matter under this file's criterion.
 - **Neither number is a claim about a future tree.** Both depend on the current ratio of test cost to
   type-check cost, which any change to the suites moves.
 
