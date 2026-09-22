@@ -35,10 +35,6 @@ Adoption alone does not close the class. The spike measured a survivor the repo'
 and the checker's relaxed settings accept, so a type-impossible survivor can outlive the checker, and
 `mutation-testing.md` has no shape for closing one either way.
 
-Adoption also rests on an untested premise. Every measurement was `--force`, while `npm run test:mutation` is
-incremental by default. If an incremental run does not apply the exclusions, the impossible mutants return to
-the survivor list on exactly the runs a role makes.
-
 A third thread runs alongside both. A file whose every mutant is excluded reports nothing, and the score and
 survivor list — the surfaces the gates and roles consume — cannot distinguish that from a file whose every
 mutant was killed. Today that costs nothing, and it is the same fail-open shape `ast-grep-rule-check`'s
@@ -55,15 +51,20 @@ split rather than inherit this file's grouping.
 
 Shaped, not specified, and the ordering is the only part worth holding.
 
-**The incremental question is answered before anything is wired.** It is cheap — one incremental run after a
-`--force` run, comparing whether the exclusions persist — and a negative answer changes what adoption is worth.
-
 **The ruling shape does not wait on adoption.** It costs one article edit and no run time, it covers the 11
 survivors standing today, and it still covers the TS6133 class after the checker lands. It is the only one of
 the three that delivers on its own.
 
 **The dark-file guard is not a precondition.** All 9 of today's dark mutants deserve their `n/a`, so a guard
 written now would fire on five files that are correctly silent. It guards against drift.
+
+**The incremental cache needs one line, not an investigation.** An exclusion is produced by the checker at run
+time rather than stored on the mutant, so any mutant an incremental run re-evaluates is type-checked again and
+the exclusions cannot drift back. The only exposure is the transition: a cache built before adoption holds
+`Survived` and `Killed` verdicts that predate the checker, and reusing it would show those mutants unchanged.
+The merge protocol already deletes `reports/stryker-incremental.json` at step 5 on any merge that is not
+mutation-invariant, and an adoption diff is not. `scripts/` has no exposure at all, since
+`npm run test:mutation:scripts` passes no `--incremental`.
 
 ## No-gos
 
@@ -79,8 +80,6 @@ whether the thresholds still encode what they were set to encode, rather than in
 
 ## Open questions
 
-- Does `--incremental` preserve a `CompileError` verdict across runs, or is the type-check repaid every run?
-  The answer decides whether adoption delivers anything on the runs roles actually make.
 - Where does the ruling shape live — `mutation-testing.md`'s survivor section, or the sidecar holding its
   evidence? The spike left this open on purpose.
 - Does the ruling shape require the argument be made against the repo's own compiler config rather than the
