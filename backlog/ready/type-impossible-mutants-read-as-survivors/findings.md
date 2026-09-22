@@ -13,12 +13,28 @@ that the check is paid on every mutant on every run while the triage cost is pai
 
 **The framing was wrong, and the measurement inverts it.** The checker makes the `src/` run _faster_, not
 slower, so the cost that the trade-off was built around does not exist on that config. It makes the `scripts/`
-run slower. The real cost is somewhere the proposal never looked: the checker removes a third of the mutant
-population from the score, and almost all of what it removes was being killed rather than surviving.
+run slower.
 
-**Recommendation: do not adopt on either config as configured today.** The triage saving is real but small,
-and on `src/` it arrives with five files losing every mutant they have. Adopting safely needs a guard that does
-not exist. The two follow-ups are named at the end.
+**Recommendation: adopt on `src/`. Leave `scripts/` alone.** On `src/` the checker is faster by 3m08s a run,
+removes 6 of 23 survivors that no test could ever close, and shrinks the mutant population to the programs
+TypeScript permits. On `scripts/` it costs 53s a run to remove 5 of 38 survivors, which is a worse trade on a
+suite that already finishes in under two minutes.
+
+**A correction to this file's own first reading.** An earlier revision recommended against adoption on both
+configs, on the ground that 629 of the 635 excluded valid mutants had been killed rather than surviving. That
+reasoning does not hold. A type-impossible mutant is a program that cannot exist, so a test that killed one was
+killing a phantom; removing the mutant removes no test and loses no coverage. The work of writing those tests
+is already spent either way — the only live question is whether to keep regenerating and re-running the
+phantoms, and on `src/` that costs 3m08s per run. The score falling from 98.65 to 98.41 is not damage. It is
+the kill rate recomputed over programs that can exist, and it fell because the type system was guarding the
+excluded subset better than the tests were guarding the rest. That is the checker working, not a cost.
+
+**What would reverse this, and what the evidence says about it.** A _false_ `CompileError` would silently
+remove a real test gap. Every verdict anyone has checked is genuine: 6 `src/` survivors and 5 `scripts/`
+survivors by two independent methods, a 20-of-20 sample across all 636 `src/` verdicts, and 9 of 9 on the dark
+files. The documented accuracy loss runs the other way — mutants that should be `CompileError` and are not —
+so false verdicts are not the known failure mode. 610 of the 636 remain unchecked, and the decisive
+measurement, splicing and type-checking all of them individually, was not run.
 
 ## Method
 
@@ -106,16 +122,22 @@ kill rate.
 Neither move threatens a `break` threshold — 98.41 against 85, and 98.62 against 95. The thresholds are not the
 exposure. The exposure is what the number now describes.
 
-**4. Five `src/` files end up with no mutation signal at all.** `src/hooks/useLiveCells.ts`,
+**4. Five `src/` files end up with no mutation signal — and every one of their mutants is genuinely
+impossible.** `src/hooks/useLiveCells.ts`,
 `src/hooks/useContentBounds.ts`, `src/equality/is-deep-equal.ts`, `src/equality/is-shallow-equal.ts` and
 `src/equality/is-strict-equal.ts` have every mutant marked `CompileError`. Each reports `n/a` and contributes
-nothing. Those five carry 9 mutants between them, so today's blast radius is small; the shape is the finding,
-not the count.
+nothing. Those five carry 9 mutants between them, and all 9 were spliced and type-checked individually: **9 of
+9 are genuine**, every one a `BlockStatement → {}` or `ArrowFunction → () => undefined` on a function declaring
+a non-`void` return, failing with TS2355 or TS2322.
 
-**Be precise about which surface is blind.** The HTML report does render `n/a`, so a human reading the per-file
-view can tell an unassessed file from a fully killed one. What cannot tell them apart is the score and the
-survivor list — the two surfaces this repo's gates and roles actually consume. That is the same fail-open shape
-this repo's own checkers are built against, and nothing currently detects it. `scripts/` has no such file.
+**So these files are unassessable rather than hidden.** Every mutant Stryker can generate for them is a program
+TypeScript forbids, which means there was no test question there to lose. The `n/a` is accurate.
+
+**The residual risk is drift, not concealment.** The HTML report renders `n/a`, so a human reading the
+per-file view can tell an unassessed file from a fully killed one. The score and the survivor list — the
+surfaces this repo's gates and roles consume — cannot. Today that costs nothing, since the 9 mutants are all
+impossible. It would start costing something if one of those files grew logic whose mutants were assessable and
+nobody noticed the file had never been reporting. `scripts/` has no such file.
 
 ## What the classification confirmed, and what it corrected
 
@@ -163,12 +185,14 @@ repo's own build rejects, which the checker is documented not to catch.
 
 Two candidates, neither of which this spike is authorized to land:
 
-1. **A dark-file guard.** Before the checker could be adopted anywhere, something has to fail when a file's
-   every mutant is excluded. That is the same inertness predicate `ast-grep-rule-check`'s "was any rule found
-   at all" and `reference-check`'s `checkNonEmpty` already encode, applied to a mutation report.
-2. **A narrower way to close a type-impossible survivor.** The triage cost this spike set out to price is
-   about eleven survivors, and `mutation-testing.md` has no shape for closing them. A ruling shape costs one
-   article edit and no run time, where the checker costs 33 to 37% of the mutant population.
+1. **A dark-file guard.** Something should report when a file's every mutant is excluded. This is **not** a
+   precondition for adoption — all 9 of today's dark mutants are genuinely impossible, so the guard would
+   currently fire on five files that deserve their `n/a`. It is worth having as the same inertness predicate
+   `ast-grep-rule-check`'s "was any rule found at all" and `reference-check`'s `checkNonEmpty` already encode,
+   applied to a mutation report, so that a file which stops reporting is visible rather than silent.
+2. **A narrower way to close a type-impossible survivor.** Adopting on `src/` leaves the 5 `scripts/`
+   survivors and the TS6133 case unaddressed, and `mutation-testing.md` has no shape for closing any of them.
+   A ruling shape costs one article edit and no run time.
 
    **The ruling shape must be argued against the repo's own compiler config, not the checker's.**
    `liveCellStore.ts:230` is the case that forces this: the repo's build rejects it and the checker's relaxed
