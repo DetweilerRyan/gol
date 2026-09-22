@@ -434,21 +434,26 @@ is true, and item 3 did not falsify it. A reader may now notice a board script a
 
 ## Sign-off
 
-**Unsigned.** `coach` stops here. Items 10 to 14 carry no authority until the user signs this file,
-and `writer` runs nothing from it before then.
+**Signed by the user 2026-09-22.** Items 10 to 14 carry authority, and `writer` may execute them.
 
 Items 1 to 9 keep the authority `spec.md` and `amendment-1.md` gave them. Nothing in this file
 reopens a signed ruling: R1, R4, R6, R7, R8 and R11 all stand.
 
-**What the signature now covers is each item's properties, not a sentence.** Items 10 to 14 name an
-anchor and what must become true at it. `writer` writes the prose and `editor` CLEAN reads it, per
-"What autonomy costs" above. Signing this file authorizes that, and the bytes that land will not be
-bytes the user read here.
+**R13 stands, in full.** The user ruled its second half explicitly: **drop the roster-closing
+"only" rather than repairing it.** Item 10's property 2 is unchanged. The file has carried two false
+universals over the readers of a board file, and a third would be the same defect written a third
+time; a sentence that closes a roster is worth less than a sentence that cannot go stale.
 
-**The ruling most worth overturning is R13's second half** — item 10's property 2, which drops the
-roster-closing "only" rather than repairing it. Repairing it keeps a stronger sentence for one
-word; the cost is a third unchecked universal in a file that has carried two. Overturning it
-changes property 2 alone and leaves the other four items untouched.
+**The signature covers each item's properties rather than a sentence.** Items 10 to 14 name an
+anchor and what must become true at it. `writer` writes the prose and `editor` CLEAN reads it, per
+"What autonomy costs" above. The user signed that trade knowingly: the bytes that land are not
+bytes the user read here, and `editor` finding a defect in one of them is the loop working rather
+than the fallback firing.
+
+**Why this amendment reads in properties rather than blocks.** The user ruled on 2026-09-22 that a
+spec dictating prose verbatim takes over work the pipeline assigns to `writer` and `editor`, so
+neither can perform its role. This file is the near-term half of that remedy. The item's
+`retro.md` records the finding as P3, and the durable half travels as a recommendation.
 
 Nothing below this line changes without a further amendment `coach` authors and the user signs
 again. Per the fallback above, `coach` does not expect to author one.
