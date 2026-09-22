@@ -29,12 +29,12 @@ The replacement keeps the duty and states no undated present-tense fact about th
 the form `claim-discipline.md` rules out. A dated claim about the same refusal is not ruled out,
 and the `checkShape` sentence in this section is one.
 
-**As of 2026-09-20, an `off the board` stop clause closed the same gap for one more line
-shape.** Measured live that day, `node scripts/board-shape-hook/run.ts src/camera.ts` printed a
-`LAYER1` line reading `off the board, 0 checks`, which no stop clause named until
-`checkers-do-not-reach-the-assessment-sidecar` added one — the same gap as the basename
-guard's, one line shape later. The 2026-09-22 positive gate below replaced that clause; see
-that section for what stands in its place.
+**An `off the board` stop clause closed the same gap for one more line shape.** Measured live
+2026-09-20, `node scripts/board-shape-hook/run.ts src/camera.ts` printed a `LAYER1` line reading
+`off the board, 0 checks`, which no stop clause named until
+`checkers-do-not-reach-the-assessment-sidecar` added one — the same gap as the basename guard's,
+one line shape later. The 2026-09-22 positive gate below replaced that clause; see that section
+for what stands in its place.
 
 ## What was ruled out
 
