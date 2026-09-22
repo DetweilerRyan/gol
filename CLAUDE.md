@@ -30,7 +30,7 @@ Ten are topic articles, read on the trigger each one names in its own header:
 - **`.claude/agents/articles/ast-grep-rules.md`** — the rule list check 5 reads, how to read a finding, and how to author a rule that is not silently inert. Read the article before authoring or narrowing a rule.
 - **`.claude/agents/articles/acceptance-mutation.md`** — the Gherkin Examples-table mutation runner, its guards, and its two mutation classes. Read the article before the first `npm run acceptance-mutation` in a slice.
 - **`.claude/agents/articles/doc-comments.md`** — the interface/implementation comment split, and what belongs in JSDoc versus `//`. It also carries the hover budget, the paired module-sidecar tier, the measured JSDoc syntax hazards, and the hover-before-Read reading habit. Read before writing or moving a comment block in `src/` or `scripts/`.
-- **`.claude/agents/articles/prose.md`** — how agent-facing prose is written, and what Vale checks of it. **It owns the instruction-versus-explanation split between every instruction file and its sidecar**, which the routing branches above deliberately do not carry. Its mechanical half runs Vale over the agent docs, `CLAUDE.md`, the module sidecars, and the JSDoc blocks in `src/` and `scripts/`. That half says which enabled rules apply mechanically and lists the exempt classes for each. Since 2026-09-12 every rule in a default run is mechanical. `STE.PassiveVoice` alone sits below `MinAlertLevel`. It also carries the ways a run reports a confident zero, and how a pass damages the file it cleans. `architect` alone authors the tracked `vale-styles/` styles, on the `rules/*.yml` precedent. Five exist. `JsDoc` covers hovers, and `Instruction` guards the stripped role files. `Procedure` carries the two script rules that replaced the last `STE` prompts. `Board` holds the idea board's one structural rule, and `Claim` matches the fingerprinted claim forms. The article carries their fixture run. Read before moving a sentence between a file and its sidecar, before acting on a Vale finding, and before enabling or re-levelling a rule. The file name predates the wider job; `backlog/ideas/` carries the rename.
+- **`.claude/agents/articles/prose.md`** — how agent-facing prose is written, and what Vale checks of it. **It owns the instruction-versus-explanation split between every instruction file and its sidecar**, which the routing branches deliberately do not carry. Its mechanical half runs Vale over the agent docs, `CLAUDE.md`, the module sidecars, and the JSDoc blocks in `src/` and `scripts/`. That half says which enabled rules apply mechanically and lists the exempt classes for each. Since 2026-09-12 every rule in a default run is mechanical. `STE.PassiveVoice` alone sits below `MinAlertLevel`. It also carries the ways a run reports a confident zero, and how a pass damages the file it cleans. `architect` alone authors the tracked `vale-styles/` styles, on the `rules/*.yml` precedent. Five exist. `JsDoc` covers hovers, and `Instruction` guards the stripped role files. `Procedure` carries the two script rules that replaced the last `STE` prompts. `Board` holds the idea board's one structural rule, and `Claim` matches the fingerprinted claim forms. The article carries their fixture run. Read before moving a sentence between a file and its sidecar, before acting on a Vale finding, and before enabling or re-levelling a rule. The file name predates the wider job; `backlog/ideas/` carries the rename.
 - **`.claude/agents/articles/quality-tooling.md`** — the crap4ts patch, the advisory `scripts/` programs, `.gherkin-lintrc`, and `.oxlintrc.json`'s `jsdoc/*` tier. Read the article on an unexpected crap4ts number, on a `jsdoc/*` lint finding, or when touching the lint config.
 - **`.claude/agents/articles/archive.md`** — layers that no longer exist, kept for their method. No role has a trigger for this one; it is research material.
 
@@ -56,9 +56,10 @@ sidecar is forced there: `scripts/agent-doc-check` reads the direct `.md` childr
 `.claude/agents/` as the agent roster, and a prose file there fails the frontmatter check. This
 file keeps its own sidecar there by choice, so that both doc checkers reach it.
 
-**The mechanics are the same for every `*.meta.md`.** Vale lints the instruction half and exempts
-the sidecar. `npm run reference-check` resolves a citation of one by basename, and checks no
-relative path in front of the name. Nothing checks a sidecar's contents.
+**The mechanics are the same for every `*.meta.md`.** Vale exempts the sidecar unconditionally,
+and lints the instruction half only where `.vale.ini` scopes that file's tier. `npm run
+reference-check` resolves a citation of one by basename, and checks no relative path in front of
+the name. Nothing checks a sidecar's contents.
 
 **No role file names a sidecar as a read trigger.** Read one when you are changing the rule it
 stands behind, never in order to follow one.
@@ -67,8 +68,8 @@ stands behind, never in order to follow one.
 `<module>.meta.md` for whoever is _changing_ it. Cite it from the JSDoc as
 `@see {@link ./<module>.meta.md}`.
 
-**A checker over this rule is a closed decision, ruled 2026-09-21.** The set of sidecars is
-derivable from the tree, so a gate would protect a hand-written copy of it. Do not re-propose
+**A checker over which files have a sidecar is a closed decision, ruled 2026-09-21.** That set is
+derivable from the tree, so a gate would only guard a hand-written copy of it. Do not re-propose
 one, and do not add a list of instances here.
 
 **A role may also hold mode files in its own subdirectory**, read on the trigger the invoking prompt names rather than unconditionally. `.claude/agents/architect/` holds `contract-mode.md` and `adjudicate-mode.md`. **The subdirectory is safe where a sidecar beside the role file is not**: `scripts/agent-doc-check`'s roster scan filters on `entry.isFile()`, so it never descends. A mode file therefore needs no agent frontmatter. `.vale.ini`'s `[.claude/agents/**/*.md]` section reaches the subdirectory, so the `Instruction` style applies there.
@@ -86,7 +87,7 @@ one, and do not add a list of instances here.
 
 5. Is it **the evidence behind a rule in an article**, rather than the rule itself? → that article's sidecar.
 
-   **These branches route by topic, and explicitly not by register.** They answer which article a subject belongs to, and where its sidecar file sits.
+   **These branches route by topic, and explicitly not by register.** They answer which article a subject belongs to; the sidecar section above answers where its sidecar file sits.
 
    They do **not** answer how prose is split between an instruction file and its sidecar. **`.claude/agents/articles/prose.md` answers all of that**, under "Instruction stays. Explanation moves." Open it when you are holding a sentence rather than a subject, and nothing here restates it.
 

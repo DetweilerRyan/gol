@@ -228,7 +228,7 @@ A rename that moves a module without moving its `@see {@link ./<module>.meta.md}
 cannot verify is a sidecar's own **contents**. Hold a sidecar to the comment-assertion convention by
 hand: no quoted test titles, no caller rosters, no `<file>:NN`. Nothing will catch one.
 
-**Which half a fact goes in is branch 5's test, one tier down: does a caller act on it?** The claim a
+**Which half a fact goes in is `prose.md`'s test, one tier down: does a caller act on it?** The claim a
 caller acts on belongs in the hover, and its worked-out form in `<module>.md`. The evidence behind that
 claim belongs in `<module>.meta.md`. `useZoomGlide` is the live example. Its hover states that the
 completion frame is bit-identical to an instantaneous zoom, because a caller can rely on that. The

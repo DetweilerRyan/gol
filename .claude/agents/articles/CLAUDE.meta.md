@@ -57,7 +57,7 @@ records this as its second placement exception.
 Branch 1 used to read "it has no other instruction surface", which
 `document-the-orchestrating-seat` made false by giving the orchestrating seat one.
 
-### Branch 5's roughly-1 KB floor
+### The roughly-1 KB floor
 
 A pair's own framing measures 1.0-1.4 KB across the three landed role pairs. Measured across
 the five role files plus `orchestration.md`: three earned a sidecar and three did not.
@@ -132,7 +132,9 @@ goes when it answers **which half of a pair**.
 - **Where a sidecar physically sits** stayed. The role-file placement into `articles/` is forced by
   `agent-doc-check`'s path glob, and `CLAUDE.meta.md`'s by `reference-check`'s and
   `agent-doc-check`'s. That is a predicate a checker reads, which is branch 1's own reservation for
-  this file.
+  this file. The `a-reader-finds-a-sidecar-without-an-inventory` slice moved this rule out of the
+  branches into `CLAUDE.md`'s sidecar section on 2026-09-21, so the which-file test above no
+  longer predicts where it lives.
 - **Branch 4's module carve-out** stayed. "Is this passage about `scrollbars.ts`, or about
   `architecture.md`'s rule?" is a subject question, and it is settled before register arises.
 - **Branch 4's register half went.** `<module>.md` against `<module>.meta.md` is the same
