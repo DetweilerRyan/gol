@@ -2,6 +2,7 @@
 name: type-impossible-mutants-read-as-survivors
 title: Decide whether Stryker should run its TypeScript checker so type-impossible mutants stop reading as survivors
 created: 2026-09-22
+kind: spike
 ---
 
 ## Situation
@@ -76,6 +77,9 @@ that the check is paid on every mutant on every run while the triage cost is pai
 Measure before choosing. Classify one full-scope survivor list by whether each mutant compiles under `tsc -b`,
 then time the same run with the checker wired in. The outcome selects among: enable it, leave the run alone and
 give the article a type-impossible ruling shape alongside the equivalent one, or both.
+
+The answer, its method and its date land in this folder's `findings.md`. This spike has no parent idea, so it
+closes against its own question rather than by re-assessing another candidate.
 
 ## No-gos
 
