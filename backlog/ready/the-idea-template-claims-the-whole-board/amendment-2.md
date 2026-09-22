@@ -4,7 +4,12 @@ By `coach` (REVIEW), 2026-09-22.
 
 ## Item numbers this amendment names
 
-**Items 10 to 14**, new numbers. Each corrects text this slice itself wrote.
+**Items 10 to 14**, new numbers. Four correct text this slice itself wrote; item 13 corrects
+pre-existing text that item 6 falsified.
+
+**Each item states an anchor and the properties the result must have, rather than a replacement
+block.** `writer` writes the sentence. Where a fact is load-bearing the item says so and names
+where to read it, which is never this file.
 
 **What it supersedes**, and nothing it does not name:
 
@@ -35,6 +40,13 @@ that reaches the tree without an editor ever having read it. `editor` CLEAN read
 so the catch arrives after the user's signature, when the text is immutable without an amendment.
 That is a structural gap in the enabler-process pipeline rather than an error by any role, and it
 goes out as a recommendation below.
+
+**This amendment was revised before signature, and the revision is that remedy applied to itself.**
+Its first draft dictated five replacement blocks verbatim. The user ruled 2026-09-22 that it state
+what must become true and leave `writer` and `editor` the autonomy to do their jobs. `coach.md`
+already draws that line — "verbatim where wording is load-bearing", not verbatim throughout — and
+four of the five items turn out not to reach it. Each item below says which half it is, and the
+"What autonomy costs" section states the trade the signature now carries.
 
 ## R13 — a universal over readers of a board file is not worth one, and this is the second time
 
@@ -128,47 +140,47 @@ The same defect appears in miniature in `SKILL.meta.md`, where item 7a's one-lin
 
 ## Item 10 — CLAUDE.md, the reader universal — `writer`
 
-**Anchor.** In the Idea board section, the paragraph beginning `Nothing enforces any of this, and`.
-Its last sentence reads:
+**Anchor.** In the Idea board section, the last sentence of the paragraph beginning
+`Nothing enforces any of this, and`.
 
-```text
-Vale's advisory `Board` style is the only other reader of a board file.
-```
+**Wording: not load-bearing. Write the sentence.**
 
-**Replace that sentence with:**
+**What must become true:**
 
-```text
-Vale's advisory `Board` style also reads a board file.
-```
+1. The sentence still names Vale's `Board` style as a reader of a board file. That fact is the half
+   worth keeping.
+2. It asserts no universal over the readers of a board file — no "only", no closed roster, no count.
+3. The three sentences before it are unchanged, and so is the Prettier paragraph below.
 
-Change no other byte of that paragraph. The three sentences before it stay exactly as item 3 wrote
-them, and the Prettier paragraph below stays untouched.
+**Do not repair the universal by narrowing it.** "The only other reader that checks a board file's
+content" would be a second unchecked claim in the same position. R13 rules that dropping it is the
+fix, and the user's signature is on that ruling rather than on a sentence.
 
-Measured 2026-09-22: the replacement is 9 words, and CLAUDE.md's live Vale findings are
-`STE.SentenceLength` and `Procedure.ProcedureLength` throughout, neither of which a shorter
-sentence can trip.
+Measured 2026-09-22: this paragraph reports no Vale finding today. CLAUDE.md's 18 live findings are
+`STE.SentenceLength` and `Procedure.ProcedureLength`, so a sentence at or under 25 words is clear.
 
 ## Item 11 — CLAUDE.md, the config field list — `writer`
 
-**Anchor.** In the Idea board section, the paragraph beginning `` `backlog/IDEA-TEMPLATE.md` is the
-`ideas/` lane's item shape: ``. Its last sentence reads:
+**Anchor.** In the Idea board section, the last sentence of the paragraph beginning
+`` `backlog/IDEA-TEMPLATE.md` is the `ideas/` lane's item shape: ``.
 
-```text
-Nothing machine-readable pairs a lane with a template — `board-lanes.config.json` declares item depth and basename only.
-```
+**Wording: not load-bearing, but the field names are. They are facts, and you read them off the
+config rather than out of this amendment.**
 
-**Replace that sentence with:**
+**What must become true:**
 
-```text
-Nothing machine-readable pairs a lane with a template — `board-lanes.config.json` declares a lane's shape and, for a folder lane, its item basename.
-```
+1. The clause "Nothing machine-readable pairs a lane with a template" survives. It is item 2's
+   signed text and the claim the sentence exists to make; only the evidence after the dash is wrong.
+2. Every field the sentence names appears verbatim as a key in `board-lanes.config.json`. **Open
+   that file and take the names from it.** The two words the sentence names today, "item depth" and
+   "basename", are both absent from it: depth is derived rather than declared, and no key carries
+   the second name.
+3. The sentence does not cite `schemas/board-lanes.schema.json` as what forbids a template field.
+   R14 says why — that schema's own description disclaims runtime authority.
+4. The two sentences before it are unchanged.
 
-Change no other byte of that paragraph. The two sentences before it stay exactly as item 2 wrote
-them.
-
-Measured 2026-09-22: the replacement is 21 words against the original's 18, and
-`STE.SentenceLength` caps descriptive text at 25. The paragraph reports no Vale finding today and
-cannot gain one from three words.
+Measured 2026-09-22: the paragraph reports no Vale finding, and the sentence it replaces is 18
+words against `STE.SentenceLength`'s cap of 25. That leaves room, not licence.
 
 ## Item 12 — the assessment sidecar's dated paragraph — `writer`
 
@@ -176,74 +188,75 @@ cannot gain one from three words.
 `## Why the basename guard is duplicated in prose`, the whole second paragraph. It opens
 `**Measured 2026-09-20, the guard covered a gap` and closes `and no instruction covering the case.`
 
-**Replace that whole paragraph with:**
+**Wording: not load-bearing. Re-tense and re-wrap the paragraph in your own words.** The one
+exception is the measured output literal it already quotes, which is a hook output and stays as the
+file has it.
 
-```text
-**Measured 2026-09-20, the guard covered a gap every stop clause keyed on the `LAYER1` output
-left open.** Those clauses keyed on a line shape in that output, or on its absence. The record
-refusal printed a shape none of them named — `an assessment record, 0 checks` — so deleting the
-basename guard on that date would have left a reader holding that line with a `LAYER1` line
-present, no stop clause naming it, and no instruction covering the case.
-```
+**What must become true:**
 
-Keep the line breaks exactly as written above. `proseWrap` is `preserve`, so Prettier returns them
-unchanged.
-
-**What this block drops, sentence by sentence, and where each obligation lands:**
-
-| Dropped                                            | Where it lands                                                      |
-| -------------------------------------------------- | ------------------------------------------------------------------- |
-| The second `Measured 2026-09-20,` sentence opener  | the paragraph's own opening date now carries both claims            |
-| "the record refusal prints", present tense         | "printed", inside the same dated frame                              |
-| "Delete the basename guard and a reader ... finds" | "deleting the basename guard on that date would have left a reader" |
-| The three-clause list after "finds"                | kept whole, re-tensed                                               |
-| The 113-character first line                       | re-wrapped to the file's own width; no word changes                 |
-
-**Add no sentence to this paragraph.** The guard's live justification sits in the two passages below
-it and in item 7b's appended section, per R15.
+1. Every claim in the paragraph reads as a record of 2026-09-20. No sentence asserts anything about
+   the gate as it now stands.
+2. The consequence about deleting the basename guard is scoped to that date. It was true then;
+   item 6's positive gate has since made the unscoped form false, because an assessment record
+   reports zero checks and the gate stops on any count that is not positive.
+3. No sentence opens with the same dated phrase as the sentence before it. Two consecutive openers
+   of `Measured 2026-09-20,` is the state item 7a left behind.
+4. The paragraph's lines sit inside the file's prevailing width. Its first line is 113 characters
+   today, in a file wrapping near 95.
+5. **No new justification for the guard is added.** R15 names three live passages that already
+   carry it, and the falsifier below turns on exactly this point.
 
 ## Item 13 — the assessment sidecar's `off the board` claim — `writer`
 
-**Anchor.** In the same file, the last paragraph of that same section. It opens with the bold
-sentence "The `off the board` stop clause closes the same gap for one more line shape."
+**Anchor.** In the same file, the last paragraph of that same section. It opens with a bold sentence
+about the `off the board` stop clause.
 
-**Replace that whole paragraph with:**
+**Wording: not load-bearing.** The command and the output literal the paragraph already quotes are,
+and they stay as the file has them.
 
-```text
-**Until 2026-09-22 an `off the board` stop clause closed the same gap for one more line shape.**
-Measured live 2026-09-20, `node scripts/board-shape-hook/run.ts src/camera.ts` printed a
-`LAYER1` line reading `off the board, 0 checks`, which no stop clause named until
-`checkers-do-not-reach-the-assessment-sidecar` added one — the same gap as the basename
-guard's, one line shape later. The 2026-09-22 positive gate section below records what
-replaced that clause.
-```
+**What must become true:**
 
-Two changes beyond the tense of the opening sentence: `prints` becomes `printed`, so the paragraph
-holds one tense throughout; and a closing sentence points at the section that records the
-replacement, so a reader meeting the past tense does not have to hunt for what happened.
-
-The filename tokens are unchanged from the current paragraph, so `npm run reference-check` has no
-new token to resolve.
+1. No sentence asserts that `.claude/skills/idea-assess/SKILL.md` contains a stop clause it does not
+   contain. **Read `SKILL.md` and check**, rather than taking the deletion from this amendment.
+2. The 2026-09-20 measurement survives as history, with its command and its quoted output intact.
+3. The paragraph holds one tense throughout.
+4. A reader meeting the past tense is pointed at the section recording what replaced the clause, so
+   the change does not read as an unexplained gap.
+5. No filename token is added or removed, so `npm run reference-check` has nothing new to resolve.
 
 ## Item 14 — the pipelines paragraph's line breaks — `writer`
 
 **Anchor.** In `.claude/references/pipelines.md`, the single-line paragraph beginning
 `**The kinds are not a closed set.**`.
 
-**Replace that line with these six lines:**
+**Wording: nothing here is load-bearing, because nothing here is wording.** This item is whitespace.
 
-```text
-**The kinds are not a closed set.** `scripts/board-shape-hook/board-shape.ts` classifies on two
-axes, and only one of them is a name lookup. The hook looks a lane up in
-`board-lanes.config.json`, so an undeclared lane draws its own refusal. A per-item artifact
-stays positional: any file at a folder lane's item depth that is neither the declared item nor
-an assessment record. So an artifact kind nobody has named yet is covered in an item's folder
-on the day it lands. `scripts/board-shape-hook/board-shape.meta.md` carries the axis-split ruling.
-```
+**What must become true:** the paragraph carries the same words in the same order, re-wrapped to the
+file's prevailing prose width. Measured 2026-09-22: that file's prose lines run 90 to 103
+characters with table rows excluded, and this paragraph is one line of 548.
 
-**No word changes.** Compare the two forms word by word before committing: this item is whitespace
-only, and a word slipping in here would be an unsigned corpus edit wearing a formatting item's
-name.
+**Check the word-for-word property before you commit**, with `git diff --word-diff` over that file.
+A word slipping in here would be an unsigned corpus edit wearing a formatting item's name.
+
+## What autonomy costs, stated so the signature is informed
+
+The five items above name an anchor and the properties the result must have. `writer` writes the
+sentences and `editor` CLEAN reads them. **That is a trade rather than a free improvement**, and the
+user signs the trade rather than discovering it at the next `editor` pass.
+
+**What is given up.** The user cannot read the exact bytes at sign-off. `writer` may satisfy an
+invariant with a sentence `coach` would not have written, and that is the mechanism working rather
+than a side effect. What the signature covers is what must become true.
+
+**What is bought.** The two roles positioned to catch a defect now have standing to fix one.
+Every finding this review is correcting reached the tree because correctness was defined as
+faithful reproduction: `writer` reproduced five defective sentences exactly as asked, and `editor`
+found several and could not touch them. Under these items, `editor` CLEAN is where such a defect
+gets caught, which is before the merge rather than after the signature.
+
+**`coach` REVIEW checks each sentence against its item's properties, and does not object on
+taste.** A sentence satisfying every property stands even where `coach` would have phrased it
+differently. Anything else would re-dictate at review time and give back what this revision buys.
 
 ## Check readings
 
@@ -261,11 +274,19 @@ Re-derive rather than inherit them.
 assumed: `.vale.ini`'s `[**/*.meta.md]` section sets an empty `BasedOnStyles` and disables every
 named rule. Items 12 and 13 therefore cannot move any prose-lint reading.
 
-**What cannot move, and why saying so matters.** `npm run reference-check` and
-`npm run agent-doc-check` are untouched by every item above: no item adds, removes or renames a
-filename token, an `npm run` reference, agent frontmatter or a declared role cycle. Item 14 changes
-whitespace only. `npm run test:scripts` cannot move either — no item reaches `scripts/`.
-**This amendment is guarded by reading, not by a gate**, exactly as the spec said of the slice.
+**What cannot move, and why saying so matters.** `npm run agent-doc-check` is untouched by every
+item above: none reaches an `npm run` reference, agent frontmatter, a retired role or a declared
+role cycle. `npm run test:scripts` cannot move either — no item reaches `scripts/`. Item 14 changes
+whitespace only.
+
+**`npm run reference-check` is the one gate with any reach here, and that is a gain of this
+revision.** Items 11, 12 and 13 leave `writer` writing sentences, and a sentence can name a file.
+Every item that could is bounded — item 13 forbids adding or removing a token outright, and item 11
+forbids the one citation R14 ruled out — and the gate catches an unresolvable token if one arrives.
+Run it after the pass rather than reasoning about it.
+
+**Everything else here is guarded by reading, not by a gate**, exactly as the spec said of the
+slice. That is why the stopping condition below is worded to be read rather than run.
 
 ## The three properties a second amendment owes
 
@@ -285,7 +306,17 @@ Checkable by reading the landed files, with no re-measurement:
    names appear: `shape` and `item`.
 4. `.claude/references/pipelines.md` carries no prose line longer than 103 characters. Table rows
    and the `reference-check` allow marker on line 3 are excluded; both predate this slice.
-5. Items 12, 13 and 14 added no sentence that was not in this amendment's verbatim blocks.
+5. Both `SKILL.meta.md` paragraphs read as records. Every sentence in them is scoped to 2026-09-20
+   or points at the section recording the 2026-09-22 replacement, and neither paragraph gained a
+   justification for the basename guard.
+6. Item 14's paragraph carries the same words in the same order as before, readable off
+   `git diff --word-diff` for that file.
+
+**Properties 5 and 6 replaced a sixth that this revision retired.** The draft's version read that
+items 12 to 14 added no sentence outside the amendment's verbatim blocks, and those blocks no
+longer exist. The other four properties were already invariants checkable by reading, and they
+carry across untouched — which is the clearest evidence that stating properties rather than bytes
+loses nothing a reader needed.
 
 ### Falsifier
 
@@ -299,12 +330,18 @@ wording.
 
 ### Fallback
 
-**Amendment 2 is the last round on this slice.** If `editor` CLEAN returns any finding in text this
-amendment supplies, `writer` does not re-edit it and the seat does not hire `coach` again. The
-finding is recorded in this item's `retro.md`, beside P1 and P2, and travels to `backlog/ideas/` as
-a candidate. The cycle then closes with the finding on record. A fourth round on five sentences
-costs more attention than the sentences are worth, and the recommendation below is the durable fix
-for the class rather than for these instances.
+**Amendment 2 is the last round on this slice.** There is no amendment 3.
+
+**`editor` CLEAN finding a defect in `writer`'s sentences is not the trigger — it is the loop
+working.** `writer` fixes it under the item's own properties, which already authorize the edit.
+This revision is what made that possible: a verbatim block was the thing neither role could
+correct, and no item above supplies one.
+
+**The trigger is a finding that a property above is itself wrong or unsatisfiable.** Then stop. The
+seat does not hire `coach` again. Record the finding in this item's `retro.md`, beside P1 and P2,
+close the cycle, and send it to `backlog/ideas/` as a candidate. A fourth round on five sentences
+costs more attention than the sentences are worth, and the first recommendation below is the
+durable fix for the class rather than for these instances.
 
 ## Execution
 
@@ -366,11 +403,18 @@ is true, and item 3 did not falsify it. A reader may now notice a board script a
 - **An `enabler-process`: no reviewer sits between a spec's verbatim text and the user's
   signature.** Five of this slice's findings are defects in prose `coach` wrote into `spec.md` and
   `writer` reproduced correctly. `editor` reads the landed file, so the catch always arrives after
-  the signature, when the text is immutable without an amendment. Two candidate remedies to weigh in
-  that item's own spec: an `editor` pass over a spec's verbatim blocks before sign-off, or a
-  `coach`-side self-audit obligation naming `claim-discipline.md`'s six forms as the checklist for
-  every verbatim block. This slice is the measured instance — two amendments, five corrective items,
-  zero role divergences.
+  the signature, when the text is immutable without an amendment. This slice is the measured
+  instance — two amendments, five corrective items, zero role divergences.
+
+  **The near-term half is already applied and needs no item: this amendment states properties
+  rather than bytes**, on the user's 2026-09-22 ruling. The durable question is what binds the next
+  spec. Three candidates to weigh in that item's own spec: a `coach.md` obligation to justify each
+  verbatim block against the load-bearing test its own file already states; an `editor` pass over a
+  spec's remaining verbatim blocks before sign-off; and a `pipelines.md` clause making a spec's
+  properties, not its bytes, what the signature covers. **Weigh the cost honestly** — verbatim is
+  the right register where wording genuinely is load-bearing, and a rule that forbids it outright
+  would be the opposite error.
+
 - **An `enabler-process`: `pipelines.md`'s two hook paragraphs are keyed on the classifier's
   wording.** R7's positive-gate reasoning applies to the coupling, though not to R7's own fail-open
   argument. Scope it to that file and rule whether a description may key on a wording the
@@ -396,10 +440,15 @@ and `writer` runs nothing from it before then.
 Items 1 to 9 keep the authority `spec.md` and `amendment-1.md` gave them. Nothing in this file
 reopens a signed ruling: R1, R4, R6, R7, R8 and R11 all stand.
 
-**The ruling most worth overturning is R13's second half** — dropping the roster-closing "only"
-rather than repairing it. Repairing it is one word and keeps a stronger sentence; the cost is a
-third unchecked universal in a file that has carried two. The user may take the repair instead with
-one word, and item 10's replacement sentence is the only byte that changes either way.
+**What the signature now covers is each item's properties, not a sentence.** Items 10 to 14 name an
+anchor and what must become true at it. `writer` writes the prose and `editor` CLEAN reads it, per
+"What autonomy costs" above. Signing this file authorizes that, and the bytes that land will not be
+bytes the user read here.
+
+**The ruling most worth overturning is R13's second half** — item 10's property 2, which drops the
+roster-closing "only" rather than repairing it. Repairing it keeps a stronger sentence for one
+word; the cost is a third unchecked universal in a file that has carried two. Overturning it
+changes property 2 alone and leaves the other four items untouched.
 
 Nothing below this line changes without a further amendment `coach` authors and the user signs
 again. Per the fallback above, `coach` does not expect to author one.
