@@ -93,6 +93,14 @@ became the default register rather than the exception the sentence describes.
 and its anchor, and leave `writer` and `editor` the latitude to write and clean. That is the
 near-term half. `coach` carried the durable half out as an `enabler-process` recommendation.
 
+**One measured outcome, taken the same day the register changed.** Amendment 2's item 11 corrected a
+sentence the spec had dictated as `board-lanes.config.json` declares item depth and basename only.
+Neither `item depth` nor `basename` is a key in that file. The amendment stated the property and
+sent `writer` to read the config rather than supplying the names; `writer` wrote that the file
+declares each lane's `shape` and a folder lane's `item`, which the seat verified matches the config
+exactly. **The dictated sentence was wrong and the authored one was right**, because the role that
+wrote it was sent to the source. One instance proves no rule, and it is recorded as an instance.
+
 **The trade, so a later reader does not mistake it for a free improvement.** Autonomy moves the
 catch rather than removing it. A `writer` given an invariant may satisfy it with a sentence `coach`
 would not have written, and `editor` CLEAN becomes the pass that finds it — which is earlier than an
