@@ -8,7 +8,7 @@
 - on an `agent-doc-check` check-5 failure
 - before acting on an ast-grep finding
 
-> The sidecar also holds the two rules documented outside the main enumeration below. Narrowing or
+> The sidecar holds the two rules documented outside the main enumeration below. Narrowing or
 > widening a rule **is** changing one, so that is when to open it.
 
 ## The rules
