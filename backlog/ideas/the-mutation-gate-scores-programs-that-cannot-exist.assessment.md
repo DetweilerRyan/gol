@@ -174,4 +174,12 @@ alone; the guard thread is ruled out under Small and is captured as its own cand
 
 ## The human ruling
 
-None recorded.
+Ruled 2026-09-22.
+
+Independent — agree.
+Negotiable — agree.
+Valuable — agree.
+Estimable — agree.
+Small — differ. The dark-file guard travels with this slice. Ruled to run all of the enablers within one
+slice; the guard rides as scoped rather than being captured as its own candidate.
+Testable — agree.
