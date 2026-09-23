@@ -63,6 +63,15 @@ Shaped, per the user's 2026-09-21 direction.
   own file forbids it editing anything and its specs name what `writer` edits. `editor` gains it
   inside a `writer` manifest for CLEAN, which is where its scope already comes from.
 
+  **The schema is inside the ruling, not beside it.** Ruled by the user 2026-09-22.
+  `schemas/board-lanes.schema.json` forbids additional properties and constrains each lane's shape,
+  so a lane entry the schema refuses is as dead as one the classifier refuses. Widening the config
+  without the schema would grant a permission that cannot be exercised.
+
+  **The pairing is the unit, and the precedent already has one.** `role-cycles.config.json` sits
+  beside `schemas/role-cycles.schema.json` under the same arrangement. So the surface a role gains
+  is a tracked declaration **and** the schema that validates it, rather than a file.
+
   **This is a boundary change**, so it runs the process pipeline on its own terms rather than
   riding in as a side edit of the lane work.
 
@@ -78,11 +87,12 @@ Shaped, per the user's 2026-09-21 direction.
 
 ## Open questions
 
-- **Does the standing ruling reach the schema, and does it reach further than this lane?**
-  `board-lanes.config.json` has a sibling at `schemas/board-lanes.schema.json`, and a lane entry
-  that the schema refuses is as useless as one the classifier refuses. The ruling names the config
-  and not the schema. It also names one file rather than a class, so the next tracked declaration
-  the corpus instructs against raises the same question again.
+- **The ruling names one pair, and the next declaration raises it again.** The config and its schema
+  are both inside it, but as named files rather than as a class. `schemas/` holds a third pair,
+  `mutation-invariance.config.json` and its schema, which the corpus also instructs against and
+  which this ruling does not reach. Whether the rule wants stating as a property — a tracked
+  declaration the corpus instructs a reader to follow — or as a list that grows one pair at a time,
+  is the spec's question.
 - **Does anything check the two membership statements against each other?** They are only worth
   duplicating because they can disagree detectably, and nothing on this board is gated. The check
   is cheap — the set of children naming an epic against the set that epic names — but it has no
