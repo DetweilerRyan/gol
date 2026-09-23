@@ -2,6 +2,7 @@
 name: the-mutation-gate-scores-programs-that-cannot-exist
 title: Make the mutation gate type-aware, and surface a file whose every mutant is excluded
 created: 2026-09-22
+kind: enabler-technical
 ---
 
 ## Situation
@@ -41,6 +42,12 @@ Does the second need belong in this slice at all? The parent epic's assessment r
 threads and flagged that it might rule Spike or Not worth doing on its own. Folding it in risks it riding along
 unjudged; splitting it risks never writing it. This file states it as a separable sub-thread so the assessment
 can rule it rather than inherit it.
+
+**Ruled 2026-09-22: it travels with this slice.** The assessment ruled the other way, on three findings — the
+guard's own Valuable is anchor 2 against this slice's 5, its Estimable bounds to a slice or nothing, and its
+finished state is an unwritten open question. The user ruled that all of the enablers run within one slice, so
+the guard rides as scoped. `assessment.md` carries both halves, and the open questions below are what the
+design pass has to settle before it can be built.
 
 ## Answer
 
