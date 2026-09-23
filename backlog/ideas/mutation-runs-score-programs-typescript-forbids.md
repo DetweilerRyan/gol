@@ -40,6 +40,22 @@ survivor list — the surfaces the gates and roles consume — cannot distinguis
 mutant was killed. Today that costs nothing, and it is the same fail-open shape `ast-grep-rule-check`'s
 "was any rule found at all" and `reference-check`'s `checkNonEmpty` already refuse elsewhere.
 
+## Children
+
+Ruled an Epic on 2026-09-22, so this file stays an index in `ideas/` and takes no `ready/` folder. Two
+children, not the three the assessment named — the dark-file guard rides with adoption as a separable
+sub-thread its own assessment can still rule on or reject.
+
+| Child                                                 | Kind              | Carries                                                |
+| ----------------------------------------------------- | ----------------- | ------------------------------------------------------ |
+| `the-mutation-gate-scores-programs-that-cannot-exist` | enabler-technical | Both stryker configs, the package, the dark-file guard |
+| `a-survivor-no-input-can-distinguish-has-no-ruling`   | enabler-process   | `mutation-testing.md`'s closing form for the class     |
+
+**Both land on one branch, `make-the-mutation-gate-type-aware`, and merge once.** Ruled by the user on
+2026-09-22. The split is about which pipeline runs, not about when either ships: an article may only be edited
+by `writer` under a signed `coach` spec, so no single item can carry both diffs. The board therefore holds two
+`ready/` folders pointing at one branch, which departs from one slice to one item and which nothing enforces.
+
 ## Question
 
 Is this one slice, or several? Three needs are named above — wire the checker in, give a role a way to close a
