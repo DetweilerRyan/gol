@@ -2,6 +2,7 @@
 name: a-survivor-no-input-can-distinguish-has-no-ruling
 title: Give a role a way to close a mutation survivor the type system already forbids
 created: 2026-09-22
+kind: enabler-process
 ---
 
 ## Situation
@@ -47,8 +48,15 @@ configuration rather than the checker's relaxed one, on the TS6133 case. Nothing
 
 ## No-gos
 
-Does not wire the checker into either stryker config. That is the sibling technical enabler. Both land on one
-branch and merge together; the split is about which pipeline runs, not about when either ships.
+Does not wire the checker into either stryker config. That is the sibling technical enabler,
+`the-mutation-gate-scores-programs-that-cannot-exist`, promoted the same day. Both land on one branch,
+`make-the-mutation-gate-type-aware`, and merge together — ruled by the user on 2026-09-22. The split is about
+which pipeline runs, not about when either ships: an article may only be edited by `writer` under a signed
+`coach` spec, so no single item can carry both diffs.
+
+Does not carry its own acceptance reading. The assessment scored Testable 2 on exactly that and ruled it
+non-blocking, since `.claude/references/pipelines.md` states the enabler-process acceptance. **`coach` SPEC
+owes the check and both its readings**, rather than inheriting them from this file.
 
 Does not revisit the equivalence rule itself, which is doing its job — this class is what it declines to cover.
 
