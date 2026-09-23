@@ -164,4 +164,11 @@ Promote.
 
 ## The human ruling
 
-None recorded.
+Ruled 2026-09-22.
+
+Independent — agree.
+Negotiable — agree.
+Valuable — agree.
+Estimable — agree.
+Small — agree.
+Testable — agree.
