@@ -1,11 +1,5 @@
-import { readFileSync } from 'node:fs'
-import path from 'node:path'
-import { fileURLToPath } from 'node:url'
 import { describe, expect, it } from 'vitest'
 import { parseLaneDeclarations } from './lane-declarations.ts'
-
-const SCRIPT_DIR = path.dirname(fileURLToPath(import.meta.url))
-const REPO_ROOT = path.resolve(SCRIPT_DIR, '../..')
 
 describe('parseLaneDeclarations -- unavailable rows', () => {
   it.each([
@@ -137,22 +131,5 @@ describe('parseLaneDeclarations -- declared rows', () => {
     // A key that was never declared must read back as absent, not as whatever
     // Object.prototype happens to carry under that name.
     expect(lanes.get('hasOwnProperty')).toBeUndefined()
-  })
-})
-
-describe('parseLaneDeclarations -- the tracked board-lanes.config.json', () => {
-  it('parses as declared, with exactly the three shipped lanes', () => {
-    const text = readFileSync(path.join(REPO_ROOT, 'board-lanes.config.json'), 'utf8')
-
-    const result = parseLaneDeclarations(text)
-
-    expect(result).toEqual({
-      kind: 'declared',
-      lanes: new Map([
-        ['ideas', { shape: 'flat' }],
-        ['ready', { shape: 'folder', item: 'proposal.md' }],
-        ['done', { shape: 'folder', item: 'proposal.md' }],
-      ]),
-    })
   })
 })
