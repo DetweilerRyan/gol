@@ -63,10 +63,15 @@ Shaped, per the user's 2026-09-21 direction.
   already authorises a correction. The grant is the file pairing; what each role does with it stays
   its mode's question.
 
-  **The schema is inside the ruling, not beside it.** Ruled by the user 2026-09-22.
-  `schemas/board-lanes.schema.json` forbids additional properties and constrains each lane's shape,
-  so a lane entry the schema refuses is as dead as one the classifier refuses. Widening the config
-  without the schema would grant a permission that cannot be exercised.
+  **The schema is inside the ruling, and adding a lane does not need it.** Ruled by the user
+  2026-09-22, and the two halves are separate. Measured 2026-09-23 at `4a78bf2`:
+  `schemas/board-lanes.schema.json` sets `additionalProperties: false` on its **root** object, while
+  `lanes` carries `additionalProperties: { "$ref": "#/definitions/laneShape" }`. So any lane name
+  validates against the shape definition, and a probe adding an `epics` entry of
+  `{ "shape": "folder", "item": "proposal.md" }` parsed as `declared` with no schema edit.
+
+  The grant still names the schema, because a role that may declare a lane and may not change what a
+  lane may be holds half a permission. It is not a prerequisite for this lane.
 
   **The pairing is the unit, and the precedent already has one.** `role-cycles.config.json` sits
   beside `schemas/role-cycles.schema.json` under the same arrangement. So the surface a role gains
