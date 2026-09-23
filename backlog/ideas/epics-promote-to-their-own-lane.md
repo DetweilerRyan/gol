@@ -51,6 +51,20 @@ Shaped, per the user's 2026-09-21 direction.
   claiming an epic and the children that epic names must be the same set, and a mismatch is
   mechanically findable. A single source of membership can only be trusted.
 - **The promoted index becomes the epic's own file**, carrying the goal and the sequence.
+- **The process pipeline gains standing over `board-lanes.config.json`.** Ruled by the user
+  2026-09-22. A lane the corpus instructs a reader to use, and which the classifier does not
+  declare, draws `undeclared lane, 0 checks` — measured 2026-09-22 on a probe under
+  `backlog/epics/`. So declaring the lane and documenting it are one change, and the pipeline that
+  documents it must be able to declare it.
+
+  **The three roles need different things, and only one of them writes.** `writer` gains the file
+  in its write surface, beside `role-cycles.config.json`, which is the precedent: a tracked
+  declaration the corpus instructs against. `coach` gains standing to name it in a spec, since its
+  own file forbids it editing anything and its specs name what `writer` edits. `editor` gains it
+  inside a `writer` manifest for CLEAN, which is where its scope already comes from.
+
+  **This is a boundary change**, so it runs the process pipeline on its own terms rather than
+  riding in as a side edit of the lane work.
 
 ## No-gos
 
@@ -64,6 +78,11 @@ Shaped, per the user's 2026-09-21 direction.
 
 ## Open questions
 
+- **Does the standing ruling reach the schema, and does it reach further than this lane?**
+  `board-lanes.config.json` has a sibling at `schemas/board-lanes.schema.json`, and a lane entry
+  that the schema refuses is as useless as one the classifier refuses. The ruling names the config
+  and not the schema. It also names one file rather than a class, so the next tracked declaration
+  the corpus instructs against raises the same question again.
 - **Does anything check the two membership statements against each other?** They are only worth
   duplicating because they can disagree detectably, and nothing on this board is gated. The check
   is cheap — the set of children naming an epic against the set that epic names — but it has no
