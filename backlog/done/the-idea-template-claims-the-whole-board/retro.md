@@ -170,3 +170,50 @@ shape one tier up, in the reference that governs the pipeline rather than in a s
 declared cycle, or something keyed positively the way R7 was, is a later question. The user's
 standing rule — AUDIT always runs before REVIEW — is unambiguous and is what the seat should have
 followed.
+
+### P5 — the seat specified work inside role invocations rather than facilitating handoffs
+
+**Named by the user on 2026-09-22**, after tracing a defect on `main` back to an instruction the
+seat had written into a role's prompt.
+
+**The mechanism.** `.claude/references/pipelines.md` gives the seat a contract: name the mode, carry
+the previous role's manifest verbatim, carry a proposal's content because no role reads a board
+file, hold the counters between stateless invocations, and sequence. Those are contracts. The seat
+instead wrote content into prompts — specifying a test's assertion, naming which property test a
+role should add, restating what a role's own rulebooks required, and directing where a reviewing
+role should look.
+
+**The measured instance.** `scripts/board-shape-hook/lane-declarations.test.ts` reads the tracked
+`board-lanes.config.json` and asserts its entire contents with an exhaustive match. A unit test over
+a pure function reads a live repository file and fails when that data changes rather than when the
+code breaks. The user named it as a defect on sight.
+
+It came from a sentence in the seat's `coder` prompt on `one-item-shape-serves-every-lane`, which
+specified the file to read, the exhaustive match, and the reason for it. `coder` implemented the
+sentence. `architect` ratified the design it sat in, and `cleaner` and `hardener` passed it. **The
+role positioned to ask what an exhaustive match bought over a subset never had the question put to
+it, because the seat had already answered it.**
+
+**The cost is still accruing.** That guard fails on any legitimate lane addition, in a tree the
+process pipeline may not enter. It is part of why `epics-promote-to-their-own-lane` re-assessed from
+Ready to Epic on 2026-09-22: a config change the corpus needs trips a test a corpus role cannot
+edit. A subset assertion would catch the deletion the guard was written for and cost nothing here.
+
+**This is P3 one tier up, and the seat was recording P3 while doing it.** P3 says a spec that
+dictates prose verbatim takes over work the pipeline assigns to `writer` and `editor`, so neither
+can perform its role, and that correctness collapses into faithful reproduction. A seat that
+specifies inside a role invocation does the same to that role. The seat wrote P3, agreed with the
+user's reframing of it, and did not recognise its own instance.
+
+**Where the boundary is genuinely unclear, stated rather than glossed.** Roles are stateless, so a
+fact measured in one invocation dies with it. Passing forward that `--scope` takes a directory
+rather than a filename, or that the language server reports phantom errors under `scripts/`, is
+carrying a measurement rather than specifying work. The seat used that latitude and then kept
+going, from facts into specifications. Nothing in the corpus draws the line, and drawing it is a
+later question rather than this entry's.
+
+**Open, and not this slice's to settle.** Whether `orchestration.md` should state what a prompt may
+carry as a positive form — the way R7 keyed a stop rule on the measured form rather than on an
+enumeration of what to avoid. And whether the defect in
+`scripts/board-shape-hook/lane-declarations.test.ts` is fixed as its own candidate or inside
+whichever slice next declares a lane.
