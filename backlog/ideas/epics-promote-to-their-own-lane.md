@@ -57,21 +57,31 @@ Shaped, per the user's 2026-09-21 direction.
   `backlog/epics/`. So declaring the lane and documenting it are one change, and the pipeline that
   documents it must be able to declare it.
 
-  **All three roles gain write access to it, and for `coach` and `editor` that is a change of
-  kind.** Ruled by the user 2026-09-22. `writer` gains the file in its write surface beside
-  `role-cycles.config.json`, which is an ordinary widening: `writer` already writes what a signed
-  spec names. `coach` and `editor` do not, and the ruling reaches past a file list into what those
-  two roles are.
+  **`writer` gains the file in its write surface**, beside `role-cycles.config.json`, and with the
+  schema that validates it. That much is an ordinary widening: `writer` already writes what a
+  signed spec names.
 
-  **What each currently forbids itself.** `coach.md` states "Never edit the corpus, `src/`, or
-  `scripts/`, in either mode. Your spec names edits; `writer` makes them" — a role that specifies
-  and never executes. `editor.md` bounds CLEAN to the files a `writer` manifest names, so it edits
-  only where another role has already been. Both lines are the reason the process pipeline has a
-  single writer, and this ruling carves an exception into each.
+  **`coach` and `editor` gain the same write surface `writer` has, bounded by their own modes.**
+  Ruled by the user 2026-09-22. This reaches past the config pairing to the whole process corpus,
+  and it exists so that a role which finds a defect in what `writer` wrote may correct it where its
+  own mode and judgement say correcting is right.
 
-  **The spec has to say why the exception stops at this pairing.** A role that may write one
-  declaration directly has a reason that either generalises or does not, and the corpus currently
-  offers none. Naming the boundary is the spec's work; the user has ruled where it sits.
+  **It overturns a line in each role's file.** `coach.md` states "Never edit the corpus, `src/`, or
+  `scripts/`, in either mode. Your spec names edits; `writer` makes them". `editor.md` bounds CLEAN
+  to the files a `writer` manifest names, and separately forbids editing text a signed spec or
+  amendment supplied verbatim, ruling such a finding a report rather than an edit. Those three
+  lines are why the process pipeline has had a single writer.
+
+  **The finding this answers is on the record.** `the-idea-template-claims-the-whole-board`'s retro
+  records two `editor` CLEAN passes that returned an empty diff — not a clean read of a clean
+  manifest, but a role forbidden to act on defects it could see, because the text was signed
+  verbatim. Its third pass, over prose `writer` had authored under properties rather than
+  dictation, returned the slice's first non-empty diff and fixed a dating error in place.
+
+  **Mode still bounds the grant, and the spec says how.** A wider surface is not a licence to edit
+  outside a mode: `editor` CLEAN stays structure-preserving, `editor` AUDIT reports rather than
+  rewrites, and `coach` still specifies rather than executing by default. What changes is that a
+  correction a mode already authorises no longer stops at the question of who wrote the bytes.
 
   **The schema is inside the ruling, not beside it.** Ruled by the user 2026-09-22.
   `schemas/board-lanes.schema.json` forbids additional properties and constrains each lane's shape,
@@ -104,12 +114,20 @@ Shaped, per the user's 2026-09-21 direction.
   declaration the corpus instructs a reader to follow — or as a list that grows one pair at a time,
   is the spec's question.
 - **What reviews a `coach` or `editor` write, once either may make one?** The pipeline's shape
-  assumes a single writer: `editor` CLEAN reads a `writer` manifest, and `coach` REVIEW reads a
-  landed corpus against a spec `coach` itself wrote. A file `coach` edits directly appears in no
-  manifest, and `coach` reviewing its own edit is the author-reviews-own-work case the corpus
-  refuses elsewhere. The spec owes an answer, and the retro of
-  `the-idea-template-claims-the-whole-board` records a finding about a role that could not fix what
-  it found, which is this question from the other side.
+  assumes a single writer. `editor` CLEAN reads a `writer` manifest, so a file `coach` edits
+  directly appears in none. `coach` REVIEW reads a landed corpus against a spec `coach` wrote, so
+  `coach` reviewing its own edit is the author-reviews-own-work case the corpus refuses elsewhere.
+  The manifest contract is the concrete half: it is how scope passes down the pipeline today, and
+  three writers need a rule for whose edits reach whom.
+- **Does a signature still bound a cycle if `editor` may edit signed text?** The user signs a spec
+  and `writer` executes it, which is what makes the landed corpus traceable to a ruling. A role
+  correcting signed prose on its own judgement is the remedy this ruling intends and also a second
+  author of text the signature covered. Whether the correction is recorded, reported at REVIEW, or
+  simply lands is the spec's to rule.
+- **Does the grant reach `writer`'s whole surface, including `adr/`?** `writer` may write the
+  decision-record tier, whose own README states a frozen record is immutable and carries a
+  correction path instead. A wider grant that reaches `adr/` collides with that rule rather than
+  with a role boundary.
 - **Does anything check the two membership statements against each other?** They are only worth
   duplicating because they can disagree detectably, and nothing on this board is gated. The check
   is cheap — the set of children naming an epic against the set that epic names — but it has no
