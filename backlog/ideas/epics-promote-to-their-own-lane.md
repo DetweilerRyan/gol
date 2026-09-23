@@ -57,11 +57,21 @@ Shaped, per the user's 2026-09-21 direction.
   `backlog/epics/`. So declaring the lane and documenting it are one change, and the pipeline that
   documents it must be able to declare it.
 
-  **The three roles need different things, and only one of them writes.** `writer` gains the file
-  in its write surface, beside `role-cycles.config.json`, which is the precedent: a tracked
-  declaration the corpus instructs against. `coach` gains standing to name it in a spec, since its
-  own file forbids it editing anything and its specs name what `writer` edits. `editor` gains it
-  inside a `writer` manifest for CLEAN, which is where its scope already comes from.
+  **All three roles gain write access to it, and for `coach` and `editor` that is a change of
+  kind.** Ruled by the user 2026-09-22. `writer` gains the file in its write surface beside
+  `role-cycles.config.json`, which is an ordinary widening: `writer` already writes what a signed
+  spec names. `coach` and `editor` do not, and the ruling reaches past a file list into what those
+  two roles are.
+
+  **What each currently forbids itself.** `coach.md` states "Never edit the corpus, `src/`, or
+  `scripts/`, in either mode. Your spec names edits; `writer` makes them" — a role that specifies
+  and never executes. `editor.md` bounds CLEAN to the files a `writer` manifest names, so it edits
+  only where another role has already been. Both lines are the reason the process pipeline has a
+  single writer, and this ruling carves an exception into each.
+
+  **The spec has to say why the exception stops at this pairing.** A role that may write one
+  declaration directly has a reason that either generalises or does not, and the corpus currently
+  offers none. Naming the boundary is the spec's work; the user has ruled where it sits.
 
   **The schema is inside the ruling, not beside it.** Ruled by the user 2026-09-22.
   `schemas/board-lanes.schema.json` forbids additional properties and constrains each lane's shape,
@@ -93,6 +103,13 @@ Shaped, per the user's 2026-09-21 direction.
   which this ruling does not reach. Whether the rule wants stating as a property — a tracked
   declaration the corpus instructs a reader to follow — or as a list that grows one pair at a time,
   is the spec's question.
+- **What reviews a `coach` or `editor` write, once either may make one?** The pipeline's shape
+  assumes a single writer: `editor` CLEAN reads a `writer` manifest, and `coach` REVIEW reads a
+  landed corpus against a spec `coach` itself wrote. A file `coach` edits directly appears in no
+  manifest, and `coach` reviewing its own edit is the author-reviews-own-work case the corpus
+  refuses elsewhere. The spec owes an answer, and the retro of
+  `the-idea-template-claims-the-whole-board` records a finding about a role that could not fix what
+  it found, which is this question from the other side.
 - **Does anything check the two membership statements against each other?** They are only worth
   duplicating because they can disagree detectably, and nothing on this board is gated. The check
   is cheap — the set of children naming an epic against the set that epic names — but it has no
