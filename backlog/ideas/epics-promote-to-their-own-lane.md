@@ -77,6 +77,13 @@ Shaped, per the user's 2026-09-21 direction.
   beside `schemas/role-cycles.schema.json` under the same arrangement. So the surface a role gains
   is a tracked declaration **and** the schema that validates it, rather than a file.
 
+  **Declaring the lane is one config entry, and nothing else in `scripts/` moves.** Measured
+  2026-09-23 at `c0a06d2`: an `epics` entry added to `board-lanes.config.json` left the hook's six
+  test files green at 141 tests. Four of those files name a lane, and none of them reads the tracked
+  config — three pass the three lanes as a fixture and one names `ideas` inside a validation-failure
+  row, so a fourth lane is invisible to all four. The one test that did read the tracked config and
+  assert its whole contents was deleted at `e0abf42`.
+
   **This is a boundary change**, so it runs the process pipeline on its own terms rather than
   riding in as a side edit of the lane work.
 
